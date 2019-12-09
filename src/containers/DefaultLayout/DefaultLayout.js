@@ -40,7 +40,6 @@ class DefaultLayout extends Component {
   }
 
   render() {
-    console.log("this.props", this.props);
     return (
       <div className="app">
         <AppHeader fixed>
