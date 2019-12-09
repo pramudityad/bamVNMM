@@ -2,6 +2,8 @@ import React, { Component, Suspense } from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
 import * as router from 'react-router-dom';
 import { Container } from 'reactstrap';
+import {connect} from 'react-redux';
+import ActionType from '../../redux/reducer/globalActionType';
 
 import {
   AppAside,
@@ -33,7 +35,12 @@ class DefaultLayout extends Component {
     this.props.history.push('/login')
   }
 
+  componentDidMount(){
+    this.props.saveDataUser({"_id_user" : "5d22f1193029609a8e3df3aa", "email_user" : "pdbdash@projectdb.live", "roles_user" : ['Admin'], "user_name" : "PDB-Dash"});
+  }
+
   render() {
+    console.log("this.props", this.props);
     return (
       <div className="app">
         <AppHeader fixed>
@@ -89,4 +96,16 @@ class DefaultLayout extends Component {
   }
 }
 
-export default DefaultLayout;
+const mapStateToProps = (state) => {
+  return {
+    dataLogin : state.loginData
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    saveDataUser : (dataUser) => dispatch({type : ActionType.LOGIN_DATA, data_user : dataUser }),
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(DefaultLayout);
