@@ -1,4 +1,3 @@
-// {"list_of_site_items.id_pp_doc" : { $in : [ObjectId('5dae77ae59f78790b14dbcaf'), ObjectId('5daa7f76747003f8292cf6f2'), ObjectId('5db013ad59f78790b14dcce3'), ObjectId('5db013ad59f78790b14dcced')]}}
 import React from 'react';
 import { Card, CardBody, CardHeader, CardFooter, Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Collapse} from 'reactstrap';
 import { Col, FormGroup, Label, Row, Table, Input} from 'reactstrap';
@@ -19,7 +18,6 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash"/>
 );
 
-//const API_URL = 'https://api.smart.pdb.e-dpm.com/smartapi';
 const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
@@ -245,6 +243,7 @@ class PackageUpload extends React.Component {
     if(whereName.length !== 0 && whereProject.length !== 0){
       where = 'where={'+whereName+','+whereProject+'}'
     }
+    // eslint-disable-next-line
     this.getDatafromAPI('/pp_all?max_results='+this.state.perPage+'&page='+page+'&'+where+'&'+'embedded={"list_of_id_material" : 1, "list_of_project" : 1}').then(res => {
         if(res.data !== undefined){
           if(res.data._items !== undefined){
@@ -1111,7 +1110,7 @@ class PackageUpload extends React.Component {
                         <DropdownMenu>
                           <DropdownItem header>Uploader Template</DropdownItem>
                           <DropdownItem onClick={this.exportFormatPackage}>> Product Package Template</DropdownItem>
-                          <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.materialselected === 0}>> Material Template</DropdownItem>
+                          <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.materialselected.length === 0}>> Material Template</DropdownItem>
                           <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
                         </DropdownMenu>
                       </Dropdown>
@@ -1149,7 +1148,7 @@ class PackageUpload extends React.Component {
                           className="basic-multi-select"
                           classNamePrefix="select"
                           onChange={this.handleSelectProjectChange}
-                          isDisabled = {this.state.rowsXLS.length==0}
+                          isDisabled = {this.state.rowsXLS.length === 0}
                         />
                       </td>
                       </tr>
@@ -1158,7 +1157,7 @@ class PackageUpload extends React.Component {
                 </div>
                 </CardBody>
                 <CardFooter>
-                          <Button color="success" disabled={this.state.rowsXLS.length==0} onClick={this.saveProductPackage}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
+                          <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
                           <Button color="primary" style={{float : 'right'}} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>
                       </CardFooter>
                     </Card>
@@ -1271,7 +1270,6 @@ class PackageUpload extends React.Component {
                 <Col>
                 <div style={{float:'right', margin: '5px', display:'inline-flex'}}>
                   <Button color="warning" disabled={this.state.materialselected.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
-                  {/* <PrintDataTechnical dataPrint={this.state.materialselected}/> */}
                 </div>
                 <div style={{float:'right', margin: '5px', display:'inline-flex'}}>
                 <Button color="warning" disabled={this.state.materialselected.length === 0} onClick={this.exportTSSRFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp; Download Technical Format</Button>
@@ -1361,7 +1359,6 @@ class PackageUpload extends React.Component {
             </Row>
           </ModalBody>
           <ModalFooter>
-            {/* <Button color="secondary" onClick={this.togglePPForm}>Close</Button> */}
             <Button color="success" onClick={this.saveNewPP}>Submit</Button>
           </ModalFooter>
           </Modal>
@@ -1439,7 +1436,6 @@ class PackageUpload extends React.Component {
           </Row>
           </ModalBody>
           <ModalFooter>
-            {/* <Button color="secondary" onClick={this.togglePPForm}>Close</Button> */}
             <Button color="success" onClick={this.saveUpdatePP}>Update</Button>
           </ModalFooter>
         </Modal>
@@ -1457,18 +1453,16 @@ class PackageUpload extends React.Component {
                 </tr>
               </thead>
               <tbody>
-              { this.state.product_package.map(pp => {
-              if(this.state.materialchecked.get(pp.name) ===  true){
-                return (
-                  <tr key={pp.name}>
-                    <td >{pp.name}</td>
-                    <td>
-                      <Checkbox name={pp.name} checked={this.state.materialchecked.get(pp.name)} onChange={this.handleChangeChecklist}/>
-                    </td>
-                  </tr>
-                )
-              }
-            })}
+              { this.state.product_package.filter(e => this.state.materialchecked.get(e.name) === true).map(pp => {
+                  return (
+                    <tr key={pp.name}>
+                      <td >{pp.name}</td>
+                      <td>
+                        <Checkbox name={pp.name} checked={this.state.materialchecked.get(pp.name)} onChange={this.handleChangeChecklist}/>
+                      </td>
+                    </tr>
+                  )
+              })}
               </tbody>
             </Table>
           </ModalBody>
