@@ -36,6 +36,7 @@ class DefaultLayout extends Component {
   }
 
   componentDidMount(){
+    // Change if u need different user
     this.props.saveDataUser({"_id_user" : "5d22f1193029609a8e3df3aa", "email_user" : "pdbdash@projectdb.live", "roles_user" : ['Admin'], "user_name" : "PDB-Dash"});
   }
 
