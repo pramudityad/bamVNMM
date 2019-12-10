@@ -84,7 +84,7 @@ const routes = [
   { path: '/users', exact: true,  name: 'Users', component: Users },
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
 
-  { path: '/ProductPackage', exact: true, name: 'Product Package Manager', component: ProductPackage },
+  { path: '/product_package', exact: true, name: 'Product Package Manager', component: ProductPackage },
   { path: '/mr_list', exact: true, name: 'MR List', component: MR_list },
   { path: '/wh_dashboard', exact: true, name: 'Warehouse Dashboard', component: WH_dashboard },
 ];
