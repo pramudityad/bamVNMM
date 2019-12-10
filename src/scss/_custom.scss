@@ -1,13 +1,13 @@
 // Here you can add other styles
 
-// @font-face {
-//     font-family: EricssonFontHilda;
-//     src : url("./assets/EricssonHilda-Regular.woff");
-// }
-//
-// body {
-//     font-family: EricssonFontHilda;
-// }
+@font-face {
+    font-family: EricssonFontHilda;
+    src : url("./assets/EricssonHilda-Regular.woff");
+}
+
+body {
+    font-family: EricssonFontHilda;
+}
 
 .app-header {
     background-color: #0c0c0c;

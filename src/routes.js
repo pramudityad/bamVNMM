@@ -37,6 +37,8 @@ const Users = React.lazy(() => import('./views/Users/Users'));
 const User = React.lazy(() => import('./views/Users/User'));
 
 const ProductPackage = React.lazy(() => import('./views/ProductPackage/PackageUpload'));
+const MR_list = React.lazy(() => import('./views/MR/MR_list'));
+const WH_dashboard = React.lazy(() => import('./views/Warehouse/WH_dashboard'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -83,6 +85,8 @@ const routes = [
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
 
   { path: '/ProductPackage', exact: true, name: 'Product Package Manager', component: ProductPackage },
+  { path: '/mr_list', exact: true, name: 'MR List', component: MR_list },
+  { path: '/wh_dashboard', exact: true, name: 'Warehouse Dashboard', component: WH_dashboard },
 ];
 
 export default routes;
