@@ -1188,7 +1188,7 @@ class PackageUpload extends React.Component {
                 <Row>
                   <Col>
                 <div className='divtable'>
-                  <Table hover bordered responsive size="sm" width='100%'>
+                  <table hover bordered responsive size="sm" width='100%'>
                     <thead style={{backgroundColor:'#c6f569'}} className='fixed'>
                       <tr align="center">
                         <th>
@@ -1210,7 +1210,7 @@ class PackageUpload extends React.Component {
                     <tbody>
                     {this.state.product_package.map(pp =>
                       <React.Fragment key={pp._id+"frag"}>
-                        <tr style={{backgroundColor: '#f8f6df'}} className='fixbody' key={pp._id}>
+                        <tr style={{backgroundColor: '#E5FCC2'}} className='fixbody' key={pp._id}>
                           <td align="center"><Checkbox name={pp._id} checked={this.state.materialchecked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp}/></td>
                           <td colSpan="2" style={{textAlign : 'left'}}>{pp.name}</td>
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
@@ -1250,7 +1250,7 @@ class PackageUpload extends React.Component {
                       </React.Fragment>
                     )}
                     </tbody>
-                  </Table>
+                  </table>
                 </div>
               </Col>
                 </Row>
