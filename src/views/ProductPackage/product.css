@@ -58,7 +58,7 @@
   /* overflow-y: scroll; */
   width:100%;
   height:auto;
-  max-height: 700px;
+  max-height: 650px;
   margin-bottom: 10px;
 }
 
@@ -68,7 +68,7 @@
 .fixed th {
   position: -webkit-sticky; /* for Safari */
   position: sticky;
-  background: #c6f569;
+  background: #45ADA8;
   padding : 10px;
   top: 0;
 }
@@ -86,7 +86,7 @@ Table tbody th {
 
 .fixbodymat {
   background: #FFFFFF;
-  border-top: 2px solid #ebebeb;
+  border: 2px solid #ebebeb;
 }
 
 .fixbodymat td {
