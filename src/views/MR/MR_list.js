@@ -200,7 +200,7 @@ class MR_list extends Component {
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText><i className="fa fa-search"></i></InputGroupText>
                             </InputGroupAddon>
-                            <Input type="text" placeholder="Search MR ID" onChange={this.handleFilterList} value={this.state.filter_list[0]} name={0}/>
+                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[0]} name={0}/>
                           </InputGroup>
                         </div>
                       </td>
