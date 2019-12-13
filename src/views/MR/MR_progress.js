@@ -22,28 +22,22 @@ class MR_list extends Component {
       perPage : 10,
       filter_list : new Array(5).fill(null),
     }
-    this.handlePageChange = this.handlePageChange.bind(this);
-    this.handleFilterList = this.handleFilterList.bind(this);
-    this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
+    this.getDataFromAPI = this.getDataFromAPI.bind(this)
   }
 
   async getDataFromAPI(url) {
     try {
-      let respond = await axios.get(API_URL+url, {
+      let response = await axios.get(API_URL+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
           username: username,
           password: password
         }
       });
-      if(respond.status >= 200 && respond.status < 300) {
-        console.log("respond data", respond);
-      }
-      return respond;
+
+      return response;
     } catch(err) {
-      let respond = err;
-      console.log("respond data", err);
-      return respond;
+      return err;
     }
   }
 
@@ -96,18 +90,20 @@ class MR_list extends Component {
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
+    const background = { 
+      backgroundColor: '#e3e3e3',
+    };
+
     return (
       <div className="animated fadeIn">
         <Row>
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                <i className="fa fa-align-justify"></i> [MR ID Here]
+                <i className="fa fa-align-justify"></i> [MR ID Here] Progress Overview
               </CardHeader>
               <CardBody 
-                style={{ 
-                  backgroundColor: '#e3e3e3',
-                }}
+                style={background}
               >
                 <VerticalTimeline>
                     <VerticalTimelineElement
