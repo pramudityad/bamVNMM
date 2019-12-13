@@ -37,6 +37,8 @@ const Users = React.lazy(() => import('./views/Users/Users'));
 const User = React.lazy(() => import('./views/Users/User'));
 
 const ProductPackage = React.lazy(() => import('./views/ProductPackage/PackageUpload'));
+const TssrBOM = React.lazy(() => import('./views/Tssr/TssrBOM'));
+
 const MR_list = React.lazy(() => import('./views/MR/MR_list'));
 const WH_dashboard = React.lazy(() => import('./views/Warehouse/WH_dashboard'));
 
@@ -85,6 +87,7 @@ const routes = [
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
 
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
+  { path: '/tssr-bom', exact: true, name: 'TSSR BOM', component: TssrBOM },
   { path: '/mr-list', exact: true, name: 'MR List', component: MR_list },
   { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WH_dashboard },
 ];
