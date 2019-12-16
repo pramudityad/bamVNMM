@@ -46,6 +46,10 @@ class TssrBOM extends Component {
 
   preparingDataTSSR(){
     //Before Show preview and user can click save button
+    const dataTSSRXls = this.state.rowsXLS;
+    for(let i = 2; i < dataTSSRXls.length; i++){
+
+    }
 
   }
 

@@ -40,6 +40,7 @@ const ProductPackage = React.lazy(() => import('./views/ProductPackage/PackageUp
 const TssrBOM = React.lazy(() => import('./views/Tssr/TssrBOM'));
 
 const MR_list = React.lazy(() => import('./views/MR/MR_list'));
+const MR_creation = React.lazy(() => import('./views/MR/MR_creation'));
 const WH_dashboard = React.lazy(() => import('./views/Warehouse/WH_dashboard'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
@@ -89,6 +90,7 @@ const routes = [
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
   { path: '/tssr-bom', exact: true, name: 'TSSR BOM', component: TssrBOM },
   { path: '/mr-list', exact: true, name: 'MR List', component: MR_list },
+  { path: '/mr-creation', exact: true, name: 'Create MR', component: MR_creation },
   { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WH_dashboard },
 ];
 
