@@ -144,13 +144,13 @@ class OrderReceived extends Component {
   async patchDataToAPI(url, data, _etag) {
     try {
       let respond = await axios.patch(API_URL+url, data, {
-        headers: {'Content-Type':'application/json'},
+        headers: {
+          'Content-Type':'application/json',
+          'If-Match': _etag
+        },
         auth: {
           username: username,
           password: password
-        },
-        headers: {
-          'If-Match': _etag
         }
       })
       if(respond.status >= 200 && respond.status < 300) {
@@ -178,7 +178,7 @@ class OrderReceived extends Component {
       }
     }
     if(successUpdate.length !== 0){
-      this.setState({ action_status : "success"});
+      this.setState({action_status : "success"});
       setTimeout(function(){ window.location.reload(); }, 2000);
     }
   }
@@ -218,14 +218,14 @@ class OrderReceived extends Component {
     function AlertProcess(props){
       const alert = props.alertAct;
       const message = props.messageAct;
-      if(alert == 'failed'){
+      if(alert === 'failed'){
         return (
           <div className="alert alert-danger" role="alert">
             {message.length !== 0 ? message : 'Sorry, there was an error when we tried to save it, please reload your page and try again'}
           </div>
         )
       } else{
-        if(alert == 'success'){
+        if(alert === 'success'){
           return (
             <div className="alert alert-success" role="alert">
               {message}
@@ -236,7 +236,6 @@ class OrderReceived extends Component {
           return (
             <div></div>
           )
-
         }
       }
     }
