@@ -10,7 +10,7 @@ const API_URL = 'http://api.smart.pdb.e-dpm.com/smartapi';
 const username = 'usermitt';
 const password = 'Z4icVgFQp3D1';
 
-class MR_list extends Component {
+class MRProgress extends Component {
   constructor(props) {
     super(props);
 
@@ -227,4 +227,4 @@ class MR_list extends Component {
   }
 }
 
-export default MR_list;
+export default MRProgress;
