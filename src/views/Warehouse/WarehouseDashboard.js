@@ -3,7 +3,7 @@ import { Col, Row } from 'reactstrap';
 import Widget from './Widget';
 import './wh_css.css';
 
-class WH_dashboard extends Component {
+class WarehouseDashboard extends Component {
   constructor(props) {
     super(props);
 
@@ -101,34 +101,34 @@ class WH_dashboard extends Component {
       <div className="animated fadeIn">
         <Row>
           <Col xs="12" sm="6" lg="4">
-            <a href="#" onMouseEnter={() => this.updateHover1("", "../../assets/icon/dashboard/order-received-blue.png")} onMouseLeave={() => this.updateHover1("inverse", "../../assets/icon/dashboard/order-received.png")}>
+            <a href="#/order-received" onMouseEnter={() => this.updateHover1("", "../../assets/icon/dashboard/order-received-blue.png")} onMouseLeave={() => this.updateHover1("inverse", "../../assets/icon/dashboard/order-received.png")}>
               <Widget color="primary" variant={this.state.variant1} header="999" mainText="Order Received" imageSource={this.state.img_1}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#" onMouseEnter={() => this.updateHover2("", "../../assets/icon/dashboard/order-processing-blue.png")} onMouseLeave={() => this.updateHover2("inverse", "../../assets/icon/dashboard/order-processing.png")}>
+            <a href="#/order-processing" onMouseEnter={() => this.updateHover2("", "../../assets/icon/dashboard/order-processing-blue.png")} onMouseLeave={() => this.updateHover2("inverse", "../../assets/icon/dashboard/order-processing.png")}>
               <Widget color="primary" variant={this.state.variant2} header="999" mainText="Order Processing" imageSource={this.state.img_2}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#" onMouseEnter={() => this.updateHover3("", "../../assets/icon/dashboard/ready-to-deliver-blue.png")} onMouseLeave={() => this.updateHover3("inverse", "../../assets/icon/dashboard/ready-to-deliver.png")}>
+            <a href="#/ready-to-deliver" onMouseEnter={() => this.updateHover3("", "../../assets/icon/dashboard/ready-to-deliver-blue.png")} onMouseLeave={() => this.updateHover3("inverse", "../../assets/icon/dashboard/ready-to-deliver.png")}>
               <Widget color="primary" variant={this.state.variant3} header="999" mainText="Ready To Deliver" imageSource={this.state.img_3}/>
             </a>
           </Col>
         </Row>
         <Row>
           <Col xs="12" sm="6" lg="4">
-            <a href="#" onMouseEnter={() => this.updateHover4("", "../../assets/icon/dashboard/joint-check-blue.png")} onMouseLeave={() => this.updateHover4("inverse", "../../assets/icon/dashboard/joint-check.png")}>
+            <a href="#/joint-check" onMouseEnter={() => this.updateHover4("", "../../assets/icon/dashboard/joint-check-blue.png")} onMouseLeave={() => this.updateHover4("inverse", "../../assets/icon/dashboard/joint-check.png")}>
               <Widget color="primary" variant={this.state.variant4} header="999" mainText="Joint Check" imageSource={this.state.img_4}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#" onMouseEnter={() => this.updateHover5("", "../../assets/icon/dashboard/loading-process-blue.png")} onMouseLeave={() => this.updateHover5("inverse", "../../assets/icon/dashboard/loading-process.png")}>
+            <a href="#/loading-process" onMouseEnter={() => this.updateHover5("", "../../assets/icon/dashboard/loading-process-blue.png")} onMouseLeave={() => this.updateHover5("inverse", "../../assets/icon/dashboard/loading-process.png")}>
               <Widget color="primary" variant={this.state.variant5} header="999" mainText="Loading Process" imageSource={this.state.img_5}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#" onMouseEnter={() => this.updateHover6("", "../../assets/icon/dashboard/dispatch-blue.png")} onMouseLeave={() => this.updateHover6("inverse", "../../assets/icon/dashboard/dispatch.png")}>
+            <a href="#/material-dispatch" onMouseEnter={() => this.updateHover6("", "../../assets/icon/dashboard/dispatch-blue.png")} onMouseLeave={() => this.updateHover6("inverse", "../../assets/icon/dashboard/dispatch.png")}>
               <Widget color="primary" variant={this.state.variant6} header="999" mainText="Material Dispatch" imageSource={this.state.img_6}/>
             </a>
           </Col>
@@ -155,4 +155,4 @@ class WH_dashboard extends Component {
   }
 }
 
-export default WH_dashboard;
+export default WarehouseDashboard;
