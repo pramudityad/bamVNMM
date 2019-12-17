@@ -43,10 +43,10 @@ class PackageUpload extends React.Component {
         total_dataParent : 0,
         dataChild : [],
         modalCheckout : false,
-        materialselected : [],
-        materialchecked : new Map(),
-        materialchecked_all : false,
-        materialchecked_allPP : false,
+        packageSelected : [],
+        packageChecked : new Map(),
+        packageChecked_all : false,
+        packageChecked_allPP : false,
         indexLoopSave : null,
         select_project_tag : new Map(),
         select_project_tag_new : [],
@@ -222,12 +222,9 @@ class PackageUpload extends React.Component {
 
   getPackageDataAPI(filter_name, project_filter){
     const page = this.state.activePage;
-    // http://api.smart.pdb.e-dpm.com/smartapi/pp_non_page?where={"$or" : [{"name":{"$regex" : "SVC", "$options" : "i"} }, {"product_type":{"$regex" : "SVC", "$options" : "i"} } ]}
-    // const project_filter = this.state.project_filter;
     let whereName = '';
     let whereProject = '';
     if(filter_name !== undefined && filter_name.length !== 0){
-      //whereName = '"name":{"$regex" : "'+filter_name+'", "$options" : "i"} '
       whereName = '"$or" : [{"pp_id":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"name":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"product_type":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"phy_group":{"$regex" : "'+filter_name+'", "$options" : "i"}} ]';
     }
     if(project_filter !== undefined && project_filter !== null && project_filter.length !== 0){
@@ -296,18 +293,20 @@ class PackageUpload extends React.Component {
 
   fileHandlerMaterial = (event) => {
     let fileObj = event.target.files[0];
-    ExcelRenderer(fileObj, (err, rest) => {
-      if(err){
-        console.log(err);
-      }
-      else{
-        this.setState({
-          rowsXLS: rest.rows
-        }, ()=> {
-          // this.formatJustChild();
-        });
-      }
-    });
+    if(fileObj !== undefined){
+      ExcelRenderer(fileObj, (err, rest) => {
+        if(err){
+          console.log(err);
+        }
+        else{
+          this.setState({
+            rowsXLS: rest.rows
+          }, ()=> {
+            // this.formatJustChild();
+          });
+        }
+      });
+    }
   }
 
   checkFormatPackage(dataXLSHeader){
@@ -694,56 +693,56 @@ class PackageUpload extends React.Component {
     const item = e.target.name;
     const isChecked = e.target.checked;
     const dataMaterial = this.state.product_package;
-    let materialselected = this.state.materialselected;
+    let packageSelected = this.state.packageSelected;
     if(isChecked === true){
       const getMaterial = dataMaterial.find(pp => pp._id === item);
-      materialselected.push(getMaterial);
+      packageSelected.push(getMaterial);
     }else{
-      materialselected = materialselected.filter(function( pp ) {
+      packageSelected = packageSelected.filter(function( pp ) {
         return pp._id !== item;
       });
     }
-    this.setState({ materialselected : materialselected});
-    this.setState(prevState => ({ materialchecked: prevState.materialchecked.set(item, isChecked) }));
-    // console.log("materialselected", dataMaterial);
+    this.setState({ packageSelected : packageSelected});
+    this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(item, isChecked) }));
+    // console.log("packageSelected", dataMaterial);
   }
 
   handleChangeChecklistAll(e){
     const isChecked = e.target.checked;
     const dataMaterial = this.state.product_package;
-    let materialselected = this.state.materialselected;
+    let packageSelected = this.state.packageSelected;
     for(let i = 0; i < dataMaterial.length; i++){
       if(isChecked === true){
-        if(this.state.materialchecked.get(dataMaterial[i]._id)!== true){
-          materialselected.push(dataMaterial[i]);
+        if(this.state.packageChecked.get(dataMaterial[i]._id)!== true){
+          packageSelected.push(dataMaterial[i]);
         }
-        this.setState(prevState => ({ materialchecked: prevState.materialchecked.set(dataMaterial[i]._id, true) }));
+        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(dataMaterial[i]._id, true) }));
       }else{
-        this.setState(prevState => ({ materialchecked: prevState.materialchecked.set(dataMaterial[i]._id, false) }));
-        materialselected = materialselected.filter(function( pp ) {
+        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(dataMaterial[i]._id, false) }));
+        packageSelected = packageSelected.filter(function( pp ) {
           return pp._id !== dataMaterial[i]._id;
         });
       }
     }
-    this.setState({ materialselected : materialselected, materialchecked_all : isChecked});
-    console.log("materialselected", materialselected);
+    this.setState({ packageSelected : packageSelected, packageChecked_all : isChecked});
+    console.log("packageSelected", packageSelected);
   }
 
   handleChangeChecklistAllPP(e){
     const isChecked = e.target.checked;
     const dataPPAll = this.state.pp_all;
-    let materialselected = this.state.materialselected;
+    let packageSelected = this.state.packageSelected;
     if(isChecked === true){
       for(let i = 0; i < dataPPAll.length; i++){
-        if(this.state.materialchecked.get(dataPPAll[i]._id) !== true){
-          materialselected.push(dataPPAll[i]);
+        if(this.state.packageChecked.get(dataPPAll[i]._id) !== true){
+          packageSelected.push(dataPPAll[i]);
         }
-        this.setState(prevState => ({ materialchecked: prevState.materialchecked.set(dataPPAll[i]._id, true) }));
+        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(dataPPAll[i]._id, true) }));
       }
-      this.setState({ materialselected : materialselected, materialchecked_allPP : isChecked });
+      this.setState({ packageSelected : packageSelected, packageChecked_allPP : isChecked });
     }else{
-      this.setState({materialchecked : new Map(), materialselected : [] });
-      this.setState({materialchecked_allPP : isChecked });
+      this.setState({packageChecked : new Map(), packageSelected : [] });
+      this.setState({packageChecked_allPP : isChecked });
     }
   }
 
@@ -754,7 +753,7 @@ class PackageUpload extends React.Component {
   }
 
   handlePageChange(pageNumber) {
-    this.setState({activePage: pageNumber, materialchecked_all :  false});
+    this.setState({activePage: pageNumber, packageChecked_all :  false});
   }
 
   viewProjectSelected(select_project_tag){
@@ -1005,13 +1004,13 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataMaterialSelected = this.state.materialselected;
+    const datapackageSelected = this.state.packageSelected;
 
     let ppIdArray = ["project", "site_id", "site_name"];
     let phyGroupArray = ["", "", ""];
 
-    ppIdArray = ppIdArray.concat(dataMaterialSelected.map(pp => pp.pp_id+" /// "+pp.name));
-    phyGroupArray = phyGroupArray.concat(dataMaterialSelected.map(pp => pp.product_type));
+    ppIdArray = ppIdArray.concat(datapackageSelected.map(pp => pp.pp_id+" /// "+pp.name));
+    phyGroupArray = phyGroupArray.concat(datapackageSelected.map(pp => pp.product_type));
 
     ws.addRow(phyGroupArray);
     ws.addRow(ppIdArray);
@@ -1024,13 +1023,14 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataMaterialSelected = this.state.materialselected;
+    const datapackageChecked = this.state.packageSelected;
+    console.log("datapackageChecked", datapackageChecked);
 
     let ppIdArray = ["project", "site_id", "site_name"];
     let phyGroupArray = ["", "", ""];
 
-    ppIdArray = ppIdArray.concat(dataMaterialSelected.map(pp => pp.pp_id+" /// "+pp.name));
-    phyGroupArray = phyGroupArray.concat(dataMaterialSelected.map(pp => pp.product_type));
+    ppIdArray = ppIdArray.concat(datapackageChecked.map(pp => pp.pp_id+" /// "+pp.name));
+    phyGroupArray = phyGroupArray.concat(datapackageChecked.map(pp => pp.product_type));
 
     ws.addRow(phyGroupArray);
     ws.addRow(ppIdArray);
@@ -1055,7 +1055,7 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataPrint = this.state.materialselected;
+    const dataPrint = this.state.packageSelected;
 
     ws.addRow(["PP / Material", "material_code", "material_name", "quantity", "unit", "material_type", "product_key", "product_package"]);
 
@@ -1110,7 +1110,7 @@ class PackageUpload extends React.Component {
                         <DropdownMenu>
                           <DropdownItem header>Uploader Template</DropdownItem>
                           <DropdownItem onClick={this.exportFormatPackage}>> Product Package Template</DropdownItem>
-                          <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.materialselected.length === 0}>> Material Template</DropdownItem>
+                          <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
                           <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
                         </DropdownMenu>
                       </Dropdown>
@@ -1169,7 +1169,7 @@ class PackageUpload extends React.Component {
                   <span style={{fontSize: '20px', fontWeight : '500'}}>Material List</span>
                   <div style={{float:'right', margin: '5px', display:'inline-flex'}}>
                     <span style={{marginRight: '10px'}}>
-                      <Checkbox name={"allPP"} checked={this.state.materialchecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0}/>
+                      <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0}/>
                       Select All
                     </span>
                     <span style={{marginRight: '10px'}}>Project Tag : </span>
@@ -1192,7 +1192,7 @@ class PackageUpload extends React.Component {
                     <thead style={{backgroundColor:'#c6f569'}} className='fixed'>
                       <tr align="center">
                         <th>
-                          <Checkbox name={"all"} checked={this.state.materialchecked_all} onChange={this.handleChangeChecklistAll}/>
+                          <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll}/>
                         </th>
                         <th style={{minWidth : '150px'}}>Product Package Variant</th>
                         <th>Material Name</th>
@@ -1211,7 +1211,7 @@ class PackageUpload extends React.Component {
                     {this.state.product_package.map(pp =>
                       <React.Fragment key={pp._id+"frag"}>
                         <tr style={{backgroundColor: '#E5FCC2'}} className='fixbody' key={pp._id}>
-                          <td align="center"><Checkbox name={pp._id} checked={this.state.materialchecked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp}/></td>
+                          <td align="center"><Checkbox name={pp._id} checked={this.state.packageChecked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp}/></td>
                           <td colSpan="2" style={{textAlign : 'left'}}>{pp.name}</td>
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                           <td style={{textAlign : 'center'}}>{pp.unit}</td>
@@ -1269,10 +1269,10 @@ class PackageUpload extends React.Component {
 
                 <Col>
                 <div style={{float:'right', margin: '5px', display:'inline-flex'}}>
-                  <Button color="warning" disabled={this.state.materialselected.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
+                  <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
                 </div>
                 <div style={{float:'right', margin: '5px', display:'inline-flex'}}>
-                <Button color="warning" disabled={this.state.materialselected.length === 0} onClick={this.exportTSSRFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp; Download Technical Format</Button>
+                <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTSSRFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp; Download TSSR Format</Button>
                 </div>
                   </Col>
                 </Row>
@@ -1453,12 +1453,12 @@ class PackageUpload extends React.Component {
                 </tr>
               </thead>
               <tbody>
-              { this.state.product_package.filter(e => this.state.materialchecked.get(e.name) === true).map(pp => {
+              { this.state.product_package.filter(e => this.state.packageChecked.get(e.name) === true).map(pp => {
                   return (
                     <tr key={pp.name}>
                       <td >{pp.name}</td>
                       <td>
-                        <Checkbox name={pp.name} checked={this.state.materialchecked.get(pp.name)} onChange={this.handleChangeChecklist}/>
+                        <Checkbox name={pp.name} checked={this.state.packageChecked.get(pp.name)} onChange={this.handleChangeChecklist}/>
                       </td>
                     </tr>
                   )
