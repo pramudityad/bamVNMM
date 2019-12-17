@@ -40,7 +40,7 @@ const ProductPackage = React.lazy(() => import('./views/ProductPackage/PackageUp
 const TssrBOM = React.lazy(() => import('./views/Tssr/TssrBOM'));
 const MRList = React.lazy(() => import('./views/MR/MRList'));
 const MRProgress = React.lazy(() => import('./views/MR/MRProgress'));
-const MR_creation = React.lazy(() => import('./views/MR/MR_creation'));
+const MRCreation = React.lazy(() => import('./views/MR/MR_creation'));
 const WarehouseDashboard = React.lazy(() => import('./views/Warehouse/WarehouseDashboard'));
 const OrderReceived = React.lazy(() => import('./views/Warehouse/OrderReceived'));
 const OrderProcessing = React.lazy(() => import('./views/Warehouse/OrderProcessing'));
@@ -97,8 +97,8 @@ const routes = [
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
 
   { path: '/tssr-bom', exact: true, name: 'TSSR BOM', component: TssrBOM },
-  { path: '/mr-list', exact: true, name: 'MR List', component: MR_list },
-  { path: '/mr-creation', exact: true, name: 'Create MR', component: MR_creation },
+  { path: '/mr-list', exact: true, name: 'MR List', component: MRList },
+  { path: '/mr-creation', exact: true, name: 'Create MR', component: MRCreation },
   { path: '/mr-progress', exact: true, name: 'MR Progress', component: MRProgress },
   { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WarehouseDashboard },
   { path: '/order-received', exact: true, name: 'Order Received', component: OrderReceived },
