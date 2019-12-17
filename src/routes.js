@@ -38,10 +38,17 @@ const User = React.lazy(() => import('./views/Users/User'));
 
 const ProductPackage = React.lazy(() => import('./views/ProductPackage/PackageUpload'));
 const TssrBOM = React.lazy(() => import('./views/Tssr/TssrBOM'));
-
-const MR_list = React.lazy(() => import('./views/MR/MR_list'));
+const MRList = React.lazy(() => import('./views/MR/MRList'));
+const MRProgress = React.lazy(() => import('./views/MR/MRProgress'));
 const MR_creation = React.lazy(() => import('./views/MR/MR_creation'));
-const WH_dashboard = React.lazy(() => import('./views/Warehouse/WH_dashboard'));
+const WarehouseDashboard = React.lazy(() => import('./views/Warehouse/WarehouseDashboard'));
+const OrderReceived = React.lazy(() => import('./views/Warehouse/OrderReceived'));
+const OrderProcessing = React.lazy(() => import('./views/Warehouse/OrderProcessing'));
+const ReadyToDeliver = React.lazy(() => import('./views/Warehouse/ReadyToDeliver'));
+const JointCheck = React.lazy(() => import('./views/Warehouse/JointCheck'));
+const LoadingProcess = React.lazy(() => import('./views/Warehouse/LoadingProcess'));
+const MaterialDispatch = React.lazy(() => import('./views/Warehouse/MaterialDispatch'));
+
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -86,12 +93,21 @@ const routes = [
   { path: '/charts', name: 'Charts', component: Charts },
   { path: '/users', exact: true,  name: 'Users', component: Users },
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
-
+  
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
+
   { path: '/tssr-bom', exact: true, name: 'TSSR BOM', component: TssrBOM },
   { path: '/mr-list', exact: true, name: 'MR List', component: MR_list },
   { path: '/mr-creation', exact: true, name: 'Create MR', component: MR_creation },
-  { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WH_dashboard },
+  { path: '/mr-progress', exact: true, name: 'MR Progress', component: MRProgress },
+  { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WarehouseDashboard },
+  { path: '/order-received', exact: true, name: 'Order Received', component: OrderReceived },
+  { path: '/order-processing', exact: true, name: 'Order Processing', component: OrderProcessing },
+  { path: '/ready-to-deliver', exact: true, name: 'Ready To Deliver', component: ReadyToDeliver },
+  { path: '/joint-check', exact: true, name: 'Joint Check', component: JointCheck },
+  { path: '/loading-process', exact: true, name: 'Loading Process', component: LoadingProcess },
+  { path: '/material-dispatch', exact: true, name: 'Material Dispatch', component: MaterialDispatch },
+
 ];
 
 export default routes;
