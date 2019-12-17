@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Card, CardBody, Col, Media, Progress, Row } from 'reactstrap';
+import { Card, CardBody, Col, Progress, Row } from 'reactstrap';
 import classNames from 'classnames';
 import { mapToCssModules } from 'reactstrap/lib/utils';
 
@@ -53,7 +53,7 @@ class Widget extends Component {
     }
 
     return (
-      <Card className={classes} {...attributes}>
+      <Card className={classes} {...attributes} style={{height:"195px"}}>
         <CardBody>
           <Row>
             <Col lg="3">

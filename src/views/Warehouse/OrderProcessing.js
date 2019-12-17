@@ -21,7 +21,9 @@ class OrderProcessing extends Component {
       totalData : 0,
       perPage : 10,
       filter_list : new Array(14).fill(""),
-      mr_all : []
+      mr_all : [],
+      action_status : null,
+      action_message : ""
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -29,6 +31,7 @@ class OrderProcessing extends Component {
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
+    this.proceedMilestone = this.proceedMilestone.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -138,6 +141,48 @@ class OrderProcessing extends Component {
     saveAs(new Blob([allocexport]), 'Order Processing.xlsx');
   }
 
+  async patchDataToAPI(url, data, _etag) {
+    try {
+      let respond = await axios.patch(API_URL+url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'If-Match': _etag
+        },
+        auth: {
+          username: username,
+          password: password
+        }
+      })
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log('respond patch data', respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = undefined;
+      this.setState({action_status: 'failed', action_message: 'Sorry, there is something wrong, please try again!'});
+      console.log('respond patch data', err);
+      return respond;
+    }
+  }
+
+  async proceedMilestone(e) {
+    const _etag = e.target.value;
+    const _id = e.target.id;
+    let successUpdate = [];
+    let updateMilestone = {};
+    updateMilestone['current_milestones'] = "MS_READY_TO_DELIVER";
+    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMilestone, _etag);
+    if(res !== undefined) {
+      if(res.data !== undefined) {
+        successUpdate.push(res.data);
+      }
+    }
+    if(successUpdate.length !== 0){
+      this.setState({action_status : "success"});
+      setTimeout(function(){ window.location.reload(); }, 2000);
+    }
+  }
+
   componentDidMount() {
     this.getMRList();
     this.getAllMR();
@@ -170,6 +215,31 @@ class OrderProcessing extends Component {
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
+    function AlertProcess(props){
+      const alert = props.alertAct;
+      const message = props.messageAct;
+      if(alert === 'failed'){
+        return (
+          <div className="alert alert-danger" role="alert">
+            {message.length !== 0 ? message : 'Sorry, there was an error when we tried to save it, please reload your page and try again'}
+          </div>
+        )
+      } else{
+        if(alert === 'success'){
+          return (
+            <div className="alert alert-success" role="alert">
+              {message}
+              Your action was success, please reload your page
+            </div>
+          )
+        } else{
+          return (
+            <div></div>
+          )
+        }
+      }
+    }
+
     const downloadMR = {
       float: 'right',
       marginBottom: '16px'
@@ -181,6 +251,7 @@ class OrderProcessing extends Component {
 
     return (
       <div className="animated fadeIn">
+        <AlertProcess alertAct={this.state.action_status} messageAct={this.state.action_message}/>
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -360,7 +431,7 @@ class OrderProcessing extends Component {
                     {this.state.mr_list.map((list, i) => 
                       <tr key={list._id}>
                         <td>
-                          <Button outline color="success" size="sm" className="btn-pill" style={{width: "120px", marginBottom: "4px"}}><i className="fa fa-check" style={{marginRight: "8px"}}></i>Complete</Button>
+                          <Button outline color="success" size="sm" className="btn-pill" style={{width: "120px", marginBottom: "4px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-check" style={{marginRight: "8px"}}></i>Complete</Button>
                           <Button outline color="danger" size="sm" className="btn-pill" style={{width: "120px"}}><i className="fa fa-times" style={{marginRight: "8px"}}></i>Not Complete</Button>
                         </td>
                         <td>{list.mr_id}</td>
