@@ -40,7 +40,7 @@ const ProductPackage = React.lazy(() => import('./views/ProductPackage/PackageUp
 const TssrBOM = React.lazy(() => import('./views/Tssr/TssrBOM'));
 const MRList = React.lazy(() => import('./views/MR/MRList'));
 const MRProgress = React.lazy(() => import('./views/MR/MRProgress'));
-const MRCreation = React.lazy(() => import('./views/MR/MR_creation'));
+const MRCreation = React.lazy(() => import('./views/MR/MRCreation'));
 const WarehouseDashboard = React.lazy(() => import('./views/Warehouse/WarehouseDashboard'));
 const OrderReceived = React.lazy(() => import('./views/Warehouse/OrderReceived'));
 const OrderProcessing = React.lazy(() => import('./views/Warehouse/OrderProcessing'));
