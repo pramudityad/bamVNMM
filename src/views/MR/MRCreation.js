@@ -18,7 +18,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
 
-class MR_creation extends Component {
+class MRCreation extends Component {
   constructor(props) {
     super(props);
 
@@ -343,7 +343,7 @@ class MR_creation extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}} >MR Creation </span>
-            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.saveMRtoAPI}>Create MR</Button>
+            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.saveMRtoAPI}><i className="fa fa-edit" style={{marginRight: "8px"}}></i>Create MR</Button>
           </CardHeader>
           <CardBody>
             <table>
@@ -465,4 +465,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(MR_creation);
+export default connect(mapStateToProps)(MRCreation);
