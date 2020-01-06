@@ -4,6 +4,7 @@ import { Form, FormGroup, Label, FormText } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
 import {connect} from 'react-redux';
+import { Link, Redirect } from 'react-router-dom';
 import Select from 'react-select';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
@@ -41,6 +42,7 @@ class MRCreation extends Component {
         tssr_BOM_data_NE : null,
         tssr_BOM_data_FE : null,
         list_pp_material_tssr : [],
+        redirectSign : false,
         action_status : null,
         action_message : null,
     };
@@ -216,6 +218,7 @@ class MRCreation extends Component {
       }
       const respondSaveMR = await this.postDatatoAPIBAM('/mr_op', mr_data);
       if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
+        setTimeout(function(){ this.setState({ redirectSign : respondSaveMR.data._id}); }.bind(this), 3000);
         console.log("success")
       }
   }
@@ -232,6 +235,9 @@ class MRCreation extends Component {
   }
 
   render() {
+    if(this.state.redirectSign !== false){
+      return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);
+    }
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
