@@ -28,6 +28,13 @@ const DefaultHeader = React.lazy(() => import('./DefaultHeader'));
 
 class DefaultLayout extends Component {
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      minimize : this.props.SidebarMinimize,
+    }
+  }
+
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   signOut(e) {
@@ -40,7 +47,14 @@ class DefaultLayout extends Component {
     this.props.saveDataUser({"_id_user" : "5d22f1193029609a8e3df3aa", "email_user" : "pdbdash@projectdb.live", "roles_user" : ['Admin'], "user_name" : "PDB-Dash"});
   }
 
+  componentDidUpdate(){
+    if(this.state.minimize !== this.props.SidebarMinimize){
+      this.setState({minimize : this.props.SidebarMinimize});
+    }
+  }
+
   render() {
+    console.log(this.props);
     return (
       <div className="app">
         <AppHeader fixed>
@@ -49,15 +63,28 @@ class DefaultLayout extends Component {
           </Suspense>
         </AppHeader>
         <div className="app-body">
-          <AppSidebar fixed display="lg" minimized="true">
-            <AppSidebarHeader />
-            <AppSidebarForm />
-            <Suspense>
-            <AppSidebarNav navConfig={navigation} {...this.props} router={router}/>
-            </Suspense>
-            <AppSidebarFooter />
-            <AppSidebarMinimizer />
-          </AppSidebar>
+          {console.log("console.log(this.state.minimize);", this.state.minimize)}
+          {this.state.minimize !== true ? (
+            <AppSidebar fixed display="lg" minimized={false}>
+              <AppSidebarHeader />
+              <AppSidebarForm />
+              <Suspense>
+              <AppSidebarNav navConfig={navigation} {...this.props} router={router}/>
+              </Suspense>
+              <AppSidebarFooter />
+              <AppSidebarMinimizer />
+            </AppSidebar>
+          ) : (
+            <AppSidebar fixed display="lg" minimized={true}>
+              <AppSidebarHeader />
+              <AppSidebarForm />
+              <Suspense>
+              <AppSidebarNav navConfig={navigation} {...this.props} router={router}/>
+              </Suspense>
+              <AppSidebarFooter />
+              <AppSidebarMinimizer />
+            </AppSidebar>
+          )}
           <main className="main">
             <AppBreadcrumb appRoutes={routes} router={router}/>
             <Container fluid>
@@ -75,7 +102,7 @@ class DefaultLayout extends Component {
                         )} />
                     ) : (null);
                   })}
-                  <Redirect from="/" to="/dashboard" />
+                  <Redirect from="/" to="/wh-dashboard" />
                 </Switch>
               </Suspense>
             </Container>
@@ -98,7 +125,8 @@ class DefaultLayout extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    dataLogin : state.loginData
+    dataLogin : state.loginData,
+    SidebarMinimize : state.minimizeSidebar
   }
 }
 

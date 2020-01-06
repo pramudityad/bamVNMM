@@ -6,7 +6,8 @@ const globalState = {
         "userName" : null,
         "email" : null,
         "_id" : null,
-    }
+    },
+    minimizeSidebar : false,
 }
 
 //reducer
@@ -20,6 +21,12 @@ const rootReducer = ( state = globalState, action) => {
                 "email" : action.data_user.email_user,
                 "_id" : action.data_user._id_user,
             }
+        }
+    }
+    if(action.type === ActionType.MINIMIZE_SIDEBAR){
+        return {
+            ...state,
+            minimizeSidebar : action.minimize_sidebar,
         }
     }
     return state;
