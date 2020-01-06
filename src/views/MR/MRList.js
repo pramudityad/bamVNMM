@@ -369,8 +369,8 @@ class MRList extends Component {
                         <td>{list.created_on}</td>
                       </tr>
                     )}
-                    <div style={{marginTop: "8px"}}><small>Showing 1 to 10 of {this.state.mr_all.length} entries</small></div>
                   </tbody>
+                  <div style={{marginTop: "8px"}}><small>Showing 1 to 10 of {this.state.mr_all.length} entries</small></div>
                 </Table>
                 <Pagination 
                   activePage={this.state.activePage}
