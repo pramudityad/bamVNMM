@@ -150,7 +150,7 @@ class MRDetail extends Component {
             this.getDatafromAPIBAM('/mr_md_sorted_nonpage?where={"id_mr_doc" : "'+_id_MR+'"}').then(resMD => {
               if(resMD.data !== undefined){
                 this.setState({mr_pp : resPP.data._items, mr_md : resMD.data._items }, () => {
-                  this.prepareView();
+                  // this.prepareView();
                 });
               }
             })
