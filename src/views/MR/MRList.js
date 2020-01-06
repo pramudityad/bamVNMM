@@ -203,7 +203,7 @@ class MRList extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2">Action</th>
+                      <th rowSpan="2" style={{verticalAlign : "middle"}}>Action</th>
                       <th>MR ID</th>
                       <th>Implementation ID</th>
                       <th>Project Name</th>
@@ -367,7 +367,7 @@ class MRList extends Component {
                       <tr key={list._id}>
                         <td>
                           <Link to={'/mr-detail/'+list._id}>
-                            <Button color="info" size="sm">Detail</Button>
+                            <Button outline color="info" size="sm">Detail</Button>
                           </Link>
                         </td>
                         <td>{list.mr_id}</td>
