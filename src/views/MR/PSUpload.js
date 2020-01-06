@@ -4,6 +4,7 @@ import { Form, FormGroup, Label } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
 import {connect} from 'react-redux';
+import { Link, Redirect } from 'react-router-dom';
 import Select from 'react-select';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
