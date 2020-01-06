@@ -37,10 +37,15 @@ const Users = React.lazy(() => import('./views/Users/Users'));
 const User = React.lazy(() => import('./views/Users/User'));
 
 const ProductPackage = React.lazy(() => import('./views/ProductPackage/PackageUpload'));
+const TssrList = React.lazy(() => import('./views/Tssr/TssrList'));
 const TssrBOM = React.lazy(() => import('./views/Tssr/TssrBOM'));
+const TssrBOMDetail = React.lazy(() => import('./views/Tssr/DetailTssr'));
 const MRList = React.lazy(() => import('./views/MR/MRList'));
+const MRNAList = React.lazy(() => import('./views/MR/MRNAList'));
+const MRCreation = React.lazy(() => import('./views/MR/MRCreation'));
+const MRDetail = React.lazy(() => import('./views/MR/MRDetail'));
+const PSUpload = React.lazy(() => import('./views/MR/PSUpload'));
 const MRProgress = React.lazy(() => import('./views/MR/MRProgress'));
-const MRCreation = React.lazy(() => import('./views/MR/MR_creation'));
 const WarehouseDashboard = React.lazy(() => import('./views/Warehouse/WarehouseDashboard'));
 const OrderReceived = React.lazy(() => import('./views/Warehouse/OrderReceived'));
 const OrderProcessing = React.lazy(() => import('./views/Warehouse/OrderProcessing'));
@@ -93,12 +98,17 @@ const routes = [
   { path: '/charts', name: 'Charts', component: Charts },
   { path: '/users', exact: true,  name: 'Users', component: Users },
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
-  
+
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
 
+  { path: '/tssr-list', exact: true, name: 'TSSR List', component: TssrList },
   { path: '/tssr-bom', exact: true, name: 'TSSR BOM', component: TssrBOM },
+  { path: '/tssr-bom/:id', name: 'TSSR BOM', component: TssrBOMDetail },
   { path: '/mr-list', exact: true, name: 'MR List', component: MRList },
+  { path: '/mr-na-list', exact: true, name: 'MR List', component: MRNAList },
   { path: '/mr-creation', exact: true, name: 'Create MR', component: MRCreation },
+  { path: '/mr-detail/:id', exact: true, name: 'Detail MR', component: MRDetail },
+  { path: '/ps-upload/:id', exact: true, name: 'MR List', component: PSUpload },
   { path: '/mr-progress', exact: true, name: 'MR Progress', component: MRProgress },
   { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WarehouseDashboard },
   { path: '/order-received', exact: true, name: 'Order Received', component: OrderReceived },
