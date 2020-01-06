@@ -48,6 +48,8 @@ const ReadyToDeliver = React.lazy(() => import('./views/Warehouse/ReadyToDeliver
 const JointCheck = React.lazy(() => import('./views/Warehouse/JointCheck'));
 const LoadingProcess = React.lazy(() => import('./views/Warehouse/LoadingProcess'));
 const MaterialDispatch = React.lazy(() => import('./views/Warehouse/MaterialDispatch'));
+const ProjectDashboard = React.lazy(() => import('./views/Project/ProjectDashboard'));
+const OrderCreated = React.lazy(() => import('./views/Project/OrderCreated'));
 
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
@@ -95,7 +97,6 @@ const routes = [
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
   
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
-
   { path: '/tssr-bom', exact: true, name: 'TSSR BOM', component: TssrBOM },
   { path: '/mr-list', exact: true, name: 'MR List', component: MRList },
   { path: '/mr-creation', exact: true, name: 'Create MR', component: MRCreation },
@@ -107,7 +108,8 @@ const routes = [
   { path: '/joint-check', exact: true, name: 'Joint Check', component: JointCheck },
   { path: '/loading-process', exact: true, name: 'Loading Process', component: LoadingProcess },
   { path: '/material-dispatch', exact: true, name: 'Material Dispatch', component: MaterialDispatch },
-
+  { path: '/project-dashboard', exact: true, name: 'Project Dashboard', component: ProjectDashboard },
+  { path: '/order-created', exact: true, name: 'Order Created', component: OrderCreated },
 ];
 
 export default routes;
