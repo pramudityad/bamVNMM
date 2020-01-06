@@ -194,7 +194,7 @@ class MRList extends Component {
             <Card>
               <CardHeader>
                 <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify"></i> MR List
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> MR List
                 </span>
                 <Link to={'/mr-creation'}><Button color="success" style={{float : 'right'}} size="sm">Create MR</Button></Link>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>

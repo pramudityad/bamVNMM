@@ -5,6 +5,7 @@ import Pagination from 'react-js-pagination';
 import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
+import { connect } from 'react-redux';
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -15,6 +16,10 @@ class OrderProcessing extends Component {
     super(props);
 
     this.state = {
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
       mr_list : [],
       prevPage : 0,
       activePage : 1,
@@ -166,12 +171,35 @@ class OrderProcessing extends Component {
   }
 
   async proceedMilestone(e) {
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
+    const dataMR = this.state.mr_list.find(e => e._id === _id);
+    let currStatus = [
+      {
+          "mr_status_name": "READY_TO_DELIVER",
+          "mr_status_value": "REQUESTED",
+          "mr_status_date": dateNow,
+          "mr_status_updater": this.state.userEmail,
+          "mr_status_updater_id": this.state.userId
+      }
+    ];
+    let currMilestones = [
+      {
+          "ms_name": "MS_READY_TO_DELIVER",
+          "ms_date": dateNow,
+          "ms_updater": this.state.userEmail,
+          "ms_updater_id": this.state.userId
+      }
+    ];
     let successUpdate = [];
-    let updateMilestone = {};
-    updateMilestone['current_milestones'] = "MS_READY_TO_DELIVER";
-    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMilestone, _etag);
+    let updateMR = {};
+    updateMR['current_milestones'] = "MS_READY_TO_DELIVER";
+    updateMR['current_mr_status'] = "RTD REQUESTED";
+    updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
+    updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
+    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
     if(res !== undefined) {
       if(res.data !== undefined) {
         successUpdate.push(res.data);
@@ -241,8 +269,7 @@ class OrderProcessing extends Component {
     }
 
     const downloadMR = {
-      float: 'right',
-      marginBottom: '16px'
+      float: 'right'
     }
 
     const tableWidth = {
@@ -257,7 +284,7 @@ class OrderProcessing extends Component {
             <Card>
               <CardHeader>
                 <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify"></i> Order Processing
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Order Processing
                 </span>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
               </CardHeader>
@@ -472,4 +499,10 @@ class OrderProcessing extends Component {
   }
 }
 
-export default OrderProcessing;
+const mapStateToProps = (state) => {
+  return {
+    dataLogin : state.loginData
+  }
+}
+
+export default connect(mapStateToProps)(OrderProcessing);
