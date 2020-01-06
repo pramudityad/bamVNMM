@@ -263,7 +263,7 @@ class PSUpload extends Component {
             }
         ],
         "mr_milestones" : [],
-        "current_mr_status" : "IMPLEMENTED",
+        "current_mr_status" : "PLANTSPEC ASSIGNED",
         "current_milestones" : "",
         "created_by" : this.state.userId,
         "updated_by" : this.state.userId
@@ -272,13 +272,6 @@ class PSUpload extends Component {
         {
             "mr_status_name": "PLANTSPEC",
             "mr_status_value": "PLANTSPEC ASSIGNED",
-            "mr_status_date": dateNow,
-            "mr_status_updater": this.state.userEmail,
-            "mr_status_updater_id": null
-        },
-        {
-            "mr_status_name": "Implemented",
-            "mr_status_value": "Implemented",
             "mr_status_date": dateNow,
             "mr_status_updater": this.state.userEmail,
             "mr_status_updater_id": null

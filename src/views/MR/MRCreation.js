@@ -202,13 +202,20 @@ class MRCreation extends Component {
         "site_info" : [],
         "mr_milestones" : [],
         "mr_status" : [
-            {
-              "mr_status_name": "PLANTSPEC",
-              "mr_status_value": "NOT ASSIGNED",
+          {
+              "mr_status_name": "IMPLEMENTED",
+              "mr_status_value": "IMPLEMENTED",
               "mr_status_date": dateNow,
               "mr_status_updater": this.state.userEmail,
-              "mr_status_updater_id": this.state.userId,
-            }
+              "mr_status_updater_id": null
+          },
+          {
+            "mr_status_name": "PLANTSPEC",
+            "mr_status_value": "NOT ASSIGNED",
+            "mr_status_date": dateNow,
+            "mr_status_updater": this.state.userEmail,
+            "mr_status_updater_id": this.state.userId,
+          }
         ],
         "current_mr_status" : "PLANTSPEC NOT ASSIGNED",
         "current_milestones" : "",
