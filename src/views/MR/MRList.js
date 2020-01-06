@@ -386,7 +386,6 @@ class MRList extends Component {
                         <td>{list.created_on}</td>
                       </tr>
                     )}
-                    <div style={{marginTop: "8px"}}><small>Showing 1 to 10 of {this.state.mr_all.length} entries</small></div>
                   </tbody>
                 </Table>
                 <Pagination
@@ -398,6 +397,7 @@ class MRList extends Component {
                   itemClass="page-item"
                   linkClass="page-link"
                 />
+                <div style={{marginTop: "8px"}}><small>Showing 1 to 10 of {this.state.mr_all.length} entries</small></div>
               </CardBody>
             </Card>
           </Col>
