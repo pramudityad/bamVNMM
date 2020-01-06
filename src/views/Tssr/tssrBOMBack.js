@@ -7,7 +7,6 @@ import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
-import { Link, Redirect } from 'react-router-dom';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -68,7 +67,6 @@ class TssrBOM extends Component {
         waiting_status : null,
         action_status : null,
         action_message : null,
-        redirectSign : false,
     };
     this.saveTssrBOMParent = this.saveTssrBOMParent.bind(this);
   }
@@ -480,7 +478,7 @@ class TssrBOM extends Component {
     console.log("tssr sites op", JSON.stringify(bulkTssrSites))
     const respondSaveTSSRSites = await this.postDatatoAPIBAM('/tssr_sites_op', bulkTssrSites);
     if(respondSaveTSSRSites.data !== undefined && respondSaveTSSRSites.status >= 200 && respondSaveTSSRSites.status <= 300 ){
-      if(bulkTssrSites.length === 1){
+      if(respondSaveTSSRSites.length === 1){
         this.saveTSSRBOMSitesItem(_id_tssr_parent, no_tssr_boq, _etag_tssr_parent, [respondSaveTSSRSites.data], bulkTssrSites);
       }else{
         this.saveTSSRBOMSitesItem(_id_tssr_parent, no_tssr_boq, _etag_tssr_parent, respondSaveTSSRSites.data._items, bulkTssrSites);
@@ -513,9 +511,9 @@ class TssrBOM extends Component {
     console.log("tssr sites item op", JSON.stringify(tssrSitesItem))
     const respondSaveTSSRSitesItem = await this.postDatatoAPIBAM('/tssr_site_items_op', tssrSitesItem);
     if(respondSaveTSSRSitesItem.data !== undefined && respondSaveTSSRSitesItem.status >= 200 && respondSaveTSSRSitesItem.status <= 300 ){
-      this.setState({ action_status : 'success' }, () => {
-        setTimeout(function(){ this.setState({ redirectSign : _id_tssr_parent}); }.bind(this), 3000);
-      });
+      console.log("Success");
+      this.setState({ action_status : 'success' });
+      // this.saveTSSRBOMSites(respondSaveTSSR.data._id, tssrData.no_tssr_boq, respondSaveTSSR.data._etag);.
     }else{
       this.setState({ action_status : 'failed' });
       this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
@@ -523,9 +521,6 @@ class TssrBOM extends Component {
   }
 
   render() {
-    if(this.state.redirectSign !== false){
-      return (<Redirect to={'/tssr-bom/'+this.state.redirectSign} />);
-    }
     console.log("Excel Render", this.state.rowsXLS);
     return (
       <div>
@@ -542,24 +537,65 @@ class TssrBOM extends Component {
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>
-                  <td colSpan="4" style={{textAlign : 'center'}}>TSSR BOM PREVIEW</td>
+                  <td colSpan="4" style={{textAlign : 'center'}}>TSSR BOM DETAIL</td>
+                </tr>
+                <tr>
+                  <td colSpan="4" style={{fontSize : '15px', textAlign : 'center'}}>TSSR ID : TSSR BOM DUMMY</td>
                 </tr>
               </tbody>
             </table>
             <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
-            <Table hover bordered responsive size="sm">
-              <tbody>
-              {this.state.rowsXLS.length !== 0 ? (
-                this.state.rowsXLS.map( row =>
-                  <tr>
-                    {row.map( col =>
-                      <td>{col}</td>
-                    )}
-                  </tr>
-                )
-              ) : ""}
-            </tbody>
-          </Table>
+            <React.Fragment>
+              <table style={{width : '35%'}} className="table-header">
+                <tbody>
+                    <tr>
+                      <td>Project Identifier</td>
+                      <td>:</td>
+                      <td style={{paddingLeft:'10px'}}>PROJECT DUMMY</td>
+                    </tr>
+                    <tr>
+                      <td>Site ID</td>
+                      <td>:</td>
+                      <td style={{paddingLeft:'10px'}}>DUMMY-1</td>
+                    </tr>
+                    <tr>
+                      <td>Site Name</td>
+                      <td>:</td>
+                      <td style={{paddingLeft:'10px'}}>SITE DUMMY 01</td>
+                    </tr>
+                </tbody>
+              </table>
+              <hr className="upload-line-ordering"></hr>
+              <div class='divtable2'>
+                <Table hover bordered striped responsive size="sm" className="table-site-detail" class='fixed'>
+                  <thead>
+                    <tr>
+                      <th class="fixedhead" style={{width : '200px'}}>PP / Material Code</th>
+                      <th class="fixedhead">Material Name</th>
+                      <th class="fixedhead" style={{width : '75px'}}>Unit</th>
+                      <th class="fixedhead" style={{width : '100px'}}>Total Qty / PP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <React.Fragment>
+                      <tr style={{backgroundColor : '#f8f6df'}} class="fixbody">
+                        <td colSpan="3" style={{fontWeight : '500', textAlign : 'left', paddingLeft : '5px'}}>PP DUMMY 1</td>
+                        <td align='center'> 0 </td>
+                      </tr>
+                      <tr class="fixbody">
+                        <td class="dataregsite" style={{textAlign : 'left'}}>MAT DUMMY 1</td>
+                        <td class="dataregsite" style={{textAlign : 'left'}}>MAT DUMMY 1</td>
+                        <td class="dataregsite" style={{textAlign : 'center'}}>PC</td>
+                        <td class="dataregsite" style={{textAlign : 'center'}}>0</td>
+                      </tr>
+                      <tr class="fixbody">
+                        <td colSpan='4' class="dataregsite"></td>
+                      </tr>
+                    </React.Fragment>
+                  </tbody>
+                </Table>
+              </div>
+            </React.Fragment>
           </CardBody>
         </Card>
         </Col>

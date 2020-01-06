@@ -1,5 +1,10 @@
-tssrsiteitemsschema = {
-    'id_tssr_boq_doc' : {
+tssrsiteitemsversionschema = {
+    'id_document' : {
+        'type': 'objectid',
+        'required': True,
+        'nullable': False
+    },
+    'id_tssr_boq' : {
         'type': 'objectid',
         'required': True,
         'nullable': True,
@@ -8,9 +13,9 @@ tssrsiteitemsschema = {
     'no_tssr_boq' : {
         'type': 'string',
         'required': True,
-        'nullable': False,
+        'nullable': False
     },
-    'id_tssr_boq_site_doc' : {
+    'id_tssr_boq_site' : {
         'type': 'objectid',
         'required': True,
         'nullable': True,
@@ -19,7 +24,7 @@ tssrsiteitemsschema = {
     'no_tssr_boq_site' : {
         'type': 'string',
         'required': True,
-        'nullable': False,
+        'nullable': False
     },
     'id_pp_doc' : {
         'type': 'objectid',
@@ -30,7 +35,7 @@ tssrsiteitemsschema = {
     'pp_id' : {
         'type': 'string',
         'required': True,
-        'nullable': False,
+        'nullable': False
     },
     'id_po_doc' : {
         'type': 'objectid',
@@ -47,42 +52,42 @@ tssrsiteitemsschema = {
     'pp_group' : {
         'type': 'string',
         'required': True,
-        'nullable': True,
+        'nullable': True
     },
     'pp_cust_number' : {
         'type': 'string',
         'required': True,
-        'nullable': True,
+        'nullable': True
     },
     'product_name' : {
         'type': 'string',
         'required': True,
-        'nullable': False,
+        'nullable': False
     },
     'physical_group' : {
         'type': 'string',
         'required': True,
-        'nullable': True,
+        'nullable': True
     },
     'product_type' : {
         'type': 'string',
         'required': True,
-        'nullable': False,
+        'nullable': False
     },
     'uom' : {
         'type': 'string',
         'required': True,
-        'nullable': True,
+        'nullable': True
     },
     'qty' : {
         'type': 'float',
         'required': True,
-        'nullable': False,
+        'nullable': False
     },
     'version' : {
         'type': 'string',
         'required': False,
-        'nullable': True,
+        'nullable': True
     },
     'deleted' : {
         'type': 'integer',
@@ -94,20 +99,21 @@ tssrsiteitemsschema = {
         'type': 'datetime',
         'required': True,
         'nullable': False,
+        'unique': False
     },
     'created_by' : {
         'type': 'objectid',
         'required': True,
-        'nullable': False,
+        'nullable': False
     },
     'updated_on' : {
         'type': 'datetime',
         'required': True,
-        'nullable': False,
+        'nullable': False
     },
     'updated_by' : {
         'type': 'objectid',
         'required': True,
-        'nullable': False,
+        'nullable': False
     }
 }

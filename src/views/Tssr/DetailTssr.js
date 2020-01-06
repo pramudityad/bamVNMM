@@ -7,7 +7,6 @@ import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
-import { Link, Redirect } from 'react-router-dom';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -52,7 +51,7 @@ Array.prototype.equals = function (array) {
 // Hide method from for-in loops
 Object.defineProperty(Array.prototype, "equals", {enumerable: false});
 
-class TssrBOM extends Component {
+class DetailTssr extends Component {
   constructor(props) {
     super(props);
 
@@ -62,15 +61,24 @@ class TssrBOM extends Component {
         userName : this.props.dataLogin.userName,
         userEmail : this.props.dataLogin.email,
         rowsXLS : [],
+        data_tssr : [],
+        data_tssr_sites : [],
+        data_tssr_sites_item : [],
+        list_pp_material_tssr : [],
+        list_project : [],
+        project_selected : null,
         project_name_selected : null,
+        tssr_site_FE : null,
+        tssr_site_NE : null,
         cd_id_selected : null,
         dataTssrUpload : [],
         waiting_status : null,
         action_status : null,
         action_message : null,
-        redirectSign : false,
     };
     this.saveTssrBOMParent = this.saveTssrBOMParent.bind(this);
+    this.handleChangeProject = this.handleChangeProject.bind(this);
+    this.saveProjecttoDB = this.saveProjecttoDB.bind(this);
   }
 
     async getDatafromAPIBMS(url){
@@ -375,10 +383,6 @@ class TssrBOM extends Component {
       return SitesOfTSSRNew;
   }
 
-  // getDataSites(){
-  //   const respondSite = this.getDataFromAPI('/site_non_page?where')
-  // }
-
   async getAllPP(array_PP, array_PP_sepcial){
     let dataPP = [];
     let arrayDataPP = array_PP;
@@ -407,6 +411,80 @@ class TssrBOM extends Component {
       }
     }
     return dataPP;
+  }
+
+  getDataTssr(_id_tssr){
+    this.getDatafromAPIBAM('/tssr_op/'+_id_tssr).then( resTssr => {
+      if(resTssr.data !== undefined){
+        this.setState({ data_tssr : resTssr.data });
+        if(resTssr.data.project_name === null || resTssr.data.project_name === "" ){
+          this.getDataProject();
+        }
+        this.getDatafromAPIBAM('/tssr_sites_sorted_nonpage?where={"id_tssr_boq_doc" : "'+_id_tssr+'"}').then( resSites => {
+          if(resSites.data !== undefined){
+            this.getDatafromAPIBAM('/tssr_site_items_sorted_nonpage?where={"id_tssr_boq_doc" : "'+_id_tssr+'"}').then( resItem => {
+              if(resItem.data !== undefined){
+                const itemsTssr = resItem.data._items;
+                const itemUniq = [...new Set(itemsTssr.map(({ id_pp_doc}) => id_pp_doc))];
+                this.setState({ data_tssr_sites : resSites.data._items, data_tssr_sites_item : resItem.data._items }, () => {
+                  this.getPPandMaterial(itemUniq);
+                  this.prepareView();
+                });
+              }
+            })
+          }
+        })
+      }
+    })
+  }
+
+  async getPPandMaterial(array_id_package){
+    let dataPP = [];
+    let arrayDataPP = array_id_package;
+    let getNumberPage = Math.ceil(arrayDataPP.length / 25);
+    for(let i = 0 ; i < getNumberPage; i++){
+        let dataPaginationPP = arrayDataPP.slice(i * 25, (i+1)*25);
+        let arrayIdPP = '"'+dataPaginationPP.join('", "')+'"';
+        let where_id_PP = '?where={"_id" : {"$in" : ['+arrayIdPP+']}}';
+        let resPP = await this.getDatafromAPIBMS('/pp_non_page'+where_id_PP+'&'+'embedded={"list_of_id_material" : 1}');
+        if(resPP !== undefined){
+            if(resPP.data !== undefined){
+              // eslint-disable-next-line
+              dataPP = dataPP.concat(resPP.data._items);
+            }
+        }
+    }
+    this.setState({list_pp_material_tssr : dataPP});
+  }
+
+  prepareView(){
+    let site_NE = this.state.data_tssr_sites.find(e => e.site_title === "NE");
+    let site_FE = this.state.data_tssr_sites.find(e => e.site_title === "FE");
+    console.log("site_NE", site_NE);
+    if(site_NE !== undefined){
+      site_NE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_NE._id);
+      this.setState({tssr_site_NE : site_NE});
+    }else{
+      this.setState({tssr_site_NE : null})
+    }
+    if(site_FE !== undefined){
+      site_FE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_FE._id);
+      this.setState({tssr_site_FE : site_FE});
+    }else{
+      this.setState({tssr_site_FE : null})
+    }
+  }
+
+  getDataProject(){
+    this.getDatafromAPIBMS('/project_non_page').then( resProject => {
+      if(resProject.data !== undefined){
+        this.setState({ list_project : resProject.data._items })
+      }
+    })
+  }
+
+  componentDidMount(){
+    this.getDataTssr(this.props.match.params.id);
   }
 
   preparingDataTSSR(){
@@ -448,8 +526,6 @@ class TssrBOM extends Component {
     const respondSaveTSSR = await this.postDatatoAPIBAM('/tssr_op', tssrData);
     if(respondSaveTSSR.data !== undefined && respondSaveTSSR.status >= 200 && respondSaveTSSR.status <= 300 ){
       this.saveTSSRBOMSites(respondSaveTSSR.data._id, tssrData.no_tssr_boq, respondSaveTSSR.data._etag);
-    }else{
-      this.setState({ action_status : 'failed' });
     }
   }
 
@@ -480,13 +556,12 @@ class TssrBOM extends Component {
     console.log("tssr sites op", JSON.stringify(bulkTssrSites))
     const respondSaveTSSRSites = await this.postDatatoAPIBAM('/tssr_sites_op', bulkTssrSites);
     if(respondSaveTSSRSites.data !== undefined && respondSaveTSSRSites.status >= 200 && respondSaveTSSRSites.status <= 300 ){
-      if(bulkTssrSites.length === 1){
+      if(respondSaveTSSRSites.length === 1){
         this.saveTSSRBOMSitesItem(_id_tssr_parent, no_tssr_boq, _etag_tssr_parent, [respondSaveTSSRSites.data], bulkTssrSites);
       }else{
         this.saveTSSRBOMSitesItem(_id_tssr_parent, no_tssr_boq, _etag_tssr_parent, respondSaveTSSRSites.data._items, bulkTssrSites);
       }
     }else{
-      this.setState({ action_status : 'failed' });
       this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
     }
   }
@@ -513,56 +588,205 @@ class TssrBOM extends Component {
     console.log("tssr sites item op", JSON.stringify(tssrSitesItem))
     const respondSaveTSSRSitesItem = await this.postDatatoAPIBAM('/tssr_site_items_op', tssrSitesItem);
     if(respondSaveTSSRSitesItem.data !== undefined && respondSaveTSSRSitesItem.status >= 200 && respondSaveTSSRSitesItem.status <= 300 ){
-      this.setState({ action_status : 'success' }, () => {
-        setTimeout(function(){ this.setState({ redirectSign : _id_tssr_parent}); }.bind(this), 3000);
-      });
+      console.log("Success");
+      // this.saveTSSRBOMSites(respondSaveTSSR.data._id, tssrData.no_tssr_boq, respondSaveTSSR.data._etag);.
     }else{
-      this.setState({ action_status : 'failed' });
       this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
     }
   }
 
-  render() {
-    if(this.state.redirectSign !== false){
-      return (<Redirect to={'/tssr-bom/'+this.state.redirectSign} />);
+  getQtyTssrPPNE(pp_id){
+    const itemTssrBom = this.state.tssr_site_NE.list_of_site_items;
+    const getDataPPTssr = itemTssrBom.find(e => e.pp_id === pp_id);
+    if(getDataPPTssr !== undefined){
+      return getDataPPTssr.qty;
+    }else{
+      return 0;
     }
+  }
+
+  getQtyTssrPPFE(pp_id){
+    const itemTssrBom = this.state.tssr_site_FE.list_of_site_items;
+    const getDataPPTssr = itemTssrBom.find(e => e.pp_id === pp_id);
+    if(getDataPPTssr !== undefined){
+      return getDataPPTssr.qty;
+    }else{
+      return 0;
+    }
+  }
+
+  handleChangeProject(e){
+    const value = e.target.value;
+    const index = e.target.selectedIndex;
+    const text = e.target[index].text;
+    this.setState({project_selected : value, project_name_selected : text});
+  }
+
+  saveProjecttoDB(){
+    let dataTssr = this.state.data_tssr;
+    const _id_project = this.state.project_selected;
+    const name_project = this.state.project_name_selected;
+    const dataProject  = {
+      "id_project_doc" : _id_project,
+      "project_name" : name_project
+    }
+    this.patchDatatoAPIBAM('/tssr_op/'+dataTssr._id, dataProject, dataTssr._etag).then( resProject => {
+      if(resProject.data !== undefined && resProject.status >= 200 && resProject.status <= 300 ){
+        dataTssr["id_project_doc"] = _id_project;
+        dataTssr["project_name"] = name_project;
+        this.setState({ action_status : 'success', data_tssr : dataTssr });
+      }else{
+        this.setState({ action_status : 'failed'});
+      }
+    })
+  }
+
+  render() {
     console.log("Excel Render", this.state.rowsXLS);
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
         <Row>
-        <Col xl="12">
-        <Card>
-          <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}} >TSSR BOM </span>
-          </CardHeader>
-          <CardBody className='card-UploadBoq'>
-            <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
-            <Button color="success" onClick={this.saveTssrBOMParent} style={{float : 'right'}} >Save</Button>
-            <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
-              <tbody>
-                <tr>
-                  <td colSpan="4" style={{textAlign : 'center'}}>TSSR BOM PREVIEW</td>
-                </tr>
-              </tbody>
-            </table>
-            <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
-            <Table hover bordered responsive size="sm">
-              <tbody>
-              {this.state.rowsXLS.length !== 0 ? (
-                this.state.rowsXLS.map( row =>
+          <Col xl="12">
+          <Card>
+            <CardHeader>
+              <span style={{lineHeight :'2', fontSize : '17px'}} >Detail TSSR</span>
+            </CardHeader>
+            <CardBody>
+            {this.state.data_tssr !== null ?
+              this.state.data_tssr.project_name === "" || this.state.data_tssr.project_name === null ? (
+                <table style={{marginBottom : '20px'}}>
+                  <tbody>
+                    <tr>
+                      <td style={{paddingTop : '10px', width : '150px'}}>
+                        Project Name
+                      </td>
+                      <td style={{paddingTop : '10px', paddingRight : '10px'}}>
+                        :
+                      </td>
+                      <td>
+                        <Input style={{marginTop : '10px'}} name="project" type="select" onChange={this.handleChangeProject} value={this.state.project_selected}>
+                          <option value={null}></option>
+                          {this.state.list_project.map( project =>
+                            <option value={project._id}>{project.project_name}</option>
+                          )}
+                        </Input>
+                      </td>
+                      <td style={{paddingTop : '10px', paddingLeft : '20px'}}>
+                        <Button color="success" size="sm" onClick={this.saveProjecttoDB}>Save</Button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              ) : (<Fragment></Fragment>) : (<Fragment></Fragment>)}
+              <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
+                <tbody>
                   <tr>
-                    {row.map( col =>
-                      <td>{col}</td>
-                    )}
+                    <td colSpan="4" style={{textAlign : 'center', color : 'rgba(59,134,134,1)', fontSize : '21px'}}>TSSR BOM DETAIL</td>
                   </tr>
-                )
-              ) : ""}
-            </tbody>
-          </Table>
-          </CardBody>
-        </Card>
-        </Col>
+                  {this.state.data_tssr !== null && (
+                    <Fragment>
+                    <tr>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>TSSR ID : {this.state.data_tssr.no_tssr_boq}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Project Name : {this.state.data_tssr.project_name}</td>
+                    </tr>
+                    </Fragment>
+                  )}
+                </tbody>
+              </table>
+              <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
+              <Fragment>
+              <Row>
+              {this.state.tssr_site_NE !== null && (
+                <Fragment>
+                  <Col md="4">
+                  <table className="table-header">
+                    <tbody>
+                        <tr>
+                          <td>Site ID NE</td>
+                          <td>: &nbsp;</td>
+                          <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_id}</td>
+                        </tr>
+                        <tr>
+                          <td>Site Name NE</td>
+                          <td>:</td>
+                          <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_id}</td>
+                        </tr>
+                    </tbody>
+                  </table>
+                  </Col>
+                  {this.state.tssr_site_FE !== null ? (
+                    <Col md="4">
+                    <table className="table-header">
+                      <tbody>
+                        <tr>
+                          <td>Site ID FE</td>
+                          <td>: &nbsp;</td>
+                          <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_id}</td>
+                        </tr>
+                        <tr>
+                          <td>Site Name FE</td>
+                          <td>:</td>
+                          <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_id}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    </Col>
+                  ) : (<Fragment></Fragment>)}
+                </Fragment>
+              )}
+              </Row>
+                <hr className="upload-line-ordering"></hr>
+                <div className='divtable2'>
+                  <Table hover bordered striped responsive size="sm">
+                    <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
+                      <tr>
+                        <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
+                        <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
+                        <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
+                        <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
+                      </tr>
+                      <tr>
+                        <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
+                        {this.state.data_tssr_sites[1] !== undefined ? (
+                          <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
+                        ):(<Fragment></Fragment>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {this.state.list_pp_material_tssr.map( pp =>
+                        <Fragment>
+                          <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                            <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
+                            <td>{pp.name}</td>
+                            <td>{pp.unit}</td>
+                            <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)}</td>
+                            {this.state.tssr_site_FE !== null ? (
+                              <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)}</td>
+                            ):(<Fragment></Fragment>)}
+                          </tr>
+                          {pp.list_of_id_material.map(material =>
+                            <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                              <td style={{textAlign : 'right'}}>{material.material_id}</td>
+                              <td style={{textAlign : 'left'}}>{material.material_name}</td>
+                              <td>{material.material_unit}</td>
+                              <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)*material.material_qty}</td>
+                              {this.state.tssr_site_FE !== null ? (
+                                <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)*material.material_qty}</td>
+                              ):(<Fragment></Fragment>)}
+                            </tr>
+                          )}
+                        </Fragment>
+                      )}
+                    </tbody>
+                  </Table>
+                </div>
+              </Fragment>
+            </CardBody>
+          </Card>
+          </Col>
         </Row>
         {/* Modal Loading */}
         <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className}>
@@ -595,4 +819,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(TssrBOM);
+export default connect(mapStateToProps)(DetailTssr);

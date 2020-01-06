@@ -64,7 +64,7 @@ class Navs extends Component {
           <CardBody>
             <Nav tabs>
               <NavItem>
-                <NavLink href="#" active>Link</NavLink>
+                <NavLink href="#" active={true}>Link</NavLink>
               </NavItem>
               <Dropdown nav isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggle(0);}}>
                 <DropdownToggle nav caret>

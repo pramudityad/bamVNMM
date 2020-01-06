@@ -299,6 +299,7 @@ class PackageUpload extends React.Component {
           console.log(err);
         }
         else{
+          console.log("excel render", JSON.stringify(rest.rows));
           this.setState({
             rowsXLS: rest.rows
           }, ()=> {

@@ -22,14 +22,12 @@ mrschema = {
         'type': 'string',
         'required': False,
         'nullable': True,
-        'unique': False,
         'default': None
     },
     'mr_type' : {
         'type': 'string',
         'required': False,
         'nullable': True,
-        'unique': False,
         'default': None
     },
     'id_tssr_doc' : {
@@ -63,6 +61,12 @@ mrschema = {
         'required': False,
         'nullable': True,
     },
+    'asp_company' : {
+        'type': 'string',
+        'required': False,
+        'nullable': True,
+        'default': None
+    },
     'dsp_company' : {
         'type': 'string',
         'required': False,
@@ -77,6 +81,21 @@ mrschema = {
         'schema' : {
             'type' : 'dict',
             'schema' : {
+                'id_tssr_boq_site_doc' : {
+                    'type': 'objectid',
+                    'required': True,
+                    'nullable': True,
+                },
+                'no_tssr_boq_site' : {
+                    'type': 'string',
+                    'required': True,
+                    'nullable': True,
+                },
+                'tssr_version' : {
+                    'type': 'string',
+                    'required': True,
+                    'nullable': True
+                },
                 'id_site_doc' : {
                     'type': 'objectid',
                     'required': True,
@@ -87,7 +106,7 @@ mrschema = {
                     'required': True,
                     'nullable': False,
                 },
-                'site_as' : {
+                'site_title' : {
                     'type': 'string',
                     'required': True,
                     'nullable': False,

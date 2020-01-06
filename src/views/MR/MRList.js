@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
 import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
 import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
+import {connect} from 'react-redux';
+import ActionType from '../../redux/reducer/globalActionType';
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -70,7 +73,7 @@ class MRList extends Component {
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    this.getDataFromAPI('/mr_op?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
+    this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
       if(res.data !== undefined) {
         const items = res.data._items;
@@ -139,8 +142,13 @@ class MRList extends Component {
   }
 
   componentDidMount() {
+    this.props.SidebarMinimizer(true);
     this.getMRList();
     this.getAllMR();
+  }
+
+  componentWillUnmount(){
+    this.props.SidebarMinimizer(false);
   }
 
   handlePageChange(pageNumber) {
@@ -172,7 +180,7 @@ class MRList extends Component {
   render() {
     const downloadMR = {
       float: 'right',
-      marginBottom: '16px'
+      marginRight: '10px'
     }
 
     const tableWidth = {
@@ -185,13 +193,17 @@ class MRList extends Component {
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                <i className="fa fa-align-justify"></i> MR List
+                <span style={{lineHeight :'2'}}>
+                  <i className="fa fa-align-justify"></i> MR List
+                </span>
+                <Link to={'/mr-creation'}><Button color="success" style={{float : 'right'}} size="sm">Create MR</Button></Link>
+                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
               </CardHeader>
               <CardBody>
-                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
-                <Table responsive striped bordered size="sm"> 
+                <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
+                      <th rowSpan="2" style={{verticalAlign : "middle"}}>Action</th>
                       <th>MR ID</th>
                       <th>Implementation ID</th>
                       <th>Project Name</th>
@@ -351,8 +363,13 @@ class MRList extends Component {
                     </tr>
                   </thead>
                   <tbody>
-                    {this.state.mr_list.map((list, i) => 
+                    {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
+                        <td>
+                          <Link to={'/mr-detail/'+list._id}>
+                            <Button outline color="info" size="sm">Detail</Button>
+                          </Link>
+                        </td>
                         <td>{list.mr_id}</td>
                         <td>{list.implementation_id}</td>
                         <td>{list.project_name}</td>
@@ -372,7 +389,7 @@ class MRList extends Component {
                     <div style={{marginTop: "8px"}}><small>Showing 1 to 10 of {this.state.mr_all.length} entries</small></div>
                   </tbody>
                 </Table>
-                <Pagination 
+                <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
                   totalItemsCount={this.state.totalData.total}
@@ -390,4 +407,17 @@ class MRList extends Component {
   }
 }
 
-export default MRList;
+const mapStateToProps = (state) => {
+  return {
+    dataLogin : state.loginData,
+    SidebarMinimize : state.minimizeSidebar
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    SidebarMinimizer : (minimize) => dispatch({type : ActionType.MINIMIZE_SIDEBAR, minimize_sidebar : minimize }),
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(MRList);

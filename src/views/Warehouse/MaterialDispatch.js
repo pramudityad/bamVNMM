@@ -70,7 +70,7 @@ class MaterialDispatch extends Component {
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_MATERIAL_DISPATCH", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    this.getDataFromAPI('/mr_op?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
+    this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
       if(res.data !== undefined) {
         const items = res.data._items;
@@ -185,11 +185,13 @@ class MaterialDispatch extends Component {
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                <i className="fa fa-align-justify"></i> Material Dispatch
+                <span style={{lineHeight :'2'}}>
+                  <i className="fa fa-align-justify"></i> Material Dispatch
+                </span>
+                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
               </CardHeader>
               <CardBody>
-                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
-                <Table responsive striped bordered size="sm"> 
+                <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
                       <th rowSpan="2" style={{verticalAlign: "middle"}}>Action</th>
@@ -357,7 +359,7 @@ class MaterialDispatch extends Component {
                         <td colSpan="15">No Data Available</td>
                       </tr>
                     )}
-                    {this.state.mr_list.map((list, i) => 
+                    {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
                         <td><Button outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Proceed</Button></td>
                         <td>{list.mr_id}</td>
@@ -378,7 +380,7 @@ class MaterialDispatch extends Component {
                     )}
                   </tbody>
                 </Table>
-                <Pagination 
+                <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
                   totalItemsCount={this.state.totalData.total}
