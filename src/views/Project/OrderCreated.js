@@ -10,7 +10,7 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
-class MRList extends Component {
+class OrderCreated extends Component {
   constructor(props) {
     super(props);
 
@@ -21,7 +21,9 @@ class MRList extends Component {
       totalData : 0,
       perPage : 10,
       filter_list : new Array(14).fill(""),
-      mr_all : []
+      mr_all : [],
+      action_status : null,
+      action_message : ""
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -29,6 +31,7 @@ class MRList extends Component {
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
+    this.proceedMilestone = this.proceedMilestone.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -69,7 +72,7 @@ class MRList extends Component {
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_mr_status": "REQUESTED", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_op?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
       if(res.data !== undefined) {
@@ -96,7 +99,7 @@ class MRList extends Component {
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_RECEIVED", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
       console.log("MR List All", res);
       if(res.data !== undefined) {
@@ -135,7 +138,49 @@ class MRList extends Component {
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'MR List.xlsx');
+    saveAs(new Blob([allocexport]), 'Order Received.xlsx');
+  }
+
+  async patchDataToAPI(url, data, _etag) {
+    try {
+      let respond = await axios.patch(API_URL+url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'If-Match': _etag
+        },
+        auth: {
+          username: username,
+          password: password
+        }
+      })
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log('respond patch data', respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = undefined;
+      this.setState({action_status: 'failed', action_message: 'Sorry, there is something wrong, please try again!'});
+      console.log('respond patch data', err);
+      return respond;
+    }
+  }
+
+  async proceedMilestone(e) {
+    const _etag = e.target.value;
+    const _id = e.target.id;
+    let successUpdate = [];
+    let updateMilestone = {};
+    updateMilestone['current_milestones'] = "MS_ORDER_RECEIVED";
+    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMilestone, _etag);
+    if(res !== undefined) {
+      if(res.data !== undefined) {
+        successUpdate.push(res.data);
+      }
+    }
+    if(successUpdate.length !== 0){
+      this.setState({action_status : "success"});
+      setTimeout(function(){ window.location.reload(); }, 2000);
+    }
   }
 
   componentDidMount() {
@@ -170,6 +215,31 @@ class MRList extends Component {
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
+    function AlertProcess(props){
+      const alert = props.alertAct;
+      const message = props.messageAct;
+      if(alert === 'failed'){
+        return (
+          <div className="alert alert-danger" role="alert">
+            {message.length !== 0 ? message : 'Sorry, there was an error when we tried to save it, please reload your page and try again'}
+          </div>
+        )
+      } else{
+        if(alert === 'success'){
+          return (
+            <div className="alert alert-success" role="alert">
+              {message}
+              Your action was success, please reload your page
+            </div>
+          )
+        } else{
+          return (
+            <div></div>
+          )
+        }
+      }
+    }
+
     const downloadMR = {
       float: 'right',
       marginBottom: '16px'
@@ -181,17 +251,19 @@ class MRList extends Component {
 
     return (
       <div className="animated fadeIn">
+        <AlertProcess alertAct={this.state.action_status} messageAct={this.state.action_message}/>
         <Row>
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                <i className="fa fa-align-justify"></i> MR List
+                <i className="fa fa-align-justify"></i> Order Received
               </CardHeader>
               <CardBody>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
                 <Table responsive striped bordered size="sm"> 
                   <thead>
                     <tr>
+                      <th rowSpan="2" style={{verticalAlign: "middle"}}>Action</th>
                       <th>MR ID</th>
                       <th>Implementation ID</th>
                       <th>Project Name</th>
@@ -351,8 +423,14 @@ class MRList extends Component {
                     </tr>
                   </thead>
                   <tbody>
+                    {this.state.mr_list.length === 0 && (
+                      <tr>
+                        <td colSpan="15">No Data Available</td>
+                      </tr>
+                    )}
                     {this.state.mr_list.map((list, i) => 
                       <tr key={list._id}>
+                        <td><Button outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Proceed</Button></td>
                         <td>{list.mr_id}</td>
                         <td>{list.implementation_id}</td>
                         <td>{list.project_name}</td>
@@ -369,7 +447,6 @@ class MRList extends Component {
                         <td>{list.created_on}</td>
                       </tr>
                     )}
-                    <div style={{marginTop: "8px"}}><small>Showing 1 to 10 of {this.state.mr_all.length} entries</small></div>
                   </tbody>
                 </Table>
                 <Pagination 
@@ -390,4 +467,4 @@ class MRList extends Component {
   }
 }
 
-export default MRList;
+export default OrderCreated;
