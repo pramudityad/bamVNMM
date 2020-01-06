@@ -3,7 +3,7 @@ import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input } from 'reac
 import { Form, FormGroup, Label } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
 import Select from 'react-select';
 
@@ -272,10 +272,10 @@ class PSUpload extends Component {
       let currStatus = [
         {
             "mr_status_name": "PLANTSPEC",
-            "mr_status_value": "PLANTSPEC ASSIGNED",
+            "mr_status_value": "ASSIGNED",
             "mr_status_date": dateNow,
             "mr_status_updater": this.state.userEmail,
-            "mr_status_updater_id": null
+            "mr_status_updater_id": this.state.userId
         }
       ];
       mr_data["mr_status"] = dataMRParent.mr_status.concat(currStatus);

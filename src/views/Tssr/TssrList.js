@@ -121,7 +121,7 @@ class TssrList extends Component {
             <Card>
               <CardHeader>
                 <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify"></i> MR List
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> TSSR List
                 </span>
                 <Link to={'/tssr-bom'}><Button color="success" style={{float : 'right'}} size="sm">Create TSSR</Button></Link>
               </CardHeader>
@@ -143,7 +143,7 @@ class TssrList extends Component {
                         <td></td>
                         <td>
                           <Link to={'/tssr-bom/'+list._id}>
-                            <Button color="info">Detail</Button>
+                            <Button color="info" size="sm" outline>Detail</Button>
                           </Link>
                         </td>
                       </tr>

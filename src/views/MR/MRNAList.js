@@ -194,7 +194,7 @@ class MRNAList extends Component {
             <Card>
               <CardHeader>
                 <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify"></i> MR List
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> MR List
                 </span>
                 <Link to={'/mr-creation'}><Button color="success" style={{float : 'right'}} size="sm">Create MR</Button></Link>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
@@ -203,7 +203,7 @@ class MRNAList extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2">Action</th>
+                      <th rowSpan="2" style={{verticalAlign : "middle"}}>Action</th>
                       <th>MR ID</th>
                       <th>Implementation ID</th>
                       <th>Project Name</th>
@@ -323,7 +323,7 @@ class MRNAList extends Component {
                       <tr key={list._id}>
                         <td>
                           <Link to={'/ps-upload/'+list._id}>
-                            <Button color="info" size="sm">Detail</Button>
+                            <Button color="info" size="sm" outline>Detail</Button>
                           </Link>
                         </td>
                         <td>{list.mr_id}</td>
