@@ -387,7 +387,6 @@ class MRList extends Component {
                       </tr>
                     )}
                   </tbody>
-                  <div style={{marginTop: "8px"}}><small>Showing 1 to 10 of {this.state.mr_all.length} entries</small></div>
                 </Table>
                 <Pagination
                   activePage={this.state.activePage}
@@ -398,6 +397,7 @@ class MRList extends Component {
                   itemClass="page-item"
                   linkClass="page-link"
                 />
+                <div style={{marginTop: "8px"}}><small>Showing 1 to 10 of {this.state.mr_all.length} entries</small></div>
               </CardBody>
             </Card>
           </Col>
