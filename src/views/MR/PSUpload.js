@@ -21,11 +21,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
 
-<<<<<<< HEAD:src/views/MR/MRCreation.js
-class MRCreation extends Component {
-=======
 class PSUpload extends Component {
->>>>>>> ahmad-dev:src/views/MR/PSUpload.js
   constructor(props) {
     super(props);
 
@@ -463,13 +459,8 @@ class PSUpload extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-<<<<<<< HEAD:src/views/MR/MRCreation.js
-            <span style={{lineHeight :'2', fontSize : '17px'}} >MR Creation </span>
-            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.saveMRtoAPI}><i className="fa fa-edit" style={{marginRight: "8px"}}></i>Create MR</Button>
-=======
             <span style={{lineHeight :'2', fontSize : '17px'}} >Assign PS</span>
             <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.saveMRtoAPI}>Assign</Button>
->>>>>>> ahmad-dev:src/views/MR/PSUpload.js
           </CardHeader>
           <CardBody>
             <table>
@@ -638,8 +629,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-<<<<<<< HEAD:src/views/MR/MRCreation.js
-export default connect(mapStateToProps)(MRCreation);
-=======
 export default connect(mapStateToProps)(PSUpload);
->>>>>>> ahmad-dev:src/views/MR/PSUpload.js

@@ -46,10 +46,6 @@ const MRCreation = React.lazy(() => import('./views/MR/MRCreation'));
 const MRDetail = React.lazy(() => import('./views/MR/MRDetail'));
 const PSUpload = React.lazy(() => import('./views/MR/PSUpload'));
 const MRProgress = React.lazy(() => import('./views/MR/MRProgress'));
-<<<<<<< HEAD
-const MRCreation = React.lazy(() => import('./views/MR/MRCreation'));
-=======
->>>>>>> ahmad-dev
 const WarehouseDashboard = React.lazy(() => import('./views/Warehouse/WarehouseDashboard'));
 const OrderReceived = React.lazy(() => import('./views/Warehouse/OrderReceived'));
 const OrderProcessing = React.lazy(() => import('./views/Warehouse/OrderProcessing'));
@@ -106,11 +102,7 @@ const routes = [
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
 
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
-<<<<<<< HEAD
-=======
-
   { path: '/tssr-list', exact: true, name: 'TSSR List', component: TssrList },
->>>>>>> ahmad-dev
   { path: '/tssr-bom', exact: true, name: 'TSSR BOM', component: TssrBOM },
   { path: '/tssr-bom/:id', name: 'TSSR BOM', component: TssrBOMDetail },
   { path: '/mr-list', exact: true, name: 'MR List', component: MRList },
