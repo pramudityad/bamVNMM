@@ -171,8 +171,7 @@ class MaterialDispatch extends Component {
 
   render() {
     const downloadMR = {
-      float: 'right',
-      marginBottom: '16px'
+      float: 'right'
     }
 
     const tableWidth = {
@@ -186,7 +185,7 @@ class MaterialDispatch extends Component {
             <Card>
               <CardHeader>
                 <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify"></i> Material Dispatch
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Material Dispatch
                 </span>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
               </CardHeader>
@@ -194,7 +193,7 @@ class MaterialDispatch extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2" style={{verticalAlign: "middle"}}>Action</th>
+                      <th rowSpan="2" style={{verticalAlign: "middle", display: "none"}}>Action</th>
                       <th>MR ID</th>
                       <th>Implementation ID</th>
                       <th>Project Name</th>
@@ -361,7 +360,7 @@ class MaterialDispatch extends Component {
                     )}
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
-                        <td><Button outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Proceed</Button></td>
+                        <td style={{display: "none"}}><Button outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Proceed</Button></td>
                         <td>{list.mr_id}</td>
                         <td>{list.implementation_id}</td>
                         <td>{list.project_name}</td>

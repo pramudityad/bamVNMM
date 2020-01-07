@@ -207,7 +207,7 @@ class MRCreation extends Component {
               "mr_status_value": "IMPLEMENTED",
               "mr_status_date": dateNow,
               "mr_status_updater": this.state.userEmail,
-              "mr_status_updater_id": null
+              "mr_status_updater_id": this.state.userId
           },
           {
             "mr_status_name": "PLANTSPEC",

@@ -194,7 +194,7 @@ class MRList extends Component {
             <Card>
               <CardHeader>
                 <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify"></i> MR List
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> MR List
                 </span>
                 <Link to={'/mr-creation'}><Button color="success" style={{float : 'right'}} size="sm">Create MR</Button></Link>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
@@ -386,7 +386,6 @@ class MRList extends Component {
                         <td>{list.created_on}</td>
                       </tr>
                     )}
-                    <div style={{marginTop: "8px"}}><small>Showing 1 to 10 of {this.state.mr_all.length} entries</small></div>
                   </tbody>
                 </Table>
                 <Pagination
@@ -398,6 +397,7 @@ class MRList extends Component {
                   itemClass="page-item"
                   linkClass="page-link"
                 />
+                <div style={{marginTop: "8px"}}><small>Showing 1 to 10 of {this.state.mr_all.length} entries</small></div>
               </CardBody>
             </Card>
           </Col>

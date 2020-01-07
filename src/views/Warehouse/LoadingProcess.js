@@ -5,6 +5,7 @@ import Pagination from 'react-js-pagination';
 import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
+import { connect } from 'react-redux';
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -15,6 +16,10 @@ class LoadingProcess extends Component {
     super(props);
 
     this.state = {
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
       mr_list : [],
       prevPage : 0,
       activePage : 1,
@@ -166,12 +171,35 @@ class LoadingProcess extends Component {
   }
 
   async proceedMilestone(e) {
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
+    const dataMR = this.state.mr_list.find(e => e._id === _id);
+    let currStatus = [
+      {
+          "mr_status_name": "MATERIAL_DISPATCH",
+          "mr_status_value": "FINISHED",
+          "mr_status_date": dateNow,
+          "mr_status_updater": this.state.userEmail,
+          "mr_status_updater_id": this.state.userId
+      }
+    ];
+    let currMilestones = [
+      {
+          "ms_name": "MS_MATERIAL_DISPATCH",
+          "ms_date": dateNow,
+          "ms_updater": this.state.userEmail,
+          "ms_updater_id": this.state.userId
+      }
+    ];
     let successUpdate = [];
-    let updateMilestone = {};
-    updateMilestone['current_milestones'] = "MS_MATERIAL_DISPATCH";
-    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMilestone, _etag);
+    let updateMR = {};
+    updateMR['current_milestones'] = "MS_MATERIAL_DISPATCH";
+    updateMR['current_mr_status'] = "MATERIAL DISPATCH FINISHED";
+    updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
+    updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
+    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
     if(res !== undefined) {
       if(res.data !== undefined) {
         successUpdate.push(res.data);
@@ -241,8 +269,7 @@ class LoadingProcess extends Component {
     }
 
     const downloadMR = {
-      float: 'right',
-      marginBottom: '16px'
+      float: 'right'
     }
 
     const tableWidth = {
@@ -257,7 +284,7 @@ class LoadingProcess extends Component {
             <Card>
               <CardHeader>
                 <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify"></i> Loading Process
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Loading Process
                 </span>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
               </CardHeader>
@@ -469,4 +496,10 @@ class LoadingProcess extends Component {
   }
 }
 
-export default LoadingProcess;
+const mapStateToProps = (state) => {
+  return {
+    dataLogin : state.loginData
+  }
+}
+
+export default connect(mapStateToProps)(LoadingProcess);

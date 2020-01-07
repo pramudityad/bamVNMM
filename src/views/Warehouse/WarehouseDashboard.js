@@ -181,7 +181,7 @@ class WarehouseDashboard extends Component {
   }
 
   getLoadingProcess() {
-    this.getDataFromAPI('/mr_sorted_nonpage?where={"current_milestones":"MS_LOADNIG_PROCESS"}').then(res => {
+    this.getDataFromAPI('/mr_sorted_nonpage?where={"current_milestones":"MS_LOADING_PROCESS"}').then(res => {
       console.log("Loading Process", res);
       if(res.data !== undefined) {
         const items = res.data._items;
