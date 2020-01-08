@@ -6,7 +6,7 @@ import Pagination from 'react-js-pagination';
 import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 import ActionType from '../../redux/reducer/globalActionType';
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';

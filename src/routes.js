@@ -56,7 +56,7 @@ const MaterialDispatch = React.lazy(() => import('./views/Warehouse/MaterialDisp
 const ProjectDashboard = React.lazy(() => import('./views/Project/ProjectDashboard'));
 const OrderCreated = React.lazy(() => import('./views/Project/OrderCreated'));
 const LOMList = React.lazy(() => import('./views/MR/LOMList'));
-
+const AssignmentCreation = React.lazy(() => import('./views/Assignment/AssignmentCreation'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -122,6 +122,7 @@ const routes = [
   { path: '/project-dashboard', exact: true, name: 'Project Dashboard', component: ProjectDashboard },
   { path: '/order-created', exact: true, name: 'Order Created', component: OrderCreated },
   { path: '/lom-list', exact: true, name: 'LOM List', component: LOMList },
+  { path: '/assignment-creation', exact: true, name: 'Assignment Creation', component: AssignmentCreation },
 ];
 
 export default routes;
