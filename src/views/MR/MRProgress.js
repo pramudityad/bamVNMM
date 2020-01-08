@@ -62,6 +62,7 @@ class MRProgress extends Component {
 
   componentDidMount() {
     this.getMRList();
+    document.title = 'MR Progress | BAM';
   }
 
   handlePageChange(pageNumber) {

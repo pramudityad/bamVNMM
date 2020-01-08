@@ -99,7 +99,7 @@ class MRNAList extends Component {
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"current_mr_status" : "PLANTSPEC NOT ASSIGNED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"current_mr_status" : "PLANTSPEC NOT ASSIGNED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
       console.log("MR List All", res);
       if(res.data !== undefined) {
@@ -145,6 +145,7 @@ class MRNAList extends Component {
     this.props.SidebarMinimizer(true);
     this.getMRList();
     this.getAllMR();
+    document.title = 'MR PS Not Assigned | BAM';
   }
 
   componentWillUnmount(){

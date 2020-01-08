@@ -445,6 +445,7 @@ class MRDetail extends Component {
 
   componentDidMount(){
     this.getDataMR(this.props.match.params.id);
+    document.title = 'MR Detail | BAM';
   }
 
   render() {

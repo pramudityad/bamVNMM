@@ -16,6 +16,10 @@ class ProjectDashboard extends Component {
     }
   }
 
+  componentDidMount() {
+    document.title = 'Project Dashboard | BAM';
+  }
+
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {

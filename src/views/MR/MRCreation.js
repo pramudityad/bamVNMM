@@ -3,7 +3,7 @@ import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input } from 'reac
 import { Form, FormGroup, Label, FormText } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
 import Select from 'react-select';
 
@@ -232,6 +232,7 @@ class MRCreation extends Component {
 
   componentDidMount(){
     this.getDataProject();
+    document.title = "MR Creation | BAM"
   }
 
   handleChangeProject(e){
@@ -252,7 +253,7 @@ class MRCreation extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}} >MR Creation </span>
+            <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-edit" style={{marginRight: "8px"}}></i>MR Creation </span>
             <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.saveMRtoAPI}>Create MR</Button>
           </CardHeader>
           <CardBody>

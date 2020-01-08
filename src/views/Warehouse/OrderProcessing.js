@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
 import debounce from 'lodash.debounce';
@@ -37,6 +38,7 @@ class OrderProcessing extends Component {
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
     this.proceedMilestone = this.proceedMilestone.bind(this);
+    this.notComplete = this.notComplete.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -77,7 +79,7 @@ class OrderProcessing extends Component {
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_PROCESSING", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_PROCESSING", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
       if(res.data !== undefined) {
@@ -104,7 +106,7 @@ class OrderProcessing extends Component {
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_PROCESSING", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_PROCESSING", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
       console.log("MR List All", res);
       if(res.data !== undefined) {
@@ -211,9 +213,51 @@ class OrderProcessing extends Component {
     }
   }
 
+  async notComplete(e) {
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    const _etag = e.target.value;
+    const _id = e.target.id;
+    const dataMR = this.state.mr_list.find(e => e._id === _id);
+    let currStatus = [
+      {
+          "mr_status_name": "LACK_OF_MATERIAL",
+          "mr_status_value": "YES",
+          "mr_status_date": dateNow,
+          "mr_status_updater": this.state.userEmail,
+          "mr_status_updater_id": this.state.userId
+      }
+    ];
+    let currMilestones = [
+      {
+          "ms_name": null,
+          "ms_date": dateNow,
+          "ms_updater": this.state.userEmail,
+          "ms_updater_id": this.state.userId
+      }
+    ];
+    let successUpdate = [];
+    let updateMR = {};
+    updateMR['current_milestones'] = null;
+    updateMR['current_mr_status'] = "LACK OF MATERIAL";
+    updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
+    updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
+    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
+    if(res !== undefined) {
+      if(res.data !== undefined) {
+        successUpdate.push(res.data);
+      }
+    }
+    if(successUpdate.length !== 0){
+      this.setState({action_status : "success"});
+      setTimeout(function(){ window.location.reload(); }, 2000);
+    }
+  }
+
   componentDidMount() {
     this.getMRList();
     this.getAllMR();
+    document.title = 'Order Processing | BAM';
   }
 
   handlePageChange(pageNumber) {
@@ -461,9 +505,9 @@ class OrderProcessing extends Component {
                       <tr key={list._id}>
                         <td>
                           <Button outline color="success" size="sm" className="btn-pill" style={{width: "120px", marginBottom: "4px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-check" style={{marginRight: "8px"}}></i>Complete</Button>
-                          <Button outline color="danger" size="sm" className="btn-pill" style={{width: "120px"}}><i className="fa fa-times" style={{marginRight: "8px"}}></i>Not Complete</Button>
+                          <Button outline color="danger" size="sm" className="btn-pill" style={{width: "120px"}} id={list._id} value={list._etag} onClick={this.notComplete}><i className="fa fa-times" style={{marginRight: "8px"}}></i>Not Complete</Button>
                         </td>
-                        <td>{list.mr_id}</td>
+                        <td><Link to={'/mr-detail/'+list._id}>{list.mr_id}</Link></td>
                         <td>{list.implementation_id}</td>
                         <td>{list.project_name}</td>
                         <td>{list.cd_id}</td>
