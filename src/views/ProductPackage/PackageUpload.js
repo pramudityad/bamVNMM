@@ -299,6 +299,7 @@ class PackageUpload extends React.Component {
           console.log(err);
         }
         else{
+          console.log("excel render", JSON.stringify(rest.rows));
           this.setState({
             rowsXLS: rest.rows
           }, ()=> {
@@ -687,6 +688,7 @@ class PackageUpload extends React.Component {
     this.getPackageDataAPI();
     this.getProjectAll();
     this.getAllPP();
+    document.title = 'Product Package | BAM';
   }
 
   handleChangeChecklist(e){

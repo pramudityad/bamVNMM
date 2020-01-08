@@ -53,7 +53,7 @@ class Widget extends Component {
     }
 
     return (
-      <Card className={classes} {...attributes} style={{height:"195px"}}>
+      <Card className={classes} {...attributes}>
         <CardBody>
           <Row>
             <Col lg="3">

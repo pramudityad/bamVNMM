@@ -8,6 +8,9 @@ from userpoolschema import userpoolschema
 from tssrschema import tssrschema
 from tssrsitesschema import tssrsitesschema
 from tssrsiteitemsschema import tssrsiteitemsschema
+from tssrversionschema import tssrversionschema
+from tssrsitesversionschema import tssrsitesversionschema
+from tssrsiteitemsversionschema import tssrsiteitemsversionschema
 
 
 # Mongo Config
@@ -70,6 +73,9 @@ mr_op = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'mr_data',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         }
@@ -85,6 +91,9 @@ mr_sorted = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'mr_data',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -101,6 +110,9 @@ mr_sorted_nonpage = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'mr_data',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -119,6 +131,9 @@ mr_md_op = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'mr_material_detail',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         }
@@ -134,6 +149,9 @@ mr_md_sorted = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'mr_material_detail',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -150,6 +168,9 @@ mr_md_sorted_nonpage = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'mr_material_detail',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -168,6 +189,9 @@ mr_pp_op = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'mr_product_package',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         }
@@ -183,6 +207,9 @@ mr_pp_sorted = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'mr_product_package',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -199,6 +226,9 @@ mr_pp_sorted_nonpage = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'mr_product_package',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -232,6 +262,9 @@ dsp_tracking_op = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'dsp_tracking',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         }
@@ -247,6 +280,9 @@ dsp_tracking_sorted = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'dsp_tracking',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -263,6 +299,9 @@ dsp_tracking_sorted_nonpage = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'dsp_tracking',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -409,6 +448,9 @@ tssr_op = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'tssr_data',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         }
@@ -424,6 +466,9 @@ tssr_sorted = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'tssr_data',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -440,6 +485,9 @@ tssr_sorted_nonpage = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'tssr_data',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -458,6 +506,9 @@ tssr_sites_op = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'tssr_sites',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         }
@@ -473,6 +524,9 @@ tssr_sites_sorted = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'tssr_sites',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -489,6 +543,9 @@ tssr_sites_sorted_nonpage = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'tssr_sites',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -507,6 +564,9 @@ tssr_site_items_op = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'tssr_site_items',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         }
@@ -522,6 +582,9 @@ tssr_site_items_sorted = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'tssr_site_items',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -538,6 +601,9 @@ tssr_site_items_sorted_nonpage = {
     'cache_expires': 10,
     'datasource' : {
 		'source' : 'tssr_site_items',
+        'filter' : {
+            'deleted' : 0
+        },
         'projection' : {
             'deleted' : 0
         },
@@ -549,6 +615,153 @@ tssr_site_items_sorted_nonpage = {
     'pagination' : False,
 	'hateoas' : False,
     'schema' : tssrsiteitemsschema
+}
+
+tssr_version_op = {    
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'tssr_data_versions',
+        'filter' : {
+            'deleted' : 0
+        }
+	},
+    'resource_methods': ['POST', 'GET'],
+    'item_methods': ['PATCH', 'GET'],
+	'versioning' : False,
+    'schema' : tssrversionschema
+}
+
+tssr_version_sorted = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'tssr_data_versions',
+        'filter' : {
+            'deleted' : 0
+        },
+        'default_sort': [('_id', -1)],
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+	'versioning' : False,
+    'schema' : tssrversionschema
+}
+
+tssr_version_sorted_nonpage = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'tssr_data_versions',
+        'filter' : {
+            'deleted' : 0
+        },
+        'default_sort': [('_id', -1)]
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+    'versioning' : False,
+    'pagination' : False,
+	'hateoas' : False,
+    'schema' : tssrversionschema,
+}
+
+tssr_sites_version_op = {    
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'tssr_sites_versions',
+        'filter' : {
+            'deleted' : 0
+        }
+	},
+    'resource_methods': ['POST', 'GET'],
+    'item_methods': ['PATCH', 'GET'],
+	'versioning' : False,
+    'schema' : tssrsitesversionschema
+}
+
+tssr_sites_version_sorted = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'tssr_sites_versions',
+        'filter' : {
+            'deleted' : 0
+        },
+        'default_sort': [('_id', -1)],
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+	'versioning' : False,
+    'schema' : tssrsitesversionschema
+}
+
+tssr_sites_version_sorted_nonpage = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'tssr_sites_versions',
+        'filter' : {
+            'deleted' : 0
+        },
+        'default_sort': [('_id', -1)]
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+    'versioning' : False,
+    'pagination' : False,
+	'hateoas' : False,
+    'schema' : tssrsitesversionschema,
+}
+
+tssr_site_items_version_op = {    
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'tssr_site_items_versions',
+        'filter' : {
+            'deleted' : 0
+        }
+	},
+    'resource_methods': ['POST', 'GET'],
+    'item_methods': ['PATCH', 'GET'],
+	'versioning' : False,
+    'schema' : tssrsiteitemsversionschema
+}
+
+tssr_site_items_version_sorted = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'tssr_site_items_versions',
+        'filter' : {
+            'deleted' : 0
+        },
+        'default_sort': [('_id', -1)],
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+	'versioning' : False,
+    'schema' : tssrsiteitemsversionschema
+}
+
+tssr_site_items_version_sorted_nonpage = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'tssr_site_items_versions',
+        'filter' : {
+            'deleted' : 0
+        },
+        'default_sort': [('_id', -1)]
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+    'versioning' : False,
+    'pagination' : False,
+	'hateoas' : False,
+    'schema' : tssrsiteitemsversionschema,
 }
 
 
@@ -580,5 +793,14 @@ DOMAIN = {
     'tssr_sites_sorted_nonpage': tssr_sites_sorted_nonpage,
     'tssr_site_items_op': tssr_site_items_op,
     'tssr_site_items_sorted': tssr_site_items_sorted,
-    'tssr_site_items_sorted_nonpage': tssr_site_items_sorted_nonpage
+    'tssr_site_items_sorted_nonpage': tssr_site_items_sorted_nonpage,
+    'tssr_version_op': tssr_version_op,
+    'tssr_version_sorted': tssr_version_sorted,
+    'tssr_version_sorted_nonpage': tssr_version_sorted_nonpage,
+    'tssr_sites_version_op': tssr_sites_version_op,
+    'tssr_sites_version_sorted': tssr_sites_version_sorted,
+    'tssr_sites_version_sorted_nonpage': tssr_sites_version_sorted_nonpage,
+    'tssr_site_items_version_op': tssr_site_items_version_op,
+    'tssr_site_items_version_sorted': tssr_site_items_version_sorted,
+    'tssr_site_items_version_sorted_nonpage': tssr_site_items_version_sorted_nonpage,
 }

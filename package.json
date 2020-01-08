@@ -40,6 +40,7 @@
     "react-router-dom": "^5.0.1",
     "react-select": "^3.0.8",
     "react-test-renderer": "^16.8.6",
+    "react-vertical-timeline-component": "^2.5.0",
     "reactstrap": "^8.0.0",
     "redux": "^4.0.4",
     "simple-line-icons": "^2.4.1"
