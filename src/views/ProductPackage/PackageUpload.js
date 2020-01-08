@@ -688,6 +688,7 @@ class PackageUpload extends React.Component {
     this.getPackageDataAPI();
     this.getProjectAll();
     this.getAllPP();
+    document.title = 'Product Package | BAM';
   }
 
   handleChangeChecklist(e){

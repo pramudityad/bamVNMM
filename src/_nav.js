@@ -1,7 +1,7 @@
 export default {
   items: [
     {
-      name: 'Warehouse Dashboard',
+      name: 'WH Dashboard',
       url: '/wh-dashboard',
       icon: 'icon-drawer',
     },
@@ -26,6 +26,11 @@ export default {
       icon: 'icon-drawer',
     },
     {
+      name: 'Order Created',
+      url: '/order-created',
+      icon: 'icon-drawer',
+    },
+    {
       name: 'Order Received',
       url: '/order-received',
       icon: 'icon-drawer',
@@ -44,6 +49,10 @@ export default {
       name: 'Joint Check',
       url: '/joint-check',
       icon: 'icon-drawer',
+      badge: {
+        variant: 'danger',
+        text: '1'
+      }
     },
     {
       name: 'Loading Process',
@@ -53,6 +62,11 @@ export default {
     {
       name: 'Material Dispatch',
       url: '/material-dispatch',
+      icon: 'icon-drawer',
+    },
+    {
+      name: 'LOM List',
+      url: '/lom-list',
       icon: 'icon-drawer',
     },
   ],

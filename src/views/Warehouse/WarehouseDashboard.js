@@ -118,6 +118,7 @@ class WarehouseDashboard extends Component {
     this.getJointCheck();
     this.getLoadingProcess();
     this.getMaterialDispatch();
+    document.title = 'Warehouse Dashboard | BAM';
   }
 
   async getDataFromAPI(url) {
