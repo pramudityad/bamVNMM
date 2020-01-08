@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { Badge, UncontrolledDropdown, DropdownItem, DropdownMenu, DropdownToggle, Nav, NavItem } from 'reactstrap';
 import PropTypes from 'prop-types';
 import './font-awesome-animation.min.css';
+import axios from 'axios';
 
 import { AppAsideToggler, AppNavbarBrand, AppSidebarToggler } from '@coreui/react';
 import logo from '../../assets/img/brand/logo.svg'
@@ -14,7 +15,56 @@ const propTypes = {
 
 const defaultProps = {};
 
+const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
+const username = 'bamidadmin@e-dpm.com';
+const password = 'F760qbAg2sml';
+
 class DefaultHeader extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      order_created : []
+    }
+
+    this.getOrderCreated = this.getOrderCreated.bind(this);
+  }
+
+  async getDataFromAPI(url) {
+    try {
+      let respond = await axios.get(API_URL+url, {
+        headers: {'Content-Type':'application/json'},
+        auth: {
+          username: username,
+          password: password
+        }
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  getOrderCreated() {
+    let whereAnd = '{"current_mr_status": "MR REQUESTED"}';
+    this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
+      console.log("Order Created", res);
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({order_created : items});
+      }
+    })
+  }
+
+  componentDidMount() {
+    this.getOrderCreated();
+  }
+
   render() {
 
     // eslint-disable-next-line
@@ -41,9 +91,19 @@ class DefaultHeader extends Component {
           </NavItem>
         </Nav>
         <Nav className="ml-auto" navbar>
-          <NavItem className="d-md-down-none">
-            <NavLink to="#" className="nav-link"><i className="fa fa-envelope faa-ring animated"></i><Badge pill color="danger">5</Badge></NavLink>
-          </NavItem>
+          <UncontrolledDropdown nav direction="down">
+            <DropdownToggle nav>
+              <i className={this.state.order_created.length === 0 ? "fa fa-envelope" : "fa fa-envelope faa-ring animated"}></i>{this.state.order_created.length !== 0 && (<Badge pill color="danger">{this.state.order_created.length}</Badge>)}
+            </DropdownToggle>
+            <DropdownMenu right>
+              <DropdownItem header tag="div" className="text-center"><strong>Order Created</strong></DropdownItem>
+              {
+                this.state.order_created.length === 0 ?
+                (<DropdownItem><center><i className="fa fa-check" style={{color:"green"}}></i>No Order Created</center></DropdownItem>) : 
+                this.state.order_created.map((list, i) => <Link to={'/order-created'}><DropdownItem><i className="fa fa-exclamation" style={{color:"red"}}></i>{list.mr_id} - {list.project_name}</DropdownItem></Link>)
+              }
+            </DropdownMenu>
+          </UncontrolledDropdown>
           <NavItem className="d-md-down-none">
             <NavLink to="#" className="nav-link"><i className="fa fa-warning"></i></NavLink>
           </NavItem>

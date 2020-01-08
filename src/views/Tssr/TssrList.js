@@ -72,6 +72,7 @@ class TssrList extends Component {
 
   componentDidMount() {
     this.getTssrList();
+    document.title = 'TSSR List | BAM';
   }
 
   componentWillUnmount(){

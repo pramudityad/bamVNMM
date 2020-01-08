@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
 import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
 import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
+import { connect } from 'react-redux';
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -15,6 +17,10 @@ class OrderCreated extends Component {
     super(props);
 
     this.state = {
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
       mr_list : [],
       prevPage : 0,
       activePage : 1,
@@ -32,6 +38,7 @@ class OrderCreated extends Component {
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
     this.proceedMilestone = this.proceedMilestone.bind(this);
+    this.rejectMR = this.rejectMR.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -72,7 +79,7 @@ class OrderCreated extends Component {
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_mr_status": "REQUESTED", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": "MR REQUESTED", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_op?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
       if(res.data !== undefined) {
@@ -99,7 +106,7 @@ class OrderCreated extends Component {
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_RECEIVED", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": "MR REQUESTED", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
       console.log("MR List All", res);
       if(res.data !== undefined) {
@@ -138,7 +145,7 @@ class OrderCreated extends Component {
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Order Received.xlsx');
+    saveAs(new Blob([allocexport]), 'Order Created.xlsx');
   }
 
   async patchDataToAPI(url, data, _etag) {
@@ -166,12 +173,67 @@ class OrderCreated extends Component {
   }
 
   async proceedMilestone(e) {
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
+    const dataMR = this.state.mr_list.find(e => e._id === _id);
+    let currStatus = [
+      {
+          "mr_status_name": "MATERIAL_REQUEST",
+          "mr_status_value": "APPROVED",
+          "mr_status_date": dateNow,
+          "mr_status_updater": this.state.userEmail,
+          "mr_status_updater_id": this.state.userId
+      }
+    ];
+    let currMilestones = [
+      {
+          "ms_name": "MS_ORDER_RECEIVED",
+          "ms_date": dateNow,
+          "ms_updater": this.state.userEmail,
+          "ms_updater_id": this.state.userId
+      }
+    ];
     let successUpdate = [];
-    let updateMilestone = {};
-    updateMilestone['current_milestones'] = "MS_ORDER_RECEIVED";
-    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMilestone, _etag);
+    let updateMR = {};
+    updateMR['current_milestones'] = "MS_ORDER_RECEIVED";
+    updateMR['current_mr_status'] = "MR APPROVED";
+    updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
+    updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
+    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
+    if(res !== undefined) {
+      if(res.data !== undefined) {
+        successUpdate.push(res.data);
+      }
+    }
+    if(successUpdate.length !== 0){
+      this.setState({action_status : "success"});
+      setTimeout(function(){ window.location.reload(); }, 2000);
+    }
+  }
+
+  async rejectMR(e) {
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    const _etag = e.target.value;
+    const _id = e.target.id;
+    const dataMR = this.state.mr_list.find(e => e._id === _id);
+    let currStatus = [
+      {
+          "mr_status_name": "MATERIAL_REQUEST",
+          "mr_status_value": "REJECTED",
+          "mr_status_date": dateNow,
+          "mr_status_updater": this.state.userEmail,
+          "mr_status_updater_id": this.state.userId
+      }
+    ];
+    let successUpdate = [];
+    let updateMR = {};
+    updateMR['current_milestones'] = null;
+    updateMR['current_mr_status'] = "MR CANCELED";
+    updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
+    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
     if(res !== undefined) {
       if(res.data !== undefined) {
         successUpdate.push(res.data);
@@ -186,6 +248,7 @@ class OrderCreated extends Component {
   componentDidMount() {
     this.getMRList();
     this.getAllMR();
+    document.title = 'Order Created | BAM';
   }
 
   handlePageChange(pageNumber) {
@@ -224,7 +287,7 @@ class OrderCreated extends Component {
             {message.length !== 0 ? message : 'Sorry, there was an error when we tried to save it, please reload your page and try again'}
           </div>
         )
-      } else{
+      } else {
         if(alert === 'success'){
           return (
             <div className="alert alert-success" role="alert">
@@ -232,7 +295,7 @@ class OrderCreated extends Component {
               Your action was success, please reload your page
             </div>
           )
-        } else{
+        } else {
           return (
             <div></div>
           )
@@ -241,8 +304,7 @@ class OrderCreated extends Component {
     }
 
     const downloadMR = {
-      float: 'right',
-      marginBottom: '16px'
+      float: 'right'
     }
 
     const tableWidth = {
@@ -256,10 +318,12 @@ class OrderCreated extends Component {
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                <i className="fa fa-align-justify"></i> Order Received
+                <span style={{lineHeight :'2'}}>
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Order Created
+                </span>
+                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
               </CardHeader>
               <CardBody>
-                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
                 <Table responsive striped bordered size="sm"> 
                   <thead>
                     <tr>
@@ -430,8 +494,11 @@ class OrderCreated extends Component {
                     )}
                     {this.state.mr_list.map((list, i) => 
                       <tr key={list._id}>
-                        <td><Button outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Proceed</Button></td>
-                        <td>{list.mr_id}</td>
+                        <td>
+                          <Button outline color="success" size="sm" className="btn-pill" style={{width: "90px", marginBottom: "4px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-check" style={{marginRight: "8px"}}></i>Approve</Button>
+                          <Button outline color="danger" size="sm" className="btn-pill" style={{width: "90px"}} id={list._id} value={list._etag} onClick={this.rejectMR}><i className="fa fa-times" style={{marginRight: "8px"}}></i>Reject</Button>
+                        </td>
+                        <td><Link to={'/mr-detail/'+list._id}>{list.mr_id}</Link></td>
                         <td>{list.implementation_id}</td>
                         <td>{list.project_name}</td>
                         <td>{list.cd_id}</td>
@@ -467,4 +534,10 @@ class OrderCreated extends Component {
   }
 }
 
-export default OrderCreated;
+const mapStateToProps = (state) => {
+  return {
+    dataLogin : state.loginData
+  }
+}
+
+export default connect(mapStateToProps)(OrderCreated);
