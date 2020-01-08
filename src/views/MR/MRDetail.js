@@ -150,7 +150,7 @@ class MRDetail extends Component {
             this.getDatafromAPIBAM('/mr_md_sorted_nonpage?where={"id_mr_doc" : "'+_id_MR+'"}').then(resMD => {
               if(resMD.data !== undefined){
                 this.setState({mr_pp : resPP.data._items, mr_md : resMD.data._items }, () => {
-                  // this.prepareView();
+                  this.prepareView();
                 });
               }
             })
@@ -174,7 +174,7 @@ class MRDetail extends Component {
     if(site_NE !== undefined){
       let data_pp_NE = data_pp.filter(e => e.site_id === site_NE.site_id);
       for(let i = 0; i < data_pp_NE.length; i++){
-        data_pp_NE[i]["mr_md"] = data_md.filter(e => e.id_mr_pp_doc === data_pp_NE._id );
+        data_pp_NE[i]["mr_md"] = data_md.filter(e => e.id_mr_pp_doc === data_pp_NE[i]._id && e.site_id === site_NE.site_id);
       }
       site_NE["mr_pp"] = data_pp_NE;
       this.setState({ mr_site_NE : site_NE });
@@ -182,7 +182,7 @@ class MRDetail extends Component {
     if(site_FE !== undefined){
       let data_pp_FE = data_pp.filter(e => e.site_id === site_FE.site_id);
       for(let i = 0; i < data_pp_FE.length; i++){
-        data_pp_FE[i]["mr_md"] = data_md.filter(e => e.id_mr_pp_doc === data_pp_FE._id );
+        data_pp_FE[i]["mr_md"] = data_md.filter(e => e.id_mr_pp_doc === data_pp_FE[i]._id && e.site_id === site_FE.site_id);
       }
       site_FE["mr_pp"] = data_pp_FE;
       this.setState({ mr_site_FE : site_FE });
@@ -209,7 +209,7 @@ class MRDetail extends Component {
   }
 
   getQtyTssrPPNE(pp_id){
-    const itemTssrBom = this.state.tssr_site_NE.list_of_site_items;
+    const itemTssrBom = this.state.mr_site_NE.mr_pp;
     const getDataPPTssr = itemTssrBom.find(e => e.pp_id === pp_id);
     if(getDataPPTssr !== undefined){
       return getDataPPTssr.qty;
@@ -219,7 +219,7 @@ class MRDetail extends Component {
   }
 
   getQtyTssrPPFE(pp_id){
-    const itemTssrBom = this.state.tssr_site_FE.list_of_site_items;
+    const itemTssrBom = this.state.mr_site_FE.mr_pp;
     const getDataPPTssr = itemTssrBom.find(e => e.pp_id === pp_id);
     if(getDataPPTssr !== undefined){
       return getDataPPTssr.qty;
@@ -437,8 +437,9 @@ class MRDetail extends Component {
   }
 
   changeTabsSubmenu(e){
+    console.log("tabs_submenu", e);
     let tab_submenu = new Array(4).fill(false);
-    tab_submenu[e] = true;
+    tab_submenu[parseInt(e)] = true;
     this.setState({ tabs_submenu : tab_submenu });
   }
 
@@ -447,6 +448,7 @@ class MRDetail extends Component {
   }
 
   render() {
+    console.log("tabs_submenu", this.state.tabs_submenu);
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -460,10 +462,10 @@ class MRDetail extends Component {
             <div style={{marginBottom : '10px'}}>
             <Nav tabs>
               <NavItem>
-                <NavLink href="#" active={this.state.tabs_submenu[0]} onClick={this.changeTabsSubmenu.bind(0)}>MR Detail</NavLink>
+              <NavLink href="#" active={this.state.tabs_submenu[0]} value="0" onClick={this.changeTabsSubmenu.bind(this, 0)}>MR Info</NavLink>
               </NavItem>
               <NavItem>
-                <NavLink href="#" active={this.state.tabs_submenu[1]} onClick={this.changeTabsSubmenu.bind(1)}>MR Material</NavLink>
+                <NavLink href="#" active={this.state.tabs_submenu[1]} value="1" onClick={this.changeTabsSubmenu.bind(this, 1)}>MR Material</NavLink>
               </NavItem>
             </Nav>
             </div>
@@ -485,129 +487,180 @@ class MRDetail extends Component {
               </tbody>
             </table>
             <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
-            <Row>
-              <Col md="6">
-                <table>
-                  <tbody>
-                    {this.state.data_mr !== null && (
-                      <Fragment>
-                      <tr>
-                        <td style={{width : '175px'}}>CD ID</td>
-                        <td>: </td>
-                        <td>{this.state.data_mr.cd_id}</td>
-                      </tr>
-                      <tr>
-                        <td style={{width : '200px'}}>MR Delivery Type</td>
-                        <td>: </td>
-                        <td>{this.state.data_mr.mr_category}</td>
-                      </tr>
-                      <tr>
-                        <td style={{width : '200px'}}>DSP Company</td>
-                        <td>: </td>
-                        <td>{this.state.data_mr.dsp_company}</td>
-                      </tr>
-                      <tr>
-                        <td style={{width : '200px'}}>ETD</td>
-                        <td>: </td>
-                        <td>{this.state.data_mr.etd}</td>
-                      </tr>
-                      <tr>
-                        <td style={{width : '200px'}}>ASP Company</td>
-                        <td>: </td>
-                        <td>{this.state.data_mr.asp_company}</td>
-                      </tr>
-                      <tr>
-                        <td style={{width : '200px'}}>Current Status</td>
-                        <td>: </td>
-                        <td>{this.state.data_mr.current_mr_status}</td>
-                      </tr>
-                      <tr>
-                        <td style={{width : '200px'}}>Current Milestone</td>
-                        <td>: </td>
-                        <td>{this.state.data_mr.current_milestones}</td>
-                      </tr>
-                      </Fragment>
-                    )}
-                  </tbody>
-                </table>
-              </Col>
-              <Col md="6">
-                <table style={{marginBottom : '0px'}}>
-                  <tbody>
-                    {this.state.data_mr !== null && (
-                      <Fragment>
-                      <tr>
-                        <td style={{width : '175px'}}>Scopes</td>
-                        <td>: </td>
-                        <td>{this.state.data_mr.scopes}</td>
-                      </tr>
-                      <tr>
-                        <td style={{width : '175px'}}>MR Type</td>
-                        <td>: </td>
-                        <td>{this.state.data_mr.mr_type}</td>
-                      </tr>
-                      <tr>
-                        <td style={{width : '200px'}}>&nbsp;</td>
-                        <td></td>
-                        <td></td>
-                      </tr>
-                      <tr>
-                        <td style={{width : '200px'}}>ETA</td>
-                        <td>: </td>
-                        <td>{this.state.data_mr.eta}</td>
-                      </tr>
-                      <tr>
-                        <td style={{width : '200px'}}>&nbsp;</td>
-                        <td></td>
-                        <td></td>
-                      </tr>
-                      </Fragment>
-                    )}
-                  </tbody>
-                </table>
-              </Col>
-            </Row>
-            <Fragment>
-            <Row>
-            {this.state.mr_site_NE !== null && (
-              <Fragment>
-                <Col md="4">
-                <table className="table-header">
-                  <tbody>
-                      <tr>
-                        <td>Site ID NE</td>
-                        <td>: &nbsp;</td>
-                        <td style={{paddingLeft:'10px'}}>{this.state.mr_site_NE.site_id}</td>
-                      </tr>
-                      <tr>
-                        <td>Site Name NE</td>
-                        <td>:</td>
-                        <td style={{paddingLeft:'10px'}}>{this.state.mr_site_NE.site_name}</td>
-                      </tr>
-                  </tbody>
-                </table>
-                </Col>
-                {this.state.mr_site_FE !== null ? (
-                  <Col md="4">
-                  <table className="table-header">
+            {this.state.tabs_submenu[0] === true && (
+              <Row>
+                <Col md="6">
+                  <table style={{marginBottom : '10px', fontSize : '15px'}}>
                     <tbody>
-                      <tr>
-                        <td>Site ID FE</td>
-                        <td>: &nbsp;</td>
-                        <td style={{paddingLeft:'10px'}}>{this.state.mr_site_FE.site_id}</td>
-                      </tr>
-                      <tr>
-                        <td>Site Name FE</td>
-                        <td>:</td>
-                        <td style={{paddingLeft:'10px'}}>{this.state.mr_site_FE.site_name}</td>
-                      </tr>
+                      {this.state.data_mr !== null && (
+                        <Fragment>
+                        <tr>
+                          <td style={{width : '175px'}}>CD ID</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.cd_id}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>MR Delivery Type</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.mr_category}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>DSP Company</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.dsp_company}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>ETD</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.etd}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>ASP Company</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.asp_company}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>Current Status</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.current_mr_status}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>Current Milestone</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.current_milestones}</td>
+                        </tr>
+                        {this.state.mr_site_NE !== null && (
+                          <Fragment>
+                          <tr>
+                            <td style={{width : '200px'}}>Site ID NE</td>
+                            <td>: &nbsp;</td>
+                            <td>{this.state.mr_site_NE.site_id}</td>
+                          </tr>
+                          <tr>
+                            <td style={{width : '200px'}}>Site Name NE</td>
+                            <td>:</td>
+                            <td>{this.state.mr_site_NE.site_name}</td>
+                          </tr>
+                          </Fragment>
+                        )}
+                        </Fragment>
+                      )}
                     </tbody>
                   </table>
-                  </Col>
-                ) : (<Fragment></Fragment>)}
-              </Fragment>
-            )}
-            </Row>
+                </Col>
+                <Col md="6">
+                  <table style={{marginBottom : '0px', fontSize : '15px'}}>
+                    <tbody>
+                      {this.state.data_mr !== null && (
+                        <Fragment>
+                        <tr>
+                          <td style={{width : '175px'}}>Scopes</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.scopes}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '175px'}}>MR Type</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.mr_type}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>&nbsp;</td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>ETA</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.eta}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>&nbsp;</td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>&nbsp;</td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>&nbsp;</td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                        {this.state.mr_site_FE !== null && (
+                          <Fragment>
+                          <tr>
+                            <td style={{width : '200px'}}>Site ID FE</td>
+                            <td>: &nbsp;</td>
+                            <td>{this.state.mr_site_FE.site_id}</td>
+                          </tr>
+                          <tr>
+                            <td style={{width : '200px'}}>Site Name FE</td>
+                            <td>:</td>
+                            <td>{this.state.mr_site_FE.site_name}</td>
+                          </tr>
+                          </Fragment>
+                        )}
+                        </Fragment>
+                      )}
+                    </tbody>
+                  </table>
+                </Col>
+              </Row>
+            ) }
+            {this.state.tabs_submenu[1] === true && (
+            <Fragment>
+              <Row>
+                <Col md="6">
+                  <table>
+                    <tbody>
+                      {this.state.data_mr !== null && (
+                        <Fragment>
+                        {this.state.mr_site_NE !== null && (
+                          <Fragment>
+                          <tr>
+                            <td style={{width : '200px'}}>Site ID NE</td>
+                            <td>: &nbsp;</td>
+                            <td>{this.state.mr_site_NE.site_id}</td>
+                          </tr>
+                          <tr>
+                            <td style={{width : '200px'}}>Site Name NE</td>
+                            <td>:</td>
+                            <td>{this.state.mr_site_NE.site_name}</td>
+                          </tr>
+                          </Fragment>
+                        )}
+                        </Fragment>
+                      )}
+                    </tbody>
+                  </table>
+                </Col>
+                <Col md="6">
+                  <table style={{marginBottom : '0px'}}>
+                    <tbody>
+                      {this.state.data_mr !== null && (
+                        <Fragment>
+                        {this.state.mr_site_FE !== null && (
+                          <Fragment>
+                          <tr>
+                            <td style={{width : '200px'}}>Site ID FE</td>
+                            <td>: &nbsp;</td>
+                            <td>{this.state.mr_site_FE.site_id}</td>
+                          </tr>
+                          <tr>
+                            <td style={{width : '200px'}}>Site Name FE</td>
+                            <td>:</td>
+                            <td>{this.state.mr_site_FE.site_name}</td>
+                          </tr>
+                          </Fragment>
+                        )}
+                        </Fragment>
+                      )}
+                    </tbody>
+                  </table>
+                </Col>
+              </Row>
               <hr className="upload-line-ordering"></hr>
               <div className='divtable2'>
                 <Table hover bordered striped responsive size="sm">
@@ -620,7 +673,7 @@ class MRDetail extends Component {
                     </tr>
                     <tr>
                       <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
-                      {this.state.data_tssr_sites[1] !== undefined ? (
+                      {this.state.mr_site_FE !== null ? (
                         <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
                       ):(<Fragment></Fragment>)}
                     </tr>
@@ -634,18 +687,18 @@ class MRDetail extends Component {
                           <td>{pp.name}</td>
                           <td>{pp.unit}</td>
                           <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)}</td>
-                          {this.state.tssr_site_FE !== null ? (
+                          {this.state.mr_site_FE !== null ? (
                             <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)}</td>
                           ):(<Fragment></Fragment>)}
                         </tr>
-                        {pp.list_of_id_material.map(material =>
+                        {pp.mr_md.map(material =>
                           <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
                             <td style={{textAlign : 'right'}}>{material.material_id}</td>
                             <td style={{textAlign : 'left'}}>{material.material_name}</td>
                             <td>{material.material_unit}</td>
-                            <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)*material.material_qty}</td>
-                            {this.state.tssr_site_FE !== null ? (
-                              <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)*material.material_qty}</td>
+                            <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)*material.qty}</td>
+                            {this.state.mr_site_FE !== null ? (
+                              <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)*material.qty}</td>
                             ):(<Fragment></Fragment>)}
                           </tr>
                         )}
@@ -657,6 +710,7 @@ class MRDetail extends Component {
                 </Table>
               </div>
             </Fragment>
+          )}
           </CardBody>
         </Card>
         </Col>
