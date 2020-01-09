@@ -320,6 +320,11 @@ class MRNAList extends Component {
                     </tr>
                   </thead>
                   <tbody>
+                    {this.state.mr_list.length === 0 && (
+                      <tr>
+                        <td colSpan="15">No Data Available</td>
+                      </tr>
+                    )}
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
