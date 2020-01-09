@@ -13,6 +13,7 @@ class WarehouseDashboard extends Component {
     super(props);
 
     this.state = {
+      variant0: "inverse",
       variant1: "inverse",
       variant2: "inverse",
       variant3: "inverse",
@@ -22,6 +23,7 @@ class WarehouseDashboard extends Component {
       variant7: "inverse",
       variant8: "inverse",
       variant9: "inverse",
+      img_0: "../../assets/icon/dashboard/order-received.png",
       img_1: "../../assets/icon/dashboard/order-received.png",
       img_2: "../../assets/icon/dashboard/order-processing.png",
       img_3: "../../assets/icon/dashboard/ready-to-deliver.png",
@@ -31,6 +33,7 @@ class WarehouseDashboard extends Component {
       img_7: "../../assets/icon/dashboard/lom-status.png",
       img_8: "../../assets/icon/dashboard/lom-status.png",
       img_9: "../../assets/icon/dashboard/lom-status.png",
+      order_created: 0,
       order_received: 0,
       order_processing: 0,
       ready_to_deliver: 0,
@@ -40,12 +43,20 @@ class WarehouseDashboard extends Component {
     }
     
     this.updateHover1 = this.updateHover1.bind(this);
+    this.getOrderCreated = this.getOrderCreated.bind(this);
     this.getOrderReceived = this.getOrderReceived.bind(this);
     this.getOrderProcessing = this.getOrderProcessing.bind(this);
     this.getReadyToDeliver = this.getReadyToDeliver.bind(this);
     this.getJointCheck = this.getJointCheck.bind(this);
     this.getLoadingProcess = this.getLoadingProcess.bind(this);
     this.getMaterialDispatch = this.getMaterialDispatch.bind(this);
+  }
+
+  updateHover0(hover, img) {
+    this.setState({
+      variant0: hover,
+      img_0: img
+    })
   }
 
   updateHover1(hover, img) {
@@ -112,6 +123,7 @@ class WarehouseDashboard extends Component {
   }
 
   componentDidMount() {
+    this.getOrderCreated();
     this.getOrderReceived();
     this.getOrderProcessing();
     this.getReadyToDeliver();
@@ -141,6 +153,16 @@ class WarehouseDashboard extends Component {
     }
   }
 
+  getOrderCreated() {
+    this.getDataFromAPI('/mr_sorted_nonpage?where={"current_mr_status":"MR REQUESTED"}').then(res => {
+      console.log("Order Created xx", res);
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({order_created : items.length});
+      }
+    })
+  }
+  
   getOrderReceived() {
     this.getDataFromAPI('/mr_sorted_nonpage?where={"current_milestones":"MS_ORDER_RECEIVED"}').then(res => {
       console.log("Order Received", res);
@@ -206,6 +228,13 @@ class WarehouseDashboard extends Component {
   render() {
     return (
       <div className="animated fadeIn">
+        <Row>
+          <Col xs="12" sm="6" lg="4">
+            <a href="#/order-created" onMouseEnter={() => this.updateHover0("", "../../assets/icon/dashboard/order-received-blue.png")} onMouseLeave={() => this.updateHover0("inverse", "../../assets/icon/dashboard/order-received.png")}>
+              <Widget color="primary" variant={this.state.variant0} header={this.state.order_created} mainText="Order Created" smallText="The initial status of the MR after being approved by the supply team and ready to be processed by the warehouse." imageSource={this.state.img_0}/>
+            </a>
+          </Col>
+        </Row>
         <Row>
           <Col xs="12" sm="6" lg="4">
             <a href="#/order-received" onMouseEnter={() => this.updateHover1("", "../../assets/icon/dashboard/order-received-blue.png")} onMouseLeave={() => this.updateHover1("inverse", "../../assets/icon/dashboard/order-received.png")}>
