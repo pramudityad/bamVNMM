@@ -33,22 +33,22 @@ export default {
     {
       name: 'Order Received',
       url: '/order-received',
-      icon: 'icon-drawer',
+      icon: 'fa fa-warehouse',
     },
     {
       name: 'Order Processing',
       url: '/order-processing',
-      icon: 'icon-drawer',
+      icon: 'fa fa-clipboard-list',
     },
     {
       name: 'Ready to Deliver',
       url: '/ready-to-deliver',
-      icon: 'icon-drawer',
+      icon: 'fa fa-arrow-right',
     },
     {
       name: 'Joint Check',
       url: '/joint-check',
-      icon: 'icon-drawer',
+      icon: 'fa fa-box-open',
       badge: {
         variant: 'danger',
         text: '1'
@@ -57,12 +57,12 @@ export default {
     {
       name: 'Loading Process',
       url: '/loading-process',
-      icon: 'icon-drawer',
+      icon: 'fa fa-truck-loading',
     },
     {
       name: 'Material Dispatch',
       url: '/material-dispatch',
-      icon: 'icon-drawer',
+      icon: 'fa fa-truck-moving',
     },
     {
       name: 'LOM List',
