@@ -41,6 +41,8 @@ class PSUpload extends Component {
         tssr_site_FE : null,
         list_pp_material_tssr : [],
         mr_type : "RBS",
+        qty_ne : new Map(),
+        qty_fe : new Map(),
         action_status : null,
         action_message : null,
     };
@@ -48,6 +50,8 @@ class PSUpload extends Component {
     this.getQtyTssrPPNE = this.getQtyTssrPPNE.bind(this);
     this.getQtyTssrPPFE = this.getQtyTssrPPFE.bind(this);
     this.saveMRtoAPI = this.saveMRtoAPI.bind(this);
+    this.editQtyNE = this.editQtyNE.bind(this);
+    this.editQtyFE = this.editQtyFE.bind(this);
   }
 
   async getDatafromAPIBMS(url){
@@ -264,7 +268,7 @@ class PSUpload extends Component {
             }
         ],
         "mr_milestones" : [],
-        "current_mr_status" : "PLANTSPEC ASSIGNED",
+        "current_mr_status" : "ASSIGNED",
         "current_milestones" : "",
         "created_by" : this.state.userId,
         "updated_by" : this.state.userId
@@ -288,7 +292,7 @@ class PSUpload extends Component {
             "no_tssr_boq_site" : dataTSSRBOMFE.no_tssr_boq_site,
             "tssr_version" : dataTSSRBOMFE.version === undefined ? "0" : dataTSSRBOMFE.version,
         }
-        mr_data["site_info"].push()
+        mr_data["site_info"].push(dataSiteFE)
       }
       const respondSaveMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMRParent._id, mr_data, dataMRParent._etag);
       if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
@@ -446,6 +450,18 @@ class PSUpload extends Component {
     }
   }
 
+  editQtyNE = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+    this.setState(prevState => ({ qty_ne : prevState.qty_ne.set(name, value) }));
+  }
+
+  editQtyFE = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+    this.setState(prevState => ({ qty_fe : prevState.qty_fe.set(name, value) }));
+}
+
   componentDidMount(){
     this.getDataMR(this.props.match.params.id);
     this.getListTssrAll();
@@ -572,9 +588,13 @@ class PSUpload extends Component {
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                           <td>{pp.name}</td>
                           <td>{pp.unit}</td>
-                          <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)}</td>
+                          <td>
+                            <Input style={{textAlign : 'center'}} onChange={this.editQtyNE} type="number" name={pp.pp_id} value={!this.state.qty_ne.has(pp.pp_id) ? this.getQtyTssrPPNE(pp.pp_id) : this.state.qty_ne.get(pp.pp_id)} />
+                          </td>
                           {this.state.tssr_site_FE !== null ? (
-                            <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)}</td>
+                            <td>
+                              <Input style={{textAlign : 'center'}} onChange={this.editQtyFE} type="number" name={pp.pp_id} value={!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id)} />
+                            </td>
                           ):(<Fragment></Fragment>)}
                         </tr>
                         {pp.list_of_id_material.map(material =>
@@ -582,9 +602,9 @@ class PSUpload extends Component {
                             <td style={{textAlign : 'right'}}>{material.material_id}</td>
                             <td style={{textAlign : 'left'}}>{material.material_name}</td>
                             <td>{material.material_unit}</td>
-                            <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)*material.material_qty}</td>
+                            <td align='center'>{(!this.state.qty_ne.has(pp.pp_id) ? this.getQtyTssrPPNE(pp.pp_id) : this.state.qty_ne.get(pp.pp_id))*material.material_qty}</td>
                             {this.state.tssr_site_FE !== null ? (
-                              <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)*material.material_qty}</td>
+                              <td align='center'>{(!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id))*material.material_qty}</td>
                             ):(<Fragment></Fragment>)}
                           </tr>
                         )}
