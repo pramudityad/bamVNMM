@@ -23,17 +23,15 @@ class WarehouseDashboard extends Component {
       variant7: "inverse",
       variant8: "inverse",
       variant9: "inverse",
-      img_0: "../../assets/icon/dashboard/order-received.png",
-      img_1: "../../assets/icon/dashboard/order-received.png",
-      img_2: "../../assets/icon/dashboard/order-processing.png",
-      img_3: "../../assets/icon/dashboard/ready-to-deliver.png",
-      img_4: "../../assets/icon/dashboard/joint-check.png",
-      img_5: "../../assets/icon/dashboard/loading-process.png",
-      img_6: "../../assets/icon/dashboard/dispatch.png",
-      img_7: "../../assets/icon/dashboard/lom-status.png",
-      img_8: "../../assets/icon/dashboard/lom-status.png",
-      img_9: "../../assets/icon/dashboard/lom-status.png",
-      order_created: 0,
+      img_1: "fa fa-warehouse",
+      img_2: "fa fa-clipboard-list",
+      img_3: "fa fa-arrow-right",
+      img_4: "fa fa-box-open",
+      img_5: "fa fa-truck-loading",
+      img_6: "fa fa-truck-moving",
+      img_7: "fa fa-stop-circle",
+      img_8: "fa fa-stop-circle",
+      img_9: "fa fa-stop-circle",
       order_received: 0,
       order_processing: 0,
       ready_to_deliver: 0,
@@ -52,73 +50,57 @@ class WarehouseDashboard extends Component {
     this.getMaterialDispatch = this.getMaterialDispatch.bind(this);
   }
 
-  updateHover0(hover, img) {
+  updateHover1(hover) {
     this.setState({
-      variant0: hover,
-      img_0: img
+      variant1: hover
     })
   }
 
-  updateHover1(hover, img) {
+  updateHover2(hover) {
     this.setState({
-      variant1: hover,
-      img_1: img
-    })
-  }
-
-  updateHover2(hover, img) {
-    this.setState({
-      variant2: hover,
-      img_2: img
+      variant2: hover
     })
   }
   
-  updateHover3(hover, img) {
+  updateHover3(hover) {
     this.setState({
-      variant3: hover,
-      img_3: img
+      variant3: hover
     })
   }
 
-  updateHover4(hover, img) {
+  updateHover4(hover) {
     this.setState({
-      variant4: hover,
-      img_4: img
+      variant4: hover
     })
   }
 
-  updateHover5(hover, img) {
+  updateHover5(hover) {
     this.setState({
-      variant5: hover,
-      img_5: img
+      variant5: hover
     })
   }
 
-  updateHover6(hover, img) {
+  updateHover6(hover) {
     this.setState({
-      variant6: hover,
-      img_6: img
+      variant6: hover
     })
   }
 
-  updateHover7(hover, img) {
+  updateHover7(hover) {
     this.setState({
-      variant7: hover,
-      img_7: img
+      variant7: hover
     })
   }
 
-  updateHover8(hover, img) {
+  updateHover8(hover) {
     this.setState({
-      variant8: hover,
-      img_8: img
+      variant8: hover
     })
   }
 
-  updateHover9(hover, img) {
+  updateHover9(hover) {
     this.setState({
-      variant9: hover,
-      img_9: img
+      variant9: hover
     })
   }
 
@@ -230,58 +212,51 @@ class WarehouseDashboard extends Component {
       <div className="animated fadeIn">
         <Row>
           <Col xs="12" sm="6" lg="4">
-            <a href="#/order-created" onMouseEnter={() => this.updateHover0("", "../../assets/icon/dashboard/order-received-blue.png")} onMouseLeave={() => this.updateHover0("inverse", "../../assets/icon/dashboard/order-received.png")}>
-              <Widget color="primary" variant={this.state.variant0} header={this.state.order_created} mainText="Order Created" smallText="The initial status of the MR after being approved by the supply team and ready to be processed by the warehouse." imageSource={this.state.img_0}/>
-            </a>
-          </Col>
-        </Row>
-        <Row>
-          <Col xs="12" sm="6" lg="4">
-            <a href="#/order-received" onMouseEnter={() => this.updateHover1("", "../../assets/icon/dashboard/order-received-blue.png")} onMouseLeave={() => this.updateHover1("inverse", "../../assets/icon/dashboard/order-received.png")}>
+            <a href="#/order-received" onMouseEnter={() => this.updateHover1("")} onMouseLeave={() => this.updateHover1("inverse")}>
               <Widget color="primary" variant={this.state.variant1} header={this.state.order_received} mainText="Order Received" smallText="The initial status of the MR after being approved by the supply team and ready to be processed by the warehouse." imageSource={this.state.img_1}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#/order-processing" onMouseEnter={() => this.updateHover2("", "../../assets/icon/dashboard/order-processing-blue.png")} onMouseLeave={() => this.updateHover2("inverse", "../../assets/icon/dashboard/order-processing.png")}>
+            <a href="#/order-processing" onMouseEnter={() => this.updateHover2("")} onMouseLeave={() => this.updateHover2("inverse")}>
               <Widget color="primary" variant={this.state.variant2} header={this.state.order_processing} mainText="Order Processing" smallText="The status in which the warehouse prepares the material and will send notification for the project team when there is lack of material." imageSource={this.state.img_2}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#/ready-to-deliver" onMouseEnter={() => this.updateHover3("", "../../assets/icon/dashboard/ready-to-deliver-blue.png")} onMouseLeave={() => this.updateHover3("inverse", "../../assets/icon/dashboard/ready-to-deliver.png")}>
+            <a href="#/ready-to-deliver" onMouseEnter={() => this.updateHover3("")} onMouseLeave={() => this.updateHover3("inverse")}>
               <Widget color="primary" variant={this.state.variant3} header={this.state.ready_to_deliver} mainText="Ready To Deliver" smallText="The status after MR has been processed or in the warehouse staging area. The MR in this status should have either complete material or not complete confirmed by the project team." imageSource={this.state.img_3}/>
             </a>
           </Col>
         </Row>
         <Row>
           <Col xs="12" sm="6" lg="4">
-            <a href="#/joint-check" onMouseEnter={() => this.updateHover4("", "../../assets/icon/dashboard/joint-check-blue.png")} onMouseLeave={() => this.updateHover4("inverse", "../../assets/icon/dashboard/joint-check.png")}>
-              <Widget color="primary" variant={this.state.variant4} header={this.state.joint_check} mainText="Joint Check"  smallText="The status in which the warehouse team conduct a verification together with DSP and ASP to make sure that the MR will be delivered according to the plant specification." imageSource={this.state.img_4}/>
+            <a href="#/joint-check" onMouseEnter={() => this.updateHover4("")} onMouseLeave={() => this.updateHover4("inverse")}>
+              <Widget color="primary" variant={this.state.variant4} header={this.state.joint_check} mainText="Joint Check" smallText="The status in which the warehouse team conduct a verification together with DSP and ASP to make sure that the MR will be delivered according to the plant specification." imageSource={this.state.img_4}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#/loading-process" onMouseEnter={() => this.updateHover5("", "../../assets/icon/dashboard/loading-process-blue.png")} onMouseLeave={() => this.updateHover5("inverse", "../../assets/icon/dashboard/loading-process.png")}>
+            <a href="#/loading-process" onMouseEnter={() => this.updateHover5("")} onMouseLeave={() => this.updateHover5("inverse")}>
               <Widget color="primary" variant={this.state.variant5} header={this.state.loading_process} mainText="Loading Process" smallText="The status in which the MR will be delivered and has been loaded to the delivery truck. The DSP driver is only able to submit delivery information when the MR is in this status." imageSource={this.state.img_5}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#/material-dispatch" onMouseEnter={() => this.updateHover6("", "../../assets/icon/dashboard/dispatch-blue.png")} onMouseLeave={() => this.updateHover6("inverse", "../../assets/icon/dashboard/dispatch.png")}>
+            <a href="#/material-dispatch" onMouseEnter={() => this.updateHover6("")} onMouseLeave={() => this.updateHover6("inverse")}>
               <Widget color="primary" variant={this.state.variant6} header={this.state.material_dispatch} mainText="Material Dispatch" smallText="The status after the DSP driver submitted the delivery information to the server and the MR is being delivered by the DSP." imageSource={this.state.img_6}/>
             </a>
           </Col>
         </Row>
         <Row>
           <Col xs="12" sm="6" lg="4">
-            <a href="#" onMouseEnter={() => this.updateHover7("", "../../assets/icon/dashboard/tile-7-red.png")} onMouseLeave={() => this.updateHover7("inverse", "../../assets/icon/dashboard/lom-status.png")}>
+            <a href="#" onMouseEnter={() => this.updateHover7("")} onMouseLeave={() => this.updateHover7("inverse")}>
               <Widget color="danger" variant={this.state.variant7} header="999" mainText="Material On Hold" imageSource={this.state.img_7}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#" onMouseEnter={() => this.updateHover8("", "../../assets/icon/dashboard/tile-7-red.png")} onMouseLeave={() => this.updateHover8("inverse", "../../assets/icon/dashboard/lom-status.png")}>
+            <a href="#" onMouseEnter={() => this.updateHover8("")} onMouseLeave={() => this.updateHover8("inverse")}>
               <Widget color="danger" variant={this.state.variant8} header="999" mainText="Wait For Completed" imageSource={this.state.img_8}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#" onMouseEnter={() => this.updateHover9("", "../../assets/icon/dashboard/tile-7-red.png")} onMouseLeave={() => this.updateHover9("inverse", "../../assets/icon/dashboard/lom-status.png")}>
+            <a href="#" onMouseEnter={() => this.updateHover9("")} onMouseLeave={() => this.updateHover9("inverse")}>
               <Widget color="danger" variant={this.state.variant9} header="999" mainText="Sent With LOM" imageSource={this.state.img_9}/>
             </a>
           </Col>
