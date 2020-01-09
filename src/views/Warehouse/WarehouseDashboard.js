@@ -164,61 +164,61 @@ class WarehouseDashboard extends Component {
   }
   
   getOrderReceived() {
-    this.getDataFromAPI('/mr_sorted_nonpage?where={"current_milestones":"MS_ORDER_RECEIVED"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_ORDER_RECEIVED"}').then(res => {
       console.log("Order Received", res);
       if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({order_received : items.length});
+        const items = res.data._meta;
+        this.setState({order_received : items.total});
       }
     })
   }
 
   getOrderProcessing() {
-    this.getDataFromAPI('/mr_sorted_nonpage?where={"current_milestones":"MS_ORDER_PROCESSING"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_ORDER_PROCESSING"}').then(res => {
       console.log("Order Processing", res);
       if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({order_processing : items.length});
+        const items = res.data._meta;
+        this.setState({order_processing : items.total});
       }
     })
   }
 
   getReadyToDeliver() {
-    this.getDataFromAPI('/mr_sorted_nonpage?where={"current_milestones":"MS_READY_TO_DELIVER"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_READY_TO_DELIVER"}').then(res => {
       console.log("Ready To Deliver", res);
       if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({ready_to_deliver : items.length});
+        const items = res.data._meta;
+        this.setState({ready_to_deliver : items.total});
       }
     })
   }
 
   getJointCheck() {
-    this.getDataFromAPI('/mr_sorted_nonpage?where={"current_milestones":"MS_JOINT_CHECK"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_JOINT_CHECK"}').then(res => {
       console.log("Joint Check", res);
       if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({joint_check : items.length});
+        const items = res.data._meta;
+        this.setState({joint_check : items.total});
       }
     })
   }
 
   getLoadingProcess() {
-    this.getDataFromAPI('/mr_sorted_nonpage?where={"current_milestones":"MS_LOADING_PROCESS"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_LOADING_PROCESS"}').then(res => {
       console.log("Loading Process", res);
       if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({loading_process : items.length});
+        const items = res.data._meta;
+        this.setState({loading_process : items.total});
       }
     })
   }
 
   getMaterialDispatch() {
-    this.getDataFromAPI('/mr_sorted_nonpage?where={"current_milestones":"MS_MATERIAL_DISPATCH"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_MATERIAL_DISPATCH"}').then(res => {
       console.log("Material Dispatch", res);
       if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({material_dispatch : items.length});
+        const items = res.data._meta;
+        this.setState({material_dispatch : items.total});
       }
     })
   }
