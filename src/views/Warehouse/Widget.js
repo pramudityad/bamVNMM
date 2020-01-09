@@ -67,7 +67,7 @@ class Widget extends Component {
             </Col>
           </Row>
           <Progress className={progress.style} color={progress.color} value={progress.value} />
-          <small className="text-muted">{smallText}</small>
+          <div className="p-3"><small className="text-muted">{smallText}</small></div>
           <div>{children}</div>
         </CardBody>
       </Card>
