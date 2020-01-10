@@ -30,16 +30,6 @@ class MRDetail extends Component {
         userName : this.props.dataLogin.userName,
         userEmail : this.props.dataLogin.email,
         data_mr : null,
-        list_tssr : [],
-        list_tssr_for_selection : [],
-        id_tssr_selected : null,
-        data_tssr : null,
-        data_tssr_sites_item : [],
-        data_tssr_sites : [],
-        tssr_site_NE : null,
-        tssr_site_FE : null,
-        list_pp_material_tssr : [],
-
         mr_site_NE : null,
         mr_site_FE : null,
         mr_pp : [],
@@ -51,8 +41,6 @@ class MRDetail extends Component {
     };
     this.getQtyTssrPPNE = this.getQtyTssrPPNE.bind(this);
     this.getQtyTssrPPFE = this.getQtyTssrPPFE.bind(this);
-    this.saveMRtoAPI = this.saveMRtoAPI.bind(this);
-    this.handleChangeMRType = this.handleChangeMRType.bind(this);
     this.changeTabsSubmenu = this.changeTabsSubmenu.bind(this);
   }
 
@@ -134,11 +122,6 @@ class MRDetail extends Component {
       console.log("respond Patch data", err);
       return respond;
     }
-  }
-
-  handleChangeMRType(e) {
-    const value = e.target.value;
-    this.setState({mr_type : value });
   }
 
   getDataMR(_id_MR){
@@ -228,214 +211,6 @@ class MRDetail extends Component {
     }
   }
 
-  async saveMRtoAPI(){
-    const dataMRParent = this.state.data_mr;
-    const dataTSSRParent = this.state.data_tssr;
-    const dataTSSRBOMNE = this.state.tssr_site_NE;
-    const dataTSSRBOMFE = this.state.tssr_site_FE;
-    const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-    let mr_data = {
-        "site_info" : [
-            {
-                "id_site_doc": dataTSSRBOMNE.id_site_doc,
-                "site_id": dataTSSRBOMNE.site_id,
-                "site_title": "NE",
-                "id_tssr_boq_site_doc" : dataTSSRBOMNE._id,
-                "no_tssr_boq_site" : dataTSSRBOMNE.no_tssr_boq_site,
-                "tssr_version" : dataTSSRBOMNE.version === undefined ? "0" : dataTSSRBOMNE.version,
-            }
-        ],
-        "mr_milestones" : [],
-        "current_mr_status" : "IMPLEMENTED",
-        "current_milestones" : "",
-        "created_by" : this.state.userId,
-        "updated_by" : this.state.userId
-      };
-      let currStatus = [
-        {
-            "mr_status_name": "PLANTSPEC",
-            "mr_status_value": "PLANTSPEC ASSIGNED",
-            "mr_status_date": dateNow,
-            "mr_status_updater": this.state.userEmail,
-            "mr_status_updater_id": null
-        },
-        {
-            "mr_status_name": "Implemented",
-            "mr_status_value": "Implemented",
-            "mr_status_date": dateNow,
-            "mr_status_updater": this.state.userEmail,
-            "mr_status_updater_id": null
-        }
-      ];
-      mr_data["mr_status"] = dataMRParent.mr_status.concat(currStatus);
-      if(this.state.tssr_site_FE !== null){
-        const dataSiteFE = {
-            "id_site_doc": dataTSSRBOMFE.id_site_doc,
-            "site_id": dataTSSRBOMFE.site_id,
-            "site_title": "FE",
-            "id_tssr_boq_site_doc" : dataTSSRBOMFE._id,
-            "no_tssr_boq_site" : dataTSSRBOMFE.no_tssr_boq_site,
-            "tssr_version" : dataTSSRBOMFE.version === undefined ? "0" : dataTSSRBOMFE.version,
-        }
-        mr_data["site_info"].push()
-      }
-      const respondSaveMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMRParent._id, mr_data, dataMRParent._etag);
-      if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
-        this.saveMrPPtoAPI(dataMRParent._id, dataMRParent.mr_id, respondSaveMR.data._etag);
-      }else{
-        this.setState({action_status : 'failed'});
-      }
-  }
-
-  async saveMrPPtoAPI(_id_mr, mr_id, _etag_mr){
-    const dataPPTssr = this.state.list_pp_material_tssr;
-    const dataTSSRBOMNE = this.state.tssr_site_NE;
-    const dataTSSRBOMFE = this.state.tssr_site_FE;
-    let ppMRsave = [];
-    //PP for NE
-    for(let i = 0; i < dataPPTssr.length; i++){
-      let dataTSSRBomItemIndex = dataTSSRBOMNE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-      let ppSave = {
-        "id_mr_doc" : _id_mr,
-        "mr_id" : mr_id,
-        "id_pp_doc" : dataPPTssr[i]._id,
-        "pp_id" : dataPPTssr[i].pp_id,
-        "id_site_doc" : dataTSSRBOMNE.id_site_doc,
-        "site_id" : dataTSSRBOMNE.site_id,
-        "product_name" : dataPPTssr[i].name,
-        "product_type" : dataPPTssr[i].product_type,
-        "physical_group" : dataPPTssr[i].phy_group,
-        "uom" : dataPPTssr[i].unit,
-        "qty" : dataTSSRBomItemIndex.qty,
-        "qty_scan" : 0,
-        "id_po_doc" : null,
-        "po_number" : "demo PO 1",
-        "deleted" : 0,
-        "created_by" : this.state.userId,
-        "updated_by" : this.state.userId
-      }
-      ppMRsave.push(ppSave);
-    }
-    //PP for FE
-    if(this.state.tssr_site_FE !== null){
-      for(let i = 0; i < dataPPTssr.length; i++){
-        let dataTSSRBomItemIndex = dataTSSRBOMFE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-        let ppSave = {
-          "id_mr_doc" : _id_mr,
-          "mr_id" : mr_id,
-          "id_pp_doc" : dataPPTssr[i]._id,
-          "pp_id" : dataPPTssr[i].pp_id,
-          "id_site_doc" : dataTSSRBOMFE.id_site_doc,
-          "site_id" : dataTSSRBOMFE.site_id,
-          "product_name" : dataPPTssr[i].name,
-          "product_type" : dataPPTssr[i].product_type,
-          "physical_group" : dataPPTssr[i].phy_group,
-          "uom" : dataPPTssr[i].unit,
-          "qty" : dataTSSRBomItemIndex.qty,
-          "qty_scan" : 0,
-          "id_po_doc" : null,
-          "po_number" : "demo PO 1",
-          "deleted" : 0,
-          "created_by" : this.state.userId,
-          "updated_by" : this.state.userId
-        }
-        ppMRsave.push(ppSave);
-      }
-    }
-    const respondSaveMRPP = await this.postDatatoAPIBAM('/mr_pp_op', ppMRsave);
-    if(respondSaveMRPP.data !== undefined && respondSaveMRPP.status >= 200 && respondSaveMRPP.status <= 300 ){
-      if(ppMRsave.length === 1){
-        this.saveMrMattoAPI(_id_mr, mr_id, _etag_mr, [respondSaveMRPP.data]);
-      }else{
-        this.saveMrMattoAPI(_id_mr, mr_id, _etag_mr, respondSaveMRPP.data._items);
-      }
-    }else{
-      this.setState({action_status : 'failed'});
-      this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
-    }
-  }
-
-  async saveMrMattoAPI(_id_mr, mr_id, _etag_mr, list_data_post_pp_mr){
-    const dataPPTssr = this.state.list_pp_material_tssr;
-    const dataTSSRBOMNE = this.state.tssr_site_NE;
-    const dataTSSRBOMFE = this.state.tssr_site_FE;
-    const list_id_pp_mr = list_data_post_pp_mr.map(e => e._id);
-    let matMRsave = [];
-    //Material for NE
-    let indexNE = 0;
-    for(let i = 0; i < dataPPTssr.length; i++){
-      let dataTSSRBomItemIndex = dataTSSRBOMNE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-      for(let j = 0; j < dataPPTssr[i].list_of_id_material.length; j++){
-        const dataMatIndex = dataPPTssr[i].list_of_id_material[j];
-        let matSave = {
-          "id_mr_doc" : _id_mr,
-          "mr_id" : mr_id,
-          "id_mr_pp_doc" : list_id_pp_mr[i],
-          "id_pp_doc" : dataPPTssr[i]._id,
-          "pp_id" : dataPPTssr[i].pp_id,
-          "id_site_doc" : dataTSSRBOMNE.id_site_doc,
-          "site_id" : dataTSSRBOMNE.site_id,
-          "id_mc_doc" : dataMatIndex._id,
-          "material_id" : dataMatIndex.material_id,
-          "material_name" : dataMatIndex.material_name,
-          "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
-          "uom" : dataMatIndex.material_unit,
-          "qty" : dataTSSRBomItemIndex.qty*dataMatIndex.material_qty,
-          "qty_scan" : 0,
-          "id_po_doc" : null,
-          "po_number" : "demo PO 1",
-          "serial_numbers": [],
-          "deleted" : 0,
-          "created_by" : this.state.userId,
-          "updated_by" : this.state.userId
-        }
-        matMRsave.push(matSave);
-      }
-      indexNE = i;
-    }
-    //Material for FE
-    if(this.state.tssr_site_FE !== null){
-      for(let i = 0; i < dataPPTssr.length; i++){
-        let dataTSSRBomItemIndex = dataTSSRBOMFE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-        for(let j = 0; j < dataPPTssr[i].list_of_id_material.length; j++){
-          const dataMatIndex = dataPPTssr[i].list_of_id_material[j];
-          let matSave = {
-            "id_mr_doc" : _id_mr,
-            "mr_id" : mr_id,
-            "id_mr_pp_doc" : list_id_pp_mr[i+indexNE],
-            "id_pp_doc" : dataPPTssr[i]._id,
-            "pp_id" : dataPPTssr[i].pp_id,
-            "id_site_doc" : dataTSSRBOMFE.id_site_doc,
-            "site_id" : dataTSSRBOMFE.site_id,
-            "id_mc_doc" : dataMatIndex._id,
-            "material_id" : dataMatIndex.material_id,
-            "material_name" : dataMatIndex.material_name,
-            "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
-            "uom" : dataMatIndex.material_unit,
-            "qty" : dataTSSRBomItemIndex.qty*dataMatIndex.material_qty,
-            "qty_scan" : 0,
-            "id_po_doc" : null,
-            "po_number" : "demo PO 1",
-            "serial_numbers": [],
-            "deleted" : 0,
-            "created_by" : this.state.userId,
-            "updated_by" : this.state.userId
-          }
-          matMRsave.push(matSave);
-        }
-      }
-    }
-    const respondSaveMRMat = await this.postDatatoAPIBAM('/mr_md_op', matMRsave);
-    if(respondSaveMRMat.data !== undefined && respondSaveMRMat.status >= 200 && respondSaveMRMat.status <= 300 ){
-      console.log("Success");
-      this.setState({action_status : 'success'});
-    }else{
-      this.setState({action_status : 'failed'});
-      this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
-    }
-  }
-
   changeTabsSubmenu(e){
     console.log("tabs_submenu", e);
     let tab_submenu = new Array(4).fill(false);
@@ -501,9 +276,14 @@ class MRDetail extends Component {
                           <td>{this.state.data_mr.cd_id}</td>
                         </tr>
                         <tr>
+                          <td style={{width : '200px'}}>Project</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.project_name}</td>
+                        </tr>
+                        <tr>
                           <td style={{width : '200px'}}>MR Delivery Type</td>
                           <td>: </td>
-                          <td>{this.state.data_mr.mr_category}</td>
+                          <td>{this.state.data_mr.mr_delivery_type}</td>
                         </tr>
                         <tr>
                           <td style={{width : '200px'}}>DSP Company</td>
@@ -555,9 +335,14 @@ class MRDetail extends Component {
                       {this.state.data_mr !== null && (
                         <Fragment>
                         <tr>
-                          <td style={{width : '175px'}}>Scopes</td>
+                          <td style={{width : '175px'}}>SOW Type</td>
                           <td>: </td>
-                          <td>{this.state.data_mr.scopes}</td>
+                          <td>{this.state.data_mr.sow_type}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>&nbsp;</td>
+                          <td></td>
+                          <td></td>
                         </tr>
                         <tr>
                           <td style={{width : '175px'}}>MR Type</td>
@@ -680,7 +465,7 @@ class MRDetail extends Component {
                     </tr>
                   </thead>
                   <tbody>
-                  {this.state.mr_site_NE !== null ? (
+                  {this.state.mr_site_NE !== null && (
                     this.state.mr_site_NE.mr_pp.map( pp =>
                       <Fragment>
                         <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
@@ -705,8 +490,12 @@ class MRDetail extends Component {
                         )}
                       </Fragment>
                     )
-                  ) : (<tr><td colSpan="4">PS not Assigned</td></tr>)}
-
+                  )}
+                  {this.state.data_mr === null ?
+                    (<tr><td colSpan="5">Loading...</td></tr>)
+                    : this.state.data_mr.current_mr_status === "NOT ASSIGNED" && (
+                      <tr><td colSpan="5">PS not Assigned</td></tr>
+                    )}
                   </tbody>
                 </Table>
               </div>

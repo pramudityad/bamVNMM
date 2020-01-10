@@ -45,6 +45,10 @@ tssrsitesschema = {
         'type': 'string',
         'required': True,
     },
+    'site_name' : {
+        'type': 'string',
+        'required': True,
+    },
     'site_title' : {
         'type': 'string',
         'required': True,
@@ -76,18 +80,20 @@ tssrsitesschema = {
     },
     'created_on' : {
         'type': 'datetime',
-        'required': True,
+        'required': False
     },
     'created_by' : {
         'type': 'objectid',
         'required': True,
+        'nullable': True
     },
     'updated_on' : {
         'type': 'datetime',
-        'required': True,
+        'required': False
     },
     'updated_by' : {
         'type': 'objectid',
         'required': True,
+        'nullable': True,
     }
 }

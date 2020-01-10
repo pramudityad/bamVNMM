@@ -210,6 +210,26 @@ class PSUpload extends Component {
     }
   }
 
+  async getPSAllocated(){
+    const data_tssr_id = this.state.id_tssr_selected;
+    const getDataMR = await this.getDatafromAPIBAM('/mr_op?where={"id_tssr_doc" : "'+data_tssr_id+'"}');
+    if(getDataMR.data !== undefined){
+      const dataIDMR = getDataMR.data._items.map(e => e._id);
+      if(dataIDMR.length !== 0){
+        const getDataMR = await this.getDatafromAPIBAM('/mr_pp_op?where={"id_mr_doc" : {"$in" : ['+dataIDMR+']}}');
+        if(getDataMR.data !== undefined){
+
+        }
+      }
+    }
+  }
+
+  countPSAllocated(data_mr_pp){
+    let site_NE = this.state.data_tssr_sites.find(e => e.site_title === "NE");
+    let site_FE = this.state.data_tssr_sites.find(e => e.site_title === "FE");
+    // const 
+  }
+
   async getPPandMaterial(array_id_package){
     let dataPP = [];
     let arrayDataPP = array_id_package;
@@ -321,7 +341,7 @@ class PSUpload extends Component {
         "product_type" : dataPPTssr[i].product_type,
         "physical_group" : dataPPTssr[i].phy_group,
         "uom" : dataPPTssr[i].unit,
-        "qty" : dataTSSRBomItemIndex.qty,
+        "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id)),
         "qty_scan" : 0,
         "id_po_doc" : null,
         "po_number" : "demo PO 1",
@@ -346,7 +366,7 @@ class PSUpload extends Component {
           "product_type" : dataPPTssr[i].product_type,
           "physical_group" : dataPPTssr[i].phy_group,
           "uom" : dataPPTssr[i].unit,
-          "qty" : dataTSSRBomItemIndex.qty,
+          "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id)),
           "qty_scan" : 0,
           "id_po_doc" : null,
           "po_number" : "demo PO 1",
@@ -395,7 +415,7 @@ class PSUpload extends Component {
           "material_name" : dataMatIndex.material_name,
           "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
           "uom" : dataMatIndex.material_unit,
-          "qty" : dataTSSRBomItemIndex.qty*dataMatIndex.material_qty,
+          "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id))*dataMatIndex.material_qty,
           "qty_scan" : 0,
           "id_po_doc" : null,
           "po_number" : "demo PO 1",
@@ -427,7 +447,7 @@ class PSUpload extends Component {
             "material_name" : dataMatIndex.material_name,
             "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
             "uom" : dataMatIndex.material_unit,
-            "qty" : dataTSSRBomItemIndex.qty*dataMatIndex.material_qty,
+            "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id))*dataMatIndex.material_qty,
             "qty_scan" : 0,
             "id_po_doc" : null,
             "po_number" : "demo PO 1",
@@ -442,7 +462,6 @@ class PSUpload extends Component {
     }
     const respondSaveMRMat = await this.postDatatoAPIBAM('/mr_md_op', matMRsave);
     if(respondSaveMRMat.data !== undefined && respondSaveMRMat.status >= 200 && respondSaveMRMat.status <= 300 ){
-      console.log("Success");
       this.setState({action_status : 'success'});
     }else{
       this.setState({action_status : 'failed'});
