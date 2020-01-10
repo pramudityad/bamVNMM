@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Card, CardBody, Col, Progress, Row } from 'reactstrap';
 import classNames from 'classnames';
 import { mapToCssModules } from 'reactstrap/lib/utils';
+import '../../assets/fontawesome/css/all.css';
 
 const propTypes = {
   header: PropTypes.string,
@@ -24,7 +25,7 @@ const defaultProps = {
   // color: '',
   value: '25',
   variant: '',
-  imageSource: '../../assets/icon/dashboard/order-received.png',
+  imageSource: 'fa fa-warehouse',
   alt: 'Warehouse status'
 };
 
@@ -46,20 +47,25 @@ class Widget extends Component {
     const classes = mapToCssModules(classNames(className, card.style, card.bgColor), cssModule);
     progress.style = classNames('progress-xs my-3', progress.style);
 
-    const verticalCenter = {
-      padding: '0',
+    const verticalCenterText = {
       display: 'flex',
       alignItems: 'center'
+    }
+
+    const verticalCenterIcon = {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
     }
 
     return (
       <Card className={classes} {...attributes} style={{height:"195px"}}>
         <CardBody>
-          <Row>
-            <Col lg="3">
-              <img src={imageSource} className="img-fluid" alt={alt} />
+          <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
+            <Col lg="3" style={verticalCenterIcon}>
+              <center><i className={imageSource} style={{fontSize: "36px"}}></i></center>
             </Col>
-            <Col lg="9" style={verticalCenter}>
+            <Col lg="9" style={verticalCenterText}>
               <div>
                 <div className="h4 m-0">{header}</div>
                 <div>{mainText}</div>
@@ -67,7 +73,7 @@ class Widget extends Component {
             </Col>
           </Row>
           <Progress className={progress.style} color={progress.color} value={progress.value} />
-          <small className="text-muted">{smallText}</small>
+          <div className="p-3"><small className="text-muted">{smallText}</small></div>
           <div>{children}</div>
         </CardBody>
       </Card>
