@@ -210,6 +210,26 @@ class PSUpload extends Component {
     }
   }
 
+  async getPSAllocated(){
+    const data_tssr_id = this.state.id_tssr_selected;
+    const getDataMR = await this.getDatafromAPIBAM('/mr_op?where={"id_tssr_doc" : "'+data_tssr_id+'"}');
+    if(getDataMR.data !== undefined){
+      const dataIDMR = getDataMR.data._items.map(e => e._id);
+      if(dataIDMR.length !== 0){
+        const getDataMR = await this.getDatafromAPIBAM('/mr_pp_op?where={"id_mr_doc" : {"$in" : ['+dataIDMR+']}}');
+        if(getDataMR.data !== undefined){
+
+        }
+      }
+    }
+  }
+
+  countPSAllocated(data_mr_pp){
+    let site_NE = this.state.data_tssr_sites.find(e => e.site_title === "NE");
+    let site_FE = this.state.data_tssr_sites.find(e => e.site_title === "FE");
+    // const 
+  }
+
   async getPPandMaterial(array_id_package){
     let dataPP = [];
     let arrayDataPP = array_id_package;

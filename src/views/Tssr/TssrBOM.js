@@ -522,6 +522,10 @@ class TssrBOM extends Component {
     }
   }
 
+  editTSSR(){
+
+  }
+
   render() {
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/tssr-bom/'+this.state.redirectSign} />);
