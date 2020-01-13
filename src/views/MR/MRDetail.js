@@ -5,6 +5,8 @@ import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
 import {connect} from 'react-redux';
 import Select from 'react-select';
+import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
+import 'react-vertical-timeline-component/style.min.css';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -218,12 +220,110 @@ class MRDetail extends Component {
     this.setState({ tabs_submenu : tab_submenu });
   }
 
+  milestoneStat(ms_name, ms_date, ms_updater, index) 
+  {
+    switch ( ms_name )
+    {
+      case 'MS_ORDER_CREATED':
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date={ms_date}
+          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+          
+      >
+          <h3 className="vertical-timeline-element-title">Order Created</h3>
+          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
+        </VerticalTimelineElement>;
+      case 'MS_ORDER_RECEIVED':
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date={ms_date}
+          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+          
+      >
+          <h3 className="vertical-timeline-element-title">Order Received</h3>
+          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
+        </VerticalTimelineElement>;
+      case 'MS_ORDER_PROCESSING':
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date={ms_date}
+          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+          
+      >
+          <h3 className="vertical-timeline-element-title">Order Processing</h3>
+          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
+        </VerticalTimelineElement>;
+      case 'MS_READY_TO_DELIVER':
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date={ms_date}
+          iconStyle={{ background: 'rgb(227, 30, 16)', color: '#fff' }}
+          
+      >
+          <h3 className="vertical-timeline-element-title">Ready to Deliver</h3>
+          <h4 className="vertical-timeline-element-subtitle">confirmed by <b>{ms_updater}</b></h4>
+        </VerticalTimelineElement>;
+      case 'MS_JOINT_CHECK':
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date={ms_date}
+          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+          
+      >
+          <h3 className="vertical-timeline-element-title">Joint Check</h3>
+          <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
+        </VerticalTimelineElement>;
+      case 'MS_LOADING_PROCESS':
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date={ms_date}
+          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+          
+      >
+          <h3 className="vertical-timeline-element-title">Loading Process</h3>
+          <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
+        </VerticalTimelineElement>;
+      default:
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date=""
+          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+          
+      >
+          <h3 className="vertical-timeline-element-title">Data not available</h3>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
+        </VerticalTimelineElement>;
+    }
+  }
+
   componentDidMount(){
     this.getDataMR(this.props.match.params.id);
     document.title = 'MR Detail | BAM';
   }
 
   render() {
+    const background = { 
+      backgroundColor: '#e3e3e3',
+    };
+
     console.log("tabs_submenu", this.state.tabs_submenu);
     return (
       <div>
@@ -242,6 +342,9 @@ class MRDetail extends Component {
               </NavItem>
               <NavItem>
                 <NavLink href="#" active={this.state.tabs_submenu[1]} value="1" onClick={this.changeTabsSubmenu.bind(this, 1)}>MR Material</NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink href="#" active={this.state.tabs_submenu[2]} value="2" onClick={this.changeTabsSubmenu.bind(this, 2)}>Progress Overview</NavLink>
               </NavItem>
             </Nav>
             </div>
@@ -498,6 +601,34 @@ class MRDetail extends Component {
                     )}
                   </tbody>
                 </Table>
+              </div>
+            </Fragment>
+          )}
+          {this.state.tabs_submenu[2] === true && (
+            <Fragment>
+              <div className="animated fadeIn">
+                <Row>
+                  <Col xs="12" lg="12">
+                    <Card>
+                      <CardHeader>
+                        {this.state.data_mr !== null &&
+                          <span> Progress Overview for <b>{this.state.data_mr.mr_id}</b> </span>
+                        }
+                      </CardHeader>
+                      <CardBody 
+                        style={background}
+                      >
+                        <VerticalTimeline>
+                          {this.state.data_mr !== null && 
+                            this.state.data_mr.mr_milestones.map((ms, i) => {
+                              return this.milestoneStat(ms.ms_name, ms.ms_date, ms.ms_updater, i)
+                            })
+                          }
+                        </VerticalTimeline>
+                      </CardBody>
+                    </Card>
+                  </Col>
+                </Row>
               </div>
             </Fragment>
           )}

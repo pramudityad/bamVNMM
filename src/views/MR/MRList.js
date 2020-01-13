@@ -374,7 +374,7 @@ class MRList extends Component {
                       <tr key={list._id}>
                         <td>
                           <Link to={'/mr-detail/'+list._id}>
-                            <Button outline color="info" size="sm">Detail</Button>
+                            <Button style={{width: "90px"}} outline color="info" size="sm">Detail</Button>
                           </Link>
                         </td>
                         <td>{list.mr_id}</td>
