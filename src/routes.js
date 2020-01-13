@@ -114,7 +114,7 @@ const routes = [
   { path: '/mr-detail/:id', exact: true, name: 'Detail MR', component: MRDetail },
   { path: '/bulk-mr-creation', name: 'Bulk MR Creation', component: BulkMRCreation },
   { path: '/ps-upload/:id', exact: true, name: 'MR List', component: PSUpload },
-  { path: '/mr-progress', exact: true, name: 'MR Progress', component: MRProgress },
+  { path: '/mr-progress/:id', exact: true, name: 'MR Progress', component: MRProgress },
   { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WarehouseDashboard },
   { path: '/order-received', exact: true, name: 'Order Received', component: OrderReceived },
   { path: '/order-processing', exact: true, name: 'Order Processing', component: OrderProcessing },

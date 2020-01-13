@@ -34,12 +34,7 @@ export default {
           name: 'MR PS Not Assigned',
           url: '/mr-na-list',
           icon: 'icon-list',
-        },
-        {
-          name: 'LOM List',
-          url: '/lom-list',
-          icon: 'icon-list',
-        },
+        }
       ]
     },
     {
@@ -98,7 +93,7 @@ export default {
     {
       name: 'LOM List',
       url: '/lom-list',
-      icon: 'icon-drawer',
+      icon: 'fa fa-stop-circle',
     },
   ],
 };
