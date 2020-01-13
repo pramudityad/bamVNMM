@@ -8,6 +8,7 @@ import { saveAs } from 'file-saver';
 import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -22,6 +23,12 @@ const passwordBAM = 'F760qbAg2sml';
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
+
+const make_cols = refstr => {
+	let o = [], C = XLSX.utils.decode_range(refstr).e.c + 1;
+	for(var i = 0; i < C; ++i) o[i] = {name:XLSX.utils.encode_col(i), key:i}
+	return o;
+};
 
 if(Array.prototype.equals)
     console.warn("Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code.");
@@ -52,7 +59,7 @@ Array.prototype.equals = function (array) {
 // Hide method from for-in loops
 Object.defineProperty(Array.prototype, "equals", {enumerable: false});
 
-class TssrBOM extends Component {
+class BulkMR extends Component {
   constructor(props) {
     super(props);
 
@@ -62,6 +69,8 @@ class TssrBOM extends Component {
         userName : this.props.dataLogin.userName,
         userEmail : this.props.dataLogin.email,
         rowsXLS : [],
+        data : [],
+        cols : [],
         project_name_selected : null,
         cd_id_selected : null,
         dataTssrUpload : [],
@@ -190,23 +199,48 @@ class TssrBOM extends Component {
     return data.findIndex(e => this.isSameValue(e,value));
   }
 
-  fileHandlerMaterial = (event) => {
-    let fileObj = event.target.files[0];
-    if(fileObj !== undefined){
-      ExcelRenderer(fileObj, (err, rest) => {
-        if(err){
-          console.log(err);
-        }
-        else{
-          this.setState({
-            action_status : null,
-            action_message : null
-          }, () => {
-            this.ArrayEmptytoNull(rest.rows);
-          });
-        }
+  // fileHandlerMaterial = (event) => {
+  //   let fileObj = event.target.files[0];
+  //   console.log("rest.rows", fileObj);
+  //   if(fileObj !== undefined){
+  //     ExcelRenderer(fileObj, (err, rest) => {
+  //       if(err){
+  //         console.log(err);
+  //       }
+  //       else{
+  //         console.log("rest.rows", JSON.stringify(rest.rows));
+  //         this.setState({
+  //           action_status : null,
+  //           action_message : null
+  //         }, () => {
+  //           this.ArrayEmptytoNull(rest.rows);
+  //         });
+  //       }
+  //     });
+  //   }
+  // }
+
+  fileHandlerMaterial = (input) => {
+    const file = input.target.files[0];
+    const reader = new FileReader();
+    const rABS = !!reader.readAsBinaryString;
+    console.log("rABS");
+    reader.onload = (e) => {
+			/* Parse data */
+			const bstr = e.target.result;
+			const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array', cellDates:true});
+			/* Get first worksheet */
+			const wsname = wb.SheetNames[0];
+			const ws = wb.Sheets[wsname];
+			/* Convert array of arrays */
+			const data = XLSX.utils.sheet_to_json(ws, {header:1});
+			/* Update state */
+			this.setState({ data: data, cols: make_cols(ws['!ref']) }, () => {
+        this.ArrayEmptytoNull(data);
+        console.log("data",data);
       });
-    }
+		};
+    if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
   }
 
   ArrayEmptytoNull(dataXLS){
@@ -214,14 +248,19 @@ class TssrBOM extends Component {
     for(let i = 0; i < dataXLS.length; i++){
       let col = [];
       for(let j = 0; j < dataXLS[1].length; j++){
-        col.push(this.checkValue(dataXLS[i][j]));
+        if(typeof dataXLS[i][j] === "object"){
+          col.push(this.checkValue(JSON.stringify(dataXLS[i][j])));
+        }else{
+          col.push(this.checkValue(dataXLS[i][j]));
+        }
       }
       newDataXLS.push(col);
     }
+    console.log("newDataXLS", JSON.stringify(newDataXLS));
     this.setState({
       rowsXLS: newDataXLS
     });
-    this.formatDataTSSR(newDataXLS);
+    // this.formatDataTSSR(newDataXLS);
   }
 
   formatDataTSSR = async(dataXLS) => {
@@ -522,10 +561,6 @@ class TssrBOM extends Component {
     }
   }
 
-  editTSSR(){
-
-  }
-
   render() {
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/tssr-bom/'+this.state.redirectSign} />);
@@ -599,4 +634,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(TssrBOM);
+export default connect(mapStateToProps)(BulkMR);

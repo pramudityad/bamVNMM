@@ -43,6 +43,7 @@ const TssrBOMDetail = React.lazy(() => import('./views/Tssr/DetailTssr'));
 const MRList = React.lazy(() => import('./views/MR/MRList'));
 const MRNAList = React.lazy(() => import('./views/MR/MRNAList'));
 const MRCreation = React.lazy(() => import('./views/MR/MRCreation'));
+const BulkMRCreation = React.lazy(() => import('./views/MR/BulkMR'));
 const MRDetail = React.lazy(() => import('./views/MR/MRDetail'));
 const PSUpload = React.lazy(() => import('./views/MR/PSUpload'));
 const MRProgress = React.lazy(() => import('./views/MR/MRProgress'));
@@ -111,6 +112,7 @@ const routes = [
   { path: '/mr-na-list', exact: true, name: 'MR List', component: MRNAList },
   { path: '/mr-creation', exact: true, name: 'Create MR', component: MRCreation },
   { path: '/mr-detail/:id', exact: true, name: 'Detail MR', component: MRDetail },
+  { path: '/bulk-mr-creation', name: 'Bulk MR Creation', component: BulkMRCreation },
   { path: '/ps-upload/:id', exact: true, name: 'MR List', component: PSUpload },
   { path: '/mr-progress', exact: true, name: 'MR Progress', component: MRProgress },
   { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WarehouseDashboard },

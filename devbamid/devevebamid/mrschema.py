@@ -30,6 +30,18 @@ mrschema = {
         'nullable': True,
         'default': None
     },
+    'mr_delivery_type' : {
+        'type': 'string',
+        'required': False,
+        'nullable': True,
+        'default': None
+    },
+    'sow_type' : {
+        'type': 'string',
+        'required': False,
+        'nullable': True,
+        'default': None
+    },
     'id_tssr_doc' : {
         'type': 'objectid',
         'required': False,

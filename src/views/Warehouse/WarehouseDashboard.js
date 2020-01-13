@@ -13,6 +13,7 @@ class WarehouseDashboard extends Component {
     super(props);
 
     this.state = {
+      variant0: "inverse",
       variant1: "inverse",
       variant2: "inverse",
       variant3: "inverse",
@@ -40,6 +41,7 @@ class WarehouseDashboard extends Component {
     }
     
     this.updateHover1 = this.updateHover1.bind(this);
+    this.getOrderCreated = this.getOrderCreated.bind(this);
     this.getOrderReceived = this.getOrderReceived.bind(this);
     this.getOrderProcessing = this.getOrderProcessing.bind(this);
     this.getReadyToDeliver = this.getReadyToDeliver.bind(this);
@@ -103,6 +105,7 @@ class WarehouseDashboard extends Component {
   }
 
   componentDidMount() {
+    this.getOrderCreated();
     this.getOrderReceived();
     this.getOrderProcessing();
     this.getReadyToDeliver();
@@ -132,6 +135,16 @@ class WarehouseDashboard extends Component {
     }
   }
 
+  getOrderCreated() {
+    this.getDataFromAPI('/mr_sorted_nonpage?where={"current_mr_status":"MR REQUESTED"}').then(res => {
+      console.log("Order Created xx", res);
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({order_created : items.length});
+      }
+    })
+  }
+  
   getOrderReceived() {
     this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_ORDER_RECEIVED"}').then(res => {
       console.log("Order Received", res);

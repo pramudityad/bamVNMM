@@ -13,6 +13,10 @@ const API_URL_BMS_Phil = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
+const API_URL_PDB_TSEL = 'http://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
+const usernameTselApi = 'adminbamidsuper';
+const passwordTselApi = 'F760qbAg2sml';
+
 const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
@@ -32,6 +36,9 @@ class MRCreation extends Component {
         userEmail : this.props.dataLogin.email,
         create_mr_form : new Array(9).fill(null),
         create_mr_name_form : new Array(9).fill(null),
+        list_cd_id : [],
+        cd_id_selected : null,
+        data_cd_id_selected : null,
         project_selected : null,
         project_name_selected : null,
         list_project : [],
@@ -50,6 +57,7 @@ class MRCreation extends Component {
     this.handleChangeFormMRCreation = this.handleChangeFormMRCreation.bind(this);
     this.handleChangeMRType = this.handleChangeMRType.bind(this);
     this.handleChangeProject = this.handleChangeProject.bind(this);
+    this.handleChangeCD = this.handleChangeCD.bind(this);
   }
 
   async getDatafromAPIBMS(url){
@@ -59,6 +67,26 @@ class MRCreation extends Component {
         auth: {
           username: usernamePhilApi,
           password: passwordPhilApi
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
+    }
+  }
+
+  async getDatafromAPITSEL(url){
+    try {
+      let respond = await axios.get(API_URL_PDB_TSEL +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameTselApi,
+          password: passwordTselApi
         },
       })
       if(respond.status >= 200 && respond.status < 300){
@@ -132,6 +160,23 @@ class MRCreation extends Component {
     }
   }
 
+  getDataCD(){
+    this.getDatafromAPITSEL('/custdel_op').then( resCD => {
+      if(resCD.data !== undefined){
+        this.setState({ list_cd_id : resCD.data._items })
+      }
+    })
+  }
+
+  getDataCDProject(){
+    const project_id = this.state.data_cd_id_selected.CD_Info_Project;
+    this.getDatafromAPITSEL('/project_op/'+project_id).then( resCD => {
+      if(resCD.data !== undefined){
+        this.setState({ project_selected : resCD.data._id, project_name_selected : resCD.data.Project })
+      }
+    })
+  }
+
   getDataProject(){
     this.getDatafromAPIBMS('/project_non_page').then( resProject => {
       if(resProject.data !== undefined){
@@ -163,7 +208,7 @@ class MRCreation extends Component {
       let dataFormName = this.state.create_mr_name_form;
       const textOpt = e.target[indexOpt].text;
       dataFormName[parseInt(index)] = textOpt;
-      this.setState({create_mr_name_form : dataFormName})
+      this.setState({create_mr_name_form : dataFormName});
     }
     this.setState({create_mr_form : dataForm}, () => {
       console.log("PPForm", this.state.create_mr_form, this.state.create_mr_name_form);
@@ -173,33 +218,67 @@ class MRCreation extends Component {
   preparingDataMR(){
     const dateNow = new Date();
     const dataRandom = Math.floor(Math.random() * 100).toString().padStart(4, '0');
-    const numberTSSR = dateNow.getFullYear().toString()+(dateNow.getMonth()+1).toString()+dateNow.getDate().toString()+dataRandom.toString();
+    const numberTSSR = dateNow.getFullYear().toString()+(dateNow.getMonth()+1).toString().padStart(2, '0')+dateNow.getDate().toString().padStart(2, '0')+dataRandom.toString();
     return numberTSSR;
   }
 
   async saveMRtoAPI(){
+    const dataCD = this.state.data_cd_id_selected;
     const dataForm = this.state.create_mr_form;
     const dataFormName = this.state.create_mr_name_form;
     const numberingMR = this.preparingDataMR();
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    let list_site = [];
+    if(dataCD.Site_Info_SiteID_NE !== ""){
+      let site_ne = {
+          "id_site_doc": "",
+          "site_id": dataCD.Site_Info_SiteID_NE,
+          "site_title": "NE",
+          "site_name" : dataCD.Site_Info_SiteName_NE,
+          "site_address" : dataCD.Site_Info_Address_NE,
+          "site_longitude" : parseFloat(dataCD.Site_Info_Longitude_NE),
+          "site_latitude" : parseFloat(dataCD.Site_Info_Latitude_NE),
+          "id_tssr_boq_site_doc" : null,
+          "no_tssr_boq_site" : null,
+          "tssr_version" : null
+      }
+      list_site.push(site_ne);
+    }
+    if(dataCD.Site_Info_SiteID_FE !== ""){
+      let site_fe = {
+          "id_site_doc": "",
+          "site_id": dataCD.Site_Info_SiteID_FE,
+          "site_title": "FE",
+          "site_name" : dataCD.Site_Info_SiteName_FE,
+          "site_address" : dataCD.Site_Info_Address_FE,
+          "site_longitude" : parseFloat(dataCD.Site_Info_Longitude_FE),
+          "site_latitude" : parseFloat(dataCD.Site_Info_Latitude_FE),
+          "id_tssr_boq_site_doc" : null,
+          "no_tssr_boq_site" : null,
+          "tssr_version" : null
+      }
+      list_site.push(site_fe);
+    }
     const mr_data = {
       	"mr_id" : "MR"+numberingMR,
         "implementation_id" : "IMP"+numberingMR,
         "scopes" : dataForm[1],
-        "mr_category" : dataForm[4],
+        "mr_delivery_type" : dataForm[4],
         "mr_type" : dataForm[3],
         "id_tssr_doc" : null,
         "tssr_id" : null,
         "account_id" : "1",
-        "id_project_doc" : dataForm[2],
-        "project_name" : dataFormName[2],
-        "id_cd_doc" : null,
-        "cd_id" : dataForm[0],
-        "etd" : dataForm[5]+" 23:59:00",
-        "requested_eta" : dataForm[6]+" 23:59:00",
+        "id_project_doc" : this.state.project_selected,
+        "project_name" : this.state.project_name_selected,
+        "id_cd_doc" : this.state.cd_id_selected,
+        "cd_id" : dataCD.WP_ID.toString(),
+        "sow_type" : dataCD.CD_Info_SOW_Type,
+        "dsp_company" : dataFormName[7],
+        "etd" : dataForm[5]+" 00:00:00",
+        "requested_eta" : dataForm[6]+" 23:59:59",
         "eta" : dataForm[6]+" 23:59:00",
-        "site_info" : [],
+        "site_info" : list_site,
         "mr_milestones" : [],
         "mr_status" : [
           {
@@ -217,12 +296,13 @@ class MRCreation extends Component {
             "mr_status_updater_id": this.state.userId,
           }
         ],
-        "current_mr_status" : "PLANTSPEC NOT ASSIGNED",
+        "current_mr_status" : "NOT ASSIGNED",
         "current_milestones" : "",
         "deleted" : 0,
         "created_by" : this.state.userId,
         "updated_by" : this.state.userId
       }
+      console.log("data new MR", JSON.stringify(mr_data));
       const respondSaveMR = await this.postDatatoAPIBAM('/mr_op', mr_data);
       if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
         setTimeout(function(){ this.setState({ redirectSign : respondSaveMR.data._id}); }.bind(this), 3000);
@@ -232,6 +312,7 @@ class MRCreation extends Component {
 
   componentDidMount(){
     this.getDataProject();
+    this.getDataCD();
     document.title = "MR Creation | BAM"
   }
 
@@ -242,7 +323,18 @@ class MRCreation extends Component {
     this.setState({project_selected : value, project_name_selected : text});
   }
 
+  handleChangeCD(e){
+    const value = e.target.value;
+    const index = e.target.selectedIndex;
+    const text = e.target[index].text;
+    const data_CD = this.state.list_cd_id.find(e => e._id === value);
+    this.setState({cd_id_selected : value, data_cd_id_selected : data_CD}, () => {
+      this.getDataCDProject();
+    });
+  }
+
   render() {
+    console.log("list_cd_id", this.state.data_cd_id_selected);
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);
     }
@@ -262,34 +354,64 @@ class MRCreation extends Component {
                 <Col md={6}>
                   <FormGroup>
                     <Label>CD ID</Label>
-                    <Input type="text" name="0" value={this.state.create_mr_form[0]} onChange={this.handleChangeFormMRCreation}/>
+                    <Input type="select" name="0" value={this.state.cd_id_selected} onChange={this.handleChangeCD}>
+                      <option value={null}></option>
+                      {this.state.list_cd_id.map( cd_id =>
+                        <option value={cd_id._id}>{cd_id.WP_ID +" ("+cd_id.WP_Name+")"}</option>
+                      )}
+                    </Input>
                   </FormGroup>
                 </Col>
-                <Col md={6}>
+                {/* <Col md={6}>
                   <FormGroup>
                     <Label>Scope</Label>
                     <Input type="text" name="1" value={this.state.create_mr_form[1]} onChange={this.handleChangeFormMRCreation}/>
+                  </FormGroup>
+                </Col> */}
+              </Row>
+              <Row form>
+                <Col md={6}>
+                  <FormGroup>
+                    <Label>Project</Label>
+                    <Input type="text" value={this.state.project_name_selected} disabled/>
                   </FormGroup>
                 </Col>
               </Row>
               <Row form>
                 <Col md={6}>
                   <FormGroup>
-                    <Label>Project</Label>
-                    <Input type="select" name="2" value={this.state.create_mr_form[2]} onChange={this.handleChangeFormMRCreation}>
+                    <Label>SOW Type</Label>
+                    <Input type="text" name="2" value={this.state.data_cd_id_selected !== null ? this.state.data_cd_id_selected.CD_Info_SOW_Type : ""} disabled/>
+                  </FormGroup>
+                </Col>
+              </Row>
+              <Row form>
+                <Col md={6}>
+                  <FormGroup>
+                    <Label>Site NE</Label>
+                    <Input type="text" value={this.state.data_cd_id_selected !== null ? this.state.data_cd_id_selected.Site_Info_SiteID_NE : ""} disabled/>
+                  </FormGroup>
+                </Col>
+                <Col md={6}>
+                  <FormGroup>
+                    <Label>Site NE</Label>
+                    <Input type="text" value={this.state.data_cd_id_selected !== null ? this.state.data_cd_id_selected.Site_Info_SiteID_FE : ""} disabled/>
+                  </FormGroup>
+                </Col>
+              </Row>
+              <Row form>
+                <Col md={6}>
+                  <FormGroup>
+                    <Label>DSP Company</Label>
+                    <Input type="select" name="7" value={this.state.create_mr_form[7]} onChange={this.handleChangeFormMRCreation}>
                       <option value={null}></option>
-                      {this.state.list_project.map( project =>
-                        <option value={project._id}>{project.project_name}</option>
-                      )}
+                      <option value={1}>PT BMS Delivery</option>
+                      <option value={2}>PT MITT Delivery</option>
+                      <option value={3}>PT IXT Delivery</option>
+                      <option value={4}>PT ARA Delivery</option>
                     </Input>
                   </FormGroup>
                 </Col>
-                {/* }<Col md={6}>
-                  <FormGroup>
-                    <Label for="exampleState">Project Group</Label>
-                    <Input type="text" name="state" id="exampleState"/>
-                  </FormGroup>
-                </Col> */}
               </Row>
               <Row form>
                 <Col md={6}>

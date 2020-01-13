@@ -92,22 +92,20 @@ tssrsiteitemsschema = {
     },
     'created_on' : {
         'type': 'datetime',
-        'required': True,
-        'nullable': False,
+        'required': False
     },
     'created_by' : {
         'type': 'objectid',
         'required': True,
-        'nullable': False,
+        'nullable': True
     },
     'updated_on' : {
         'type': 'datetime',
-        'required': True,
-        'nullable': False,
+        'required': False
     },
     'updated_by' : {
         'type': 'objectid',
         'required': True,
-        'nullable': False,
+        'nullable': True,
     }
 }

@@ -41,6 +41,8 @@ class PSUpload extends Component {
         tssr_site_FE : null,
         list_pp_material_tssr : [],
         mr_type : "RBS",
+        qty_ne : new Map(),
+        qty_fe : new Map(),
         action_status : null,
         action_message : null,
     };
@@ -48,6 +50,8 @@ class PSUpload extends Component {
     this.getQtyTssrPPNE = this.getQtyTssrPPNE.bind(this);
     this.getQtyTssrPPFE = this.getQtyTssrPPFE.bind(this);
     this.saveMRtoAPI = this.saveMRtoAPI.bind(this);
+    this.editQtyNE = this.editQtyNE.bind(this);
+    this.editQtyFE = this.editQtyFE.bind(this);
   }
 
   async getDatafromAPIBMS(url){
@@ -206,6 +210,26 @@ class PSUpload extends Component {
     }
   }
 
+  async getPSAllocated(){
+    const data_tssr_id = this.state.id_tssr_selected;
+    const getDataMR = await this.getDatafromAPIBAM('/mr_op?where={"id_tssr_doc" : "'+data_tssr_id+'"}');
+    if(getDataMR.data !== undefined){
+      const dataIDMR = getDataMR.data._items.map(e => e._id);
+      if(dataIDMR.length !== 0){
+        const getDataMR = await this.getDatafromAPIBAM('/mr_pp_op?where={"id_mr_doc" : {"$in" : ['+dataIDMR+']}}');
+        if(getDataMR.data !== undefined){
+
+        }
+      }
+    }
+  }
+
+  countPSAllocated(data_mr_pp){
+    let site_NE = this.state.data_tssr_sites.find(e => e.site_title === "NE");
+    let site_FE = this.state.data_tssr_sites.find(e => e.site_title === "FE");
+    // const 
+  }
+
   async getPPandMaterial(array_id_package){
     let dataPP = [];
     let arrayDataPP = array_id_package;
@@ -264,7 +288,7 @@ class PSUpload extends Component {
             }
         ],
         "mr_milestones" : [],
-        "current_mr_status" : "PLANTSPEC ASSIGNED",
+        "current_mr_status" : "ASSIGNED",
         "current_milestones" : "",
         "created_by" : this.state.userId,
         "updated_by" : this.state.userId
@@ -288,7 +312,7 @@ class PSUpload extends Component {
             "no_tssr_boq_site" : dataTSSRBOMFE.no_tssr_boq_site,
             "tssr_version" : dataTSSRBOMFE.version === undefined ? "0" : dataTSSRBOMFE.version,
         }
-        mr_data["site_info"].push()
+        mr_data["site_info"].push(dataSiteFE)
       }
       const respondSaveMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMRParent._id, mr_data, dataMRParent._etag);
       if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
@@ -317,7 +341,7 @@ class PSUpload extends Component {
         "product_type" : dataPPTssr[i].product_type,
         "physical_group" : dataPPTssr[i].phy_group,
         "uom" : dataPPTssr[i].unit,
-        "qty" : dataTSSRBomItemIndex.qty,
+        "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id)),
         "qty_scan" : 0,
         "id_po_doc" : null,
         "po_number" : "demo PO 1",
@@ -342,7 +366,7 @@ class PSUpload extends Component {
           "product_type" : dataPPTssr[i].product_type,
           "physical_group" : dataPPTssr[i].phy_group,
           "uom" : dataPPTssr[i].unit,
-          "qty" : dataTSSRBomItemIndex.qty,
+          "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id)),
           "qty_scan" : 0,
           "id_po_doc" : null,
           "po_number" : "demo PO 1",
@@ -391,7 +415,7 @@ class PSUpload extends Component {
           "material_name" : dataMatIndex.material_name,
           "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
           "uom" : dataMatIndex.material_unit,
-          "qty" : dataTSSRBomItemIndex.qty*dataMatIndex.material_qty,
+          "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id))*dataMatIndex.material_qty,
           "qty_scan" : 0,
           "id_po_doc" : null,
           "po_number" : "demo PO 1",
@@ -423,7 +447,7 @@ class PSUpload extends Component {
             "material_name" : dataMatIndex.material_name,
             "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
             "uom" : dataMatIndex.material_unit,
-            "qty" : dataTSSRBomItemIndex.qty*dataMatIndex.material_qty,
+            "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id))*dataMatIndex.material_qty,
             "qty_scan" : 0,
             "id_po_doc" : null,
             "po_number" : "demo PO 1",
@@ -438,13 +462,24 @@ class PSUpload extends Component {
     }
     const respondSaveMRMat = await this.postDatatoAPIBAM('/mr_md_op', matMRsave);
     if(respondSaveMRMat.data !== undefined && respondSaveMRMat.status >= 200 && respondSaveMRMat.status <= 300 ){
-      console.log("Success");
       this.setState({action_status : 'success'});
     }else{
       this.setState({action_status : 'failed'});
       this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
     }
   }
+
+  editQtyNE = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+    this.setState(prevState => ({ qty_ne : prevState.qty_ne.set(name, value) }));
+  }
+
+  editQtyFE = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+    this.setState(prevState => ({ qty_fe : prevState.qty_fe.set(name, value) }));
+}
 
   componentDidMount(){
     this.getDataMR(this.props.match.params.id);
@@ -572,9 +607,13 @@ class PSUpload extends Component {
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                           <td>{pp.name}</td>
                           <td>{pp.unit}</td>
-                          <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)}</td>
+                          <td>
+                            <Input style={{textAlign : 'center'}} onChange={this.editQtyNE} type="number" name={pp.pp_id} value={!this.state.qty_ne.has(pp.pp_id) ? this.getQtyTssrPPNE(pp.pp_id) : this.state.qty_ne.get(pp.pp_id)} />
+                          </td>
                           {this.state.tssr_site_FE !== null ? (
-                            <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)}</td>
+                            <td>
+                              <Input style={{textAlign : 'center'}} onChange={this.editQtyFE} type="number" name={pp.pp_id} value={!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id)} />
+                            </td>
                           ):(<Fragment></Fragment>)}
                         </tr>
                         {pp.list_of_id_material.map(material =>
@@ -582,9 +621,9 @@ class PSUpload extends Component {
                             <td style={{textAlign : 'right'}}>{material.material_id}</td>
                             <td style={{textAlign : 'left'}}>{material.material_name}</td>
                             <td>{material.material_unit}</td>
-                            <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)*material.material_qty}</td>
+                            <td align='center'>{(!this.state.qty_ne.has(pp.pp_id) ? this.getQtyTssrPPNE(pp.pp_id) : this.state.qty_ne.get(pp.pp_id))*material.material_qty}</td>
                             {this.state.tssr_site_FE !== null ? (
-                              <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)*material.material_qty}</td>
+                              <td align='center'>{(!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id))*material.material_qty}</td>
                             ):(<Fragment></Fragment>)}
                           </tr>
                         )}
