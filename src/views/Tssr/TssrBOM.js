@@ -19,6 +19,10 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const API_URL_PDB_TSEL = 'http://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
+const usernameTselApi = 'adminbamidsuper';
+const passwordTselApi = 'F760qbAg2sml';
+
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
@@ -73,13 +77,13 @@ class TssrBOM extends Component {
     this.saveTssrBOMParent = this.saveTssrBOMParent.bind(this);
   }
 
-    async getDatafromAPIBMS(url){
+    async getDatafromAPITSEL(url){
       try {
-        let respond = await axios.get(API_URL_BMS_Phil +url, {
+        let respond = await axios.get(API_URL_PDB_TSEL +url, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: usernameTselApi,
+            password: passwordTselApi
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -225,10 +229,10 @@ class TssrBOM extends Component {
   }
 
   formatDataTSSR = async(dataXLS) => {
-      let action_message = this.state.action_message;
+      let action_message = [];
       let actionStatus = null;
       this.setState({waiting_status : 'loading'});
-      const staticHeader = ["project", "site_id", "site_name"];
+      const staticHeader = ["site_title", "site_id", "site_name"];
       const staticHeaderXLS = dataXLS[1].filter((e,n) => n < 3);
       if(staticHeaderXLS.equals(staticHeader) !== true){
         this.setState({action_status : "failed", action_message : action_message + "la Please check your upload format or Package Number"});
@@ -261,7 +265,7 @@ class TssrBOM extends Component {
       let pp_name = new Map();
       let group_PP = new Map();
       let pp_cust_num = new Map();
-      let phy_group = new Map();
+      let physical_group = new Map();
       let pp_type = new Map();
       let pp_unit = new Map();
       let data_duplicated = [];
@@ -286,11 +290,11 @@ class TssrBOM extends Component {
             pp_key.set(idXLSIndex, get_id_PP.pp_key);
             _id_PP.set(idXLSIndex, get_id_PP._id);
             group_PP.set(idXLSIndex, get_id_PP.pp_group)
-            pp_name.set(idXLSIndex, get_id_PP.name);
+            pp_name.set(idXLSIndex, get_id_PP.product_name);
             pp_cust_num.set(idXLSIndex, get_id_PP.pp_cust_number);
-            phy_group.set(idXLSIndex, get_id_PP.phy_group)
+            physical_group.set(idXLSIndex, get_id_PP.physical_group)
             pp_type.set(idXLSIndex, get_id_PP.product_type);
-            pp_unit.set(idXLSIndex, get_id_PP.unit);
+            pp_unit.set(idXLSIndex, get_id_PP.uom);
           }else{
             data_duplicated.push(idXLSIndex);
           }
@@ -320,7 +324,7 @@ class TssrBOM extends Component {
                 "pp_group" : group_PP.get(dataXLSIndex),
                 "pp_cust_number" : pp_cust_num.get(dataXLSIndex),
                 "product_name" : pp_name.get(dataXLSIndex).toString(),
-                "physical_group" : phy_group.get(dataXLSIndex),
+                "physical_group" : physical_group.get(dataXLSIndex),
                 "product_type" : pp_type.get(dataXLSIndex),
                 "uom" : pp_unit.get(dataXLSIndex),
                 "qty" : this.checkValuetoZero(dataXLS[i][j]),
@@ -336,12 +340,19 @@ class TssrBOM extends Component {
           let SiteBOQTech = {
             "account_id" : "1",
             "site_id" : siteID,
-            "site_name" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]).toString(),
+            "site_name" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]),
+            "site_title" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_title')]),
             "list_of_site_items" : packageDatas,
             "version" : "0",
             "created_by" : this.state.userId,
             "updated_by" : this.state.userId,
             "deleted" : 0
+          }
+          if(SiteBOQTech.site_name !== null){
+            SiteBOQTech["site_name"] = SiteBOQTech.site_name.toString();
+          }
+          if(SiteBOQTech.site_title !== null){
+            SiteBOQTech["site_title"] = SiteBOQTech.site_title.toString();
           }
           // "site_name" : this.checkValuetoString(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]).toString(),
           if(siteID.length === 0){
@@ -375,10 +386,6 @@ class TssrBOM extends Component {
       return SitesOfTSSRNew;
   }
 
-  // getDataSites(){
-  //   const respondSite = this.getDataFromAPI('/site_non_page?where')
-  // }
-
   async getAllPP(array_PP, array_PP_sepcial){
     let dataPP = [];
     let arrayDataPP = array_PP;
@@ -388,7 +395,7 @@ class TssrBOM extends Component {
       let arrayIdPP = '"'+DataPaginationPP.join('", "')+'"';
       arrayIdPP = arrayIdPP.replace("&", "%26");
       let where_id_PP = '?where={"pp_id" : {"$in" : ['+arrayIdPP+']}}';
-      let resPP = await this.getDatafromAPIBMS('/pp_sorted_non_page'+where_id_PP);
+      let resPP = await this.getDatafromAPIBAM('/pp_sorted_nonpage'+where_id_PP);
       if(resPP !== undefined){
         if(resPP.data !== undefined){
           dataPP = dataPP.concat(resPP.data._items);
@@ -399,7 +406,7 @@ class TssrBOM extends Component {
       let dataPPIndex = array_PP_sepcial[i];
       dataPPIndex = dataPPIndex.replace("\"", "");
       let where_id_PP = '?where={"pp_id":{"$regex" : "'+dataPPIndex+'", "$options" : "i"}}';
-      let resPP = await this.getDatafromAPIBMS('/pp_sorted_non_page'+where_id_PP);
+      let resPP = await this.getDatafromAPIBAM('/pp_sorted_nonpage'+where_id_PP);
       if(resPP !== undefined){
         if(resPP.data !== undefined){
           dataPP = dataPP.concat(resPP.data._items);
@@ -459,7 +466,6 @@ class TssrBOM extends Component {
     const dateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
     const dataSites = this.state.dataTssrUpload;
     for(let i = 0; i < dataSites.length; i++){
-      // let siteTssrIdx = Object.assign(dataSites[i], {});
       let siteTssrIdx = JSON.parse(JSON.stringify(dataSites[i]));
       siteTssrIdx["id_tssr_boq_doc"] = _id_tssr_parent;
       siteTssrIdx["no_tssr_boq"] = no_tssr_boq;
@@ -469,7 +475,9 @@ class TssrBOM extends Component {
       siteTssrIdx["project_name"] = this.state.project_name_selected === null ? "" : this.state.project_name_selected;
       siteTssrIdx["id_boq_tech_doc"] = null;
       siteTssrIdx["no_boq_tech"] = "";
-      siteTssrIdx["site_title"] = ((i+1) % 2) === 1 ? "NE" : "FE";
+      if(siteTssrIdx.site_title === null){
+        siteTssrIdx["site_title"] = ((i+1) % 2) === 1 ? "NE" : "FE";
+      }
       siteTssrIdx["created_on"] = dateNow.toString();
       siteTssrIdx["updated_on"] = dateNow.toString();
       if(siteTssrIdx.list_of_site_items !== undefined){
@@ -486,8 +494,9 @@ class TssrBOM extends Component {
         this.saveTSSRBOMSitesItem(_id_tssr_parent, no_tssr_boq, _etag_tssr_parent, respondSaveTSSRSites.data._items, bulkTssrSites);
       }
     }else{
+      const delData = await this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
       this.setState({ action_status : 'failed' });
-      this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
+
     }
   }
 
@@ -517,8 +526,8 @@ class TssrBOM extends Component {
         setTimeout(function(){ this.setState({ redirectSign : _id_tssr_parent}); }.bind(this), 3000);
       });
     }else{
+      const delData = await this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
       this.setState({ action_status : 'failed' });
-      this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
     }
   }
 
