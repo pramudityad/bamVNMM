@@ -18,6 +18,10 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const API_URL_PDB_TSEL = 'http://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
+const usernameTselApi = 'adminbamidsuper';
+const passwordTselApi = 'F760qbAg2sml';
+
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
@@ -88,6 +92,26 @@ class DetailTssr extends Component {
           auth: {
             username: usernamePhilApi,
             password: passwordPhilApi
+          },
+        })
+        if(respond.status >= 200 && respond.status < 300){
+          console.log("respond Get Data", respond);
+        }
+        return respond;
+      }catch (err) {
+        let respond = err;
+        console.log("respond Get Data", err);
+        return respond;
+      }
+    }
+
+    async getDatafromAPITSEL(url){
+      try {
+        let respond = await axios.get(API_URL_PDB_TSEL +url, {
+          headers : {'Content-Type':'application/json'},
+          auth: {
+            username: usernameTselApi,
+            password: passwordTselApi
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -298,7 +322,7 @@ class DetailTssr extends Component {
             pp_cust_num.set(idXLSIndex, get_id_PP.pp_cust_number);
             phy_group.set(idXLSIndex, get_id_PP.phy_group)
             pp_type.set(idXLSIndex, get_id_PP.product_type);
-            pp_unit.set(idXLSIndex, get_id_PP.unit);
+            pp_unit.set(idXLSIndex, get_id_PP.uom);
           }else{
             data_duplicated.push(idXLSIndex);
           }
@@ -446,7 +470,7 @@ class DetailTssr extends Component {
         let dataPaginationPP = arrayDataPP.slice(i * 25, (i+1)*25);
         let arrayIdPP = '"'+dataPaginationPP.join('", "')+'"';
         let where_id_PP = '?where={"_id" : {"$in" : ['+arrayIdPP+']}}';
-        let resPP = await this.getDatafromAPIBMS('/pp_non_page'+where_id_PP+'&'+'embedded={"list_of_id_material" : 1}');
+        let resPP = await this.getDatafromAPIBAM('/pp_sorted_nonpage'+where_id_PP);
         if(resPP !== undefined){
             if(resPP.data !== undefined){
               // eslint-disable-next-line
@@ -454,15 +478,44 @@ class DetailTssr extends Component {
             }
         }
     }
-    this.setState({list_pp_material_tssr : dataPP});
+    this.getDataMaterial(dataPP);
+  }
+
+  async getDataMaterial(data_pp){
+    let dataMat = [];
+    let arrayDataPP = data_pp.map(e => e._id);
+    let getNumberPage = Math.ceil(arrayDataPP.length / 25);
+    for(let i = 0 ; i < getNumberPage; i++){
+        let dataPaginationPP = arrayDataPP.slice(i * 25, (i+1)*25);
+        let arrayIdPP = '"'+dataPaginationPP.join('", "')+'"';
+        let where_id_PP = '?where={"id_pp_doc" : {"$in" : ['+arrayIdPP+']}}';
+        let resMat = await this.getDatafromAPIBAM('/mc_op'+where_id_PP);
+        if(resMat !== undefined){
+            if(resMat.data !== undefined){
+              // eslint-disable-next-line
+              dataMat = dataMat.concat(resMat.data._items);
+            }
+        }
+    }
+    this.prepareDataPP(data_pp, dataMat);
+  }
+
+  prepareDataPP(data_pp, data_material){
+    let product_package = data_pp;
+    const material_catalogue = data_material;
+    for(let i = 0; i < product_package.length; i++){
+      const material = material_catalogue.filter(e => e.pp_id === product_package[i].pp_id);
+      product_package[i]["list_of_material"] = material;
+    }
+    this.setState({list_pp_material_tssr : product_package});
   }
 
   prepareView(){
     let site_NE = this.state.data_tssr_sites.find(e => e.site_title === "NE");
     let site_FE = this.state.data_tssr_sites.find(e => e.site_title === "FE");
-    console.log("site_NE", site_NE);
     if(site_NE !== undefined){
       site_NE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_NE._id);
+      console.log("site_NE", site_NE);
       this.setState({tssr_site_NE : site_NE});
     }else{
       this.setState({tssr_site_NE : null})
@@ -476,7 +529,7 @@ class DetailTssr extends Component {
   }
 
   getDataProject(){
-    this.getDatafromAPIBMS('/project_non_page').then( resProject => {
+    this.getDatafromAPITSEL('/project_sorted_non_page').then( resProject => {
       if(resProject.data !== undefined){
         this.setState({ list_project : resProject.data._items })
       }
@@ -668,7 +721,7 @@ class DetailTssr extends Component {
                         <Input style={{marginTop : '10px'}} name="project" type="select" onChange={this.handleChangeProject} value={this.state.project_selected}>
                           <option value={null}></option>
                           {this.state.list_project.map( project =>
-                            <option value={project._id}>{project.project_name}</option>
+                            <option value={project._id}>{project.Project}</option>
                           )}
                         </Input>
                       </td>
@@ -761,20 +814,20 @@ class DetailTssr extends Component {
                           <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                             <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                             <td>{pp.name}</td>
-                            <td>{pp.unit}</td>
+                            <td>{pp.uom}</td>
                             <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)}</td>
                             {this.state.tssr_site_FE !== null ? (
                               <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)}</td>
                             ):(<Fragment></Fragment>)}
                           </tr>
-                          {pp.list_of_id_material.map(material =>
+                          {pp.list_of_material.map(material =>
                             <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
                               <td style={{textAlign : 'right'}}>{material.material_id}</td>
                               <td style={{textAlign : 'left'}}>{material.material_name}</td>
-                              <td>{material.material_unit}</td>
-                              <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)*material.material_qty}</td>
+                              <td>{material.uom}</td>
+                              <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)*material.qty}</td>
                               {this.state.tssr_site_FE !== null ? (
-                                <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)*material.material_qty}</td>
+                                <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)*material.qty}</td>
                               ):(<Fragment></Fragment>)}
                             </tr>
                           )}

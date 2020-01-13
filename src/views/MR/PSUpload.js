@@ -227,7 +227,7 @@ class PSUpload extends Component {
   countPSAllocated(data_mr_pp){
     let site_NE = this.state.data_tssr_sites.find(e => e.site_title === "NE");
     let site_FE = this.state.data_tssr_sites.find(e => e.site_title === "FE");
-    // const 
+    // const
   }
 
   async getPPandMaterial(array_id_package){
@@ -238,7 +238,7 @@ class PSUpload extends Component {
         let dataPaginationPP = arrayDataPP.slice(i * 25, (i+1)*25);
         let arrayIdPP = '"'+dataPaginationPP.join('", "')+'"';
         let where_id_PP = '?where={"_id" : {"$in" : ['+arrayIdPP+']}}';
-        let resPP = await this.getDatafromAPIBMS('/pp_non_page'+where_id_PP+'&'+'embedded={"list_of_id_material" : 1}');
+        let resPP = await this.getDatafromAPIBAM('/pp_sorted_nonpage'+where_id_PP);
         if(resPP !== undefined){
             if(resPP.data !== undefined){
               // eslint-disable-next-line
@@ -246,7 +246,37 @@ class PSUpload extends Component {
             }
         }
     }
-    this.setState({list_pp_material_tssr : dataPP});
+    this.getDataMaterial(dataPP);
+  }
+
+
+  async getDataMaterial(data_pp){
+    let dataMat = [];
+    let arrayDataPP = data_pp.map(e => e._id);
+    let getNumberPage = Math.ceil(arrayDataPP.length / 25);
+    for(let i = 0 ; i < getNumberPage; i++){
+        let dataPaginationPP = arrayDataPP.slice(i * 25, (i+1)*25);
+        let arrayIdPP = '"'+dataPaginationPP.join('", "')+'"';
+        let where_id_PP = '?where={"id_pp_doc" : {"$in" : ['+arrayIdPP+']}}';
+        let resMat = await this.getDatafromAPIBAM('/mc_op'+where_id_PP);
+        if(resMat !== undefined){
+            if(resMat.data !== undefined){
+              // eslint-disable-next-line
+              dataMat = dataMat.concat(resMat.data._items);
+            }
+        }
+    }
+    this.prepareDataPP(data_pp, dataMat);
+  }
+
+  prepareDataPP(data_pp, data_material){
+    let product_package = data_pp;
+    const material_catalogue = data_material;
+    for(let i = 0; i < product_package.length; i++){
+      const material = material_catalogue.filter(e => e.pp_id === product_package[i].pp_id);
+      product_package[i]["list_of_material"] = material;
+    }
+    this.setState({list_pp_material_tssr : product_package});
   }
 
   getQtyTssrPPNE(pp_id){
@@ -269,30 +299,64 @@ class PSUpload extends Component {
     }
   }
 
-  async saveMRtoAPI(){
-    const dataMRParent = this.state.data_mr;
-    const dataTSSRParent = this.state.data_tssr;
-    const dataTSSRBOMNE = this.state.tssr_site_NE;
-    const dataTSSRBOMFE = this.state.tssr_site_FE;
-    const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-    let mr_data = {
-        "site_info" : [
-            {
-                "id_site_doc": dataTSSRBOMNE.id_site_doc,
-                "site_id": dataTSSRBOMNE.site_id,
-                "site_title": "NE",
-                "id_tssr_boq_site_doc" : dataTSSRBOMNE._id,
-                "no_tssr_boq_site" : dataTSSRBOMNE.no_tssr_boq_site,
-                "tssr_version" : dataTSSRBOMNE.version === undefined ? "0" : dataTSSRBOMNE.version,
-            }
-        ],
+    async saveMRtoAPI(){
+      const dataMRParent = this.state.data_mr;
+      const dataTSSRParent = this.state.data_tssr;
+      const dataTSSRBOMNE = this.state.tssr_site_NE;
+      const dataTSSRBOMFE = this.state.tssr_site_FE;
+      const newDate = new Date();
+      const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+      let site_info = [];
+      let mr_data = {
+        "site_info" : [],
         "mr_milestones" : [],
         "current_mr_status" : "ASSIGNED",
         "current_milestones" : "",
         "created_by" : this.state.userId,
         "updated_by" : this.state.userId
       };
+      //Add Site Info
+      if(dataMRParent.site_info.length !== 0){
+        let dataSiteNE = dataMRParent.site_info.find(e => e.site_id === dataTSSRBOMNE.site_id);
+        if(dataSiteNE !== undefined){
+          dataSiteNE["id_tssr_boq_site_doc"] = dataTSSRBOMNE._id;
+          dataSiteNE["no_tssr_boq_site"] = dataTSSRBOMNE.no_tssr_boq_site;
+          dataSiteNE["tssr_version"] = dataTSSRBOMNE.version === undefined ? "0" : dataTSSRBOMNE.version;
+          mr_data["site_info"].push(dataSiteNE);
+        }else{
+          const dataNewSiteNE = {
+              "id_site_doc" : dataTSSRBOMNE.id_site_doc,
+              "site_id" : dataTSSRBOMNE.site_id,
+              "site_name" : dataTSSRBOMNE.site_name,
+              "site_title": "NE",
+              "id_tssr_boq_site_doc" : dataTSSRBOMNE._id,
+              "no_tssr_boq_site" : dataTSSRBOMNE.no_tssr_boq_site,
+              "tssr_version" : dataTSSRBOMNE.version === undefined ? "0" : dataTSSRBOMNE.version,
+          };
+          mr_data["site_info"].push(dataNewSiteNE);
+        };
+        //IF There is Site FE
+        if(this.state.tssr_site_FE !== null){
+          let dataSiteFE = dataMRParent.site_info.find(e => e.site_id === dataTSSRBOMFE.site_id);
+          if(dataSiteFE !== undefined){
+            dataSiteFE["id_tssr_boq_site_doc"] = dataTSSRBOMFE._id;
+            dataSiteFE["no_tssr_boq_site"] = dataTSSRBOMFE.no_tssr_boq_site;
+            dataSiteFE["tssr_version"] = dataTSSRBOMFE.version === undefined ? "0" : dataTSSRBOMFE.version;
+            mr_data["site_info"].push(dataSiteFE);
+          }else{
+            const dataNewSiteFE = {
+                "id_site_doc": dataTSSRBOMFE.id_site_doc,
+                "site_id": dataTSSRBOMFE.site_id,
+                "site_name" : dataTSSRBOMFE.site_name,
+                "site_title": "FE",
+                "id_tssr_boq_site_doc" : dataTSSRBOMFE._id,
+                "no_tssr_boq_site" : dataTSSRBOMFE.no_tssr_boq_site,
+                "tssr_version" : dataTSSRBOMFE.version === undefined ? "0" : dataTSSRBOMFE.version,
+            }
+            mr_data["site_info"].push(dataNewSiteFE)
+          }
+        }
+      }
       let currStatus = [
         {
             "mr_status_name": "PLANTSPEC",
@@ -303,24 +367,13 @@ class PSUpload extends Component {
         }
       ];
       mr_data["mr_status"] = dataMRParent.mr_status.concat(currStatus);
-      if(this.state.tssr_site_FE !== null){
-        const dataSiteFE = {
-            "id_site_doc": dataTSSRBOMFE.id_site_doc,
-            "site_id": dataTSSRBOMFE.site_id,
-            "site_title": "FE",
-            "id_tssr_boq_site_doc" : dataTSSRBOMFE._id,
-            "no_tssr_boq_site" : dataTSSRBOMFE.no_tssr_boq_site,
-            "tssr_version" : dataTSSRBOMFE.version === undefined ? "0" : dataTSSRBOMFE.version,
-        }
-        mr_data["site_info"].push(dataSiteFE)
-      }
       const respondSaveMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMRParent._id, mr_data, dataMRParent._etag);
       if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
         this.saveMrPPtoAPI(dataMRParent._id, dataMRParent.mr_id, respondSaveMR.data._etag);
       }else{
         this.setState({action_status : 'failed'});
       }
-  }
+    }
 
   async saveMrPPtoAPI(_id_mr, mr_id, _etag_mr){
     const dataPPTssr = this.state.list_pp_material_tssr;
@@ -337,10 +390,10 @@ class PSUpload extends Component {
         "pp_id" : dataPPTssr[i].pp_id,
         "id_site_doc" : dataTSSRBOMNE.id_site_doc,
         "site_id" : dataTSSRBOMNE.site_id,
-        "product_name" : dataPPTssr[i].name,
+        "product_name" : dataPPTssr[i].product_name,
         "product_type" : dataPPTssr[i].product_type,
-        "physical_group" : dataPPTssr[i].phy_group,
-        "uom" : dataPPTssr[i].unit,
+        "physical_group" : dataPPTssr[i].physical_group,
+        "uom" : dataPPTssr[i].uom,
         "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id)),
         "qty_scan" : 0,
         "id_po_doc" : null,
@@ -362,10 +415,10 @@ class PSUpload extends Component {
           "pp_id" : dataPPTssr[i].pp_id,
           "id_site_doc" : dataTSSRBOMFE.id_site_doc,
           "site_id" : dataTSSRBOMFE.site_id,
-          "product_name" : dataPPTssr[i].name,
+          "product_name" : dataPPTssr[i].product_name,
           "product_type" : dataPPTssr[i].product_type,
-          "physical_group" : dataPPTssr[i].phy_group,
-          "uom" : dataPPTssr[i].unit,
+          "physical_group" : dataPPTssr[i].physical_group,
+          "uom" : dataPPTssr[i].uom,
           "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id)),
           "qty_scan" : 0,
           "id_po_doc" : null,
@@ -377,6 +430,7 @@ class PSUpload extends Component {
         ppMRsave.push(ppSave);
       }
     }
+    console.log("JSON")
     const respondSaveMRPP = await this.postDatatoAPIBAM('/mr_pp_op', ppMRsave);
     if(respondSaveMRPP.data !== undefined && respondSaveMRPP.status >= 200 && respondSaveMRPP.status <= 300 ){
       if(ppMRsave.length === 1){
@@ -400,8 +454,8 @@ class PSUpload extends Component {
     let indexNE = 0;
     for(let i = 0; i < dataPPTssr.length; i++){
       let dataTSSRBomItemIndex = dataTSSRBOMNE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-      for(let j = 0; j < dataPPTssr[i].list_of_id_material.length; j++){
-        const dataMatIndex = dataPPTssr[i].list_of_id_material[j];
+      for(let j = 0; j < dataPPTssr[i].list_of_material.length; j++){
+        const dataMatIndex = dataPPTssr[i].list_of_material[j];
         let matSave = {
           "id_mr_doc" : _id_mr,
           "mr_id" : mr_id,
@@ -414,8 +468,8 @@ class PSUpload extends Component {
           "material_id" : dataMatIndex.material_id,
           "material_name" : dataMatIndex.material_name,
           "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
-          "uom" : dataMatIndex.material_unit,
-          "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id))*dataMatIndex.material_qty,
+          "uom" : dataMatIndex.uom,
+          "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id))*dataMatIndex.qty,
           "qty_scan" : 0,
           "id_po_doc" : null,
           "po_number" : "demo PO 1",
@@ -432,8 +486,8 @@ class PSUpload extends Component {
     if(this.state.tssr_site_FE !== null){
       for(let i = 0; i < dataPPTssr.length; i++){
         let dataTSSRBomItemIndex = dataTSSRBOMFE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-        for(let j = 0; j < dataPPTssr[i].list_of_id_material.length; j++){
-          const dataMatIndex = dataPPTssr[i].list_of_id_material[j];
+        for(let j = 0; j < dataPPTssr[i].list_of_material.length; j++){
+          const dataMatIndex = dataPPTssr[i].list_of_material[j];
           let matSave = {
             "id_mr_doc" : _id_mr,
             "mr_id" : mr_id,
@@ -446,8 +500,8 @@ class PSUpload extends Component {
             "material_id" : dataMatIndex.material_id,
             "material_name" : dataMatIndex.material_name,
             "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
-            "uom" : dataMatIndex.material_unit,
-            "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id))*dataMatIndex.material_qty,
+            "uom" : dataMatIndex.uom,
+            "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id))*dataMatIndex.qty,
             "qty_scan" : 0,
             "id_po_doc" : null,
             "po_number" : "demo PO 1",
@@ -605,8 +659,8 @@ class PSUpload extends Component {
                       <Fragment>
                         <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
-                          <td>{pp.name}</td>
-                          <td>{pp.unit}</td>
+                          <td>{pp.product_name}</td>
+                          <td>{pp.uom}</td>
                           <td>
                             <Input style={{textAlign : 'center'}} onChange={this.editQtyNE} type="number" name={pp.pp_id} value={!this.state.qty_ne.has(pp.pp_id) ? this.getQtyTssrPPNE(pp.pp_id) : this.state.qty_ne.get(pp.pp_id)} />
                           </td>
@@ -616,14 +670,14 @@ class PSUpload extends Component {
                             </td>
                           ):(<Fragment></Fragment>)}
                         </tr>
-                        {pp.list_of_id_material.map(material =>
+                        {pp.list_of_material.map(material =>
                           <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
                             <td style={{textAlign : 'right'}}>{material.material_id}</td>
                             <td style={{textAlign : 'left'}}>{material.material_name}</td>
-                            <td>{material.material_unit}</td>
-                            <td align='center'>{(!this.state.qty_ne.has(pp.pp_id) ? this.getQtyTssrPPNE(pp.pp_id) : this.state.qty_ne.get(pp.pp_id))*material.material_qty}</td>
+                            <td>{material.uom}</td>
+                            <td align='center'>{(!this.state.qty_ne.has(pp.pp_id) ? this.getQtyTssrPPNE(pp.pp_id) : this.state.qty_ne.get(pp.pp_id))*material.qty}</td>
                             {this.state.tssr_site_FE !== null ? (
-                              <td align='center'>{(!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id))*material.material_qty}</td>
+                              <td align='center'>{(!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id))*material.qty}</td>
                             ):(<Fragment></Fragment>)}
                           </tr>
                         )}

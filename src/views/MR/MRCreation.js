@@ -305,8 +305,11 @@ class MRCreation extends Component {
       console.log("data new MR", JSON.stringify(mr_data));
       const respondSaveMR = await this.postDatatoAPIBAM('/mr_op', mr_data);
       if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
-        setTimeout(function(){ this.setState({ redirectSign : respondSaveMR.data._id}); }.bind(this), 3000);
-        console.log("success")
+        this.setState({ action_status : 'success' }, () => {
+          setTimeout(function(){ this.setState({ redirectSign : respondSaveMR.data._id}); }.bind(this), 3000);
+        });
+      }else{
+        this.setState({ action_status : 'failed' });
       }
   }
 

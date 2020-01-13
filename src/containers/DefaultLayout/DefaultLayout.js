@@ -44,7 +44,7 @@ class DefaultLayout extends Component {
 
   componentDidMount(){
     // Change if u need different user
-    this.props.saveDataUser({"_id_user" : "5d22f1193029609a8e3df3aa", "email_user" : "pdbdash@projectdb.live", "roles_user" : ['Admin'], "user_name" : "PDB-Dash"});
+    this.props.saveDataUser({"_id_user" : "5df1e1ee4432f92022e584e6", "email_user" : "userbamid@e-dpm.com", "roles_user" : ['BAM-Admin'], "user_name" : "userbamid"});
   }
 
   componentDidUpdate(){

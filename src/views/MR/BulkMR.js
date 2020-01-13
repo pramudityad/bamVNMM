@@ -20,6 +20,10 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const API_URL_PDB_TSEL = 'http://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
+const usernameTselApi = 'adminbamidsuper';
+const passwordTselApi = 'F760qbAg2sml';
+
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
@@ -69,6 +73,7 @@ class BulkMR extends Component {
         userName : this.props.dataLogin.userName,
         userEmail : this.props.dataLogin.email,
         rowsXLS : [],
+        list_data_activity : [],
         data : [],
         cols : [],
         project_name_selected : null,
@@ -79,8 +84,28 @@ class BulkMR extends Component {
         action_message : null,
         redirectSign : false,
     };
-    this.saveTssrBOMParent = this.saveTssrBOMParent.bind(this);
+    this.saveDataMRBulk = this.saveDataMRBulk.bind(this);
   }
+
+      async getDatafromAPITSEL(url){
+        try {
+          let respond = await axios.get(API_URL_PDB_TSEL +url, {
+            headers : {'Content-Type':'application/json'},
+            auth: {
+              username: usernameTselApi,
+              password: passwordTselApi
+            },
+          })
+          if(respond.status >= 200 && respond.status < 300){
+            console.log("respond Get Data", respond);
+          }
+          return respond;
+        }catch (err) {
+          let respond = err;
+          console.log("respond Get Data", err);
+          return respond;
+        }
+      }
 
     async getDatafromAPIBMS(url){
       try {
@@ -199,26 +224,23 @@ class BulkMR extends Component {
     return data.findIndex(e => this.isSameValue(e,value));
   }
 
-  // fileHandlerMaterial = (event) => {
-  //   let fileObj = event.target.files[0];
-  //   console.log("rest.rows", fileObj);
-  //   if(fileObj !== undefined){
-  //     ExcelRenderer(fileObj, (err, rest) => {
-  //       if(err){
-  //         console.log(err);
-  //       }
-  //       else{
-  //         console.log("rest.rows", JSON.stringify(rest.rows));
-  //         this.setState({
-  //           action_status : null,
-  //           action_message : null
-  //         }, () => {
-  //           this.ArrayEmptytoNull(rest.rows);
-  //         });
-  //       }
-  //     });
-  //   }
-  // }
+  comparerDiffbyField(otherArray, field){
+    //Compare Different between 2 array
+    return function(current){
+      return otherArray.filter(function(other){
+        return other[field] == current[field]
+      }).length == 0;
+    }
+  }
+
+  comparerDiffbyValue(otherArray){
+    //Compare Different between 2 array
+    return function(current){
+      return otherArray.filter(function(other){
+        return other == current
+      }).length == 0;
+    }
+  }
 
   fileHandlerMaterial = (input) => {
     const file = input.target.files[0];
@@ -260,158 +282,260 @@ class BulkMR extends Component {
     this.setState({
       rowsXLS: newDataXLS
     });
+    this.checkingDataMR(newDataXLS);
     // this.formatDataTSSR(newDataXLS);
   }
 
-  formatDataTSSR = async(dataXLS) => {
-      let action_message = this.state.action_message;
-      let actionStatus = null;
-      this.setState({waiting_status : 'loading'});
-      const staticHeader = ["project", "site_id", "site_name"];
-      const staticHeaderXLS = dataXLS[1].filter((e,n) => n < 3);
-      if(staticHeaderXLS.equals(staticHeader) !== true){
-        this.setState({action_status : "failed", action_message : action_message + "la Please check your upload format or Package Number"});
+  async checkingDataMR(dataXLS){
+    let action_message = "";
+    let errorData = [];
+    let activity_error = [];
+    let action_status = null;
+    const staticHeader = ["id", "mr_project", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "eta_time", "mot_actual", "mr_dsp", "mr_asp", "pic_on_site", "ps_revision_type", "mr_comment_project", "sent_mr_request", "mr_activity_id", "mr_assignment"];
+    const staticHeaderXLS = dataXLS[0].filter((e,n) => n < 17);
+    // if(staticHeaderXLS.equals(staticHeader) !== true){
+    //   this.setState({action_status : "failed", action_message : action_message + "Please check your upload format or Package Number"});
+    // }
+    const array_mr_type = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'mr_type')]) ).filter( (e,n) => n>0);
+    const array_mr_del_type = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'mr_delivery_type')]) ).filter( (e,n) => n>0);
+    const array_mr_dsp = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'mr_dsp')]) ).filter( (e,n) => n>0);
+    const array_mr_activity_id = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'mr_activity_id')]) ).filter( (e,n) => n>0);
+    let array_mar_act_id_uniq = [...new Set(array_mr_activity_id)];
+    if(array_mr_type.some( e => e > 2)){
+      errorData.push("MR Type");
+    }
+    if(array_mr_del_type.some( e => e > 3)){
+      errorData.push("MR Delivery Type");
+    }
+    if(array_mr_dsp.some( e => e > 4)){
+      errorData.push("DSP");
+    }
+    if(array_mr_activity_id.some( e => e === null)){
+      errorData.push("Activity ID");
+    }
+    if(errorData.length !== 0){
+      action_status = "failed";
+      action_message = "Please Check "+errorData.join(", ");
+    }
+    const getActivityID = await this.getAllActivityID(array_mar_act_id_uniq);
+    if(getActivityID.length !== 0){
+      const dataActivity = getActivityID;
+      const id_activity = dataActivity.map(e => e.WP_ID);
+      const act_none = array_mar_act_id_uniq.filter(this.comparerDiffbyValue(id_activity));
+      this.setState({list_data_activity : dataActivity});
+      if(act_none.length !== 0){
+        const twoSentence = action_message.length !== 0 ? " and " : "";
+        action_message = action_message+twoSentence+" Activity ID : "+act_none.join(", ")+" is undefined";
+        action_status = "failed";
       }
-      let dataPackage = [];
-      const index_item = 3;
-      let RespondGetPP = [];
-      const ppid_upload = [];
-      let pp_id_special = [];
-      for(let j = index_item ; j < dataXLS[1].length; j++){
-        let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
-        if(Array.isArray(idXLSIndex) == true){
-          idXLSIndex = idXLSIndex.join();
-          if(idXLSIndex.includes("\"")){
-            pp_id_special.push(idXLSIndex);
-          }else{
-            ppid_upload.push(idXLSIndex);
-          }
+    }else{
+      action_message = null;
+      action_status = "failed";
+    }
+    if(action_status === "failed"){
+
+    }
+  }
+
+  async getAllActivityID(array_activity_id){
+    let dataAct = [];
+    let arrayDataAct = array_activity_id;
+    let getNumberPage = Math.ceil(arrayDataAct.length / 25);
+    for(let i = 0 ; i < getNumberPage; i++){
+      let DataPaginationPP = arrayDataAct.slice(i * 25, (i+1)*25);
+      let arrayIdAct = '"'+DataPaginationPP.join('","')+'"';
+      arrayIdAct = arrayIdAct.replace("%BF", "");
+      arrayIdAct = arrayIdAct.replace("%BB", "");
+      arrayIdAct = arrayIdAct.replace("%EF", "");
+      let where_id_Act = '?where={"WP_ID" : {"$in" : ['+arrayIdAct+']}}';
+      let resAct = await this.getDatafromAPITSEL('/custdel_sorted_non_page'+where_id_Act);
+      if(resAct !== undefined){
+        if(resAct.data !== undefined){
+          dataAct = dataAct.concat(resAct.data._items);
         }
       }
-      RespondGetPP = await this.getAllPP(ppid_upload, pp_id_special);
-      this.setState({waiting_status : null});
-      if(RespondGetPP.length !== 0){
-        dataPackage = RespondGetPP;
-      }
-      let SitesOfTSSRNew = [];
-      let id_PP = new Map();
-      let _id_PP = new Map();
-      let pp_key = new Map();
-      let pp_name = new Map();
-      let group_PP = new Map();
-      let pp_cust_num = new Map();
-      let phy_group = new Map();
-      let pp_type = new Map();
-      let pp_unit = new Map();
-      let data_duplicated = [];
-      let data_undefined = [];
-      let dataAllnull = [];
-      let siteIDNull = [];
-      for(let j = index_item ; j < dataXLS[1].length; j++){
-        let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
-        if(Array.isArray(idXLSIndex) == true){
-          idXLSIndex = idXLSIndex.join();
-        }
-        let get_id_PP = dataPackage.find(PP => PP.pp_id === idXLSIndex);
-        let cekAllZero = dataXLS.map( e => this.checkValuetoZero(e[j]) ).filter( (e,n) => n>1);
-        if(cekAllZero.every( e => e == 0)){
-          dataAllnull.push(idXLSIndex);
-        }
-        if(get_id_PP === undefined){
-          data_undefined.push(idXLSIndex)
-        }else{
-          if(id_PP.get(idXLSIndex) === undefined){
-            id_PP.set(idXLSIndex, get_id_PP.pp_id);
-            pp_key.set(idXLSIndex, get_id_PP.pp_key);
-            _id_PP.set(idXLSIndex, get_id_PP._id);
-            group_PP.set(idXLSIndex, get_id_PP.pp_group)
-            pp_name.set(idXLSIndex, get_id_PP.name);
-            pp_cust_num.set(idXLSIndex, get_id_PP.pp_cust_number);
-            phy_group.set(idXLSIndex, get_id_PP.phy_group)
-            pp_type.set(idXLSIndex, get_id_PP.product_type);
-            pp_unit.set(idXLSIndex, get_id_PP.unit);
-          }else{
-            data_duplicated.push(idXLSIndex);
-          }
+    }
+    return dataAct;
+  }
+
+  async getDataProject(array_id_project){
+    let dataProject = [];
+    let arrayDataProject = array_id_project;
+    let getNumberPage = Math.ceil(arrayDataProject.length / 25);
+    for(let i = 0 ; i < getNumberPage; i++){
+      let DataPaginationPP = arrayDataProject.slice(i * 25, (i+1)*25);
+      let arrayIdProject = '"'+DataPaginationPP.join('","')+'"';
+      arrayIdProject = arrayIdProject.replace("%EF", "%BB", "%BF");
+      let where_id_Project = '?where={"_id" : {"$in" : ['+arrayIdProject+']}}';
+      let resProject = await this.getDatafromAPITSEL('/project_sorted_non_page'+where_id_Project);
+      if(resProject !== undefined){
+        if(resProject.data !== undefined){
+          dataProject = dataProject.concat(resProject.data._items);
         }
       }
-      if(data_undefined.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and <br />" : "";
-        action_message = "Please check your upload format or Package Number in "+data_undefined.join(", ")+twoSentence+action_message;
-      }
-      if(data_duplicated.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and <br />" : "";
-        action_message = action_message+twoSentence+" There are Duplicated PP in "+data_duplicated.join(", ");
-      }
-      let siteSaveFormat = [];
-      let siteError = [];
-      for(let i = 2; i < dataXLS.length; i++){
-        if(this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]) !== null && this.state.action_status !== "failed" && actionStatus !== "failed"){
-          let packageDatas = []
-          for(let j = index_item ; j < dataXLS[1].length; j++){
-            let dataXLSIndex = dataXLS[1][j].split(" /// ",1).join();
-            if(dataAllnull.includes(dataXLSIndex) === false){
-              let package_data = {
-                "id_pp_doc" : _id_PP.get(dataXLSIndex),
-                "pp_id" : dataXLSIndex,
-                "pp_group" : group_PP.get(dataXLSIndex),
-                "pp_cust_number" : pp_cust_num.get(dataXLSIndex),
-                "product_name" : pp_name.get(dataXLSIndex).toString(),
-                "physical_group" : phy_group.get(dataXLSIndex),
-                "product_type" : pp_type.get(dataXLSIndex),
-                "uom" : pp_unit.get(dataXLSIndex),
-                "qty" : this.checkValuetoZero(dataXLS[i][j]),
-                "version" : "0",
-                "deleted" : 0,
-                "created_by" : this.state.userId,
-                "updated_by" : this.state.userId
-              }
-              packageDatas.push(package_data);
-            }
-          }
-          let siteID = this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]).toString();
-          let SiteBOQTech = {
-            "account_id" : "1",
-            "site_id" : siteID,
-            "site_name" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]).toString(),
-            "list_of_site_items" : packageDatas,
-            "version" : "0",
-            "created_by" : this.state.userId,
-            "updated_by" : this.state.userId,
-            "deleted" : 0
-          }
-          // "site_name" : this.checkValuetoString(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]).toString(),
-          if(siteID.length === 0){
-            siteIDNull.push(null);
-          }
-          if(siteSaveFormat.find(e => e === SiteBOQTech.site_id) !== undefined){
-            siteError.push(SiteBOQTech.site_id);
-          }
-          siteSaveFormat.push(SiteBOQTech.site_id);
-          SitesOfTSSRNew.push(SiteBOQTech);
+    }
+    return dataProject;
+  }
+
+  preparingDataMR(id){
+    const dateNow = new Date();
+    const dataRandom = (Math.floor(Math.random() * 100).toString()+id.toString()).padStart(4, '0');
+    const numberTSSR = dateNow.getFullYear().toString()+(dateNow.getMonth()+1).toString().padStart(2, '0')+dateNow.getDate().toString().padStart(2, '0')+dataRandom.toString();
+    return numberTSSR;
+  }
+
+  checkDSPbyID(id){
+    switch(id.toString()) {
+      case "1":
+        return "PT BMS Delivery";
+        break;
+      case "2":
+        return "PT MITT Delivery";
+        break;
+      case "3":
+        return "PT IXT Delivery";
+        break;
+      case "4":
+        return "PT ARA Delivery";
+        break;
+      default:
+        return null
+    }
+  }
+
+  checkDeliveryTypebyID(id){
+    switch(id.toString()) {
+      case "1":
+        return "Warehouse to Site";
+        break;
+      case "2":
+        return "Site to Site";
+        break;
+      case "3":
+        return "Warehouse to Warehouse";
+        break;
+      default:
+        return null
+    }
+  }
+
+  checkMRTypebyID(id){
+    switch(id.toString()) {
+      case "1":
+        return "New";
+        break;
+      case "2":
+        return "Upgrade";
+        break;
+      default:
+        return null
+    }
+  }
+
+  async saveDataMRBulk(){
+    const dataXLS = this.state.rowsXLS;
+    const dataActivity = this.state.list_data_activity;
+    const data_idProjectUniq = [...new Set(dataActivity.map(({ CD_Info_Project }) => CD_Info_Project))];
+    const getProject = await this.getDataProject(data_idProjectUniq);
+    let dataBulkMR = [];
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    for(let i = 1; i < dataXLS.length; i++){
+      const activity_id = dataXLS[i][this.getIndex(dataXLS[0],'mr_activity_id')];
+      const dataCD = dataActivity.find(e => e.WP_ID === activity_id.toString());
+      const dataProject = getProject.find(e => e._id === dataCD.CD_Info_Project );
+      let numberingMR = this.preparingDataMR(i);
+      const id_delivery_type = dataXLS[i][this.getIndex(dataXLS[0],'mr_delivery_type')];
+      const id_mr_type = dataXLS[i][this.getIndex(dataXLS[0],'mr_type')];
+      const id_dsp = dataXLS[i][this.getIndex(dataXLS[0],'mr_dsp')];
+      let id_etd = dataXLS[i][this.getIndex(dataXLS[0],'etd')];
+      let id_eta = dataXLS[i][this.getIndex(dataXLS[0],'eta')];
+      id_etd = id_etd.replace(/'/g, "").replace(/"/g, "").split("T")[0];
+      id_eta = id_eta.replace(/'/g, "").replace(/"/g, "").split("T")[0];
+      let list_site = [];
+      if(dataCD.Site_Info_SiteID_NE !== ""){
+        let site_ne = {
+            "id_site_doc": "",
+            "site_id": dataCD.Site_Info_SiteID_NE,
+            "site_title": "NE",
+            "site_name" : dataCD.Site_Info_SiteName_NE,
+            "site_address" : dataCD.Site_Info_Address_NE,
+            "site_longitude" : parseFloat(dataCD.Site_Info_Longitude_NE),
+            "site_latitude" : parseFloat(dataCD.Site_Info_Latitude_NE),
+            "id_tssr_boq_site_doc" : null,
+            "no_tssr_boq_site" : null,
+            "tssr_version" : null
         }
+        list_site.push(site_ne);
       }
-      if(siteIDNull.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and " : "";
-        action_message = action_message+twoSentence+"Site ID cant NULL";
+      if(dataCD.Site_Info_SiteID_FE !== ""){
+        let site_fe = {
+            "id_site_doc": "",
+            "site_id": dataCD.Site_Info_SiteID_FE,
+            "site_title": "FE",
+            "site_name" : dataCD.Site_Info_SiteName_FE,
+            "site_address" : dataCD.Site_Info_Address_FE,
+            "site_longitude" : parseFloat(dataCD.Site_Info_Longitude_FE),
+            "site_latitude" : parseFloat(dataCD.Site_Info_Latitude_FE),
+            "id_tssr_boq_site_doc" : null,
+            "no_tssr_boq_site" : null,
+            "tssr_version" : null
+        }
+        list_site.push(site_fe);
       }
-      if(siteError.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and " : "";
-        action_message = action_message+twoSentence+"There are duplicate site";
+      const mr_data = {
+      	"mr_id" : "MR"+numberingMR+i.toString(),
+        "implementation_id" : "IMP"+numberingMR.toString(),
+        "scopes" : "",
+        "mr_delivery_type" : this.checkDeliveryTypebyID(id_delivery_type),
+        "mr_type" : this.checkMRTypebyID(id_mr_type),
+        "id_tssr_doc" : null,
+        "tssr_id" : null,
+        "account_id" : "1",
+        "id_project_doc" : dataProject._id,
+        "project_name" : dataProject.Project,
+        "id_cd_doc" : this.state.cd_id_selected,
+        "cd_id" : dataCD.WP_ID.toString(),
+        "sow_type" : dataCD.CD_Info_SOW_Type,
+        "dsp_company" : this.checkDSPbyID(id_dsp),
+        "etd" : id_etd+" 00:00:00",
+        "requested_eta" : id_eta+" 23:59:59",
+        "eta" : id_eta+" 23:59:00",
+        "site_info" : list_site,
+        "mr_milestones" : [],
+        "mr_status" : [
+          {
+              "mr_status_name": "IMPLEMENTED",
+              "mr_status_value": "IMPLEMENTED",
+              "mr_status_date": dateNow,
+              "mr_status_updater": this.state.userEmail,
+              "mr_status_updater_id": this.state.userId
+          },
+          {
+            "mr_status_name": "PLANTSPEC",
+            "mr_status_value": "NOT ASSIGNED",
+            "mr_status_date": dateNow,
+            "mr_status_updater": this.state.userEmail,
+            "mr_status_updater_id": this.state.userId,
+          }
+        ],
+        "current_mr_status" : "NOT ASSIGNED",
+        "current_milestones" : "",
+        "deleted" : 0,
+        "created_by" : this.state.userId,
+        "updated_by" : this.state.userId
       }
-      if(actionStatus === 'failed'){
-        this.setState({action_status : "failed", action_message : action_message});
-      }
-      if(actionStatus !== 'failed'){
-        this.setState({action_message : null});
-      }
-      console.log("SitesOfTSSRNew", SitesOfTSSRNew);
-      this.setState({dataTssrUpload : SitesOfTSSRNew});
-      return SitesOfTSSRNew;
+      dataBulkMR.push(mr_data);
+      console.log("mr_data", mr_data);
+    }
+    const respondSaveMR = await this.postDatatoAPIBAM('/mr_op', dataBulkMR);
+    if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
+      this.setState({ action_status : 'success' }, () => {
+        // setTimeout(function(){ this.setState({ redirectSign : respondSaveMR.data._id}); }.bind(this), 3000);
+      });
+    }else{
+      this.setState({ action_status : 'failed' });
+    }
   }
 
   // getDataSites(){
@@ -563,7 +687,7 @@ class BulkMR extends Component {
 
   render() {
     if(this.state.redirectSign !== false){
-      return (<Redirect to={'/tssr-bom/'+this.state.redirectSign} />);
+      return (<Redirect to={'/mr-list'} />);
     }
     console.log("Excel Render", this.state.rowsXLS);
     return (
@@ -573,15 +697,15 @@ class BulkMR extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}} >TSSR BOM </span>
+            <span style={{lineHeight :'2', fontSize : '17px'}} >MR Creation Bulk </span>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
-            <Button color="success" onClick={this.saveTssrBOMParent} style={{float : 'right'}} >Save</Button>
+            <Button color="success" onClick={this.saveDataMRBulk} style={{float : 'right'}} >Save</Button>
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>
-                  <td colSpan="4" style={{textAlign : 'center'}}>TSSR BOM PREVIEW</td>
+                  <td colSpan="4" style={{textAlign : 'center'}}>MRs Preview</td>
                 </tr>
               </tbody>
             </table>
