@@ -8,6 +8,7 @@ import axios from 'axios';
 import { AppAsideToggler, AppNavbarBrand, AppSidebarToggler } from '@coreui/react';
 import logo from '../../assets/img/brand/logo.svg'
 import sygnet from '../../assets/img/brand/sygnet.svg'
+import '../../assets/fontawesome/css/all.css';
 
 const propTypes = {
   children: PropTypes.node,

@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { Card, CardBody, Col, Progress, Row } from 'reactstrap';
 import classNames from 'classnames';
 import { mapToCssModules } from 'reactstrap/lib/utils';
-import '../../assets/fontawesome/css/all.css';
 
 const propTypes = {
   header: PropTypes.string,

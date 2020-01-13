@@ -47,6 +47,11 @@ export default {
       class: ''             // optional class names space delimited list for title item ex: "text-center"
     },
     {
+      name: 'Assignment List',
+      url: '/assignment-list',
+      icon: 'icon-drawer',
+    },
+    {
       name: 'Order Created',
       url: '/order-created',
       icon: 'icon-envelope-open',
