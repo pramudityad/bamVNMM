@@ -50,7 +50,7 @@ class AssignmentList extends Component {
   getAssignmentList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPI('/assignment_data_sorted?&max_results='+maxPage+'&page='+page).then(res => {
+    this.getDataFromAPI('/asp_assignment_sorted?&max_results='+maxPage+'&page='+page).then(res => {
       console.log("Assignment List Sorted", res);
       if(res.data !== undefined) {
         const items = res.data._items;

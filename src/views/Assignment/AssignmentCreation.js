@@ -25,13 +25,15 @@ class AssignmentCreation extends Component {
       list_activity_selection : [],
       list_activity_selected : null,
       project_name : null,
-      asp_list : []
+      asp_list : [],
+      create_assignment_form : new Array(9).fill(null),
     }
 
     this.changeSSOW = this.changeSSOW.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.loadOptionsActivity = this.loadOptionsActivity.bind(this);
     this.handleChangeActivity = this.handleChangeActivity.bind(this);
+    this.handleChangeForm = this.handleChangeForm.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -71,7 +73,14 @@ class AssignmentCreation extends Component {
     let dataActivity = this.state.list_activity_selection.find(e => e._id === newValue.value);
     this.setState({activity_selected : newValue.value, list_activity_selected : dataActivity});
     const getProject = await this.getDataFromAPI('/project_sorted/'+dataActivity.CD_Info_Project);
-    this.setState({project_name : getProject.data.Project})
+    this.setState({project_name : getProject.data.Project});
+    let dataForm = this.state.create_assignment_form;
+    dataForm[0] = dataActivity.WP_ID;
+    dataForm[1] = getProject.data.Project;
+    dataForm[2] = dataActivity.Site_Info_SiteID_NE;
+    this.setState({create_assignment_form : dataForm}, () => {
+      console.log("Assignment Form", this.state.create_assignment_form);
+    });
     return newValue;
   };
 
@@ -159,6 +168,16 @@ class AssignmentCreation extends Component {
       }
   }
 
+  handleChangeForm(e) {
+    const value = e.target.value;
+    const index = e.target.name;
+    let dataForm = this.state.create_assignment_form;
+    dataForm[parseInt(index)] = value;
+    this.setState({create_assignment_form : dataForm}, () => {
+      console.log("Assignment Form", this.state.create_assignment_form);
+    });
+  }
+
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
@@ -191,7 +210,7 @@ class AssignmentCreation extends Component {
                     <Col md="6">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>Project Name</Label>
-                        <Input type="text" name="project_name" readOnly value={this.state.project_name !== null ? this.state.project_name : ""} />
+                        <Input type="text" name="0" readOnly value={this.state.project_name !== null ? this.state.project_name : ""} />
                       </FormGroup>
                     </Col>
                     <Col md="6" style={{display: "none"}}>
@@ -292,7 +311,7 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>TOP</Label>
-                        <Input type="select" name="top" placeholder="hai">
+                        <Input type="select" name="top">
                           <option value="" disabled selected hidden>Select TOP</option>
                           <option value="100%">100%</option>
                           <option value="30%-70%">30%-70%</option>
