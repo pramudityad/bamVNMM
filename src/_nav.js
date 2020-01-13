@@ -26,6 +26,11 @@ export default {
       icon: 'icon-drawer',
     },
     {
+      name: 'Assignment List',
+      url: '/assignment-list',
+      icon: 'icon-drawer',
+    },
+    {
       name: 'Order Created',
       url: '/order-created',
       icon: 'icon-drawer',
