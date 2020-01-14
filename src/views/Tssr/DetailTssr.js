@@ -94,6 +94,7 @@ class DetailTssr extends Component {
     this.saveProjecttoDB = this.saveProjecttoDB.bind(this);
     this.prepareEdit = this.prepareEdit.bind(this);
     this.prepareRevision = this.prepareRevision.bind(this);
+    this.exportFormatTSSR = this.exportFormatTSSR.bind(this);
   }
 
     async getDatafromAPIBMS(url){
@@ -950,6 +951,37 @@ class DetailTssr extends Component {
     this.setState({ dataTssrRevUpload : dataFormat})
   }
 
+  exportFormatTSSR = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPP = this.state.list_pp_material_tssr;
+    const dataNE = this.state.tssr_site_NE;
+    const dataFE = this.state.tssr_site_FE;
+
+    let ppIdRow = ["site_title", "site_id", "site_name"];
+    let ppTypeRow = ["", "", ""];
+
+    ppIdRow = ppIdRow.concat(dataPP.map(pp => pp.pp_id+" /// "+pp.product_name));
+    ppTypeRow = ppTypeRow.concat(dataPP.map(pp => pp.product_type));
+
+    ws.addRow(ppTypeRow);
+    ws.addRow(ppIdRow);
+    if(dataNE !== null){
+      let rowNE = ["NE", dataNE.site_id, dataNE.site_name];
+      rowNE = rowNE.concat(dataPP.map(e => this.getQtyTssrPPNE(e.pp_id)));
+      ws.addRow(rowNE);
+    }
+    if(dataFE !== null){
+      let rowFE = ["FE", dataFE.site_id, dataFE.site_name];
+      rowFE = rowFE.concat(dataPP.map(e => this.getQtyTssrPPFE(e.pp_id)));
+      ws.addRow(rowFE);
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'TSSR '+this.state.data_tssr.no_tssr_boq+' Uploader Template.xlsx');
+  }
+
   render() {
     console.log("Excel Render", JSON.stringify(this.state.rowsXLS));
     console.log("Excel Render revUpload", this.state.dataTssrRevUpload);
@@ -960,7 +992,8 @@ class DetailTssr extends Component {
           <Col xl="12">
           <Card>
             <CardHeader>
-              <span style={{lineHeight :'2', fontSize : '17px'}} >Detail TSSR</span>
+              <span style={{lineHeight :'2', fontSize : '15px'}} >Detail TSSR</span>
+              <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download TSSR Format</Button>
             </CardHeader>
             <CardBody>
             <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
