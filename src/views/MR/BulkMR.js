@@ -84,6 +84,7 @@ class BulkMR extends Component {
         action_message : null,
         redirectSign : false,
     };
+    this.exportFormatBulkMR = this.exportFormatBulkMR.bind(this);
     this.saveDataMRBulk = this.saveDataMRBulk.bind(this);
   }
 
@@ -255,7 +256,7 @@ class BulkMR extends Component {
 			const wsname = wb.SheetNames[0];
 			const ws = wb.Sheets[wsname];
 			/* Convert array of arrays */
-			const data = XLSX.utils.sheet_to_json(ws, {header:1});
+			const data = XLSX.utils.sheet_to_json(ws, {header:1, devfal : null});
 			/* Update state */
 			this.setState({ data: data, cols: make_cols(ws['!ref']) }, () => {
         this.ArrayEmptytoNull(data);
@@ -269,7 +270,7 @@ class BulkMR extends Component {
     let newDataXLS = [];
     for(let i = 0; i < dataXLS.length; i++){
       let col = [];
-      for(let j = 0; j < dataXLS[1].length; j++){
+      for(let j = 0; j < dataXLS[0].length; j++){
         if(typeof dataXLS[i][j] === "object"){
           col.push(this.checkValue(JSON.stringify(dataXLS[i][j])));
         }else{
@@ -399,7 +400,7 @@ class BulkMR extends Component {
         return "PT ARA Delivery";
         break;
       default:
-        return null
+        return id.toString();
     }
   }
 
@@ -572,6 +573,16 @@ class BulkMR extends Component {
     return dataPP;
   }
 
+  exportFormatBulkMR = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    ws.addRow(["id", "mr_project", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "eta_time", "mot_actual", "mr_dsp", "mr_asp", "pic_on_site", "ps_revision_type", "mr_comment_project", "sent_mr_request", "mr_activity_id", "mr_assignment"]);
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'MR Uploader Template.xlsx');
+  }
+
   render() {
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/mr-list'} />);
@@ -584,7 +595,8 @@ class BulkMR extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}} >MR Creation Bulk </span>
+            <span style={{lineHeight :'2', fontSize : '15px'}} >MR Creation Bulk </span>
+            <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkMR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
@@ -597,19 +609,107 @@ class BulkMR extends Component {
               </tbody>
             </table>
             <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
-            <Table hover bordered responsive size="sm">
-              <tbody>
-              {this.state.rowsXLS.length !== 0 ? (
-                this.state.rowsXLS.map( row =>
-                  <tr>
-                    {row.map( col =>
-                      <td>{col}</td>
-                    )}
-                  </tr>
-                )
-              ) : ""}
-            </tbody>
-          </Table>
+            {this.state.rowsXLS.length !== 0 ? (
+              <Table hover bordered responsive size="sm">
+                <tbody>
+                {this.state.rowsXLS.length !== 0 ? (
+                  this.state.rowsXLS.map( row =>
+                    <tr>
+                      {row.map( col =>
+                        <td>{col}</td>
+                      )}
+                    </tr>
+                  )
+                ) : ""}
+                </tbody>
+              </Table>
+            ) : (
+              <div>
+              <Row>
+                <Col sm="6" lg="6">
+                  <Table hover bordered responsive size="sm">
+                    <thead>
+                      <tr style={{backgroundColor : "rgb(11, 72, 107)", color: "white"}}>
+                        <td colSpan="2">MR Type</td>
+                      </tr>
+                      <tr>
+                        <th>No</th>
+                        <th>Type Name</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>1</td>
+                        <td>New</td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>Upgrade</td>
+                      </tr>
+                    </tbody>
+                  </Table>
+                </Col>
+                <Col sm="6" lg="6">
+                  <Table hover bordered responsive size="sm">
+                    <thead>
+                      <tr style={{backgroundColor : "rgb(11, 72, 107)", color: "white"}}>
+                        <td colSpan="2">Delivery Type</td>
+                      </tr>
+                      <tr>
+                        <th>No</th>
+                        <th>Delivery Type Name</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>1</td>
+                        <td>Warehouse to Site</td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>Site to Site</td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>Warehouse to Warehouse</td>
+                      </tr>
+                    </tbody>
+                  </Table>
+                </Col>
+                <Col sm="6" lg="6">
+                  <Table hover bordered responsive size="sm">
+                    <thead>
+                      <tr style={{backgroundColor : "rgb(11, 72, 107)", color: "white"}}>
+                        <td colSpan="2">Delivery Company</td>
+                      </tr>
+                      <tr>
+                        <th>No</th>
+                        <th>Type Name</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>1</td>
+                        <td>PT BMS Delivery</td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>PT MITT Delivery</td>
+                      </tr>
+                      <tr>
+                        <td>3</td>
+                        <td>PT IXT Delivery</td>
+                      </tr>
+                      <tr>
+                        <td>4</td>
+                        <td>PT ARA Delivery</td>
+                      </tr>
+                    </tbody>
+                  </Table>
+                </Col>
+              </Row>
+              </div>
+            )}
           </CardBody>
         </Card>
         </Col>

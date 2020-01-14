@@ -402,8 +402,8 @@ class PackageUpload extends React.Component {
                   }
                   let materialUpdate = {
                     "material_name" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'material_name')], cekChild.material_name),
-                    "uom" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'unit')], cekChild.material_unit),
-                    "qty" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'quantity')], cekChild.material_qty),
+                    "uom" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'unit')], cekChild.uom),
+                    "qty" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'quantity')], cekChild.qty),
                     "material_price" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'price')], cekChild.material_price),
                     "material_type" : materialType,
                     "updated_by" : this.state.userId
@@ -544,7 +544,7 @@ class PackageUpload extends React.Component {
               PPAlIndex = {
                 "pp_group" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'cust_product_name')], findPP.pp_group).toString(),
                 "product_name" : this.checkValueReturn(this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_package')]), findPP.product_name),
-                "uom" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'unit')], findPP.unit),
+                "uom" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'unit')], findPP.uom),
                 "pp_cust_number" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'cust_product_number')], findPP.pp_cust_number),
                 "physical_group" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'product_package_physical_group')], findPP.physical_group),
                 "product_type" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'product_package_type')], findPP.product_type),
@@ -955,12 +955,12 @@ class PackageUpload extends React.Component {
     }
 
     for(let i = 0; i < dataPP.length; i++){
-      ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, "", "", dataPP[i].unit, "", "", "", dataPP[i].pp_cust_number, dataPP[i].pp_group, dataPP[i].physical_group, dataPP[i].product_type, dataPP[i].note])
+      ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, "", "", dataPP[i].uom, "", "", "", dataPP[i].pp_cust_number, dataPP[i].pp_group, dataPP[i].physical_group, dataPP[i].product_type, dataPP[i].note])
       let getlastrow = ws.lastRow._number;
       ws.mergeCells('B'+getlastrow+':D'+getlastrow);
       for(let j = 0; j < dataPP[i].list_of_material.length; j++){
         let matIndex = dataPP[i].list_of_material[j];
-        ws.addRow(["", "", matIndex.material_id, matIndex.material_name, matIndex.material_unit, matIndex.material_qty, matIndex.material_price, matIndex.material_type, "", "", "", "", ""])
+        ws.addRow(["", "", matIndex.material_id, matIndex.material_name, matIndex.uom, matIndex.qty, matIndex.material_price, matIndex.material_type, "", "", "", "", ""])
       }
     }
 
@@ -1229,9 +1229,9 @@ class PackageUpload extends React.Component {
                 </Col>
 
                 <Col>
-                <div style={{float:'right', margin: '5px', display:'inline-flex'}}>
+                {/* }<div style={{float:'right', margin: '5px', display:'inline-flex'}}>
                   <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
-                </div>
+                </div> */}
                 <div style={{float:'right', margin: '5px', display:'inline-flex'}}>
                 <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTSSRFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp; Download TSSR Format</Button>
                 </div>
