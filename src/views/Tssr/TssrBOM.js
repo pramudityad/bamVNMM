@@ -480,6 +480,8 @@ class TssrBOM extends Component {
       }
       siteTssrIdx["created_on"] = dateNow.toString();
       siteTssrIdx["updated_on"] = dateNow.toString();
+      siteTssrIdx["created_by"] = this.state.userId;
+      siteTssrIdx["updated_by"] = this.state.userId;
       if(siteTssrIdx.list_of_site_items !== undefined){
         delete siteTssrIdx.list_of_site_items;
       }
@@ -516,6 +518,8 @@ class TssrBOM extends Component {
         itemSiteIdx["no_tssr_boq_site"] = no_sites_tssr[i].no_tssr_boq_site;
         itemSiteIdx["created_on"] = dateNow.toString();
         itemSiteIdx["updated_on"] = dateNow.toString();
+        itemSiteIdx["created_by"] = this.state.userId;
+        itemSiteIdx["updated_by"] = this.state.userId;
         tssrSitesItem.push(itemSiteIdx);
       }
     }
@@ -529,10 +533,6 @@ class TssrBOM extends Component {
       const delData = await this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
       this.setState({ action_status : 'failed' });
     }
-  }
-
-  editTSSR(){
-
   }
 
   render() {
