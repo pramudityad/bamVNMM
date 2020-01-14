@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input } from 'reactstrap';
+import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input, CardFooter } from 'reactstrap';
 import { Form, FormGroup, Label, FormText } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
@@ -346,7 +346,6 @@ class MRCreation extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-edit" style={{marginRight: "8px"}}></i>MR Creation </span>
-            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.saveMRtoAPI}>Create MR</Button>
           </CardHeader>
           <CardBody>
             <Form>
@@ -355,7 +354,7 @@ class MRCreation extends Component {
                   <FormGroup>
                     <Label>CD ID</Label>
                     <Input type="select" name="0" value={this.state.cd_id_selected} onChange={this.handleChangeCD}>
-                      <option value={null}></option>
+                      <option value="" disabled selected hidden>Select CD ID</option>
                       {this.state.list_cd_id.map( cd_id =>
                         <option value={cd_id._id}>{cd_id.WP_ID +" ("+cd_id.WP_Name+")"}</option>
                       )}
@@ -394,7 +393,7 @@ class MRCreation extends Component {
                 </Col>
                 <Col md={6}>
                   <FormGroup>
-                    <Label>Site NE</Label>
+                    <Label>Site FE</Label>
                     <Input type="text" value={this.state.data_cd_id_selected !== null ? this.state.data_cd_id_selected.Site_Info_SiteID_FE : ""} disabled/>
                   </FormGroup>
                 </Col>
@@ -404,7 +403,7 @@ class MRCreation extends Component {
                   <FormGroup>
                     <Label>DSP Company</Label>
                     <Input type="select" name="7" value={this.state.create_mr_form[7]} onChange={this.handleChangeFormMRCreation}>
-                      <option value={null}></option>
+                      <option value="" disabled selected hidden>Select DSP Company</option>
                       <option value={1}>PT BMS Delivery</option>
                       <option value={2}>PT MITT Delivery</option>
                       <option value={3}>PT IXT Delivery</option>
@@ -418,7 +417,7 @@ class MRCreation extends Component {
                   <FormGroup>
                     <Label>MR Type</Label>
                     <Input type="select" name="3" value={this.state.create_mr_form[3]} onChange={this.handleChangeFormMRCreation}>
-                      <option value={null}></option>
+                      <option value="" disabled selected hidden>Select MR Type</option>
                       <option value="New">New</option>
                       <option value="Upgrade">Upgrade</option>
                     </Input>
@@ -428,7 +427,7 @@ class MRCreation extends Component {
                   <FormGroup>
                     <Label>MR Delivery Type</Label>
                     <Input type="select" name="4" value={this.state.create_mr_form[4]} onChange={this.handleChangeFormMRCreation}>
-                      <option value={null}></option>
+                      <option value="" disabled selected hidden>Select MR Delivery Type</option>
                       <option value="Warehouse to Site">Warehouse to Site</option>
                       <option value="Site to Site">Site to Site</option>
                       <option value="Warehouse to Warehouse">Warehouse to Warehouse</option>
@@ -458,6 +457,9 @@ class MRCreation extends Component {
               </Row>
               </Form>
           </CardBody>
+          <CardFooter>
+            <Button color='success' style={{float : 'right'}} onClick={this.saveMRtoAPI}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create MR</Button>
+          </CardFooter>
         </Card>
         </Col>
         </Row>
