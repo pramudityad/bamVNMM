@@ -534,7 +534,7 @@ class BulkMR extends Component {
     const respondSaveMR = await this.postDatatoAPIBAM('/mr_op', dataBulkMR);
     if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
       this.setState({ action_status : 'success' }, () => {
-        // setTimeout(function(){ this.setState({ redirectSign : respondSaveMR.data._id}); }.bind(this), 3000);
+        setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 3000);
       });
     }else{
       this.setState({ action_status : 'failed' });
