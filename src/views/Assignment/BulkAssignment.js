@@ -458,7 +458,7 @@ class BulkAssignment extends Component {
         bulkAssignment.push(assignmentData);
       }
       console.log("bulkAssignment", JSON.stringify(bulkAssignment));
-      const postAssignment = await this.postDatatoAPITSEL('/asp_assignment_op');
+      const postAssignment = await this.postDatatoAPITSEL('/asp_assignment_op', bulkAssignment);
       if(postAssignment.data !== undefined){
         this.setState({ action_status : 'success' });
       }
