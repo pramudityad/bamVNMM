@@ -197,8 +197,8 @@ class MRList extends Component {
                 <span style={{lineHeight :'2'}}>
                   <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> MR List
                 </span>
-                <Link to={'/mr-creation'}><Button color="success" style={{float : 'right'}} size="sm">Create MR</Button></Link>
-                <Link to={'/bulk-mr-creation'}><Button color="success" style={{float : 'right', marginRight: "8px"}} size="sm">Create MR Bulk</Button></Link>
+                <Link to={'/mr-creation'}><Button color="success" style={{float : 'right'}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create MR</Button></Link>
+                <Link to={'/bulk-mr-creation'}><Button color="success" style={{float : 'right', marginRight: "8px"}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create MR Bulk</Button></Link>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
               </CardHeader>
               <CardBody>
