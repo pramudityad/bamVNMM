@@ -260,7 +260,6 @@ class BulkMR extends Component {
 			/* Update state */
 			this.setState({ data: data, cols: make_cols(ws['!ref']) }, () => {
         this.ArrayEmptytoNull(data);
-        console.log("data",data);
       });
 		};
     if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
@@ -279,63 +278,66 @@ class BulkMR extends Component {
       }
       newDataXLS.push(col);
     }
-    console.log("newDataXLS", JSON.stringify(newDataXLS));
     this.setState({
-      rowsXLS: newDataXLS
+      rowsXLS: newDataXLS,
+      action_status : null,
     });
     this.checkingDataMR(newDataXLS);
     // this.formatDataTSSR(newDataXLS);
   }
 
   async checkingDataMR(dataXLS){
+    this.setState({waiting_status : true});
     let action_message = "";
     let errorData = [];
     let activity_error = [];
     let action_status = null;
     const staticHeader = ["id", "mr_project", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "eta_time", "mot_actual", "mr_dsp", "mr_asp", "pic_on_site", "ps_revision_type", "mr_comment_project", "sent_mr_request", "mr_activity_id", "mr_assignment"];
-    const staticHeaderXLS = dataXLS[0].filter((e,n) => n < 17);
-    // if(staticHeaderXLS.equals(staticHeader) !== true){
-    //   this.setState({action_status : "failed", action_message : action_message + "Please check your upload format or Package Number"});
-    // }
-    const array_mr_type = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'mr_type')]) ).filter( (e,n) => n>0);
-    const array_mr_del_type = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'mr_delivery_type')]) ).filter( (e,n) => n>0);
-    const array_mr_dsp = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'mr_dsp')]) ).filter( (e,n) => n>0);
-    const array_mr_activity_id = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'mr_activity_id')]) ).filter( (e,n) => n>0);
-    let array_mar_act_id_uniq = [...new Set(array_mr_activity_id)];
-    if(array_mr_type.some( e => e > 2)){
-      errorData.push("MR Type");
-    }
-    if(array_mr_del_type.some( e => e > 3)){
-      errorData.push("MR Delivery Type");
-    }
-    if(array_mr_dsp.some( e => e > 4)){
-      errorData.push("DSP");
-    }
-    if(array_mr_activity_id.some( e => e === null)){
-      errorData.push("Activity ID");
-    }
-    if(errorData.length !== 0){
+    const staticHeaderXLS = dataXLS[0];
+    if(staticHeaderXLS.equals(staticHeader) !== true){
       action_status = "failed";
-      action_message = "Please Check "+errorData.join(", ");
+      this.setState({action_status : "failed", action_message : action_message + "Please check your format uploader"});
     }
-    const getActivityID = await this.getAllActivityID(array_mar_act_id_uniq);
-    if(getActivityID.length !== 0){
-      const dataActivity = getActivityID;
-      const id_activity = dataActivity.map(e => e.WP_ID);
-      const act_none = array_mar_act_id_uniq.filter(this.comparerDiffbyValue(id_activity));
-      this.setState({list_data_activity : dataActivity});
-      if(act_none.length !== 0){
-        const twoSentence = action_message.length !== 0 ? " and " : "";
-        action_message = action_message+twoSentence+" Activity ID : "+act_none.join(", ")+" is undefined";
+    if(action_status !== "failed"){
+      const array_mr_type = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'mr_type')]) ).filter( (e,n) => n>0);
+      const array_mr_del_type = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'mr_delivery_type')]) ).filter( (e,n) => n>0);
+      const array_mr_dsp = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'mr_dsp')]) ).filter( (e,n) => n>0);
+      const array_mr_activity_id = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'mr_activity_id')]) ).filter( (e,n) => n>0);
+      let array_mar_act_id_uniq = [...new Set(array_mr_activity_id)];
+      if(array_mr_type.some( e => e > 2)){
+        errorData.push("MR Type");
+      }
+      if(array_mr_del_type.some( e => e > 3)){
+        errorData.push("MR Delivery Type");
+      }
+      if(array_mr_activity_id.some( e => e === null)){
+        errorData.push("Activity ID");
+      }
+      if(errorData.length !== 0){
+        action_status = "failed";
+        action_message = "Please Check "+errorData.join(", ");
+      }
+      const getActivityID = await this.getAllActivityID(array_mar_act_id_uniq);
+      if(getActivityID.length !== 0){
+        const dataActivity = getActivityID;
+        const id_activity = dataActivity.map(e => e.WP_ID);
+        const act_none = array_mar_act_id_uniq.filter(this.comparerDiffbyValue(id_activity));
+        this.setState({list_data_activity : dataActivity});
+        if(act_none.length !== 0){
+          const twoSentence = action_message.length !== 0 ? " and " : "";
+          action_message = action_message+twoSentence+" Activity ID : "+act_none.join(", ")+" is undefined";
+          action_status = "failed";
+        }
+      }else{
+        action_message = null;
         action_status = "failed";
       }
-    }else{
-      action_message = null;
-      action_status = "failed";
+      if(action_status === "failed"){
+        if(action_message.length )
+        this.setState({action_status : "failed", action_message : action_message});
+      }
     }
-    if(action_status === "failed"){
-
-    }
+    this.setState({waiting_status : false});
   }
 
   async getAllActivityID(array_activity_id){
@@ -485,7 +487,7 @@ class BulkMR extends Component {
         list_site.push(site_fe);
       }
       const mr_data = {
-      	"mr_id" : "MR"+numberingMR+i.toString(),
+      	"mr_id" : "MR"+numberingMR.toString(),
         "implementation_id" : "IMP"+numberingMR.toString(),
         "scopes" : "",
         "mr_delivery_type" : this.checkDeliveryTypebyID(id_delivery_type),
@@ -596,11 +598,13 @@ class BulkMR extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '15px'}} >MR Creation Bulk </span>
-            <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkMR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
+            <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkMR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR Format</Button>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
-            <Button color="success" onClick={this.saveDataMRBulk} style={{float : 'right'}} >Save</Button>
+            <Button color="success" onClick={this.saveDataMRBulk} style={{float : 'right'}} disabled={this.state.rowsXLS.length === 0 || this.state.waiting_status === true || this.state.action_status === "failed" }>
+              {this.state.rowsXLS.length === 0? "Save" : this.state.waiting_status === true ? "Loading..." : "Save"}
+            </Button>
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>

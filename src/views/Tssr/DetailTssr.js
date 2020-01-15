@@ -289,155 +289,158 @@ class DetailTssr extends Component {
   formatDataTSSR = async(dataXLS) => {
       let action_message = [];
       let actionStatus = null;
+      let SitesOfTSSRNew = [];
       this.setState({waiting_status : 'loading'});
       const staticHeader = ["site_title", "site_id", "site_name"];
       const staticHeaderXLS = dataXLS[1].filter((e,n) => n < 3);
       if(staticHeaderXLS.equals(staticHeader) !== true){
-        this.setState({action_status : "failed", action_message : action_message + "la Please check your upload format or Package Number"});
-      }
-      let dataPackage = [];
-      const index_item = 3;
-      let RespondGetPP = [];
-      const ppid_upload = [];
-      let pp_id_special = [];
-      for(let j = index_item ; j < dataXLS[1].length; j++){
-        let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
-        if(Array.isArray(idXLSIndex) == true){
-          idXLSIndex = idXLSIndex.join();
-          if(idXLSIndex.includes("\"")){
-            pp_id_special.push(idXLSIndex);
-          }else{
-            ppid_upload.push(idXLSIndex);
-          }
-        }
-      }
-      RespondGetPP = await this.getAllPP(ppid_upload, pp_id_special);
-      this.setState({waiting_status : null});
-      if(RespondGetPP.length !== 0){
-        dataPackage = RespondGetPP;
-      }
-      let SitesOfTSSRNew = [];
-      let id_PP = new Map();
-      let _id_PP = new Map();
-      let pp_key = new Map();
-      let pp_name = new Map();
-      let group_PP = new Map();
-      let pp_cust_num = new Map();
-      let physical_group = new Map();
-      let pp_type = new Map();
-      let pp_unit = new Map();
-      let data_duplicated = [];
-      let data_undefined = [];
-      let dataAllnull = [];
-      let siteIDNull = [];
-      for(let j = index_item ; j < dataXLS[1].length; j++){
-        let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
-        if(Array.isArray(idXLSIndex) == true){
-          idXLSIndex = idXLSIndex.join();
-        }
-        let get_id_PP = dataPackage.find(PP => PP.pp_id === idXLSIndex);
-        let cekAllZero = dataXLS.map( e => this.checkValuetoZero(e[j]) ).filter( (e,n) => n>1);
-        if(cekAllZero.every( e => e == 0)){
-          dataAllnull.push(idXLSIndex);
-        }
-        if(get_id_PP === undefined){
-          data_undefined.push(idXLSIndex)
-        }else{
-          if(id_PP.get(idXLSIndex) === undefined){
-            id_PP.set(idXLSIndex, get_id_PP.pp_id);
-            pp_key.set(idXLSIndex, get_id_PP.pp_key);
-            _id_PP.set(idXLSIndex, get_id_PP._id);
-            group_PP.set(idXLSIndex, get_id_PP.pp_group)
-            pp_name.set(idXLSIndex, get_id_PP.product_name);
-            pp_cust_num.set(idXLSIndex, get_id_PP.pp_cust_number);
-            physical_group.set(idXLSIndex, get_id_PP.physical_group)
-            pp_type.set(idXLSIndex, get_id_PP.product_type);
-            pp_unit.set(idXLSIndex, get_id_PP.uom);
-          }else{
-            data_duplicated.push(idXLSIndex);
-          }
-        }
-      }
-      if(data_undefined.length !== 0){
         actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and <br />" : "";
-        action_message = "Please check your upload format or Package Number in "+data_undefined.join(", ")+twoSentence+action_message;
+        this.setState({action_status : "failed", action_message : "Please check your upload format or Package Number"});
       }
-      if(data_duplicated.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and <br />" : "";
-        action_message = action_message+twoSentence+" There are Duplicated PP in "+data_duplicated.join(", ");
-      }
-      let siteSaveFormat = [];
-      let siteError = [];
-      for(let i = 2; i < dataXLS.length; i++){
-        if(this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]) !== null && this.state.action_status !== "failed" && actionStatus !== "failed"){
-          let packageDatas = []
-          for(let j = index_item ; j < dataXLS[1].length; j++){
-            let dataXLSIndex = dataXLS[1][j].split(" /// ",1).join();
-            if(dataAllnull.includes(dataXLSIndex) === false){
-              let package_data = {
-                "id_pp_doc" : _id_PP.get(dataXLSIndex),
-                "pp_id" : dataXLSIndex,
-                "pp_group" : group_PP.get(dataXLSIndex),
-                "pp_cust_number" : pp_cust_num.get(dataXLSIndex),
-                "product_name" : pp_name.get(dataXLSIndex).toString(),
-                "physical_group" : physical_group.get(dataXLSIndex),
-                "product_type" : pp_type.get(dataXLSIndex),
-                "uom" : pp_unit.get(dataXLSIndex),
-                "qty" : this.checkValuetoZero(dataXLS[i][j]),
-                "version" : "0",
-                "deleted" : 0,
-                "created_by" : this.state.userId,
-                "updated_by" : this.state.userId
-              }
-              packageDatas.push(package_data);
+      if(actionStatus !== "failed"){
+        let dataPackage = [];
+        const index_item = 3;
+        let RespondGetPP = [];
+        const ppid_upload = [];
+        let pp_id_special = [];
+        for(let j = index_item ; j < dataXLS[1].length; j++){
+          let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
+          if(Array.isArray(idXLSIndex) == true){
+            idXLSIndex = idXLSIndex.join();
+            if(idXLSIndex.includes("\"")){
+              pp_id_special.push(idXLSIndex);
+            }else{
+              ppid_upload.push(idXLSIndex);
             }
           }
-          let siteID = this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]).toString();
-          let siteTssrBOM = {
-            "account_id" : "1",
-            "site_id" : siteID,
-            "site_name" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]),
-            "site_title" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_title')]),
-            "list_of_site_items" : packageDatas,
-            "version" : "0",
-            "created_by" : this.state.userId,
-            "updated_by" : this.state.userId,
-            "deleted" : 0
-          }
-          if(siteTssrBOM.site_name !== null){
-            siteTssrBOM["site_name"] = siteTssrBOM.site_name.toString();
-          }
-          if(siteTssrBOM.site_title !== null){
-            siteTssrBOM["site_title"] = siteTssrBOM.site_title.toString();
-          }
-          // "site_name" : this.checkValuetoString(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]).toString(),
-          if(siteID.length === 0){
-            siteIDNull.push(null);
-          }
-          if(siteSaveFormat.find(e => e === siteTssrBOM.site_id) !== undefined){
-            siteError.push(siteTssrBOM.site_id);
-          }
-          siteSaveFormat.push(siteTssrBOM.site_id);
-          SitesOfTSSRNew.push(siteTssrBOM);
         }
-      }
-      if(siteIDNull.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and " : "";
-        action_message = action_message+twoSentence+"Site ID cant NULL";
-      }
-      if(siteError.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and " : "";
-        action_message = action_message+twoSentence+"There are duplicate site";
-      }
-      if(actionStatus === 'failed'){
-        this.setState({action_status : "failed", action_message : action_message});
-      }
-      if(actionStatus !== 'failed'){
-        this.setState({action_message : null});
+        RespondGetPP = await this.getAllPP(ppid_upload, pp_id_special);
+        this.setState({waiting_status : null});
+        if(RespondGetPP.length !== 0){
+          dataPackage = RespondGetPP;
+        }
+        let id_PP = new Map();
+        let _id_PP = new Map();
+        let pp_key = new Map();
+        let pp_name = new Map();
+        let group_PP = new Map();
+        let pp_cust_num = new Map();
+        let physical_group = new Map();
+        let pp_type = new Map();
+        let pp_unit = new Map();
+        let data_duplicated = [];
+        let data_undefined = [];
+        let dataAllnull = [];
+        let siteIDNull = [];
+        for(let j = index_item ; j < dataXLS[1].length; j++){
+          let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
+          if(Array.isArray(idXLSIndex) == true){
+            idXLSIndex = idXLSIndex.join();
+          }
+          let get_id_PP = dataPackage.find(PP => PP.pp_id === idXLSIndex);
+          let cekAllZero = dataXLS.map( e => this.checkValuetoZero(e[j]) ).filter( (e,n) => n>1);
+          if(cekAllZero.every( e => e == 0)){
+            dataAllnull.push(idXLSIndex);
+          }
+          if(get_id_PP === undefined){
+            data_undefined.push(idXLSIndex)
+          }else{
+            if(id_PP.get(idXLSIndex) === undefined){
+              id_PP.set(idXLSIndex, get_id_PP.pp_id);
+              pp_key.set(idXLSIndex, get_id_PP.pp_key);
+              _id_PP.set(idXLSIndex, get_id_PP._id);
+              group_PP.set(idXLSIndex, get_id_PP.pp_group)
+              pp_name.set(idXLSIndex, get_id_PP.product_name);
+              pp_cust_num.set(idXLSIndex, get_id_PP.pp_cust_number);
+              physical_group.set(idXLSIndex, get_id_PP.physical_group)
+              pp_type.set(idXLSIndex, get_id_PP.product_type);
+              pp_unit.set(idXLSIndex, get_id_PP.uom);
+            }else{
+              data_duplicated.push(idXLSIndex);
+            }
+          }
+        }
+        if(data_undefined.length !== 0){
+          actionStatus = "failed";
+          let twoSentence = action_message.length !== 0 ? "and <br />" : "";
+          action_message = "Please check your upload format or Package Number in "+data_undefined.join(", ")+twoSentence+action_message;
+        }
+        if(data_duplicated.length !== 0){
+          actionStatus = "failed";
+          let twoSentence = action_message.length !== 0 ? "and <br />" : "";
+          action_message = action_message+twoSentence+" There are Duplicated PP in "+data_duplicated.join(", ");
+        }
+        let siteSaveFormat = [];
+        let siteError = [];
+        for(let i = 2; i < dataXLS.length; i++){
+          if(this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]) !== null && this.state.action_status !== "failed" && actionStatus !== "failed"){
+            let packageDatas = []
+            for(let j = index_item ; j < dataXLS[1].length; j++){
+              let dataXLSIndex = dataXLS[1][j].split(" /// ",1).join();
+              if(dataAllnull.includes(dataXLSIndex) === false){
+                let package_data = {
+                  "id_pp_doc" : _id_PP.get(dataXLSIndex),
+                  "pp_id" : dataXLSIndex,
+                  "pp_group" : group_PP.get(dataXLSIndex),
+                  "pp_cust_number" : pp_cust_num.get(dataXLSIndex),
+                  "product_name" : pp_name.get(dataXLSIndex).toString(),
+                  "physical_group" : physical_group.get(dataXLSIndex),
+                  "product_type" : pp_type.get(dataXLSIndex),
+                  "uom" : pp_unit.get(dataXLSIndex),
+                  "qty" : this.checkValuetoZero(dataXLS[i][j]),
+                  "version" : "0",
+                  "deleted" : 0,
+                  "created_by" : this.state.userId,
+                  "updated_by" : this.state.userId
+                }
+                packageDatas.push(package_data);
+              }
+            }
+            let siteID = this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]).toString();
+            let siteTssrBOM = {
+              "account_id" : "1",
+              "site_id" : siteID,
+              "site_name" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]),
+              "site_title" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_title')]),
+              "list_of_site_items" : packageDatas,
+              "version" : "0",
+              "created_by" : this.state.userId,
+              "updated_by" : this.state.userId,
+              "deleted" : 0
+            }
+            if(siteTssrBOM.site_name !== null){
+              siteTssrBOM["site_name"] = siteTssrBOM.site_name.toString();
+            }
+            if(siteTssrBOM.site_title !== null){
+              siteTssrBOM["site_title"] = siteTssrBOM.site_title.toString();
+            }
+            // "site_name" : this.checkValuetoString(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]).toString(),
+            if(siteID.length === 0){
+              siteIDNull.push(null);
+            }
+            if(siteSaveFormat.find(e => e === siteTssrBOM.site_id) !== undefined){
+              siteError.push(siteTssrBOM.site_id);
+            }
+            siteSaveFormat.push(siteTssrBOM.site_id);
+            SitesOfTSSRNew.push(siteTssrBOM);
+          }
+        }
+        if(siteIDNull.length !== 0){
+          actionStatus = "failed";
+          let twoSentence = action_message.length !== 0 ? "and " : "";
+          action_message = action_message+twoSentence+"Site ID cant NULL";
+        }
+        if(siteError.length !== 0){
+          actionStatus = "failed";
+          let twoSentence = action_message.length !== 0 ? "and " : "";
+          action_message = action_message+twoSentence+"There are duplicate site";
+        }
+        if(actionStatus === 'failed'){
+          this.setState({action_status : "failed", action_message : action_message});
+        }
+        if(actionStatus !== 'failed'){
+          this.setState({action_message : null});
+        }
       }
       this.setState({dataTssrUpload : SitesOfTSSRNew});
       return SitesOfTSSRNew;

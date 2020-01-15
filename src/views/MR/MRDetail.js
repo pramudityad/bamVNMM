@@ -41,8 +41,8 @@ class MRDetail extends Component {
         action_status : null,
         action_message : null,
     };
-    this.getQtyTssrPPNE = this.getQtyTssrPPNE.bind(this);
-    this.getQtyTssrPPFE = this.getQtyTssrPPFE.bind(this);
+    this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
+    this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
     this.changeTabsSubmenu = this.changeTabsSubmenu.bind(this);
   }
 
@@ -174,40 +174,21 @@ class MRDetail extends Component {
     }
   }
 
-  async getPPandMaterial(array_id_package){
-    let dataPP = [];
-    let arrayDataPP = array_id_package;
-    let getNumberPage = Math.ceil(arrayDataPP.length / 25);
-    for(let i = 0 ; i < getNumberPage; i++){
-        let dataPaginationPP = arrayDataPP.slice(i * 25, (i+1)*25);
-        let arrayIdPP = '"'+dataPaginationPP.join('", "')+'"';
-        let where_id_PP = '?where={"_id" : {"$in" : ['+arrayIdPP+']}}';
-        let resPP = await this.getDatafromAPIBMS('/pp_non_page'+where_id_PP+'&'+'embedded={"list_of_id_material" : 1}');
-        if(resPP !== undefined){
-            if(resPP.data !== undefined){
-              // eslint-disable-next-line
-              dataPP = dataPP.concat(resPP.data._items);
-            }
-        }
-    }
-    this.setState({list_pp_material_tssr : dataPP});
-  }
-
-  getQtyTssrPPNE(pp_id){
-    const itemTssrBom = this.state.mr_site_NE.mr_pp;
-    const getDataPPTssr = itemTssrBom.find(e => e.pp_id === pp_id);
-    if(getDataPPTssr !== undefined){
-      return getDataPPTssr.qty;
+  getQtyMRPPNE(pp_id){
+    const itemMRBom = this.state.mr_site_NE.mr_pp;
+    const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
+    if(getDataPPMR !== undefined){
+      return getDataPPMR.qty;
     }else{
       return 0;
     }
   }
 
-  getQtyTssrPPFE(pp_id){
-    const itemTssrBom = this.state.mr_site_FE.mr_pp;
-    const getDataPPTssr = itemTssrBom.find(e => e.pp_id === pp_id);
-    if(getDataPPTssr !== undefined){
-      return getDataPPTssr.qty;
+  getQtyMRPPFE(pp_id){
+    const itemMRBom = this.state.mr_site_FE.mr_pp;
+    const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
+    if(getDataPPMR !== undefined){
+      return getDataPPMR.qty;
     }else{
       return 0;
     }
@@ -319,11 +300,12 @@ class MRDetail extends Component {
     document.title = 'MR Detail | BAM';
   }
 
-  plantSpecUnassigned(){
+  async plantSpecUnassigned(){
     const dataMR = this.state.data_mr;
     const dataMRPP = this.state.mr_pp;
     const dataMRMD = this.state.mr_md;
-    
+    for(let i = 0; i < dataMRMD.length; i++){
+    }
   }
 
   render() {
@@ -582,9 +564,9 @@ class MRDetail extends Component {
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                           <td>{pp.name}</td>
                           <td>{pp.unit}</td>
-                          <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)}</td>
+                          <td align='center'>{this.getQtyMRPPNE(pp.pp_id)}</td>
                           {this.state.mr_site_FE !== null ? (
-                            <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)}</td>
+                            <td align='center'>{this.getQtyMRPPFE(pp.pp_id)}</td>
                           ):(<Fragment></Fragment>)}
                         </tr>
                         {pp.mr_md.map(material =>
@@ -592,9 +574,9 @@ class MRDetail extends Component {
                             <td style={{textAlign : 'right'}}>{material.material_id}</td>
                             <td style={{textAlign : 'left'}}>{material.material_name}</td>
                             <td>{material.material_unit}</td>
-                            <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)*material.qty}</td>
+                            <td align='center'>{this.getQtyMRPPNE(pp.pp_id)*material.qty}</td>
                             {this.state.mr_site_FE !== null ? (
-                              <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)*material.qty}</td>
+                              <td align='center'>{this.getQtyMRPPFE(pp.pp_id)*material.qty}</td>
                             ):(<Fragment></Fragment>)}
                           </tr>
                         )}
