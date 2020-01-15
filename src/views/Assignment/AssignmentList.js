@@ -92,7 +92,7 @@ class AssignmentList extends Component {
                 <span style={{lineHeight :'2'}}>
                   <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Assignment List
                 </span>
-                <Link to={'/assignment-creation'}><Button color="success" style={{float : 'right'}} size="sm">Create Assignment</Button></Link>
+                <Link to={'/assignment-creation'}><Button color="success" style={{float : 'right'}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create Assignment</Button></Link>
                 <Button style={downloadAssignment} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment List</Button>
               </CardHeader>
               <CardBody>

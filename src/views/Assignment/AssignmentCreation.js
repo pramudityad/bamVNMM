@@ -4,6 +4,9 @@ import { Form, FormGroup, Label } from 'reactstrap';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import AsyncSelect from 'react-select/async';
+import { Redirect } from 'react-router-dom';
+
+const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const API_URL_tsel = 'http://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const username_tsel = 'adminbamidsuper';
@@ -19,18 +22,18 @@ class AssignmentCreation extends Component {
       userId : this.props.dataLogin._id,
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
-      ssowType : null,
+      redirect_sign : false,
+      action_status : null,
+      action_message : null,
       filter_list : new Array(1).fill(""),
       activity_selected : null,
       list_activity_selection : [],
       list_activity_selected : null,
       project_name : null,
       asp_list : [],
-      create_assignment_form : new Array(59).fill(null),
-      ssow_description_list : new Array(7).fill(null),
+      create_assignment_form : new Array(69).fill(null),
     }
 
-    this.changeSSOW = this.changeSSOW.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.loadOptionsActivity = this.loadOptionsActivity.bind(this);
     this.loadOptionsSSOWID = this.loadOptionsSSOWID.bind(this);
@@ -84,12 +87,12 @@ class AssignmentCreation extends Component {
     dataForm[1] = getProject.data.Project;
     dataForm[2] = dataActivity.Site_Info_SiteID_NE;
     dataForm[3] = dataActivity.Site_Info_SiteName_NE;
-    dataForm[4] = dataActivity.Site_Info_Latitude_NE;
-    dataForm[5] = dataActivity.Site_Info_Longitude_NE;
+    dataForm[4] = dataActivity.Site_Info_Latitude_NE !== "" ? dataActivity.Site_Info_Latitude_NE : "0.0";
+    dataForm[5] = dataActivity.Site_Info_Longitude_NE !== "" ? dataActivity.Site_Info_Longitude_NE : "0.0";
     dataForm[6] = dataActivity.Site_Info_SiteID_FE;
     dataForm[7] = dataActivity.Site_Info_SiteName_FE;
-    dataForm[8] = dataActivity.Site_Info_Latitude_FE;
-    dataForm[9] = dataActivity.Site_Info_Longitude_FE;
+    dataForm[8] = dataActivity.Site_Info_Latitude_FE !== "" ? dataActivity.Site_Info_Latitude_FE : "0.0";
+    dataForm[9] = dataActivity.Site_Info_Longitude_FE !== "" ? dataActivity.Site_Info_Longitude_FE : "0.0";
     dataForm[10] = dataActivity.CD_Info_SOW_Type;
     dataForm[11] = dataActivity.CD_Info_Network_Number;
     dataForm[12] = dataActivity.CD_Info_WBS;
@@ -108,11 +111,6 @@ class AssignmentCreation extends Component {
     });
     if(e.name === "17") {
       const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataDescription = this.state.ssow_description_list;
-      dataDescription[0] = getDescription.data._items[0].description;
-      this.setState({ssow_description_list : dataDescription}, () => {
-        console.log("Description List", this.state.ssow_description_list);
-      });
       let dataForm = this.state.create_assignment_form;
       dataForm[19] = getDescription.data._items[0].description;
       this.setState({create_assignment_form : dataForm}, () => {
@@ -120,11 +118,6 @@ class AssignmentCreation extends Component {
       });
     } else if(e.name === "23") {
       const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataDescription = this.state.ssow_description_list;
-      dataDescription[1] = getDescription.data._items[0].description;
-      this.setState({ssow_description_list : dataDescription}, () => {
-        console.log("Description List", this.state.ssow_description_list);
-      });
       let dataForm = this.state.create_assignment_form;
       dataForm[25] = getDescription.data._items[0].description;
       this.setState({create_assignment_form : dataForm}, () => {
@@ -132,11 +125,6 @@ class AssignmentCreation extends Component {
       });
     } else if(e.name === "29") {
       const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataDescription = this.state.ssow_description_list;
-      dataDescription[2] = getDescription.data._items[0].description;
-      this.setState({ssow_description_list : dataDescription}, () => {
-        console.log("Description List", this.state.ssow_description_list);
-      });
       let dataForm = this.state.create_assignment_form;
       dataForm[31] = getDescription.data._items[0].description;
       this.setState({create_assignment_form : dataForm}, () => {
@@ -144,11 +132,6 @@ class AssignmentCreation extends Component {
       });
     } else if(e.name === "35") {
       const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataDescription = this.state.ssow_description_list;
-      dataDescription[3] = getDescription.data._items[0].description;
-      this.setState({ssow_description_list : dataDescription}, () => {
-        console.log("Description List", this.state.ssow_description_list);
-      });
       let dataForm = this.state.create_assignment_form;
       dataForm[37] = getDescription.data._items[0].description;
       this.setState({create_assignment_form : dataForm}, () => {
@@ -156,11 +139,6 @@ class AssignmentCreation extends Component {
       });
     } else if(e.name === "41") {
       const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataDescription = this.state.ssow_description_list;
-      dataDescription[4] = getDescription.data._items[0].description;
-      this.setState({ssow_description_list : dataDescription}, () => {
-        console.log("Description List", this.state.ssow_description_list);
-      });
       let dataForm = this.state.create_assignment_form;
       dataForm[43] = getDescription.data._items[0].description;
       this.setState({create_assignment_form : dataForm}, () => {
@@ -168,11 +146,6 @@ class AssignmentCreation extends Component {
       });
     } else if(e.name === "47") {
       const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataDescription = this.state.ssow_description_list;
-      dataDescription[5] = getDescription.data._items[0].description;
-      this.setState({ssow_description_list : dataDescription}, () => {
-        console.log("Description List", this.state.ssow_description_list);
-      });
       let dataForm = this.state.create_assignment_form;
       dataForm[49] = getDescription.data._items[0].description;
       this.setState({create_assignment_form : dataForm}, () => {
@@ -180,16 +153,46 @@ class AssignmentCreation extends Component {
       });
     } else if(e.name === "53") {
       const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataDescription = this.state.ssow_description_list;
-      dataDescription[6] = getDescription.data._items[0].description;
-      this.setState({ssow_description_list : dataDescription}, () => {
-        console.log("Description List", this.state.ssow_description_list);
-      });
       let dataForm = this.state.create_assignment_form;
       dataForm[55] = getDescription.data._items[0].description;
       this.setState({create_assignment_form : dataForm}, () => {
         console.log("Assignment Form", this.state.create_assignment_form);
       });
+    } else if(e.name === "18") {
+      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+      let dataForm = this.state.create_assignment_form;
+      dataForm[20] = getPriceUnit.data._items[0].ssow_type;
+      dataForm[59] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    } else if(e.name === "24") {
+      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+      let dataForm = this.state.create_assignment_form;
+      dataForm[26] = getPriceUnit.data._items[0].ssow_type;
+      dataForm[60] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    } else if(e.name === "30") {
+      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+      let dataForm = this.state.create_assignment_form;
+      dataForm[32] = getPriceUnit.data._items[0].ssow_type;
+      dataForm[61] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    } else if(e.name === "36") {
+      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+      let dataForm = this.state.create_assignment_form;
+      dataForm[38] = getPriceUnit.data._items[0].ssow_type;
+      dataForm[62] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    } else if(e.name === "42") {
+      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+      let dataForm = this.state.create_assignment_form;
+      dataForm[44] = getPriceUnit.data._items[0].ssow_type;
+      dataForm[63] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    } else if(e.name === "48") {
+      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+      let dataForm = this.state.create_assignment_form;
+      dataForm[50] = getPriceUnit.data._items[0].ssow_type;
+      dataForm[64] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    } else if(e.name === "54") {
+      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+      let dataForm = this.state.create_assignment_form;
+      dataForm[56] = getPriceUnit.data._items[0].ssow_type;
+      dataForm[65] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
     }
   }
 
@@ -214,7 +217,7 @@ class AssignmentCreation extends Component {
       return [];
     } else {
       let ssow_id_list = [];
-      const getSSOWID = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.ssowType+'"}');
+      const getSSOWID = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
       if(getSSOWID !== undefined && getSSOWID.data !== undefined) {
         getSSOWID.data._items.map(ssow => 
           ssow_id_list.push({'label' : ssow.ssow_id !== undefined ? ssow.ssow_id : null, 'value' : ssow.ssow_id}))
@@ -247,13 +250,16 @@ class AssignmentCreation extends Component {
     })
   }
 
-  changeSSOW(e) {
-    this.setState({ssowType: e.target.value});
-  }
-
   componentDidMount() {
     document.title = 'Assignment Creation | BAM';
     this.loadOptionsASP();
+  }
+
+  getAssignmentID(){
+    const dateNow = new Date();
+    const dataRandom = Math.floor(Math.random() * 100).toString().padStart(4, '0');
+    const asgID = dateNow.getFullYear().toString()+(dateNow.getMonth()+1).toString().padStart(2, '0')+dateNow.getDate().toString().padStart(2, '0')+dataRandom.toString();
+    return asgID;
   }
 
   async postDatatoAPI(url, data){
@@ -275,19 +281,49 @@ class AssignmentCreation extends Component {
       return respond;
     }
   }
+  
 
   async postAssignment(){
     const dataForm = this.state.create_assignment_form;
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    
+    let i = 17;
+    let j = 10;
+    let k = 59;
+    let all_ssow = [];
+    for(i; i <= 53; i = i+6) {
+      let ssow_list = {
+        "ssow_id" : dataForm[i],
+        "sow_type" : dataForm[j],
+        "ssow_description" : dataForm[i+2],
+        "ssow_activity_number" : dataForm[i+1],
+        "ssow_unit" : dataForm[i+3],
+        "ssow_qty" : dataForm[i+4],
+        "ssow_price" : dataForm[k],
+        "ssow_total_price" : dataForm[k]*dataForm[i+4],
+        "ssow_status" : [
+          {
+            "status" : dataForm[i+5],
+            "status_update_date" : dateNow,
+            "status_updater" : this.state.userEmail
+          }
+        ]
+      }
+      if(dataForm[i] !== null) {
+        all_ssow.push(ssow_list);
+      }
+      k++;
+    }
+
     const assignment_data = {
-      "Assignment_No" : "030797",
+      "Assignment_No" : "ASG"+this.getAssignmentID(),
       "Account_Name" : "TSEL",
       "CD_ID" : dataForm[0],
       "Project" : dataForm[1],
-      "Plant" : "wtf is plant?",
+      "Plant" : "what is plant?",
       "NW" : dataForm[11],
-      "NW_Activity" : "NW Activity?",
+      "NW_Activity" : dataForm[13],
       "Requisitioner" : "what is this?",
       "SOW_Type" : dataForm[10],
       "Site_ID" : dataForm[2],
@@ -298,51 +334,52 @@ class AssignmentCreation extends Component {
       "Site_FE_Name" : dataForm[7],
       "Site_FE_Longitude" : dataForm[9],
       "Site_FE_Latitude" : dataForm[8],
-      "Vendor_Code_Number" : dataForm[14],
+      "Vendor_Code" : dataForm[66],
+      "Vendor_Code_Number" : dataForm[67],
       "Vendor_Name" : dataForm[14],
-      "Vendor_Email" : dataForm[14],
+      "Vendor_Email" : dataForm[68],
       "Payment_Terms" : dataForm[15],
-      "SH_ID" : "shid?",
+      "SH_ID" : dataForm[0],
       "Assignment_Creation_Date" : dateNow,
-      "Value_Assignment" : "11.11",
-      "Requestor" : this.state.userId,
+      "Value_Assignment" : (dataForm[59]*dataForm[21])+(dataForm[60]*dataForm[27])+(dataForm[61]*dataForm[33])+(dataForm[62]*dataForm[39])+(dataForm[63]*dataForm[45])+(dataForm[64]*dataForm[51])+(dataForm[65]*dataForm[57]),
+      "Requestor" : this.state.userEmail,
       "Payment_Term_Ratio" : "11.11",
-      "SSOW_List" : [
-        {
-          "ssow_id" : dataForm[17],
-          "ssow_description" : dataForm[19],
-          "ssow_activity_number" : dataForm[18],
-          "ssow_unit" : dataForm[20],
-          "ssow_qty" : dataForm[21],
-          "ssow_status" : [
-            {
-              "status" : dataForm[22],
-              "status_update_date" : dateNow,
-              "status_updater" : this.state.userId
-            }
-          ]
-        }
-      ],
+      "SSOW_List" : all_ssow,
       "Current_Status" : dataForm[22],
       "ASP_Assignment_Status" : null,
-      "deleted" : null,
+      "deleted" : 0,
       "created_by" : this.state.userId,
       "updated_by" : this.state.userId,
       "created_on" : dateNow,
       "updated_on" : dateNow
     }
+
     console.log('to be posted', JSON.stringify(assignment_data));
     const respondSaveAssignment = await this.postDatatoAPI('/asp_assignment_op', assignment_data);
-    if(respondSaveAssignment.data !== undefined && respondSaveAssignment.status >= 200 && respondSaveAssignment.status <= 300 ){
+    if(respondSaveAssignment.data !== undefined && respondSaveAssignment.status >= 200 && respondSaveAssignment.status <= 300 ) {
       console.log("Assignment Successfully Created");
+      alert('New Assignment has been created!');
+      this.setState({ action_status : 'success', action_message : 'New Assignment has been created!' }, () => {
+        setTimeout(function(){ this.setState({ redirect_sign : respondSaveAssignment.data._id}); }.bind(this), 1000);
+      });
+    } else {
+      alert('New Assignment cannot be created, please try again!');
+      this.setState({ action_status : 'failed', action_message : 'New Assignment cannot be created, please try again!' });
     }
   }
 
-  handleChangeForm(e) {
+  async handleChangeForm(e) {
     const value = e.target.value;
     const index = e.target.name;
     let dataForm = this.state.create_assignment_form;
     dataForm[parseInt(index)] = value;
+    if(index === "14") {
+      const getDataASP = await this.getDataFromAPI('/vendor_data_non_page?where={"Name":"'+value+'"}');
+      let dataForm = this.state.create_assignment_form;
+      dataForm[66] = getDataASP.data._items[0]._id;
+      dataForm[67] = getDataASP.data._items[0].Vendor_Code;
+      dataForm[68] = getDataASP.data._items[0].Email;
+    }
     this.setState({create_assignment_form : dataForm}, () => {
       console.log("Assignment Form", this.state.create_assignment_form);
     });
@@ -351,8 +388,12 @@ class AssignmentCreation extends Component {
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
+    if(this.state.redirect_sign !== false) {
+      return (<Redirect to={'/assignment-list/'} />);
+    }
     return(
       <div className="animated fadeIn">
+        <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -495,8 +536,8 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>SSOW Type</Label>
-                        <Input type="select" name="16" onChange={e => {this.changeSSOW(e); this.handleChangeForm(e)}}>
-                          <option value="" disabled selected hidden>Select SSOW Type</option>
+                        <Input type="text" name="16" value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.CD_Info_SOW_Type : ""} readOnly />
+                          {/* <option value="" disabled selected hidden>Select SSOW Type</option>
                           <option value="BSC">BSC</option>
                           <option value="DWDM">DWDM</option>
                           <option value="NDO">NDO</option>
@@ -504,8 +545,8 @@ class AssignmentCreation extends Component {
                           <option value="SACME">SACME</option>
                           <option value="Survey">Survey</option>
                           <option value="SV">SV</option>
-                          <option value="TRM">TRM</option>
-                        </Input>
+                          <option value="TRM">TRM</option> */}
+                        {/* </Input> */}
                       </FormGroup>
                     </Col>
                   </Row>
@@ -557,7 +598,7 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <h5 style={{marginTop: "16px"}}>SSOW {this.state.ssowType}</h5>
+                  <h5 style={{marginTop: "16px"}}>SSOW {this.state.list_activity_selected !== null ? this.state.list_activity_selected.CD_Info_SOW_Type : ""}</h5>
                   <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
                     <Col md="2" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
@@ -586,13 +627,13 @@ class AssignmentCreation extends Component {
                     <Col md="4" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Description</Label>
-                        <Input type="textarea" name="19" rows="1" value={this.state.ssow_description_list[0]} readOnly />
+                        <Input type="textarea" name="19" rows="1" value={this.state.create_assignment_form[19]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Unit</Label>
-                        <Input type="text" name="20" onChange={this.handleChangeForm} />
+                        <Input type="text" name="20" value={this.state.create_assignment_form[20]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
@@ -642,13 +683,13 @@ class AssignmentCreation extends Component {
                     <Col md="4" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Description</Label>
-                        <Input type="textarea" name="25" rows="1" value={this.state.ssow_description_list[1]} readOnly />
+                        <Input type="textarea" name="25" rows="1" value={this.state.create_assignment_form[25]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Unit</Label>
-                        <Input type="text" name="26" onChange={this.handleChangeForm} />
+                        <Input type="text" name="26" value={this.state.create_assignment_form[26]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
@@ -698,13 +739,13 @@ class AssignmentCreation extends Component {
                     <Col md="4" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Description</Label>
-                        <Input type="textarea" name="31" rows="1" value={this.state.ssow_description_list[2]} readOnly />
+                        <Input type="textarea" name="31" rows="1" value={this.state.create_assignment_form[31]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Unit</Label>
-                        <Input type="text" name="32" onChange={this.handleChangeForm} />
+                        <Input type="text" name="32" value={this.state.create_assignment_form[32]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
@@ -754,13 +795,13 @@ class AssignmentCreation extends Component {
                     <Col md="4" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Description</Label>
-                        <Input type="textarea" name="37" rows="1" value={this.state.ssow_description_list[3]} readOnly />
+                        <Input type="textarea" name="37" rows="1" value={this.state.create_assignment_form[37]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Unit</Label>
-                        <Input type="text" name="38" onChange={this.handleChangeForm} />
+                        <Input type="text" name="38" value={this.state.create_assignment_form[38]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
@@ -810,13 +851,13 @@ class AssignmentCreation extends Component {
                     <Col md="4" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Description</Label>
-                        <Input type="textarea" name="43" rows="1" value={this.state.ssow_description_list[4]} readOnly />
+                        <Input type="textarea" name="43" rows="1" value={this.state.create_assignment_form[43]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Unit</Label>
-                        <Input type="text" name="44" onChange={this.handleChangeForm} />
+                        <Input type="text" name="44" value={this.state.create_assignment_form[44]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
@@ -866,13 +907,13 @@ class AssignmentCreation extends Component {
                     <Col md="4" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Description</Label>
-                        <Input type="textarea" name="49" rows="1" value={this.state.ssow_description_list[5]} readOnly />
+                        <Input type="textarea" name="49" rows="1" value={this.state.create_assignment_form[49]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Unit</Label>
-                        <Input type="text" name="50" onChange={this.handleChangeForm} />
+                        <Input type="text" name="50" value={this.state.create_assignment_form[50]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
@@ -922,13 +963,13 @@ class AssignmentCreation extends Component {
                     <Col md="4" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Description</Label>
-                        <Input type="textarea" name="55" rows="1" value={this.state.ssow_description_list[6]} readOnly />
+                        <Input type="textarea" name="55" rows="1" value={this.state.create_assignment_form[55]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>Unit</Label>
-                        <Input type="text" name="56" onChange={this.handleChangeForm} />
+                        <Input type="text" name="56" value={this.state.create_assignment_form[56]} readOnly />
                       </FormGroup>
                     </Col>
                     <Col md="1" style={{margin:"0", padding:"4px"}}>
