@@ -402,6 +402,13 @@ class BulkAssignment extends Component {
 
   async saveDataAssignmentBulk(){
     let bulkAssignment = [];
+    let errVendor = [];
+    let errActId = [];
+    let errSSOW = [];
+    let errActNo = [];
+    let errProject = [];
+    let actionStatus = null;
+    let actionMessage = "";
     const uploadSSOW = this.state.assignment_ssow_upload;
     const dataActivity = this.state.list_data_activity;
     const getAllSSOW = uploadSSOW.map(value => value.SSOW_List.map(child => child)).reduce((l, n) => l.concat(n), []);
@@ -418,53 +425,116 @@ class BulkAssignment extends Component {
         let assignmentData = Object.assign(uploadSSOW[i], {});
         const getVendor = dataVendorAPI.find(e => e.Vendor_Code === assignmentData.Vendor_Code_Number);
         const getActId = dataActivity.find(e => e.WP_ID === assignmentData.CD_ID);
-        const getProject = dataProjectAPI.find(e => e._id === getActId.CD_Info_Project);
-        assignmentData["Assignment_No"] = "ASG"+this.preparingDataAssignment(i);
-        assignmentData["Account_Name"] = "TSEL";
-        assignmentData["Project"] = getProject.Project;
-        assignmentData["Plant"] = "";
-        assignmentData["NW"] = getActId.CD_Info_Network_Number;
-        assignmentData["NW_Activity"] = getActId.CD_Info_Activity_Code;
-        assignmentData["Requisitioner"] = "";
-        assignmentData["SOW_Type"] = getActId.CD_Info_SOW_Type;
-        assignmentData["Site_ID"] = getActId.Site_Info_SiteID_NE;
-        assignmentData["Site_Name"] = getActId.Site_Info_SiteName_NE;
-        assignmentData["Site_Longitude"] = getActId.Site_Info_Longitude_NE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Longitude_NE);
-        assignmentData["Site_Latitude"] = getActId.Site_Info_Latitude_NE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Latitude_NE);
-        assignmentData["Site_FE_ID"] = getActId.Site_Info_SiteID_FE;
-        assignmentData["Site_FE_Name"] = getActId.Site_Info_SiteName_FE;
-        assignmentData["Site_FE_Longitude"] = getActId.Site_Info_Longitude_FE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Longitude_FE);
-        assignmentData["Site_FE_Latitude"] = getActId.Site_Info_Latitude_FE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Latitude_FE);
-        assignmentData["Vendor_Code"] = getVendor._id;
-        assignmentData["Vendor_Code_Number"] = getVendor.Vendor_Code;
-        assignmentData["Vendor_Name"] = getVendor.Name;
-        assignmentData["Vendor_Email"] = getVendor.Email;
-        assignmentData["Payment_Terms"] = null;
-        assignmentData["Requestor"] = this.state.userEmail;
-        assignmentData["Payment_Term_Ratio"] = null;
-        let list_ssow = [];
-        let total_val_asg = 0;
-        for(let j = 0; j < assignmentData.SSOW_List.length; j++ ){
-          let ssowData = Object.assign(assignmentData.SSOW_List[j], {});
-          const getSSOW = dataSSOWAPI.find(e => e.ssow_id === ssowData.ssow_id && e.sow_type === ssowData.sow_type);
-          const getActNo = dataSSOWActNoAPI.find(e => e.activity_number === ssowData.ssow_activity_number);
-          ssowData["ssow_description"] = getSSOW.description;
-          ssowData["ssow_unit"] = getActNo.ssow_type;
-          ssowData["ssow_price"] = getActNo.price === null ? 0 : getActNo.price;
-          ssowData["ssow_total_price"] = ssowData.ssow_price * ssowData.ssow_qty;
-          total_val_asg = total_val_asg + ssowData.ssow_total_price;
-          list_ssow.push(ssowData);
+        if(getVendor !== undefined && getActId !== undefined){
+          const getProject = dataProjectAPI.find(e => e._id === getActId.CD_Info_Project);
+          if(getProject !== undefined){
+            assignmentData["Assignment_No"] = "ASG"+this.preparingDataAssignment(i);
+            assignmentData["Account_Name"] = "TSEL";
+            assignmentData["Project"] = getProject.Project;
+            assignmentData["Plant"] = "";
+            assignmentData["NW"] = getActId.CD_Info_Network_Number;
+            assignmentData["NW_Activity"] = getActId.CD_Info_Activity_Code;
+            assignmentData["Requisitioner"] = "";
+            assignmentData["SOW_Type"] = getActId.CD_Info_SOW_Type;
+            assignmentData["Site_ID"] = getActId.Site_Info_SiteID_NE;
+            assignmentData["Site_Name"] = getActId.Site_Info_SiteName_NE;
+            assignmentData["Site_Longitude"] = getActId.Site_Info_Longitude_NE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Longitude_NE);
+            assignmentData["Site_Latitude"] = getActId.Site_Info_Latitude_NE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Latitude_NE);
+            assignmentData["Site_FE_ID"] = getActId.Site_Info_SiteID_FE;
+            assignmentData["Site_FE_Name"] = getActId.Site_Info_SiteName_FE;
+            assignmentData["Site_FE_Longitude"] = getActId.Site_Info_Longitude_FE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Longitude_FE);
+            assignmentData["Site_FE_Latitude"] = getActId.Site_Info_Latitude_FE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Latitude_FE);
+            assignmentData["Vendor_Code"] = getVendor._id;
+            assignmentData["Vendor_Code_Number"] = getVendor.Vendor_Code;
+            assignmentData["Vendor_Name"] = getVendor.Name;
+            assignmentData["Vendor_Email"] = getVendor.Email;
+            assignmentData["Payment_Terms"] = null;
+            assignmentData["Requestor"] = this.state.userEmail;
+            assignmentData["Payment_Term_Ratio"] = null;
+            let list_ssow = [];
+            let total_val_asg = 0;
+            for(let j = 0; j < assignmentData.SSOW_List.length; j++ ){
+              let ssowData = Object.assign(assignmentData.SSOW_List[j], {});
+              const getSSOW = dataSSOWAPI.find(e => e.ssow_id === ssowData.ssow_id && e.sow_type === ssowData.sow_type);
+              const getActNo = dataSSOWActNoAPI.find(e => e.activity_number === ssowData.ssow_activity_number);
+              if(getSSOW !== undefined && getActNo !== undefined ){
+                ssowData["ssow_description"] = getSSOW.description;
+                ssowData["ssow_unit"] = getActNo.ssow_type;
+                ssowData["ssow_price"] = getActNo.price === null ? 0 : getActNo.price;
+                ssowData["ssow_total_price"] = ssowData.ssow_price * ssowData.ssow_qty;
+                total_val_asg = total_val_asg + ssowData.ssow_total_price;
+                list_ssow.push(ssowData);
+              }else{
+                if(getSSOW === undefined){
+                  errSSOW.push(ssowData.ssow_id);
+                }
+                if(getActNo === undefined){
+                  errActNo.push(ssowData.ssow_activity_number);
+                }
+              }
+            }
+            assignmentData["Value_Assignment"] = total_val_asg;
+            assignmentData["SSOW_List"] = list_ssow;
+            assignmentData["ASP_Assignment_Status"] = null;
+            bulkAssignment.push(assignmentData);
+          }else{
+            if(getProject === undefined){
+              errProject.push(assignmentData.CD_ID);
+            }
+          }
+        }else{
+          if(getActId === undefined){
+            errActId.push(assignmentData.CD_ID);
+          }
+          if(getVendor === undefined){
+            errVendor.push(assignmentData.Vendor_Code_Number);
+          }
         }
-        assignmentData["Value_Assignment"] = total_val_asg;
-        assignmentData["SSOW_List"] = list_ssow;
-        assignmentData["ASP_Assignment_Status"] = null;
-        bulkAssignment.push(assignmentData);
       }
-      console.log("bulkAssignment", JSON.stringify(bulkAssignment));
-      const postAssignment = await this.postDatatoAPITSEL('/asp_assignment_op', bulkAssignment);
-      if(postAssignment.data !== undefined){
-        this.setState({ action_status : 'success' });
+      errVendor = [...new Set(errVendor)];
+      errActId = [...new Set(errActId)];
+      errSSOW = [...new Set(errSSOW)];
+      errActNo = [...new Set(errActNo)];
+      errProject = [...new Set(errProject)];
+      if(errActId.length !== 0){
+        actionStatus = 'failed';
+        let twoSentence = actionMessage.length !== 0 ? " and <br />" : "";
+        actionMessage = "Activity ID : "+errActId.join(", ")+" not exist"+twoSentence+actionMessage;
       }
+      if(errVendor.length !== 0){
+        actionStatus = 'failed';
+        let twoSentence = actionMessage.length !== 0 ? " and <br />" : "";
+        actionMessage = actionMessage+twoSentence+"Vendor Code : "+errVendor.join(", ")+" not exist";
+      }
+      if(errSSOW.length !== 0){
+        actionStatus = 'failed';
+        let twoSentence = actionMessage.length !== 0 ? " and <br />" : "";
+        actionMessage = actionMessage+twoSentence+"SSOW Id : "+errSSOW.join(", ")+" not exist";
+      }
+      if(errActNo.length !== 0){
+        actionStatus = 'failed';
+        let twoSentence = actionMessage.length !== 0 ? " and <br />" : "";
+        actionMessage = actionMessage+twoSentence+"SSOW Activity Number : "+errActNo.join(", ")+" not exist";
+      }
+      if(errProject.length !== 0){
+        actionStatus = 'failed';
+        let twoSentence = actionMessage.length !== 0 ? " and <br />" : "";
+        actionMessage = actionMessage+twoSentence+"Activity ID : "+errProject.join(", ")+" haven't project";
+      }
+      console.log("bulkAssignment", bulkAssignment);
+      if(actionStatus !== 'failed'){
+        const postAssignment = await this.postDatatoAPITSEL('/asp_assignment_op', bulkAssignment);
+        if(postAssignment.data !== undefined){
+          this.setState({ action_status : 'success' }, () => {
+            setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 3000);
+          });
+        }else{
+          this.setState({action_status : 'failed'});
+        }
+      }else{
+        this.setState({action_status : actionStatus, action_message : actionMessage});
+      }
+
     }
   }
 
@@ -500,7 +570,9 @@ class BulkAssignment extends Component {
   }
 
   render() {
-    console.log("Excel Render", this.state.rowsXLS);
+    if(this.state.redirectSign !== false){
+      return (<Redirect to={'/assignment-list'} />);
+    }
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
