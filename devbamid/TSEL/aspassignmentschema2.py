@@ -437,7 +437,7 @@ aspassignmentschema = {
                     'schema' : {
                         'type' : 'dict',
                         'schema' : {
-                            'status' : {
+                            'status_value' : {
                                 'type' : 'string',
                                 'nullable' : True,
                                 'required' : True
@@ -446,23 +446,115 @@ aspassignmentschema = {
                                 'type' : 'string',
                                 'nullable' : True,
                                 'required' : True
-                            },                       
-                            'status_update_date' : {
-                                'type': 'datetime',
-                                'required': True,
-                                'nullable': True,
                             },
-                            'status_updater_id' : {
-                                'type': 'objectid',
-                                'required': False,
-                                'nullable': True,
-                            }
+                            # 'status_update_date': {
+                            #     'type': 'datetime',
+                            #     'require': True,
+                            #     'nullable': True
+                            # },
+                            # 'status_updater': {
+                            #     'type': 'string',
+                            #     'require': True,
+                            #     'nullable': True
+                            # },
+                            # 'status_updater_id': {
+                            #     'type': 'objectid',
+                            #     'require': False,
+                            #     'default': None
+                            # }
                         }
                     }
                 },
             }
         }
     },
+    # 'SSOW_List' : {
+    #     'type' : 'list',
+    #     'schema': {
+    #         'type': 'dict',
+    #         'nullable' : True,
+    #         'schema': {
+    #             'id_ssow_doc': {
+    #                 'type': 'objectid',
+    #                 'required': False,
+    #                 'nullable': True
+    #             },
+    #             'sow_type': {
+    #                 'type': 'string',
+    #                 'required': True,
+    #                 'nullable': True
+    #             },
+    #             'ssow_id': {
+    #                 'type': 'string',
+    #                 'required': True,
+    #                 'nullable': True
+    #             },
+    #             'ssow_description': {
+    #                 'type': 'string',
+    #                 'required': True,
+    #                 'nullable': True
+    #             },
+    #             'id_activity_number_doc': {
+    #                 'type': 'objectid',
+    #                 'required': False,
+    #                 'nullable': True
+    #             },
+    #             'ssow_activity_number': {
+    #                 'type': 'string',
+    #                 'required': True,
+    #                 'nullable': True
+    #             },
+    #             'ssow_unit': {
+    #                 'type': 'string',
+    #                 'required': True,
+    #                 'nullable': True
+    #             },
+    #             'ssow_qty': {
+    #                 'type': 'float',
+    #                 'required': True,
+    #                 'nullable': True
+    #             },
+    #             'ssow_price': {
+    #                 'type': 'float',
+    #                 'required': True,
+    #                 'nullable': True
+    #             },
+    #             'ssow_total_price': {
+    #                 'type': 'float',
+    #                 'required': True,
+    #                 'nullable': True
+    #             },
+    #             'ssow_status' : {
+    #                 'type' : 'list',
+    #                 'schema': {
+    #                     'type': 'dict',
+    #                     'schema': {
+    #                         'status': {
+    #                             'type': 'string',
+    #                             'require': True,
+    #                             'nullable': True
+    #                         },
+    #                         'status_update_date': {
+    #                             'type': 'datetime',
+    #                             'require': True,
+    #                             'nullable': True
+    #                         },
+    #                         'status_updater': {
+    #                             'type': 'string',
+    #                             'require': True,
+    #                             'nullable': True
+    #                         },
+    #                         'status_updater_id': {
+    #                             'type': 'objectid',
+    #                             'require': False,
+    #                             'nullable': True
+    #                         }
+    #                     }
+    #                 }
+    #             }
+    #         }
+    #     }
+    # },
     'Current_Status' : {
         'type': 'string',
         'required': True,
