@@ -598,7 +598,7 @@ class BulkMR extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '15px'}} >MR Creation Bulk </span>
-            <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkMR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
+            <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkMR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR Format</Button>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>

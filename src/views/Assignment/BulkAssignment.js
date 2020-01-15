@@ -67,6 +67,7 @@ class BulkAssignment extends Component {
         userEmail : this.props.dataLogin.email,
         assignment_ssow_upload : [],
         list_data_activity : [],
+        sow_type_selected : null,
         rowsXLS : [],
         waiting_status : null,
         action_status : null,
@@ -74,6 +75,8 @@ class BulkAssignment extends Component {
         redirectSign : false,
     };
     this.saveDataAssignmentBulk = this.saveDataAssignmentBulk.bind(this);
+    this.exportFormatBulkAssignment = this.exportFormatBulkAssignment.bind(this);
+    this.handleChangeSOWType = this.handleChangeSOWType.bind(this);
   }
 
     async getDatafromAPITSEL(url){
@@ -465,6 +468,37 @@ class BulkAssignment extends Component {
     }
   }
 
+  handleChangeSOWType(e){
+    const value = e.target.value;
+    console.log("Excel Render e", e);
+    this.setState({sow_type_selected : value});
+  }
+
+  exportFormatBulkAssignment = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const sow_type = this.state.sow_type_selected;
+    let indexSSOW = 7;
+    if(sow_type === "SACME"){
+      indexSSOW = 25;
+    }
+
+    let headerRow = ["id", "project", "sow_type", "vendor_code", "vendor_name", "activity_id"];
+
+    for(let i = 1; i <= indexSSOW; i++){
+      headerRow.push("ssow_"+sow_type.toLowerCase()+"_id_"+i.toString());
+      headerRow.push("ssow_"+sow_type.toLowerCase()+"_activity_number_"+i.toString());
+      headerRow.push("ssow_"+sow_type.toLowerCase()+"_unit_"+i.toString());
+    }
+
+    ws.addRow(headerRow);
+    ws.addRow(["","",sow_type]);
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'MR Uploader Template.xlsx');
+  }
+
   render() {
     console.log("Excel Render", this.state.rowsXLS);
     return (
@@ -475,6 +509,18 @@ class BulkAssignment extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}} >ASP Assignment Bulk </span>
+            <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkAssignment} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment Format</Button>
+            <select type="select" onChange={this.handleChangeSOWType} value={this.state.sow_type_selected} style={{marginRight : '8px', marginTop :'3px', float : 'right', width : '100px'}}>
+              <option value="" disabled selected hidden>SOW Type</option>
+              <option value="NDO">NDO</option>
+              <option value="RBS">RBS</option>
+              <option value="TRM">TRM</option>
+              <option value="Power">Power</option>
+              <option value="SACME">SACME</option>
+              <option value="Survey">Survey</option>
+              <option value="BSC">BSC</option>
+              <option value="RNC">RNC</option>
+            </select>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
