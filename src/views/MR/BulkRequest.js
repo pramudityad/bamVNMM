@@ -240,7 +240,7 @@ class BulkRequest extends Component {
     }
   }
 
-  requestForApprovalBulk(){
+  async requestForApprovalBulk(){
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     let dataMRChecked = this.state.data_mr_checked;
