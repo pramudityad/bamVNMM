@@ -8,7 +8,7 @@ import { Redirect } from 'react-router-dom';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
-const API_URL_tsel = 'http://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
+const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const username_tsel = 'adminbamidsuper';
 const password_tsel = 'F760qbAg2sml';
 
@@ -204,8 +204,8 @@ class AssignmentCreation extends Component {
       let activity_list = [];
       const getActivity = await this.getDataFromAPI('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}');
       if(getActivity !== undefined && getActivity.data !== undefined) {
-        this.setState({list_activity_selection : getActivity.data._items}, () => 
-        getActivity.data._items.map(activity => 
+        this.setState({list_activity_selection : getActivity.data._items}, () =>
+        getActivity.data._items.map(activity =>
           activity_list.push({'label' : activity.WP_ID !== undefined ? activity.WP_ID +" ("+activity.WP_Name +")" : null, 'value' :activity._id})))
       }
       return activity_list;
@@ -219,7 +219,7 @@ class AssignmentCreation extends Component {
       let ssow_id_list = [];
       const getSSOWID = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
       if(getSSOWID !== undefined && getSSOWID.data !== undefined) {
-        getSSOWID.data._items.map(ssow => 
+        getSSOWID.data._items.map(ssow =>
           ssow_id_list.push({'label' : ssow.ssow_id !== undefined ? ssow.ssow_id : null, 'value' : ssow.ssow_id}))
       }
       return ssow_id_list;
@@ -233,7 +233,7 @@ class AssignmentCreation extends Component {
       let act_number_list = [];
       const getActNumber = await this.getDataFromAPI('/ssow_activity_number_sorted_nonpage?where={"activity_number":{"$regex":"'+inputValue+'", "$options":"i"}}');
       if(getActNumber !== undefined && getActNumber.data !== undefined) {
-        getActNumber.data._items.map(act_number => 
+        getActNumber.data._items.map(act_number =>
           act_number_list.push({'label' : act_number.activity_number !== undefined ? act_number.activity_number : null, 'value' : act_number.activity_number}))
       }
       return act_number_list;
@@ -286,7 +286,7 @@ class AssignmentCreation extends Component {
     const dataForm = this.state.create_assignment_form;
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-    
+
     let i = 17;
     let j = 10;
     let k = 59;
@@ -418,7 +418,7 @@ class AssignmentCreation extends Component {
                           cacheOptions
                           loadOptions={this.loadOptionsActivity}
                           defaultOptions
-                          onChange={this.handleChangeActivity}                
+                          onChange={this.handleChangeActivity}
                         />
                       </FormGroup>
                     </Col>
@@ -517,7 +517,7 @@ class AssignmentCreation extends Component {
                         <Label>ASP</Label>
                         <Input type="select" name="14" onChange={this.handleChangeForm}>
                           <option value="" disabled selected hidden>Select ASP</option>
-                          {this.state.asp_list.map((list, i) => 
+                          {this.state.asp_list.map((list, i) =>
                             <option value={list.Name} key={list._id}>{list.Name}</option>
                           )}
                         </Input>
@@ -657,7 +657,7 @@ class AssignmentCreation extends Component {
                           <option value="Cancelled">Cancelled</option>
                           <option value="Close">Close</option>
                           <option value="Open">Open</option>
-                          <option value="Partial Close">Partial Close</option> 
+                          <option value="Partial Close">Partial Close</option>
                         </Input>
                       </FormGroup>
                     </Col>
@@ -713,7 +713,7 @@ class AssignmentCreation extends Component {
                           <option value="Cancelled">Cancelled</option>
                           <option value="Close">Close</option>
                           <option value="Open">Open</option>
-                          <option value="Partial Close">Partial Close</option> 
+                          <option value="Partial Close">Partial Close</option>
                         </Input>
                       </FormGroup>
                     </Col>
@@ -769,7 +769,7 @@ class AssignmentCreation extends Component {
                           <option value="Cancelled">Cancelled</option>
                           <option value="Close">Close</option>
                           <option value="Open">Open</option>
-                          <option value="Partial Close">Partial Close</option> 
+                          <option value="Partial Close">Partial Close</option>
                         </Input>
                       </FormGroup>
                     </Col>
@@ -825,7 +825,7 @@ class AssignmentCreation extends Component {
                           <option value="Cancelled">Cancelled</option>
                           <option value="Close">Close</option>
                           <option value="Open">Open</option>
-                          <option value="Partial Close">Partial Close</option> 
+                          <option value="Partial Close">Partial Close</option>
                         </Input>
                       </FormGroup>
                     </Col>
@@ -881,7 +881,7 @@ class AssignmentCreation extends Component {
                           <option value="Cancelled">Cancelled</option>
                           <option value="Close">Close</option>
                           <option value="Open">Open</option>
-                          <option value="Partial Close">Partial Close</option> 
+                          <option value="Partial Close">Partial Close</option>
                         </Input>
                       </FormGroup>
                     </Col>
@@ -937,7 +937,7 @@ class AssignmentCreation extends Component {
                           <option value="Cancelled">Cancelled</option>
                           <option value="Close">Close</option>
                           <option value="Open">Open</option>
-                          <option value="Partial Close">Partial Close</option> 
+                          <option value="Partial Close">Partial Close</option>
                         </Input>
                       </FormGroup>
                     </Col>
@@ -993,7 +993,7 @@ class AssignmentCreation extends Component {
                           <option value="Cancelled">Cancelled</option>
                           <option value="Close">Close</option>
                           <option value="Open">Open</option>
-                          <option value="Partial Close">Partial Close</option> 
+                          <option value="Partial Close">Partial Close</option>
                         </Input>
                       </FormGroup>
                     </Col>

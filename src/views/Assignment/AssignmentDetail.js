@@ -4,7 +4,7 @@ import { Form, FormGroup, Label } from 'reactstrap';
 import axios from 'axios';
 import { connect } from 'react-redux';
 
-const API_URL_tsel = 'http://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
+const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const username_tsel = 'adminbamidsuper';
 const password_tsel = 'F760qbAg2sml';
 
