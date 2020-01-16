@@ -39,7 +39,7 @@ class WarehouseDashboard extends Component {
       loading_process: 0,
       material_dispatch: 0
     }
-    
+
     this.updateHover1 = this.updateHover1.bind(this);
     this.getOrderCreated = this.getOrderCreated.bind(this);
     this.getOrderReceived = this.getOrderReceived.bind(this);
@@ -61,7 +61,7 @@ class WarehouseDashboard extends Component {
       variant2: hover
     })
   }
-  
+
   updateHover3(hover) {
     this.setState({
       variant3: hover
@@ -136,15 +136,15 @@ class WarehouseDashboard extends Component {
   }
 
   getOrderCreated() {
-    this.getDataFromAPI('/mr_sorted_nonpage?where={"current_mr_status":"MR REQUESTED"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_mr_status":"MR REQUESTED"}').then(res => {
       console.log("Order Created xx", res);
       if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({order_created : items.length});
+        const items = res.data._meta;
+        this.setState({order_created : items.total});
       }
     })
   }
-  
+
   getOrderReceived() {
     this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_ORDER_RECEIVED"}').then(res => {
       console.log("Order Received", res);

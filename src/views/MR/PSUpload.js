@@ -43,6 +43,7 @@ class PSUpload extends Component {
         mr_type : "RBS",
         qty_ne : new Map(),
         qty_fe : new Map(),
+        redirectSign : false,
         action_status : null,
         action_message : null,
     };
@@ -515,10 +516,12 @@ class PSUpload extends Component {
     }
     const respondSaveMRMat = await this.postDatatoAPIBAM('/mr_md_op', matMRsave);
     if(respondSaveMRMat.data !== undefined && respondSaveMRMat.status >= 200 && respondSaveMRMat.status <= 300 ){
-      this.setState({action_status : 'success'});
+      this.setState({action_status : 'success'}, () => {
+        setTimeout(function(){ this.setState({ redirectSign : _id_mr}); }.bind(this), 3000);
+      });
     }else{
       this.setState({action_status : 'failed'});
-      this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
+      // this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
     }
   }
 
@@ -540,6 +543,9 @@ class PSUpload extends Component {
   }
 
   render() {
+    if(this.state.redirectSign !== false){
+      return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);
+    }
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
