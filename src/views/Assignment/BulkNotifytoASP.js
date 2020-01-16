@@ -85,7 +85,7 @@ class BulkNotifytoASP extends Component {
   getAssignmentList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPI('/asp_assignment_sorted?&max_results='+maxPage+'&page='+page+'&where={"Current_Status" = "ASP ASSIGNMENT CREATED"}').then(res => {
+    this.getDataFromAPI('/asp_assignment_sorted?max_results='+maxPage+'&page='+page+'&where={"Current_Status" : "ASP ASSIGNMENT CREATED"}').then(res => {
       console.log("Assignment List Sorted", res);
       if(res.data !== undefined) {
         const items = res.data._items;
@@ -98,7 +98,7 @@ class BulkNotifytoASP extends Component {
   getAssignmentListAll() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPI('/asp_assignment_sorted_non_page?where={"Current_Status" = "ASP ASSIGNMENT CREATED"}').then(res => {
+    this.getDataFromAPI('/asp_assignment_sorted_non_page?where={"Current_Status" : "ASP ASSIGNMENT CREATED"}').then(res => {
       console.log("Assignment List Sorted All", res);
       if(res.data !== undefined) {
         const items = res.data._items;
@@ -143,7 +143,7 @@ class BulkNotifytoASP extends Component {
     }
   }
 
-  requestForNotifyBulk(){
+  async requestForNotifyBulk(){
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     let dataASGChecked = this.state.data_asg_checked;
@@ -163,11 +163,10 @@ class BulkNotifytoASP extends Component {
       let notifyASP = {};
       notifyASP['Current_Status'] = "ASP ASSIGNMENT NOTIFIED TO ASP";
       notifyASP['ASP_Assignment_Status'] = dataASG.ASP_Assignment_Status.concat(notifyStatus);
-      this.patchDatatoAPIBAM('/asp_assignment_op/'+dataASG._id, notifyASP, dataASG._etag).then(res => {
-        if(res.data !== undefined){
-          sucPatch.push(res.data._id);
-        }
-      })
+      const patchData = await this.patchDatatoAPIBAM('/asp_assignment_op/'+dataASG._id, notifyASP, dataASG._etag);
+      if(patchData.data !== undefined){
+        sucPatch.push(patchData.data._id);
+      }
     }
     if(sucPatch.length === dataASGChecked.length){
       this.setState({action_message : 'success'});

@@ -281,7 +281,6 @@ class AssignmentCreation extends Component {
       return respond;
     }
   }
-  
 
   async postAssignment(){
     const dataForm = this.state.create_assignment_form;
@@ -321,10 +320,10 @@ class AssignmentCreation extends Component {
       "Account_Name" : "TSEL",
       "CD_ID" : dataForm[0],
       "Project" : dataForm[1],
-      "Plant" : "what is plant?",
+      "Plant" : "",
       "NW" : dataForm[11],
       "NW_Activity" : dataForm[13],
-      "Requisitioner" : "what is this?",
+      "Requisitioner" : "",
       "SOW_Type" : dataForm[10],
       "Site_ID" : dataForm[2],
       "Site_Name" : dataForm[3],
@@ -345,8 +344,16 @@ class AssignmentCreation extends Component {
       "Requestor" : this.state.userEmail,
       "Payment_Term_Ratio" : "11.11",
       "SSOW_List" : all_ssow,
-      "Current_Status" : dataForm[22],
-      "ASP_Assignment_Status" : null,
+      "Current_Status" : "ASP ASSIGNMENT CREATED",
+      "ASP_Assignment_Status" : [
+        {
+          "status_name" : "ASP_ASSIGNMENT",
+          "status_value" : "CREATED",
+          "status_date" : dateNow,
+          "status_updater" : this.state.userEmail,
+          "status_updater_id" : this.state.userId
+        }
+      ],
       "deleted" : 0,
       "created_by" : this.state.userId,
       "updated_by" : this.state.userId,

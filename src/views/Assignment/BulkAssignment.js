@@ -350,7 +350,7 @@ class BulkAssignment extends Component {
           "SOW_Type": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'sow_type')]),
           "SSOW_List" : ssow_data,
           "ASP_Assignment_Status" : current_status,
-          "Current_Status" : "CREATED",
+          "Current_Status" : "ASP ASSIGNMENT CREATED",
           "Assignment_Creation_Date" : dateNow,
           "created_by" : this.state.userId,
           "updated_by" : this.state.userId

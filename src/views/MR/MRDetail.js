@@ -378,7 +378,7 @@ class MRDetail extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}} >MR Detail</span>
+            <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-info-circle" style={{marginRight: "8px"}}></i>MR Detail</span>
           </CardHeader>
           <CardBody>
             <div style={{marginBottom : '10px'}}>

@@ -257,11 +257,10 @@ class BulkRequest extends Component {
       let reqMR = {};
       reqMR['current_mr_status'] = "MR REQUESTED";
       reqMR['mr_status'] = dataMR.mr_status.concat(requestAprv);
-      this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, reqMR, dataMR._etag).then(res => {
-        if(res.data !== undefined){
-          sucPatch.push(res.data._id);
-        }
-      })
+      const patchData = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, reqMR, dataMR._etag)
+      if(patchData.data !== undefined){
+        sucPatch.push(patchData.data._id);
+      }
     }
     if(sucPatch.length === dataMRChecked.length){
       this.setState({action_message : 'success'});
