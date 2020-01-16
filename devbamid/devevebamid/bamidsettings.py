@@ -11,6 +11,11 @@ from tssrsiteitemsschema import tssrsiteitemsschema
 from tssrversionschema import tssrversionschema
 from tssrsitesversionschema import tssrsitesversionschema
 from tssrsiteitemsversionschema import tssrsiteitemsversionschema
+from productpackageschema import productpackageschema
+from materialcatalogueschema import materialcatalogueschema
+from ssowschema import ssowschema
+from aspassignmentschema import aspassignmentschema
+from ssowactivitynumberschema import ssowactivitynumberschema
 
 
 # Mongo Config
@@ -764,6 +769,305 @@ tssr_site_items_version_sorted_nonpage = {
     'schema' : tssrsiteitemsversionschema,
 }
 
+pp_op = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource': {
+		'source': 'product_packages',
+        'projection' : {
+            'created_by': 0,
+            'updated_by': 0,
+            'deleted' : 0
+        },
+        'filter' : {'deleted' : 0}
+	},
+    'resource_methods': ['POST', 'GET'],
+    'item_methods': ['PATCH', 'GET'],
+    
+    'versioning': False,
+    'hateoas' : False,
+    'schema': productpackageschema,
+}
+
+pp_sorted = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource': {
+		'source': 'product_packages',
+        'default_sort': [('_id', -1)],
+        'projection' : {
+            'created_by': 0,
+            'updated_by': 0,
+            'deleted' : 0
+        },
+        'filter' : {'deleted' : 0}
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+
+    'versioning': False,
+    'hateoas' : False,
+    'schema': productpackageschema,
+}
+
+pp_sorted_nonpage = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource': {
+		'source': 'product_packages',
+        'default_sort': [('_id', -1)],
+        'projection' : {
+            'created_by': 0,
+            'updated_by': 0,
+            'deleted' : 0
+        },
+        'filter' : {'deleted' : 0}
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+
+    'versioning': False,
+    'pagination': False,
+    'hateoas' : False,
+    'schema': productpackageschema,
+}
+
+mc_op = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource': {
+		'source': 'material_catalogue',
+        'projection' : {
+            'created_by': 0,
+            'updated_by': 0,
+            'deleted' : 0
+        },
+        'filter' : {'deleted' : 0}
+	},
+    'resource_methods': ['POST', 'GET'],
+    'item_methods': ['PATCH', 'GET'],
+
+    'versioning': False,
+    'hateoas' : False,
+    'schema': materialcatalogueschema,
+}
+
+mc_sorted = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource': {
+		'source': 'material_catalogue',
+        'default_sort': [('_id', -1)],
+        'projection' : {
+            'created_by': 0,
+            'updated_by': 0,
+            'deleted' : 0
+        },
+        'filter' : {'deleted' : 0}
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['PATCH', 'GET'],
+
+    'versioning': False,
+    'hateoas' : False,
+    'schema': materialcatalogueschema,
+}
+
+mc_sorted_nonpage = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource': {
+		'source': 'material_catalogue',
+        'default_sort': [('_id', -1)],
+        'projection' : {
+            'created_by': 0,
+            'updated_by': 0,
+            'deleted' : 0
+        },
+        'filter' : {'deleted' : 0}
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['PATCH', 'GET'],
+    
+    'versioning': False,
+    'pagination': False,
+    'hateoas' : False,
+    'schema': materialcatalogueschema,
+}
+
+asp_assignment_op = {    
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'asp_assignment_data',
+        'filter' : {
+            'deleted' : 0
+        },
+        'projection' : {
+            'deleted' : 0
+        }
+	},
+    'resource_methods': ['POST', 'GET'],
+    'item_methods': ['PATCH', 'GET'],
+	'versioning' : False,
+    'schema' : aspassignmentschema
+}
+
+asp_assignment_sorted = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'asp_assignment_data',
+        'filter' : {
+            'deleted' : 0
+        },
+        'projection' : {
+            'deleted' : 0
+        },
+        'default_sort': [('_id', -1)],
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+	'versioning' : False,
+    'schema' : aspassignmentschema
+}
+
+asp_assignment_sorted_nonpage = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'asp_assignment_data',
+        'filter' : {
+            'deleted' : 0
+        },
+        'projection' : {
+            'deleted' : 0
+        },
+        'default_sort': [('_id', -1)]
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+    'versioning' : False,
+    'pagination' : False,
+	'hateoas' : False,
+    'schema' : aspassignmentschema,
+}
+
+ssow_op = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'ssow_data',
+        'filter' : {
+            'deleted' : 0
+        },
+        'projection' : {
+            'deleted' : 0
+        }
+	},
+    'resource_methods': ['POST', 'GET'],
+    'item_methods': ['PATCH', 'GET'],
+	'versioning' : False,
+    'schema' : ssowschema
+}
+
+ssow_sorted = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'ssow_data',
+        'filter' : {
+            'deleted' : 0
+        },
+        'projection' : {
+            'deleted' : 0
+        },
+        'default_sort': [('_id', -1)],
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+	'versioning' : False,
+    'schema' : ssowschema
+}
+
+ssow_sorted_nonpage = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'ssow_data',
+        'filter' : {
+            'deleted' : 0
+        },
+        'projection' : {
+            'deleted' : 0
+        },
+        'default_sort': [('_id', -1)]
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+    'versioning' : False,
+    'pagination' : False,
+	'hateoas' : False,
+    'schema' : ssowschema
+}
+
+ssow_activity_number_op = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'ssow_activity_number',
+        'filter' : {
+            'deleted' : 0
+        },
+        'projection' : {
+            'deleted' : 0
+        }
+	},
+    'resource_methods': ['POST', 'GET'],
+    'item_methods': ['PATCH', 'GET'],
+	'versioning' : False,
+    'schema' : ssowactivitynumberschema
+}
+
+ssow_activity_number_sorted = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'ssow_activity_number',
+        'filter' : {
+            'deleted' : 0
+        },
+        'projection' : {
+            'deleted' : 0
+        },
+        'default_sort': [('_id', -1)],
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+	'versioning' : False,
+    'schema' : ssowactivitynumberschema
+}
+
+ssow_activity_number_sorted_nonpage = {
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
+    'datasource' : {
+		'source' : 'ssow_activity_number',
+        'filter' : {
+            'deleted' : 0
+        },
+        'projection' : {
+            'deleted' : 0
+        },
+        'default_sort': [('_id', -1)]
+	},
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+    'versioning' : False,
+    'pagination' : False,
+	'hateoas' : False,
+    'schema' : ssowactivitynumberschema
+}
 
 DOMAIN = {
     'mr_op': mr_op,
@@ -803,4 +1107,19 @@ DOMAIN = {
     'tssr_site_items_version_op': tssr_site_items_version_op,
     'tssr_site_items_version_sorted': tssr_site_items_version_sorted,
     'tssr_site_items_version_sorted_nonpage': tssr_site_items_version_sorted_nonpage,
+    'pp_op': pp_op,
+    'pp_sorted': pp_sorted,
+    'pp_sorted_nonpage': pp_sorted_nonpage,
+    'mc_op': mc_op,
+    'mc_sorted': mc_sorted,
+    'mc_sorted_nonpage': mc_sorted_nonpage,
+    'asp_assignment_op': asp_assignment_op,
+    'asp_assignment_sorted': asp_assignment_sorted,
+    'asp_assignment_sorted_nonpage': asp_assignment_sorted_nonpage,
+    'ssow_op': ssow_op,
+    'ssow_sorted': ssow_sorted,
+    'ssow_sorted_nonpage': ssow_sorted_nonpage,
+    'ssow_activity_number_op': ssow_activity_number_op,
+    'ssow_activity_number_sorted': ssow_activity_number_sorted,
+    'ssow_activity_number_sorted_nonpage': ssow_activity_number_sorted_nonpage
 }

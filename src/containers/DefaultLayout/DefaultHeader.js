@@ -6,8 +6,9 @@ import './font-awesome-animation.min.css';
 import axios from 'axios';
 
 import { AppAsideToggler, AppNavbarBrand, AppSidebarToggler } from '@coreui/react';
-import logo from '../../assets/img/brand/logo.svg'
-import sygnet from '../../assets/img/brand/sygnet.svg'
+import logo from '../../assets/img/ERI_horizontal_RGB.svg';
+import sygnet from '../../assets/img/brand/ECON_RGB.svg';
+import '../../assets/fontawesome/css/all.css';
 
 const propTypes = {
   children: PropTypes.node,
@@ -99,7 +100,7 @@ class DefaultHeader extends Component {
               <DropdownItem header tag="div" className="text-center"><strong>Order Created</strong></DropdownItem>
               {
                 this.state.order_created.length === 0 ?
-                (<DropdownItem><center><i className="fa fa-check" style={{color:"green"}}></i>No Order Created</center></DropdownItem>) : 
+                (<DropdownItem><center><i className="fa fa-check" style={{color:"green"}}></i>No Order Created</center></DropdownItem>) :
                 this.state.order_created.map((list, i) => <Link to={'/order-created'}><DropdownItem><i className="fa fa-exclamation" style={{color:"red"}}></i>{list.mr_id} - {list.project_name}</DropdownItem></Link>)
               }
             </DropdownMenu>

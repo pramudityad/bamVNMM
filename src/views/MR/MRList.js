@@ -71,8 +71,8 @@ class MRList extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
       if(res.data !== undefined) {
@@ -98,8 +98,8 @@ class MRList extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
       console.log("MR List All", res);
       if(res.data !== undefined) {
@@ -197,7 +197,8 @@ class MRList extends Component {
                 <span style={{lineHeight :'2'}}>
                   <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> MR List
                 </span>
-                <Link to={'/mr-creation'}><Button color="success" style={{float : 'right'}} size="sm">Create MR</Button></Link>
+                <Link to={'/mr-creation'}><Button color="success" style={{float : 'right'}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create MR</Button></Link>
+                <Link to={'/bulk-mr-creation'}><Button color="success" style={{float : 'right', marginRight: "8px"}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create MR Bulk</Button></Link>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
               </CardHeader>
               <CardBody>
@@ -364,23 +365,28 @@ class MRList extends Component {
                     </tr>
                   </thead>
                   <tbody>
+                    {this.state.mr_list.length === 0 && (
+                      <tr>
+                        <td colSpan="15">No Data Available</td>
+                      </tr>
+                    )}
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
                           <Link to={'/mr-detail/'+list._id}>
-                            <Button outline color="info" size="sm">Detail</Button>
+                            <Button style={{width: "90px"}} outline color="info" size="sm">Detail</Button>
                           </Link>
                         </td>
                         <td>{list.mr_id}</td>
                         <td>{list.implementation_id}</td>
                         <td>{list.project_name}</td>
                         <td>{list.cd_id}</td>
-                        <td></td>
-                        <td></td>
+                        <td>{list.site_info[0].site_id}</td>
+                        <td>{list.site_info[0].site_name}</td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
-                        <td></td>
+                        <td>{list.asp_company}</td>
                         <td>{list.eta}</td>
                         <td></td>
                         <td>{list.updated_on}</td>

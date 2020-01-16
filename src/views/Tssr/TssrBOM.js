@@ -19,6 +19,10 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const API_URL_PDB_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
+const usernameTselApi = 'adminbamidsuper';
+const passwordTselApi = 'F760qbAg2sml';
+
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
@@ -73,13 +77,13 @@ class TssrBOM extends Component {
     this.saveTssrBOMParent = this.saveTssrBOMParent.bind(this);
   }
 
-    async getDatafromAPIBMS(url){
+    async getDatafromAPITSEL(url){
       try {
-        let respond = await axios.get(API_URL_BMS_Phil +url, {
+        let respond = await axios.get(API_URL_PDB_TSEL +url, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: usernameTselApi,
+            password: passwordTselApi
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -225,159 +229,166 @@ class TssrBOM extends Component {
   }
 
   formatDataTSSR = async(dataXLS) => {
-      let action_message = this.state.action_message;
+      let action_message = "";
       let actionStatus = null;
+      let SitesOfTSSRNew = [];
       this.setState({waiting_status : 'loading'});
-      const staticHeader = ["project", "site_id", "site_name"];
+      const staticHeader = ["site_title", "site_id", "site_name"];
       const staticHeaderXLS = dataXLS[1].filter((e,n) => n < 3);
       if(staticHeaderXLS.equals(staticHeader) !== true){
-        this.setState({action_status : "failed", action_message : action_message + "la Please check your upload format or Package Number"});
+        actionStatus = "failed"
+        this.setState({action_status : "failed", action_message : action_message + "Please check your upload format or Package Number"});
       }
-      let dataPackage = [];
-      const index_item = 3;
-      let RespondGetPP = [];
-      const ppid_upload = [];
-      let pp_id_special = [];
-      for(let j = index_item ; j < dataXLS[1].length; j++){
-        let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
-        if(Array.isArray(idXLSIndex) == true){
-          idXLSIndex = idXLSIndex.join();
-          if(idXLSIndex.includes("\"")){
-            pp_id_special.push(idXLSIndex);
-          }else{
-            ppid_upload.push(idXLSIndex);
-          }
-        }
-      }
-      RespondGetPP = await this.getAllPP(ppid_upload, pp_id_special);
-      this.setState({waiting_status : null});
-      if(RespondGetPP.length !== 0){
-        dataPackage = RespondGetPP;
-      }
-      let SitesOfTSSRNew = [];
-      let id_PP = new Map();
-      let _id_PP = new Map();
-      let pp_key = new Map();
-      let pp_name = new Map();
-      let group_PP = new Map();
-      let pp_cust_num = new Map();
-      let phy_group = new Map();
-      let pp_type = new Map();
-      let pp_unit = new Map();
-      let data_duplicated = [];
-      let data_undefined = [];
-      let dataAllnull = [];
-      let siteIDNull = [];
-      for(let j = index_item ; j < dataXLS[1].length; j++){
-        let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
-        if(Array.isArray(idXLSIndex) == true){
-          idXLSIndex = idXLSIndex.join();
-        }
-        let get_id_PP = dataPackage.find(PP => PP.pp_id === idXLSIndex);
-        let cekAllZero = dataXLS.map( e => this.checkValuetoZero(e[j]) ).filter( (e,n) => n>1);
-        if(cekAllZero.every( e => e == 0)){
-          dataAllnull.push(idXLSIndex);
-        }
-        if(get_id_PP === undefined){
-          data_undefined.push(idXLSIndex)
-        }else{
-          if(id_PP.get(idXLSIndex) === undefined){
-            id_PP.set(idXLSIndex, get_id_PP.pp_id);
-            pp_key.set(idXLSIndex, get_id_PP.pp_key);
-            _id_PP.set(idXLSIndex, get_id_PP._id);
-            group_PP.set(idXLSIndex, get_id_PP.pp_group)
-            pp_name.set(idXLSIndex, get_id_PP.name);
-            pp_cust_num.set(idXLSIndex, get_id_PP.pp_cust_number);
-            phy_group.set(idXLSIndex, get_id_PP.phy_group)
-            pp_type.set(idXLSIndex, get_id_PP.product_type);
-            pp_unit.set(idXLSIndex, get_id_PP.unit);
-          }else{
-            data_duplicated.push(idXLSIndex);
-          }
-        }
-      }
-      if(data_undefined.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and <br />" : "";
-        action_message = "Please check your upload format or Package Number in "+data_undefined.join(", ")+twoSentence+action_message;
-      }
-      if(data_duplicated.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and <br />" : "";
-        action_message = action_message+twoSentence+" There are Duplicated PP in "+data_duplicated.join(", ");
-      }
-      let siteSaveFormat = [];
-      let siteError = [];
-      for(let i = 2; i < dataXLS.length; i++){
-        if(this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]) !== null && this.state.action_status !== "failed" && actionStatus !== "failed"){
-          let packageDatas = []
-          for(let j = index_item ; j < dataXLS[1].length; j++){
-            let dataXLSIndex = dataXLS[1][j].split(" /// ",1).join();
-            if(dataAllnull.includes(dataXLSIndex) === false){
-              let package_data = {
-                "id_pp_doc" : _id_PP.get(dataXLSIndex),
-                "pp_id" : dataXLSIndex,
-                "pp_group" : group_PP.get(dataXLSIndex),
-                "pp_cust_number" : pp_cust_num.get(dataXLSIndex),
-                "product_name" : pp_name.get(dataXLSIndex).toString(),
-                "physical_group" : phy_group.get(dataXLSIndex),
-                "product_type" : pp_type.get(dataXLSIndex),
-                "uom" : pp_unit.get(dataXLSIndex),
-                "qty" : this.checkValuetoZero(dataXLS[i][j]),
-                "version" : "0",
-                "deleted" : 0,
-                "created_by" : this.state.userId,
-                "updated_by" : this.state.userId
-              }
-              packageDatas.push(package_data);
+      if(actionStatus !== "failed"){
+        let dataPackage = [];
+        const index_item = 3;
+        let RespondGetPP = [];
+        const ppid_upload = [];
+        let pp_id_special = [];
+        for(let j = index_item ; j < dataXLS[1].length; j++){
+          let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
+          if(Array.isArray(idXLSIndex) == true){
+            idXLSIndex = idXLSIndex.join();
+            if(idXLSIndex.includes("\"")){
+              pp_id_special.push(idXLSIndex);
+            }else{
+              ppid_upload.push(idXLSIndex);
             }
           }
-          let siteID = this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]).toString();
-          let SiteBOQTech = {
-            "account_id" : "1",
-            "site_id" : siteID,
-            "site_name" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]).toString(),
-            "list_of_site_items" : packageDatas,
-            "version" : "0",
-            "created_by" : this.state.userId,
-            "updated_by" : this.state.userId,
-            "deleted" : 0
+        }
+        RespondGetPP = await this.getAllPP(ppid_upload, pp_id_special);
+        this.setState({waiting_status : null});
+        if(RespondGetPP.length !== 0){
+          dataPackage = RespondGetPP;
+        }
+        let id_PP = new Map();
+        let _id_PP = new Map();
+        let pp_key = new Map();
+        let pp_name = new Map();
+        let group_PP = new Map();
+        let pp_cust_num = new Map();
+        let physical_group = new Map();
+        let pp_type = new Map();
+        let pp_unit = new Map();
+        let data_duplicated = [];
+        let data_undefined = [];
+        let dataAllnull = [];
+        let siteIDNull = [];
+        for(let j = index_item ; j < dataXLS[1].length; j++){
+          let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
+          if(Array.isArray(idXLSIndex) == true){
+            idXLSIndex = idXLSIndex.join();
           }
-          // "site_name" : this.checkValuetoString(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]).toString(),
-          if(siteID.length === 0){
-            siteIDNull.push(null);
+          let get_id_PP = dataPackage.find(PP => PP.pp_id === idXLSIndex);
+          let cekAllZero = dataXLS.map( e => this.checkValuetoZero(e[j]) ).filter( (e,n) => n>1);
+          if(cekAllZero.every( e => e == 0)){
+            dataAllnull.push(idXLSIndex);
           }
-          if(siteSaveFormat.find(e => e === SiteBOQTech.site_id) !== undefined){
-            siteError.push(SiteBOQTech.site_id);
+          if(get_id_PP === undefined){
+            data_undefined.push(idXLSIndex)
+          }else{
+            if(id_PP.get(idXLSIndex) === undefined){
+              id_PP.set(idXLSIndex, get_id_PP.pp_id);
+              pp_key.set(idXLSIndex, get_id_PP.pp_key);
+              _id_PP.set(idXLSIndex, get_id_PP._id);
+              group_PP.set(idXLSIndex, get_id_PP.pp_group)
+              pp_name.set(idXLSIndex, get_id_PP.product_name);
+              pp_cust_num.set(idXLSIndex, get_id_PP.pp_cust_number);
+              physical_group.set(idXLSIndex, get_id_PP.physical_group)
+              pp_type.set(idXLSIndex, get_id_PP.product_type);
+              pp_unit.set(idXLSIndex, get_id_PP.uom);
+            }else{
+              data_duplicated.push(idXLSIndex);
+            }
           }
-          siteSaveFormat.push(SiteBOQTech.site_id);
-          SitesOfTSSRNew.push(SiteBOQTech);
+        }
+        if(data_undefined.length !== 0){
+          actionStatus = "failed";
+          let twoSentence = action_message.length !== 0 ? "and <br />" : "";
+          action_message = "Please check your upload format or Package Number in "+data_undefined.join(", ")+twoSentence+action_message;
+        }
+        if(data_duplicated.length !== 0){
+          actionStatus = "failed";
+          let twoSentence = action_message.length !== 0 ? "and <br />" : "";
+          action_message = action_message+twoSentence+" There are Duplicated PP in "+data_duplicated.join(", ");
+        }
+        let siteSaveFormat = [];
+        let siteError = [];
+        for(let i = 2; i < dataXLS.length; i++){
+          if(this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]) !== null && this.state.action_status !== "failed" && actionStatus !== "failed"){
+            let packageDatas = []
+            for(let j = index_item ; j < dataXLS[1].length; j++){
+              let dataXLSIndex = dataXLS[1][j].split(" /// ",1).join();
+              if(dataAllnull.includes(dataXLSIndex) === false){
+                let package_data = {
+                  "id_pp_doc" : _id_PP.get(dataXLSIndex),
+                  "pp_id" : dataXLSIndex,
+                  "pp_group" : group_PP.get(dataXLSIndex),
+                  "pp_cust_number" : pp_cust_num.get(dataXLSIndex),
+                  "product_name" : pp_name.get(dataXLSIndex).toString(),
+                  "physical_group" : physical_group.get(dataXLSIndex),
+                  "product_type" : pp_type.get(dataXLSIndex),
+                  "uom" : pp_unit.get(dataXLSIndex),
+                  "qty" : this.checkValuetoZero(dataXLS[i][j]),
+                  "version" : "0",
+                  "deleted" : 0,
+                  "created_by" : this.state.userId,
+                  "updated_by" : this.state.userId
+                }
+                packageDatas.push(package_data);
+              }
+            }
+            let siteID = this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]).toString();
+            let SiteBOQTech = {
+              "account_id" : "1",
+              "site_id" : siteID,
+              "site_name" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]),
+              "site_title" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_title')]),
+              "list_of_site_items" : packageDatas,
+              "version" : "0",
+              "created_by" : this.state.userId,
+              "updated_by" : this.state.userId,
+              "deleted" : 0
+            }
+            if(SiteBOQTech.site_name !== null){
+              SiteBOQTech["site_name"] = SiteBOQTech.site_name.toString();
+            }
+            if(SiteBOQTech.site_title !== null){
+              SiteBOQTech["site_title"] = SiteBOQTech.site_title.toString();
+            }
+            if(siteID.length === 0){
+              siteIDNull.push(null);
+            }
+            if(siteSaveFormat.find(e => e === SiteBOQTech.site_id) !== undefined){
+              siteError.push(SiteBOQTech.site_id);
+            }
+            siteSaveFormat.push(SiteBOQTech.site_id);
+            SitesOfTSSRNew.push(SiteBOQTech);
+          }
+        }
+        if(siteIDNull.length !== 0){
+          actionStatus = "failed";
+          let twoSentence = action_message.length !== 0 ? "and " : "";
+          action_message = action_message+twoSentence+"Site ID cant NULL";
+        }
+        if(siteError.length !== 0){
+          actionStatus = "failed";
+          let twoSentence = action_message.length !== 0 ? "and " : "";
+          action_message = action_message+twoSentence+"There are duplicate site";
+        }
+        if(actionStatus === 'failed'){
+          if(action_message.length === 0){
+            action_message = null;
+          }
+          this.setState({action_status : "failed", action_message : action_message});
+        }
+        if(actionStatus !== 'failed'){
+          this.setState({action_message : null});
         }
       }
-      if(siteIDNull.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and " : "";
-        action_message = action_message+twoSentence+"Site ID cant NULL";
-      }
-      if(siteError.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and " : "";
-        action_message = action_message+twoSentence+"There are duplicate site";
-      }
-      if(actionStatus === 'failed'){
-        this.setState({action_status : "failed", action_message : action_message});
-      }
-      if(actionStatus !== 'failed'){
-        this.setState({action_message : null});
-      }
-      console.log("SitesOfTSSRNew", SitesOfTSSRNew);
       this.setState({dataTssrUpload : SitesOfTSSRNew});
       return SitesOfTSSRNew;
   }
-
-  // getDataSites(){
-  //   const respondSite = this.getDataFromAPI('/site_non_page?where')
-  // }
 
   async getAllPP(array_PP, array_PP_sepcial){
     let dataPP = [];
@@ -388,7 +399,7 @@ class TssrBOM extends Component {
       let arrayIdPP = '"'+DataPaginationPP.join('", "')+'"';
       arrayIdPP = arrayIdPP.replace("&", "%26");
       let where_id_PP = '?where={"pp_id" : {"$in" : ['+arrayIdPP+']}}';
-      let resPP = await this.getDatafromAPIBMS('/pp_sorted_non_page'+where_id_PP);
+      let resPP = await this.getDatafromAPIBAM('/pp_sorted_nonpage'+where_id_PP);
       if(resPP !== undefined){
         if(resPP.data !== undefined){
           dataPP = dataPP.concat(resPP.data._items);
@@ -399,7 +410,7 @@ class TssrBOM extends Component {
       let dataPPIndex = array_PP_sepcial[i];
       dataPPIndex = dataPPIndex.replace("\"", "");
       let where_id_PP = '?where={"pp_id":{"$regex" : "'+dataPPIndex+'", "$options" : "i"}}';
-      let resPP = await this.getDatafromAPIBMS('/pp_sorted_non_page'+where_id_PP);
+      let resPP = await this.getDatafromAPIBAM('/pp_sorted_nonpage'+where_id_PP);
       if(resPP !== undefined){
         if(resPP.data !== undefined){
           dataPP = dataPP.concat(resPP.data._items);
@@ -459,7 +470,6 @@ class TssrBOM extends Component {
     const dateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
     const dataSites = this.state.dataTssrUpload;
     for(let i = 0; i < dataSites.length; i++){
-      // let siteTssrIdx = Object.assign(dataSites[i], {});
       let siteTssrIdx = JSON.parse(JSON.stringify(dataSites[i]));
       siteTssrIdx["id_tssr_boq_doc"] = _id_tssr_parent;
       siteTssrIdx["no_tssr_boq"] = no_tssr_boq;
@@ -469,9 +479,13 @@ class TssrBOM extends Component {
       siteTssrIdx["project_name"] = this.state.project_name_selected === null ? "" : this.state.project_name_selected;
       siteTssrIdx["id_boq_tech_doc"] = null;
       siteTssrIdx["no_boq_tech"] = "";
-      siteTssrIdx["site_title"] = ((i+1) % 2) === 1 ? "NE" : "FE";
+      if(siteTssrIdx.site_title === null){
+        siteTssrIdx["site_title"] = ((i+1) % 2) === 1 ? "NE" : "FE";
+      }
       siteTssrIdx["created_on"] = dateNow.toString();
       siteTssrIdx["updated_on"] = dateNow.toString();
+      siteTssrIdx["created_by"] = this.state.userId;
+      siteTssrIdx["updated_by"] = this.state.userId;
       if(siteTssrIdx.list_of_site_items !== undefined){
         delete siteTssrIdx.list_of_site_items;
       }
@@ -486,8 +500,9 @@ class TssrBOM extends Component {
         this.saveTSSRBOMSitesItem(_id_tssr_parent, no_tssr_boq, _etag_tssr_parent, respondSaveTSSRSites.data._items, bulkTssrSites);
       }
     }else{
+      const delData = await this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
       this.setState({ action_status : 'failed' });
-      this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
+
     }
   }
 
@@ -507,6 +522,8 @@ class TssrBOM extends Component {
         itemSiteIdx["no_tssr_boq_site"] = no_sites_tssr[i].no_tssr_boq_site;
         itemSiteIdx["created_on"] = dateNow.toString();
         itemSiteIdx["updated_on"] = dateNow.toString();
+        itemSiteIdx["created_by"] = this.state.userId;
+        itemSiteIdx["updated_by"] = this.state.userId;
         tssrSitesItem.push(itemSiteIdx);
       }
     }
@@ -517,8 +534,8 @@ class TssrBOM extends Component {
         setTimeout(function(){ this.setState({ redirectSign : _id_tssr_parent}); }.bind(this), 3000);
       });
     }else{
+      const delData = await this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
       this.setState({ action_status : 'failed' });
-      this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
     }
   }
 

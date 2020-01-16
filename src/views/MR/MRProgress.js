@@ -6,23 +6,22 @@ import debounce from 'lodash.debounce';
 import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
 import 'react-vertical-timeline-component/style.min.css';
 
-const API_URL = 'http://api.smart.pdb.e-dpm.com/smartapi';
+const API_URL = 'https://api.smart.pdb.e-dpm.com/smartapi';
 const username = 'usermitt';
 const password = 'Z4icVgFQp3D1';
+
+const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
+const usernameBAM = 'bamidadmin@e-dpm.com';
+const passwordBAM = 'F760qbAg2sml';
 
 class MRProgress extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      mr_list : [],
-      prevPage : 0,
-      activePage : 1,
-      totalData : 0,
-      perPage : 10,
-      filter_list : new Array(5).fill(null),
+      data_mr : null
     }
-    this.getDataFromAPI = this.getDataFromAPI.bind(this)
+    this.getDatafromAPIBAM = this.getDatafromAPIBAM.bind(this)
   }
 
   async getDataFromAPI(url) {
@@ -41,179 +40,162 @@ class MRProgress extends Component {
     }
   }
 
-  getMRList() {
-    const page = this.state.activePage;
-    const maxPage = this.state.perPage;
-    let filter_mr_id = this.state.filter_list[0] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[0]+'", "$options" : "i"}';
-    let filter_cd_id = this.state.filter_list[1] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
-    let filter_current_status = this.state.filter_list[2] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
-    let filter_updated_on = this.state.filter_list[3] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
-    let filter_created_on = this.state.filter_list[4] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "cd_id": '+filter_cd_id+', "current_status": '+filter_current_status+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    this.getDataFromAPI('/mrf_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
-      console.log("MRF List Sorted", res);
-      if(res.data !== undefined) {
-        const items = res.data._items;
-        const totalData = res.data._meta;
-        this.setState({mr_list : items, totalData: totalData});
+  async getDatafromAPIBAM(url){
+    try {
+      let respond = await axios.get(API_URL_BAM +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameBAM,
+          password: passwordBAM
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
+    }
+  }
+
+  getMRProgress(_id_MR)
+  {
+    this.getDatafromAPIBAM('/mr_op/'+_id_MR).then(resMR => {
+      if(resMR.data !== undefined){
+        this.setState({ data_mr : resMR.data })
+        console.log('milestones nya ', this.state.data_mr.mr_milestones)
       }
     })
   }
 
-  componentDidMount() {
-    this.getMRList();
-    document.title = 'MR Progress | BAM';
-  }
+  milestoneStat(ms_name, ms_date, ms_updater, index)
+  {
+    switch ( ms_name )
+    {
+      case 'MS_ORDER_CREATED':
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date={ms_date}
+          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
 
-  handlePageChange(pageNumber) {
-    this.setState({activePage: pageNumber}, () => {
-      this.getMRList();
-    });
-  }
+      >
+          <h3 className="vertical-timeline-element-title">Order Created</h3>
+          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
+        </VerticalTimelineElement>;
+      case 'MS_ORDER_RECEIVED':
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date={ms_date}
+          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
 
-  handleFilterList(e) {
-    const index = e.target.name;
-    let value = e.target.value;
-    if(value !== null && value.length === 0) {
-      value = null;
+      >
+          <h3 className="vertical-timeline-element-title">Order Received</h3>
+          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
+        </VerticalTimelineElement>;
+      case 'MS_ORDER_PROCESSING':
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date={ms_date}
+          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+
+      >
+          <h3 className="vertical-timeline-element-title">Order Processing</h3>
+          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
+        </VerticalTimelineElement>;
+      case 'MS_READY_TO_DELIVER':
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date={ms_date}
+          iconStyle={{ background: 'rgb(227, 30, 16)', color: '#fff' }}
+
+      >
+          <h3 className="vertical-timeline-element-title">Ready to Deliver</h3>
+          <h4 className="vertical-timeline-element-subtitle">confirmed by <b>{ms_updater}</b></h4>
+        </VerticalTimelineElement>;
+      case 'MS_JOINT_CHECK':
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date={ms_date}
+          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+
+      >
+          <h3 className="vertical-timeline-element-title">Joint Check</h3>
+          <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
+        </VerticalTimelineElement>;
+      case 'MS_LOADING_PROCESS':
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date={ms_date}
+          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+
+      >
+          <h3 className="vertical-timeline-element-title">Loading Process</h3>
+          <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
+        </VerticalTimelineElement>;
+      default:
+        return <VerticalTimelineElement
+          className="vertical-timeline-element--work"
+          date=""
+          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+
+      >
+          <h3 className="vertical-timeline-element-title">Data not available</h3>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
+        </VerticalTimelineElement>;
     }
-    let dataFilter = this.state.filter_list;
-    dataFilter[parseInt(index)] = value;
-    this.setState({filter_list : dataFilter, activePage: 1}, () => {
-      this.onChangeDebounced(e);
-    })
   }
 
-  onChangeDebounced(e) {
-    this.getMRList();
+  componentDidMount() {
+    this.getMRProgress(this.props.match.params.id);
+    document.title = 'MR Progress Overview | BAM';
   }
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
-    const background = { 
+    const background = {
       backgroundColor: '#e3e3e3',
     };
 
+    console.log("di render", this.state.data_mr);
     return (
       <div className="animated fadeIn">
         <Row>
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                <i className="fa fa-align-justify"></i> [MR ID Here] Progress Overview
+                {this.state.data_mr !== null &&
+                  <span> Progress Overview for <b>{this.state.data_mr.mr_id}</b> </span>
+                }
               </CardHeader>
-              <CardBody 
+              <CardBody
                 style={background}
               >
                 <VerticalTimeline>
-                    <VerticalTimelineElement
-                        className="vertical-timeline-element--work"
-                        date="December 12, 2019"
-                        iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-                        
-                    >
-                        <h3 className="vertical-timeline-element-title">MR Created</h3>
-                        <h4 className="vertical-timeline-element-subtitle">Order by <span>[USER-PROJECT]</span></h4>
-                        <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-                        </p>
-                    </VerticalTimelineElement>
-                    <VerticalTimelineElement
-                        className="vertical-timeline-element--work"
-                        date="December 14, 2019"
-                        iconStyle={{ background: 'rgb(197, 2, 204)', color: '#fff' }}
-                        
-                    >
-                        <h3 className="vertical-timeline-element-title">Order Received</h3>
-                        <h4 className="vertical-timeline-element-subtitle">Approved by <span>[USER-LDM]</span></h4>
-                        <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-                        </p>
-                    </VerticalTimelineElement>
-                    <VerticalTimelineElement
-                        className="vertical-timeline-element--work"
-                        date="December 15, 2019"
-                        iconStyle={{ background: 'rgb(157, 219, 11)', color: '#fff' }}
-                        
-                    >
-                        <h3 className="vertical-timeline-element-title">Order Processing</h3>
-                        <h4 className="vertical-timeline-element-subtitle">Initiated by <span>[USER-WAREHOUSE]</span></h4>
-                        <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-                        </p>
-                    </VerticalTimelineElement>
-                    <VerticalTimelineElement
-                        className="vertical-timeline-element--work"
-                        date="December 15, 2019"
-                        iconStyle={{ background: 'rgb(227, 30, 16)', color: '#fff' }}
-                        
-                    >
-                        <h3 className="vertical-timeline-element-title">Ready to Deliver</h3>
-                        <h4 className="vertical-timeline-element-subtitle">Confirmed by <span>[USER-LDM]</span></h4>
-                        <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-                        </p>
-                    </VerticalTimelineElement>
-                    <VerticalTimelineElement
-                        className="vertical-timeline-element--work"
-                        date="December 16, 2019"
-                        iconStyle={{ background: 'rgb(227, 30, 16)', color: '#fff' }}
-                        
-                    >
-                        <h3 className="vertical-timeline-element-title">Ready to Deliver</h3>
-                        <h4 className="vertical-timeline-element-subtitle">Initiated by <span>[USER-WAREHOUSE]</span></h4>
-                        <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-                        </p>
-                    </VerticalTimelineElement>
-                    <VerticalTimelineElement
-                        className="vertical-timeline-element--education"
-                        date="December 17, 2019"
-                        iconStyle={{ background: 'rgb(33, 216, 222)', color: '#fff' }}
-                        
-                    >
-                        <h3 className="vertical-timeline-element-title">Joint Check</h3>
-                        <h4 className="vertical-timeline-element-subtitle">Initiated by <span>[USER-WAREHOUSE]</span></h4>
-                        <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-                        </p>
-                    </VerticalTimelineElement>
-                    <VerticalTimelineElement
-                        className="vertical-timeline-element--education"
-                        date="December 18, 2019"
-                        iconStyle={{ background: 'rgb(150, 203, 227)', color: '#fff' }}
-                        
-                    >
-                        <h3 className="vertical-timeline-element-title">Loading Process</h3>
-                        <h4 className="vertical-timeline-element-subtitle">Initiated by <span>[USER-WAREHOUSE]</span></h4>
-                        <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-                        </p>
-                    </VerticalTimelineElement>
-                    <VerticalTimelineElement
-                        className="vertical-timeline-element--education"
-                        date="December 19, 2019"
-                        iconStyle={{ background: 'rgb(255, 251, 130)', color: '#fff' }}
-                        
-                    >
-                        <h3 className="vertical-timeline-element-title">Dispatch</h3>
-                        <h4 className="vertical-timeline-element-subtitle">Handled by <span>[USER-DSP]</span></h4>
-                        <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-                        </p>
-                    </VerticalTimelineElement>
-                    <VerticalTimelineElement
-                        iconStyle={{ background: 'rgb(97, 255, 126)', color: '#fff' }}
-                        date="December 21, 2019"
-
-                    >
-                        <h3 className="vertical-timeline-element-title">Delivery Complete</h3>
-                        <h4 className="vertical-timeline-element-subtitle">Mateial received by <span>[ASP NAME]</span></h4>
-                        <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-                        </p>
-                    </VerticalTimelineElement>
+                  {this.state.data_mr !== null &&
+                    this.state.data_mr.mr_milestones.map((ms, i) => {
+                      return this.milestoneStat(ms.ms_name, ms.ms_date, ms.ms_updater, i)
+                    })
+                  }
                 </VerticalTimeline>
               </CardBody>
             </Card>

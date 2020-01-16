@@ -18,9 +18,13 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash"/>
 );
 
-const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
+// const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
+// const usernamePhilApi = 'pdbdash';
+// const passwordPhilApi = 'rtkO6EZLkxL1';
+
+const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
+const usernameBAM = 'bamidadmin@e-dpm.com';
+const passwordBAM = 'F760qbAg2sml';
 
 class PackageUpload extends React.Component {
 
@@ -28,7 +32,11 @@ class PackageUpload extends React.Component {
       super(props);
       this.state = {
         userRole : this.props.dataLogin.role,
+        userId : this.props.dataLogin._id,
+        userName : this.props.dataLogin.userName,
+        userEmail : this.props.dataLogin.email,
         pp_all : [],
+        material_all : [],
         project_all : [],
         project_filter : undefined,
         filter_name : "",
@@ -39,6 +47,7 @@ class PackageUpload extends React.Component {
         action_status : null,
         action_message : "",
         product_package : [],
+        material_catalogue : [],
         dataParent : [],
         total_dataParent : 0,
         dataChild : [],
@@ -121,13 +130,13 @@ class PackageUpload extends React.Component {
       this.setState({ status: 'Closed' });
     }
 
-    async getDatafromAPI(url){
+    async getDatafromAPIBAM(url){
       try {
-        let respond = await axios.get(API_URL +url, {
+        let respond = await axios.get(API_URL_BAM +url, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: usernameBAM,
+            password: passwordBAM
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -141,13 +150,13 @@ class PackageUpload extends React.Component {
       }
     }
 
-    async postDatatoAPI(url, data){
+    async postDatatoAPIBAM(url, data){
       try {
-        let respond = await axios.post(API_URL +url, data, {
+        let respond = await axios.post(API_URL_BAM +url, data, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: usernameBAM,
+            password: passwordBAM
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -161,13 +170,13 @@ class PackageUpload extends React.Component {
       }
     }
 
-    async patchDatatoAPI(url, data, _etag){
+    async patchDatatoAPIBAM(url, data, _etag){
       try {
-        let respond = await axios.patch(API_URL +url, data, {
+        let respond = await axios.patch(API_URL_BAM +url, data, {
           headers : {'Content-Type':'application/json', "If-Match" : _etag},
           auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: usernameBAM,
+            password: passwordBAM
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -209,23 +218,12 @@ class PackageUpload extends React.Component {
       this.setState(prevState => ({ select_project_tag: prevState.select_project_tag.set(value, text) }));
     }
 
-    getProjectAll(){
-      this.getDatafromAPI('/project_all').then( resp => {
-        if(resp.data !== undefined){
-          this.setState({project_all : resp.data._items});
-        }
-        this.state.project_all.map(i =>
-          this.state.loadprojectdata.push({'label' : i.project_name, 'value' : i._id})
-        )
-      })
-    }
-
   getPackageDataAPI(filter_name, project_filter){
     const page = this.state.activePage;
     let whereName = '';
     let whereProject = '';
     if(filter_name !== undefined && filter_name.length !== 0){
-      whereName = '"$or" : [{"pp_id":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"name":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"product_type":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"phy_group":{"$regex" : "'+filter_name+'", "$options" : "i"}} ]';
+      whereName = '"$or" : [{"pp_id":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"name":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"product_type":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"physical_group":{"$regex" : "'+filter_name+'", "$options" : "i"}} ]';
     }
     if(project_filter !== undefined && project_filter !== null && project_filter.length !== 0){
       whereProject = '"list_of_project":{"$in" :["'+project_filter+'"]}'
@@ -241,15 +239,37 @@ class PackageUpload extends React.Component {
       where = 'where={'+whereName+','+whereProject+'}'
     }
     // eslint-disable-next-line
-    this.getDatafromAPI('/pp_all?max_results='+this.state.perPage+'&page='+page+'&'+where+'&'+'embedded={"list_of_id_material" : 1, "list_of_project" : 1}').then(res => {
+    this.getDatafromAPIBAM('/pp_op?max_results='+this.state.perPage+'&page='+page+'&'+where).then(res => {
         if(res.data !== undefined){
           if(res.data._items !== undefined){
-            this.setState({ product_package : res.data._items, total_dataParent : res.data._meta, prevPage : this.state.activePage});
+            this.getDataMaterial(res.data._items);
+            this.setState({ total_dataParent : res.data._meta, prevPage : this.state.activePage});
         }else{
           this.setState({ product_package : [], total_dataParent : 0, prevPage : this.state.activePage});
         }
       }
     })
+  }
+
+  getDataMaterial(data_pp){
+    const array_id_doc = '"'+data_pp.map(e => e._id).join('", "')+'"';
+    this.getDatafromAPIBAM('/mc_op?where={"id_pp_doc" : {"$in" : ['+array_id_doc+']}}').then( res => {
+      if(res.data !== undefined){
+        this.setState({material_catalogue : res.data._items}, () => {
+          this.prepareView(data_pp);
+        });
+      }
+    })
+  }
+
+  async prepareView(data_pp){
+    let product_package = data_pp;
+    const material_catalogue = this.state.material_catalogue;
+    for(let i = 0; i < product_package.length; i++){
+      const material = material_catalogue.filter(e => e.pp_id === product_package[i].pp_id);
+      product_package[i]["list_of_material"] = material;
+    }
+    this.setState({product_package : product_package});
   }
 
   isSameValue(element,value){
@@ -336,28 +356,7 @@ class PackageUpload extends React.Component {
     const isPackage = this.checkFormatPackage(productPackageXLS[0]);
     const isMaterial = this.checkFormatMaterial(productPackageXLS[0]);
     if(isPackage === true){
-      let respPrepare = await this.getDatafromAPI('/amountpp/5d24454a951c58496433be19');
-      if(respPrepare === undefined){respPrepare = {}; respPrepare["data"] = undefined}
-      if(respPrepare.data !== undefined){
-        let pp_count = respPrepare.data.pp_data+1;
-        const pp_count_after = (pp_count-1)+(productPackageXLS.length-1);
-        const update_amount = await {
-          "pp_data" : pp_count_after
-        }
-        // eslint-disable-next-line
-        let respAmountUpdate = await this.patchDatatoAPI('/amountpp/5d24454a951c58496433be19', update_amount, respPrepare.data._etag);
-        if(respAmountUpdate.data !== null || respAmountUpdate.data !== undefined){
-          this.savePackagetoDB(productPackageXLS, pp_count);
-        }else{
-          this.setState({action_status : 'failed', action_message : 'There is something error, please try again later'}, () => {
-            this.toggleLoading();
-          });
-        }
-      }else{
-        this.setState({action_status : 'failed', action_message : 'There is something error, please try again later'}, () => {
-          this.toggleLoading();
-        });
-      }
+      this.savePackagetoDB(productPackageXLS);
     }else{
       if(isMaterial === true){
         const PackageNull = [];
@@ -385,12 +384,11 @@ class PackageUpload extends React.Component {
             if(this.state.action_status !== null){
               this.setState({action_status : null});
             }
-            materPP = [];
             let dataChild = dataXLS.map(e => e).filter( e => (this.checkValuetoString(e[this.getIndex(dataXLS[0],'PP / Material')])).toLowerCase() === "material" && e[this.getIndex(dataXLS[0],'product_key')] === materialchildUniq[i]);
             const dataParent = RespondGetPP.find(e => e.pp_id === materialchildUniq[i]);
             if(dataParent !== undefined){
               for(let j = 0;j < dataChild.length; j++){
-                let cekChild = dataParent.list_of_id_material.find(i => i.material_id === dataChild[j][this.getIndex(dataXLS[0],'material_code')]);
+                let cekChild = dataParent.list_of_material.find(i => i.material_id === dataChild[j][this.getIndex(dataXLS[0],'material_code')]);
                 if(cekChild !== undefined){
                   let materialType = this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'material_type')], this.checkValueReturn(cekChild.material_type, "active_material"));
                   if(materialType === 'active' || materialType === 'active_material' ){
@@ -404,14 +402,14 @@ class PackageUpload extends React.Component {
                   }
                   let materialUpdate = {
                     "material_name" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'material_name')], cekChild.material_name),
-                    "material_unit" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'unit')], cekChild.material_unit),
-                    "material_qty" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'quantity')], cekChild.material_qty),
+                    "uom" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'unit')], cekChild.uom),
+                    "qty" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'quantity')], cekChild.qty),
                     "material_price" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'price')], cekChild.material_price),
                     "material_type" : materialType,
-                    "updated_by" : this.props.dataLogin._id
+                    "updated_by" : this.state.userId
                   }
                   console.log('material_type', JSON.stringify(materialUpdate));
-                  let dataPatch = await this.patchDatatoAPI('/mc_op/'+cekChild._id, materialUpdate, cekChild._etag);
+                  let dataPatch = await this.patchDatatoAPIBAM('/mc_op/'+cekChild._id, materialUpdate, cekChild._etag);
                   if(dataPatch !== undefined && dataPatch.data !== undefined){
                     signSuc.push(dataPatch);
                     console.log("dataPatch", dataPatch);
@@ -430,49 +428,35 @@ class PackageUpload extends React.Component {
                     }
                   }
                   let material = {
+                    "id_pp_doc" : dataParent._id,
+                    "pp_id" : dataParent.pp_id,
                     "material_id" : dataChild[j][this.getIndex(dataXLS[0],'material_code')],
                     "material_name" : dataChild[j][this.getIndex(dataXLS[0],'material_name')],
-                    "material_unit" : this.checkValue(dataChild[j][this.getIndex(dataXLS[0],'unit')]),
-                    "material_qty" : dataChild[j][this.getIndex(dataXLS[0],'quantity')],
                     "material_type" : materialType,
-                    "deleted" : 0,
+                    "uom" : this.checkValue(dataChild[j][this.getIndex(dataXLS[0],'unit')]),
+                    "qty" : dataChild[j][this.getIndex(dataXLS[0],'quantity')],
                     "material_price" : this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0],'price')], 0),
-                    "pp_id" : dataParent.pp_id,
-                    "created_by" : this.props.dataLogin._id,
-                    "updated_by" : this.props.dataLogin._id,
-                    "id_pp_doc" : dataParent._id
+                    "deleted" : 0,
+                    "created_by" : this.state.userId,
+                    "updated_by" : this.state.userId
                   }
                   materPP.push(material);
                 }
               }
             }
-            if(materPP.length !== 0){
-              console.log('material_type', JSON.stringify(materPP));
-              const PostMat = await this.postDatatoAPI('/mc_op', materPP);
-              if(PostMat.data !== undefined && PostMat.status < 400){
-                console.log('respond post API', PostMat);
-                let arrayIDPost = []
-                if(PostMat.data._items !== undefined){
-                  arrayIDPost = PostMat.data._items.map(e => e._id);
-                }else{
-                  arrayIDPost = [PostMat.data._id];
-                }
-                const dataUpdatePP = {
-                  "list_of_id_material" : dataParent.list_of_id_material.map(e => e._id).concat(arrayIDPost)
-                }
-                const respondPatchPP = await this.patchDatatoAPI('/pp_op/'+dataParent._id, dataUpdatePP, dataParent._etag);
-                if(respondPatchPP !== undefined && respondPatchPP.status < 400){
-                  if(respondPatchPP.data._items === undefined){
-                    signSuc.push(respondPatchPP.data);
-                  }else{
-                    signSuc.concat(respondPatchPP.data._items);
-                  }
-
-                }
-              }else{
-                this.setState({action_status : 'failed'})
-              }
+          }
+        }
+        if(materPP.length !== 0){
+          console.log('material_type', JSON.stringify(materPP));
+          const PostMat = await this.postDatatoAPIBAM('/mc_op', materPP);
+          if(PostMat.data !== undefined && PostMat.status < 400){
+            if(PostMat.data._items === undefined){
+              signSuc.push(PostMat.data);
+            }else{
+              signSuc = signSuc.concat(PostMat.data._items);
             }
+          }else{
+            this.setState({action_status : 'failed'})
           }
         }
         if(signSuc.length === materialchild.filter( e => e !== undefined &&  e !== null && e !== '' && e !== "" ).length){
@@ -486,7 +470,7 @@ class PackageUpload extends React.Component {
             });
           }else{
             this.setState({action_status : 'failed'});
-	    this.toggleLoading();
+	           this.toggleLoading();
           }
         }
       }else{
@@ -501,7 +485,7 @@ class PackageUpload extends React.Component {
     }
   }
 
-  async savePackagetoDB(dataImport, pp_count){
+  async savePackagetoDB(dataImport){
     const dataHeader = dataImport[0];
     const onlyParent = dataImport.map(e => e).filter( e => (this.checkValuetoString(e[this.getIndex(dataHeader,'PP / Material')])).toLowerCase() === "pp");
     let product_package = [];
@@ -513,39 +497,35 @@ class PackageUpload extends React.Component {
         let pp_id = this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_key')]);
         let pp_name = this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_package')]);
         if(pp_name === null || pp_name === undefined){pp_name = pp_id}
-        const countPP = pp_count+i;
-        const ppcountID = countPP.toString().padStart(6, '0');
+        // const countPP = pp_count+i;
+        const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
         let pp_id_Gen = "PP"+ppcountID+" / "+pp_name;
-        let pp = {
+        const pp = {
           "pp_id" : pp_id,
           "pp_key" : pp_id_Gen,
-          "name" : pp_name.toString(),
           "pp_group" : this.checkValue(onlyParent[i][this.getIndex(dataHeader,'cust_product_name')]),
+          "product_name" : pp_name.toString(),
+          "uom" : this.checkValue(onlyParent[i][this.getIndex(dataHeader,'unit')]),
           "pp_cust_number" : this.checkValue(onlyParent[i][this.getIndex(dataHeader,'cust_product_number')]),
-          "unit" : this.checkValue(onlyParent[i][this.getIndex(dataHeader,'unit')]),
-          "phy_group" : this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_package_physical_group')]),
-          "pricing_group" : null,
+          "physical_group" : this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_package_physical_group')]),
           "product_type" : this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_package_type')]),
+          "pricing_group" : 0,
           "price" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'price')], 0),
-          "note" : this.checkValuetoString(onlyParent[i][this.getIndex(dataHeader,'note')]).toString(),
-          "list_of_id_material" : [],
-          "created_by" : this.checkValue(this.props.dataLogin._id),
-          "updated_by" : this.checkValue(this.props.dataLogin._id),
-          "list_of_project" : null,
-          "deleted" : 0
+          "year" : "2020",
+          "variant_name" : null,
+          "notes" : this.checkValuetoString(onlyParent[i][this.getIndex(dataHeader,'note')]).toString(),
+          "deleted" : 0,
+          "created_by" : this.state.userId,
+          "updated_by" : this.state.userId
         }
-        if(pp.phy_group !== undefined && pp.phy_group !== null){
-          pp["phy_group"] = pp.phy_group.toString();
+        if(pp.physical_group !== undefined && pp.physical_group !== null){
+          pp["physical_group"] = pp.physical_group.toString();
         }
         if(pp.product_type !== undefined && pp.product_type !== null){
           pp["product_type"] = pp.product_type.toString();
         }
-        pp["list_of_project"] = this.state.select_project_tag_new;
-        if(pp.pp_group === undefined || pp.pp_group === null){
-          pp["pp_group"] = pp.name;
-        }
-        if(pp.pp_cust_number === null || pp.pp_cust_number === undefined){
-          pp["pp_cust_number"] = pp.pp_id;
+        if(pp.pp_group === null || pp.pp_group === undefined){
+          pp["pp_group"] = pp.pp_id;
         }
         let findPP = this.state.pp_all.find( e => e.pp_id === pp_id);
         if(findPP === undefined && pp_id !== null){
@@ -562,32 +542,30 @@ class PackageUpload extends React.Component {
               ppAlready.push(pp_id);
               let PPAlIndex = Object.assign({}, pp);
               PPAlIndex = {
-                "name" : this.checkValueReturn(this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_package')]), findPP.name),
                 "pp_group" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'cust_product_name')], findPP.pp_group).toString(),
+                "product_name" : this.checkValueReturn(this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_package')]), findPP.product_name),
+                "uom" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'unit')], findPP.uom),
                 "pp_cust_number" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'cust_product_number')], findPP.pp_cust_number),
-                "unit" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'unit')], findPP.unit),
-                "phy_group" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'product_package_physical_group')], findPP.phy_group),
-                "pricing_group" : null,
+                "physical_group" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'product_package_physical_group')], findPP.physical_group),
                 "product_type" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'product_package_type')], findPP.product_type),
+                "pricing_group" : 0,
                 "price" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'price')], findPP.price),
-                "note" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'note')], findPP.note).toString(),
-                "updated_by" : this.props.dataLogin._id,
-                "list_of_project" : pp.list_of_project,
-                "deleted" : 0
+                "year" : "2020",
+                "variant_name" : null,
+                "notes" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'note')], findPP.note).toString(),
+                "deleted" : 0,
+                "updated_by" : this.state.userId
               }
-              if(PPAlIndex.unit !== null){
-                PPAlIndex["unit"] = PPAlIndex.unit.toString();
+              if(PPAlIndex.uom !== null){
+                PPAlIndex["uom"] = PPAlIndex.uom.toString();
               }
-              if(PPAlIndex.phy_group !== undefined && PPAlIndex.phy_group !== null){
-                PPAlIndex["phy_group"] = PPAlIndex.phy_group.toString();
+              if(PPAlIndex.physical_group !== undefined && PPAlIndex.physical_group !== null){
+                PPAlIndex["physical_group"] = PPAlIndex.physical_group.toString();
               }
               if(PPAlIndex.product_type !== undefined && PPAlIndex.product_type !== null){
                 PPAlIndex["product_type"] = PPAlIndex.product_type.toString();
               }
-              if(pp.list_of_project.length === 0){
-                PPAlIndex["list_of_project"] = findPP.list_of_project;
-              }
-              let resPatch = await this.patchDatatoAPI('/pp_op/'+findPP._id, PPAlIndex, findPP._etag);
+              let resPatch = await this.patchDatatoAPIBAM('/pp_op/'+findPP._id, PPAlIndex, findPP._etag);
               console.log("resPatch", resPatch)
             }
           }
@@ -595,7 +573,7 @@ class PackageUpload extends React.Component {
       }
       console.log('pp_id', JSON.stringify(product_package));
       if(ppError.length === 0 && product_package.length !== 0 && ppSpace.length === 0){
-        let res = await this.postDatatoAPI('/pp_op', product_package)
+        let res = await this.postDatatoAPIBAM('/pp_op', product_package)
         if(res !== undefined){
           if(res.data !== undefined && res.status < 400){
             if(ppAlready.length === 0){
@@ -641,26 +619,13 @@ class PackageUpload extends React.Component {
     }
   }
 
-  updateProductPackage(data, _id_PP, etag_PP){
-    this.patchDatatoAPI('/pp_op/'+_id_PP, data, etag_PP).then(res => {
-        if(res.data !== undefined){
-          if(res.data._id !== undefined || res.data._id !== null){
-              console.log("respond PP update", res);
-          }
-        }else{
-          this.setState({action_status : 'failed'});
-          console.log("respond PP update", "Error");
-        }
-    })
-  }
-
   getAllPP(){
     const filter_name = this.state.filter_name;
     const project_filter = this.state.project_filter;
     let whereName = '';
     let whereProject = '';
     if(filter_name !== undefined && filter_name.length !== 0){
-      whereName = '"$or" : [{"pp_id":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"name":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"product_type":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"phy_group":{"$regex" : "'+filter_name+'", "$options" : "i"}} ]';
+      whereName = '"$or" : [{"pp_id":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"name":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"product_type":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"physical_group":{"$regex" : "'+filter_name+'", "$options" : "i"}} ]';
     }
     if(project_filter !== undefined && project_filter !== null && project_filter.length !== 0){
       whereProject = '"list_of_project":{"$in" :["'+project_filter+'"]}'
@@ -675,18 +640,31 @@ class PackageUpload extends React.Component {
     if(whereName.length !== 0 && whereProject.length !== 0){
       where = 'where={'+whereName+','+whereProject+'}'
     }
-    this.getDatafromAPI('/pp_non_page?embedded={"list_of_id_material" : 1}&'+where).then( resPP => {
+    this.getDatafromAPIBAM('/pp_sorted_nonpage?'+where).then( resPP => {
       if(resPP.data !== undefined){
         if(resPP.data._items.length !== 0){
-          this.setState({ pp_all : resPP.data._items});
+          this.prepareData(resPP.data._items);
         }
       }
     })
   }
 
+  async prepareData(data_pp){
+    let product_package = data_pp;
+    let material_catalogue = [];
+    const dataMaterial = await this.getDatafromAPIBAM('/mc_sorted_nonpage');
+    if(dataMaterial.data !== undefined){
+      material_catalogue = dataMaterial.data._items;
+    }
+    for(let i = 0; i < product_package.length; i++){
+      const material = material_catalogue.filter(e => e.pp_id === product_package[i].pp_id);
+      product_package[i]["list_of_material"] = material;
+    }
+    this.setState({pp_all : product_package});
+  }
+
   componentDidMount() {
     this.getPackageDataAPI();
-    this.getProjectAll();
     this.getAllPP();
     document.title = 'Product Package | BAM';
   }
@@ -790,13 +768,13 @@ class PackageUpload extends React.Component {
         const ppEdit = this.state.product_package.find(e => e.pp_id === value);
         let dataForm = this.state.PPForm;
         dataForm[0] = ppEdit.pp_id;
-        dataForm[1] = ppEdit.name;
-        dataForm[2] = ppEdit.unit;
+        dataForm[1] = ppEdit.product_name;
+        dataForm[2] = ppEdit.uom;
         dataForm[3] = ppEdit.product_type;
-        dataForm[4] = ppEdit.phy_group;
+        dataForm[4] = ppEdit.physical_group;
         dataForm[5] = ppEdit.pp_cust_number;
         dataForm[6] = ppEdit.pp_group;
-        dataForm[7] = ppEdit.note;
+        dataForm[7] = ppEdit.notes;
         dataForm[8] = ppEdit.price;
         let select_project_tag_edit = [];
         if(ppEdit.list_of_project !== null && ppEdit.list_of_project !== undefined){
@@ -828,37 +806,37 @@ class PackageUpload extends React.Component {
       const dataPPEdit = this.state.PPForm;
       const dataPP = this.state.product_package.find(e => e.pp_id === dataPPEdit[0]);
       let pp = {
-        "name" : dataPPEdit[1],
         "pp_group" : this.checkValue(dataPPEdit[6]),
+        "product_name" : dataPPEdit[1],
+        "uom" : dataPPEdit[2],
         "pp_cust_number" : this.checkValue(dataPPEdit[5]),
-        "unit" : dataPPEdit[2],
-        "phy_group" : dataPPEdit[4],
-        "pricing_group" : null,
+        "physical_group" : dataPPEdit[4],
         "product_type" : dataPPEdit[3],
+        "pricing_group" : 0,
         "price" : dataPPEdit[8],
-        "note" : dataPPEdit[7],
-        "updated_by" : this.checkValue(this.props.dataLogin._id),
-        "list_of_project" : null,
-        "deleted" : 0
+        "year" : "2020",
+        "variant_name" : null,
+        "notes" : dataPPEdit[7],
+        "deleted" : 0,
+        "updated_by" : this.state.userId
       }
       this.toggleLoading();
       this.togglePPedit();
-      pp["list_of_project"] = this.state.select_project_tag_new;
       if(pp.pp_group === undefined || pp.pp_group === null){
-        pp["pp_group"] = pp.name;
+        pp["pp_group"] = pp.product_name;
       }else{
         if(pp.pp_group.length === 0){
-          pp["pp_group"] = pp.name;
+          pp["pp_group"] = pp.product_name;
         }
       }
       if(pp.pp_cust_number === null || pp.pp_cust_number === undefined){
         pp["pp_cust_number"] = pp.pp_id;
       }else{
         if(pp.pp_cust_number.length === 0){
-          pp["pp_cust_number"] = pp.name;
+          pp["pp_cust_number"] = pp.pp_id;
         }
       }
-      let patchData = await this.patchDatatoAPI('/pp_op/'+dataPP._id, pp, dataPP._etag);
+      let patchData = await this.patchDatatoAPIBAM('/pp_op/'+dataPP._id, pp, dataPP._etag);
       if(patchData === undefined){patchData = {}; patchData["data"] = undefined}
         if(patchData.data !== undefined){
           respondSaveEdit = patchData.data;
@@ -878,71 +856,59 @@ class PackageUpload extends React.Component {
       const dataPPNew = this.state.PPForm;
       const dataAllPP = this.state.pp_all;
       if(dataAllPP.find(e => e.pp_id === dataPPNew[0]) !== undefined){
-        let respPrepare = await this.getDatafromAPI('/amountpp/5d24454a951c58496433be19');
-        if(respPrepare === undefined){respPrepare = {}; respPrepare["data"] = undefined}
-        if(respPrepare.data !== undefined){
-          let pp_count = respPrepare.data.pp_data+1;
-          const update_amount = await {
-            "pp_data" : pp_count
-          }
-          // eslint-disable-next-line
-          let respAmountUpdate = await this.patchDatatoAPI('/amountpp/5d24454a951c58496433be19', update_amount, respPrepare.data._etag);
-          const ppcountID = pp_count.toString().padStart(6, '0');
+          const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
           const pp_name = dataPPNew[1];
           let pp_id_Gen = "PP"+ppcountID+" / "+pp_name;
           let pp = {
             "pp_id" : dataPPNew[0],
             "pp_key" : pp_id_Gen,
-            "name" : pp_name.toString(),
             "pp_group" : this.checkValue(dataPPNew[6]),
+            "product_name" : pp_name.toString(),
+            "uom" : dataPPNew[2],
             "pp_cust_number" : this.checkValue(dataPPNew[5]),
-            "unit" : dataPPNew[2],
-            "phy_group" : dataPPNew[4],
-            "pricing_group" : null,
+            "physical_group" : dataPPNew[4],
             "product_type" : dataPPNew[3],
+            "pricing_group" : 0,
             "price" : dataPPNew[8],
-            "note" : dataPPNew[7],
-            "list_of_id_material" : [],
-            "created_by" : this.checkValue(this.props.dataLogin._id),
-            "updated_by" : this.checkValue(this.props.dataLogin._id),
-            "list_of_project" : null,
-            "deleted" : 0
+            "year" : "2020",
+            "variant_name" : null,
+            "notes" : dataPPNew[7],
+            "deleted" : 0,
+            "created_by" : this.state.userId,
+            "updated_by" : this.state.userId
           }
-          pp["list_of_project"] = this.state.select_project_tag_new;
           if(pp.pp_group === undefined || pp.pp_group === null){
-            pp["pp_group"] = pp.name;
+            pp["pp_group"] = pp.product_name;
           }else{
             if(pp.pp_group.length === 0){
-              pp["pp_group"] = pp.name;
+              pp["pp_group"] = pp.product_name;
             }
           }
           if(pp.pp_cust_number === null || pp.pp_cust_number === undefined){
             pp["pp_cust_number"] = pp.pp_id;
           }else{
             if(pp.pp_cust_number.length === 0){
-              pp["pp_cust_number"] = pp.name;
+              pp["pp_cust_number"] = pp.pp_id;
             }
           }
-          let postData = await this.postDatatoAPI('/pp_op', pp);
+          let postData = await this.postDatatoAPIBAM('/pp_op', pp);
           if(postData === undefined){postData = {}; postData["data"] = undefined}
           if(postData.data !== undefined){
             respondSaveNew = postData.data;
           }
-        }
-        if(respondSaveNew !== undefined){
-          this.setState({action_status : 'success'}, () => {
+          if(respondSaveNew !== undefined){
+            this.setState({action_status : 'success'}, () => {
+              this.toggleLoading();
+              setTimeout(function(){ window.location.reload(); }, 2000);
+            });
+          }else{
+            this.setState({action_status :'failed'});
             this.toggleLoading();
-            setTimeout(function(){ window.location.reload(); }, 2000);
-          });
+          }
         }else{
-          this.setState({action_status :'failed'});
           this.toggleLoading();
+          this.setState({action_status :'failed', action_message : 'Duplicated PP ID'});
         }
-      }else{
-        this.toggleLoading();
-        this.setState({action_status :'failed', action_message : 'Duplicated PP ID'});
-      }
-
     }
 
     componentDidUpdate(){
@@ -989,12 +955,12 @@ class PackageUpload extends React.Component {
     }
 
     for(let i = 0; i < dataPP.length; i++){
-      ws.addRow([dataPP[i].pp_id, dataPP[i].name, "", "", dataPP[i].unit, "", "", "", dataPP[i].pp_cust_number, dataPP[i].pp_group, dataPP[i].phy_group, dataPP[i].product_type, dataPP[i].note])
+      ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, "", "", dataPP[i].uom, "", "", "", dataPP[i].pp_cust_number, dataPP[i].pp_group, dataPP[i].physical_group, dataPP[i].product_type, dataPP[i].note])
       let getlastrow = ws.lastRow._number;
       ws.mergeCells('B'+getlastrow+':D'+getlastrow);
-      for(let j = 0; j < dataPP[i].list_of_id_material.length; j++){
-        let matIndex = dataPP[i].list_of_id_material[j];
-        ws.addRow(["", "", matIndex.material_id, matIndex.material_name, matIndex.material_unit, matIndex.material_qty, matIndex.material_price, matIndex.material_type, "", "", "", "", ""])
+      for(let j = 0; j < dataPP[i].list_of_material.length; j++){
+        let matIndex = dataPP[i].list_of_material[j];
+        ws.addRow(["", "", matIndex.material_id, matIndex.material_name, matIndex.uom, matIndex.qty, matIndex.material_price, matIndex.material_type, "", "", "", "", ""])
       }
     }
 
@@ -1008,10 +974,10 @@ class PackageUpload extends React.Component {
 
     const datapackageSelected = this.state.packageSelected;
 
-    let ppIdArray = ["project", "site_id", "site_name"];
+    let ppIdArray = ["site_title", "site_id", "site_name"];
     let phyGroupArray = ["", "", ""];
 
-    ppIdArray = ppIdArray.concat(datapackageSelected.map(pp => pp.pp_id+" /// "+pp.name));
+    ppIdArray = ppIdArray.concat(datapackageSelected.map(pp => pp.pp_id+" /// "+pp.product_name));
     phyGroupArray = phyGroupArray.concat(datapackageSelected.map(pp => pp.product_type));
 
     ws.addRow(phyGroupArray);
@@ -1028,10 +994,10 @@ class PackageUpload extends React.Component {
     const datapackageChecked = this.state.packageSelected;
     console.log("datapackageChecked", datapackageChecked);
 
-    let ppIdArray = ["project", "site_id", "site_name"];
+    let ppIdArray = ["site_title", "site_id", "site_name"];
     let phyGroupArray = ["", "", ""];
 
-    ppIdArray = ppIdArray.concat(datapackageChecked.map(pp => pp.pp_id+" /// "+pp.name));
+    ppIdArray = ppIdArray.concat(datapackageChecked.map(pp => pp.pp_id+" /// "+pp.product_name));
     phyGroupArray = phyGroupArray.concat(datapackageChecked.map(pp => pp.product_type));
 
     ws.addRow(phyGroupArray);
@@ -1062,7 +1028,7 @@ class PackageUpload extends React.Component {
     ws.addRow(["PP / Material", "material_code", "material_name", "quantity", "unit", "material_type", "product_key", "product_package"]);
 
     for(let i = 0; i < dataPrint.length; i++){
-      ws.addRow(["Material", "child Code", "child Name", "3", "pc", "active", dataPrint[i].pp_id, dataPrint[i].name])
+      ws.addRow(["Material", "child Code", "child Name", "3", "pc", "active", dataPrint[i].pp_id, dataPrint[i].product_name])
     }
 
     const MaterialFormat = await wb.xlsx.writeBuffer();
@@ -1175,13 +1141,13 @@ class PackageUpload extends React.Component {
                       Select All
                     </span>
                     <span style={{marginRight: '10px'}}>Project Tag : </span>
-                    <select style={{marginRight: '10px', marginTop : '2.85px', borderBottomWidth : '2.5px'}} className="search-box-project" name="ProjectFilter" type="select" onChange={this.handleChangeProjectFilter} value={this.state.project_filter}>
+                    {/*}<select style={{marginRight: '10px', marginTop : '2.85px', borderBottomWidth : '2.5px'}} className="search-box-project" name="ProjectFilter" type="select" onChange={this.handleChangeProjectFilter} value={this.state.project_filter}>
                       <option value="all">All</option>
                       <option value="none">None</option>
                       {this.state.project_all.map( project =>
                         <option key={project._id} value={project._id}>{project.project_name}</option>
                       )}
-                    </select>
+                    </select>*/}
                     <input className="search-box-material" type="text" name='filter' placeholder="Search Package Name" onChange={this.handleChangeFilter} value={this.state.filter_name } />
                 </div>
                 </div>
@@ -1205,7 +1171,6 @@ class PackageUpload extends React.Component {
                         <th>Product Package</th>
                         <th>Physical Group</th>
                         <th>Product / Material Type</th>
-                        <th>Project Tag</th>
                         <th></th>
                       </tr>
                     </thead>
@@ -1214,38 +1179,32 @@ class PackageUpload extends React.Component {
                       <React.Fragment key={pp._id+"frag"}>
                         <tr style={{backgroundColor: '#E5FCC2'}} className='fixbody' key={pp._id}>
                           <td align="center"><Checkbox name={pp._id} checked={this.state.packageChecked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp}/></td>
-                          <td colSpan="2" style={{textAlign : 'left'}}>{pp.name}</td>
+                          <td colSpan="2" style={{textAlign : 'left'}}>{pp.product_name}</td>
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
-                          <td style={{textAlign : 'center'}}>{pp.unit}</td>
+                          <td style={{textAlign : 'center'}}>{pp.uom}</td>
                           <td style={{textAlign : 'left'}}></td>
                           <td style={{textAlign : 'center'}}>{pp.price}</td>
                           <td style={{textAlign : 'left'}}>{pp.pp_group}</td>
-                          <td style={{textAlign : 'center'}}>{pp.phy_group}</td>
+                          <td style={{textAlign : 'center'}}>{pp.physical_group}</td>
                           <td style={{textAlign : 'center'}}>{pp.product_type}</td>
-                          {pp.list_of_project !== undefined && pp.list_of_project !== null && Array.isArray(pp.list_of_project) ? (
-                            <td style={{fontSize : '11px', textAlign : 'left'}}>{pp.list_of_project.map(e => e.project_name+' ; ')}</td>
-                          ) : (
-                            <td></td>
-                          )}
                           <td>
                             <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
                               <i className="fa fa-pencil" aria-hidden="true"></i>
                             </Button>
                           </td>
                         </tr>
-                        { pp.list_of_id_material.map(mat =>
+                        { pp.list_of_material.map(mat =>
                           <tr className='fixbodymat' key={mat._id}>
                             <td style={{textAlign : 'left'}}></td>
                             <td style={{textAlign : 'left'}}></td>
                             <td style={{textAlign : 'left'}}>{mat.material_name}</td>
                             <td style={{textAlign : 'left'}}>{mat.material_id}</td>
-                            <td style={{textAlign : 'center'}}>{mat.material_unit}</td>
-                            <td style={{textAlign : 'center'}}>{mat.material_qty}</td>
+                            <td style={{textAlign : 'center'}}>{mat.uom}</td>
+                            <td style={{textAlign : 'center'}}>{mat.qty}</td>
                             <td style={{textAlign : 'left'}}></td>
                             <td style={{textAlign : 'left'}}></td>
                             <td style={{textAlign : 'left'}}></td>
                             <td style={{textAlign : 'center'}}>{mat.material_type}</td>
-                            <td></td>
                             <td></td>
                           </tr>
                         ) }
@@ -1270,9 +1229,9 @@ class PackageUpload extends React.Component {
                 </Col>
 
                 <Col>
-                <div style={{float:'right', margin: '5px', display:'inline-flex'}}>
+                {/* }<div style={{float:'right', margin: '5px', display:'inline-flex'}}>
                   <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
-                </div>
+                </div> */}
                 <div style={{float:'right', margin: '5px', display:'inline-flex'}}>
                 <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTSSRFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp; Download TSSR Format</Button>
                 </div>
@@ -1319,7 +1278,7 @@ class PackageUpload extends React.Component {
                     </Col>
                     <Col xs="4">
                       <FormGroup>
-                        <Label htmlFor="phy_group" >Physical Group</Label>
+                        <Label htmlFor="physical_group" >Physical Group</Label>
                           <Input  type="text" name="4" placeholder="" value={this.state.PPForm[4]} onChange={this.handleChangeForm}/>
                       </FormGroup>
                     </Col>
@@ -1345,17 +1304,6 @@ class PackageUpload extends React.Component {
                   <FormGroup>
                     <Label htmlFor="note" >Note</Label>
                       <Input  type="text" name="7" placeholder="" value={this.state.PPForm[7]} onChange={this.handleChangeForm}/>
-                  </FormGroup>
-                  <FormGroup>
-                    <Label htmlFor="project_tag" >Project Tag</Label>
-                      <Select
-                        isMulti
-                        name="ProjectTag"
-                        options={this.state.loadprojectdata}
-                        className="basic-multi-select"
-                        classNamePrefix="select"
-                        onChange={this.handleSelectProjectChange}
-                      />
                   </FormGroup>
               </Col>
             </Row>
@@ -1395,7 +1343,7 @@ class PackageUpload extends React.Component {
                   </Col>
                   <Col xs="4">
                     <FormGroup>
-                      <Label htmlFor="phy_group" >Physical Group</Label>
+                      <Label htmlFor="physical_group" >Physical Group</Label>
                         <Input  type="text" name="4" placeholder="" value={this.state.PPForm[4]} onChange={this.handleChangeForm}/>
                     </FormGroup>
                   </Col>
@@ -1422,18 +1370,6 @@ class PackageUpload extends React.Component {
                   <Label htmlFor="note" >Note</Label>
                     <Input  type="text" name="7" placeholder="" value={this.state.PPForm[7]} onChange={this.handleChangeForm}/>
                 </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="project_tag" >Project Tag</Label>
-                  <Select
-                    isMulti
-                    value={this.state.loadprojectdata.filter(pro => this.state.select_project_tag_new.includes(pro.value) === true)}
-                    name="ProjectTag"
-                    options={this.state.loadprojectdata}
-                    className="basic-multi-select"
-                    classNamePrefix="select"
-                    onChange={this.handleSelectProjectChange}
-                  />
-                </FormGroup>
             </Col>
           </Row>
           </ModalBody>
@@ -1455,12 +1391,12 @@ class PackageUpload extends React.Component {
                 </tr>
               </thead>
               <tbody>
-              { this.state.product_package.filter(e => this.state.packageChecked.get(e.name) === true).map(pp => {
+              { this.state.product_package.filter(e => this.state.packageChecked.get(e.product_name) === true).map(pp => {
                   return (
-                    <tr key={pp.name}>
-                      <td >{pp.name}</td>
+                    <tr key={pp.product_name}>
+                      <td >{pp.product_name}</td>
                       <td>
-                        <Checkbox name={pp.name} checked={this.state.packageChecked.get(pp.name)} onChange={this.handleChangeChecklist}/>
+                        <Checkbox name={pp.product_name} checked={this.state.packageChecked.get(pp.product_name)} onChange={this.handleChangeChecklist}/>
                       </td>
                     </tr>
                   )

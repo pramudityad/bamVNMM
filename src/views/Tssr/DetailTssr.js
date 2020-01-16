@@ -18,6 +18,10 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const API_URL_PDB_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
+const usernameTselApi = 'adminbamidsuper';
+const passwordTselApi = 'F760qbAg2sml';
+
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
@@ -61,24 +65,36 @@ class DetailTssr extends Component {
         userName : this.props.dataLogin.userName,
         userEmail : this.props.dataLogin.email,
         rowsXLS : [],
-        data_tssr : [],
+        data_tssr : null,
+        tssr_site_FE : null,
+        tssr_site_NE : null,
         data_tssr_sites : [],
         data_tssr_sites_item : [],
+        list_version : [],
+        data_tssr_current : null,
+        tssr_site_FE_current : null,
+        tssr_site_NE_current : null,
+        data_tssr_sites_current : [],
+        data_tssr_sites_item_current : [],
+        version_selected : null,
+        version_current : null,
         list_pp_material_tssr : [],
         list_project : [],
         project_selected : null,
         project_name_selected : null,
-        tssr_site_FE : null,
-        tssr_site_NE : null,
         cd_id_selected : null,
         dataTssrUpload : [],
+        dataTssrRevUpload : [],
         waiting_status : null,
         action_status : null,
         action_message : null,
     };
-    this.saveTssrBOMParent = this.saveTssrBOMParent.bind(this);
     this.handleChangeProject = this.handleChangeProject.bind(this);
+    this.handleChangeVersion = this.handleChangeVersion.bind(this);
     this.saveProjecttoDB = this.saveProjecttoDB.bind(this);
+    this.prepareEdit = this.prepareEdit.bind(this);
+    this.prepareRevision = this.prepareRevision.bind(this);
+    this.exportFormatTSSR = this.exportFormatTSSR.bind(this);
   }
 
     async getDatafromAPIBMS(url){
@@ -88,6 +104,26 @@ class DetailTssr extends Component {
           auth: {
             username: usernamePhilApi,
             password: passwordPhilApi
+          },
+        })
+        if(respond.status >= 200 && respond.status < 300){
+          console.log("respond Get Data", respond);
+        }
+        return respond;
+      }catch (err) {
+        let respond = err;
+        console.log("respond Get Data", err);
+        return respond;
+      }
+    }
+
+    async getDatafromAPITSEL(url){
+      try {
+        let respond = await axios.get(API_URL_PDB_TSEL +url, {
+          headers : {'Content-Type':'application/json'},
+          auth: {
+            username: usernameTselApi,
+            password: passwordTselApi
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -156,7 +192,7 @@ class DetailTssr extends Component {
         return respond;
       }catch (err) {
         let respond = err;
-        console.log("respond Patch data", err);
+        console.log("respond Patch data", err.response);
         return respond;
       }
     }
@@ -198,6 +234,24 @@ class DetailTssr extends Component {
     return data.findIndex(e => this.isSameValue(e,value));
   }
 
+  comparerDiffbyField(otherArray, field){
+    //Compare Different between 2 array
+    return function(current){
+      return otherArray.filter(function(other){
+        return other[field] == current[field]
+      }).length == 0;
+    }
+  }
+
+  comparerDiffbyValue(otherArray){
+    //Compare Different between 2 array
+    return function(current){
+      return otherArray.filter(function(other){
+        return other == current
+      }).length == 0;
+    }
+  }
+
   fileHandlerMaterial = (event) => {
     let fileObj = event.target.files[0];
     if(fileObj !== undefined){
@@ -233,152 +287,161 @@ class DetailTssr extends Component {
   }
 
   formatDataTSSR = async(dataXLS) => {
-      let action_message = this.state.action_message;
+      let action_message = [];
       let actionStatus = null;
+      let SitesOfTSSRNew = [];
       this.setState({waiting_status : 'loading'});
-      const staticHeader = ["project", "site_id", "site_name"];
+      const staticHeader = ["site_title", "site_id", "site_name"];
       const staticHeaderXLS = dataXLS[1].filter((e,n) => n < 3);
       if(staticHeaderXLS.equals(staticHeader) !== true){
-        this.setState({action_status : "failed", action_message : action_message + "la Please check your upload format or Package Number"});
-      }
-      let dataPackage = [];
-      const index_item = 3;
-      let RespondGetPP = [];
-      const ppid_upload = [];
-      let pp_id_special = [];
-      for(let j = index_item ; j < dataXLS[1].length; j++){
-        let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
-        if(Array.isArray(idXLSIndex) == true){
-          idXLSIndex = idXLSIndex.join();
-          if(idXLSIndex.includes("\"")){
-            pp_id_special.push(idXLSIndex);
-          }else{
-            ppid_upload.push(idXLSIndex);
-          }
-        }
-      }
-      RespondGetPP = await this.getAllPP(ppid_upload, pp_id_special);
-      this.setState({waiting_status : null});
-      if(RespondGetPP.length !== 0){
-        dataPackage = RespondGetPP;
-      }
-      let SitesOfTSSRNew = [];
-      let id_PP = new Map();
-      let _id_PP = new Map();
-      let pp_key = new Map();
-      let pp_name = new Map();
-      let group_PP = new Map();
-      let pp_cust_num = new Map();
-      let phy_group = new Map();
-      let pp_type = new Map();
-      let pp_unit = new Map();
-      let data_duplicated = [];
-      let data_undefined = [];
-      let dataAllnull = [];
-      let siteIDNull = [];
-      for(let j = index_item ; j < dataXLS[1].length; j++){
-        let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
-        if(Array.isArray(idXLSIndex) == true){
-          idXLSIndex = idXLSIndex.join();
-        }
-        let get_id_PP = dataPackage.find(PP => PP.pp_id === idXLSIndex);
-        let cekAllZero = dataXLS.map( e => this.checkValuetoZero(e[j]) ).filter( (e,n) => n>1);
-        if(cekAllZero.every( e => e == 0)){
-          dataAllnull.push(idXLSIndex);
-        }
-        if(get_id_PP === undefined){
-          data_undefined.push(idXLSIndex)
-        }else{
-          if(id_PP.get(idXLSIndex) === undefined){
-            id_PP.set(idXLSIndex, get_id_PP.pp_id);
-            pp_key.set(idXLSIndex, get_id_PP.pp_key);
-            _id_PP.set(idXLSIndex, get_id_PP._id);
-            group_PP.set(idXLSIndex, get_id_PP.pp_group)
-            pp_name.set(idXLSIndex, get_id_PP.name);
-            pp_cust_num.set(idXLSIndex, get_id_PP.pp_cust_number);
-            phy_group.set(idXLSIndex, get_id_PP.phy_group)
-            pp_type.set(idXLSIndex, get_id_PP.product_type);
-            pp_unit.set(idXLSIndex, get_id_PP.unit);
-          }else{
-            data_duplicated.push(idXLSIndex);
-          }
-        }
-      }
-      if(data_undefined.length !== 0){
         actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and <br />" : "";
-        action_message = "Please check your upload format or Package Number in "+data_undefined.join(", ")+twoSentence+action_message;
+        this.setState({action_status : "failed", action_message : "Please check your upload format or Package Number"});
       }
-      if(data_duplicated.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and <br />" : "";
-        action_message = action_message+twoSentence+" There are Duplicated PP in "+data_duplicated.join(", ");
-      }
-      let siteSaveFormat = [];
-      let siteError = [];
-      for(let i = 2; i < dataXLS.length; i++){
-        if(this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]) !== null && this.state.action_status !== "failed" && actionStatus !== "failed"){
-          let packageDatas = []
-          for(let j = index_item ; j < dataXLS[1].length; j++){
-            let dataXLSIndex = dataXLS[1][j].split(" /// ",1).join();
-            if(dataAllnull.includes(dataXLSIndex) === false){
-              let package_data = {
-                "id_pp_doc" : _id_PP.get(dataXLSIndex),
-                "pp_id" : dataXLSIndex,
-                "pp_group" : group_PP.get(dataXLSIndex),
-                "pp_cust_number" : pp_cust_num.get(dataXLSIndex),
-                "product_name" : pp_name.get(dataXLSIndex).toString(),
-                "physical_group" : phy_group.get(dataXLSIndex),
-                "product_type" : pp_type.get(dataXLSIndex),
-                "uom" : pp_unit.get(dataXLSIndex),
-                "qty" : this.checkValuetoZero(dataXLS[i][j]),
-                "version" : "0",
-                "deleted" : 0,
-                "created_by" : this.state.userId,
-                "updated_by" : this.state.userId
-              }
-              packageDatas.push(package_data);
+      if(actionStatus !== "failed"){
+        let dataPackage = [];
+        const index_item = 3;
+        let RespondGetPP = [];
+        const ppid_upload = [];
+        let pp_id_special = [];
+        for(let j = index_item ; j < dataXLS[1].length; j++){
+          let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
+          if(Array.isArray(idXLSIndex) == true){
+            idXLSIndex = idXLSIndex.join();
+            if(idXLSIndex.includes("\"")){
+              pp_id_special.push(idXLSIndex);
+            }else{
+              ppid_upload.push(idXLSIndex);
             }
           }
-          let siteID = this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]).toString();
-          let SiteBOQTech = {
-            "account_id" : "1",
-            "site_id" : siteID,
-            "site_name" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]).toString(),
-            "list_of_site_items" : packageDatas,
-            "version" : "0",
-            "created_by" : this.state.userId,
-            "updated_by" : this.state.userId,
-            "deleted" : 0
+        }
+        RespondGetPP = await this.getAllPP(ppid_upload, pp_id_special);
+        this.setState({waiting_status : null});
+        if(RespondGetPP.length !== 0){
+          dataPackage = RespondGetPP;
+        }
+        let id_PP = new Map();
+        let _id_PP = new Map();
+        let pp_key = new Map();
+        let pp_name = new Map();
+        let group_PP = new Map();
+        let pp_cust_num = new Map();
+        let physical_group = new Map();
+        let pp_type = new Map();
+        let pp_unit = new Map();
+        let data_duplicated = [];
+        let data_undefined = [];
+        let dataAllnull = [];
+        let siteIDNull = [];
+        for(let j = index_item ; j < dataXLS[1].length; j++){
+          let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
+          if(Array.isArray(idXLSIndex) == true){
+            idXLSIndex = idXLSIndex.join();
           }
-          // "site_name" : this.checkValuetoString(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]).toString(),
-          if(siteID.length === 0){
-            siteIDNull.push(null);
+          let get_id_PP = dataPackage.find(PP => PP.pp_id === idXLSIndex);
+          let cekAllZero = dataXLS.map( e => this.checkValuetoZero(e[j]) ).filter( (e,n) => n>1);
+          if(cekAllZero.every( e => e == 0)){
+            dataAllnull.push(idXLSIndex);
           }
-          if(siteSaveFormat.find(e => e === SiteBOQTech.site_id) !== undefined){
-            siteError.push(SiteBOQTech.site_id);
+          if(get_id_PP === undefined){
+            data_undefined.push(idXLSIndex)
+          }else{
+            if(id_PP.get(idXLSIndex) === undefined){
+              id_PP.set(idXLSIndex, get_id_PP.pp_id);
+              pp_key.set(idXLSIndex, get_id_PP.pp_key);
+              _id_PP.set(idXLSIndex, get_id_PP._id);
+              group_PP.set(idXLSIndex, get_id_PP.pp_group)
+              pp_name.set(idXLSIndex, get_id_PP.product_name);
+              pp_cust_num.set(idXLSIndex, get_id_PP.pp_cust_number);
+              physical_group.set(idXLSIndex, get_id_PP.physical_group)
+              pp_type.set(idXLSIndex, get_id_PP.product_type);
+              pp_unit.set(idXLSIndex, get_id_PP.uom);
+            }else{
+              data_duplicated.push(idXLSIndex);
+            }
           }
-          siteSaveFormat.push(SiteBOQTech.site_id);
-          SitesOfTSSRNew.push(SiteBOQTech);
+        }
+        if(data_undefined.length !== 0){
+          actionStatus = "failed";
+          let twoSentence = action_message.length !== 0 ? "and <br />" : "";
+          action_message = "Please check your upload format or Package Number in "+data_undefined.join(", ")+twoSentence+action_message;
+        }
+        if(data_duplicated.length !== 0){
+          actionStatus = "failed";
+          let twoSentence = action_message.length !== 0 ? "and <br />" : "";
+          action_message = action_message+twoSentence+" There are Duplicated PP in "+data_duplicated.join(", ");
+        }
+        let siteSaveFormat = [];
+        let siteError = [];
+        for(let i = 2; i < dataXLS.length; i++){
+          if(this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]) !== null && this.state.action_status !== "failed" && actionStatus !== "failed"){
+            let packageDatas = []
+            for(let j = index_item ; j < dataXLS[1].length; j++){
+              let dataXLSIndex = dataXLS[1][j].split(" /// ",1).join();
+              if(dataAllnull.includes(dataXLSIndex) === false){
+                let package_data = {
+                  "id_pp_doc" : _id_PP.get(dataXLSIndex),
+                  "pp_id" : dataXLSIndex,
+                  "pp_group" : group_PP.get(dataXLSIndex),
+                  "pp_cust_number" : pp_cust_num.get(dataXLSIndex),
+                  "product_name" : pp_name.get(dataXLSIndex).toString(),
+                  "physical_group" : physical_group.get(dataXLSIndex),
+                  "product_type" : pp_type.get(dataXLSIndex),
+                  "uom" : pp_unit.get(dataXLSIndex),
+                  "qty" : this.checkValuetoZero(dataXLS[i][j]),
+                  "version" : "0",
+                  "deleted" : 0,
+                  "created_by" : this.state.userId,
+                  "updated_by" : this.state.userId
+                }
+                packageDatas.push(package_data);
+              }
+            }
+            let siteID = this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]).toString();
+            let siteTssrBOM = {
+              "account_id" : "1",
+              "site_id" : siteID,
+              "site_name" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]),
+              "site_title" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_title')]),
+              "list_of_site_items" : packageDatas,
+              "version" : "0",
+              "created_by" : this.state.userId,
+              "updated_by" : this.state.userId,
+              "deleted" : 0
+            }
+            if(siteTssrBOM.site_name !== null){
+              siteTssrBOM["site_name"] = siteTssrBOM.site_name.toString();
+            }
+            if(siteTssrBOM.site_title !== null){
+              siteTssrBOM["site_title"] = siteTssrBOM.site_title.toString();
+            }
+            // "site_name" : this.checkValuetoString(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]).toString(),
+            if(siteID.length === 0){
+              siteIDNull.push(null);
+            }
+            if(siteSaveFormat.find(e => e === siteTssrBOM.site_id) !== undefined){
+              siteError.push(siteTssrBOM.site_id);
+            }
+            siteSaveFormat.push(siteTssrBOM.site_id);
+            SitesOfTSSRNew.push(siteTssrBOM);
+          }
+        }
+        if(siteIDNull.length !== 0){
+          actionStatus = "failed";
+          let twoSentence = action_message.length !== 0 ? "and " : "";
+          action_message = action_message+twoSentence+"Site ID cant NULL";
+        }
+        if(siteError.length !== 0){
+          actionStatus = "failed";
+          let twoSentence = action_message.length !== 0 ? "and " : "";
+          action_message = action_message+twoSentence+"There are duplicate site";
+        }
+        if(actionStatus === 'failed'){
+          this.setState({action_status : "failed", action_message : action_message});
+        }
+        if(actionStatus !== 'failed'){
+          this.setState({action_message : null});
         }
       }
-      if(siteIDNull.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and " : "";
-        action_message = action_message+twoSentence+"Site ID cant NULL";
-      }
-      if(siteError.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and " : "";
-        action_message = action_message+twoSentence+"There are duplicate site";
-      }
-      if(actionStatus === 'failed'){
-        this.setState({action_status : "failed", action_message : action_message});
-      }
-      if(actionStatus !== 'failed'){
-        this.setState({action_message : null});
-      }
-      console.log("SitesOfTSSRNew", SitesOfTSSRNew);
       this.setState({dataTssrUpload : SitesOfTSSRNew});
       return SitesOfTSSRNew;
   }
@@ -392,7 +455,7 @@ class DetailTssr extends Component {
       let arrayIdPP = '"'+DataPaginationPP.join('", "')+'"';
       arrayIdPP = arrayIdPP.replace("&", "%26");
       let where_id_PP = '?where={"pp_id" : {"$in" : ['+arrayIdPP+']}}';
-      let resPP = await this.getDatafromAPIBMS('/pp_sorted_non_page'+where_id_PP);
+      let resPP = await this.getDatafromAPIBAM('/pp_sorted_nonpage'+where_id_PP);
       if(resPP !== undefined){
         if(resPP.data !== undefined){
           dataPP = dataPP.concat(resPP.data._items);
@@ -403,7 +466,7 @@ class DetailTssr extends Component {
       let dataPPIndex = array_PP_sepcial[i];
       dataPPIndex = dataPPIndex.replace("\"", "");
       let where_id_PP = '?where={"pp_id":{"$regex" : "'+dataPPIndex+'", "$options" : "i"}}';
-      let resPP = await this.getDatafromAPIBMS('/pp_sorted_non_page'+where_id_PP);
+      let resPP = await this.getDatafromAPIBAM('/pp_sorted_nonpage'+where_id_PP);
       if(resPP !== undefined){
         if(resPP.data !== undefined){
           dataPP = dataPP.concat(resPP.data._items);
@@ -416,7 +479,7 @@ class DetailTssr extends Component {
   getDataTssr(_id_tssr){
     this.getDatafromAPIBAM('/tssr_op/'+_id_tssr).then( resTssr => {
       if(resTssr.data !== undefined){
-        this.setState({ data_tssr : resTssr.data });
+        this.setState({ data_tssr : resTssr.data, data_tssr_current : resTssr.data, version_current : resTssr.data.version });
         if(resTssr.data.project_name === null || resTssr.data.project_name === "" ){
           this.getDataProject();
         }
@@ -426,7 +489,7 @@ class DetailTssr extends Component {
               if(resItem.data !== undefined){
                 const itemsTssr = resItem.data._items;
                 const itemUniq = [...new Set(itemsTssr.map(({ id_pp_doc}) => id_pp_doc))];
-                this.setState({ data_tssr_sites : resSites.data._items, data_tssr_sites_item : resItem.data._items }, () => {
+                this.setState({ data_tssr_sites : resSites.data._items, data_tssr_sites_item : resItem.data._items, data_tssr_sites_current : resSites.data._items, data_tssr_sites_item_current : resItem.data._items  }, () => {
                   this.getPPandMaterial(itemUniq);
                   this.prepareView();
                 });
@@ -446,7 +509,7 @@ class DetailTssr extends Component {
         let dataPaginationPP = arrayDataPP.slice(i * 25, (i+1)*25);
         let arrayIdPP = '"'+dataPaginationPP.join('", "')+'"';
         let where_id_PP = '?where={"_id" : {"$in" : ['+arrayIdPP+']}}';
-        let resPP = await this.getDatafromAPIBMS('/pp_non_page'+where_id_PP+'&'+'embedded={"list_of_id_material" : 1}');
+        let resPP = await this.getDatafromAPIBAM('/pp_sorted_nonpage'+where_id_PP);
         if(resPP !== undefined){
             if(resPP.data !== undefined){
               // eslint-disable-next-line
@@ -454,29 +517,57 @@ class DetailTssr extends Component {
             }
         }
     }
-    this.setState({list_pp_material_tssr : dataPP});
+    this.getDataMaterial(dataPP);
+  }
+
+  async getDataMaterial(data_pp){
+    let dataMat = [];
+    let arrayDataPP = data_pp.map(e => e._id);
+    let getNumberPage = Math.ceil(arrayDataPP.length / 25);
+    for(let i = 0 ; i < getNumberPage; i++){
+        let dataPaginationPP = arrayDataPP.slice(i * 25, (i+1)*25);
+        let arrayIdPP = '"'+dataPaginationPP.join('", "')+'"';
+        let where_id_PP = '?where={"id_pp_doc" : {"$in" : ['+arrayIdPP+']}}';
+        let resMat = await this.getDatafromAPIBAM('/mc_op'+where_id_PP);
+        if(resMat !== undefined){
+            if(resMat.data !== undefined){
+              // eslint-disable-next-line
+              dataMat = dataMat.concat(resMat.data._items);
+            }
+        }
+    }
+    this.prepareDataPP(data_pp, dataMat);
+  }
+
+  prepareDataPP(data_pp, data_material){
+    let product_package = data_pp;
+    const material_catalogue = data_material;
+    for(let i = 0; i < product_package.length; i++){
+      const material = material_catalogue.filter(e => e.pp_id === product_package[i].pp_id);
+      product_package[i]["list_of_material"] = material;
+    }
+    this.setState({list_pp_material_tssr : product_package});
   }
 
   prepareView(){
     let site_NE = this.state.data_tssr_sites.find(e => e.site_title === "NE");
     let site_FE = this.state.data_tssr_sites.find(e => e.site_title === "FE");
-    console.log("site_NE", site_NE);
     if(site_NE !== undefined){
       site_NE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_NE._id);
-      this.setState({tssr_site_NE : site_NE});
+      this.setState({tssr_site_NE : site_NE, tssr_site_NE_current : site_NE});
     }else{
-      this.setState({tssr_site_NE : null})
+      this.setState({tssr_site_NE : null, tssr_site_NE_current : null})
     }
     if(site_FE !== undefined){
       site_FE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_FE._id);
-      this.setState({tssr_site_FE : site_FE});
+      this.setState({tssr_site_FE : site_FE, tssr_site_FE_current : site_FE});
     }else{
-      this.setState({tssr_site_FE : null})
+      this.setState({tssr_site_FE : null, tssr_site_FE_current : null})
     }
   }
 
   getDataProject(){
-    this.getDatafromAPIBMS('/project_non_page').then( resProject => {
+    this.getDatafromAPITSEL('/project_sorted_non_page').then( resProject => {
       if(resProject.data !== undefined){
         this.setState({ list_project : resProject.data._items })
       }
@@ -485,6 +576,7 @@ class DetailTssr extends Component {
 
   componentDidMount(){
     this.getDataTssr(this.props.match.params.id);
+    this.getVersionTssr(this.props.match.params.id);
   }
 
   preparingDataTSSR(){
@@ -501,98 +593,6 @@ class DetailTssr extends Component {
     const dataRandom = Math.floor(Math.random() * 100);
     const numberTSSR = dateNow.getFullYear().toString()+(dateNow.getMonth()+1).toString()+dateNow.getDate().toString()+"-"+dataRandom.toString().padStart(4, '0');
     return numberTSSR;
-  }
-
-  async saveTssrBOMParent(){
-    const numberingTSSR = "TSSRBOM-"+this.preparingSaveTssr();
-    const date = new Date();
-    const dateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-    const tssrData = {
-      "no_tssr_boq" : numberingTSSR,
-      "id_project_doc" : null,
-      "project_name" : this.state.project_name_selected,
-      "account_id" : "1",
-      "current_status" : "CREATED",
-      "id_boq_tech_doc" : null,
-      "no_boq_tech" : "",
-      "version" : "0",
-      "deleted" : 0,
-      "created_on" : dateNow.toString(),
-      "created_by" : this.state.userId,
-      "updated_on" : dateNow.toString(),
-      "updated_by" : this.state.userId
-    }
-    console.log("tssr op", JSON.stringify(tssrData))
-    const respondSaveTSSR = await this.postDatatoAPIBAM('/tssr_op', tssrData);
-    if(respondSaveTSSR.data !== undefined && respondSaveTSSR.status >= 200 && respondSaveTSSR.status <= 300 ){
-      this.saveTSSRBOMSites(respondSaveTSSR.data._id, tssrData.no_tssr_boq, respondSaveTSSR.data._etag);
-    }
-  }
-
-  async saveTSSRBOMSites(_id_tssr_parent, no_tssr_boq, _etag_tssr_parent){
-    let bulkTssrSites = [];
-    const date = new Date();
-    const dateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-    const dataSites = this.state.dataTssrUpload;
-    for(let i = 0; i < dataSites.length; i++){
-      // let siteTssrIdx = Object.assign(dataSites[i], {});
-      let siteTssrIdx = JSON.parse(JSON.stringify(dataSites[i]));
-      siteTssrIdx["id_tssr_boq_doc"] = _id_tssr_parent;
-      siteTssrIdx["no_tssr_boq"] = no_tssr_boq;
-      siteTssrIdx["no_tssr_boq_site"] = no_tssr_boq+"-"+i.toString();
-      siteTssrIdx["id_site_doc"] = null;
-      siteTssrIdx["id_project_doc"] = null;
-      siteTssrIdx["project_name"] = this.state.project_name_selected === null ? "" : this.state.project_name_selected;
-      siteTssrIdx["id_boq_tech_doc"] = null;
-      siteTssrIdx["no_boq_tech"] = "";
-      siteTssrIdx["site_title"] = ((i+1) % 2) === 1 ? "NE" : "FE";
-      siteTssrIdx["created_on"] = dateNow.toString();
-      siteTssrIdx["updated_on"] = dateNow.toString();
-      if(siteTssrIdx.list_of_site_items !== undefined){
-        delete siteTssrIdx.list_of_site_items;
-      }
-      bulkTssrSites.push(siteTssrIdx);
-    }
-    console.log("tssr sites op", JSON.stringify(bulkTssrSites))
-    const respondSaveTSSRSites = await this.postDatatoAPIBAM('/tssr_sites_op', bulkTssrSites);
-    if(respondSaveTSSRSites.data !== undefined && respondSaveTSSRSites.status >= 200 && respondSaveTSSRSites.status <= 300 ){
-      if(respondSaveTSSRSites.length === 1){
-        this.saveTSSRBOMSitesItem(_id_tssr_parent, no_tssr_boq, _etag_tssr_parent, [respondSaveTSSRSites.data], bulkTssrSites);
-      }else{
-        this.saveTSSRBOMSitesItem(_id_tssr_parent, no_tssr_boq, _etag_tssr_parent, respondSaveTSSRSites.data._items, bulkTssrSites);
-      }
-    }else{
-      this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
-    }
-  }
-
-  async saveTSSRBOMSitesItem(_id_tssr_parent, no_tssr_boq, _etag_tssr_parent, _id_sites_tssr, no_sites_tssr){
-    const tssrSitesItem = [];
-    const dataSites = this.state.dataTssrUpload;
-    const date = new Date();
-    const dateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-    console.log("dataTSSRSites", dataSites)
-    for(let i = 0; i < dataSites.length; i++){
-      const dataSiteIdxItem = dataSites[i].list_of_site_items;
-      for(let j = 0; j < dataSiteIdxItem.length; j++){
-        let itemSiteIdx = Object.assign(dataSiteIdxItem[j], {});
-        itemSiteIdx["id_tssr_boq_doc"] = _id_tssr_parent;
-        itemSiteIdx["no_tssr_boq"] = no_tssr_boq;
-        itemSiteIdx["id_tssr_boq_site_doc"] = _id_sites_tssr[i]._id
-        itemSiteIdx["no_tssr_boq_site"] = no_sites_tssr[i].no_tssr_boq_site;
-        itemSiteIdx["created_on"] = dateNow.toString();
-        itemSiteIdx["updated_on"] = dateNow.toString();
-        tssrSitesItem.push(itemSiteIdx);
-      }
-    }
-    console.log("tssr sites item op", JSON.stringify(tssrSitesItem))
-    const respondSaveTSSRSitesItem = await this.postDatatoAPIBAM('/tssr_site_items_op', tssrSitesItem);
-    if(respondSaveTSSRSitesItem.data !== undefined && respondSaveTSSRSitesItem.status >= 200 && respondSaveTSSRSitesItem.status <= 300 ){
-      console.log("Success");
-      // this.saveTSSRBOMSites(respondSaveTSSR.data._id, tssrData.no_tssr_boq, respondSaveTSSR.data._etag);.
-    }else{
-      this.patchDatatoAPIBAM('/tssr_op/'+_id_tssr_parent, {"deleted" : 0}, _etag_tssr_parent);
-    }
   }
 
   getQtyTssrPPNE(pp_id){
@@ -641,8 +641,353 @@ class DetailTssr extends Component {
     })
   }
 
+  prepareEdit(){
+    this.prepareEditData();
+  }
+
+  async prepareEditData(signSucRev, versionNew){
+    let signSuc = [];
+    let signRevSuc = signSucRev;
+    let dataTSSR = this.state.data_tssr;
+    let dataSiteNE = this.state.tssr_site_NE;
+    let dataSiteFE = this.state.tssr_site_FE;
+    let dataFormat = this.state.dataTssrUpload;
+    let version = dataTSSR.version;
+    if(signSucRev === undefined){
+      signRevSuc = [];
+    }else{
+      if(versionNew !== undefined){
+        version = versionNew;
+      }
+    }
+    if(this.state.version_current !== this.state.version_selected){
+      dataTSSR = this.state.data_tssr_current;
+      dataSiteNE = this.state.tssr_site_NE_current;
+      dataSiteFE = this.state.tssr_site_FE_current;
+    }
+    if(dataFormat.length === 0 && this.state.version_current !== this.state.version_selected){
+      dataFormat = this.state.dataTssrRevUpload;
+    }
+    console.log("version pre", version);
+    if(dataSiteNE !== null){
+      console.log("version Try NE");
+      const SiteNENew = dataFormat.find(e => e.site_id === dataSiteNE.site_id);
+      if(SiteNENew !== undefined && dataSiteNE.site_id === SiteNENew.site_id){
+        const itemFormatNew = SiteNENew.list_of_site_items;
+        const itemNE = dataSiteNE.list_of_site_items;
+        const itemNENew = itemFormatNew.filter(this.comparerDiffbyField(itemNE, "pp_id"));
+        const itemNEDel = itemNE.filter(this.comparerDiffbyField(itemFormatNew, "pp_id"));
+        const itemNESame = itemFormatNew.filter( e => itemNE.findIndex(i => e.pp_id === i.pp_id) !== -1);
+        const patchDataSite = await this.patchDatatoAPIBAM('/tssr_sites_op/'+dataSiteNE._id, {"version" : version.toString() }, dataSiteNE._etag);
+        const delItem = await this.delItemTssr(itemNEDel, version, dataSiteNE);
+        const editItem = await this.editPP(itemNENew, itemNESame, version, dataTSSR, dataSiteNE);
+        if(delItem.length === itemNEDel.length && editItem.length === (itemNENew.length + itemNESame.length) ){
+          signSuc.push(true);
+        }
+      }
+    }
+    if(dataSiteFE !== null){
+      console.log("version Try FE");
+      const SiteFENew = dataFormat.find(e => e.site_id === dataSiteFE.site_id);
+      if(SiteFENew !== undefined && dataSiteFE.site_id === SiteFENew.site_id){
+        const itemFormatNew = SiteFENew.list_of_site_items;
+        const itemFE = dataSiteFE.list_of_site_items;
+        const itemFENew = itemFormatNew.filter(this.comparerDiffbyField(itemFE, "pp_id"));
+        const itemFEDel = itemFE.filter(this.comparerDiffbyField(itemFormatNew, "pp_id"));
+        const itemFESame = itemFormatNew.filter( e => itemFE.findIndex(i => e.pp_id === i.pp_id) !== -1);
+        const patchDataSite = await this.patchDatatoAPIBAM('/tssr_sites_op/'+dataSiteFE._id, {"version" : version.toString() }, dataSiteFE._etag);
+        const delItem = await this.delItemTssr(itemFEDel, version, dataSiteFE);
+        const editItem = await this.editPP(itemFENew, itemFESame, version, dataTSSR, dataSiteFE);
+        if(delItem.length === itemFEDel.length && editItem.length === (itemFENew.length + itemFESame.length) ){
+          signSuc.push(true);
+        }
+      }
+    }
+    const patchDataParent = await this.patchDatatoAPIBAM('/tssr_op/'+dataTSSR._id, {"version" : version.toString() }, dataTSSR._etag);
+    if(signSucRev === undefined){
+      if(signSuc.length === 2 && patchDataParent.data !== undefined){
+        this.setState({action_status : "success"});
+      }else{
+        this.setState({action_status : "failed"});
+      }
+    }else{
+      if((signSuc.length+signSucRev.length) === 5 && patchDataParent.data !== undefined){
+        this.setState({action_status : "success"});
+      }else{
+        this.setState({action_status : "failed"});
+      }
+    }
+  }
+
+  async editPP(itemNew, itemSame, version, dataTssr, dataSite){
+    console.log("version ed", version);
+    const date = new Date();
+    const dateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
+    let sucEdit = [];
+    for(let i = 0; i < itemSame.length; i++){
+      const dataItemIdx = dataSite.list_of_site_items.find(e => e.pp_id === itemSame[i].pp_id);
+      const patchDataItem = await this.patchDatatoAPIBAM('/tssr_site_items_op/'+dataItemIdx._id, {"qty" : itemSame[i].qty, "version" : version.toString() }, dataItemIdx._etag);
+      if(patchDataItem.data !== undefined && patchDataItem.status < 400){
+        sucEdit.push(patchDataItem.data._id);
+      }
+    }
+    if(itemNew.length !== 0){
+      let tssrSitesItem = [];
+      for(let j = 0; j < itemNew.length; j++){
+        let itemSiteIdx = Object.assign(itemNew[j], {});
+        itemSiteIdx["id_tssr_boq_doc"] = dataTssr._id;
+        itemSiteIdx["no_tssr_boq"] = dataTssr.no_tssr_boq;
+        itemSiteIdx["id_tssr_boq_site_doc"] = dataSite._id
+        itemSiteIdx["no_tssr_boq_site"] = dataSite.no_tssr_boq_site;
+        itemSiteIdx["version"] = version.toString();
+        itemSiteIdx["created_on"] = dateNow.toString();
+        itemSiteIdx["updated_on"] = dateNow.toString();
+        tssrSitesItem.push(itemSiteIdx);
+      }
+      const respondSaveTSSRSitesItem = await this.postDatatoAPIBAM('/tssr_site_items_op', tssrSitesItem);
+      if(respondSaveTSSRSitesItem.data !== undefined){
+        if(itemNew.length > 1){
+          sucEdit.push(respondSaveTSSRSitesItem.data._items.map(e => e._id));
+        }else{
+          sucEdit.push(respondSaveTSSRSitesItem.data._id);
+        }
+      }
+    }
+    return sucEdit;
+  }
+
+  async prepareRevision(){
+    let signSuc = [];
+    let dataTSSR = this.state.data_tssr;
+    let dataSiteNE = this.state.tssr_site_NE;
+    let dataSiteFE = this.state.tssr_site_FE;
+    let version = parseInt(dataTSSR.version)+1;
+    let version_current = parseInt(dataTSSR.version);
+    let dataRevTssr = Object.assign({}, dataTSSR);
+    dataRevTssr["id_document"] = dataTSSR._id;
+    dataRevTssr["created_by"] = dataTSSR.created_by;
+    dataRevTssr["updated_by"] = dataTSSR.updated_by;
+    delete dataRevTssr._id;
+    delete dataRevTssr._etag;
+    delete dataRevTssr._links;
+    const respondSaveTSSRRev = await this.postDatatoAPIBAM('/tssr_version_op', dataRevTssr);
+    if(respondSaveTSSRRev.data !== undefined){
+      signSuc.push(true);
+      let dataItemRev = [];
+      let dataSiteRev= [];
+      let dataRevNE = Object.assign({}, dataSiteNE);
+      let dataRevFE = Object.assign({}, dataSiteFE);
+      const dataItemNE = dataSiteNE.list_of_site_items;
+      const dataItemFE = dataSiteFE.list_of_site_items;
+      for(let i = 0; i < dataItemNE.length; i++){
+        let dataRevItemNE = Object.assign({}, dataItemNE[i]);
+        console.log(dataRevItemNE);
+        dataRevItemNE["id_document"] = dataItemNE[i]._id;
+        dataRevItemNE["created_by"] = dataItemNE[i].created_by;
+        dataRevItemNE["updated_by"] = dataItemNE[i].updated_by;
+        delete dataRevItemNE._id;
+        delete dataRevItemNE._etag;
+        delete dataRevItemNE._links;
+        dataItemRev.push(dataRevItemNE);
+      }
+      for(let i = 0; i < dataItemFE.length; i++){
+        let dataRevItemFE = Object.assign({}, dataItemFE[i]);
+        dataRevItemFE["id_document"] = dataItemFE[i]._id;
+        dataRevItemFE["created_by"] = dataItemFE[i].created_by;
+        dataRevItemFE["updated_by"] = dataItemFE[i].updated_by;
+        delete dataRevItemFE._id;
+        delete dataRevItemFE._etag;
+        delete dataRevItemFE._links;
+        dataItemRev.push(dataRevItemFE);
+      }
+      dataRevNE["id_document"] = dataSiteNE._id;
+      dataRevNE["created_by"] = dataSiteNE.created_by;
+      dataRevNE["updated_by"] = dataSiteNE.updated_by;
+      delete dataRevNE._id;
+      delete dataRevNE._etag;
+      delete dataRevNE._links;
+      if(dataRevNE.list_of_site_items !== undefined){
+        delete dataRevNE.list_of_site_items;
+      }
+      dataSiteRev.push(dataRevNE);
+      dataRevFE["id_document"] = dataSiteFE._id;
+      dataRevFE["created_by"] = dataSiteFE.created_by;
+      dataRevFE["updated_by"] = dataSiteFE.updated_by;
+      delete dataRevFE._id;
+      delete dataRevFE._etag;
+      delete dataRevFE._links;
+      if(dataRevFE.list_of_site_items !== undefined){
+        delete dataRevFE.list_of_site_items;
+      }
+      dataSiteRev.push(dataRevFE);
+      const respondSaveSitesRev = await this.postDatatoAPIBAM('/tssr_sites_version_op', dataSiteRev);
+      if(respondSaveSitesRev.data !== undefined){
+        signSuc.push(true);
+        const respondSaveItemsRev = await this.postDatatoAPIBAM('/tssr_site_items_version_op', dataItemRev);
+        if(respondSaveItemsRev.data !== undefined){
+          signSuc.push(true);
+          console.log("version rev", version);
+          this.prepareEditData(signSuc, version);
+        }
+      }
+    }
+  }
+
+  async delItemTssr(itemDel, version, dataSite){
+    let sucDel = [];
+    for(let i = 0; i < itemDel.length; i++ ){
+      const dataItemIdx = dataSite.list_of_site_items.find(e => e.pp_id === itemDel[i].pp_id);
+      const delData = await this.patchDatatoAPIBAM('/tssr_site_items_op/'+dataItemIdx._id, {"deleted" : 1, "version" : version.toString() }, dataItemIdx._etag);
+      if(delData.data !== undefined && delData.status < 400){
+        sucDel.push(delData.data._id);
+      }
+    }
+    return sucDel;
+  }
+
+  getVersionTssr(_id){
+    this.getDatafromAPIBAM('/tssr_version_sorted_nonpage?where={"id_document":"'+_id+'"}&projection={"version":1, "_etag" : 1}').then(res => {
+      if(res.data !== undefined){
+        this.setState({list_version : res.data._items});
+      }
+    })
+  }
+
+  handleChangeVersion(e){
+    const value = e.target.value;
+    this.setState({version_selected : value}, () => {
+      if(value !== this.state.version_current){
+        this.getDataTssrVersion(this.props.match.params.id, value)
+      }else{
+        this.getDataTssr(this.props.match.params.id);
+      }
+    })
+  }
+
+  getDataTssrVersion(_id_tssr, version){
+    this.getDatafromAPIBAM('/tssr_version_op?where={"id_document" : "'+_id_tssr+'", "version" : "'+version+'"}').then( resTssr => {
+      if(resTssr.data !== undefined){
+        // this.setState({ data_tssr : resTssr.data });
+        this.getDatafromAPIBAM('/tssr_sites_version_op?where={"id_tssr_boq_doc" : "'+_id_tssr+'", "version" : "'+version+'"}').then( resSites => {
+          if(resSites.data !== undefined){
+            this.getDatafromAPIBAM('/tssr_site_items_version_op?where={"id_tssr_boq_doc" : "'+_id_tssr+'", "version" : "'+version+'"}').then( resItem => {
+              if(resItem.data !== undefined && resItem.data._items.length !== 0){
+                const itemsTssr = resItem.data._items;
+                const itemUniq = [...new Set(itemsTssr.map(({ id_pp_doc}) => id_pp_doc))];
+                this.setState({ data_tssr_sites : resSites.data._items, data_tssr_sites_item : resItem.data._items }, () => {
+                  this.getPPandMaterial(itemUniq);
+                  this.prepareViewRevision();
+                });
+              }
+            })
+          }
+        })
+      }
+    })
+  }
+
+  prepareViewRevision(){
+    let site_NE = this.state.data_tssr_sites.find(e => e.site_title === "NE");
+    let site_FE = this.state.data_tssr_sites.find(e => e.site_title === "FE");
+    if(site_NE !== undefined){
+      site_NE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_NE.id_document);
+      console.log("site NE", site_NE);
+      this.setState({tssr_site_NE : site_NE});
+    }else{
+      site_NE = null;
+      this.setState({tssr_site_NE : null});
+    }
+    if(site_FE !== undefined){
+      site_FE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_FE.id_document);
+      this.setState({tssr_site_FE : site_FE});
+    }else{
+      site_FE = null;
+      this.setState({tssr_site_FE : null});
+    }
+    this.formatDataRev(site_NE, site_FE);
+  }
+
+  formatDataRev(siteNE, siteFE){
+    console.log("siteNE rev", siteNE);
+    let dataFormat = [];
+    let listSites = [];
+    if(siteNE !== null && siteNE !== undefined){
+      listSites.push(siteNE);
+    }
+    if(siteFE !== null && siteFE !== undefined){
+      listSites.push(siteFE);
+    }
+    for(let i = 0; i < listSites.length; i++){
+      let itemsSite = [];
+      let dataItem = listSites[i].list_of_site_items;
+      for(let j = 0; j < dataItem.length; j++){
+        let package_data = {
+          "id_pp_doc" : dataItem[j].id_pp_doc,
+          "pp_id" : dataItem[j].pp_id,
+          "pp_group" : dataItem[j].pp_group,
+          "pp_cust_number" : dataItem[j].pp_cust_number,
+          "product_name" : dataItem[j].product_name,
+          "physical_group" : dataItem[j].physical_group,
+          "product_type" : dataItem[j].pp_group,
+          "uom" : dataItem[j].uom,
+          "qty" : dataItem[j].qty,
+          "version" : "0",
+          "deleted" : 0,
+          "created_by" : this.state.userId,
+          "updated_by" : this.state.userId
+        }
+        itemsSite.push(package_data);
+      }
+      let siteTssrBOM = {
+        "account_id" : "1",
+        "site_id" : listSites[i].site_id,
+        "site_name" : listSites[i].site_id,
+        "site_title" : listSites[i].site_id,
+        "list_of_site_items" : itemsSite,
+        "version" : "0",
+        "created_by" : this.state.userId,
+        "updated_by" : this.state.userId,
+        "deleted" : 0
+      }
+      dataFormat.push(siteTssrBOM);
+    }
+    this.setState({ dataTssrRevUpload : dataFormat})
+  }
+
+  exportFormatTSSR = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPP = this.state.list_pp_material_tssr;
+    const dataNE = this.state.tssr_site_NE;
+    const dataFE = this.state.tssr_site_FE;
+
+    let ppIdRow = ["site_title", "site_id", "site_name"];
+    let ppTypeRow = ["", "", ""];
+
+    ppIdRow = ppIdRow.concat(dataPP.map(pp => pp.pp_id+" /// "+pp.product_name));
+    ppTypeRow = ppTypeRow.concat(dataPP.map(pp => pp.product_type));
+
+    ws.addRow(ppTypeRow);
+    ws.addRow(ppIdRow);
+    if(dataNE !== null){
+      let rowNE = ["NE", dataNE.site_id, dataNE.site_name];
+      rowNE = rowNE.concat(dataPP.map(e => this.getQtyTssrPPNE(e.pp_id)));
+      ws.addRow(rowNE);
+    }
+    if(dataFE !== null){
+      let rowFE = ["FE", dataFE.site_id, dataFE.site_name];
+      rowFE = rowFE.concat(dataPP.map(e => this.getQtyTssrPPFE(e.pp_id)));
+      ws.addRow(rowFE);
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'TSSR '+this.state.data_tssr.no_tssr_boq+' Uploader Template.xlsx');
+  }
+
   render() {
-    console.log("Excel Render", this.state.rowsXLS);
+    console.log("Excel Render", JSON.stringify(this.state.rowsXLS));
+    console.log("Excel Render revUpload", this.state.dataTssrRevUpload);
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -650,9 +995,13 @@ class DetailTssr extends Component {
           <Col xl="12">
           <Card>
             <CardHeader>
-              <span style={{lineHeight :'2', fontSize : '17px'}} >Detail TSSR</span>
+              <span style={{lineHeight :'2', fontSize : '15px'}} >Detail TSSR</span>
+              <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download TSSR Format</Button>
             </CardHeader>
             <CardBody>
+            <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
+            <Button color="warning" onClick={this.prepareEdit} style={{float : 'right'}} >Edit</Button>
+            <Button color="success" onClick={this.prepareRevision} style={{float : 'right', marginRight : '8px'}} >Revision</Button>
             {this.state.data_tssr !== null ?
               this.state.data_tssr.project_name === "" || this.state.data_tssr.project_name === null ? (
                 <table style={{marginBottom : '20px'}}>
@@ -668,7 +1017,7 @@ class DetailTssr extends Component {
                         <Input style={{marginTop : '10px'}} name="project" type="select" onChange={this.handleChangeProject} value={this.state.project_selected}>
                           <option value={null}></option>
                           {this.state.list_project.map( project =>
-                            <option value={project._id}>{project.project_name}</option>
+                            <option value={project._id}>{project.Project}</option>
                           )}
                         </Input>
                       </td>
@@ -713,6 +1062,18 @@ class DetailTssr extends Component {
                           <td>Site Name NE</td>
                           <td>:</td>
                           <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_id}</td>
+                        </tr>
+                        <tr>
+                          <td>Version</td>
+                          <td>:</td>
+                          <td style={{paddingLeft:'10px'}}>
+                            <Input style={{marginTop : '10px'}} type="select" onChange={this.handleChangeVersion} value={this.state.version_selected === null ? this.state.version_current : this.state.version_selected}>
+                              <option value={this.state.data_tssr.version}>{this.state.data_tssr.version}</option>
+                              {this.state.list_version.map( ver =>
+                                <option value={ver.version}>{ver.version}</option>
+                              )}
+                            </Input>
+                          </td>
                         </tr>
                     </tbody>
                   </table>
@@ -761,20 +1122,20 @@ class DetailTssr extends Component {
                           <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                             <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                             <td>{pp.name}</td>
-                            <td>{pp.unit}</td>
+                            <td>{pp.uom}</td>
                             <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)}</td>
                             {this.state.tssr_site_FE !== null ? (
                               <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)}</td>
                             ):(<Fragment></Fragment>)}
                           </tr>
-                          {pp.list_of_id_material.map(material =>
+                          {pp.list_of_material.map(material =>
                             <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
                               <td style={{textAlign : 'right'}}>{material.material_id}</td>
                               <td style={{textAlign : 'left'}}>{material.material_name}</td>
-                              <td>{material.material_unit}</td>
-                              <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)*material.material_qty}</td>
+                              <td>{material.uom}</td>
+                              <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)*material.qty}</td>
                               {this.state.tssr_site_FE !== null ? (
-                                <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)*material.material_qty}</td>
+                                <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)*material.qty}</td>
                               ):(<Fragment></Fragment>)}
                             </tr>
                           )}
