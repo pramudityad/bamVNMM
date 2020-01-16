@@ -38,6 +38,17 @@ export default {
       ]
     },
     {
+      name: 'Assignment Report',
+      icon: 'icon-drawer',
+      children: [
+        {
+          name: 'Assignment List',
+          url: '/assignment-list',
+          icon: 'icon-list',
+        }
+      ]
+    },
+    {
       title: true,
       name: 'MR Process Milestones',
       wrapper: {            // optional wrapper object
@@ -45,11 +56,6 @@ export default {
         attributes: {}        // optional valid JS object with JS API naming ex: { className: "my-class", style: { fontFamily: "Verdana" }, id: "my-id"}
       },
       class: ''             // optional class names space delimited list for title item ex: "text-center"
-    },
-    {
-      name: 'Assignment List',
-      url: '/assignment-list',
-      icon: 'icon-drawer',
     },
     {
       name: 'Order Created',
