@@ -253,6 +253,8 @@ class BulkAssignment extends Component {
   formatDataASP = async(dataXLS) => {
     let action_message = [];
     let action_status = null;
+    let actionStatus = null;
+    let actionMessage = "";
     //Make Date
     const date = new Date();
     const dateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
@@ -263,91 +265,117 @@ class BulkAssignment extends Component {
       action_status = "failed";
       this.setState({action_status : "failed", action_message : action_message + "Please check your format uploader"});
     }
-    // check can't null
-    let errorRequired = [];
-    const array_sow_type = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'sow_type')]) ).filter( (e,n) => n>0);
-    const array_vendor_code = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'vendor_code')]) ).filter( (e,n) => n>0);
-    const array_activity_id = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'activity_id')]) ).filter( (e,n) => n>0);
-    if(array_sow_type.some( e => e === null)){
-      errorRequired.push("SOW Type");
-    }
-    if(array_vendor_code.some( e => e === null)){
-      errorRequired.push("Vendor Code");
-    }
-    if(array_activity_id.some( e => e === null)){
-      errorRequired.push("Activity ID");
-    }
-    // Get Activity ID from API;
-    let array_act_id_uniq = [...new Set(array_activity_id)];
-    // const getActivityID = await this.getAllActivityID(array_act_id_uniq);
-    const getActivityID = await this.getAllDataApiPaginationTSEL(array_act_id_uniq, 'WP_ID', '/custdel_sorted_non_page');
-    if(getActivityID.length !== 0){
-      this.setState({list_data_activity : getActivityID});
-    }
-    //Make Data (SSOW) to format
-    let err_ssow_id = [];
-    let err_ssow_no = [];
-    let err_ssow_row = [];
-    let err_ssow_act_no = [];
-    let dataAssignment = [];
-    for(let i = 1 ; i < dataXLS.length; i++){
-      const sow_type = this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'sow_type')]);
-      let ssow_data = [];
-      let len_ssow = 7;
-      if(sow_type.toLowerCase() === "sacme"){
-        len_ssow = 25;
+    if(action_status !== "failed"){
+      // check can't null
+      let errorRequired = [];
+      const array_sow_type = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'sow_type')]) ).filter( (e,n) => n>0);
+      const array_vendor_code = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'vendor_code')]) ).filter( (e,n) => n>0);
+      const array_activity_id = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'activity_id')]) ).filter( (e,n) => n>0);
+      if(array_sow_type.some( e => e === null)){
+        errorRequired.push("SOW Type");
       }
-      for(let j = 1; j <= len_ssow; j++ ){
-        const data_ssow = {
-          "ssow_id" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'ssow_'+sow_type.toLowerCase()+'_id_'+j.toString())]),
-          "ssow_activity_number" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'ssow_'+sow_type.toLowerCase()+'_activity_number_'+j.toString())]),
-          "sow_type" : sow_type,
-          "ssow_description" : "tes",
-          "ssow_unit" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'ssow_'+sow_type.toLowerCase()+'_unit_'+j.toString())]),
-          "ssow_qty" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'ssow_'+sow_type.toLowerCase()+'_quantity_'+j.toString())]),
-          "ssow_status" : [
-            {
-              "status" : "Open",
-              "status_update_date" : dateNow,
-              "status_updater" : this.state.userEmail,
-              "status_updater" : this.state.userId,
-            }
-          ]
-        }
-        if(data_ssow.ssow_id !== null){
-          data_ssow["ssow_id"] = data_ssow.ssow_id.toString();
-        }
-        if(data_ssow.ssow_activity_number !== null){
-          data_ssow["ssow_activity_number"] = data_ssow.ssow_activity_number.toString();
-        }
-        // 5010
-        if(data_ssow.ssow_id !== null && data_ssow.ssow_activity_number !== null){
-          ssow_data.push(data_ssow);
-        }
-        //Check not null of SSOW ID and SSOW Activity Number
-        if((data_ssow.ssow_id === null && data_ssow.ssow_activity_number !== null) || (data_ssow.ssow_id !== null && data_ssow.ssow_activity_number === null) ){
-          err_ssow_row.push(i);
-          err_ssow_no.push(j);
-        }
+      if(array_vendor_code.some( e => e === null)){
+        errorRequired.push("Vendor Code");
       }
-      const dataAssginment = {
-        "CD_ID": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'activity_id')]).toString(),
-        "SH_ID": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'activity_id')]).toString(),
-        "Vendor_Code_Number": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'vendor_code')]),
-        "SOW_Type": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'sow_type')]),
-        "SSOW_List" : ssow_data,
-        "Current_Status" : "Open",
-        "Assignment_Creation_Date" : dateNow,
-        "created_by" : this.state.userId,
-        "updated_by" : this.state.userId
+      if(array_activity_id.some( e => e === null)){
+        errorRequired.push("Activity ID");
       }
-      if(dataAssginment.Vendor_Code_Number !== null){
-        dataAssginment["Vendor_Code_Number"] = dataAssginment.Vendor_Code_Number.toString();
+      // Get Activity ID from API;
+      let array_act_id_uniq = [...new Set(array_activity_id)];
+      // const getActivityID = await this.getAllActivityID(array_act_id_uniq);
+      const getActivityID = await this.getAllDataApiPaginationTSEL(array_act_id_uniq, 'WP_ID', '/custdel_sorted_non_page');
+      if(getActivityID.length !== 0){
+        this.setState({list_data_activity : getActivityID});
       }
-      dataAssignment.push(dataAssginment);
+      //Make Data (SSOW) to format
+      let err_ssow_id = [];
+      let err_ssow_no = [];
+      let err_ssow_row = [];
+      let err_ssow_act_no = [];
+      let dataAssignment = [];
+      for(let i = 1 ; i < dataXLS.length; i++){
+        const sow_type = this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'sow_type')]);
+        let ssow_data = [];
+        let len_ssow = 7;
+        if(sow_type.toLowerCase() === "sacme"){
+          len_ssow = 25;
+        }
+        for(let j = 1; j <= len_ssow; j++ ){
+          const data_ssow = {
+            "ssow_id" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'ssow_'+sow_type.toLowerCase()+'_id_'+j.toString())]),
+            "ssow_activity_number" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'ssow_'+sow_type.toLowerCase()+'_activity_number_'+j.toString())]),
+            "sow_type" : sow_type,
+            "ssow_description" : "tes",
+            "ssow_unit" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'ssow_'+sow_type.toLowerCase()+'_unit_'+j.toString())]),
+            "ssow_qty" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'ssow_'+sow_type.toLowerCase()+'_quantity_'+j.toString())]),
+            "ssow_status" : [
+              {
+                "status" : "Open",
+                "status_update_date" : dateNow,
+                "status_updater" : this.state.userEmail,
+                "status_updater" : this.state.userId,
+              }
+            ]
+          }
+          if(data_ssow.ssow_id !== null){
+            data_ssow["ssow_id"] = data_ssow.ssow_id.toString();
+          }
+          if(data_ssow.ssow_activity_number !== null){
+            data_ssow["ssow_activity_number"] = data_ssow.ssow_activity_number.toString();
+          }
+          // 5010
+          if(data_ssow.ssow_id !== null && data_ssow.ssow_activity_number !== null){
+            ssow_data.push(data_ssow);
+          }
+          //Check not null of SSOW ID and SSOW Activity Number
+          if((data_ssow.ssow_id === null && data_ssow.ssow_activity_number !== null) || (data_ssow.ssow_id !== null && data_ssow.ssow_activity_number === null) ){
+            err_ssow_row.push(i);
+            err_ssow_no.push(j.toString() + " in Row "+i.toString());
+          }
+        }
+        let current_status = [
+          {
+            "status_name": "ASP_ASSIGNMENT",
+            "status_value": "CREATED",
+            "status_date": dateNow,
+            "status_updater": this.state.userId,
+            "status_updater_id": this.state.userId,
+            "status_note": ""
+          }
+        ];
+        const dataAssginment = {
+          "CD_ID": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'activity_id')]).toString(),
+          "SH_ID": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'activity_id')]).toString(),
+          "Vendor_Code_Number": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'vendor_code')]),
+          "SOW_Type": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'sow_type')]),
+          "SSOW_List" : ssow_data,
+          "ASP_Assignment_Status" : current_status,
+          "Current_Status" : "CREATED",
+          "Assignment_Creation_Date" : dateNow,
+          "created_by" : this.state.userId,
+          "updated_by" : this.state.userId
+        }
+        if(dataAssginment.Vendor_Code_Number !== null){
+          dataAssginment["Vendor_Code_Number"] = dataAssginment.Vendor_Code_Number.toString();
+        }
+        dataAssignment.push(dataAssginment);
+      }
+      if(errorRequired.length !== 0){
+        actionStatus = 'failed';
+        let twoSentence = actionMessage.length !== 0 ? " and " : "";
+        actionMessage = errorRequired.join(", ")+" Cannot Null"+twoSentence+actionMessage;
+      }
+      if(err_ssow_row.length !== 0){
+        actionStatus = 'failed';
+        let twoSentence = actionMessage.length !== 0 ? " and " : "";
+        actionMessage = actionMessage+twoSentence+"SSOW ID or Activity Number Can't null, Please Check SSOW Number : "+err_ssow_no.join(", ");
+      }
+      if(actionStatus === 'failed'){
+        this.setState({ action_status : 'failed', action_message : actionMessage});
+      }else{
+        this.setState({assignment_ssow_upload : dataAssignment});
+      }
     }
-    this.setState({assignment_ssow_upload : dataAssignment});
-    console.log("dataAssginment", dataAssignment);
   }
 
 
@@ -395,7 +423,7 @@ class BulkAssignment extends Component {
 
   preparingDataAssignment(id){
     const dateNow = new Date();
-    const dataRandom = (Math.floor(Math.random() * 100).toString()+id.toString()).padStart(4, '0');
+    const dataRandom = ((Math.floor(Math.random() * 100)+id).toString()).padStart(4, '0');
     const numberTSSR = dateNow.getFullYear().toString()+(dateNow.getMonth()+1).toString().padStart(2, '0')+dateNow.getDate().toString().padStart(2, '0')+dataRandom.toString();
     return numberTSSR;
   }
@@ -475,7 +503,6 @@ class BulkAssignment extends Component {
             }
             assignmentData["Value_Assignment"] = total_val_asg;
             assignmentData["SSOW_List"] = list_ssow;
-            assignmentData["ASP_Assignment_Status"] = null;
             bulkAssignment.push(assignmentData);
           }else{
             if(getProject === undefined){
@@ -498,27 +525,27 @@ class BulkAssignment extends Component {
       errProject = [...new Set(errProject)];
       if(errActId.length !== 0){
         actionStatus = 'failed';
-        let twoSentence = actionMessage.length !== 0 ? " and <br />" : "";
+        let twoSentence = actionMessage.length !== 0 ? " and " : "";
         actionMessage = "Activity ID : "+errActId.join(", ")+" not exist"+twoSentence+actionMessage;
       }
       if(errVendor.length !== 0){
         actionStatus = 'failed';
-        let twoSentence = actionMessage.length !== 0 ? " and <br />" : "";
+        let twoSentence = actionMessage.length !== 0 ? " and " : "";
         actionMessage = actionMessage+twoSentence+"Vendor Code : "+errVendor.join(", ")+" not exist";
       }
       if(errSSOW.length !== 0){
         actionStatus = 'failed';
-        let twoSentence = actionMessage.length !== 0 ? " and <br />" : "";
+        let twoSentence = actionMessage.length !== 0 ? " and " : "";
         actionMessage = actionMessage+twoSentence+"SSOW Id : "+errSSOW.join(", ")+" not exist";
       }
       if(errActNo.length !== 0){
         actionStatus = 'failed';
-        let twoSentence = actionMessage.length !== 0 ? " and <br />" : "";
+        let twoSentence = actionMessage.length !== 0 ? " and " : "";
         actionMessage = actionMessage+twoSentence+"SSOW Activity Number : "+errActNo.join(", ")+" not exist";
       }
       if(errProject.length !== 0){
         actionStatus = 'failed';
-        let twoSentence = actionMessage.length !== 0 ? " and <br />" : "";
+        let twoSentence = actionMessage.length !== 0 ? " and " : "";
         actionMessage = actionMessage+twoSentence+"Activity ID : "+errProject.join(", ")+" haven't project";
       }
       console.log("bulkAssignment", bulkAssignment);

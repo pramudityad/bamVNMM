@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input, Nav, NavItem, NavLink } from 'reactstrap';
+import { Card, CardHeader, CardBody, CardFooter, Table, Row, Col, Button, Input, Nav, NavItem, NavLink } from 'reactstrap';
 import { Form, FormGroup, Label } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
@@ -44,6 +44,8 @@ class MRDetail extends Component {
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
     this.changeTabsSubmenu = this.changeTabsSubmenu.bind(this);
+    this.requestForApproval = this.requestForApproval.bind(this);
+    this.ApproveMR = this.ApproveMR.bind(this);
   }
 
   async getDatafromAPIBMS(url){
@@ -300,12 +302,67 @@ class MRDetail extends Component {
     document.title = 'MR Detail | BAM';
   }
 
-  async plantSpecUnassigned(){
-    const dataMR = this.state.data_mr;
-    const dataMRPP = this.state.mr_pp;
-    const dataMRMD = this.state.mr_md;
-    for(let i = 0; i < dataMRMD.length; i++){
-    }
+  // async plantSpecUnassigned(){
+  //   const dataMR = this.state.data_mr;
+  //   const dataMRPP = this.state.mr_pp;
+  //   const dataMRMD = this.state.mr_md;
+  //   for(let i = 0; i < dataMRMD.length; i++){
+  //   }
+  // }
+
+  requestForApproval(){
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    let dataMR = this.state.data_mr;
+    const requestAprv = [{
+      "mr_status_name": "MATERIAL_REQUEST",
+      "mr_status_value": "MR REQUESTED",
+      "mr_status_date": dateNow,
+      "mr_status_updater": this.state.userEmail,
+      "mr_status_updater_id": this.state.userId,
+    }]
+    let reqMR = {};
+    reqMR['current_mr_status'] = "MR REQUESTED";
+    reqMR['mr_status'] = dataMR.mr_status.concat(requestAprv);
+    this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, reqMR, dataMR._etag).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+      }else{
+        this.setState({ action_status : "failed" });
+      }
+    })
+  }
+
+  ApproveMR(){
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    let dataMR = this.state.data_mr;
+    const statusAprv = [{
+      "mr_status_name": "MATERIAL_REQUEST",
+      "mr_status_value": "MR REQUESTED",
+      "mr_status_date": dateNow,
+      "mr_status_updater": this.state.userEmail,
+      "mr_status_updater_id": this.state.userId,
+    }];
+    const msAprv = [{
+        "ms_name": "MS_ORDER_RECEIVED",
+        "ms_date": dateNow,
+        "ms_updater": this.state.userEmail,
+        "ms_updater_id": this.state.userId
+    }];
+    let aprvMR = {};
+    aprvMR['current_mr_status'] = "MR APPROVED";
+    aprvMR['current_milestones'] = "MS_ORDER_RECEIVED";
+    aprvMR['mr_status'] = dataMR.mr_status.concat(statusAprv);
+    aprvMR['mr_milestones'] = dataMR.mr_milestones.concat(msAprv);
+    console.log("aprvMR", aprvMR);
+    // this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, reqMR, dataMR._etag).then(res => {
+    //   if(res.data !== undefined){
+    //     this.setState({ action_status : "success" });
+    //   }else{
+    //     this.setState({ action_status : "failed" });
+    //   }
+    // })
   }
 
   render() {
@@ -622,6 +679,18 @@ class MRDetail extends Component {
             </Fragment>
           )}
           </CardBody>
+          <CardFooter>
+            {this.state.data_mr !== null && (
+              <div>
+                {this.state.data_mr.current_mr_status === "PLANTSPEC ASSIGNED" ? (
+                  <Button color='success' style={{float : 'right'}} onClick={this.requestForApproval}> Send Request</Button>
+                ) : (<div></div>)}
+                {this.state.data_mr.current_mr_status === "MR REQUESTED" ? (
+                  <Button color='success' style={{float : 'right'}} onClick={this.ApproveMR}>Approve</Button>
+                ) : (<div></div>)}
+              </div>
+            )}
+          </CardFooter>
         </Card>
         </Col>
         </Row>

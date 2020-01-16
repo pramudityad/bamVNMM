@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import { Button, Card, CardBody, CardHeader, CardFooter, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
@@ -9,20 +9,31 @@ import { saveAs } from 'file-saver';
 import {connect} from 'react-redux';
 import ActionType from '../../redux/reducer/globalActionType';
 
-const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const username = 'bamidadmin@e-dpm.com';
-const password = 'F760qbAg2sml';
+const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
-class MRNAList extends Component {
+const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
+const usernameBAM = 'bamidadmin@e-dpm.com';
+const passwordBAM = 'F760qbAg2sml';
+
+const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
+  <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash"/>
+);
+
+class BulkRequest extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      action_message : null,
+      action_status : null,
       mr_list : [],
       prevPage : 0,
       activePage : 1,
       totalData : 0,
       perPage : 10,
+      mr_checked : new Map(),
+      mr_checked_all : false,
+      data_mr_checked : [],
       filter_list : new Array(14).fill(""),
       mr_all : []
     }
@@ -32,15 +43,18 @@ class MRNAList extends Component {
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
+    this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
+    this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
+    this.requestForApprovalBulk = this.requestForApprovalBulk.bind(this);
   }
 
   async getDataFromAPI(url) {
     try {
-      let respond = await axios.get(API_URL+url, {
+      let respond = await axios.get(API_URL_BAM+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
-          username: username,
-          password: password
+          username: usernameBAM,
+          password: passwordBAM
         }
       });
       if(respond.status >= 200 && respond.status < 300) {
@@ -50,6 +64,26 @@ class MRNAList extends Component {
     } catch(err) {
       let respond = err;
       console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async patchDatatoAPIBAM(url, data, _etag){
+    try {
+      let respond = await axios.patch(API_URL_BAM +url, data, {
+        headers : {'Content-Type':'application/json', "If-Match" : _etag},
+        auth: {
+          username: usernameBAM,
+          password: passwordBAM
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Patch data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Patch data", err);
       return respond;
     }
   }
@@ -72,7 +106,7 @@ class MRNAList extends Component {
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"current_mr_status" : "PLANTSPEC NOT ASSIGNED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"current_mr_status" : "PLANTSPEC ASSIGNED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
       if(res.data !== undefined) {
@@ -99,7 +133,7 @@ class MRNAList extends Component {
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"current_mr_status" : "PLANTSPEC NOT ASSIGNED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"current_mr_status" : "PLANTSPEC ASSIGNED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
       console.log("MR List All", res);
       if(res.data !== undefined) {
@@ -171,6 +205,71 @@ class MRNAList extends Component {
     })
   }
 
+  handleChangeChecklist(e){
+    const item = e.target.name;
+    const isChecked = e.target.checked;
+    const mrList = this.state.mr_all;
+    let dataMRChecked = this.state.data_mr_checked;
+    if(isChecked === true){
+      const getMR = mrList.find(e => e._id === item);
+      dataMRChecked.push(getMR);
+    }else{
+      dataMRChecked = dataMRChecked.filter(function( e ) {
+        return e._id !== item;
+      });
+    }
+    this.setState({ data_mr_checked : dataMRChecked});
+    this.setState(prevState => ({ mr_checked: prevState.mr_checked.set(item, isChecked) }));
+  }
+
+  handleChangeChecklistAll(e){
+    const isChecked = e.target.checked;
+    const mrList = this.state.mr_all;
+    let dataMRChecked = this.state.data_mr_checked;
+    if(isChecked === true){
+      for(let i = 0; i < mrList.length; i++){
+        if(this.state.mr_checked.get(mrList[i]._id) !== true){
+          dataMRChecked.push(mrList[i]);
+        }
+        this.setState(prevState => ({ mr_checked: prevState.mr_checked.set(mrList[i]._id, true) }));
+      }
+      this.setState({ data_mr_checked : dataMRChecked, mr_checked_all : isChecked });
+    }else{
+      this.setState({mr_checked : new Map(), data_mr_checked : [] });
+      this.setState({mr_checked_all : isChecked });
+    }
+  }
+
+  requestForApprovalBulk(){
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    let dataMRChecked = this.state.data_mr_checked;
+    let sucPatch = [];
+    for(let i = 0; i < dataMRChecked.length; i++){
+      let dataMR = dataMRChecked[i];
+      const requestAprv = [{
+        "mr_status_name": "MATERIAL_REQUEST",
+        "mr_status_value": "MR REQUESTED",
+        "mr_status_date": dateNow,
+        "mr_status_updater": this.state.userEmail,
+        "mr_status_updater_id": this.state.userId,
+      }]
+      let reqMR = {};
+      reqMR['current_mr_status'] = "MR REQUESTED";
+      reqMR['mr_status'] = dataMR.mr_status.concat(requestAprv);
+      this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, reqMR, dataMR._etag).then(res => {
+        if(res.data !== undefined){
+          sucPatch.push(res.data._id);
+        }
+      })
+    }
+    if(sucPatch.length === dataMRChecked.length){
+      this.setState({action_message : 'success'});
+    }else{
+      this.setState({action_message : 'failed'});
+    }
+  }
+
   onChangeDebounced(e) {
     this.getMRList();
     this.getAllMR();
@@ -190,6 +289,7 @@ class MRNAList extends Component {
 
     return (
       <div className="animated fadeIn">
+        <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -197,14 +297,17 @@ class MRNAList extends Component {
                 <span style={{lineHeight :'2'}}>
                   <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> MR List
                 </span>
-                <Link to={'/mr-creation'}><Button color="success" style={{float : 'right'}} size="sm">Create MR</Button></Link>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
+                <div style={{float : 'right', marginRight : '20px', display:'inline-flex', marginTop : '5px'}}>
+                  <Checkbox checked={this.state.mr_checked_all} onChange={this.handleChangeChecklistAll} style={{float : 'right', marginRight: "8px"}}/>
+                  <span style={{marginTop : '1px'}}>Select All</span>
+                </div>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2" style={{verticalAlign : "middle"}}>Action</th>
+                      <th rowSpan="2" style={{verticalAlign : "middle"}}></th>
                       <th>MR ID</th>
                       <th>Implementation ID</th>
                       <th>Project Name</th>
@@ -328,9 +431,7 @@ class MRNAList extends Component {
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
-                          <Link to={'/ps-upload/'+list._id}>
-                            <Button color="info" size="sm" outline>Detail</Button>
-                          </Link>
+                          <Checkbox name={list._id} checked={this.state.mr_checked.get(list._id)} onChange={this.handleChangeChecklist}/>
                         </td>
                         <td>{list.mr_id}</td>
                         <td>{list.implementation_id}</td>
@@ -356,6 +457,13 @@ class MRNAList extends Component {
                   linkClass="page-link"
                 />
               </CardBody>
+              <CardFooter>
+                {this.state.data_mr_checked.length !== 0 && (
+                  <div>
+                    <Button color='success' style={{float : 'right'}} onClick={this.requestForApprovalBulk}> Send Request</Button>
+                  </div>
+                )}
+              </CardFooter>
             </Card>
           </Col>
         </Row>
@@ -377,4 +485,4 @@ const mapDispatchToProps = (dispatch) => {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(MRNAList);
+export default connect(mapStateToProps, mapDispatchToProps)(BulkRequest);

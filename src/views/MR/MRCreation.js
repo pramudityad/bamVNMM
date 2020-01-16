@@ -277,7 +277,7 @@ class MRCreation extends Component {
         "dsp_company" : dataFormName[7],
         "etd" : dataForm[5]+" 00:00:00",
         "requested_eta" : dataForm[6]+" 23:59:59",
-        "eta" : dataForm[6]+" 23:59:00",
+        "eta" : dataForm[6]+" 23:59:59",
         "site_info" : list_site,
         "mr_milestones" : [],
         "mr_status" : [
@@ -296,7 +296,7 @@ class MRCreation extends Component {
             "mr_status_updater_id": this.state.userId,
           }
         ],
-        "current_mr_status" : "NOT ASSIGNED",
+        "current_mr_status" : "PLANTSPEC NOT ASSIGNED",
         "current_milestones" : "",
         "deleted" : 0,
         "created_by" : this.state.userId,

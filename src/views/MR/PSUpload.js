@@ -310,7 +310,7 @@ class PSUpload extends Component {
       let mr_data = {
         "site_info" : [],
         "mr_milestones" : [],
-        "current_mr_status" : "ASSIGNED",
+        "current_mr_status" : "PLANTSPEC ASSIGNED",
         "current_milestones" : "",
         "created_by" : this.state.userId,
         "updated_by" : this.state.userId
@@ -430,7 +430,6 @@ class PSUpload extends Component {
         ppMRsave.push(ppSave);
       }
     }
-    console.log("JSON")
     const respondSaveMRPP = await this.postDatatoAPIBAM('/mr_pp_op', ppMRsave);
     if(respondSaveMRPP.data !== undefined && respondSaveMRPP.status >= 200 && respondSaveMRPP.status <= 300 ){
       if(ppMRsave.length === 1){
@@ -590,6 +589,9 @@ class PSUpload extends Component {
                   </tr>
                   <tr>
                     <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Project Name : {this.state.data_mr.project_name}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>SOW Tyoe : {this.state.data_mr.sow_type}</td>
                   </tr>
                   </Fragment>
                 )}

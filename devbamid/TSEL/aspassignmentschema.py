@@ -94,7 +94,7 @@ aspassignmentschema = {
         'nullable': True,
         'default': None
     },
-    'Service_Price' : {
+    'Servive_Price' : {
         'type': 'float',
         'required': False,
         'nullable': True,
@@ -377,30 +377,26 @@ aspassignmentschema = {
         'default': None
     },
     'SSOW_List' : {
-        'type' : 'list',
-        'required' : True,
-        'schema' : {
-            'type' : 'dict',
-            'schema' : {
+        'type': 'list',
+        'required': True,
+        'nullable': True,
+        'schema': {
+            'type': 'dict',
+            'schema': {
                 'id_ssow_doc': {
                     'type': 'objectid',
                     'required': False,
                     'nullable': True
                 },
-                'sow_type': {
+                'ssow_id': {
                     'type': 'string',
                     'required': True,
                     'nullable': True
                 },
-                'ssow_id' : {
-                    'type' : 'string',
-                    'nullable' : True,
-                    'required' : True
-                },
-                'ssow_description' : {
-                    'type' : 'string',
-                    'nullable' : True,
-                    'required' : True
+                'ssow_description': {
+                    'type': 'string',
+                    'required': True,
+                    'nullable': True
                 },
                 'id_activity_number_doc': {
                     'type': 'objectid',
@@ -422,44 +418,36 @@ aspassignmentschema = {
                     'required': True,
                     'nullable': True
                 },
-                'ssow_price': {
-                    'type': 'float',
+                'ssow_status': {
+                    'type': 'list',
                     'required': True,
-                    'nullable': True
-                },
-                'ssow_total_price': {
-                    'type': 'float',
-                    'required': True,
-                    'nullable': True
-                },
-                'ssow_status' : {
-                    'type' : 'list',
-                    'schema' : {
-                        'type' : 'dict',
-                        'schema' : {
-                            'status' : {
-                                'type' : 'string',
-                                'nullable' : True,
-                                'required' : True
+                    'nullable': True,
+                    'schema': {
+                        'type': 'dict',
+                        'schema': {
+                            'status': {
+                                'type': 'string',
+                                'require': True,
+                                'nullable': True
                             },
-                            'status_updater' : {
-                                'type' : 'string',
-                                'nullable' : True,
-                                'required' : True
-                            },                       
-                            'status_update_date' : {
+                            'status_update_date': {
                                 'type': 'datetime',
-                                'required': True,
-                                'nullable': True,
+                                'require': True,
+                                'nullable': True
                             },
-                            'status_updater_id' : {
+                            'status_updater': {
+                                'type': 'string',
+                                'require': True,
+                                'nullable': True
+                            },
+                            'status_updater_id': {
                                 'type': 'objectid',
-                                'required': False,
-                                'nullable': True,
+                                'require': False,
+                                'nullable': True
                             }
                         }
                     }
-                },
+                }
             }
         }
     },
@@ -497,6 +485,11 @@ aspassignmentschema = {
                 },
                 'status_updater_id': {
                     'type': 'objectid',
+                    'required': False,
+                    'nullable': True
+                }
+                'status_note': {
+                    'type': 'string',
                     'required': False,
                     'nullable': True
                 }

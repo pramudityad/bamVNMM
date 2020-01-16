@@ -34,6 +34,11 @@ export default {
           name: 'MR PS Not Assigned',
           url: '/mr-na-list',
           icon: 'icon-list',
+        },
+        {
+          name: 'Bulk MR Request',
+          url: '/bulk-mr-request',
+          icon: 'icon-list',
         }
       ]
     },

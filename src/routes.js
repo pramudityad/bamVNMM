@@ -60,6 +60,8 @@ const LOMList = React.lazy(() => import('./views/MR/LOMList'));
 const AssignmentCreation = React.lazy(() => import('./views/Assignment/AssignmentCreation'));
 const AssignmentList = React.lazy(() => import('./views/Assignment/AssignmentList'));
 const BulkAssignment = React.lazy(() => import('./views/Assignment/BulkAssignment'));
+const BulkRequest = React.lazy(() => import('./views/MR/BulkRequest'));
+const BulkNotifytoASP = React.lazy(() => import('./views/Assignment/BulkNotifytoASP'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -114,6 +116,7 @@ const routes = [
   { path: '/mr-creation', exact: true, name: 'Create MR', component: MRCreation },
   { path: '/mr-detail/:id', exact: true, name: 'Detail MR', component: MRDetail },
   { path: '/bulk-mr-creation', name: 'Bulk MR Creation', component: BulkMRCreation },
+  { path: '/bulk-mr-request', name: 'Bulk MR Request', component: BulkRequest },
   { path: '/ps-upload/:id', exact: true, name: 'MR List', component: PSUpload },
   { path: '/mr-progress/:id', exact: true, name: 'MR Progress', component: MRProgress },
   { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WarehouseDashboard },
@@ -129,6 +132,8 @@ const routes = [
   { path: '/assignment-creation', exact: true, name: 'Assignment Creation', component: AssignmentCreation },
   { path: '/assignment-list', exact: true, name: 'Assignment List', component: AssignmentList },
   { path: '/bulk-assignment-creation', exact: true, name: 'Bulk Assignment Creation', component: BulkAssignment },
+  { path: '/bulk-assignment-notify', exact: true, name: 'Bulk Assignment Notify to ASP', component: BulkNotifytoASP },
+
 ];
 
 export default routes;
