@@ -6,7 +6,7 @@ import debounce from 'lodash.debounce';
 import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
 import 'react-vertical-timeline-component/style.min.css';
 
-const API_URL = 'http://api.smart.pdb.e-dpm.com/smartapi';
+const API_URL = 'https://api.smart.pdb.e-dpm.com/smartapi';
 const username = 'usermitt';
 const password = 'Z4icVgFQp3D1';
 
@@ -70,7 +70,7 @@ class MRProgress extends Component {
     })
   }
 
-  milestoneStat(ms_name, ms_date, ms_updater, index) 
+  milestoneStat(ms_name, ms_date, ms_updater, index)
   {
     switch ( ms_name )
     {
@@ -79,7 +79,7 @@ class MRProgress extends Component {
           className="vertical-timeline-element--work"
           date={ms_date}
           iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-          
+
       >
           <h3 className="vertical-timeline-element-title">Order Created</h3>
           <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
@@ -92,7 +92,7 @@ class MRProgress extends Component {
           className="vertical-timeline-element--work"
           date={ms_date}
           iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-          
+
       >
           <h3 className="vertical-timeline-element-title">Order Received</h3>
           <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
@@ -105,7 +105,7 @@ class MRProgress extends Component {
           className="vertical-timeline-element--work"
           date={ms_date}
           iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-          
+
       >
           <h3 className="vertical-timeline-element-title">Order Processing</h3>
           <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
@@ -118,7 +118,7 @@ class MRProgress extends Component {
           className="vertical-timeline-element--work"
           date={ms_date}
           iconStyle={{ background: 'rgb(227, 30, 16)', color: '#fff' }}
-          
+
       >
           <h3 className="vertical-timeline-element-title">Ready to Deliver</h3>
           <h4 className="vertical-timeline-element-subtitle">confirmed by <b>{ms_updater}</b></h4>
@@ -128,7 +128,7 @@ class MRProgress extends Component {
           className="vertical-timeline-element--work"
           date={ms_date}
           iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-          
+
       >
           <h3 className="vertical-timeline-element-title">Joint Check</h3>
           <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
@@ -141,7 +141,7 @@ class MRProgress extends Component {
           className="vertical-timeline-element--work"
           date={ms_date}
           iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-          
+
       >
           <h3 className="vertical-timeline-element-title">Loading Process</h3>
           <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
@@ -154,7 +154,7 @@ class MRProgress extends Component {
           className="vertical-timeline-element--work"
           date=""
           iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-          
+
       >
           <h3 className="vertical-timeline-element-title">Data not available</h3>
           <p>
@@ -172,7 +172,7 @@ class MRProgress extends Component {
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
-    const background = { 
+    const background = {
       backgroundColor: '#e3e3e3',
     };
 
@@ -187,11 +187,11 @@ class MRProgress extends Component {
                   <span> Progress Overview for <b>{this.state.data_mr.mr_id}</b> </span>
                 }
               </CardHeader>
-              <CardBody 
+              <CardBody
                 style={background}
               >
                 <VerticalTimeline>
-                  {this.state.data_mr !== null && 
+                  {this.state.data_mr !== null &&
                     this.state.data_mr.mr_milestones.map((ms, i) => {
                       return this.milestoneStat(ms.ms_name, ms.ms_date, ms.ms_updater, i)
                     })
