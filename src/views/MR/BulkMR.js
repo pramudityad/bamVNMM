@@ -382,7 +382,7 @@ class BulkMR extends Component {
 
   preparingDataMR(id){
     const dateNow = new Date();
-    const dataRandom = (Math.floor(Math.random() * 100).toString()+id.toString()).padStart(4, '0');
+    const dataRandom = ((Math.floor(Math.random() * 100)+id.toString())).padStart(4, '0');
     const numberTSSR = dateNow.getFullYear().toString()+(dateNow.getMonth()+1).toString().padStart(2, '0')+dateNow.getDate().toString().padStart(2, '0')+dataRandom.toString();
     return numberTSSR;
   }
@@ -522,7 +522,7 @@ class BulkMR extends Component {
             "mr_status_updater_id": this.state.userId,
           }
         ],
-        "current_mr_status" : "NOT ASSIGNED",
+        "current_mr_status" : "PLANTSPEC NOT ASSIGNED",
         "current_milestones" : "",
         "deleted" : 0,
         "created_by" : this.state.userId,
