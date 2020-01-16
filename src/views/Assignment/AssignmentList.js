@@ -92,14 +92,15 @@ class AssignmentList extends Component {
                 <span style={{lineHeight :'2'}}>
                   <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Assignment List
                 </span>
-                <Link to={'/assignment-creation'}><Button color="success" style={{float : 'right'}} size="sm">Create Assignment</Button></Link>
-                <Link to={'/bulk-assignment-creation'}><Button color="success" style={{float : 'right', marginRight: "8px"}} size="sm">Create Assignment Bulk</Button></Link>
+                <Link to={'/assignment-creation'}><Button color="success" style={{float : 'right'}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create Assignment</Button></Link>
+                <Link to={'/bulk-assignment-creation'}><Button color="success" style={{float : 'right', marginRight: "8px"}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create Assignment Bulk</Button></Link>
                 <Button style={downloadAssignment} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment List</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
+                      <th rowSpan="2" style={{verticalAlign : "middle"}}>Action</th>
                       <th>Assignment ID</th>
                       <th>Account Name</th>
                       <th>Project Name</th>
@@ -206,11 +207,16 @@ class AssignmentList extends Component {
                   <tbody>
                     {this.state.assignment_list.length === 0 && (
                       <tr>
-                        <td colSpan="9">No Data Available</td>
+                        <td colSpan="10">No Data Available</td>
                       </tr>
                     )}
                     {this.state.assignment_list.map((list, i) =>
                       <tr key={list._id}>
+                        <td>
+                          <Link to={'/assignment-detail/'+list._id}>
+                            <Button style={{width: "90px"}} outline color="info" size="sm">Detail</Button>
+                          </Link>
+                        </td>
                         <td>{list.Assignment_No}</td>
                         <td>{list.Account_Name}</td>
                         <td>{list.Project}</td>
