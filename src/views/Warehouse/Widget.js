@@ -34,7 +34,7 @@ class Widget extends Component {
 
     // demo purposes only
     const progress = { style: '', color: color, value: value };
-    const card = { style: '', bgColor: '' };
+    const card = { style: 'text-' + color, bgColor: '' };
 
     if (variant === 'inverse') {
       progress.style = 'progress-white';
@@ -72,7 +72,7 @@ class Widget extends Component {
             </Col>
           </Row>
           <Progress className={progress.style} color={progress.color} value={progress.value} />
-          <div className="p-3"><small className="text-muted">{smallText}</small></div>
+          <div><small className="text-muted">{smallText}</small></div>
           <div>{children}</div>
         </CardBody>
       </Card>
