@@ -63,6 +63,7 @@ const BulkAssignment = React.lazy(() => import('./views/Assignment/BulkAssignmen
 const AssignmentDetail = React.lazy(() => import('./views/Assignment/AssignmentDetail'));
 const BulkRequest = React.lazy(() => import('./views/MR/BulkRequest'));
 const BulkNotifytoASP = React.lazy(() => import('./views/Assignment/BulkNotifytoASP'));
+const DSACreation = React.lazy(() => import('./views/DSA/DSACreation'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -135,6 +136,7 @@ const routes = [
   { path: '/bulk-assignment-creation', exact: true, name: 'Bulk Assignment Creation', component: BulkAssignment },
   { path: '/assignment-detail/:id', exact: true, name: 'Assignment Detail', component: AssignmentDetail },
   { path: '/bulk-assignment-notify', exact: true, name: 'Bulk Assignment Notify to ASP', component: BulkNotifytoASP },
+  { path: '/dsa-creation', exact: true, name: 'DSA Creation', component: DSACreation },
 ];
 
 export default routes;

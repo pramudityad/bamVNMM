@@ -398,7 +398,7 @@ class AssignmentCreation extends Component {
     if(this.state.redirect_sign !== false) {
       return (<Redirect to={'/assignment-list/'} />);
     }
-    return(
+    return (
       <div className="animated fadeIn">
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
         <Row>
