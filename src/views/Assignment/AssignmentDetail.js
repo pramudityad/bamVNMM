@@ -261,7 +261,7 @@ class AssignmentDetail extends Component {
   }
 
   render() {
-    return(
+    return (
       <div className="animated fadeIn">
         <Row>
           <Col xs="12" lg="12">
