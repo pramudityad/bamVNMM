@@ -319,6 +319,7 @@ class AssignmentCreation extends Component {
       "Assignment_No" : "ASG"+this.getAssignmentID(),
       "Account_Name" : "TSEL",
       "CD_ID" : dataForm[0],
+      "id_cd_doc" : this.state.activity_selected,
       "Project" : dataForm[1],
       "Plant" : "",
       "NW" : dataForm[11],

@@ -490,7 +490,6 @@ class MRCreation extends Component {
   }
 }
 
-
 const mapStateToProps = (state) => {
   return {
     dataLogin : state.loginData

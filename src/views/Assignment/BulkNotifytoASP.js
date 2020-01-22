@@ -169,9 +169,11 @@ class BulkNotifytoASP extends Component {
       }
     }
     if(sucPatch.length === dataASGChecked.length){
-      this.setState({action_message : 'success'});
+      this.setState({action_status : 'success'}, () => {
+        setTimeout(function(){ window.location.reload(); }, 3000);
+      });
     }else{
-      this.setState({action_message : 'failed'});
+      this.setState({action_status : 'failed'});
     }
   }
 

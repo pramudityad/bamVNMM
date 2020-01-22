@@ -2,17 +2,26 @@ import React, { Component } from 'react';
 import { Col, Row } from 'reactstrap';
 import Widget from './Widget';
 import './wh_css.css';
+import { connect } from 'react-redux';
 import axios from 'axios';
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
+const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+// /bamidapi/updateBastNumber/
+
 class WarehouseDashboard extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
       variant0: "inverse",
       variant1: "inverse",
       variant2: "inverse",
@@ -40,7 +49,7 @@ class WarehouseDashboard extends Component {
       material_dispatch: 0,
       material_on_hold: 0
     }
-    
+
     this.updateHover1 = this.updateHover1.bind(this);
     this.getOrderCreated = this.getOrderCreated.bind(this);
     this.getOrderReceived = this.getOrderReceived.bind(this);
@@ -63,7 +72,7 @@ class WarehouseDashboard extends Component {
       variant2: hover
     })
   }
-  
+
   updateHover3(hover) {
     this.setState({
       variant3: hover
@@ -138,16 +147,35 @@ class WarehouseDashboard extends Component {
     }
   }
 
+  async getDataFromAPINode(url) {
+    try {
+      let respond = await axios.get(API_URL_Node+url, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data node", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data node", err);
+      return respond;
+    }
+  }
+
   getOrderCreated() {
-    this.getDataFromAPI('/mr_sorted_nonpage?where={"current_mr_status":"MR REQUESTED"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_mr_status":"MR REQUESTED"}').then(res => {
       console.log("Order Created xx", res);
       if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({order_created : items.length});
+        const items = res.data._meta;
+        this.setState({order_created : items.total});
       }
     })
   }
-  
+
   getOrderReceived() {
     this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_ORDER_RECEIVED"}').then(res => {
       console.log("Order Received", res);
@@ -279,4 +307,10 @@ class WarehouseDashboard extends Component {
   }
 }
 
-export default WarehouseDashboard;
+const mapStateToProps = (state) => {
+  return {
+    dataLogin : state.loginData
+  }
+}
+
+export default connect(mapStateToProps)(WarehouseDashboard);
