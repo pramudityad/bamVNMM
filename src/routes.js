@@ -66,6 +66,7 @@ const BulkNotifytoASP = React.lazy(() => import('./views/Assignment/BulkNotifyto
 const ListTechnical = React.lazy(() => import('./views/Technical/ListTechnical'));
 const DetailTechnical = React.lazy(() => import('./views/Technical/TechnicalBoq'));
 const ApprovalTechnical = React.lazy(() => import('./views/Technical/TechnicalBoqApproval'));
+const DSACreation = React.lazy(() => import('./views/DSA/DSACreation'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -141,6 +142,7 @@ const routes = [
   { path: '/list-technical', exact: true, name: 'List Technical BOQ', component: ListTechnical },
   { path: '/detail-technical/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
   { path: '/approval-technical/:id', exact: true, name: 'Approval for Technical BOQ', component: ApprovalTechnical },
+  { path: '/dsa-creation', exact: true, name: 'DSA Creation', component: DSACreation },
 ];
 
 export default routes;

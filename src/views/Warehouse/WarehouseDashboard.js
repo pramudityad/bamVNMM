@@ -45,7 +45,8 @@ class WarehouseDashboard extends Component {
       ready_to_deliver: 0,
       joint_check: 0,
       loading_process: 0,
-      material_dispatch: 0
+      material_dispatch: 0,
+      material_on_hold: 0
     }
 
     this.updateHover1 = this.updateHover1.bind(this);
@@ -56,6 +57,7 @@ class WarehouseDashboard extends Component {
     this.getJointCheck = this.getJointCheck.bind(this);
     this.getLoadingProcess = this.getLoadingProcess.bind(this);
     this.getMaterialDispatch = this.getMaterialDispatch.bind(this);
+    this.getMaterialOnHold = this.getMaterialOnHold.bind(this);
   }
 
   updateHover1(hover) {
@@ -120,7 +122,7 @@ class WarehouseDashboard extends Component {
     this.getJointCheck();
     this.getLoadingProcess();
     this.getMaterialDispatch();
-    this.getDataFromAPINode('/matreqCountByMs');
+    this.getMaterialOnHold();
     document.title = 'Warehouse Dashboard | BAM';
   }
 
@@ -233,6 +235,16 @@ class WarehouseDashboard extends Component {
     })
   }
 
+  getMaterialOnHold() {
+    this.getDataFromAPI('/mr_op?where={"current_mr_status":"LACK OF MATERIAL"}').then(res => {
+      console.log("Material On Hold", res);
+      if(res.data !== undefined) {
+        const items = res.data._meta;
+        this.setState({material_on_hold : items.total});
+      }
+    })
+  }
+
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
@@ -240,34 +252,34 @@ class WarehouseDashboard extends Component {
       <div className="animated fadeIn">
         <Row>
           <Col xs="12" sm="6" lg="4">
-            <a href="#/order-received" onMouseEnter={() => this.updateHover1("")} onMouseLeave={() => this.updateHover1("inverse")}>
+            <a href="order-received" onMouseEnter={() => this.updateHover1("")} onMouseLeave={() => this.updateHover1("inverse")}>
               <Widget color="primary" variant={this.state.variant1} header={this.state.order_received} mainText="Order Received" smallText="The initial status of the MR after being approved by the supply team and ready to be processed by the warehouse." imageSource={this.state.img_1}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#/order-processing" onMouseEnter={() => this.updateHover2("")} onMouseLeave={() => this.updateHover2("inverse")}>
+            <a href="order-processing" onMouseEnter={() => this.updateHover2("")} onMouseLeave={() => this.updateHover2("inverse")}>
               <Widget color="primary" variant={this.state.variant2} header={this.state.order_processing} mainText="Order Processing" smallText="The status in which the warehouse prepares the material and will send notification for the project team when there is lack of material." imageSource={this.state.img_2}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#/ready-to-deliver" onMouseEnter={() => this.updateHover3("")} onMouseLeave={() => this.updateHover3("inverse")}>
+            <a href="ready-to-deliver" onMouseEnter={() => this.updateHover3("")} onMouseLeave={() => this.updateHover3("inverse")}>
               <Widget color="primary" variant={this.state.variant3} header={this.state.ready_to_deliver} mainText="Ready To Deliver" smallText="The status after MR has been processed or in the warehouse staging area. The MR in this status should have either complete material or not complete confirmed by the project team." imageSource={this.state.img_3}/>
             </a>
           </Col>
         </Row>
         <Row>
           <Col xs="12" sm="6" lg="4">
-            <a href="#/joint-check" onMouseEnter={() => this.updateHover4("")} onMouseLeave={() => this.updateHover4("inverse")}>
+            <a href="joint-check" onMouseEnter={() => this.updateHover4("")} onMouseLeave={() => this.updateHover4("inverse")}>
               <Widget color="primary" variant={this.state.variant4} header={this.state.joint_check} mainText="Joint Check" smallText="The status in which the warehouse team conduct a verification together with DSP and ASP to make sure that the MR will be delivered according to the plant specification." imageSource={this.state.img_4}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#/loading-process" onMouseEnter={() => this.updateHover5("")} onMouseLeave={() => this.updateHover5("inverse")}>
+            <a href="loading-process" onMouseEnter={() => this.updateHover5("")} onMouseLeave={() => this.updateHover5("inverse")}>
               <Widget color="primary" variant={this.state.variant5} header={this.state.loading_process} mainText="Loading Process" smallText="The status in which the MR will be delivered and has been loaded to the delivery truck. The DSP driver is only able to submit delivery information when the MR is in this status." imageSource={this.state.img_5}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="#/material-dispatch" onMouseEnter={() => this.updateHover6("")} onMouseLeave={() => this.updateHover6("inverse")}>
+            <a href="material-dispatch" onMouseEnter={() => this.updateHover6("")} onMouseLeave={() => this.updateHover6("inverse")}>
               <Widget color="primary" variant={this.state.variant6} header={this.state.material_dispatch} mainText="Material Dispatch" smallText="The status after the DSP driver submitted the delivery information to the server and the MR is being delivered by the DSP." imageSource={this.state.img_6}/>
             </a>
           </Col>
@@ -275,17 +287,17 @@ class WarehouseDashboard extends Component {
         <Row>
           <Col xs="12" sm="6" lg="4">
             <a href="#" onMouseEnter={() => this.updateHover7("")} onMouseLeave={() => this.updateHover7("inverse")}>
-              <Widget color="danger" variant={this.state.variant7} header="999" mainText="Material On Hold" imageSource={this.state.img_7}/>
+              <Widget color="danger" variant={this.state.variant7} header={this.state.material_on_hold} mainText="Material On Hold" smallText="The status when the MR is in LOM and has not been confirmed by project whether to send with LOM or wait until it's completed" imageSource={this.state.img_7}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
             <a href="#" onMouseEnter={() => this.updateHover8("")} onMouseLeave={() => this.updateHover8("inverse")}>
-              <Widget color="danger" variant={this.state.variant8} header="999" mainText="Wait For Completed" imageSource={this.state.img_8}/>
+              <Widget color="danger" variant={this.state.variant8} header="999" mainText="Wait For Completed" smallText="The status when the MR is in LOM and needs to wait until the materials are completed" imageSource={this.state.img_8}/>
             </a>
           </Col>
           <Col xs="12" sm="6" lg="4">
             <a href="#" onMouseEnter={() => this.updateHover9("")} onMouseLeave={() => this.updateHover9("inverse")}>
-              <Widget color="danger" variant={this.state.variant9} header="999" mainText="Sent With LOM" imageSource={this.state.img_9}/>
+              <Widget color="danger" variant={this.state.variant9} header="999" mainText="Sent With LOM" smallText="The status when the MR is in LOM but the project decided to send with LOM" imageSource={this.state.img_9}/>
             </a>
           </Col>
         </Row>
