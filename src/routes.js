@@ -71,6 +71,8 @@ const DSACreation = React.lazy(() => import('./views/DSA/DSACreation'));
 const ListCommercial = React.lazy(() => import('./views/Commercial/ListCommercial'));
 const DetailCommercial = React.lazy(() => import('./views/Commercial/CommercialBoq'));
 const ApprovalCommercial = React.lazy(() => import('./views/Commercial/CommercialBoqApproval'));
+const DSAList = React.lazy(() => import('./views/DSA/DSAList'));
+const DSADetail = React.lazy(() => import('./views/DSA/DSADetail'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -151,7 +153,8 @@ const routes = [
   { path: '/detail-commercial/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
   { path: '/approval-commercial/:id', exact: true, name: 'Approval for Commercial BOQ', component: ApprovalCommercial },
   { path: '/assign-bast/:id', exact: true, name: 'Assign Bast', component: AssignBast },
-
+  { path: '/dsa-list', exact: true, name: 'DSA List', component: DSAList },
+  { path: '/dsa-detail/:id', exact: true, name: 'DSA Detail', component: DSADetail },
 ];
 
 export default routes;
