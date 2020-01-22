@@ -4,32 +4,16 @@
     margin-bottom: 15px;
   }
 
-  .modal.show .modal-dialog {
-    margin-top: 200px;
-  }
-
-  .modal-content {
-    width: 200px;
-  }
-
-  .table-bordered th, .table-bordered td {
-    vertical-align: middle;
-    text-align: center;
-}
-
 .table-bordered th, .table-bordered td {
-    vertical-align: middle;
-    text-align: center;
+  vertical-align: middle;
+  text-align: center;
 }
-.upload-line {
-    border: 2px solid rgba(129,199,132 ,1);
-  }
 
 .boq-tech-status-PA {
   padding-left : 10px;
   padding-right: 10px;
   background-color: rgba(229,115,115 ,1);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 500;
   color:rgba(238,238,238 ,1);
   border-radius: 7px;
@@ -40,7 +24,7 @@
   padding-left : 10px;
   padding-right: 10px;
   background-color: rgba(255,160,0 ,1);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 500;
   color:rgba(238,238,238 ,1);
   border-radius: 7px;
@@ -51,7 +35,7 @@
   padding-left : 10px;
   padding-right: 10px;
   background-color: rgba(129,199,132 ,1);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 500;
   color:rgba(238,238,238 ,1);
   border-radius: 7px;
@@ -66,31 +50,55 @@
   text-align: left;
 }
 
-.select-per-page {
-  height: 30px;
-  width: 70px !important;
-  padding-top: 3px;
-  border-top: 0;
-  border-right : 0;
-  border-left: 0;
-  border-bottom-width : 2px;
-  border-bottom-color: rgba(165,214,167 ,1);
-  width: 150px;
-  margin-bottom: 2px;
+
+.divtable {
+  overflow-y: scroll;
+  /* overflow-y: scroll; */
+  width:100%;
+  height:auto;
+  max-height: 600px;
+  margin-bottom:10px;
 }
 
-.select-per-page:focus {
-  outline: none !important;
-  border-top: 0 !important;
-  border-right : 0 !important;
-  border-left: 0 !important;
+.divtable2 {
+  /* overflow-y: scroll; */
+  /* overflow-y: scroll; */
+  width:100%;
+  height:auto;
+  max-height: 600px;
+  margin-bottom:10px;
 }
 
-.pagination {
-  align-items: center;
-  justify-content: center;
+/* Use position: sticky to have it stick to the edge
+ * and top, right, or left to choose which edge to stick to: */
+
+.fixed th {
+  position: -webkit-sticky; /* for Safari */
+  position: sticky;
+  background: #c6f569;
+  padding : 10px;
+  text-align: center;
+  top: 0;
 }
 
-.page-choose {
-  margin-top: 10px;
+.fixed2 tr td {
+  position: -webkit-sticky; /* for Safari */
+  position: sticky;
+  background: #eeeeee;
+  padding : 10px;
+  text-align: center;
+  bottom: 0;
+}
+
+.fixbody tr {
+  border-top: 2px solid #ebebeb;
+}
+
+.fixbody td {
+  padding : 10px;
+}
+
+.inputNumber{
+  width : 100%;
+  max-width : 35% ;
 }

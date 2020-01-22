@@ -4,7 +4,7 @@ import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
 import { Redirect, Link } from 'react-router-dom';
 import {OutTable, ExcelRenderer} from 'react-excel-renderer';
-import './boqTechnical.css';
+import './boqCommercial.css';
 import { saveAs } from 'file-saver';
 import Pagination from "react-js-pagination";
 import Select from 'react-select';

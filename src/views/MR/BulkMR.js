@@ -584,7 +584,7 @@ class BulkMR extends Component {
     }
     if((dataXLS.length-1) === (dataBulkMRSuc.length + dataPatchMRSuc.length)){
       this.setState({ action_status : 'success', action_message : 'Created New : '+dataBulkMRSuc.length+' data, Update Data : '+dataPatchMRSuc.length+' data'}, () => {
-        setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 3000);
+        setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 4000);
       });
     }else{
       this.setState({ action_status : 'failed' });

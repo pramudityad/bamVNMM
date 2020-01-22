@@ -10,6 +10,7 @@ const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
 const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+// /bamidapi/updateBastNumber/
 
 class WarehouseDashboard extends Component {
   constructor(props) {

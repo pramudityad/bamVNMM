@@ -1,11 +1,11 @@
-import React, { Component, Fragment } from 'react';
+Simport React, { Component, Fragment } from 'react';
 import { Card, CardHeader, CardBody, CardFooter, Table, Row, Col, Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Collapse, Input} from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import ReactExport from "react-data-export";
 import axios from 'axios';
 import { Redirect, Link } from 'react-router-dom';
 import {OutTable, ExcelRenderer} from 'react-excel-renderer';
-import './boqTechnical.css';
+import './boqCommercial.css';
 import Excel from 'exceljs/modern.browser';
 import { saveAs } from 'file-saver';
 import Pagination from "react-js-pagination";

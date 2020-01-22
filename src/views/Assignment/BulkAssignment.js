@@ -492,7 +492,6 @@ class BulkAssignment extends Component {
     let getUniqAssignmentCode = [...new Set(uploadSSOW.map(({ Assignment_No }) => Assignment_No))];
     getUniqAssignmentCode = getUniqAssignmentCode.filter(e => e !== null);
     const dataAssignmentCode = await this.getAllDataApiPaginationAssignment(getUniqAssignmentCode);
-    console.log("assignmentCode get", dataAssignmentCode);
     const dataVendorAPI = await this.getAllDataApiPaginationTSEL(getUniqVendorCode, 'Vendor_Code', '/vendor_data_non_page');
     const dataSSOWAPI = await this.getAllDataApiPaginationTSEL(getUniqSSOWId, 'ssow_id', '/ssow_sorted_nonpage');
     const dataSSOWActNoAPI = await this.getAllDataApiPaginationTSEL(getUniqActNo, 'activity_number', '/ssow_activity_number_sorted_nonpage');
@@ -501,7 +500,6 @@ class BulkAssignment extends Component {
       for(let i = 0; i < uploadSSOW.length; i++){
         let assignmentData = Object.assign(uploadSSOW[i], {});
         let assignmentCode = dataAssignmentCode.find(e => e.Assignment_No === uploadSSOW[i].Assignment_No);
-        console.log("assignmentCode find", assignmentCode);
         const getVendor = dataVendorAPI.find(e => e.Vendor_Code === assignmentData.Vendor_Code_Number);
         const getActId = dataActivity.find(e => e.WP_ID === assignmentData.CD_ID);
         if(getVendor !== undefined && getActId !== undefined){
@@ -512,6 +510,7 @@ class BulkAssignment extends Component {
               assignmentData["Account_Name"] = "TSEL";
               assignmentData["Project"] = getProject.Project;
               assignmentData["Plant"] = "";
+              assignmentData["id_cd_doc"] = getActId._id;
               assignmentData["NW"] = getActId.CD_Info_Network_Number;
               assignmentData["NW_Activity"] = getActId.CD_Info_Activity_Code;
               assignmentData["Requisitioner"] = "";
@@ -647,7 +646,7 @@ class BulkAssignment extends Component {
         }
         if(uploadSSOW.length === (dataBulkASGSuc.length + dataPatchASGSuc.length) ){
           this.setState({ action_status : 'success', action_message : 'Created New : '+dataBulkASGSuc.length+' data, Update Data : '+dataPatchASGSuc.length+' data' }, () => {
-            setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 3000);
+            setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 4000);
           });
         }else{
           this.setState({action_status : 'failed'});

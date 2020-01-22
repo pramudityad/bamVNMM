@@ -170,10 +170,10 @@ class ListCommercial extends Component {
                       <span className="boq-tech-status-A">A</span>
                     </td>
                     <td style={{verticalAlign : 'middle'}}>
-                      <Link to={'/detail-technical/'+'1'}>
+                      <Link to={'/detail-commercial/'+'1'}>
                         <Button style={{width: "90px"}} outline color="info" size="sm">Detail</Button>
                       </Link>
-                      <Link to={'/approval-technical/'+'1'}>
+                      <Link to={'/approval-commercial/'+'1'}>
                         <Button style={{width: "90px"}} outline color="success" size="sm" style={{marginLeft : '10px'}}>Approval</Button>
                       </Link>
                     </td>
@@ -187,10 +187,10 @@ class ListCommercial extends Component {
                       <span className="boq-tech-status-WA">WA</span>
                     </td>
                     <td style={{verticalAlign : 'middle'}}>
-                      <Link to={'/detail-technical/'+'1'}>
+                      <Link to={'/detail-commercial/'+'1'}>
                         <Button style={{width: "90px"}} outline color="info" size="sm">Detail</Button>
                       </Link>
-                      <Link to={'/approval-technical/'+'1'}>
+                      <Link to={'/approval-commercial/'+'1'}>
                         <Button style={{width: "90px"}} outline color="success" size="sm" style={{marginLeft : '10px'}}>Approval</Button>
                       </Link>
                     </td>
@@ -204,10 +204,10 @@ class ListCommercial extends Component {
                       <span className="boq-tech-status-PA">R</span>
                     </td>
                     <td style={{verticalAlign : 'middle'}}>
-                      <Link to={'/detail-technical/'+'1'}>
+                      <Link to={'/detail-commercial/'+'1'}>
                         <Button style={{width: "90px"}} outline color="info" size="sm">Detail</Button>
                       </Link>
-                      <Link to={'/approval-technical/'+'1'}>
+                      <Link to={'/approval-commercial/'+'1'}>
                         <Button style={{width: "90px"}} outline color="success" size="sm" style={{marginLeft : '10px'}}>Approval</Button>
                       </Link>
                     </td>
@@ -221,10 +221,10 @@ class ListCommercial extends Component {
                       <span className="boq-tech-status-PA">PA</span>
                     </td>
                     <td style={{verticalAlign : 'middle'}}>
-                      <Link to={'/detail-technical/'+'1'}>
+                      <Link to={'/detail-commercial/'+'1'}>
                         <Button style={{width: "90px"}} outline color="info" size="sm">Detail</Button>
                       </Link>
-                      <Link to={'/approval-technical/'+'1'}>
+                      <Link to={'/approval-commercial/'+'1'}>
                         <Button style={{width: "90px"}} outline color="success" size="sm" style={{marginLeft : '10px'}}>Approval</Button>
                       </Link>
                     </td>
