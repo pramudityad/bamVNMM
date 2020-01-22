@@ -74,6 +74,17 @@ export default {
       ]
     },
     {
+      name: 'DSA Report',
+      icon: 'icon-drawer',
+      children: [
+        {
+          name: 'DSA List',
+          url: '/dsa-list',
+          icon: 'icon-list',
+        }
+      ]
+    },
+    {
       title: true,
       name: 'MR Process Milestones',
       wrapper: {            // optional wrapper object

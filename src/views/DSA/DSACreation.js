@@ -19,17 +19,24 @@ class DSACreation extends Component {
     super(props);
 
     this.state = {
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
       list_mr_selection: [],
       list_mr_selected : null,
       create_dsa_form : new Array(200).fill(null),
       network_number : null,
       list_dsa_selection : [],
-      list_dsa_selected : new Array(10).fill(null)
+      list_dsa_selected : new Array(10).fill(null),
+      action_status : null,
+      action_message : ""
     }
 
     this.loadOptionsMR = this.loadOptionsMR.bind(this);
     this.loadOptionsDSA = this.loadOptionsDSA.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
+    this.submitDSA = this.submitDSA.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -78,7 +85,7 @@ class DSACreation extends Component {
       return [];
     } else {
       let mr_list = [];
-      const getMR = await this.getDataFromAPI('/mr_sorted_nonpage?where={"mr_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      const getMR = await this.getDataFromAPI('/mr_sorted?where={"mr_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
       if(getMR !== undefined && getMR.data !== undefined) {
         this.setState({list_mr_selection : getMR.data._items}, () =>
         getMR.data._items.map(mr =>
@@ -130,6 +137,7 @@ class DSACreation extends Component {
     let dataForm = this.state.create_dsa_form;
     dataForm[parseInt(e.name)] = dataDSA.dsa_price_id;
     dataForm[parseInt(e.name)+1] = dataDSA.price;
+    dataForm[parseInt(e.name)+2] = 0;
     dataForm[parseInt(e.name)+4] = dataDSA.short_text;
     dataForm[parseInt(e.name)+5] = dataDSA.long_text;
     this.setState({create_dsa_form : dataForm}, () => {
@@ -152,6 +160,28 @@ class DSACreation extends Component {
         dataForm[i+1] = dataForm[i]*this.state.create_dsa_form[i-1];
       }
     }
+    for(let i = 185; i < 193; i=i+7) {
+      if(dataForm[i-1] !== null && dataForm[i] !== null) {
+        dataForm[i+1] = dataForm[i]*this.state.create_dsa_form[i-1];
+      }
+    }
+
+    // to get the total value
+    let totalValue = 0;
+    for(let i = 19; i < 56; i=i+6) {
+      totalValue = totalValue + dataForm[i];
+    }
+    for(let i = 68; i < 146; i=i+7) {
+      totalValue = totalValue + dataForm[i];
+    }
+    for(let i = 164; i < 177; i=i+3) {
+      if(dataForm[i] !== null) {
+        totalValue = totalValue + parseFloat(dataForm[i]);
+      }
+    }
+    totalValue = totalValue + dataForm[186] + dataForm[193];
+    dataForm[197] = parseFloat(totalValue);
+
     this.setState({create_dsa_form : dataForm}, () => {
       console.log("DSA Form", this.state.create_dsa_form);
     });
@@ -166,9 +196,9 @@ class DSACreation extends Component {
             <Label>Details</Label>
             <Input type="select" name="15" onChange={this.handleChangeForm}>
               <option value="" disabled selected hidden>MOT</option>
-              <option value="Land">Land</option>
-              <option value="Air">Air</option>
-              <option value="Sea">Sea</option>
+              <option value="MOT-Land">MOT-Land</option>
+              <option value="MOT-Air">MOT-Air</option>
+              <option value="MOT-Sea">MOT-Sea</option>
             </Input>
           </FormGroup>
         </Col>
@@ -193,7 +223,7 @@ class DSACreation extends Component {
         <Col md="1" style={{margin:"0", padding:"4px"}}>
           <FormGroup>
             <Label>Quantity</Label>
-            <Input type="text" name="18" onChange={this.handleChangeForm} />
+            <Input type="number" name="18" value={this.state.create_dsa_form[18] !== null ? this.state.create_dsa_form[18] : ""} onChange={this.handleChangeForm} />
           </FormGroup>
         </Col>
         <Col md="2" style={{margin:"0", padding:"4px"}}>
@@ -216,10 +246,38 @@ class DSACreation extends Component {
         </Col>
       </Row>
     );
+    let k = 58;
     for(let i = 0; i < 25; i=i+6) {
       section_1.push(
         <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
           <Col md="1" style={{margin:"0", padding:"4px"}}>
+            <Input type="select" name={k} onChange={this.handleChangeForm}>
+              <option disabled selected hidden>Select</option>
+              <option value="Additional Delivery">Additional Delivery</option>
+              <option value="MOT-Air">MOT-Air</option>
+              <option value="Crane">Crane</option>
+              <option value="Custom">Custom</option>
+              <option value="Custom Clearance">Custom Clearance</option>
+              <option value="Delivery Service">Delivery Service</option>
+              <option value="Flat Community">Flat Community</option>
+              <option value="Flat Community Cost">Flat Community Cost</option>
+              <option value="Forklift">Forklift</option>
+              <option value="MOT-Land">MOT-Land</option>
+              <option value="Manual Handling">Manual Handling</option>
+              <option value="On Forwarding">On Forwarding</option>
+              <option value="On Forwarding (Langsir)">On Forwarding (Langsir)</option>
+              <option value="Other Service">Other Service</option>
+              <option value="Others">Others</option>
+              <option value="Packing">Packing</option>
+              <option value="Port to WH">Port to WH</option>
+              <option value="MOT-Sea">MOT-Sea</option>
+              <option value="Service">Service</option>
+              <option value="Service (Seaport to WH)">Service (Seaport to WH)</option>
+              <option value="Service (WH to WH)">Service (WH to WH)</option>
+              <option value="Standby On Site">Standby On Site</option>
+              <option value="Temporary Storage">Temporary Storage</option>
+              <option value="WH to WH">WH to WH</option>
+            </Input>
           </Col>
           <Col md="2" style={{margin:"0", padding:"4px"}}>
             <FormGroup>
@@ -239,7 +297,7 @@ class DSACreation extends Component {
           </Col>
           <Col md="1" style={{margin:"0", padding:"4px"}}>
             <FormGroup>
-              <Input type="text" name={i+24} onChange={this.handleChangeForm} />
+              <Input type="number" name={i+24} onChange={this.handleChangeForm} value={this.state.create_dsa_form[i+24] !== null ? this.state.create_dsa_form[i+24] : ""} />
             </FormGroup>
           </Col>
           <Col md="2" style={{margin:"0", padding:"4px"}}>
@@ -259,6 +317,7 @@ class DSACreation extends Component {
           </Col>
         </Row>
       )
+      k++;
     }
     section_1.push(
       <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
@@ -283,7 +342,7 @@ class DSACreation extends Component {
         </Col>
         <Col md="1" style={{margin:"0", padding:"4px"}}>
           <FormGroup>
-            <Input type="text" name="54" onChange={this.handleChangeForm} />
+            <Input type="number" name="54" value={this.state.create_dsa_form[54] !== null ? this.state.create_dsa_form[54] : ""} onChange={this.handleChangeForm} />
           </FormGroup>
         </Col>
         <Col md="2" style={{margin:"0", padding:"4px"}}>
@@ -308,38 +367,10 @@ class DSACreation extends Component {
 
   loopSection2 = () => {
     let section_2 = [];
-    let text;
     for(let i = 64; i < 142; i=i+7) {
+      let label1, label2, label3, label4, label5, label6, label7;
       if(i === 64) {
-        text = "Temp Storage <= 7 days";
-      } else if(i === 71) {
-        text = "Temp Storage > 7 days";
-      } else if(i === 78) {
-        text = "Packing Wooden +";
-      } else if(i === 85) {
-        text = "Packing Wooden";
-      } else if(i === 92) {
-        text = "Packing Crate";
-      } else if(i === 99) {
-        text = (<small>Packing Carton Box RBS/BBS/Recti</small>);
-      } else if(i === 106) {
-        text = "Packing Carton Accessories";
-      } else if(i === 113) {
-        text = "Manual Handling";
-      } else if(i === 120) {
-        text = "Hoisting Gear";
-      } else if(i === 127) {
-        text = "Crane";
-      } else if(i === 134) {
-        text = "Forklift";
-      } else if(i === 141) {
-        text = "Langsir";
-      } 
-
-      let label0, label1, label2, label3, label4, label5, label6, label7;
-      if(i === 64) {
-        label0 = (<Label>&nbsp;</Label>);
-        label1 = (<Label>Additional Service</Label>);
+        label1 = (<Label><small>Additional Service</small></Label>);
         label2 = (<Label>Service Master</Label>);
         label3 = (<Label>Price</Label>);
         label4 = (<Label>Quantity</Label>);
@@ -351,16 +382,34 @@ class DSACreation extends Component {
         <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
           <Col md="1" style={{margin:"0", padding:"4px"}}>
             <FormGroup>
-              {label0}
-              <div>
-                {text}
-              </div>
-            </FormGroup>
-          </Col>
-          <Col md="2" style={{margin:"0", padding:"4px"}}>
-            <FormGroup>
               {label1}
-              <Input type="text" name={i} readOnly />
+              <Input type="select" name={i} onChange={this.handleChangeForm}>
+                <option disabled selected hidden>Select</option>
+                <option value="Additional Delivery">Additional Delivery</option>
+                <option value="MOT-Air">MOT-Air</option>
+                <option value="Crane">Crane</option>
+                <option value="Custom">Custom</option>
+                <option value="Custom Clearance">Custom Clearance</option>
+                <option value="Delivery Service">Delivery Service</option>
+                <option value="Flat Community">Flat Community</option>
+                <option value="Flat Community Cost">Flat Community Cost</option>
+                <option value="Forklift">Forklift</option>
+                <option value="MOT-Land">MOT-Land</option>
+                <option value="Manual Handling">Manual Handling</option>
+                <option value="On Forwarding">On Forwarding</option>
+                <option value="On Forwarding (Langsir)">On Forwarding (Langsir)</option>
+                <option value="Other Service">Other Service</option>
+                <option value="Others">Others</option>
+                <option value="Packing">Packing</option>
+                <option value="Port to WH">Port to WH</option>
+                <option value="MOT-Sea">MOT-Sea</option>
+                <option value="Service">Service</option>
+                <option value="Service (Seaport to WH)">Service (Seaport to WH)</option>
+                <option value="Service (WH to WH)">Service (WH to WH)</option>
+                <option value="Standby On Site">Standby On Site</option>
+                <option value="Temporary Storage">Temporary Storage</option>
+                <option value="WH to WH">WH to WH</option>
+              </Input>
             </FormGroup>
           </Col>
           <Col md="2" style={{margin:"0", padding:"4px"}}>
@@ -375,7 +424,7 @@ class DSACreation extends Component {
               />
             </FormGroup>
           </Col>
-          <Col md="1" style={{margin:"0", padding:"4px"}}>
+          <Col md="2" style={{margin:"0", padding:"4px"}}>
             <FormGroup>
               {label3}
               <Input type="text" name={i+2} value={this.state.create_dsa_form[i+2] !== null ? this.state.create_dsa_form[i+2] : ""} readOnly />
@@ -384,10 +433,10 @@ class DSACreation extends Component {
           <Col md="1" style={{margin:"0", padding:"4px"}}>
             <FormGroup>
               {label4}
-              <Input type="text" name={i+3} onChange={this.handleChangeForm} />
+              <Input type="number" name={i+3} value={this.state.create_dsa_form[i+3] !== null ? this.state.create_dsa_form[i+3] : ""} onChange={this.handleChangeForm} />
             </FormGroup>
           </Col>
-          <Col md="1" style={{margin:"0", padding:"4px"}}>
+          <Col md="2" style={{margin:"0", padding:"4px"}}>
             <FormGroup>
               {label5}
               <Input type="text" name={i+4} readOnly value={this.state.create_dsa_form[i+2] !== null && this.state.create_dsa_form[i+3] !== null ? this.state.create_dsa_form[i+2]*this.state.create_dsa_form[i+3] : ""} onChange={this.handleChangeForm} />
@@ -447,7 +496,7 @@ class DSACreation extends Component {
           <Col md="2" style={{margin:"0", padding:"4px"}}>
             <FormGroup>
               {label3}
-              <Input type="text" name={i+2} onChange={this.handleChangeForm} />
+              <Input type="number" name={i+2} onChange={this.handleChangeForm} />
             </FormGroup>
           </Col>
         </Row>
@@ -455,6 +504,153 @@ class DSACreation extends Component {
       k++;
     }
     return section_3;
+  }
+
+  async patchDataToAPI(url, data, _etag) {
+    try {
+      let respond = await axios.patch(API_URL+url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'If-Match': _etag
+        },
+        auth: {
+          username: username,
+          password: password
+        }
+      })
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log('respond patch data', respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = undefined;
+      this.setState({action_status: 'failed', action_message: 'Sorry, there is something wrong, please try again!'});
+      console.log('respond patch data', err);
+      return respond;
+    }
+  }
+
+  async submitDSA(e) {
+    const dataForm = this.state.create_dsa_form;
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    const _etag = e.target.value;
+    const _id = e.target.id;
+    let successUpdate = [];
+
+    let section_1 = [
+      {
+        "category" : "MOT",
+        "sub_category" : dataForm[15],
+        "service_master" : dataForm[16],
+        "price" : dataForm[17],
+        "qty" : dataForm[18],
+        "total_price" : dataForm[19],
+        "short_text" : dataForm[20],
+        "long_text" : dataForm[21]
+      }
+    ];
+    let k = 58;
+    for(let i = 22; i < 47; i=i+6) {
+      let data_section_1 = {
+        "category" : dataForm[k],
+        "sub_category" : null,
+        "service_master" : dataForm[i],
+        "price" : dataForm[i+1],
+        "qty" : dataForm[i+2],
+        "total_price" : dataForm[i+3],
+        "short_text" : dataForm[i+4],
+        "long_text" : dataForm[i+5]
+      }
+      if(dataForm[i] !== null) {
+        section_1.push(data_section_1);
+      }
+      k++;
+    }
+    let data_section_1b = {
+      "category" : "Flat Community",
+      "sub_category" : null,
+      "service_master" : dataForm[52],
+      "price" : dataForm[53],
+      "qty" : dataForm[54],
+      "total_price" : dataForm[55],
+      "short_text" : dataForm[56],
+      "long_text" : dataForm[57]
+    }
+    if(dataForm[52] !== null) {
+      section_1.push(data_section_1b);
+    }
+
+    let section_2 = [];
+    for(let i = 64; i < 142; i=i+7) {
+      let data_section_2 = {
+        "category" : dataForm[i],
+        "sub_category" : null,
+        "service_master" : dataForm[i+1],
+        "price" : dataForm[i+2],
+        "qty" : dataForm[i+3],
+        "total_price" : dataForm[i+4],
+        "short_text" : dataForm[i+5],
+        "long_text" : dataForm[i+6]
+      }
+      if(dataForm[i+1] !== null) {
+        section_2.push(data_section_2);
+      }
+    }
+
+    let section_3 = [];
+    for(let i = 162; i < 175; i=i+3) {
+      let data_section_3 = {
+        "type_of_cost" : dataForm[i],
+        "description" : dataForm[i+1],
+        "price" : dataForm[i+2]
+      }
+      if(dataForm[i] !== null) {
+        section_3.push(data_section_3);
+      }
+    }
+
+    let updateDSA = {
+      "dsa_number" : dataForm[0],
+      "job_order_number" : dataForm[3],
+      "po_for_dsp" : dataForm[4],
+      "po_item_number" : dataForm[6],
+      "dimension_volume" : dataForm[12],
+      "dimension_weight" : dataForm[13],
+      "primary_section" : section_1,
+      "second_section" : {
+        "po_number" : dataForm[63],
+        "service_details" : section_2,
+      },
+      "third_section" : {
+        "po_number" : dataForm[160],
+        "dac_number" : dataForm[161],
+        "service_details" : section_3
+      },
+      "dsa_total_value" : dataForm[197],
+      "current_dsa_status" : "DSA CREATED",
+      "dsa_status" : [
+        {
+          "dsa_status_name" : "DSA",
+          "dsa_status_value" : "CREATED",
+          "dsa_status_date" : dateNow,
+          "dsa_status_updater" : this.state.userEmail,
+          "dsa_status_updater_id" : this.state.userId
+        }
+      ]
+    };
+    console.log('to be posted', JSON.stringify(updateDSA));
+    let res = await this.patchDataToAPI('/mr_op/'+_id, updateDSA, _etag);
+    if(res !== undefined) {
+      if(res.data !== undefined) {
+        successUpdate.push(res.data);
+      }
+    }
+    if(successUpdate.length !== 0){
+      alert('New DSA has been created!');
+      this.setState({action_status : "success", action_message : 'New DSA has been created!'});
+      setTimeout(function(){ window.location.reload(); }, 2000);
+    }
   }
 
   componentDidMount() {
@@ -561,11 +757,11 @@ class DSACreation extends Component {
                         <h6>Dimension</h6>
                         <FormGroup style={{paddingLeft: "16px"}}>
                           <Label>Vol (m<sup>3</sup>)</Label>
-                          <Input type="text" name="12" onChange={this.handleChangeForm} />
+                          <Input type="number" name="12" onChange={this.handleChangeForm} />
                         </FormGroup>
                         <FormGroup style={{paddingLeft: "16px"}}>
                           <Label>Weight (Kg)</Label>
-                          <Input type="text" name="13" onChange={this.handleChangeForm} />
+                          <Input type="number" name="13" onChange={this.handleChangeForm} />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -615,37 +811,43 @@ class DSACreation extends Component {
                       <Col md="2" style={{margin:"0", padding:"4px"}}>
                         <FormGroup>
                           <Label>Service Master</Label>
-                          <Input type="text" name="183" onChange={this.handleChangeForm} />
+                          <AsyncSelect
+                            cacheOptions
+                            loadOptions={this.loadOptionsDSA}
+                            defaultOptions
+                            onChange={this.handleChangeDSA}
+                            name={183}
+                          />
                         </FormGroup>
                       </Col>
                       <Col md="2" style={{margin:"0", padding:"4px"}}>
                         <FormGroup>
                           <Label>Price</Label>
-                          <Input type="text" name="184" onChange={this.handleChangeForm} />
+                          <Input type="text" name="184" value={this.state.create_dsa_form[184] !== null ? this.state.create_dsa_form[184] : ""} readOnly />
                         </FormGroup>
                       </Col>
                       <Col md="1" style={{margin:"0", padding:"4px"}}>
                         <FormGroup>
                           <Label>Quantity</Label>
-                          <Input type="text" name="185" onChange={this.handleChangeForm} />
+                          <Input type="number" name="185" value={this.state.create_dsa_form[185] !== null ? this.state.create_dsa_form[185] : ""} onChange={this.handleChangeForm} />
                         </FormGroup>
                       </Col>
                       <Col md="2" style={{margin:"0", padding:"4px"}}>
                         <FormGroup>
                           <Label>Total Price</Label>
-                          <Input type="text" name="186" onChange={this.handleChangeForm} />
+                          <Input type="text" name="186" value={this.state.create_dsa_form[186] !== null ? this.state.create_dsa_form[186] : ""} readOnly />
                         </FormGroup>
                       </Col>
                       <Col md="2" style={{margin:"0", padding:"4px"}}>
                         <FormGroup>
                           <Label>Short Text</Label>
-                          <Input type="text" name="187" onChange={this.handleChangeForm} />
+                          <Input type="text" name="187" value={this.state.create_dsa_form[187] !== null ? this.state.create_dsa_form[187] : ""} readOnly />
                         </FormGroup>
                       </Col>
                       <Col md="2" style={{margin:"0", padding:"4px"}}>
                         <FormGroup>
                           <Label>Long Text</Label>
-                          <Input type="textarea" name="188" rows="1" onChange={this.handleChangeForm} />
+                          <Input type="textarea" name="188" rows="1" value={this.state.create_dsa_form[188] !== null ? this.state.create_dsa_form[188] : ""} readOnly />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -657,32 +859,38 @@ class DSACreation extends Component {
                       </Col>
                       <Col md="2" style={{margin:"0", padding:"4px"}}>
                         <FormGroup>
-                          <Input type="text" name="190" onChange={this.handleChangeForm} />
+                        <AsyncSelect
+                          cacheOptions
+                          loadOptions={this.loadOptionsDSA}
+                          defaultOptions
+                          onChange={this.handleChangeDSA}
+                          name={190}
+                        />
                         </FormGroup>
                       </Col>
                       <Col md="2" style={{margin:"0", padding:"4px"}}>
                         <FormGroup>
-                          <Input type="text" name="191" onChange={this.handleChangeForm} />
+                          <Input type="text" name="191" value={this.state.create_dsa_form[191] !== null ? this.state.create_dsa_form[191] : ""} readOnly />
                         </FormGroup>
                       </Col>
                       <Col md="1" style={{margin:"0", padding:"4px"}}>
                         <FormGroup>
-                          <Input type="text" name="192" onChange={this.handleChangeForm} />
+                          <Input type="number" name="192" value={this.state.create_dsa_form[192] !== null ? this.state.create_dsa_form[192] : ""} onChange={this.handleChangeForm} />
                         </FormGroup>
                       </Col>
                       <Col md="2" style={{margin:"0", padding:"4px"}}>
                         <FormGroup>
-                          <Input type="text" name="193" onChange={this.handleChangeForm} />
+                          <Input type="text" name="193" value={this.state.create_dsa_form[193] !== null ? this.state.create_dsa_form[193] : ""} readOnly />
                         </FormGroup>
                       </Col>
                       <Col md="2" style={{margin:"0", padding:"4px"}}>
                         <FormGroup>
-                          <Input type="text" name="194" onChange={this.handleChangeForm} />
+                          <Input type="text" name="194" value={this.state.create_dsa_form[194] !== null ? this.state.create_dsa_form[194] : ""} readOnly />
                         </FormGroup>
                       </Col>
                       <Col md="2" style={{margin:"0", padding:"4px"}}>
                         <FormGroup>
-                          <Input type="textarea" name="195" rows="1" onChange={this.handleChangeForm} />
+                          <Input type="textarea" name="195" rows="1" value={this.state.create_dsa_form[195] !== null ? this.state.create_dsa_form[195] : ""} readOnly />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -694,8 +902,8 @@ class DSACreation extends Component {
                         </FormGroup>
                       </Col>
                     </Row>
-                    <h5>DSA UPDATE</h5>
-                    <Row style={{paddingLeft: "16px"}}>
+                    <h5 style={{display: "none"}}>DSA UPDATE</h5>
+                    <Row style={{paddingLeft: "16px", display: "none"}}>
                       <Col md="1" style={{paddingLeft: "16px"}}>
                         <FormGroup>
                           <Label>Submission Type</Label>
@@ -716,12 +924,15 @@ class DSACreation extends Component {
                       <Col md="2" style={{margin:"0", paddingLeft:"16px"}}>
                         <FormGroup>
                           <Label>Total Value</Label>
-                          <Input type="text" name="total_value" />
+                          <Input type="text" name="197" value={this.state.create_dsa_form[197] !== null ? this.state.create_dsa_form[197] : ""} readOnly />
                         </FormGroup>
                       </Col>
                     </Row>
                   </Form>
                 </CardBody>
+                <CardFooter>
+                  <Button type="submit" color="primary" disabled={this.state.list_mr_selected === null} onClick={this.submitDSA} id={this.state.list_mr_selected !== null ? this.state.list_mr_selected._id : ""} value={this.state.list_mr_selected !== null ? this.state.list_mr_selected._etag : ""}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Submit DSA</Button>
+                </CardFooter>
               </Card>
             </Col>
           </Row>
