@@ -16,7 +16,7 @@ from materialcatalogueschema import materialcatalogueschema
 from ssowschema import ssowschema
 from aspassignmentschema import aspassignmentschema
 from ssowactivitynumberschema import ssowactivitynumberschema
-
+from dsapriceshema import dsapriceschema
 
 # Mongo Config
 MONGO_HOST = '10.0.0.11'

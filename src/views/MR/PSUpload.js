@@ -669,13 +669,17 @@ class PSUpload extends Component {
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                           <td>{pp.product_name}</td>
                           <td>{pp.uom}</td>
-                          <td>
+                          <td>{this.getQtyTssrPPNE(pp.pp_id)}</td>
+                          {/*<td>
                             <Input style={{textAlign : 'center'}} onChange={this.editQtyNE} type="number" name={pp.pp_id} value={!this.state.qty_ne.has(pp.pp_id) ? this.getQtyTssrPPNE(pp.pp_id) : this.state.qty_ne.get(pp.pp_id)} />
-                          </td>
+                          </td> */}
                           {this.state.tssr_site_FE !== null ? (
-                            <td>
+                            <Fragment>
+                            <td>{this.getQtyTssrPPFE(pp.pp_id)}</td>
+                            {/*<td>
                               <Input style={{textAlign : 'center'}} onChange={this.editQtyFE} type="number" name={pp.pp_id} value={!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id)} />
-                            </td>
+                            </td>*/}
+                            </Fragment>
                           ):(<Fragment></Fragment>)}
                         </tr>
                         {pp.list_of_material.map(material =>

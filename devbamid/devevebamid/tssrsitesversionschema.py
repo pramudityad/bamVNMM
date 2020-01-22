@@ -9,6 +9,11 @@ tssrsitesversionschema = {
         'required': True,
         'nullable': False
     },
+    'account_id' : {
+        'type': 'string',
+        'required': True,
+        'nullable': True
+    },
     'id_tssr_boq_doc' : {
         'type': 'objectid',
         'required': True,
@@ -49,13 +54,23 @@ tssrsitesversionschema = {
         'required': True,
         'nullable': False
     },
+    'site_name' : {
+        'type': 'string',
+        'required': True,
+    },
+    'site_title' : {
+        'type': 'string',
+        'required': True,
+        'nullable': True,
+        'allowed': ['NE', 'FE']
+    },
     'id_cd_doc' : {
         'type': 'objectid',
         'required': False,
         'nullable': True,
         'default': None
     },
-    'cc_id' : {
+    'cd_id' : {
         'type': 'string',
         'required': False,
         'nullable': True,

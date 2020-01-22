@@ -15,6 +15,11 @@ export default {
           icon: 'icon-layers',
         },
         {
+          name: 'Technical BOQ',
+          url: '/list-technical',
+          icon: 'icon-layers',
+        },
+        {
           name: 'TSSR List',
           url: '/tssr-list',
           icon: 'icon-briefcase',

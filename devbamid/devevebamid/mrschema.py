@@ -357,6 +357,275 @@ mrschema = {
         'unique': False,
         'default': None
     },
+    'dsa_number' : {
+        'type': 'string',
+        'required': False,
+        'nullable': True,
+        'unique': False,
+        'default': None
+    },
+    'job_order_number' : {
+        'type': 'string',
+        'required': False,
+        'nullable': True,
+        'unique': False
+    },
+    'po_for_dsp' : {
+        'type': 'string',
+        'required': False,
+        'nullable': True,
+        'unique': False
+    },
+    'po_item_number' : {
+        'type': 'string',
+        'required': False,
+        'nullable': True,
+        'unique': False
+    },
+    'origin_warehouse' : {
+        'type': 'dict',
+        'schema': {
+            'title': {
+                'type': 'string',
+                'required': True,
+                'nullable': True
+            },
+            'value': {
+                'type': 'string',
+                'required': False,
+                'nullable': True
+            },
+            'address': {
+                'type': 'string',
+                'required': True,
+                'nullable': True
+            },
+        }
+    },
+    'destination' : {
+        'type': 'dict',
+        'schema': {
+            'title': {
+                'type': 'string',
+                'required': True,
+                'nullable': True
+            },
+            'value': {
+                'type': 'string',
+                'required': False,
+                'nullable': True
+            },
+            'address': {
+                'type': 'string',
+                'required': True,
+                'nullable': True
+            },
+        }
+    },
+    'dimension_volume' : {
+        'type': 'float',
+        'required': False,
+        'nullable': True,
+        'unique': False
+    },
+    'dimension_weight' : {
+        'type': 'float',
+        'required': False,
+        'nullable': True,
+        'unique': False
+    },
+    'primary_section' : {
+        'type': 'list',
+        'required': True,
+        'schema': {
+            'type': 'dict',
+            'schema': {
+                'category': {
+                    'type': 'string',
+                    'required': True,
+                    'nullable': True
+                },
+                'sub_category': {
+                    'type': 'string',
+                    'required': False,
+                    'nullable': True
+                },
+                'service_master': {
+                    'type': 'string',
+                    'required': True,
+                    'nullable': True
+                },
+                'price': {
+                    'type': 'float',
+                    'required': True,
+                    'nullable': True
+                },
+                'qty': {
+                    'type': 'float',
+                    'required': True,
+                    'nullable': True
+                },
+                'total_price': {
+                    'type': 'float',
+                    'required': True,
+                    'nullable': True
+                },
+                'short_text': {
+                    'type': 'string',
+                    'required': False,
+                    'nullable': True
+                },
+                'long_text': {
+                    'type': 'string',
+                    'required': True,
+                    'nullable': True
+                }
+            }
+        }
+    },
+    'second_section' : {
+        'type': 'dict',
+        'default' : None,
+        'schema': {
+            'po_number': {
+                'type': 'string',
+                'nullable': True
+            },
+            'service_details': {
+                'type': 'list',
+                'schema': {
+                    'type': 'dict',
+                    'schema': {
+                        'category': {
+                            'type': 'string',
+                            'required': True,
+                            'nullable': True
+                        },
+                        'sub_category': {
+                            'type': 'string',
+                            'required': False,
+                            'nullable': True
+                        },
+                        'service_master': {
+                            'type': 'string',
+                            'required': True,
+                            'nullable': True
+                        },
+                        'price': {
+                            'type': 'float',
+                            'required': True,
+                            'nullable': True
+                        },
+                        'qty': {
+                            'type': 'float',
+                            'required': True,
+                            'nullable': True
+                        },
+                        'total_price': {
+                            'type': 'float',
+                            'required': True,
+                            'nullable': True
+                        },
+                        'short_text': {
+                            'type': 'string',
+                            'required': False,
+                            'nullable': True
+                        },
+                        'long_text': {
+                            'type': 'string',
+                            'required': False,
+                            'nullable': True
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'third_section' : {
+        'type': 'dict',
+        'default' : None,
+        'schema': {
+            'po_number': {
+                'type': 'string',
+                'nullable': True
+            },
+            'dac_number': {
+                'type': 'string',
+                'nullable': True
+            },
+            'service_details': {
+                'type': 'list',
+                'required': True,
+                'schema': {
+                    'type': 'dict',
+                    'schema': {
+                        'type_of_cost': {
+                            'type': 'string',
+                            'required': True,
+                            'nullable': True
+                        },
+                        'description': {
+                            'type': 'string',
+                            'required': True,
+                            'nullable': True
+                        },
+                        'price': {
+                            'type': 'float',
+                            'required': True,
+                            'nullable': True
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'dsa_total_value' : {
+        'type': 'float',
+        'required': False,
+        'default' : 0
+    },
+    'current_dsa_status' : {
+        'type': 'string',
+        'required': False,
+        'default' : None
+    },
+    'dsa_status' : {
+        'type': 'list',
+        'schema': {
+            'type': 'dict',
+            'schema': {
+                'dsa_status_name': {
+                    'type': 'string',
+                    'required': True,
+                    'nullable': True
+                },
+                'dsa_status_value': {
+                    'type': 'string',
+                    'required': True,
+                    'nullable': True
+                },
+                'dsa_status_date': {
+                    'type': 'datetime',
+                    'required': True,
+                    'nullable': True
+                },
+                'dsa_status_updater': {
+                    'type': 'string',
+                    'required': True,
+                    'nullable': True
+                },
+                'dsa_status_updater_id': {
+                    'type': 'objectid',
+                    'required': True,
+                    'nullable': True
+                },
+                'dsa_status_note': {
+                    'type': 'string',
+                    'nullable': True
+                }
+            }
+        }
+    },
     'deleted' : {
         'type': 'integer',
         'required': False,

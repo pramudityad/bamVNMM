@@ -9,6 +9,11 @@ tssrversionschema = {
         'required': True,
         'nullable': False
     },
+    'account_id' : {
+        'type': 'string',
+        'required': True,
+        'nullable': True
+    },
     'id_boq_tech_doc' : {
         'type': 'objectid',
         'required': False,

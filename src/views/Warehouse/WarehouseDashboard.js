@@ -2,17 +2,25 @@ import React, { Component } from 'react';
 import { Col, Row } from 'reactstrap';
 import Widget from './Widget';
 import './wh_css.css';
+import { connect } from 'react-redux';
 import axios from 'axios';
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
+const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class WarehouseDashboard extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
       variant0: "inverse",
       variant1: "inverse",
       variant2: "inverse",
@@ -112,6 +120,7 @@ class WarehouseDashboard extends Component {
     this.getJointCheck();
     this.getLoadingProcess();
     this.getMaterialDispatch();
+    this.getDataFromAPINode('/matreqCountByMs');
     document.title = 'Warehouse Dashboard | BAM';
   }
 
@@ -131,6 +140,25 @@ class WarehouseDashboard extends Component {
     } catch(err) {
       let respond = err;
       console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async getDataFromAPINode(url) {
+    try {
+      let respond = await axios.get(API_URL_Node+url, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data node", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data node", err);
       return respond;
     }
   }
@@ -266,4 +294,10 @@ class WarehouseDashboard extends Component {
   }
 }
 
-export default WarehouseDashboard;
+const mapStateToProps = (state) => {
+  return {
+    dataLogin : state.loginData
+  }
+}
+
+export default connect(mapStateToProps)(WarehouseDashboard);
