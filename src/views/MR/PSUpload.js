@@ -514,14 +514,20 @@ class PSUpload extends Component {
         }
       }
     }
-    const respondSaveMRMat = await this.postDatatoAPIBAM('/mr_md_op', matMRsave);
-    if(respondSaveMRMat.data !== undefined && respondSaveMRMat.status >= 200 && respondSaveMRMat.status <= 300 ){
+    if(matMRsave.length !== 0){
+      const respondSaveMRMat = await this.postDatatoAPIBAM('/mr_md_op', matMRsave);
+      if(respondSaveMRMat.data !== undefined && respondSaveMRMat.status >= 200 && respondSaveMRMat.status <= 300 ){
+        this.setState({action_status : 'success'}, () => {
+          setTimeout(function(){ this.setState({ redirectSign : _id_mr}); }.bind(this), 3000);
+        });
+      }else{
+        this.setState({action_status : 'failed'});
+        // this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
+      }
+    }else{
       this.setState({action_status : 'success'}, () => {
         setTimeout(function(){ this.setState({ redirectSign : _id_mr}); }.bind(this), 3000);
       });
-    }else{
-      this.setState({action_status : 'failed'});
-      // this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
     }
   }
 

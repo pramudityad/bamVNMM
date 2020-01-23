@@ -279,6 +279,11 @@ class MRCreation extends Component {
         "requested_eta" : dataForm[6]+" 23:59:59",
         "eta" : dataForm[6]+" 23:59:59",
         "site_info" : list_site,
+        "origin_warehouse" : {
+          "title" : "Warehouse",
+          "value" : dataFormName[8],
+          "address" : "",
+        },
         "mr_milestones" : [],
         "mr_status" : [
           {
@@ -414,6 +419,20 @@ class MRCreation extends Component {
                     </Input>
                   </FormGroup>
                 </Col>
+                <Col md={6}>
+                  <FormGroup>
+                    <Label>Origin</Label>
+                    <Input type="select" name="8" value={this.state.create_mr_form[8]} onChange={this.handleChangeFormMRCreation}>
+                      <option value="" disabled selected hidden>Select Origin</option>
+                      <option value={"JKT"}>Jakarta</option>
+                      <option value={"MKS"}>Makassar</option>
+                      <option value={"PLB"}>Palembang</option>
+                      <option value={"PKB"}>Pekanbaru</option>
+                      <option value={"PDG"}>Padang</option>
+                      <option value={"MND"}>Manado</option>
+                    </Input>
+                  </FormGroup>
+                </Col>
               </Row>
               <Row form>
                 <Col md={6}>
@@ -432,7 +451,7 @@ class MRCreation extends Component {
                     <Input type="select" name="4" value={this.state.create_mr_form[4]} onChange={this.handleChangeFormMRCreation}>
                       <option value="" disabled selected hidden>Select MR Delivery Type</option>
                       <option value="Warehouse to Site">Warehouse to Site</option>
-                      <option value="Site to Site">Site to Site</option>
+                      {/*<option value="Site to Site">Site to Site</option>*/}
                       <option value="Warehouse to Warehouse">Warehouse to Warehouse</option>
                     </Input>
                   </FormGroup>

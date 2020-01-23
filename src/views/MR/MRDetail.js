@@ -134,6 +134,17 @@ class MRDetail extends Component {
     }
   }
 
+  checkValueReturn(value1, value2){
+    // if value undefined return Value2
+    if( typeof value1 !== 'undefined' && value1 !== null) {
+      console.log('value1', value1);
+      return value1;
+    }else{
+      console.log('value2', value2);
+      return value2;
+    }
+  }
+
   getDataMR(_id_MR){
     this.getDatafromAPIBAM('/mr_op/'+_id_MR).then(resMR => {
       if(resMR.data !== undefined){
@@ -345,7 +356,7 @@ class MRDetail extends Component {
     let dataMR = this.state.data_mr;
     const requestAprv = [{
       "mr_status_name": "MATERIAL_REQUEST",
-      "mr_status_value": "MR REQUESTED",
+      "mr_status_value": "REQUESTED",
       "mr_status_date": dateNow,
       "mr_status_updater": this.state.userEmail,
       "mr_status_updater_id": this.state.userId,
@@ -368,7 +379,7 @@ class MRDetail extends Component {
     let dataMR = this.state.data_mr;
     const statusAprv = [{
       "mr_status_name": "MATERIAL_REQUEST",
-      "mr_status_value": "MR REQUESTED",
+      "mr_status_value": "APPROVED",
       "mr_status_date": dateNow,
       "mr_status_updater": this.state.userEmail,
       "mr_status_updater_id": this.state.userId,
@@ -396,11 +407,22 @@ class MRDetail extends Component {
   async updateDataMR(){
     const dataForm = this.state.update_mr_name_form;
     const dataMR = this.state.data_mr;
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    const dataStatus = [{
+      "mr_status_name": "MATERIAL_REQUEST",
+      "mr_status_value": "UPDATED",
+      "mr_status_date": dateNow,
+      "mr_status_updater": this.state.userEmail,
+      "mr_status_updater_id": this.state.userId
+    }];
     let patchData = {};
-    patchData["eta"] = dataForm[3]+" 23:59:59";
-    patchData["requested_eta"] = dataForm[3]+" 23:59:59";
-    patchData["etd"] = dataForm[2]+" 00:00:00";
-    patchData["dsp_company"] = dataForm[1];
+    patchData["eta"] = dataForm[3] !== null ? dataForm[3]+" 23:59:59" : dataMR.eta;
+    patchData["requested_eta"] = dataForm[3] !== null ? dataForm[3]+" 23:59:59" : dataMR.requested_eta;
+    patchData["etd"] = dataForm[2] !== null ? dataForm[2]+" 23:59:59" : dataMR.etd;
+    patchData["dsp_company"] = dataForm[1] !== null ? dataForm[1]+" 23:59:59" : dataMR.dsp_company;
+    patchData["current_mr_status"] = "MR UPDATED";
+    patchData["mr_status"] = dataMR.mr_status.concat(dataStatus);
     const respondPatchMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, patchData, dataMR._etag);
     if(respondPatchMR.data !== undefined && respondPatchMR.status >= 200 && respondPatchMR.status <= 300 ){
       this.setState({action_status : 'success'});
@@ -498,6 +520,11 @@ class MRDetail extends Component {
                           </td>
                         </tr>
                         <tr>
+                          <td style={{width : '200px'}}>Origin {this.state.data_mr.origin_warehouse.title}</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.origin_warehouse.value}</td>
+                        </tr>
+                        <tr>
                           <td style={{width : '200px'}}>ETD</td>
                           <td>: </td>
                           <td>
@@ -563,6 +590,11 @@ class MRDetail extends Component {
                           <td style={{width : '175px'}}>MR Type</td>
                           <td>: </td>
                           <td>{this.state.data_mr.mr_type}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>&nbsp;</td>
+                          <td></td>
+                          <td></td>
                         </tr>
                         <tr>
                           <td style={{width : '200px'}}>&nbsp;</td>

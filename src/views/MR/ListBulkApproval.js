@@ -19,7 +19,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash"/>
 );
 
-class BulkRequest extends Component {
+class ListBulkApproval extends Component {
   constructor(props) {
     super(props);
 
@@ -249,13 +249,13 @@ class BulkRequest extends Component {
       let dataMR = dataMRChecked[i];
       const requestAprv = [{
         "mr_status_name": "MATERIAL_REQUEST",
-        "mr_status_value": "REQUESTED",
+        "mr_status_value": "APPROVED",
         "mr_status_date": dateNow,
         "mr_status_updater": this.state.userEmail,
         "mr_status_updater_id": this.state.userId,
       }]
       let reqMR = {};
-      reqMR['current_mr_status'] = "MR REQUESTED";
+      reqMR['current_mr_status'] = "MR APPROVED";
       reqMR['mr_status'] = dataMR.mr_status.concat(requestAprv);
       const patchData = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, reqMR, dataMR._etag)
       if(patchData.data !== undefined){
@@ -486,4 +486,4 @@ const mapDispatchToProps = (dispatch) => {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(BulkRequest);
+export default connect(mapStateToProps, mapDispatchToProps)(ListBulkApproval);

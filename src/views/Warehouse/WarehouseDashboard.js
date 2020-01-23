@@ -156,12 +156,12 @@ class WarehouseDashboard extends Component {
         },
       });
       if(respond.status >= 200 && respond.status < 300) {
-        console.log("respond data node", respond);
+        console.log("respond data", respond);
       }
       return respond;
     } catch(err) {
       let respond = err;
-      console.log("respond data node", err);
+      console.log("respond data", err);
       return respond;
     }
   }
