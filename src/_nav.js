@@ -16,18 +16,8 @@ export default {
         },
         {
           name: 'Technical BOQ',
-          url: '/tssr-list',
-          icon: 'icon-drawer',
-        },
-        {
-          name: 'Commercial BOQ ',
-          url: '/tssr-list',
-          icon: 'icon-drawer',
-        },
-        {
-          name: 'Ordering BOQ ',
-          url: '/tssr-list',
-          icon: 'icon-drawer',
+          url: '/list-technical',
+          icon: 'icon-layers',
         },
         {
           name: 'TSSR List',

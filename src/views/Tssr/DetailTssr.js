@@ -761,6 +761,11 @@ class DetailTssr extends Component {
     let dataTSSR = this.state.data_tssr;
     let dataSiteNE = this.state.tssr_site_NE;
     let dataSiteFE = this.state.tssr_site_FE;
+    if(this.state.version_current !== this.state.version_selected){
+      dataTSSR = this.state.data_tssr_current;
+      dataSiteNE = this.state.tssr_site_NE_current;
+      dataSiteFE = this.state.tssr_site_FE_current;
+    }
     let version = parseInt(dataTSSR.version)+1;
     let version_current = parseInt(dataTSSR.version);
     let dataRevTssr = Object.assign({}, dataTSSR);
@@ -781,10 +786,10 @@ class DetailTssr extends Component {
       const dataItemFE = dataSiteFE.list_of_site_items;
       for(let i = 0; i < dataItemNE.length; i++){
         let dataRevItemNE = Object.assign({}, dataItemNE[i]);
-        console.log(dataRevItemNE);
         dataRevItemNE["id_document"] = dataItemNE[i]._id;
         dataRevItemNE["created_by"] = dataItemNE[i].created_by;
         dataRevItemNE["updated_by"] = dataItemNE[i].updated_by;
+        dataRevItemNE["version"] = version_current.toString();
         delete dataRevItemNE._id;
         delete dataRevItemNE._etag;
         delete dataRevItemNE._links;
@@ -795,6 +800,7 @@ class DetailTssr extends Component {
         dataRevItemFE["id_document"] = dataItemFE[i]._id;
         dataRevItemFE["created_by"] = dataItemFE[i].created_by;
         dataRevItemFE["updated_by"] = dataItemFE[i].updated_by;
+        dataRevItemFE["version"] = version_current.toString();
         delete dataRevItemFE._id;
         delete dataRevItemFE._etag;
         delete dataRevItemFE._links;
@@ -803,6 +809,7 @@ class DetailTssr extends Component {
       dataRevNE["id_document"] = dataSiteNE._id;
       dataRevNE["created_by"] = dataSiteNE.created_by;
       dataRevNE["updated_by"] = dataSiteNE.updated_by;
+      dataRevNE["version"] = version_current.toString();
       delete dataRevNE._id;
       delete dataRevNE._etag;
       delete dataRevNE._links;
@@ -813,6 +820,7 @@ class DetailTssr extends Component {
       dataRevFE["id_document"] = dataSiteFE._id;
       dataRevFE["created_by"] = dataSiteFE.created_by;
       dataRevFE["updated_by"] = dataSiteFE.updated_by;
+      dataRevFE["version"] = version_current.toString();
       delete dataRevFE._id;
       delete dataRevFE._etag;
       delete dataRevFE._links;
