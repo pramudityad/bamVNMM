@@ -20,6 +20,11 @@ export default {
           icon: 'icon-layers',
         },
         {
+          name: 'Commercial BOQ ',
+          url: '/list-commercial',
+          icon: 'icon-drawer',
+        },
+        {
           name: 'TSSR List',
           url: '/tssr-list',
           icon: 'icon-briefcase',
@@ -43,6 +48,16 @@ export default {
         {
           name: 'Bulk MR Request',
           url: '/bulk-mr-request',
+          icon: 'icon-list',
+        },
+        {
+          name: 'Bulk MR Approval Changes',
+          url: '/bulk-mr-change-approval',
+          icon: 'icon-list',
+        },
+        {
+          name: 'Bulk MR Approval',
+          url: '/bulk-mr-approval',
           icon: 'icon-list',
         }
       ]

@@ -214,75 +214,75 @@ class CommercialBoq extends Component {
                     </Col>
                   </Row>
                   <div style={{padding:"10px 20px 10px 20px", marginBottom : '10px', fontSize:'15px'}}>
-                    <Fragment>
-                      <Row>
-                        <Col sm="6" md="6">
-                        <table className="table-header">
-                          <tbody>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>COMMERCIAL INFORMATION</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td style={{width : '150px'}}>Project Identifier </td>
-                              <td>:</td>
-                              <td colspan="2" style={{paddingLeft:'10px'}}>LTE 2020</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>Version</td>
-                              <td>:</td>
-                              <td style={{paddingLeft:'10px'}} colspan="2">0</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>Early Start </td>
-                              <td>:</td>
-                              <td colspan="2">&nbsp;</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td></td>
-                              <td></td>
-                              <td style={{paddingLeft:'10px'}}></td>
-                              <td  style={{paddingLeft:'5px'}}></td>
-                            </tr>
-                          </tbody>
-                          </table>
-                        </Col>
-                        <Col sm="6" md="6">
-                        <table style={{float : 'right', marginRight : '10px'}} className="table-header">
-                          <tbody>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>PROJECT ORDER INFORMATION</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>PO Identifier </td>
-                              <td>:</td>
-                              <td style={{paddingLeft:'10px'}} colspan="2">PO2020001</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>Updated By</td>
-                              <td>:</td>
-                              <td style={{paddingLeft:'10px'}} colspan="2">adminbamid@bamid.com</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>Date </td>
-                              <td>:</td>
-                              <td style={{paddingLeft:'10px'}} colspan="2">2020-01-20</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td></td>
-                              <td></td>
-                              <td style={{paddingLeft:'10px'}}></td>
-                              <td style={{paddingLeft:'5px'}}></td>
-                            </tr>
-                          </tbody>
-                          </table>
-                        </Col>
-                      </Row>
-                    </Fragment>
+                  <Fragment>
+                    <Row>
+                      <Col sm="6" md="6">
+                      <table className="table-header">
+                        <tbody>
+                          <tr style={{fontWeight : '425', fontSize : '17px'}}>
+                            <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '600'}}>COMMERCIAL INFORMATION</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td style={{width : '150px'}}>Project Identifier </td>
+                            <td>:</td>
+                            <td colspan="2" style={{paddingLeft:'10px'}}>LTE 2020</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td>Version</td>
+                            <td>:</td>
+                            <td style={{paddingLeft:'10px'}} colspan="2">0</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td>Early Start </td>
+                            <td>:</td>
+                            <td colspan="2">&nbsp;</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td></td>
+                            <td></td>
+                            <td style={{paddingLeft:'10px'}}></td>
+                            <td  style={{paddingLeft:'5px'}}></td>
+                          </tr>
+                        </tbody>
+                        </table>
+                      </Col>
+                      <Col sm="6" md="6">
+                      <table style={{float : 'right', marginRight : '10px'}} className="table-header">
+                        <tbody>
+                          <tr style={{fontWeight : '425', fontSize : '17px'}}>
+                            <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '600'}}>PROJECT ORDER INFORMATION</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td>PO Identifier </td>
+                            <td>:</td>
+                            <td style={{paddingLeft:'10px'}} colspan="2">PO2020001</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td>Updated By</td>
+                            <td>:</td>
+                            <td style={{paddingLeft:'10px'}} colspan="2">adminbamid@bamid.com</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td>Date </td>
+                            <td>:</td>
+                            <td style={{paddingLeft:'10px'}} colspan="2">2020-01-20</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td></td>
+                            <td></td>
+                            <td style={{paddingLeft:'10px'}}></td>
+                            <td style={{paddingLeft:'5px'}}></td>
+                          </tr>
+                        </tbody>
+                        </table>
+                      </Col>
+                    </Row>
+                  </Fragment>
                   </div>
                   <div>
                   </div>
                   </React.Fragment>
-                    <Table hover bordered striped responsive size="sm" className="table-commercial">
+                    <Table hover bordered responsive size="sm" className="table-commercial">
                       <thead>
                         <tr style={{backgroundColor : "#c6f569", fontWeight : "500"}}>
                           <th style={{width :'100px'}} >PP ID</th>
@@ -297,7 +297,7 @@ class CommercialBoq extends Component {
                         </tr>
                       </thead>
                       <tbody>
-                        <tr style={{backgroundColor : '#45ADA8'}}>
+                        <tr style={{backgroundColor : 'rgb(248, 246, 223)'}}>
                           <td colSpan="9" style={{textAlign: 'left'}}>
                             <span style={{fontWeight : '700'}}>HW</span>
                           </td>

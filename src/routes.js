@@ -73,6 +73,8 @@ const DetailCommercial = React.lazy(() => import('./views/Commercial/CommercialB
 const ApprovalCommercial = React.lazy(() => import('./views/Commercial/CommercialBoqApproval'));
 const DSAList = React.lazy(() => import('./views/DSA/DSAList'));
 const DSADetail = React.lazy(() => import('./views/DSA/DSADetail'));
+const BulkChangeApproval = React.lazy(() => import('./views/MR/ListChangeApproval'));
+const BulkApproval = React.lazy(() => import('./views/MR/ListBulkApproval'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -128,6 +130,8 @@ const routes = [
   { path: '/mr-detail/:id', exact: true, name: 'MR Detail', component: MRDetail },
   { path: '/bulk-mr-creation', name: 'Bulk MR Creation', component: BulkMRCreation },
   { path: '/bulk-mr-request', name: 'Bulk MR Request', component: BulkRequest },
+  { path: '/bulk-mr-change-approval', name: 'Bulk MR Change Approval', component: BulkChangeApproval },
+  { path: '/bulk-mr-approval', name: 'Bulk MR Approval', component: BulkApproval },
   { path: '/ps-upload/:id', exact: true, name: 'MR List', component: PSUpload },
   { path: '/mr-progress/:id', exact: true, name: 'MR Progress', component: MRProgress },
   { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WarehouseDashboard },
@@ -155,6 +159,7 @@ const routes = [
   { path: '/assign-bast/:id', exact: true, name: 'Assign Bast', component: AssignBast },
   { path: '/dsa-list', exact: true, name: 'DSA List', component: DSAList },
   { path: '/dsa-detail/:id', exact: true, name: 'DSA Detail', component: DSADetail },
+
 ];
 
 export default routes;

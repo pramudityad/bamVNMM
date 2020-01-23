@@ -19,7 +19,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash"/>
 );
 
-class BulkRequest extends Component {
+class ListChangeApproval extends Component {
   constructor(props) {
     super(props);
 
@@ -45,7 +45,7 @@ class BulkRequest extends Component {
     this.getAllMR = this.getAllMR.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
     this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
-    this.requestForApprovalBulk = this.requestForApprovalBulk.bind(this);
+    this.ApprovalBulk = this.ApprovalBulk.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -106,7 +106,7 @@ class BulkRequest extends Component {
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"current_mr_status" : "PLANTSPEC ASSIGNED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"current_mr_status" : "MR UPDATED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
       if(res.data !== undefined) {
@@ -133,7 +133,7 @@ class BulkRequest extends Component {
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"current_mr_status" : "PLANTSPEC ASSIGNED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"current_mr_status" : "MR UPDATED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
       console.log("MR List All", res);
       if(res.data !== undefined) {
@@ -240,24 +240,57 @@ class BulkRequest extends Component {
     }
   }
 
-  async requestForApprovalBulk(){
+  async ApprovalBulk(){
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     let dataMRChecked = this.state.data_mr_checked;
     let sucPatch = [];
     for(let i = 0; i < dataMRChecked.length; i++){
       let dataMR = dataMRChecked[i];
-      const requestAprv = [{
+      const statusAprv = [{
         "mr_status_name": "MATERIAL_REQUEST",
-        "mr_status_value": "REQUESTED",
+        "mr_status_value": "APPROVED",
         "mr_status_date": dateNow,
         "mr_status_updater": this.state.userEmail,
         "mr_status_updater_id": this.state.userId,
-      }]
-      let reqMR = {};
-      reqMR['current_mr_status'] = "MR REQUESTED";
-      reqMR['mr_status'] = dataMR.mr_status.concat(requestAprv);
-      const patchData = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, reqMR, dataMR._etag)
+      }];
+      const statusRecent = dataMR.mr_status[dataMR.mr_status.findIndex(e => e.mr_status_value === "UPDATED" && e.mr_status_name === "MATERIAL_REQUEST")-1];
+      let aprvMR = {};
+      let firstStat = "";
+      let lastStat = "";
+      switch(statusRecent.mr_status_name) {
+        case "MATERIAL_REQUEST":
+          firstStat = "MR";
+          break;
+        case "LACK_OF_MATERIAL":
+          firstStat = "LACK OF MATERIAL";
+          break;
+        case "LOM_CONFIRMATION":
+          firstStat = "LOM CONFIRMED";
+          break;
+        default:
+          firstStat = statusRecent.mr_status_name;
+      }
+      switch(statusRecent.mr_status_value) {
+        case "YES":
+          lastStat = "";
+          break;
+        case "SEND WITH LOM":
+          lastStat = " (SEND WITH LOM)";
+          break;
+        case "LOM_CONFIRMATION":
+          lastStat = " (WAIT FOR COMPLETION)";
+          break;
+        default:
+          lastStat = " "+statusRecent.mr_status_value;
+      }
+      const statusNow = lastStat.length !== 0 ? firstStat + lastStat : firstStat;
+      aprvMR['current_mr_status'] = statusNow;
+      aprvMR['mr_status'] = dataMR.mr_status.concat(statusAprv);
+      aprvMR['mr_status'] = dataMR.mr_status.concat(statusRecent);
+      console.log("dataMR", dataMR);
+      console.log("aprvMR", aprvMR);
+      const patchData = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, aprvMR, dataMR._etag)
       if(patchData.data !== undefined){
         sucPatch.push(patchData.data._id);
       }
@@ -461,7 +494,7 @@ class BulkRequest extends Component {
               <CardFooter>
                 {this.state.data_mr_checked.length !== 0 && (
                   <div>
-                    <Button color='success' style={{float : 'right'}} onClick={this.requestForApprovalBulk}> Send Request</Button>
+                    <Button color='success' style={{float : 'right'}} onClick={this.ApprovalBulk}>Approve Changes</Button>
                   </div>
                 )}
               </CardFooter>
@@ -486,4 +519,4 @@ const mapDispatchToProps = (dispatch) => {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(BulkRequest);
+export default connect(mapStateToProps, mapDispatchToProps)(ListChangeApproval);
