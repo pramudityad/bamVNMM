@@ -24,6 +24,8 @@ class DSADetail extends Component {
       userEmail : this.props.dataLogin.email,
       network_number : null,
     }
+
+    this.submitDSA = this.submitDSA.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -260,6 +262,62 @@ class DSADetail extends Component {
     return section_3;
   }
 
+  async submitDSA(e) {
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    const _etag = e.target.value;
+    const _id = e.target.id;
+    let currStatus = [
+      {
+        "dsa_status_name": "DSA",
+        "dsa_status_value": "SUBMITTED",
+        "dsa_status_date": dateNow,
+        "dsa_status_updater": this.state.userEmail,
+        "dsa_status_updater_id": this.state.userId
+      }
+    ];
+    let successUpdate = [];
+    let updateDSA = {};
+    updateDSA['current_dsa_status'] = "DSA SUBMITTED";
+    updateDSA['dsa_status'] = this.state.data_dsa.dsa_status.concat(currStatus);
+    let res = await this.patchDataToAPI('/mr_op/'+_id, updateDSA, _etag);
+    if(res !== undefined) {
+      if(res.data !== undefined) {
+        successUpdate.push(res.data);
+      }
+    }
+    if(successUpdate.length !== 0){
+      alert('DSA has been submitted!');
+      setTimeout(function(){ window.location.reload(); }, 2000);
+    } else {
+      alert('Sorry there is an error, please try again!');
+    }
+  }
+
+  async patchDataToAPI(url, data, _etag) {
+    try {
+      let respond = await axios.patch(API_URL+url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'If-Match': _etag
+        },
+        auth: {
+          username: username,
+          password: password
+        }
+      })
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log('respond patch data', respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = undefined;
+      this.setState({action_status: 'failed', action_message: 'Sorry, there is something wrong, please try again!'});
+      console.log('respond patch data', err);
+      return respond;
+    }
+  }
+
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
@@ -345,11 +403,11 @@ class DSADetail extends Component {
                           <h6>Destination</h6>
                           <FormGroup style={{paddingLeft: "16px"}}>
                             <Label>From</Label>
-                            <Input type="text" name="10" readOnly />
+                            <Input type="text" name="10" readOnly value={this.state.data_dsa.origin_warehouse.value} />
                           </FormGroup>
                           <FormGroup style={{paddingLeft: "16px"}}>
                             <Label>To</Label>
-                            <Input type="text" name="11" readOnly />
+                            <Input type="text" name="11" readOnly value={this.state.data_dsa.site_info[0].site_id} />
                           </FormGroup>
                         </Col>
                         <Col md="3">
@@ -368,7 +426,7 @@ class DSADetail extends Component {
                         <Col md="6">
                           <FormGroup style={{paddingLeft: "16px"}}>
                             <Label>Address</Label>
-                            <Input type="textarea" name="14" rows="3" readOnly />
+                            <Input type="textarea" name="14" rows="3" readOnly value={this.state.data_dsa.origin_warehouse.address} />
                           </FormGroup>
                         </Col>
                       </Row>
@@ -517,6 +575,9 @@ class DSADetail extends Component {
                       </Row>
                     </Form>
                   </CardBody>
+                  <CardFooter>
+                    <Button color="primary" id={this.state.data_dsa._id} value={this.state.data_dsa._etag} onClick={this.submitDSA} hidden={this.state.data_dsa.current_dsa_status === "DSA SUBMITTED"}><i className="fa fa-check" style={{marginRight: "8px"}}></i> Submit DSA</Button>
+                  </CardFooter>
                 </Card>
               )}
             </Col>

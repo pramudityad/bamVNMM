@@ -111,6 +111,7 @@ class DSACreation extends Component {
     // dataForm[7] = balanced value;
     // dataForm[8] = % utilization;
     // dataForm[9] = status;
+    dataForm[14] = dataMR.origin_warehouse.address;
     this.setState({create_dsa_form : dataForm}, () => {
       console.log("DSA Form", this.state.create_dsa_form);
     });
@@ -538,18 +539,21 @@ class DSACreation extends Component {
     const _id = e.target.id;
     let successUpdate = [];
 
-    let section_1 = [
-      {
-        "category" : "MOT",
-        "sub_category" : dataForm[15],
-        "service_master" : dataForm[16],
-        "price" : dataForm[17],
-        "qty" : dataForm[18],
-        "total_price" : dataForm[19],
-        "short_text" : dataForm[20],
-        "long_text" : dataForm[21]
-      }
-    ];
+    let section_1 = [];
+    if(dataForm[16] !== null) {
+      section_1.push(
+        {
+          "category" : "MOT",
+          "sub_category" : dataForm[15],
+          "service_master" : dataForm[16],
+          "price" : dataForm[17],
+          "qty" : dataForm[18],
+          "total_price" : dataForm[19],
+          "short_text" : dataForm[20],
+          "long_text" : dataForm[21]
+        }
+      )
+    }
     let k = 58;
     for(let i = 22; i < 47; i=i+6) {
       let data_section_1 = {
@@ -746,11 +750,11 @@ class DSACreation extends Component {
                         <h6>Destination</h6>
                         <FormGroup style={{paddingLeft: "16px"}}>
                           <Label>From</Label>
-                          <Input type="text" name="10" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.origin_warehouse : ""} onChange={this.handleChangeForm} />
+                          <Input type="text" name="10" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.origin_warehouse.value : ""} onChange={this.handleChangeForm} readOnly />
                         </FormGroup>
                         <FormGroup style={{paddingLeft: "16px"}}>
                           <Label>To</Label>
-                          <Input type="text" name="11" onChange={this.handleChangeForm} />
+                          <Input type="text" name="11" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.site_info[0].site_id : ""} onChange={this.handleChangeForm} readOnly />
                         </FormGroup>
                       </Col>
                       <Col md="3">
@@ -769,7 +773,7 @@ class DSACreation extends Component {
                       <Col md="6">
                         <FormGroup style={{paddingLeft: "16px"}}>
                           <Label>Address</Label>
-                          <Input type="textarea" name="14" rows="3" onChange={this.handleChangeForm} />
+                          <Input type="textarea" name="14" rows="3" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.origin_warehouse.address : ""} onChange={this.handleChangeForm} />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -931,7 +935,7 @@ class DSACreation extends Component {
                   </Form>
                 </CardBody>
                 <CardFooter>
-                  <Button type="submit" color="primary" disabled={this.state.list_mr_selected === null} onClick={this.submitDSA} id={this.state.list_mr_selected !== null ? this.state.list_mr_selected._id : ""} value={this.state.list_mr_selected !== null ? this.state.list_mr_selected._etag : ""}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Submit DSA</Button>
+                  <Button type="submit" color="primary" disabled={this.state.list_mr_selected === null} onClick={this.submitDSA} id={this.state.list_mr_selected !== null ? this.state.list_mr_selected._id : ""} value={this.state.list_mr_selected !== null ? this.state.list_mr_selected._etag : ""}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create DSA</Button>
                 </CardFooter>
               </Card>
             </Col>
