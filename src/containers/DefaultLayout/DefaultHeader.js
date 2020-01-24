@@ -25,10 +25,12 @@ class DefaultHeader extends Component {
     super(props);
 
     this.state = {
-      order_created : []
+      order_created : [],
+      rtd : []
     }
 
     this.getOrderCreated = this.getOrderCreated.bind(this);
+    this.getRTD = this.getRTD.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -62,8 +64,20 @@ class DefaultHeader extends Component {
     })
   }
 
+  getRTD() {
+    let whereAnd = '{"current_mr_status": "RTD REQUESTED"}';
+    this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
+      console.log("RTD", res);
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({rtd : items});
+      }
+    })
+  }
+
   componentDidMount() {
     this.getOrderCreated();
+    this.getRTD();
   }
 
   render() {
@@ -82,13 +96,13 @@ class DefaultHeader extends Component {
 
         <Nav className="d-md-down-none" navbar>
           <NavItem className="px-3">
-            <NavLink to="/dashboard" className="nav-link" >Dashboard</NavLink>
+            <NavLink to="/dashboard" className="nav-link">Dashboard</NavLink>
           </NavItem>
           <NavItem className="px-3">
             <Link to="/users" className="nav-link">Users</Link>
           </NavItem>
           <NavItem className="px-3">
-            <NavLink to="#" className="nav-link">Settings</NavLink>
+            <NavLink to="/settings" className="nav-link">Settings</NavLink>
           </NavItem>
         </Nav>
         <Nav className="ml-auto" navbar>
@@ -105,9 +119,19 @@ class DefaultHeader extends Component {
               }
             </DropdownMenu>
           </UncontrolledDropdown>
-          <NavItem className="d-md-down-none">
-            <NavLink to="#" className="nav-link"><i className="fa fa-warning"></i></NavLink>
-          </NavItem>
+          <UncontrolledDropdown nav direction="down">
+            <DropdownToggle nav>
+              <i className={this.state.rtd.length === 0 ? "fa fa-warning" : "fa fa-warning faa-ring animated"}></i>{this.state.rtd.length !== 0 && (<Badge pill color="danger">{this.state.rtd.length}</Badge>)}
+            </DropdownToggle>
+            <DropdownMenu right>
+              <DropdownItem header tag="div" className="text-center"><strong>Confirmation Go / No Go</strong></DropdownItem>
+              {
+                this.state.rtd.length === 0 ?
+                (<DropdownItem><center><i className="fa fa-check" style={{color:"green"}}></i>No Requested RTD</center></DropdownItem>) :
+                this.state.rtd.map((list, i) => <Link to={'/ready-to-deliver'}><DropdownItem><i className="fa fa-exclamation" style={{color:"red"}}></i>{list.mr_id} - {list.project_name}</DropdownItem></Link>)
+              }
+            </DropdownMenu>
+          </UncontrolledDropdown>
           <UncontrolledDropdown nav direction="down">
             <DropdownToggle nav>
               <img src={'../../assets/img/avatars/6.jpg'} className="img-avatar" alt="admin@bootstrapmaster.com" />
