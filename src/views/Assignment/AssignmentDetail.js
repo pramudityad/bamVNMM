@@ -366,7 +366,7 @@ class AssignmentDetail extends Component {
     if(respondAssignBast.data !== undefined && respondAssignBast.status >= 200 && respondAssignBast.status <= 300 ){
       this.setState({action_status : 'success', action_message : 'BAST Number has been assign'});
     }else{
-      this.setState({action_status : 'failed'});
+      this.setState({action_status : 'failed', action_message : respondAssignBast.response.data.error});
     }
   }
 
@@ -530,7 +530,7 @@ class AssignmentDetail extends Component {
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>PO</Label>
-                        <Input type="text" name="po" readOnly />
+                        <Input type="text" name="po" readOnly value={this.state.data_assignment.PO_Number}/>
                       </FormGroup>
                     </Col>
                     <Col md="4">
