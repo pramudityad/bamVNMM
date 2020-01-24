@@ -185,8 +185,8 @@ class DSAList extends Component {
                         </td>
                         <td>{list.dsa_number}</td>
                         <td>{list.dsa_total_value}</td>
-                        <td></td>
-                        <td></td>
+                        <td>{list.origin_warehouse.value}</td>
+                        <td>{list.site_info[0].site_id}</td>
                         <td>{list.dimension_volume}</td>
                         <td>{list.dimension_weight}</td>
                       </tr>
