@@ -566,7 +566,7 @@ class PSUpload extends Component {
             <table>
               <tbody>
                 <tr>
-                  <td style={{width : '150px'}}>TSSR</td>
+                  <td style={{width : '150px'}}>PlantSpec</td>
                   <td>:</td>
                   <td style={{width : '300px'}}>
                     <Select

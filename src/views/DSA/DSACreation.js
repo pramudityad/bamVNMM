@@ -665,7 +665,7 @@ class DSACreation extends Component {
 
   render() {
     return (
-      <div className="animated fadeIn" style={{height: "430px", overflow: "scroll"}}>
+      <div className="animated fadeIn" style={{overflow: "scroll"}}>
         <div style={{width: "150%"}}>
           <Row>
             <Col xs="12" lg="12">
@@ -753,9 +753,15 @@ class DSACreation extends Component {
                           <Input type="text" name="10" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.origin_warehouse.value : ""} onChange={this.handleChangeForm} readOnly />
                         </FormGroup>
                         <FormGroup style={{paddingLeft: "16px"}}>
-                          <Label>To</Label>
+                          <Label>To (Site NE)</Label>
                           <Input type="text" name="11" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.site_info[0].site_id : ""} onChange={this.handleChangeForm} readOnly />
                         </FormGroup>
+                        {this.state.list_mr_selected !== null ? this.state.list_mr_selected.site_info[1] !== undefined ? (
+                          <FormGroup style={{paddingLeft: "16px"}}>
+                            <Label>To (Site FE)</Label>
+                            <Input type="text" name="11" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.site_info[1].site_id : ""} onChange={this.handleChangeForm} readOnly />
+                          </FormGroup>
+                        ) : (<div></div>) : (<div></div>)}
                       </Col>
                       <Col md="3">
                         <h6>Dimension</h6>
@@ -952,5 +958,5 @@ const mapStateToProps = (state) => {
     SidebarMinimize : state.minimizeSidebar
   }
 }
-  
+
 export default connect(mapStateToProps)(DSACreation);

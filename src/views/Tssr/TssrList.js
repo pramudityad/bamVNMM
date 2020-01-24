@@ -122,15 +122,15 @@ class TssrList extends Component {
             <Card>
               <CardHeader>
                 <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> TSSR List
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> PS List
                 </span>
-                <Link to={'/tssr-bom'}><Button color="success" style={{float : 'right'}} size="sm">Create TSSR</Button></Link>
+                <Link to={'/tssr-bom'}><Button color="success" style={{float : 'right'}} size="sm">Create PS</Button></Link>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th>No TSSR</th>
+                      <th>No PS</th>
                       <th>Project</th>
                       <th>Site</th>
                       <th>Action</th>
