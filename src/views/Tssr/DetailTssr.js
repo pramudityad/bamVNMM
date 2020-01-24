@@ -1003,7 +1003,7 @@ class DetailTssr extends Component {
           <Col xl="12">
           <Card>
             <CardHeader>
-              <span style={{lineHeight :'2', fontSize : '15px'}} >Detail TSSR</span>
+              <span style={{lineHeight :'2', fontSize : '15px'}} >Detail Plant Spec</span>
               <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download TSSR Format</Button>
             </CardHeader>
             <CardBody>

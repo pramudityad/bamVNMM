@@ -362,7 +362,7 @@ class AssignmentDetail extends Component {
       "account_id" : "1",
       "data" : [dataBast]
     };
-    const respondAssignBast = await this.patchDatatoAPINode('/updateBastNumber/'+dataAssignment._id, assignBast);
+    const respondAssignBast = await this.patchDatatoAPINode('/aspAssignment/updateBastNumber/'+dataAssignment._id, assignBast);
     if(respondAssignBast.data !== undefined && respondAssignBast.status >= 200 && respondAssignBast.status <= 300 ){
       this.setState({action_status : 'success', action_message : 'BAST Number has been assign'});
     }else{
