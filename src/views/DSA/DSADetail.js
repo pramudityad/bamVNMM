@@ -141,7 +141,7 @@ class DSADetail extends Component {
             <Col md="2" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 {label7}
-                <Input type="text" readOnly value={this.state.data_dsa.primary_section[i].long_text}></Input>
+                <Input type="textarea" rows="1" readOnly value={this.state.data_dsa.primary_section[i].long_text}></Input>
               </FormGroup>
             </Col>
           </Row>
@@ -206,7 +206,7 @@ class DSADetail extends Component {
             <Col md="2" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 {label7}
-                <Input type="text" readOnly value={this.state.data_dsa.second_section.service_details[i].long_text}></Input>
+                <Input type="textarea" rows="1" readOnly value={this.state.data_dsa.second_section.service_details[i].long_text}></Input>
               </FormGroup>
             </Col>
           </Row>
@@ -246,7 +246,7 @@ class DSADetail extends Component {
             <Col md="2" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 {label2}
-                <Input type="text" readOnly value={this.state.data_dsa.third_section.service_details[i].description}></Input>
+                <Input type="textarea" rows="1" readOnly value={this.state.data_dsa.third_section.service_details[i].description}></Input>
               </FormGroup>
             </Col>
             <Col md="2" style={{margin:"0", padding:"4px"}}>
@@ -504,7 +504,7 @@ class DSADetail extends Component {
                         <Col md="2" style={{margin:"0", padding:"4px"}}>
                           <FormGroup>
                             <Label>Long Text</Label>
-                            <Input type="text" readOnly />
+                            <Input type="textarea" rows="1" readOnly />
                           </FormGroup>
                         </Col>
                       </Row>
@@ -541,7 +541,7 @@ class DSADetail extends Component {
                         </Col>
                         <Col md="2" style={{margin:"0", padding:"4px"}}>
                           <FormGroup>
-                            <Input type="text" readOnly />
+                            <Input type="textarea" rows="1" readOnly />
                           </FormGroup>
                         </Col>
                       </Row>
