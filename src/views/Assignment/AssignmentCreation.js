@@ -558,7 +558,7 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <Row>
+                  <Row style={{display: "none"}}>
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>PR</Label>
@@ -578,7 +578,7 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <Row>
+                  <Row style={{display: "none"}}>
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>PO</Label>
@@ -598,7 +598,7 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <Row>
+                  <Row style={{display: "none"}}>
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>PO LINE ITEM</Label>
@@ -999,8 +999,8 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <h5 style={{marginTop: "16px"}}>GR (PARTIAL)</h5>
-                  <Row>
+                  <h5 style={{marginTop: "16px", display: "none"}}>GR (PARTIAL)</h5>
+                  <Row style={{display: "none"}}>
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>ASP BAST NO (DP)</Label>
@@ -1028,7 +1028,7 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <Row>
+                  <Row style={{display: "none"}}>
                     <Col md="4">
                       <FormGroup check inline style={{paddingLeft: "16px", verticalAlign: "center"}}>
                         <Input className="form-check-input" type="checkbox" name="partial_request_revision_check" readOnly />
@@ -1050,8 +1050,8 @@ class AssignmentCreation extends Component {
                       </Row>
                     </Col>
                   </Row>
-                  <h5 style={{marginTop: "16px"}}>GR (FINAL)</h5>
-                  <Row>
+                  <h5 style={{marginTop: "16px", display: "none"}}>GR (FINAL)</h5>
+                  <Row style={{display: "none"}}>
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>ASP BAST NO</Label>
@@ -1079,7 +1079,7 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <Row>
+                  <Row style={{display: "none"}}>
                     <Col md="4">
                       <FormGroup check inline style={{paddingLeft: "16px", verticalAlign: "center"}}>
                         <Input className="form-check-input" type="checkbox" name="final_request_revision_check"/>
