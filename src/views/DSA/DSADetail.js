@@ -407,12 +407,12 @@ class DSADetail extends Component {
                           </FormGroup>
                           <FormGroup style={{paddingLeft: "16px"}}>
                             <Label>To (Site NE)</Label>
-                            <Input type="text" name="11" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.site_info[0].site_id : ""} onChange={this.handleChangeForm} readOnly />
+                            <Input type="text" name="11" value={this.state.data_dsa !== null ? this.state.data_dsa.site_info[0].site_id : ""} onChange={this.handleChangeForm} readOnly />
                           </FormGroup>
-                          {this.state.list_mr_selected !== null ? this.state.list_mr_selected.site_info[1] !== undefined ? (
+                          {this.state.data_dsa !== null ? this.state.data_dsa.site_info[1] !== undefined ? (
                             <FormGroup style={{paddingLeft: "16px"}}>
                               <Label>To (Site FE)</Label>
-                              <Input type="text" name="11" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.site_info[1].site_id : ""} onChange={this.handleChangeForm} readOnly />
+                              <Input type="text" name="11" value={this.state.data_dsa !== null ? this.state.data_dsa.site_info[1].site_id : ""} onChange={this.handleChangeForm} readOnly />
                             </FormGroup>
                           ) : (<div></div>) : (<div></div>)}
                         </Col>
