@@ -1,11 +1,6 @@
 export default {
   items: [
     {
-      name: 'WH Dashboard',
-      url: '/wh-dashboard',
-      icon: 'icon-speedometer',
-    },
-    {
       name: 'BOQ & Product',
       icon: 'icon-drawer',
       children: [
@@ -51,6 +46,11 @@ export default {
       name: 'Material Request',
       icon: 'icon-drawer',
       children: [
+        {
+          name: 'WH Dashboard',
+          url: '/wh-dashboard',
+          icon: 'icon-speedometer',
+        },
         {
           name: 'MR List',
           url: '/mr-list',
