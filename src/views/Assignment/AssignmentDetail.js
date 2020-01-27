@@ -366,6 +366,7 @@ class AssignmentDetail extends Component {
     if(respondAssignBast.data !== undefined && respondAssignBast.status >= 200 && respondAssignBast.status <= 300 ){
       this.setState({action_status : 'success', action_message : 'BAST Number has been assign'});
     }else{
+      console.log("respondAssignBast.response", respondAssignBast.response);
       this.setState({action_status : 'failed', action_message : respondAssignBast.response.data.error});
     }
   }

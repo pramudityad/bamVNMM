@@ -25,8 +25,8 @@ export default {
           icon: 'icon-drawer',
         },
         {
-          name: 'TSSR List',
-          url: '/tssr-list',
+          name: 'Plant Spec List',
+          url: '/ps-list',
           icon: 'icon-briefcase',
         },
       ]
