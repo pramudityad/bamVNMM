@@ -7,9 +7,8 @@ import {connect} from 'react-redux';
 import Select from 'react-select';
 import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
 import 'react-vertical-timeline-component/style.min.css';
-import { Map, GoogleApiWrapper } from 'google-maps-react';
-import GMap from './MapView';
-import GoogleMap from './MyMapComponent';
+import { withScriptjs } from "react-google-maps";
+import GMap from './MapComponent';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -439,6 +438,8 @@ class MRDetail extends Component {
       backgroundColor: '#e3e3e3',
     };
 
+    const MapLoader = withScriptjs(GMap);
+
     console.log("tabs_submenu", this.state.tabs_submenu);
     return (
       <div>
@@ -792,9 +793,11 @@ class MRDetail extends Component {
           )}
           {this.state.tabs_submenu[3] === true && (
             <Fragment>
-                {/* <GMap></GMap> */}
-                <b><span>NOT FULLY IMPLEMENTED YET</span></b>
-                <GoogleMap />
+                {/* <GoogleMap site_lat={-6.3046027} site_lng={106.7951936} /> */}
+                <MapLoader
+                  googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyAoCmcgwc7MN40js68RpcZdSzh9yLrmLF4"
+                  loadingElement={<div style={{ height: '100%' }} />}
+                />
             </Fragment>
           )}
           </CardBody>
