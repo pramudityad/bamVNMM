@@ -7,6 +7,9 @@ import {connect} from 'react-redux';
 import Select from 'react-select';
 import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
 import 'react-vertical-timeline-component/style.min.css';
+import { Map, GoogleApiWrapper } from 'google-maps-react';
+import GMap from './MapView';
+import GoogleMap from './MyMapComponent';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -462,6 +465,9 @@ class MRDetail extends Component {
               <NavItem>
                 <NavLink href="#" active={this.state.tabs_submenu[2]} value="2" onClick={this.changeTabsSubmenu.bind(this, 2)}>Progress Overview</NavLink>
               </NavItem>
+              <NavItem>
+                <NavLink href="#" active={this.state.tabs_submenu[3]} value="2" onClick={this.changeTabsSubmenu.bind(this, 3)}>Map View</NavLink>
+              </NavItem>
             </Nav>
             </div>
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
@@ -782,6 +788,13 @@ class MRDetail extends Component {
                   </Col>
                 </Row>
               </div>
+            </Fragment>
+          )}
+          {this.state.tabs_submenu[3] === true && (
+            <Fragment>
+                {/* <GMap></GMap> */}
+                <b><span>NOT FULLY IMPLEMENTED YET</span></b>
+                <GoogleMap />
             </Fragment>
           )}
           </CardBody>
