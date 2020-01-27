@@ -166,7 +166,7 @@ class AssignmentCreation extends Component {
     } else if(e.name === "24") {
       const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
       let dataForm = this.state.create_assignment_form;
-      dataForm[26] = getPriceUnit.data._items[0].ssow_type;
+      dataForm[26] = getPriceUnit.data._items[0].ssow_type !== null ? getPriceUnit.data._items[0].ssow_type : "act";
       dataForm[60] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
     } else if(e.name === "30") {
       const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
@@ -308,6 +308,13 @@ class AssignmentCreation extends Component {
             "status_updater" : this.state.userEmail
           }
         ]
+      }
+      if(ssow_list.ssow_unit === null){
+        ssow_list["ssow_unit"] = "act";
+      }else{
+        if(ssow_list.ssow_unit.length === 0){
+          ssow_list["ssow_unit"] = "act";
+        }
       }
       if(dataForm[i] !== null) {
         all_ssow.push(ssow_list);
