@@ -122,9 +122,9 @@ class TssrList extends Component {
             <Card>
               <CardHeader>
                 <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> PS List
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Plant Spec List
                 </span>
-                <Link to={'/tssr-bom'}><Button color="success" style={{float : 'right'}} size="sm">Create PS</Button></Link>
+                <Link to={'/ps-bom'}><Button color="success" style={{float : 'right'}} size="sm">Create PS</Button></Link>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -143,7 +143,7 @@ class TssrList extends Component {
                         <td>{list.project_name}</td>
                         <td></td>
                         <td>
-                          <Link to={'/tssr-bom/'+list._id}>
+                          <Link to={'/ps-bom/'+list._id}>
                             <Button color="info" size="sm" outline>Detail</Button>
                           </Link>
                         </td>

@@ -124,9 +124,9 @@ const routes = [
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
 
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
-  { path: '/tssr-list', exact: true, name: 'TSSR List', component: TssrList },
-  { path: '/tssr-bom', exact: true, name: 'TSSR BOM', component: TssrBOM },
-  { path: '/tssr-bom/:id', name: 'TSSR BOM', component: TssrBOMDetail },
+  { path: '/ps-list', exact: true, name: 'Plant Spec List', component: TssrList },
+  { path: '/ps-bom', exact: true, name: 'Plant Spec BOM', component: TssrBOM },
+  { path: '/ps-bom/:id', name: 'Plant Spec BOM', component: TssrBOMDetail },
   { path: '/mr-list', exact: true, name: 'MR List', component: MRList },
   { path: '/mr-na-list', exact: true, name: 'MR List', component: MRNAList },
   { path: '/mr-creation', exact: true, name: 'Create MR', component: MRCreation },
@@ -164,8 +164,6 @@ const routes = [
   { path: '/dsa-detail/:id', exact: true, name: 'DSA Detail', component: DSADetail },
   { path: '/ordering-list', exact: true, name: 'Ordering List', component: ListOrdering },
   { path: '/ordering-detail/:id', exact: true, name: 'Ordering Detail', component: DetailOrdering },
-  { path: '/map-view', exact: true, name: 'Map View', component: MapView },
-
 ];
 
 export default routes;

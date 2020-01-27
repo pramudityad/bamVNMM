@@ -541,7 +541,7 @@ class TssrBOM extends Component {
 
   render() {
     if(this.state.redirectSign !== false){
-      return (<Redirect to={'/tssr-bom/'+this.state.redirectSign} />);
+      return (<Redirect to={'/ps-bom/'+this.state.redirectSign} />);
     }
     console.log("Excel Render", this.state.rowsXLS);
     return (
@@ -551,7 +551,7 @@ class TssrBOM extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}} >PlantSpec </span>
+            <span style={{lineHeight :'2', fontSize : '17px'}} >Plant Spec </span>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
@@ -559,7 +559,7 @@ class TssrBOM extends Component {
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>
-                  <td colSpan="4" style={{textAlign : 'center'}}>PLANTSPEC PREVIEW</td>
+                  <td colSpan="4" style={{textAlign : 'center'}}>PLANT SPEC PREVIEW</td>
                 </tr>
               </tbody>
             </table>
