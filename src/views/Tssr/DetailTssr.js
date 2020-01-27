@@ -990,7 +990,7 @@ class DetailTssr extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'TSSR '+this.state.data_tssr.no_tssr_boq+' Uploader Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'Plant Spec '+this.state.data_tssr.no_tssr_boq+' Uploader Template.xlsx');
   }
 
   render() {
@@ -1004,7 +1004,7 @@ class DetailTssr extends Component {
           <Card>
             <CardHeader>
               <span style={{lineHeight :'2', fontSize : '15px'}} >Detail Plant Spec</span>
-              <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download TSSR Format</Button>
+              <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download PS Format</Button>
             </CardHeader>
             <CardBody>
             <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
@@ -1039,12 +1039,12 @@ class DetailTssr extends Component {
               <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
                 <tbody>
                   <tr>
-                    <td colSpan="4" style={{textAlign : 'center', color : 'rgba(59,134,134,1)', fontSize : '21px'}}>TSSR BOM DETAIL</td>
+                    <td colSpan="4" style={{textAlign : 'center', color : 'rgba(59,134,134,1)', fontSize : '21px'}}>Plant Spec DETAIL</td>
                   </tr>
                   {this.state.data_tssr !== null && (
                     <Fragment>
                     <tr>
-                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>TSSR ID : {this.state.data_tssr.no_tssr_boq}</td>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Plant Spec ID : {this.state.data_tssr.no_tssr_boq}</td>
                     </tr>
                     <tr>
                       <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Project Name : {this.state.data_tssr.project_name}</td>
