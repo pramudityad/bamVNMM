@@ -329,7 +329,7 @@ class MRNAList extends Component {
                       <tr key={list._id}>
                         <td>
                           <Link to={'/ps-upload/'+list._id}>
-                            <Button color="info" size="sm" outline>Assign</Button>
+                            <Button color="info" size="sm" outline>Detail</Button>
                           </Link>
                         </td>
                         <td>{list.mr_id}</td>

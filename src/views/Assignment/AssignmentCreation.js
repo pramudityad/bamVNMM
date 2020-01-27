@@ -166,7 +166,7 @@ class AssignmentCreation extends Component {
     } else if(e.name === "24") {
       const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
       let dataForm = this.state.create_assignment_form;
-      dataForm[26] = getPriceUnit.data._items[0].ssow_type !== null ? getPriceUnit.data._items[0].ssow_type : "act";
+      dataForm[26] = getPriceUnit.data._items[0].ssow_type;
       dataForm[60] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
     } else if(e.name === "30") {
       const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
@@ -309,13 +309,6 @@ class AssignmentCreation extends Component {
           }
         ]
       }
-      if(ssow_list.ssow_unit === null){
-        ssow_list["ssow_unit"] = "act";
-      }else{
-        if(ssow_list.ssow_unit.length === 0){
-          ssow_list["ssow_unit"] = "act";
-        }
-      }
       if(dataForm[i] !== null) {
         all_ssow.push(ssow_list);
       }
@@ -326,7 +319,6 @@ class AssignmentCreation extends Component {
       "Assignment_No" : "ASG"+this.getAssignmentID(),
       "Account_Name" : "TSEL",
       "CD_ID" : dataForm[0],
-      "id_cd_doc" : this.state.activity_selected,
       "Project" : dataForm[1],
       "Plant" : "",
       "NW" : dataForm[11],
@@ -406,7 +398,7 @@ class AssignmentCreation extends Component {
     if(this.state.redirect_sign !== false) {
       return (<Redirect to={'/assignment-list/'} />);
     }
-    return (
+    return(
       <div className="animated fadeIn">
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
         <Row>
@@ -565,7 +557,7 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <Row style={{display: "none"}}>
+                  <Row>
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>PR</Label>
@@ -585,7 +577,7 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <Row style={{display: "none"}}>
+                  <Row>
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>PO</Label>
@@ -605,7 +597,7 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <Row style={{display: "none"}}>
+                  <Row>
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>PO LINE ITEM</Label>
@@ -1006,8 +998,8 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <h5 style={{marginTop: "16px", display: "none"}}>GR (PARTIAL)</h5>
-                  <Row style={{display: "none"}}>
+                  <h5 style={{marginTop: "16px"}}>GR (PARTIAL)</h5>
+                  <Row>
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>ASP BAST NO (DP)</Label>
@@ -1035,7 +1027,7 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <Row style={{display: "none"}}>
+                  <Row>
                     <Col md="4">
                       <FormGroup check inline style={{paddingLeft: "16px", verticalAlign: "center"}}>
                         <Input className="form-check-input" type="checkbox" name="partial_request_revision_check" readOnly />
@@ -1057,8 +1049,8 @@ class AssignmentCreation extends Component {
                       </Row>
                     </Col>
                   </Row>
-                  <h5 style={{marginTop: "16px", display: "none"}}>GR (FINAL)</h5>
-                  <Row style={{display: "none"}}>
+                  <h5 style={{marginTop: "16px"}}>GR (FINAL)</h5>
+                  <Row>
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>ASP BAST NO</Label>
@@ -1086,7 +1078,7 @@ class AssignmentCreation extends Component {
                       </FormGroup>
                     </Col>
                   </Row>
-                  <Row style={{display: "none"}}>
+                  <Row>
                     <Col md="4">
                       <FormGroup check inline style={{paddingLeft: "16px", verticalAlign: "center"}}>
                         <Input className="form-check-input" type="checkbox" name="final_request_revision_check"/>

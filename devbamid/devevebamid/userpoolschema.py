@@ -33,12 +33,6 @@ userpoolschema = {
         'nullable': True,
         'default': None
     },
-    'cas_id' : {
-        'type': 'string',
-        'required': False,
-        'nullable': True,
-        'default': None
-    },
     'is_active' : {
         'type': 'boolean',
         'required': False,

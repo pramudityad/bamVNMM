@@ -61,22 +61,8 @@ const AssignmentCreation = React.lazy(() => import('./views/Assignment/Assignmen
 const AssignmentList = React.lazy(() => import('./views/Assignment/AssignmentList'));
 const BulkAssignment = React.lazy(() => import('./views/Assignment/BulkAssignment'));
 const AssignmentDetail = React.lazy(() => import('./views/Assignment/AssignmentDetail'));
-const AssignBast = React.lazy(() => import('./views/Assignment/AssignBast'));
 const BulkRequest = React.lazy(() => import('./views/MR/BulkRequest'));
 const BulkNotifytoASP = React.lazy(() => import('./views/Assignment/BulkNotifytoASP'));
-const ListTechnical = React.lazy(() => import('./views/Technical/ListTechnical'));
-const DetailTechnical = React.lazy(() => import('./views/Technical/TechnicalBoq'));
-const ApprovalTechnical = React.lazy(() => import('./views/Technical/TechnicalBoqApproval'));
-const DSACreation = React.lazy(() => import('./views/DSA/DSACreation'));
-const ListCommercial = React.lazy(() => import('./views/Commercial/ListCommercial'));
-const DetailCommercial = React.lazy(() => import('./views/Commercial/CommercialBoq'));
-const ApprovalCommercial = React.lazy(() => import('./views/Commercial/CommercialBoqApproval'));
-const DSAList = React.lazy(() => import('./views/DSA/DSAList'));
-const DSADetail = React.lazy(() => import('./views/DSA/DSADetail'));
-const BulkChangeApproval = React.lazy(() => import('./views/MR/ListChangeApproval'));
-const BulkApproval = React.lazy(() => import('./views/MR/ListBulkApproval'));
-const ListOrdering = React.lazy(() => import('./views/Ordering/ListOrdering'));
-const DetailOrdering = React.lazy(() => import('./views/Ordering/OrderingMaterial'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -123,17 +109,15 @@ const routes = [
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
 
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
-  { path: '/ps-list', exact: true, name: 'Plant Spec List', component: TssrList },
-  { path: '/ps-bom', exact: true, name: 'Plant Spec BOM', component: TssrBOM },
-  { path: '/ps-bom/:id', name: 'Plant Spec BOM', component: TssrBOMDetail },
+  { path: '/tssr-list', exact: true, name: 'TSSR List', component: TssrList },
+  { path: '/tssr-bom', exact: true, name: 'TSSR BOM', component: TssrBOM },
+  { path: '/tssr-bom/:id', name: 'TSSR BOM', component: TssrBOMDetail },
   { path: '/mr-list', exact: true, name: 'MR List', component: MRList },
   { path: '/mr-na-list', exact: true, name: 'MR List', component: MRNAList },
   { path: '/mr-creation', exact: true, name: 'Create MR', component: MRCreation },
   { path: '/mr-detail/:id', exact: true, name: 'MR Detail', component: MRDetail },
   { path: '/bulk-mr-creation', name: 'Bulk MR Creation', component: BulkMRCreation },
   { path: '/bulk-mr-request', name: 'Bulk MR Request', component: BulkRequest },
-  { path: '/bulk-mr-change-approval', name: 'Bulk MR Change Approval', component: BulkChangeApproval },
-  { path: '/bulk-mr-approval', name: 'Bulk MR Approval', component: BulkApproval },
   { path: '/ps-upload/:id', exact: true, name: 'MR List', component: PSUpload },
   { path: '/mr-progress/:id', exact: true, name: 'MR Progress', component: MRProgress },
   { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WarehouseDashboard },
@@ -151,19 +135,6 @@ const routes = [
   { path: '/bulk-assignment-creation', exact: true, name: 'Bulk Assignment Creation', component: BulkAssignment },
   { path: '/assignment-detail/:id', exact: true, name: 'Assignment Detail', component: AssignmentDetail },
   { path: '/bulk-assignment-notify', exact: true, name: 'Bulk Assignment Notify to ASP', component: BulkNotifytoASP },
-  { path: '/list-technical', exact: true, name: 'List Technical BOQ', component: ListTechnical },
-  { path: '/detail-technical/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
-  { path: '/approval-technical/:id', exact: true, name: 'Approval for Technical BOQ', component: ApprovalTechnical },
-  { path: '/dsa-creation', exact: true, name: 'DSA Creation', component: DSACreation },
-  { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
-  { path: '/detail-commercial/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
-  { path: '/approval-commercial/:id', exact: true, name: 'Approval for Commercial BOQ', component: ApprovalCommercial },
-  { path: '/assign-bast/:id', exact: true, name: 'Assign Bast', component: AssignBast },
-  { path: '/dsa-list', exact: true, name: 'DSA List', component: DSAList },
-  { path: '/dsa-detail/:id', exact: true, name: 'DSA Detail', component: DSADetail },
-  { path: '/ordering-list', exact: true, name: 'Ordering List', component: ListOrdering },
-  { path: '/ordering-detail/:id', exact: true, name: 'Ordering Detail', component: DetailOrdering },
-
 ];
 
 export default routes;

@@ -282,7 +282,6 @@ class BulkMR extends Component {
       rowsXLS: newDataXLS,
       action_status : null,
     });
-    console.log("newDataXLS", JSON.stringify(newDataXLS));
     this.checkingDataMR(newDataXLS);
     // this.formatDataTSSR(newDataXLS);
   }
@@ -381,27 +380,6 @@ class BulkMR extends Component {
     return dataProject;
   }
 
-  async getAllDataApiPaginationMR(array_value, field, endpoint){
-    let dataValue = [];
-    let arrayDataValue = array_value;
-    let getNumberPage = Math.ceil(arrayDataValue.length / 25);
-    for(let i = 0 ; i < getNumberPage; i++){
-      let DataPaginationValue = arrayDataValue.slice(i * 25, (i+1)*25);
-      let arrayIdValue = '"'+DataPaginationValue.join('","')+'"';
-      arrayIdValue = arrayIdValue.replace("%BF", "");
-      arrayIdValue = arrayIdValue.replace("%BB", "");
-      arrayIdValue = arrayIdValue.replace("%EF", "");
-      let where_id_value = '?where={"mr_id" : {"$in" : ['+arrayIdValue+']}}&projection={"_etag" : 1, "eta" : 1, "requested_eta" : 1, "dsp_company" : 1, "mr_status" : 1, "mr_milestones" : 1, "mr_id" : 1}';
-      let resValue = await this.getDatafromAPIBAM('/mr_sorted_nonpage'+where_id_value);
-      if(resValue !== undefined){
-        if(resValue.data !== undefined){
-          dataValue = dataValue.concat(resValue.data._items);
-        }
-      }
-    }
-    return dataValue;
-  }
-
   preparingDataMR(id){
     const dateNow = new Date();
     const dataRandom = ((Math.floor(Math.random() * 100)+id.toString())).padStart(4, '0');
@@ -411,16 +389,16 @@ class BulkMR extends Component {
 
   checkDSPbyID(id){
     switch(id.toString()) {
-      case "BMS":
+      case "1":
         return "PT BMS Delivery";
         break;
-      case "MITT":
+      case "2":
         return "PT MITT Delivery";
         break;
-      case "IXT":
+      case "3":
         return "PT IXT Delivery";
         break;
-      case "ARA":
+      case "4":
         return "PT ARA Delivery";
         break;
       default:
@@ -430,13 +408,13 @@ class BulkMR extends Component {
 
   checkDeliveryTypebyID(id){
     switch(id.toString()) {
-      case "WTS":
+      case "1":
         return "Warehouse to Site";
         break;
-      case "STS":
+      case "2":
         return "Site to Site";
         break;
-      case "WTW":
+      case "3":
         return "Warehouse to Warehouse";
         break;
       default:
@@ -446,10 +424,10 @@ class BulkMR extends Component {
 
   checkMRTypebyID(id){
     switch(id.toString()) {
-      case "New":
+      case "1":
         return "New";
         break;
-      case "Upgrade":
+      case "2":
         return "Upgrade";
         break;
       default:
@@ -461,18 +439,15 @@ class BulkMR extends Component {
     const dataXLS = this.state.rowsXLS;
     const dataActivity = this.state.list_data_activity;
     const data_idProjectUniq = [...new Set(dataActivity.map(({ CD_Info_Project }) => CD_Info_Project))];
-    const array_mr_id = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'id')]) ).filter( (e,n) => n>0);
-    let array_mr_id_uniq = [...new Set(array_mr_id)];
-    array_mr_id_uniq = array_mr_id_uniq.filter(e => e !== null);
     const getProject = await this.getDataProject(data_idProjectUniq);
-    const getMRID = await this.getAllDataApiPaginationMR(array_mr_id_uniq);
     let dataBulkMR = [];
-    let dataBulkMRSuc = [];
-    let dataPatchMRSuc = [];
-    let dataPatchMRError = [];
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     for(let i = 1; i < dataXLS.length; i++){
+      const activity_id = dataXLS[i][this.getIndex(dataXLS[0],'mr_activity_id')];
+      const dataCD = dataActivity.find(e => e.WP_ID === activity_id.toString());
+      const dataProject = getProject.find(e => e._id === dataCD.CD_Info_Project );
+      let numberingMR = this.preparingDataMR(i);
       const id_delivery_type = dataXLS[i][this.getIndex(dataXLS[0],'mr_delivery_type')];
       const id_mr_type = dataXLS[i][this.getIndex(dataXLS[0],'mr_type')];
       const id_dsp = dataXLS[i][this.getIndex(dataXLS[0],'mr_dsp')];
@@ -480,128 +455,86 @@ class BulkMR extends Component {
       let id_eta = dataXLS[i][this.getIndex(dataXLS[0],'eta')];
       id_etd = id_etd.replace(/'/g, "").replace(/"/g, "").split("T")[0];
       id_eta = id_eta.replace(/'/g, "").replace(/"/g, "").split("T")[0];
-      const id_upload = dataXLS[i][this.getIndex(dataXLS[0],'id')];
-      const find_mr_id = getMRID.find(e => e.mr_id === id_upload);
-      if(find_mr_id !== undefined){
-        const dataStatus = [{
-          "mr_status_name": "MATERIAL_REQUEST",
-          "mr_status_value": "UPDATED",
-          "mr_status_date": dateNow,
-          "mr_status_updater": this.state.userEmail,
-          "mr_status_updater_id": this.state.userId
-        }];
-        let patchData = {};
-        patchData["eta"] = id_eta+" 23:59:59";
-        patchData["requested_eta"] = id_eta+" 23:59:59";
-        patchData["etd"] = id_etd+" 00:00:00";
-        patchData["dsp_company"] = this.checkDSPbyID(id_dsp);
-        patchData["current_mr_status"] = "MR UPDATED";
-        patchData["mr_status"] = find_mr_id.mr_status.concat(dataStatus);
-        const respondPatchMR = await this.patchDatatoAPIBAM('/mr_op/'+find_mr_id._id, patchData, find_mr_id._etag);
-        if(respondPatchMR.data !== undefined && respondPatchMR.status >= 200 && respondPatchMR.status <= 300 ){
-          dataPatchMRSuc.push(respondPatchMR.data._id);
-        }else{
-          dataPatchMRError.push(id_upload);
+      let list_site = [];
+      if(dataCD.Site_Info_SiteID_NE !== ""){
+        let site_ne = {
+            "id_site_doc": "",
+            "site_id": dataCD.Site_Info_SiteID_NE,
+            "site_title": "NE",
+            "site_name" : dataCD.Site_Info_SiteName_NE,
+            "site_address" : dataCD.Site_Info_Address_NE,
+            "site_longitude" : parseFloat(dataCD.Site_Info_Longitude_NE),
+            "site_latitude" : parseFloat(dataCD.Site_Info_Latitude_NE),
+            "id_tssr_boq_site_doc" : null,
+            "no_tssr_boq_site" : null,
+            "tssr_version" : null
         }
-      }else{
-        const activity_id = dataXLS[i][this.getIndex(dataXLS[0],'mr_activity_id')];
-        const dataCD = dataActivity.find(e => e.WP_ID === activity_id.toString());
-        const dataProject = getProject.find(e => e._id === dataCD.CD_Info_Project );
-        let numberingMR = this.preparingDataMR(i);
-        let list_site = [];
-        if(dataCD.Site_Info_SiteID_NE !== ""){
-          let site_ne = {
-              "id_site_doc": "",
-              "site_id": dataCD.Site_Info_SiteID_NE,
-              "site_title": "NE",
-              "site_name" : dataCD.Site_Info_SiteName_NE,
-              "site_address" : dataCD.Site_Info_Address_NE,
-              "site_longitude" : parseFloat(dataCD.Site_Info_Longitude_NE),
-              "site_latitude" : parseFloat(dataCD.Site_Info_Latitude_NE),
-              "id_tssr_boq_site_doc" : null,
-              "no_tssr_boq_site" : null,
-              "tssr_version" : null
-          }
-          list_site.push(site_ne);
+        list_site.push(site_ne);
+      }
+      if(dataCD.Site_Info_SiteID_FE !== ""){
+        let site_fe = {
+            "id_site_doc": "",
+            "site_id": dataCD.Site_Info_SiteID_FE,
+            "site_title": "FE",
+            "site_name" : dataCD.Site_Info_SiteName_FE,
+            "site_address" : dataCD.Site_Info_Address_FE,
+            "site_longitude" : parseFloat(dataCD.Site_Info_Longitude_FE),
+            "site_latitude" : parseFloat(dataCD.Site_Info_Latitude_FE),
+            "id_tssr_boq_site_doc" : null,
+            "no_tssr_boq_site" : null,
+            "tssr_version" : null
         }
-        if(dataCD.Site_Info_SiteID_FE !== ""){
-          let site_fe = {
-              "id_site_doc": "",
-              "site_id": dataCD.Site_Info_SiteID_FE,
-              "site_title": "FE",
-              "site_name" : dataCD.Site_Info_SiteName_FE,
-              "site_address" : dataCD.Site_Info_Address_FE,
-              "site_longitude" : parseFloat(dataCD.Site_Info_Longitude_FE),
-              "site_latitude" : parseFloat(dataCD.Site_Info_Latitude_FE),
-              "id_tssr_boq_site_doc" : null,
-              "no_tssr_boq_site" : null,
-              "tssr_version" : null
-          }
-          list_site.push(site_fe);
-        }
-        const mr_data = {
-        	"mr_id" : "MR"+numberingMR.toString(),
-          "implementation_id" : "IMP"+numberingMR.toString(),
-          "scopes" : "",
-          "mr_delivery_type" : this.checkDeliveryTypebyID(id_delivery_type),
-          "mr_type" : this.checkMRTypebyID(id_mr_type),
-          "id_tssr_doc" : null,
-          "tssr_id" : null,
-          "account_id" : "1",
-          "id_project_doc" : dataProject._id,
-          "project_name" : dataProject.Project,
-          "id_cd_doc" : this.state.cd_id_selected,
-          "cd_id" : dataCD.WP_ID.toString(),
-          "sow_type" : dataCD.CD_Info_SOW_Type,
-          "dsp_company" : this.checkDSPbyID(id_dsp),
-          "etd" : id_etd+" 00:00:00",
-          "requested_eta" : id_eta+" 23:59:59",
-          "eta" : id_eta+" 23:59:00",
-          "site_info" : list_site,
-          "mr_milestones" : [],
-          "origin_warehouse" : {
-            "title" : "Warehouse",
-            "value" : dataXLS[i][this.getIndex(dataXLS[0],'origin_warehouse')],
-            "address" : "",
-          },
-          "mr_status" : [
-            {
-                "mr_status_name": "IMPLEMENTED",
-                "mr_status_value": "IMPLEMENTED",
-                "mr_status_date": dateNow,
-                "mr_status_updater": this.state.userEmail,
-                "mr_status_updater_id": this.state.userId
-            },
-            {
-              "mr_status_name": "PLANTSPEC",
-              "mr_status_value": "NOT ASSIGNED",
+        list_site.push(site_fe);
+      }
+      const mr_data = {
+      	"mr_id" : "MR"+numberingMR.toString(),
+        "implementation_id" : "IMP"+numberingMR.toString(),
+        "scopes" : "",
+        "mr_delivery_type" : this.checkDeliveryTypebyID(id_delivery_type),
+        "mr_type" : this.checkMRTypebyID(id_mr_type),
+        "id_tssr_doc" : null,
+        "tssr_id" : null,
+        "account_id" : "1",
+        "id_project_doc" : dataProject._id,
+        "project_name" : dataProject.Project,
+        "id_cd_doc" : this.state.cd_id_selected,
+        "cd_id" : dataCD.WP_ID.toString(),
+        "sow_type" : dataCD.CD_Info_SOW_Type,
+        "dsp_company" : this.checkDSPbyID(id_dsp),
+        "etd" : id_etd+" 00:00:00",
+        "requested_eta" : id_eta+" 23:59:59",
+        "eta" : id_eta+" 23:59:00",
+        "site_info" : list_site,
+        "mr_milestones" : [],
+        "mr_status" : [
+          {
+              "mr_status_name": "IMPLEMENTED",
+              "mr_status_value": "IMPLEMENTED",
               "mr_status_date": dateNow,
               "mr_status_updater": this.state.userEmail,
-              "mr_status_updater_id": this.state.userId,
-            }
-          ],
-          "current_mr_status" : "PLANTSPEC NOT ASSIGNED",
-          "current_milestones" : "",
-          "deleted" : 0,
-          "created_by" : this.state.userId,
-          "updated_by" : this.state.userId
-        }
-        dataBulkMR.push(mr_data);
+              "mr_status_updater_id": this.state.userId
+          },
+          {
+            "mr_status_name": "PLANTSPEC",
+            "mr_status_value": "NOT ASSIGNED",
+            "mr_status_date": dateNow,
+            "mr_status_updater": this.state.userEmail,
+            "mr_status_updater_id": this.state.userId,
+          }
+        ],
+        "current_mr_status" : "PLANTSPEC NOT ASSIGNED",
+        "current_milestones" : "",
+        "deleted" : 0,
+        "created_by" : this.state.userId,
+        "updated_by" : this.state.userId
       }
+      dataBulkMR.push(mr_data);
+      console.log("mr_data", mr_data);
     }
-    if(dataBulkMR.length !== 0){
-      const respondSaveMR = await this.postDatatoAPIBAM('/mr_op', dataBulkMR);
-      if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
-        if(dataBulkMR.length > 1){
-          dataBulkMRSuc = dataBulkMRSuc.concat(respondSaveMR.data._items.map(e => e._id))
-        }else{
-          dataBulkMRSuc.push(respondSaveMR.data._id)
-        }
-      }
-    }
-    if((dataXLS.length-1) === (dataBulkMRSuc.length + dataPatchMRSuc.length)){
-      this.setState({ action_status : 'success', action_message : 'Created New : '+dataBulkMRSuc.length+' data, Update Data : '+dataPatchMRSuc.length+' data'}, () => {
-        setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 4000);
+    const respondSaveMR = await this.postDatatoAPIBAM('/mr_op', dataBulkMR);
+    if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
+      this.setState({ action_status : 'success' }, () => {
+        setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 3000);
       });
     }else{
       this.setState({ action_status : 'failed' });
@@ -704,17 +637,17 @@ class BulkMR extends Component {
                         <td colSpan="2">MR Type</td>
                       </tr>
                       <tr>
-                        <th>Code</th>
+                        <th>No</th>
                         <th>Type Name</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td>New</td>
+                        <td>1</td>
                         <td>New</td>
                       </tr>
                       <tr>
-                        <td>Upgrade</td>
+                        <td>2</td>
                         <td>Upgrade</td>
                       </tr>
                     </tbody>
@@ -727,21 +660,21 @@ class BulkMR extends Component {
                         <td colSpan="2">Delivery Type</td>
                       </tr>
                       <tr>
-                        <th>Code</th>
+                        <th>No</th>
                         <th>Delivery Type Name</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td>WTS</td>
+                        <td>1</td>
                         <td>Warehouse to Site</td>
                       </tr>
-                      {/*<tr>
-                        <td>STS</td>
-                        <td>Site to Site</td>
-                      </tr>*/}
                       <tr>
-                        <td>WTW</td>
+                        <td>2</td>
+                        <td>Site to Site</td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
                         <td>Warehouse to Warehouse</td>
                       </tr>
                     </tbody>
@@ -754,25 +687,25 @@ class BulkMR extends Component {
                         <td colSpan="2">Delivery Company</td>
                       </tr>
                       <tr>
-                        <th>Code</th>
+                        <th>No</th>
                         <th>Type Name</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td>BMS</td>
+                        <td>1</td>
                         <td>PT BMS Delivery</td>
                       </tr>
                       <tr>
-                        <td>MITT</td>
+                        <td>2</td>
                         <td>PT MITT Delivery</td>
                       </tr>
                       <tr>
-                        <td>IXT</td>
+                        <td>3</td>
                         <td>PT IXT Delivery</td>
                       </tr>
                       <tr>
-                        <td>ARA</td>
+                        <td>4</td>
                         <td>PT ARA Delivery</td>
                       </tr>
                     </tbody>

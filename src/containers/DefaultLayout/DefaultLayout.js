@@ -4,7 +4,6 @@ import * as router from 'react-router-dom';
 import { Container } from 'reactstrap';
 import {connect} from 'react-redux';
 import ActionType from '../../redux/reducer/globalActionType';
-import axios from 'axios';
 
 import {
   AppAside,
@@ -39,20 +38,13 @@ class DefaultLayout extends Component {
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   signOut(e) {
-    e.preventDefault();
-    this.props.history.push('/');
-    this.props.keycloak.logout();
+    e.preventDefault()
+    this.props.history.push('/login')
   }
 
   componentDidMount(){
-    // this.getDataLogin();
-    // // if(this.props.keycloak === undefined){
-    // //   console.log("logout");
-    // //   this.props.history.push('/');
-    // //   this.props.keycloak.logout();
-    // // }else{
-    // //   this.getDataLogin();
-    // // }
+    // Change if u need different user
+    this.props.saveDataUser({"_id_user" : "5df1e1ee4432f92022e584e6", "email_user" : "userbamid@e-dpm.com", "roles_user" : ['BAM-Admin'], "user_name" : "userbamid"});
   }
 
   componentDidUpdate(){
@@ -62,7 +54,7 @@ class DefaultLayout extends Component {
   }
 
   render() {
-    console.log("this.props", this.props);
+    console.log(this.props);
     return (
       <div className="app">
         <AppHeader fixed>
@@ -138,4 +130,10 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(DefaultLayout);
+const mapDispatchToProps = (dispatch) => {
+  return {
+    saveDataUser : (dataUser) => dispatch({type : ActionType.LOGIN_DATA, data_user : dataUser }),
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(DefaultLayout);

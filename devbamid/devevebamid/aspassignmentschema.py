@@ -487,11 +487,6 @@ aspassignmentschema = {
                     'type': 'objectid',
                     'required': False,
                     'nullable': True
-                },
-                'status_note': {
-                    'type': 'string',
-                    'required': False,
-                    'nullable': True
                 }
             }
         }

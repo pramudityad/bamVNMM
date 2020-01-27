@@ -4,12 +4,6 @@ tssrsiteitemsversionschema = {
         'required': True,
         'nullable': False
     },
-    'id_tssr_boq_doc' : {
-        'type': 'objectid',
-        'required': True,
-        'nullable': True,
-        'default': None
-    },
     'id_tssr_boq' : {
         'type': 'objectid',
         'required': True,
@@ -20,12 +14,6 @@ tssrsiteitemsversionschema = {
         'type': 'string',
         'required': True,
         'nullable': False
-    },
-    'id_tssr_boq_site_doc' : {
-        'type': 'objectid',
-        'required': True,
-        'nullable': True,
-        'default': None
     },
     'id_tssr_boq_site' : {
         'type': 'objectid',

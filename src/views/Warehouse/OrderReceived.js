@@ -180,7 +180,7 @@ class OrderReceived extends Component {
     let currStatus = [
       {
           "mr_status_name": "ORDER_PROCESSING",
-          "mr_status_value": "FINISHED",
+          "mr_status_value": "COMPLETE",
           "mr_status_date": dateNow,
           "mr_status_updater": this.state.userEmail,
           "mr_status_updater_id": this.state.userId
@@ -197,7 +197,7 @@ class OrderReceived extends Component {
     let successUpdate = [];
     let updateMR = {};
     updateMR['current_milestones'] = "MS_ORDER_PROCESSING";
-    updateMR['current_mr_status'] = "ORDER PROCESSING FINISHED";
+    updateMR['current_mr_status'] = "ORDER PROCESSING COMPLETE";
     updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
     updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
     let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);

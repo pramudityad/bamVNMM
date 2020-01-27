@@ -78,7 +78,12 @@ productpackageschema = {
 	},
 	'created_by' : {
 		'type' : 'objectid',
-		'nullable' : True
+		'nullable' : True,
+		'data_relation':{
+			'resource' : 'user_ref',
+			'field': '_id',
+			'embeddable': True
+		},
 	},
 	'updated_on' : {
 		'type' : 'datetime',
@@ -86,6 +91,11 @@ productpackageschema = {
 	},
 	'updated_by' : {
 		'type' : 'objectid',
-		'nullable' : True
+		'nullable' : True,
+		'data_relation':{
+			'resource' : 'user_ref',
+			'field': '_id',
+			'embeddable': True
+		},
 	}
 }

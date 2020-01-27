@@ -1004,7 +1004,7 @@ class PackageUpload extends React.Component {
     ws.addRow(ppIdArray);
 
     const tssrFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([tssrFormat]), 'PS BOQ Format.xlsx');
+    saveAs(new Blob([tssrFormat]), 'TSSR BOQ Format.xlsx');
   }
 
   exportFormatPackage = async () =>{
@@ -1233,7 +1233,7 @@ class PackageUpload extends React.Component {
                   <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
                 </div> */}
                 <div style={{float:'right', margin: '5px', display:'inline-flex'}}>
-                <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTSSRFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp; Download PS Format</Button>
+                <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTSSRFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp; Download TSSR Format</Button>
                 </div>
                   </Col>
                 </Row>
