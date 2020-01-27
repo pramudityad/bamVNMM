@@ -119,6 +119,26 @@ class BulkAssignment extends Component {
       }
     }
 
+    async patchDatatoAPITSEL(url, data, _etag){
+      try {
+        let respond = await axios.patch(API_URL_PDB_TSEL +url, data, {
+          headers : {'Content-Type':'application/json', "If-Match" : _etag},
+          auth: {
+            username: usernameTselApi,
+            password: passwordTselApi
+          },
+        })
+        if(respond.status >= 200 && respond.status < 300){
+          console.log("respond Patch data", respond);
+        }
+        return respond;
+      }catch (err) {
+        let respond = err;
+        console.log("respond Patch data", err);
+        return respond;
+      }
+    }
+
     async getDatafromAPIBAM(url){
       try {
         let respond = await axios.get(API_URL_BAM +url, {
@@ -320,6 +340,9 @@ class BulkAssignment extends Component {
           if(data_ssow.ssow_id !== null){
             data_ssow["ssow_id"] = data_ssow.ssow_id.toString();
           }
+          if(data_ssow.ssow_unit !== null){
+            data_ssow["ssow_unit"] = data_ssow.ssow_unit.toString();
+          }
           if(data_ssow.ssow_activity_number !== null){
             data_ssow["ssow_activity_number"] = data_ssow.ssow_activity_number.toString();
           }
@@ -344,6 +367,7 @@ class BulkAssignment extends Component {
           }
         ];
         const dataAssginment = {
+          "Assignment_No": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'id')]),
           "CD_ID": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'activity_id')]).toString(),
           "SH_ID": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'activity_id')]).toString(),
           "Vendor_Code_Number": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'vendor_code')]),
@@ -370,6 +394,7 @@ class BulkAssignment extends Component {
         let twoSentence = actionMessage.length !== 0 ? " and " : "";
         actionMessage = actionMessage+twoSentence+"SSOW ID or Activity Number Can't null, Please Check SSOW Number : "+err_ssow_no.join(", ");
       }
+      console.log("dataAssignment", dataAssignment);
       if(actionStatus === 'failed'){
         this.setState({ action_status : 'failed', action_message : actionMessage});
       }else{
@@ -421,6 +446,27 @@ class BulkAssignment extends Component {
     return dataValue;
   }
 
+  async getAllDataApiPaginationAssignment(array_value){
+    let dataValue = [];
+    let arrayDataValue = array_value;
+    let getNumberPage = Math.ceil(arrayDataValue.length / 25);
+    for(let i = 0 ; i < getNumberPage; i++){
+      let DataPaginationValue = arrayDataValue.slice(i * 25, (i+1)*25);
+      let arrayIdValue = '"'+DataPaginationValue.join('","')+'"';
+      arrayIdValue = arrayIdValue.replace("%BF", "");
+      arrayIdValue = arrayIdValue.replace("%BB", "");
+      arrayIdValue = arrayIdValue.replace("%EF", "");
+      let where_id_value = '?where={"Assignment_No" : {"$in" : ['+arrayIdValue+']}}&projection={"Assignment_No" : 1, "SSOW_List" : 1, "_etag" : 1}';
+      let resValue = await this.getDatafromAPITSEL('/asp_assignment_op'+where_id_value);
+      if(resValue !== undefined){
+        if(resValue.data !== undefined){
+          dataValue = dataValue.concat(resValue.data._items);
+        }
+      }
+    }
+    return dataValue;
+  }
+
   preparingDataAssignment(id){
     const dateNow = new Date();
     const dataRandom = ((Math.floor(Math.random() * 100)+id).toString()).padStart(4, '0');
@@ -435,6 +481,9 @@ class BulkAssignment extends Component {
     let errSSOW = [];
     let errActNo = [];
     let errProject = [];
+    let dataBulkASGSuc = [];
+    let dataPatchASGSuc = [];
+    let dataPatchASGError = [];
     let actionStatus = null;
     let actionMessage = "";
     const uploadSSOW = this.state.assignment_ssow_upload;
@@ -444,6 +493,9 @@ class BulkAssignment extends Component {
     const getUniqSSOWId = [...new Set(getAllSSOW.map(({ ssow_id }) => ssow_id))]; //get all ssow id from uploader (unique)
     const getUniqActNo = [...new Set(getAllSSOW.map(({ ssow_activity_number }) => ssow_activity_number))]; //get all activity number from uploader (unique)
     const getUniqVendorCode = [...new Set(uploadSSOW.map(({ Vendor_Code_Number }) => Vendor_Code_Number))];
+    let getUniqAssignmentCode = [...new Set(uploadSSOW.map(({ Assignment_No }) => Assignment_No))];
+    getUniqAssignmentCode = getUniqAssignmentCode.filter(e => e !== null);
+    const dataAssignmentCode = await this.getAllDataApiPaginationAssignment(getUniqAssignmentCode);
     const dataVendorAPI = await this.getAllDataApiPaginationTSEL(getUniqVendorCode, 'Vendor_Code', '/vendor_data_non_page');
     const dataSSOWAPI = await this.getAllDataApiPaginationTSEL(getUniqSSOWId, 'ssow_id', '/ssow_sorted_nonpage');
     const dataSSOWActNoAPI = await this.getAllDataApiPaginationTSEL(getUniqActNo, 'activity_number', '/ssow_activity_number_sorted_nonpage');
@@ -451,34 +503,77 @@ class BulkAssignment extends Component {
     if(dataVendorAPI.length !== undefined && dataSSOWAPI.length !== undefined && dataSSOWActNoAPI.length !== undefined && dataProjectAPI.length !== undefined ){
       for(let i = 0; i < uploadSSOW.length; i++){
         let assignmentData = Object.assign(uploadSSOW[i], {});
+        let assignmentCode = dataAssignmentCode.find(e => e.Assignment_No === uploadSSOW[i].Assignment_No);
         const getVendor = dataVendorAPI.find(e => e.Vendor_Code === assignmentData.Vendor_Code_Number);
         const getActId = dataActivity.find(e => e.WP_ID === assignmentData.CD_ID);
         if(getVendor !== undefined && getActId !== undefined){
-          const getProject = dataProjectAPI.find(e => e._id === getActId.CD_Info_Project);
-          if(getProject !== undefined){
-            assignmentData["Assignment_No"] = "ASG"+this.preparingDataAssignment(i);
-            assignmentData["Account_Name"] = "TSEL";
-            assignmentData["Project"] = getProject.Project;
-            assignmentData["Plant"] = "";
-            assignmentData["NW"] = getActId.CD_Info_Network_Number;
-            assignmentData["NW_Activity"] = getActId.CD_Info_Activity_Code;
-            assignmentData["Requisitioner"] = "";
-            assignmentData["SOW_Type"] = getActId.CD_Info_SOW_Type;
-            assignmentData["Site_ID"] = getActId.Site_Info_SiteID_NE;
-            assignmentData["Site_Name"] = getActId.Site_Info_SiteName_NE;
-            assignmentData["Site_Longitude"] = getActId.Site_Info_Longitude_NE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Longitude_NE);
-            assignmentData["Site_Latitude"] = getActId.Site_Info_Latitude_NE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Latitude_NE);
-            assignmentData["Site_FE_ID"] = getActId.Site_Info_SiteID_FE;
-            assignmentData["Site_FE_Name"] = getActId.Site_Info_SiteName_FE;
-            assignmentData["Site_FE_Longitude"] = getActId.Site_Info_Longitude_FE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Longitude_FE);
-            assignmentData["Site_FE_Latitude"] = getActId.Site_Info_Latitude_FE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Latitude_FE);
-            assignmentData["Vendor_Code"] = getVendor._id;
-            assignmentData["Vendor_Code_Number"] = getVendor.Vendor_Code;
-            assignmentData["Vendor_Name"] = getVendor.Name;
-            assignmentData["Vendor_Email"] = getVendor.Email;
-            assignmentData["Payment_Terms"] = null;
-            assignmentData["Requestor"] = this.state.userEmail;
-            assignmentData["Payment_Term_Ratio"] = null;
+          if(assignmentCode === undefined){
+            const getProject = dataProjectAPI.find(e => e._id === getActId.CD_Info_Project);
+            if(getProject !== undefined){
+              assignmentData["Assignment_No"] = "ASG"+this.preparingDataAssignment(i);
+              assignmentData["Account_Name"] = "TSEL";
+              assignmentData["Project"] = getProject.Project;
+              assignmentData["Plant"] = "";
+              assignmentData["id_cd_doc"] = getActId._id;
+              assignmentData["NW"] = getActId.CD_Info_Network_Number;
+              assignmentData["NW_Activity"] = getActId.CD_Info_Activity_Code;
+              assignmentData["Requisitioner"] = "";
+              assignmentData["SOW_Type"] = getActId.CD_Info_SOW_Type;
+              assignmentData["Site_ID"] = getActId.Site_Info_SiteID_NE;
+              assignmentData["Site_Name"] = getActId.Site_Info_SiteName_NE;
+              assignmentData["Site_Longitude"] = getActId.Site_Info_Longitude_NE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Longitude_NE);
+              assignmentData["Site_Latitude"] = getActId.Site_Info_Latitude_NE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Latitude_NE);
+              assignmentData["Site_FE_ID"] = getActId.Site_Info_SiteID_FE;
+              assignmentData["Site_FE_Name"] = getActId.Site_Info_SiteName_FE;
+              assignmentData["Site_FE_Longitude"] = getActId.Site_Info_Longitude_FE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Longitude_FE);
+              assignmentData["Site_FE_Latitude"] = getActId.Site_Info_Latitude_FE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Latitude_FE);
+              assignmentData["Vendor_Code"] = getVendor._id;
+              assignmentData["Vendor_Code_Number"] = getVendor.Vendor_Code;
+              assignmentData["Vendor_Name"] = getVendor.Name;
+              assignmentData["Vendor_Email"] = getVendor.Email;
+              assignmentData["Payment_Terms"] = null;
+              assignmentData["Requestor"] = this.state.userEmail;
+              assignmentData["Payment_Term_Ratio"] = null;
+              let list_ssow = [];
+              let total_val_asg = 0;
+              for(let j = 0; j < assignmentData.SSOW_List.length; j++ ){
+                let ssowData = Object.assign(assignmentData.SSOW_List[j], {});
+                const getSSOW = dataSSOWAPI.find(e => e.ssow_id === ssowData.ssow_id && e.sow_type === ssowData.sow_type);
+                const getActNo = dataSSOWActNoAPI.find(e => e.activity_number === ssowData.ssow_activity_number);
+                if(getSSOW !== undefined && getActNo !== undefined ){
+                  ssowData["ssow_description"] = getSSOW.description;
+                  ssowData["ssow_unit"] = assignmentData.SSOW_List[j].ssow_unit === null ? getActNo.ssow_type : assignmentData.SSOW_List[j].ssow_unit;;
+                  ssowData["ssow_price"] = getActNo.price === null ? 0 : getActNo.price;
+                  ssowData["ssow_total_price"] = ssowData.ssow_price * ssowData.ssow_qty;
+                  total_val_asg = total_val_asg + ssowData.ssow_total_price;
+                  if(ssowData.ssow_unit === null){
+                    ssowData["ssow_unit"] = "act";
+                  }else{
+                    if(ssowData.ssow_unit.length === 0){
+                      ssowData["ssow_unit"] = "act";
+                    }
+                  }
+                  list_ssow.push(ssowData);
+                }else{
+                  if(getSSOW === undefined){
+                    errSSOW.push(ssowData.ssow_id);
+                  }
+                  if(getActNo === undefined){
+                    errActNo.push(ssowData.ssow_activity_number);
+                  }
+                }
+              }
+              assignmentData["Value_Assignment"] = total_val_asg;
+              assignmentData["SSOW_List"] = list_ssow;
+              bulkAssignment.push(assignmentData);
+            }else{
+              if(getProject === undefined){
+                errProject.push(assignmentData.CD_ID);
+              }
+            }
+          }else{
+            //PATCH DATA EXISTING
+            let assignmentPatch = {};
             let list_ssow = [];
             let total_val_asg = 0;
             for(let j = 0; j < assignmentData.SSOW_List.length; j++ ){
@@ -487,10 +582,17 @@ class BulkAssignment extends Component {
               const getActNo = dataSSOWActNoAPI.find(e => e.activity_number === ssowData.ssow_activity_number);
               if(getSSOW !== undefined && getActNo !== undefined ){
                 ssowData["ssow_description"] = getSSOW.description;
-                ssowData["ssow_unit"] = getActNo.ssow_type;
+                ssowData["ssow_unit"] = assignmentData.SSOW_List[j].ssow_unit === null ? getActNo.ssow_type : assignmentData.SSOW_List[j].ssow_unit;
                 ssowData["ssow_price"] = getActNo.price === null ? 0 : getActNo.price;
                 ssowData["ssow_total_price"] = ssowData.ssow_price * ssowData.ssow_qty;
                 total_val_asg = total_val_asg + ssowData.ssow_total_price;
+                if(ssowData.ssow_unit === null){
+                  ssowData["ssow_unit"] = "act";
+                }else{
+                  if(ssowData.ssow_unit.length === 0){
+                    ssowData["ssow_unit"] = "act";
+                  }
+                }
                 list_ssow.push(ssowData);
               }else{
                 if(getSSOW === undefined){
@@ -501,12 +603,14 @@ class BulkAssignment extends Component {
                 }
               }
             }
-            assignmentData["Value_Assignment"] = total_val_asg;
-            assignmentData["SSOW_List"] = list_ssow;
-            bulkAssignment.push(assignmentData);
-          }else{
-            if(getProject === undefined){
-              errProject.push(assignmentData.CD_ID);
+            assignmentPatch["Value_Assignment"] = total_val_asg;
+            assignmentPatch["SSOW_List"] = list_ssow;
+            console.log("assignmentCode patch", assignmentCode);
+            const respondPatchASG = await this.patchDatatoAPITSEL('/asp_assignment_op/'+assignmentCode._id, assignmentPatch, assignmentCode._etag);
+            if(respondPatchASG.data !== undefined && respondPatchASG.status >= 200 && respondPatchASG.status <= 300 ){
+              dataPatchASGSuc.push(respondPatchASG.data._id);
+            }else{
+              dataPatchASGError.push(assignmentCode.Assignment_No);
             }
           }
         }else{
@@ -552,8 +656,15 @@ class BulkAssignment extends Component {
       if(actionStatus !== 'failed'){
         const postAssignment = await this.postDatatoAPITSEL('/asp_assignment_op', bulkAssignment);
         if(postAssignment.data !== undefined){
-          this.setState({ action_status : 'success' }, () => {
-            setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 3000);
+          if(bulkAssignment.length > 1){
+            dataBulkASGSuc = dataBulkASGSuc.concat(postAssignment.data._items.map(e => e._id))
+          }else{
+            dataBulkASGSuc.push(postAssignment.data._id)
+          }
+        }
+        if(uploadSSOW.length === (dataBulkASGSuc.length + dataPatchASGSuc.length) ){
+          this.setState({ action_status : 'success', action_message : 'Created New : '+dataBulkASGSuc.length+' data, Update Data : '+dataPatchASGSuc.length+' data' }, () => {
+            // setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 4000);
           });
         }else{
           this.setState({action_status : 'failed'});

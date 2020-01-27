@@ -7,6 +7,8 @@ import {connect} from 'react-redux';
 import Select from 'react-select';
 import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
 import 'react-vertical-timeline-component/style.min.css';
+import { withScriptjs } from "react-google-maps";
+import GMap from './MapComponent';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -34,10 +36,13 @@ class MRDetail extends Component {
         data_mr : null,
         mr_site_NE : null,
         mr_site_FE : null,
+        update_mr_form : new Array(9).fill(null),
+        update_mr_name_form : new Array(9).fill(null),
         mr_pp : [],
         mr_md : [],
         mr_item : [],
         tabs_submenu : [true, false, false, false],
+        edit_detail : false,
         action_status : null,
         action_message : null,
     };
@@ -46,6 +51,9 @@ class MRDetail extends Component {
     this.changeTabsSubmenu = this.changeTabsSubmenu.bind(this);
     this.requestForApproval = this.requestForApproval.bind(this);
     this.ApproveMR = this.ApproveMR.bind(this);
+    this.changeEditable = this.changeEditable.bind(this);
+    this.handleChangeFormMRUpdate = this.handleChangeFormMRUpdate.bind(this);
+    this.updateDataMR = this.updateDataMR.bind(this);
   }
 
   async getDatafromAPIBMS(url){
@@ -128,6 +136,17 @@ class MRDetail extends Component {
     }
   }
 
+  checkValueReturn(value1, value2){
+    // if value undefined return Value2
+    if( typeof value1 !== 'undefined' && value1 !== null) {
+      console.log('value1', value1);
+      return value1;
+    }else{
+      console.log('value2', value2);
+      return value2;
+    }
+  }
+
   getDataMR(_id_MR){
     this.getDatafromAPIBAM('/mr_op/'+_id_MR).then(resMR => {
       if(resMR.data !== undefined){
@@ -196,11 +215,34 @@ class MRDetail extends Component {
     }
   }
 
+  changeEditable(e){
+    this.setState(prevState => ({
+      edit_detail: !prevState.edit_detail
+    }));
+  }
+
   changeTabsSubmenu(e){
     console.log("tabs_submenu", e);
     let tab_submenu = new Array(4).fill(false);
     tab_submenu[parseInt(e)] = true;
     this.setState({ tabs_submenu : tab_submenu });
+  }
+
+  handleChangeFormMRUpdate(e){
+    const value = e.target.value;
+    const index = e.target.name;
+    let dataForm = this.state.update_mr_form;
+    dataForm[parseInt(index)] = value;
+    const indexOpt = e.target.selectedIndex;
+    if(indexOpt !== undefined){
+      let dataFormName = this.state.update_mr_name_form;
+      const textOpt = e.target[indexOpt].text;
+      dataFormName[parseInt(index)] = textOpt;
+      this.setState({update_mr_name_form : dataFormName});
+    }
+    this.setState({update_mr_form : dataForm}, () => {
+      console.log("PPForm", this.state.update_mr_form, this.state.update_mr_name_form);
+    });
   }
 
   milestoneStat(ms_name, ms_date, ms_updater, index)
@@ -316,7 +358,7 @@ class MRDetail extends Component {
     let dataMR = this.state.data_mr;
     const requestAprv = [{
       "mr_status_name": "MATERIAL_REQUEST",
-      "mr_status_value": "MR REQUESTED",
+      "mr_status_value": "REQUESTED",
       "mr_status_date": dateNow,
       "mr_status_updater": this.state.userEmail,
       "mr_status_updater_id": this.state.userId,
@@ -339,7 +381,7 @@ class MRDetail extends Component {
     let dataMR = this.state.data_mr;
     const statusAprv = [{
       "mr_status_name": "MATERIAL_REQUEST",
-      "mr_status_value": "MR REQUESTED",
+      "mr_status_value": "APPROVED",
       "mr_status_date": dateNow,
       "mr_status_updater": this.state.userEmail,
       "mr_status_updater_id": this.state.userId,
@@ -355,20 +397,48 @@ class MRDetail extends Component {
     aprvMR['current_milestones'] = "MS_ORDER_RECEIVED";
     aprvMR['mr_status'] = dataMR.mr_status.concat(statusAprv);
     aprvMR['mr_milestones'] = dataMR.mr_milestones.concat(msAprv);
-    console.log("aprvMR", aprvMR);
-    // this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, reqMR, dataMR._etag).then(res => {
-    //   if(res.data !== undefined){
-    //     this.setState({ action_status : "success" });
-    //   }else{
-    //     this.setState({ action_status : "failed" });
-    //   }
-    // })
+    this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, aprvMR, dataMR._etag).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+      }else{
+        this.setState({ action_status : "failed" });
+      }
+    })
+  }
+
+  async updateDataMR(){
+    const dataForm = this.state.update_mr_name_form;
+    const dataMR = this.state.data_mr;
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    const dataStatus = [{
+      "mr_status_name": "MATERIAL_REQUEST",
+      "mr_status_value": "UPDATED",
+      "mr_status_date": dateNow,
+      "mr_status_updater": this.state.userEmail,
+      "mr_status_updater_id": this.state.userId
+    }];
+    let patchData = {};
+    patchData["eta"] = dataForm[3] !== null ? dataForm[3]+" 23:59:59" : dataMR.eta;
+    patchData["requested_eta"] = dataForm[3] !== null ? dataForm[3]+" 23:59:59" : dataMR.requested_eta;
+    patchData["etd"] = dataForm[2] !== null ? dataForm[2]+" 23:59:59" : dataMR.etd;
+    patchData["dsp_company"] = dataForm[1] !== null ? dataForm[1]+" 23:59:59" : dataMR.dsp_company;
+    patchData["current_mr_status"] = "MR UPDATED";
+    patchData["mr_status"] = dataMR.mr_status.concat(dataStatus);
+    const respondPatchMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, patchData, dataMR._etag);
+    if(respondPatchMR.data !== undefined && respondPatchMR.status >= 200 && respondPatchMR.status <= 300 ){
+      this.setState({action_status : 'success'});
+    }else{
+      this.setState({action_status : 'failed'});
+    }
   }
 
   render() {
     const background = {
       backgroundColor: '#e3e3e3',
     };
+
+    const MapLoader = withScriptjs(GMap);
 
     console.log("tabs_submenu", this.state.tabs_submenu);
     return (
@@ -379,6 +449,10 @@ class MRDetail extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-info-circle" style={{marginRight: "8px"}}></i>MR Detail</span>
+            <Button style={{float : 'right'}} color="warning" onClick={this.changeEditable}>Editable</Button>
+            {this.state.edit_detail !== false && (
+              <Button style={{float : 'right', marginRight : '10px'}} color="success" onClick={this.updateDataMR}>Save</Button>
+            )}
           </CardHeader>
           <CardBody>
             <div style={{marginBottom : '10px'}}>
@@ -391,6 +465,9 @@ class MRDetail extends Component {
               </NavItem>
               <NavItem>
                 <NavLink href="#" active={this.state.tabs_submenu[2]} value="2" onClick={this.changeTabsSubmenu.bind(this, 2)}>Progress Overview</NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink href="#" active={this.state.tabs_submenu[3]} value="2" onClick={this.changeTabsSubmenu.bind(this, 3)}>Map View</NavLink>
               </NavItem>
             </Nav>
             </div>
@@ -437,12 +514,35 @@ class MRDetail extends Component {
                         <tr>
                           <td style={{width : '200px'}}>DSP Company</td>
                           <td>: </td>
-                          <td>{this.state.data_mr.dsp_company}</td>
+                          <td>
+                            {this.state.edit_detail === false ? this.state.data_mr.dsp_company : (
+                              <Input type="select" name="1" value={this.state.update_mr_form[1] === null ? this.state.data_mr.dsp_company : this.state.update_mr_form[1] } onChange={this.handleChangeFormMRUpdate}>
+                                <option value="" disabled selected hidden>Select DSP Company</option>
+                                <option value="PT BMS Delivery">PT BMS Delivery</option>
+                                <option value="PT MITT Delivery">PT MITT Delivery</option>
+                                <option value="PT IXT Delivery">PT IXT Delivery</option>
+                                <option value="PT ARA Delivery">PT ARA Delivery</option>
+                              </Input>
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>Origin {this.state.data_mr.origin_warehouse.title}</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.origin_warehouse.value}</td>
                         </tr>
                         <tr>
                           <td style={{width : '200px'}}>ETD</td>
                           <td>: </td>
-                          <td>{this.state.data_mr.etd}</td>
+                          <td>
+                            {this.state.edit_detail === false ? this.state.data_mr.etd : (
+                              <Input
+                                type="date"
+                                name="2"
+                                value={this.state.update_mr_form[2] === null ? this.state.data_mr.etd : this.state.update_mr_form[2]} onChange={this.handleChangeFormMRUpdate}
+                              />
+                            )}
+                          </td>
                         </tr>
                         <tr>
                           <td style={{width : '200px'}}>ASP Company</td>
@@ -504,9 +604,22 @@ class MRDetail extends Component {
                           <td></td>
                         </tr>
                         <tr>
+                          <td style={{width : '200px'}}>&nbsp;</td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                        <tr>
                           <td style={{width : '200px'}}>ETA</td>
                           <td>: </td>
-                          <td>{this.state.data_mr.eta}</td>
+                          <td>
+                            {this.state.edit_detail === false ? this.state.data_mr.eta : (
+                              <Input
+                                type="date"
+                                name="3"
+                                value={this.state.update_mr_form[3] === null ? this.state.data_mr.eta : this.state.update_mr_form[3]} onChange={this.handleChangeFormMRUpdate}
+                              />
+                            )}
+                          </td>
                         </tr>
                         <tr>
                           <td style={{width : '200px'}}>&nbsp;</td>
@@ -676,6 +789,15 @@ class MRDetail extends Component {
                   </Col>
                 </Row>
               </div>
+            </Fragment>
+          )}
+          {this.state.tabs_submenu[3] === true && (
+            <Fragment>
+                {/* <GoogleMap site_lat={-6.3046027} site_lng={106.7951936} /> */}
+                <MapLoader
+                  googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyAoCmcgwc7MN40js68RpcZdSzh9yLrmLF4"
+                  loadingElement={<div style={{ height: '100%' }} />}
+                />
             </Fragment>
           )}
           </CardBody>
