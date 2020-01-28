@@ -350,7 +350,7 @@ class AssignmentCreation extends Component {
       "Assignment_Creation_Date" : dateNow,
       "Value_Assignment" : (dataForm[59]*dataForm[21])+(dataForm[60]*dataForm[27])+(dataForm[61]*dataForm[33])+(dataForm[62]*dataForm[39])+(dataForm[63]*dataForm[45])+(dataForm[64]*dataForm[51])+(dataForm[65]*dataForm[57]),
       "Requestor" : this.state.userEmail,
-      "Payment_Term_Ratio" : "11.11",
+      "Payment_Term_Ratio" : null,
       "SSOW_List" : all_ssow,
       "Current_Status" : "ASP ASSIGNMENT CREATED",
       "ASP_Assignment_Status" : [

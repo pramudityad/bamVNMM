@@ -3,9 +3,10 @@ import { Card, CardHeader, CardBody, Row, Col, Button, Input, CardFooter } from 
 import { Form, FormGroup, Label } from 'reactstrap';
 import axios from 'axios';
 import { connect } from 'react-redux';
+import AsyncSelect from 'react-select/async';
 import './assignment.css';
 
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const DefaultNotif = React.lazy(() => import('../DefaultView/DefaultNotif'));
 
 const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const username_tsel = 'adminbamidsuper';
@@ -13,7 +14,7 @@ const password_tsel = 'F760qbAg2sml';
 
 const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class AssignmentDetail extends Component {
+class AssignmentEdit extends Component {
   constructor(props) {
     super(props);
 
@@ -27,12 +28,15 @@ class AssignmentDetail extends Component {
       action_message : null,
       action_message : null,
       bast_assign_form : new Map(),
+      asp_list : [],
+      edit_assignment_form : new Array(100).fill(null),
     }
-    this.notifyASP = this.notifyASP.bind(this);
+    this.editAssignment = this.editAssignment.bind(this);
     this.saveBastNumber = this.saveBastNumber.bind(this);
-    this.acceptASG = this.acceptASG.bind(this);
-    this.rescheduleASG = this.rescheduleASG.bind(this);
-    this.revisionASG = this.revisionASG.bind(this);
+    this.handleChangeForm = this.handleChangeForm.bind(this);
+    this.handleChangeFormAsyncSelect = this.handleChangeFormAsyncSelect.bind(this);
+    this.loadOptionsSSOWID = this.loadOptionsSSOWID.bind(this);
+    this.loadOptionsActivityNumber = this.loadOptionsActivityNumber.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -138,13 +142,35 @@ class AssignmentDetail extends Component {
 
   componentDidMount() {
     this.getDataAssignment(this.props.match.params.id);
-    document.title = 'Assignment Detail | BAM';
+    this.loadOptionsASP();
+    document.title = 'Assignment Edit | BAM';
   }
 
   getDataAssignment(_id_Assignment) {
     this.getDataFromAPI('/asp_assignment_op/'+_id_Assignment).then(resAsg => {
       if(resAsg.data !== undefined) {
         this.setState({ data_assignment : resAsg.data });
+        let dataForm = this.state.edit_assignment_form;
+        let j = 5;
+        for(let i = 0; i < 7; i++) {
+          if(this.state.data_assignment.SSOW_List[i] !== undefined) {
+            dataForm[j] = this.state.data_assignment.SSOW_List[i].ssow_id;
+            dataForm[j+1] = this.state.data_assignment.SSOW_List[i].ssow_activity_number;
+            dataForm[j+2] = this.state.data_assignment.SSOW_List[i].ssow_description;
+            dataForm[j+3] = this.state.data_assignment.SSOW_List[i].ssow_unit;
+            dataForm[j+4] = this.state.data_assignment.SSOW_List[i].ssow_qty;
+            dataForm[j+5] = this.state.data_assignment.SSOW_List[i].ssow_status[0].status;
+            dataForm[j+6] = this.state.data_assignment.SSOW_List[i].sow_type;
+            dataForm[j+7] = this.state.data_assignment.SSOW_List[i].ssow_status[0].status_update_date;
+            dataForm[j+8] = this.state.data_assignment.SSOW_List[i].ssow_status[0].status_updater;
+            dataForm[j+9] = this.state.data_assignment.SSOW_List[i].ssow_price;
+            dataForm[j+10] = this.state.data_assignment.SSOW_List[i].ssow_total_price;
+            j = j + 11;
+          }
+        }
+        this.setState({edit_assignment_form : dataForm}, () => {
+          console.log("Assignment Form", this.state.edit_assignment_form);
+        });
       }
     })
   }
@@ -155,10 +181,145 @@ class AssignmentDetail extends Component {
     this.setState(prevState => ({ bast_assign_form: prevState.bast_assign_form.set(name, value) }));
   }
 
+  loadOptionsASP() {
+    this.getDataFromAPI('/vendor_data_non_page').then(res => {
+      console.log("ASP List", res);
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({asp_list : items});
+      }
+    })
+  }
+
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
+
+  async loadOptionsSSOWID(inputValue) {
+    if(!inputValue) {
+      return [];
+    } else {
+      let ssow_id_list = [];
+      const getSSOWID = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.data_assignment.SOW_Type+'"}');
+      if(getSSOWID !== undefined && getSSOWID.data !== undefined) {
+        getSSOWID.data._items.map(ssow =>
+          ssow_id_list.push({'label' : ssow.ssow_id !== undefined ? ssow.ssow_id : null, 'value' : ssow.ssow_id}))
+      }
+      return ssow_id_list;
+    }
+  }
+
+  async loadOptionsActivityNumber(inputValue) {
+    if(!inputValue) {
+      return [];
+    } else {
+      let act_number_list = [];
+      const getActNumber = await this.getDataFromAPI('/ssow_activity_number_sorted_nonpage?where={"activity_number":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      if(getActNumber !== undefined && getActNumber.data !== undefined) {
+        getActNumber.data._items.map(act_number =>
+          act_number_list.push({'label' : act_number.activity_number !== undefined ? act_number.activity_number : null, 'value' : act_number.activity_number}))
+      }
+      return act_number_list;
+    }
+  }
+
+  handleChangeFormAsyncSelect = async (newValue, e) => {
+    let dataForm = this.state.edit_assignment_form;
+    dataForm[parseInt(e.name)] = newValue.value;
+    this.setState({edit_assignment_form : dataForm}, () => {
+      console.log("Assignment Form", this.state.edit_assignment_form);
+    });
+    console.log('coba', e.name);
+    if(e.name === "5") {
+      console.log('masuk');
+      const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
+      let dataForm = this.state.edit_assignment_form;
+      dataForm[7] = getDescription.data._items[0].description;
+      this.setState({edit_assignment_form : dataForm}, () => {
+        console.log("Assignment Form", this.state.edit_assignment_form);
+      });
+    }
+    // } else if(e.name === "23") {
+    //   const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[25] = getDescription.data._items[0].description;
+    //   this.setState({edit_assignment_form : dataForm}, () => {
+    //     console.log("Assignment Form", this.state.edit_assignment_form);
+    //   });
+    // } else if(e.name === "29") {
+    //   const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[31] = getDescription.data._items[0].description;
+    //   this.setState({edit_assignment_form : dataForm}, () => {
+    //     console.log("Assignment Form", this.state.edit_assignment_form);
+    //   });
+    // } else if(e.name === "35") {
+    //   const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[37] = getDescription.data._items[0].description;
+    //   this.setState({edit_assignment_form : dataForm}, () => {
+    //     console.log("Assignment Form", this.state.edit_assignment_form);
+    //   });
+    // } else if(e.name === "41") {
+    //   const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[43] = getDescription.data._items[0].description;
+    //   this.setState({edit_assignment_form : dataForm}, () => {
+    //     console.log("Assignment Form", this.state.edit_assignment_form);
+    //   });
+    // } else if(e.name === "47") {
+    //   const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[49] = getDescription.data._items[0].description;
+    //   this.setState({edit_assignment_form : dataForm}, () => {
+    //     console.log("Assignment Form", this.state.edit_assignment_form);
+    //   });
+    // } else if(e.name === "53") {
+    //   const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[55] = getDescription.data._items[0].description;
+    //   this.setState({edit_assignment_form : dataForm}, () => {
+    //     console.log("Assignment Form", this.state.edit_assignment_form);
+    //   });
+    // } else if(e.name === "18") {
+    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[20] = getPriceUnit.data._items[0].ssow_type;
+    //   dataForm[59] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    // } else if(e.name === "24") {
+    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[26] = getPriceUnit.data._items[0].ssow_type !== null ? getPriceUnit.data._items[0].ssow_type : "act";
+    //   dataForm[60] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    // } else if(e.name === "30") {
+    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[32] = getPriceUnit.data._items[0].ssow_type;
+    //   dataForm[61] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    // } else if(e.name === "36") {
+    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[38] = getPriceUnit.data._items[0].ssow_type;
+    //   dataForm[62] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    // } else if(e.name === "42") {
+    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[44] = getPriceUnit.data._items[0].ssow_type;
+    //   dataForm[63] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    // } else if(e.name === "48") {
+    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[50] = getPriceUnit.data._items[0].ssow_type;
+    //   dataForm[64] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    // } else if(e.name === "54") {
+    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+    //   let dataForm = this.state.edit_assignment_form;
+    //   dataForm[56] = getPriceUnit.data._items[0].ssow_type;
+    //   dataForm[65] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+    // }
+  }
 
   loopSSOW = () => {
     let ssow_content = [];
+    let j = 5;
     for(let i = 0; i < 7; i++) {
       if(this.state.data_assignment.SSOW_List[i] !== undefined) {
         ssow_content.push(
@@ -166,64 +327,79 @@ class AssignmentDetail extends Component {
             <Col md="2" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 <Label>SSOW ID</Label>
-                <Input type="text" name="17" value={this.state.data_assignment.SSOW_List[i].ssow_id} readOnly />
+                <AsyncSelect
+                  cacheOptions
+                  loadOptions={this.loadOptionsSSOWID}
+                  defaultOptions
+                  onChange={this.handleChangeFormAsyncSelect}
+                  name={j}
+                  placeholder={this.state.data_assignment.SSOW_List[i].ssow_id}
+                />
               </FormGroup>
             </Col>
             <Col md="2" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 <Label>Activity Number</Label>
-                <Input type="textarea" rows="1" name="18" value={this.state.data_assignment.SSOW_List[i].ssow_activity_number} readOnly />
+                <AsyncSelect
+                  cacheOptions
+                  loadOptions={this.loadOptionsActivityNumber}
+                  defaultOptions
+                  onChange={this.handleChangeFormAsyncSelect}
+                  name={j+1}
+                  placeholder={this.state.data_assignment.SSOW_List[i].ssow_activity_number}
+                />
               </FormGroup>
             </Col>
             <Col md="4" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 <Label>Description</Label>
-                <Input type="textarea" name="19" rows="1" readOnly value={this.state.data_assignment.SSOW_List[i].ssow_description} />
+                <Input type="textarea" name={j+2} rows="1" readOnly value={this.state.data_assignment.SSOW_List[i].ssow_description} />
               </FormGroup>
             </Col>
             <Col md="1" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 <Label>Unit</Label>
-                <Input type="text" name="20" value={this.state.data_assignment.SSOW_List[i].ssow_unit} readOnly />
+                <Input type="text" name={j+3} value={this.state.data_assignment.SSOW_List[i].ssow_unit} readOnly />
               </FormGroup>
             </Col>
             <Col md="1" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 <Label>Quantity</Label>
-                <Input type="number" name="21" value={this.state.data_assignment.SSOW_List[i].ssow_qty} readOnly />
+                <Input type="number" name={j+4} value={this.state.data_assignment.SSOW_List[i].ssow_qty} readOnly />
               </FormGroup>
             </Col>
             <Col md="2" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 <Label>Status</Label>
-                <Input type="text" name="22" value={this.state.data_assignment.SSOW_List[i].ssow_status[0].status} readOnly />
+                <Input type="text" name={j+5} value={this.state.data_assignment.SSOW_List[i].ssow_status[0].status} readOnly />
               </FormGroup>
             </Col>
           </Row>
         );
+        j = j + 11;
       }
     }
     return ssow_content;
   }
 
-  async notifyASP(e) {
+  async editAssignment(e) {
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
-    let currStatus = [
-      {
-        "status_name": "ASP_ASSIGNMENT",
-        "status_value": "NOTIFIED TO ASP",
-        "status_date": dateNow,
-        "status_updater": this.state.userEmail,
-        "status_updater_id": this.state.userId
-      }
-    ];
+    let dataForm = this.state.edit_assignment_form;
     let successUpdate = [];
     let updateASG = {};
-    updateASG['Current_Status'] = "ASP ASSIGNMENT NOTIFIED TO ASP";
-    updateASG['ASP_Assignment_Status'] = this.state.data_assignment.ASP_Assignment_Status.concat(currStatus);
+    if(dataForm[0] !== null) {
+      updateASG['Vendor_Code'] = dataForm[1];
+      updateASG['Vendor_Code_Number'] = dataForm[2];
+      updateASG['Vendor_Name'] = dataForm[0];
+      updateASG['Vendor_Email'] = dataForm[3];
+    }
+    if(dataForm[4] !== null) {
+      updateASG['Payment_Terms'] = dataForm[4];
+    }
+    console.log('isi update', updateASG);
     let res = await this.patchDataToAPI('/asp_assignment_op/'+_id, updateASG, _etag);
     if(res !== undefined) {
       if(res.data !== undefined) {
@@ -231,104 +407,7 @@ class AssignmentDetail extends Component {
       }
     }
     if(successUpdate.length !== 0){
-      alert('Assignment has been notified to ASP!');
-      setTimeout(function(){ window.location.reload(); }, 2000);
-    } else {
-      alert('Sorry there is an error, please try again!');
-    }
-  }
-
-  async acceptASG(e) {
-    const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-    const _etag = e.target.value;
-    const _id = e.target.id;
-    let currStatus = [
-      {
-        "status_name": "ASP_ASSIGNMENT",
-        "status_value": "ACCEPTED",
-        "status_date": dateNow,
-        "status_updater": this.state.userEmail,
-        "status_updater_id": this.state.userId
-      }
-    ];
-    let successUpdate = [];
-    let updateASG = {};
-    updateASG['Current_Status'] = "ASP ASSIGNMENT ACCEPT";
-    updateASG['ASP_Assignment_Status'] = this.state.data_assignment.ASP_Assignment_Status.concat(currStatus);
-    updateASG['ASP_Acceptance_Date'] = dateNow;
-    let res = await this.patchDataToAPI('/asp_assignment_op/'+_id, updateASG, _etag);
-    if(res !== undefined) {
-      if(res.data !== undefined) {
-        successUpdate.push(res.data);
-      }
-    }
-    if(successUpdate.length !== 0){
-      alert('Assignment has been accepted!');
-      setTimeout(function(){ window.location.reload(); }, 2000);
-    } else {
-      alert('Sorry there is an error, please try again!');
-    }
-  }
-
-  async revisionASG(e) {
-    const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-    const _etag = e.target.value;
-    const _id = e.target.id;
-    let currStatus = [
-      {
-        "status_name": "ASP_ASSIGNMENT",
-        "status_value": "NEED REVISION",
-        "status_date": dateNow,
-        "status_updater": this.state.userEmail,
-        "status_updater_id": this.state.userId
-      }
-    ];
-    let successUpdate = [];
-    let updateASG = {};
-    updateASG['Current_Status'] = "ASP ASSIGNMENT NEED REVISION";
-    updateASG['ASP_Assignment_Status'] = this.state.data_assignment.ASP_Assignment_Status.concat(currStatus);
-    let res = await this.patchDataToAPI('/asp_assignment_op/'+_id, updateASG, _etag);
-    if(res !== undefined) {
-      if(res.data !== undefined) {
-        successUpdate.push(res.data);
-      }
-    }
-    if(successUpdate.length !== 0){
-      alert('Assignment status has been changed to need revision!');
-      setTimeout(function(){ window.location.reload(); }, 2000);
-    } else {
-      alert('Sorry there is an error, please try again!');
-    }
-  }
-
-  async rescheduleASG(e) {
-    const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-    const _etag = e.target.value;
-    const _id = e.target.id;
-    let currStatus = [
-      {
-        "status_name": "ASP_ASSIGNMENT",
-        "status_value": "RE-SCHEDULE",
-        "status_date": dateNow,
-        "status_updater": this.state.userEmail,
-        "status_updater_id": this.state.userId
-      }
-    ];
-    let successUpdate = [];
-    let updateASG = {};
-    updateASG['Current_Status'] = "ASP ASSIGNMENT RE-SCHEDULE";
-    updateASG['ASP_Assignment_Status'] = this.state.data_assignment.ASP_Assignment_Status.concat(currStatus);
-    let res = await this.patchDataToAPI('/asp_assignment_op/'+_id, updateASG, _etag);
-    if(res !== undefined) {
-      if(res.data !== undefined) {
-        successUpdate.push(res.data);
-      }
-    }
-    if(successUpdate.length !== 0){
-      alert('Assignment status has been changed to reschedule!');
+      alert('Assignment has been successfully edited!');
       setTimeout(function(){ window.location.reload(); }, 2000);
     } else {
       alert('Sorry there is an error, please try again!');
@@ -371,6 +450,23 @@ class AssignmentDetail extends Component {
     }
   }
 
+  async handleChangeForm(e) {
+    const value = e.target.value;
+    const index = e.target.name;
+    let dataForm = this.state.edit_assignment_form;
+    dataForm[parseInt(index)] = value;
+    if(index === "0") {
+      const getDataASP = await this.getDataFromAPI('/vendor_data_non_page?where={"Name":"'+value+'"}');
+      let dataForm = this.state.edit_assignment_form;
+      dataForm[1] = getDataASP.data._items[0]._id;
+      dataForm[2] = getDataASP.data._items[0].Vendor_Code;
+      dataForm[3] = getDataASP.data._items[0].Email;
+    }
+    this.setState({edit_assignment_form : dataForm}, () => {
+      console.log("Assignment Form", this.state.edit_assignment_form);
+    });
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -384,7 +480,7 @@ class AssignmentDetail extends Component {
             {this.state.data_assignment !== null && (
             <Card>
               <CardHeader>
-                <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-info-circle" style={{marginRight: "8px"}}></i>Assignment Detail ({this.state.data_assignment.Assignment_No})</span>
+                <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-edit" style={{marginRight: "8px"}}></i>Assignment Edit ({this.state.data_assignment.Assignment_No})</span>
               </CardHeader>
               <CardBody>
                 <Form>
@@ -489,7 +585,11 @@ class AssignmentDetail extends Component {
                     <Col md="6">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>ASP</Label>
-                        <Input type="text" name="asp" readOnly value={this.state.data_assignment.Vendor_Name} />
+                        <Input type="select" name="0" onChange={this.handleChangeForm}>
+                          {this.state.asp_list.map((list, i) =>
+                            <option value={list.Name} selected={list.Name === this.state.data_assignment.Vendor_Name} key={list._id}>{list.Name}</option>
+                          )}
+                        </Input>
                       </FormGroup>
                       <FormGroup style={{paddingLeft: "16px", display: "none"}}>
                         <Label>MR ID</Label>
@@ -499,7 +599,15 @@ class AssignmentDetail extends Component {
                       </FormGroup>
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>TOP</Label>
-                        <Input type="text" name="top" readOnly value={this.state.data_assignment.Payment_Terms} />
+                        <Input type="select" name="4" onChange={this.handleChangeForm}>
+                          <option value="100%" selected={this.state.data_assignment.Payment_Terms === "100%"}>100%</option>
+                          <option value="30%-70%" selected={this.state.data_assignment.Payment_Terms === "30%-70%"}>30%-70%</option>
+                          <option value="40%-60%" selected={this.state.data_assignment.Payment_Terms === "40%-60%"}>40%-60%</option>
+                          <option value="50%-50%" selected={this.state.data_assignment.Payment_Terms === "50%-50%"}>50%-50%</option>
+                          <option value="60%-40%" selected={this.state.data_assignment.Payment_Terms === "60%-40%"}>60%-40%</option>
+                          <option value="70%-30%" selected={this.state.data_assignment.Payment_Terms === "70%-30%"}>70%-30%</option>
+                          <option value="80%-20%" selected={this.state.data_assignment.Payment_Terms === "80%-20%"}>80%-20%</option>
+                        </Input>
                       </FormGroup>
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>SSOW Type</Label>
@@ -719,14 +827,7 @@ class AssignmentDetail extends Component {
               </CardBody>
               <CardFooter>
                 {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT CREATED" || this.state.data_assignment.Current_Status === "ASP ASSIGNMENT NEED REVISION" || this.state.data_assignment.Current_Status === "ASP ASSIGNMENT RE-SCHEDULE") && (
-                  <Button color="primary" style={{float: "right"}} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.notifyASP}><i className="fa fa-bell" style={{marginRight: "8px"}}></i> Notify ASP</Button>
-                )}
-                {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT NOTIFIED TO ASP") && (
-                <Fragment>
-                  <Button color="danger" style={{float: "right"}} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.rescheduleASG}><i className="fa fa-calendar-alt" style={{marginRight: "8px"}}></i> Reschedule</Button>
-                  <Button color="warning" style={{float: "right", marginRight: "8px"}} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.revisionASG}><i className="fa fa-edit" style={{marginRight: "8px"}}></i> Need Revision</Button>
-                  <Button color="success" style={{float: "right", marginRight: "8px"}} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.acceptASG}><i className="fa fa-check" style={{marginRight: "8px"}}></i> Accept</Button>
-                </Fragment>
+                  <Button color="primary" style={{float: "right"}} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.editAssignment}><i className="fa fa-edit" style={{marginRight: "8px"}}></i> Edit Assignment</Button>
                 )}
               </CardFooter>
             </Card>
@@ -745,4 +846,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(AssignmentDetail);
+export default connect(mapStateToProps)(AssignmentEdit);
