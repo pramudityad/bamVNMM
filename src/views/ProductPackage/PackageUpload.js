@@ -1162,13 +1162,13 @@ class PackageUpload extends React.Component {
                         <th>
                           <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll}/>
                         </th>
-                        <th style={{minWidth : '150px'}}>Product Package Variant</th>
+                        <th style={{minWidth : '150px'}}>Product Package</th>
                         <th>Material Name</th>
                         <th>PP / Material Code</th>
                         <th>Unit</th>
                         <th>Qty</th>
                         <th>Price</th>
-                        <th>Product Package</th>
+                        {/* <th>Product Package</th> */}
                         <th>Physical Group</th>
                         <th>Product / Material Type</th>
                         <th></th>
@@ -1184,7 +1184,7 @@ class PackageUpload extends React.Component {
                           <td style={{textAlign : 'center'}}>{pp.uom}</td>
                           <td style={{textAlign : 'left'}}></td>
                           <td style={{textAlign : 'center'}}>{pp.price}</td>
-                          <td style={{textAlign : 'left'}}>{pp.pp_group}</td>
+                          {/* <td style={{textAlign : 'left'}}>{pp.pp_group}</td> */}
                           <td style={{textAlign : 'center'}}>{pp.physical_group}</td>
                           <td style={{textAlign : 'center'}}>{pp.product_type}</td>
                           <td>
@@ -1202,7 +1202,7 @@ class PackageUpload extends React.Component {
                             <td style={{textAlign : 'center'}}>{mat.uom}</td>
                             <td style={{textAlign : 'center'}}>{mat.qty}</td>
                             <td style={{textAlign : 'left'}}></td>
-                            <td style={{textAlign : 'left'}}></td>
+                            {/* }<td style={{textAlign : 'left'}}></td> */}
                             <td style={{textAlign : 'left'}}></td>
                             <td style={{textAlign : 'center'}}>{mat.material_type}</td>
                             <td></td>

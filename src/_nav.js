@@ -1,11 +1,6 @@
 export default {
   items: [
     {
-      name: 'WH Dashboard',
-      url: '/wh-dashboard',
-      icon: 'icon-speedometer',
-    },
-    {
       name: 'BOQ & Product',
       icon: 'icon-drawer',
       children: [
@@ -32,9 +27,30 @@ export default {
       ]
     },
     {
-      name: 'MR Report',
+      name: 'Assignment',
       icon: 'icon-drawer',
       children: [
+        {
+          name: 'Assignment List',
+          url: '/assignment-list',
+          icon: 'icon-list',
+        },
+        {
+          name: 'Assignment Bulk Notify',
+          url: '/bulk-assignment-notify',
+          icon: 'icon-list',
+        }
+      ]
+    },
+    {
+      name: 'Material Request',
+      icon: 'icon-drawer',
+      children: [
+        {
+          name: 'WH Dashboard',
+          url: '/wh-dashboard',
+          icon: 'icon-speedometer',
+        },
         {
           name: 'MR List',
           url: '/mr-list',
@@ -63,35 +79,13 @@ export default {
       ]
     },
     {
-      name: 'Assignment Report',
-      icon: 'icon-drawer',
-      children: [
-        {
-          name: 'Assignment List',
-          url: '/assignment-list',
-          icon: 'icon-list',
-        },
-        {
-          name: 'Assignment Bulk Notify',
-          url: '/bulk-assignment-notify',
-          icon: 'icon-list',
-        }
-      ]
-    },
-    {
-      name: 'DSA Report',
-      icon: 'icon-drawer',
-      children: [
-        {
-          name: 'DSA List',
-          url: '/dsa-list',
-          icon: 'icon-list',
-        }
-      ]
+      name: 'DSA List',
+      url: '/dsa-list',
+      icon: 'icon-list',
     },
     {
       title: true,
-      name: 'MR Process Milestones',
+      name: 'MR Process',
       wrapper: {            // optional wrapper object
         element: '',        // required valid HTML5 element tag
         attributes: {}        // optional valid JS object with JS API naming ex: { className: "my-class", style: { fontFamily: "Verdana" }, id: "my-id"}
@@ -104,38 +98,44 @@ export default {
       icon: 'icon-envelope-open',
     },
     {
-      name: 'Order Received',
-      url: '/order-received',
-      icon: 'fa fa-warehouse',
-    },
-    {
-      name: 'Order Processing',
-      url: '/order-processing',
-      icon: 'fa fa-clipboard-list',
-    },
-    {
-      name: 'Ready to Deliver',
-      url: '/ready-to-deliver',
-      icon: 'fa fa-arrow-right',
-    },
-    {
-      name: 'Joint Check',
-      url: '/joint-check',
-      icon: 'fa fa-box-open',
-      badge: {
-        variant: 'danger',
-        text: '1'
-      }
-    },
-    {
-      name: 'Loading Process',
-      url: '/loading-process',
-      icon: 'fa fa-truck-loading',
-    },
-    {
-      name: 'Material Dispatch',
-      url: '/material-dispatch',
-      icon: 'fa fa-truck-moving',
+      name: 'MR Milestones',
+      icon: 'icon-drawer',
+      children: [
+        {
+          name: 'Order Received',
+          url: '/order-received',
+          icon: 'fa fa-warehouse',
+        },
+        {
+          name: 'Order Processing',
+          url: '/order-processing',
+          icon: 'fa fa-clipboard-list',
+        },
+        {
+          name: 'Ready to Deliver',
+          url: '/ready-to-deliver',
+          icon: 'fa fa-arrow-right',
+        },
+        {
+          name: 'Joint Check',
+          url: '/joint-check',
+          icon: 'fa fa-box-open',
+          badge: {
+            variant: 'danger',
+            text: '1'
+          }
+        },
+        {
+          name: 'Loading Process',
+          url: '/loading-process',
+          icon: 'fa fa-truck-loading',
+        },
+        {
+          name: 'Material Dispatch',
+          url: '/material-dispatch',
+          icon: 'fa fa-truck-moving',
+        },
+      ]
     },
     {
       name: 'LOM List',

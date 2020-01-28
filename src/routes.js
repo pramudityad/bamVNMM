@@ -165,6 +165,7 @@ const routes = [
   { path: '/dsa-detail/:id', exact: true, name: 'DSA Detail', component: DSADetail },
   { path: '/ordering-list', exact: true, name: 'Ordering List', component: ListOrdering },
   { path: '/ordering-detail/:id', exact: true, name: 'Ordering Detail', component: DetailOrdering },
+
 ];
 
 export default routes;
