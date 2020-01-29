@@ -199,7 +199,7 @@ class TSSRbyTech extends Component {
             if(res.data !== undefined){
                 const items = res.data;
                 const totalData = res.data._meta;
-                console.log("test data");
+                console.log("test data lala");
                 this.setState({ boq_tech_API : items},() => {
                   if(items.list_of_id_site !== undefined){
                     if(items.list_of_id_site.length !== 0){
@@ -370,6 +370,7 @@ class TSSRbyTech extends Component {
         count_progress = count_progress + count_total;
         this.setState({progress_count : count_progress});
     }
+    console.log("dataSitesTSSR", JSON.stringify(dataSitesTSSR));
     postTSSRSites = await this.postDatatoAPI('/tssr_boq_matrix_sites_op', dataSitesTSSR);
     if(postTSSRSites === undefined){postTSSRSites = {}; postTSSRSites["data"] = undefined;}
     if(postTSSRSites.data !== undefined){
@@ -389,7 +390,7 @@ class TSSRbyTech extends Component {
         if(updateTech.data !== undefined){
           this.setState({action_status : 'success', action_message : "Your TSSR BOQ Has Been saved "}, () => {
             this.toggleLoading();
-            setTimeout(function(){ this.setState({ redirectSign : updateTech.data._id}); }.bind(this), 3000);
+            // setTimeout(function(){ this.setState({ redirectSign : updateTech.data._id}); }.bind(this), 3000);
           });
         }else{
           this.setState({action_status : 'failed'}, () => {

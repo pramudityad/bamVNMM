@@ -383,7 +383,8 @@ class CommercialBoq extends Component {
     }
 
     saveSmartStockorPrice = async (verNumber, _id_Comm, _etag_Comm) => {
-      // this.toggleLoading();\
+      // this.toggleLoading();
+      console.log("_id_Comm", _id_Comm, _etag_Comm);
       const qty_smart = this.state.qty_cust;
       const edit_price = this.state.unit_price;
       const qty_ericsson = this.state.qty_ericsson;
@@ -394,14 +395,6 @@ class CommercialBoq extends Component {
       const AllEdit = new Map([...qty_smart, ...edit_price, ...qty_ericsson, ...curr_item, ...insen_item]);
       let respondStockPrice = [];
       let dataProject = undefined;
-      if(dataComm.project_name !== null){
-        const getDataProject = await this.getDatafromAPI('/project_op/'+dataComm.id_project_doc);
-          if(getDataProject !== undefined){
-            if(getDataProject.data !== undefined){
-              dataProject = getDataProject.data;
-            }
-          }
-      }
       for (const [key, value] of AllEdit.entries()) {
         const dataIndex = commItems.find(e => e._id === key);
         if(dataIndex !== undefined){
@@ -451,7 +444,6 @@ class CommercialBoq extends Component {
           "rev1_date" : DateNow.toString(),
         }
         const respondUpdateComm = await this.patchDatatoAPI('/boq_comm_op/'+_id_Comm, updateComm, _etag_Comm);
-        const LinkDetail = '/Boq/Commercial/Detail/'+this.state.boq_comm_API._id;
         this.setState({action_status : 'success', action_message : 'Your Commercial BOQ has been updated'}, () => {
           this.toggleLoading();
           setTimeout(function(){ window.location.reload(); }, 2000);
@@ -503,10 +495,13 @@ class CommercialBoq extends Component {
     }
 
     getAllPP(){
-      this.getDatafromAPI('/pp_sorted_non_page?projection={"_id" : 1,"pp_id" : 1, "pp_group" : 1, "name" :1, "unit" : 1, "phy_group" : 1, "product_type" : 1, "pp_key" : 1, "pp_cust_number" : 1, "fas_category" : 1}').then( resPP => {
+      this.getDatafromAPIBAM('/pp_sorted_nonpage?projection={"_id" : 1,"pp_id" : 1, "pp_group" : 1, "product_name" :1, "uom" : 1, "physical_group" : 1, "product_type" : 1, "pp_key" : 1, "pp_cust_number" : 1}').then( resPP => {
         if(resPP !== undefined){
-          if(resPP.data._items.length !== 0){
-            this.setState({ pp_all : resPP.data._items});
+          if(resPP.data !== undefined){
+            console.log("resPP.data", resPP.data);
+            if(resPP.data._items.length !== 0){
+              this.setState({ pp_all : resPP.data._items});
+            }
           }
         }
       })
@@ -584,7 +579,7 @@ class CommercialBoq extends Component {
 
     getListTechBOQ(){
       const urlAPITech = '?where={}';
-      this.getDatafromAPI('/boq_tech_sorted_non_page?embedded={"created_by" :1}&where={"created_by" : {"$exists" : 1}}').then(res => {
+      this.getDatafromAPI('/boq_tech_sorted_non_page?embedded={"created_by" :1}&where={"created_by" : {"$exists" : 1}, "project_name" : {"$ne" : null}}').then(res => {
         if(res !== undefined){
           this.setState({boq_tech_API : res.data._items}, () => {
             this.filterBOQTech("");
@@ -694,7 +689,7 @@ class CommercialBoq extends Component {
         const dataGroupComm = {
           "pp_group" : Object.keys(sumPPGroup)[i],
           "product_type" : PPindex[0].product_type,
-          "phy_group" : PPindex[0].phy_group,
+          "phy_group" : PPindex[0].physical_group,
           "unit" : PPindex[0].unit,
           "unit_price" : PPindex[0].price,
           "qty_tech" : Object.values(sumPPGroup)[i],
@@ -739,11 +734,11 @@ class CommercialBoq extends Component {
             "pp_id" :  PPindex.pp_id,
             "pp_key" :  PPTechIndex.pp_key !== undefined ? PPTechIndex.pp_key : this.checkValueReturn(PPindex.pp_key, PPindex.pp_id),
             "pp_group" : PPTechIndex.pp_group !== undefined ? PPTechIndex.pp_group : PPindex.pp_group,
-            "package_name" : PPTechIndex.package_name !== undefined ? PPTechIndex.package_name : PPindex.name,
+            "package_name" : PPTechIndex.package_name !== undefined ? PPTechIndex.package_name : PPindex.product_name,
             "product_type" : PPTechIndex.product_type !== undefined ? PPTechIndex.product_type : PPindex.product_type,
             "pp_cust_number" : PPTechIndex.pp_cust_number !== undefined ? PPTechIndex.pp_cust_number : this.checkValueReturn(PPindex.pp_cust_number, PPindex.name),
-            "phy_group" : PPTechIndex.phy_group !== undefined ? PPTechIndex.phy_group : PPindex.phy_group,
-            "unit" : PPTechIndex.unit !== undefined ? PPTechIndex.unit :  PPindex.unit,
+            "phy_group" : PPTechIndex.phy_group !== undefined ? PPTechIndex.phy_group : PPindex.physical_group,
+            "unit" : PPTechIndex.unit !== undefined ? PPTechIndex.unit :  PPindex.uom,
             "unit_price" : PPindex.price == null ? 0 : PPindex.price,
             "qty_tech" : Object.values(SummPP)[i],
             "qty_early_start" : null,
@@ -849,12 +844,6 @@ class CommercialBoq extends Component {
             if(BoqTechSelect.id_project_doc !== null && BoqTechSelect.project_name !== ""){
               data_comm['id_project_doc'] = BoqTechSelect.id_project_doc
               data_comm['project_name'] = BoqTechSelect.project_name;
-              const getDataProject = await this.getDatafromAPI('/project_op/'+BoqTechSelect.id_project_doc);
-              if(getDataProject !== undefined){
-                if(getDataProject.data !== undefined){
-                  dataProject = getDataProject.data;
-                }
-              }
             }
           }
           const respondPost = await this.postDatatoAPI('/boq_comm_op', data_comm);
@@ -867,9 +856,7 @@ class CommercialBoq extends Component {
               dataItemsComm[i]["id_po_doc"] = null;
               dataItemsComm[i]["po_number"] = null;
               dataItemsComm[i]["version"] = "0";
-              if(dataProject !== undefined){
-                dataItemsComm[i]["fas_assignment_id"] = null;
-              }
+              dataItemsComm[i]["fas_assignment_id"] = null;
             }
             const respondPostItems = await this.postDatatoAPI('/boq_comm_items_op', dataItemsComm);
             if(respondPostItems.data !== undefined){
@@ -1054,7 +1041,7 @@ class CommercialBoq extends Component {
       delete commDataRev._etag;
       delete commDataRev._links;
       delete commDataRev.created_on;
-
+      console.log("commDataRev", JSON.stringify(dataStoreRev));
       const respondRevComm = await this.postDatatoAPI('/boq_comm_items_rev', dataStoreRev);
       const respondRevItem = await this.postDatatoAPI('/boq_comm_rev', commDataRev);
       const dataUpdateComm = {
@@ -1077,10 +1064,8 @@ class CommercialBoq extends Component {
           })
         }
       }else{
-        this.saveSmartStockorPrice(dataUpdateComm.version.toString(), respondUpdateComm._id, respondUpdateComm._etag);
+        this.saveSmartStockorPrice(dataUpdateComm.version.toString(), dataComm._id, respondUpdateComm.data._etag);
       }
-
-
     }
 
     async LoopOverwrite(indexXLS, dataNewXLS, dataOld, verNumber){
@@ -1266,27 +1251,6 @@ class CommercialBoq extends Component {
       }
     }
 
-    // packageView(packageData, pt, group){
-    //   let itemsDatas = {
-    //     "pp_group" : [],
-    //     "items" : [],
-    //   };
-    //   if(packageData.length !== 0){
-    //     let getGroup = packageData.filter(d => d.product_type === pt && d.phy_group === group)
-    //     if( getGroup.length !== 0){
-    //       let grp = [...new Set(getGroup.map(e => e.pp_group))];
-    //       itemsDatas["pp_group"] = grp;
-    //       for(let i=0; i < grp.length; i++){
-    //         itemsDatas["items"] = itemsDatas.items.concat(packageData.filter(d => d.product_type === pt && d.phy_group === group && d.pp_group == grp[i]));
-    //       }
-    //     }
-    //     console.log("{itemsDatas")
-    //     return itemsDatas
-    //   }else{
-    //     return itemsDatas
-    //   }
-    // }
-
     exportCommercialTemplate = async () => {
       const wb = new Excel.Workbook()
       const ws = wb.addWorksheet()
@@ -1373,7 +1337,7 @@ class CommercialBoq extends Component {
       ws.getCell('I6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
       const revDocNum = ws.mergeCells('I7:K7');
-      ws.getCell('I7').value = (dataComm.rev1 !== 'A' ? 'PA' : 'A')+ dataComm.version;
+      ws.getCell('I7').value = dataComm.version;
       ws.getCell('I7').alignment  = {vertical: 'top', horizontal: 'left' };
       ws.getCell('I7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
@@ -2037,7 +2001,7 @@ class CommercialBoq extends Component {
                           <Input type="select" onChange={this.handleChangeCurrencyAll} value={this.state.currencyChangeAll}>
                             <option value={""}></option>
                             <option value={"USD"}>USD</option>
-                            <option value={"PHP"}>PHP</option>
+                            <option value={"PHP"}>IDR</option>
                           </Input>
                         )}
                         </th>
@@ -2107,7 +2071,7 @@ class CommercialBoq extends Component {
                                       <Input type="select" onChange={this.handleChangeCurrency} name={itm._id} value={this.state.currencyChange.has(itm._id) ? this.state.currencyChange.get(itm._id) : itm.currency}>
                                         {/* <option value={false}></option> */}
                                         <option value={"USD"}>USD</option>
-                                        <option value={"PHP"}>PHP</option>
+                                        <option value={"PHP"}>IDR</option>
                                       </Input>
                                     )}
                                     {/* {itm.currency} */}
