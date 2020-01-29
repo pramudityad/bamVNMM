@@ -24,6 +24,18 @@ export default {
           url: '/tssr-list',
           icon: 'icon-briefcase',
         },
+        
+        {
+          name: 'Commercial BOQ',
+          url: '/list-commercial',
+          icon: 'icon-briefcase',
+        },
+        
+        {
+          name: 'Ordering BOQ',
+          url: '/list-ordering',
+          icon: 'icon-briefcase',
+        },
       ]
     },
     {
