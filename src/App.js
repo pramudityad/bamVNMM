@@ -65,7 +65,7 @@ class App extends Component {
     if(getLogin.data !== undefined){
       this.setState({dataLogin : getLogin.data});
       this.props.saveDataUser({
-        "_id_user" : getLogin.data.validUser.id_user_doc,
+        "_id_user" : getLogin.data.validUser._id,
         "email_user" : getLogin.data.validUser.email,
         "roles_user" : getLogin.data.listRole,
         "user_name" : getLogin.data.validUser.username,

@@ -179,8 +179,8 @@ class LoadingProcess extends Component {
     const dataMR = this.state.mr_list.find(e => e._id === _id);
     let currStatus = [
       {
-          "mr_status_name": "MATERIAL_DISPATCH",
-          "mr_status_value": "FINISHED",
+          "mr_status_name": "DISPATCH",
+          "mr_status_value": "DISPATCHING",
           "mr_status_date": dateNow,
           "mr_status_updater": this.state.userEmail,
           "mr_status_updater_id": this.state.userId
@@ -188,7 +188,7 @@ class LoadingProcess extends Component {
     ];
     let currMilestones = [
       {
-          "ms_name": "MS_MATERIAL_DISPATCH",
+          "ms_name": "MS_DISPATCH",
           "ms_date": dateNow,
           "ms_updater": this.state.userEmail,
           "ms_updater_id": this.state.userId
@@ -196,8 +196,8 @@ class LoadingProcess extends Component {
     ];
     let successUpdate = [];
     let updateMR = {};
-    updateMR['current_milestones'] = "MS_MATERIAL_DISPATCH";
-    updateMR['current_mr_status'] = "MATERIAL DISPATCH FINISHED";
+    updateMR['current_milestones'] = "MS_DISPATCH";
+    updateMR['current_mr_status'] = "DISPATCHING";
     updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
     updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
     let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);

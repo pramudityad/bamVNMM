@@ -227,7 +227,7 @@ class WarehouseDashboard extends Component {
   }
 
   getMaterialDispatch() {
-    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_MATERIAL_DISPATCH"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_DISPATCH"}').then(res => {
       console.log("Material Dispatch", res);
       if(res.data !== undefined) {
         const items = res.data._meta;

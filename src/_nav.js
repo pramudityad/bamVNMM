@@ -120,10 +120,6 @@ export default {
           name: 'Joint Check',
           url: '/joint-check',
           icon: 'fa fa-box-open',
-          badge: {
-            variant: 'danger',
-            text: '1'
-          }
         },
         {
           name: 'Loading Process',

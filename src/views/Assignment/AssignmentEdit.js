@@ -164,8 +164,7 @@ class AssignmentEdit extends Component {
             dataForm[j+7] = this.state.data_assignment.SSOW_List[i].ssow_status[0].status_update_date;
             dataForm[j+8] = this.state.data_assignment.SSOW_List[i].ssow_status[0].status_updater;
             dataForm[j+9] = this.state.data_assignment.SSOW_List[i].ssow_price;
-            dataForm[j+10] = this.state.data_assignment.SSOW_List[i].ssow_total_price;
-            j = j + 11;
+            j = j + 10;
           }
         }
         this.setState({edit_assignment_form : dataForm}, () => {
@@ -227,99 +226,33 @@ class AssignmentEdit extends Component {
     this.setState({edit_assignment_form : dataForm}, () => {
       console.log("Assignment Form", this.state.edit_assignment_form);
     });
-    console.log('coba', e.name);
-    if(e.name === "5") {
-      console.log('masuk');
-      const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataForm = this.state.edit_assignment_form;
-      dataForm[7] = getDescription.data._items[0].description;
-      this.setState({edit_assignment_form : dataForm}, () => {
-        console.log("Assignment Form", this.state.edit_assignment_form);
-      });
+    for(let i = 5; i < 72; i=i+10) {
+      if(e.name === i) {
+        const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
+        let dataForm = this.state.edit_assignment_form;
+        dataForm[i+2] = getDescription.data._items[0].description;
+        this.setState({edit_assignment_form : dataForm}, () => {
+          console.log("Assignment Form", this.state.edit_assignment_form);
+        });
+      }
     }
-    // } else if(e.name === "23") {
-    //   const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[25] = getDescription.data._items[0].description;
-    //   this.setState({edit_assignment_form : dataForm}, () => {
-    //     console.log("Assignment Form", this.state.edit_assignment_form);
-    //   });
-    // } else if(e.name === "29") {
-    //   const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[31] = getDescription.data._items[0].description;
-    //   this.setState({edit_assignment_form : dataForm}, () => {
-    //     console.log("Assignment Form", this.state.edit_assignment_form);
-    //   });
-    // } else if(e.name === "35") {
-    //   const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[37] = getDescription.data._items[0].description;
-    //   this.setState({edit_assignment_form : dataForm}, () => {
-    //     console.log("Assignment Form", this.state.edit_assignment_form);
-    //   });
-    // } else if(e.name === "41") {
-    //   const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[43] = getDescription.data._items[0].description;
-    //   this.setState({edit_assignment_form : dataForm}, () => {
-    //     console.log("Assignment Form", this.state.edit_assignment_form);
-    //   });
-    // } else if(e.name === "47") {
-    //   const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[49] = getDescription.data._items[0].description;
-    //   this.setState({edit_assignment_form : dataForm}, () => {
-    //     console.log("Assignment Form", this.state.edit_assignment_form);
-    //   });
-    // } else if(e.name === "53") {
-    //   const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[55] = getDescription.data._items[0].description;
-    //   this.setState({edit_assignment_form : dataForm}, () => {
-    //     console.log("Assignment Form", this.state.edit_assignment_form);
-    //   });
-    // } else if(e.name === "18") {
-    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[20] = getPriceUnit.data._items[0].ssow_type;
-    //   dataForm[59] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    // } else if(e.name === "24") {
-    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[26] = getPriceUnit.data._items[0].ssow_type !== null ? getPriceUnit.data._items[0].ssow_type : "act";
-    //   dataForm[60] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    // } else if(e.name === "30") {
-    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[32] = getPriceUnit.data._items[0].ssow_type;
-    //   dataForm[61] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    // } else if(e.name === "36") {
-    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[38] = getPriceUnit.data._items[0].ssow_type;
-    //   dataForm[62] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    // } else if(e.name === "42") {
-    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[44] = getPriceUnit.data._items[0].ssow_type;
-    //   dataForm[63] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    // } else if(e.name === "48") {
-    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[50] = getPriceUnit.data._items[0].ssow_type;
-    //   dataForm[64] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    // } else if(e.name === "54") {
-    //   const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-    //   let dataForm = this.state.edit_assignment_form;
-    //   dataForm[56] = getPriceUnit.data._items[0].ssow_type;
-    //   dataForm[65] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    // }
+    for(let i = 6; i < 73; i=i+10) {
+      if(e.name === i) {
+        const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
+        let dataForm = this.state.edit_assignment_form;
+        dataForm[i+2] = getPriceUnit.data._items[0].ssow_type;
+        dataForm[i+8] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
+        this.setState({edit_assignment_form : dataForm}, () => {
+          console.log("Assignment Form", this.state.edit_assignment_form);
+        });
+      }
+    }
   }
 
   loopSSOW = () => {
     let ssow_content = [];
     let j = 5;
+    let k = 0;
     for(let i = 0; i < 7; i++) {
       if(this.state.data_assignment.SSOW_List[i] !== undefined) {
         ssow_content.push(
@@ -353,31 +286,98 @@ class AssignmentEdit extends Component {
             <Col md="4" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 <Label>Description</Label>
-                <Input type="textarea" name={j+2} rows="1" readOnly value={this.state.data_assignment.SSOW_List[i].ssow_description} />
+                <Input type="textarea" name={j+2} rows="1" readOnly value={this.state.edit_assignment_form[j+2]} />
               </FormGroup>
             </Col>
             <Col md="1" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 <Label>Unit</Label>
-                <Input type="text" name={j+3} value={this.state.data_assignment.SSOW_List[i].ssow_unit} readOnly />
+                <Input type="text" name={j+3} value={this.state.edit_assignment_form[j+3]} readOnly />
               </FormGroup>
             </Col>
             <Col md="1" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 <Label>Quantity</Label>
-                <Input type="number" name={j+4} value={this.state.data_assignment.SSOW_List[i].ssow_qty} readOnly />
+                <Input type="number" name={j+4} value={this.state.edit_assignment_form[j+4]} onChange={this.handleChangeForm} />
               </FormGroup>
             </Col>
             <Col md="2" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 <Label>Status</Label>
-                <Input type="text" name={j+5} value={this.state.data_assignment.SSOW_List[i].ssow_status[0].status} readOnly />
+                <Input type="select" name={j+5} onChange={this.handleChangeForm}>
+                  <option value="Cancelled" selected={this.state.edit_assignment_form[j+5] === "Cancelled"}>Cancelled</option>
+                  <option value="Close" selected={this.state.edit_assignment_form[j+5] === "Close"}>Close</option>
+                  <option value="Open" selected={this.state.edit_assignment_form[j+5] === "Open"}>Open</option>
+                  <option value="Partial Close" selected={this.state.edit_assignment_form[j+5] === "Partial Close"}>Partial Close</option>
+                </Input>
               </FormGroup>
             </Col>
           </Row>
         );
-        j = j + 11;
+        j = j + 10;
+        k++;
       }
+    }
+    for(let i = 0; i < 7-k; i++) {
+      ssow_content.push(
+        <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
+          <Col md="2" style={{margin:"0", padding:"4px"}}>
+            <FormGroup>
+              <Label>SSOW ID</Label>
+              <AsyncSelect
+                cacheOptions
+                loadOptions={this.loadOptionsSSOWID}
+                defaultOptions
+                onChange={this.handleChangeFormAsyncSelect}
+                name={j}
+              />
+            </FormGroup>
+          </Col>
+          <Col md="2" style={{margin:"0", padding:"4px"}}>
+            <FormGroup>
+              <Label>Activity Number</Label>
+              <AsyncSelect
+                cacheOptions
+                loadOptions={this.loadOptionsActivityNumber}
+                defaultOptions
+                onChange={this.handleChangeFormAsyncSelect}
+                name={j+1}
+              />
+            </FormGroup>
+          </Col>
+          <Col md="4" style={{margin:"0", padding:"4px"}}>
+            <FormGroup>
+              <Label>Description</Label>
+              <Input type="textarea" name={j+2} rows="1" readOnly value={this.state.edit_assignment_form[j+2]} />
+            </FormGroup>
+          </Col>
+          <Col md="1" style={{margin:"0", padding:"4px"}}>
+            <FormGroup>
+              <Label>Unit</Label>
+              <Input type="text" name={j+3} value={this.state.edit_assignment_form[j+3]} readOnly />
+            </FormGroup>
+          </Col>
+          <Col md="1" style={{margin:"0", padding:"4px"}}>
+            <FormGroup>
+              <Label>Quantity</Label>
+              <Input type="number" name={j+4} value={this.state.edit_assignment_form[j+4]} onChange={this.handleChangeForm} />
+            </FormGroup>
+          </Col>
+          <Col md="2" style={{margin:"0", padding:"4px"}}>
+            <FormGroup>
+              <Label>Status</Label>
+              <Input type="select" name={j+5} onChange={this.handleChangeForm}>
+                <option value="" disabled selected hidden>Select Status</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="Close">Close</option>
+                <option value="Open">Open</option>
+                <option value="Partial Close">Partial Close</option>
+              </Input>
+            </FormGroup>
+          </Col>
+        </Row>
+      );
+      j = j + 10;
     }
     return ssow_content;
   }
@@ -398,6 +398,27 @@ class AssignmentEdit extends Component {
     }
     if(dataForm[4] !== null) {
       updateASG['Payment_Terms'] = dataForm[4];
+    }
+    updateASG['SSOW_List'] = [];
+    for(let i = 5; i < 66; i=i+10) {
+      if(dataForm[i] !== null) {
+        let ssow_list = {
+          "ssow_id" : dataForm[i],
+          "sow_type" : this.state.data_assignment.SOW_Type,
+          "ssow_description" : dataForm[i+2],
+          "ssow_activity_number" : dataForm[i+1],
+          "ssow_unit" : dataForm[i+3],
+          "ssow_qty" : dataForm[i+4],
+          "ssow_price" : dataForm[i+9],
+          "ssow_total_price" : dataForm[i+9]*dataForm[i+4],
+          "ssow_status" : [{
+            "status" : dataForm[i+5],
+            "status_update_date" : dateNow,
+            "status_updater" : this.state.userEmail
+          }]
+        }
+        updateASG['SSOW_List'].push(ssow_list);
+      }
     }
     console.log('isi update', updateASG);
     let res = await this.patchDataToAPI('/asp_assignment_op/'+_id, updateASG, _etag);
@@ -699,128 +720,6 @@ class AssignmentEdit extends Component {
                     </Col>
                     <Col md="2">
                       <Button color='success' style={{float : 'right', marginRight : '20px', marginTop : '30px'}} onClick={this.saveBastNumber}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Assign</Button>
-                    </Col>
-                  </Row>
-                  <h5 style={{marginTop: "16px"}}>GR (PARTIAL)</h5>
-                  <Row>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>ASP BAST NO (DP)</Label>
-                        <Input type="text" name="partial_asp_bast_no" readOnly />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>GR Doc No (DP)</Label>
-                        <Input type="text" name="partial_gr_doc_no" readOnly />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>GR Release Date (DP)</Label>
-                        <Input type="date" name="partial_gr_release_date" readOnly />
-                      </FormGroup>
-                    </Col>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>On</Label>
-                        <Input type="date" name="partial_asp_bast_no_on" readOnly />
-                      </FormGroup>
-                    </Col>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>By</Label>
-                        <Input type="text" name="partial_asp_bast_no_by" readOnly />
-                      </FormGroup>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col md="4">
-                      <FormGroup check inline style={{paddingLeft: "16px", verticalAlign: "center"}}>
-                        <Input className="form-check-input" type="checkbox" name="partial_request_revision_check" readOnly />
-                        <Label className="form-check-label" check>Request Revision</Label>
-                      </FormGroup>
-                      <Row>
-                        <Col md="6">
-                          <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>On</Label>
-                            <Input type="date" name="partial_request_revision_on" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="6">
-                          <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>By</Label>
-                            <Input type="text" name="partial_request_revision_by" readOnly />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                    </Col>
-                  </Row>
-                  <h5 style={{marginTop: "16px"}}>GR (FINAL)</h5>
-                  <Row>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>ASP BAST NO</Label>
-                        <Input type="text" name="final_asp_bast_no" readOnly />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>GR Doc No</Label>
-                        <Input type="text" name="final_gr_doc_no" readOnly />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>GR Release Date</Label>
-                        <Input type="date" name="final_gr_release_date" readOnly />
-                      </FormGroup>
-                    </Col>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>On</Label>
-                        <Input type="date" name="final_asp_bast_no_on" readOnly />
-                      </FormGroup>
-                    </Col>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>By</Label>
-                        <Input type="text" name="final_asp_bast_no_by" readOnly />
-                      </FormGroup>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col md="4">
-                      <FormGroup check inline style={{paddingLeft: "16px", verticalAlign: "center"}}>
-                        <Input className="form-check-input" type="checkbox" name="final_request_revision_check"/>
-                        <Label className="form-check-label" check>Request Revision</Label>
-                      </FormGroup>
-                      <Row>
-                        <Col md="6">
-                          <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>On</Label>
-                            <Input type="date" name="final_request_revision_on" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="6">
-                          <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>By</Label>
-                            <Input type="text" name="final_request_revision_by" readOnly />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                    </Col>
-                    <Col md="4">
-                      <FormGroup check inline style={{paddingLeft: "16px", verticalAlign: "center"}}>
-                        <Input className="form-check-input" type="checkbox" name="final_revision_done_check" readOnly />
-                        <Label className="form-check-label" check>Revision Done</Label>
-                      </FormGroup>
-                      <Row>
-                        <Col md="6">
-                          <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>On</Label>
-                            <Input type="date" name="final_revision_done_on" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="6">
-                          <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>By</Label>
-                            <Input type="text" name="final_revision_done_by" readOnly />
-                          </FormGroup>
-                        </Col>
-                      </Row>
                     </Col>
                   </Row>
                 </Form>

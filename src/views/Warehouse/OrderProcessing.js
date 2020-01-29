@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import React, { Component, Fragment } from 'react';
+import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
@@ -12,6 +12,8 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
+const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class OrderProcessing extends Component {
   constructor(props) {
     super(props);
@@ -21,6 +23,7 @@ class OrderProcessing extends Component {
       userId : this.props.dataLogin._id,
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
       mr_list : [],
       prevPage : 0,
       activePage : 1,
@@ -29,7 +32,11 @@ class OrderProcessing extends Component {
       filter_list : new Array(14).fill(""),
       mr_all : [],
       action_status : null,
-      action_message : ""
+      action_message : "",
+      modalNotComplete : false,
+      data_material : null,
+      site_NE : "",
+      site_FE : ""
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -39,6 +46,7 @@ class OrderProcessing extends Component {
     this.getAllMR = this.getAllMR.bind(this);
     this.proceedMilestone = this.proceedMilestone.bind(this);
     this.notComplete = this.notComplete.bind(this);
+    this.toggleNotComplete = this.toggleNotComplete.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -57,6 +65,25 @@ class OrderProcessing extends Component {
     } catch(err) {
       let respond = err;
       console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async getDataFromAPINode(url) {
+    try {
+      let respond = await axios.get(API_URL_Node+url, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data node", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data node", err);
       return respond;
     }
   }
@@ -221,19 +248,19 @@ class OrderProcessing extends Component {
     const dataMR = this.state.mr_list.find(e => e._id === _id);
     let currStatus = [
       {
-          "mr_status_name": "LACK_OF_MATERIAL",
-          "mr_status_value": "YES",
-          "mr_status_date": dateNow,
-          "mr_status_updater": this.state.userEmail,
-          "mr_status_updater_id": this.state.userId
+        "mr_status_name": "LACK_OF_MATERIAL",
+        "mr_status_value": "YES",
+        "mr_status_date": dateNow,
+        "mr_status_updater": this.state.userEmail,
+        "mr_status_updater_id": this.state.userId
       }
     ];
     let currMilestones = [
       {
-          "ms_name": null,
-          "ms_date": dateNow,
-          "ms_updater": this.state.userEmail,
-          "ms_updater_id": this.state.userId
+        "ms_name": null,
+        "ms_date": dateNow,
+        "ms_updater": this.state.userEmail,
+        "ms_updater_id": this.state.userId
       }
     ];
     let successUpdate = [];
@@ -248,7 +275,7 @@ class OrderProcessing extends Component {
         successUpdate.push(res.data);
       }
     }
-    if(successUpdate.length !== 0){
+    if(successUpdate.length !== 0) {
       this.setState({action_status : "success"});
       setTimeout(function(){ window.location.reload(); }, 2000);
     }
@@ -277,6 +304,26 @@ class OrderProcessing extends Component {
     this.setState({filter_list : dataFilter, activePage: 1}, () => {
       this.onChangeDebounced(e);
     })
+  }
+
+  toggleNotComplete(e){
+    const modalNotComplete = this.state.modalNotComplete;
+    if(modalNotComplete === false) {
+      const _id_mr = e.currentTarget.id;
+      this.getDataFromAPINode('/matreq/'+_id_mr).then(resAsg => {
+        if(resAsg.data !== undefined) {
+          this.setState({data_material : resAsg.data}, () => {
+            console.log("Data Material", this.state.data_material);
+          });
+          this.setState({site_NE : this.state.data_material.site_info.find( e => e.site_title === "NE")});
+          this.setState({site_FE : this.state.data_material.site_info.find( e => e.site_title === "FE")});
+          console.log("site ne", this.state.site_NE.site_id);
+        }
+      })
+    }
+    this.setState(prevState => ({
+      modalNotComplete: !prevState.modalNotComplete
+    }));
   }
 
   onChangeDebounced(e) {
@@ -505,7 +552,7 @@ class OrderProcessing extends Component {
                       <tr key={list._id}>
                         <td>
                           <Button outline color="success" size="sm" className="btn-pill" style={{width: "120px", marginBottom: "4px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-check" style={{marginRight: "8px"}}></i>Complete</Button>
-                          <Button outline color="danger" size="sm" className="btn-pill" style={{width: "120px"}} id={list._id} value={list._etag} onClick={this.notComplete}><i className="fa fa-times" style={{marginRight: "8px"}}></i>Not Complete</Button>
+                          <Button outline color="danger" size="sm" className="btn-pill" style={{width: "120px"}} id={list._id} value={list._etag} onClick={this.toggleNotComplete}><i className="fa fa-times" style={{marginRight: "8px"}}></i>Not Complete</Button>
                         </td>
                         <td><Link to={'/mr-detail/'+list._id}>{list.mr_id}</Link></td>
                         <td>{list.implementation_id}</td>
@@ -538,6 +585,51 @@ class OrderProcessing extends Component {
             </Card>
           </Col>
         </Row>
+        <Modal isOpen={this.state.modalNotComplete} toggle={this.toggleNotComplete}>
+          <ModalHeader>Lack of Materials</ModalHeader>
+          <ModalBody>
+            <Table hover bordered striped responsive size="sm">
+              <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
+                <tr>
+                  <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
+                  <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
+                  <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
+                  <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
+                </tr>
+                <tr>
+                  <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
+                  <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
+                </tr>
+              </thead>
+              <tbody>
+              {this.state.data_material !== null && (
+                this.state.data_material.packages.map(pp =>
+                  pp.site_id === this.state.site_NE.site_id && (
+                    <Fragment>
+                    <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                      <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
+                      <td>{pp.product_name}</td>
+                      <td>{pp.uom}</td>
+                      <td align='center'>0</td>
+                      <td align='center'>0</td>
+                    </tr>
+                    {pp.materials.map(mat => 
+                      <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                        <td style={{textAlign : 'right'}}>{mat.material_id}</td>
+                        <td style={{textAlign : 'left'}}>{mat.material_name}</td>
+                        <td>{mat.material_unit}</td>
+                        <td align='center'><Input type="number" value="0"/></td>
+                        <td align='center'><Input type="number" value="0"/></td>
+                      </tr>
+                    )}
+                  </Fragment>
+                  )
+                )
+              )}
+              </tbody>
+            </Table>
+          </ModalBody>
+        </Modal>
       </div>
     );
   }

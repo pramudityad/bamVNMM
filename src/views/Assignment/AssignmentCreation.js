@@ -309,10 +309,10 @@ class AssignmentCreation extends Component {
           }
         ]
       }
-      if(ssow_list.ssow_unit === null){
+      if(ssow_list.ssow_unit === null) {
         ssow_list["ssow_unit"] = "act";
-      }else{
-        if(ssow_list.ssow_unit.length === 0){
+      } else {
+        if(ssow_list.ssow_unit.length === 0) {
           ssow_list["ssow_unit"] = "act";
         }
       }
