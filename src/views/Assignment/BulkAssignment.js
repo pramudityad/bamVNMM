@@ -372,6 +372,7 @@ class BulkAssignment extends Component {
           "SH_ID": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'activity_id')]).toString(),
           "Vendor_Code_Number": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'vendor_code')]),
           "SOW_Type": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'sow_type')]),
+          "Payment_Terms": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'payment_terms')]),
           "SSOW_List" : ssow_data,
           "ASP_Assignment_Status" : current_status,
           "Current_Status" : "ASP ASSIGNMENT CREATED",
@@ -692,7 +693,7 @@ class BulkAssignment extends Component {
       indexSSOW = 25;
     }
 
-    let headerRow = ["id", "project", "sow_type", "vendor_code", "vendor_name", "activity_id"];
+    let headerRow = ["id", "project", "sow_type", "vendor_code", "vendor_name", "activity_id", "payment_terms"];
 
     for(let i = 1; i <= indexSSOW; i++){
       headerRow.push("ssow_"+sow_type.toLowerCase()+"_id_"+i.toString());

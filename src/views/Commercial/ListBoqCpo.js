@@ -5,10 +5,12 @@ import { Form, FormGroup, Label } from 'reactstrap';
 import axios from 'axios';
 import Pagination from "react-js-pagination";
 import './boqCommercial.css';
+import ReactExport from 'react-data-export';
 import { Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import debounce from 'lodash.debounce';
 
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const ExcelFile = ReactExport.ExcelFile;
+const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 //const API_URL = 'http://localhost:5000/smartapi';
 const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
@@ -20,7 +22,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
 );
 
-class ListCommercial extends Component {
+class ListBoqComm extends Component {
   constructor(props) {
     super(props);
 
@@ -28,7 +30,6 @@ class ListCommercial extends Component {
         action_status : null,
         action_message : "",
         boq_comm_all : [],
-        list_technical : [],
         BOQ_all : [],
         prevPage : 1,
         activePage : 1,
@@ -43,8 +44,6 @@ class ListCommercial extends Component {
 
     };
     this.toggleLoading = this.toggleLoading.bind(this);
-    this.toggleDelete = this.toggleDelete.bind(this);
-    this.deleteBOQCOMM = this.deleteBOQCOMM.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.handleFilterListName = this.handleFilterListName.bind(this);
@@ -56,21 +55,6 @@ class ListCommercial extends Component {
     this.setState(prevState => ({
       modal_loading: !prevState.modal_loading
     }));
-  }
-
-  toggleDelete(e){
-    let value = null;
-    this.setState(prevState => ({
-      modal_delete: !prevState.modal_delete
-    }));
-    if(e !== undefined){
-      if(e.currentTarget.value === undefined){
-        value = e.target.value;
-      }else{
-        value = e.currentTarget.value;
-      }
-    }
-    this.setState({modal_delete_noBOQ : value})
   }
 
   async getDatafromAPI(url){
@@ -139,10 +123,10 @@ class ListCommercial extends Component {
 
   getListBoQ(){
     const page = this.state.activePage;
+
     let filter_no_tech = this.state.filter_list[1] === null ? '"no_boq_tech":{"$exists" : 1}' : '"no_boq_tech":{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
     let filter_no_comm = this.state.filter_list[2] === null ? '"no_boq_comm":{"$exists" : 1}' : '"no_boq_comm":{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
     let filter_project = this.state.filter_list[3] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
-    let filter_po = this.state.filter_list[6] === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "'+this.state.filter_list[6]+'", "$options" : "i"}';
     let filter_ver = this.state.filter_list[5] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
     let filter_created_by = '"created_by":{"$exists" : 1}';
     if(this.state.filter_list[4] !== null){
@@ -153,12 +137,10 @@ class ListCommercial extends Component {
         filter_created_by = '"created_by":null';
       }
     }
-    let where = 'where={"deleted" : 0, '+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_po+', '+filter_no_comm+', '+filter_created_by+'}';
+    let where = 'where={"deleted" : 0, '+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_no_comm+', '+filter_created_by+'}';
     this.getDatafromAPI('/boq_comm_audit?'+where+'&max_results='+this.state.perPage+'&page='+page+'&embedded={"created_by" : 1}').then(res => {
         if(res !== undefined){
-            this.setState({boq_comm_all : res.data._items, totalData : res.data._meta}, () => {
-              this.getTechnicalData(res.data._items.map(e => e.id_boq_tech_doc));
-            })
+            this.setState({boq_comm_all : res.data._items, totalData : res.data._meta})
         }
     })
   }
@@ -173,23 +155,12 @@ class ListCommercial extends Component {
           this.setState({ filter_createdBy : items.map(e => e._id)}, () => {
             this.getListBoQ();
           });
-        });
+        })
     }else{
       this.setState({filter_createdBy : []}, () => {
         this.getListBoQ();
       });
     }
-  }
-
-  getTechnicalData(array_id_tech){
-    let arrayIdTech = '"'+array_id_tech.join('", "')+'"';
-    arrayIdTech = arrayIdTech.replace("&", "%26");
-    let where_id_tech = 'where={"id_boq_tech" : {"$in" : ['+arrayIdTech+']}}';
-    this.getDatafromAPI('/boq_tech_op?projection={"note_6" : 1}'+'&'+where_id_tech).then(res => {
-      if(res !== undefined){
-        this.setState({list_technical : res.data._items})
-      }
-    })
   }
 
   componentDidMount(){
@@ -201,66 +172,6 @@ class ListCommercial extends Component {
     this.setState({activePage: pageNumber}, () => {
       this.getListBoQ();
     });
-  }
-
-  deleteBOQCOMM = async () => {
-    this.toggleDelete();
-    this.toggleLoading();
-    const no_com = this.state.modal_delete_noBOQ;
-    let indexCOM = this.state.boq_comm_all.find(e => e.no_boq_comm === no_com);
-    const projection = 'projection={"_etag" : 1}';
-    let getItemComm = await this.getDatafromAPI('/boq_comm_items_non_page?where={"id_boq_comm_doc" : "'+indexCOM._id+'"}'+'&'+projection);
-    let dataItemsComm = [];
-    if(getItemComm !== undefined){
-      if(getItemComm.data !== undefined){
-        dataItemsComm = getItemComm.data._items;
-      }
-    }
-    if(indexCOM !== undefined){
-      const dataTech = await this.getDatafromAPI('/boq_tech_op/'+indexCOM.id_boq_tech_doc);
-      if(dataTech !== undefined){
-        if(dataTech.data !== undefined){
-          const updateTech = {
-            "list_of_id_boq_comm" : dataTech.data.list_of_id_boq_comm.filter(id => id !== indexCOM._id)
-          }
-          const patchDataTech = await this.patchDatatoAPI('/boq_tech_op/'+dataTech.data._id, updateTech, dataTech.data._etag);
-          if(patchDataTech !== undefined){
-            if(patchDataTech.data !== undefined){
-              const updateComm = {
-                "deleted" : 1
-              }
-              for(let x = 0; x < dataItemsComm.length; x++){
-                const itemsUpdate = await this.patchDatatoAPI('/boq_comm_items_op/'+dataItemsComm[x]._id, updateComm, dataItemsComm[x]._etag);
-              }
-              const patchComm = await this.patchDatatoAPI('/boq_comm_op/'+indexCOM._id, updateComm, indexCOM._etag);
-                if(patchComm !== undefined){
-                  if(patchComm.data !== undefined){
-                    this.setState({action_status : 'success', action_message : 'Commercial BOQ '+no_com+' has been deleted'})
-                    this.toggleLoading();
-                    setTimeout(function(){ window.location.reload(); }, 1500);
-                  }
-                }else{
-                  this.setState({action_status : 'failed', action_message : ''})
-                  this.toggleLoading();
-                }
-            }
-          }else{
-            this.setState({action_status : 'failed', action_message : ''})
-            this.toggleLoading();
-          }
-        }else{
-          this.setState({action_status : 'failed', action_message : ''})
-          this.toggleLoading();
-        }
-      }else{
-        this.setState({action_status : 'failed', action_message : ''})
-        this.toggleLoading();
-      }
-    }else{
-      this.setState({action_status : 'failed', action_message : ''})
-      this.toggleLoading();
-    }
-    console.log("indexCOM", indexCOM);
   }
 
   // componentDidUpdate(){
@@ -278,7 +189,8 @@ class ListCommercial extends Component {
     let dataFilter = this.state.filter_list;
     dataFilter[parseInt(index)] = value;
     this.setState({filter_list : dataFilter}, () => {
-      this.onChangeDebounced();
+      this.getListBoQ();
+      console.log("filter_list", this.state.filter_list);
     });
   }
 
@@ -304,7 +216,7 @@ class ListCommercial extends Component {
   }
 
   render() {
-
+    
     function AlertProcess(props){
       const alert = props.alertAct;
       const message = props.messageAct;
@@ -335,19 +247,16 @@ class ListCommercial extends Component {
     console.log('data BoQ total', this.state.modal_delete_noBOQ);
     return (
       <div>
-        <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
+        <AlertProcess alertAct={this.state.action_status} messageAct={this.state.action_message}/>
         <Row>
         <Col xl="12">
         <Card>
           <CardHeader>
-            <React.Fragment>
-              <span style={{position:'absolute',marginTop:'8px'}}>Commercial BOQ List</span>
-              <div className="card-header-actions" style={{marginRight:'5px'}}>
-                <Link to='/commercial-creation'>
-                <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
-                </Link>
-              </div>
-            </React.Fragment>
+            { this.state.userRole.includes('PDB-Dash')|| this.state.userRole.includes('Admin') || this.state.userRole.includes('Flow-Commercial') ? (
+              <React.Fragment>
+                <span>Commercial BOQ List</span>
+              </React.Fragment>
+            ):(<span>List BOQ Commercial</span>)}
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             {/* <div style={{float : 'right', marginBottom : '5px'}}>
@@ -360,10 +269,10 @@ class ListCommercial extends Component {
                         <th>Tehnical BOQ Document</th>
                         <th>Commercial BOQ Document</th>
                         <th>Project</th>
-                        <th>PO Number</th>
+                        <th>Created By</th>
                         <th>Ver.</th>
-                        <th style={{'width' : '150px', textAlign : 'center'}}>Status</th>
-                        <th style={{'width' : '200px', textAlign : 'center'}}>Action</th>
+                        <th style={{'width' : '250px', textAlign : 'center'}}>Commercial BOQ Status</th>
+                        <th style={{'width' : '150PX', textAlign : 'center'}}>Action</th>
                     </tr>
                     <tr>
                       <td>
@@ -402,17 +311,17 @@ class ListCommercial extends Component {
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText><i className="fa fa-search"></i></InputGroupText>
                             </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={6} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[6]}/>
+                            <Input type="text" placeholder="Search" name={4} size="sm" onChange={this.handleFilterListName} value={this.state.filter_list[4]}/>
                           </InputGroup>
                         </div>
                       </td>
-                      <td>
+                      <td style={{width : '125px'}}>
                         <div className="controls">
                           <InputGroup className="input-prepend">
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText><i className="fa fa-search"></i></InputGroupText>
                             </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={7} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[7]}/>
+                            <Input type="text" placeholder="Search" name={5} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[5]}/>
                           </InputGroup>
                         </div>
                       </td>
@@ -423,15 +332,15 @@ class ListCommercial extends Component {
                     </tr>
                 </thead>
                 <tbody>
-                    {this.state.boq_comm_all.map((boq, i) =>
+                    {this.state.boq_comm_all.map((boq,i) =>
                         <tr key={boq._id}>
                             <td style={{verticalAlign : 'middle'}}>{boq.no_boq_tech}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.no_boq_comm}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.project_name}</td>
-                            <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.po_number}</td>
+                            <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.created_by !== undefined ? boq.created_by.email : ''}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.version}</td>
                             <td style={{verticalAlign : 'middle'}}>
-                              {boq.rev1 === "PA" || boq.rev1 === "R" ? (
+                              {boq.rev1 === "PA" ? (
                                 <span className="boq-tech-status-PA">{boq.rev1}</span>
                               ) : boq.rev1 === "WA" ? (
                                 <span className="boq-tech-status-WA">{boq.rev1}</span>
@@ -445,25 +354,22 @@ class ListCommercial extends Component {
                               ) : (
                                 <span className="boq-tech-status-A">{boq.po_status}</span>
                               )}
-                              {boq.submitted === undefined ? (
-                                <span className="boq-tech-status-PA">NS</span>
-                              ) : boq.submitted === "NS" ? (
-                                <span className="boq-tech-status-PA">NS</span>
-                              ) : (
-                                <span className="boq-tech-status-A">{boq.submitted}</span>
-                              )}
                             </td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              <Link to={'/detail-commercial/'+boq._id}>
-                                <Button className="btn-primary" size="sm" color="primary" style={{marginRight : '10px'}}>
-                                  <i className="fa fa-pencil" aria-hidden="true"></i>&nbsp; Edit
-                                </Button>
-                              </Link>
-                              <Link to={'/approval-commercial/'+boq._id}>
-                                <Button size="sm" color="warning" style={{marginRight : '10px'}}>
-                                  <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; Approval
-                                </Button>
-                              </Link>
+                                { this.state.userRole.includes('PDB-Dash')|| this.state.userRole.includes('Admin') || this.state.userRole.includes('Flow-Commercial') ? (
+                                  <Link to={'/Boq/Commercial/PO/'+boq._id}>
+                                    <Button size="sm" color="secondary" style={{marginRight : '10px'}}>
+                                      <i className="fa fa-pencil-square-o" aria-hidden="true"></i>&nbsp; PO Assign
+                                    </Button>
+                                  </Link>
+                                ) : (<React.Fragment></React.Fragment>)}
+                                { this.state.userRole.includes('Flow-PublicInternal') ? (
+                                  <Link to={'/Boq/Commercial/Approval/'+boq._id}>
+                                    <Button size="sm" color="warning" style={{marginRight : '10px'}}>
+                                      <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; View
+                                    </Button>
+                                  </Link>
+                                ) : (<React.Fragment></React.Fragment>)}
                             </td>
                         </tr>
                     )}
@@ -529,4 +435,4 @@ class ListCommercial extends Component {
   }
 }
 
-export default ListCommercial;
+export default ListBoqComm;

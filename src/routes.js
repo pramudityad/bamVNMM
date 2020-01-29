@@ -71,6 +71,9 @@ const DSACreation = React.lazy(() => import('./views/DSA/DSACreation'));
 const ListCommercial = React.lazy(() => import('./views/Commercial/ListCommercial'));
 const DetailCommercial = React.lazy(() => import('./views/Commercial/CommercialBoq'));
 const ApprovalCommercial = React.lazy(() => import('./views/Commercial/CommercialBoqApproval'));
+const ListTssrMatrix = React.lazy(() => import('./views/TssrMatrix/ListTSSRBoq'));
+const DetailTssrMatrix = React.lazy(() => import('./views/TssrMatrix/UploadTSSRMatrix'));
+const NewTssrMatrix = React.lazy(() => import('./views/TssrMatrix/TSSRbyTech'));
 const DSAList = React.lazy(() => import('./views/DSA/DSAList'));
 const DSADetail = React.lazy(() => import('./views/DSA/DSADetail'));
 const BulkChangeApproval = React.lazy(() => import('./views/MR/ListChangeApproval'));
@@ -156,7 +159,11 @@ const routes = [
   { path: '/approval-technical/:id', exact: true, name: 'Approval for Technical BOQ', component: ApprovalTechnical },
   { path: '/dsa-creation', exact: true, name: 'DSA Creation', component: DSACreation },
   { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
+  { path: '/commercial-creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
   { path: '/detail-commercial/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
+  { path: '/list-tssr-matix', exact: true, name: 'List TSSR Matrix BOQ', component: ListTssrMatrix },
+  { path: '/tssr-matix-creation', exact: true, name: 'TSSR Matrix BOQ Creation', component: NewTssrMatrix },
+  { path: '/detail-tssr-matix/:id', exact: true, name: 'Detail TSSR Matrix BOQ', component: DetailTssrMatrix },
   { path: '/approval-commercial/:id', exact: true, name: 'Approval for Commercial BOQ', component: ApprovalCommercial },
   { path: '/assign-bast/:id', exact: true, name: 'Assign Bast', component: AssignBast },
   { path: '/dsa-list', exact: true, name: 'DSA List', component: DSAList },

@@ -48,6 +48,8 @@ class MRDetail extends Component {
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
+    this.getQtyMRMDNE = this.getQtyMRMDNE.bind(this);
+    this.getQtyMRMDFE = this.getQtyMRMDFE.bind(this);
     this.changeTabsSubmenu = this.changeTabsSubmenu.bind(this);
     this.requestForApproval = this.requestForApproval.bind(this);
     this.ApproveMR = this.ApproveMR.bind(this);
@@ -210,6 +212,36 @@ class MRDetail extends Component {
     const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
     if(getDataPPMR !== undefined){
       return getDataPPMR.qty;
+    }else{
+      return 0;
+    }
+  }
+
+  getQtyMRMDNE(pp_id, mr_id){
+    const itemMRBom = this.state.mr_site_NE.mr_pp;
+    const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
+    if(getDataPPMR !== undefined){
+      const getDataMDMR = getDataPPMR.mr_md.find(e => e.material_id === mr_id);
+      if(getDataMDMR !== undefined){
+        return getDataMDMR.qty;
+      }else{
+        return 0;
+      }
+    }else{
+      return 0;
+    }
+  }
+
+  getQtyMRMDFE(pp_id, mr_id){
+    const itemMRBom = this.state.mr_site_FE.mr_pp;
+    const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
+    if(getDataPPMR !== undefined){
+      const getDataMDMR = getDataPPMR.mr_md.find(e => e.material_id === mr_id);
+      if(getDataMDMR !== undefined){
+        return getDataMDMR.qty;
+      }else{
+        return 0;
+      }
     }else{
       return 0;
     }
@@ -744,9 +776,9 @@ class MRDetail extends Component {
                             <td style={{textAlign : 'right'}}>{material.material_id}</td>
                             <td style={{textAlign : 'left'}}>{material.material_name}</td>
                             <td>{material.material_unit}</td>
-                            <td align='center'>{this.getQtyMRPPNE(pp.pp_id)*material.qty}</td>
+                            <td align='center'>{this.getQtyMRMDNE(pp.pp_id, material.material_id)}</td>
                             {this.state.mr_site_FE !== null ? (
-                              <td align='center'>{this.getQtyMRPPFE(pp.pp_id)*material.qty}</td>
+                              <td align='center'>{this.getQtyMRMDFE(pp.pp_id, material.material_id)}</td>
                             ):(<Fragment></Fragment>)}
                           </tr>
                         )}

@@ -1,41 +1,38 @@
 import React, { Component, Fragment } from 'react';
 import { Card, CardHeader, CardBody, CardFooter,Table, Row, Col, Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Collapse} from 'reactstrap';
 import { Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
+import ReactExport from "react-data-export";
 import axios from 'axios';
 import { Link, Redirect } from 'react-router-dom';
 import {Form, FormGroup, Label, Input, FormText} from 'reactstrap';
 import {OutTable, ExcelRenderer} from 'react-excel-renderer';
 import './boqCommercial.css';
-import Excel from 'exceljs';
+import Excel from 'exceljs/modern.browser';
 import { saveAs } from 'file-saver';
 import { AppSwitch } from '@coreui/react';
 import AsyncSelect from 'react-select/async';
-import Select from 'react-select';
-import { connect } from 'react-redux';
+import { toTimeZone, checkValue } from "../../helper/basicFunction.js";
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
 );
 
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const StepFlow = React.lazy(() => import('../../views/Defaultview/StepFlow'));
 
 const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
-const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const usernameBAM = 'bamidadmin@e-dpm.com';
-const passwordBAM = 'F760qbAg2sml';
+const ExcelFile = ReactExport.ExcelFile;
+const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
+const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
 
-class CommercialBoq extends Component {
+class CommercialNew extends Component {
     constructor(props) {
       super(props);
 
       this.state = {
-        userRole : this.props.dataLogin.role,
-        userId : this.props.dataLogin._id,
-        userName : this.props.dataLogin.userName,
-        userEmail : this.props.dataLogin.email,
+        boq_item_tech_comm : [],
         boq_comm_API : null,
         pp_all : [],
         boq_tech_API : [],
@@ -86,7 +83,12 @@ class CommercialBoq extends Component {
         currencyChangeAll : null,
         incentiveChange : new Map(),
         total_comm : {},
-        boq_tech_select : {},
+
+        activePageTech : 1,
+        prevPageTech : 0,
+        perPageTech : 10,
+        techList : [],
+        totalDataTech : 0,
       };
       this.toggleLoading = this.toggleLoading.bind(this);
       this.toggleDropdown = this.toggleDropdown.bind(this);
@@ -116,6 +118,7 @@ class CommercialBoq extends Component {
       this.handleChangeincentive = this.handleChangeincentive.bind(this);
       this.handleChangeVerComment = this.handleChangeVerComment.bind(this);
       this.handleChangeCurrencyAll = this.handleChangeCurrencyAll.bind(this);
+      // this.cobaClickRow = this.cobaClickRow.bind(this);
     }
 
     toggleUpload() {
@@ -134,15 +137,15 @@ class CommercialBoq extends Component {
     onEntering() {
       this.setState({ status: 'Opening...' });
     }
-
+  
     onEntered() {
       this.setState({ status: 'Opened' });
     }
-
+  
     onExiting() {
       this.setState({ status: 'Closing...' });
     }
-
+  
     onExited() {
       this.setState({ status: 'Closed' });
     }
@@ -212,24 +215,9 @@ class CommercialBoq extends Component {
       return data.findIndex(e => this.isSameValue(e,value));
     }
 
-    async getDatafromAPIBAM(url){
-      try {
-        let respond = await axios.get(API_URL_BAM +url, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernameBAM,
-            password: passwordBAM
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Get Data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = err;
-        console.log("respond Get Data", err);
-        return respond;
-      }
+    cobaClickRow(e){
+      this.setState({Boq_Technical_Select : e});
+      console.log("Clicked ", e);
     }
 
     async getDatafromAPI(url){
@@ -298,6 +286,19 @@ class CommercialBoq extends Component {
         console.log("respond Patch data", err);
         return respond;
       }
+    }
+
+    getTechnicalList(){
+      const page = this.state.activePageTech;
+      //let filter_project = this.state.filter_list[1] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
+      // let filter_table = this.state.filter_list[0] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[0]+'", "$options" : "i"}';
+      // let whereOr = '"$or" : [{"no_boq_tech": '+filter_table+' }, {"project_name": '+filter_table+' } ]';
+      let where = 'where={"deleted" : 0}';
+      this.getDatafromAPI('/boq_tech_audit?'+where+'&max_results='+this.state.perPageTech+'&page='+page+'&embedded={"created_by" :1}').then(res => {
+          const items = res.data._items;
+          const totalData = res.data._meta;
+          this.setState({ techList : items, totalDataTech : totalData, prevPageTech : this.state.activePageTech});
+        })
     }
 
     handleChangeChecklist(e){
@@ -389,47 +390,34 @@ class CommercialBoq extends Component {
       const qty_ericsson = this.state.qty_ericsson;
       const curr_item = this.state.currencyChange;
       const insen_item = this.state.incentiveChange;
-      const dataComm = this.state.boq_comm_API;
       const commItems = this.state.commercialData;
       const AllEdit = new Map([...qty_smart, ...edit_price, ...qty_ericsson, ...curr_item, ...insen_item]);
       let respondStockPrice = [];
-      let dataProject = undefined;
-      if(dataComm.project_name !== null){
-        const getDataProject = await this.getDatafromAPI('/project_op/'+dataComm.id_project_doc);
-          if(getDataProject !== undefined){
-            if(getDataProject.data !== undefined){
-              dataProject = getDataProject.data;
-            }
-          }
-      }
       for (const [key, value] of AllEdit.entries()) {
         const dataIndex = commItems.find(e => e._id === key);
-        if(dataIndex !== undefined){
-          let idxSmart = qty_smart.has(key) ? parseFloat(this.checkValuetoZero(qty_smart.get(key))) : dataIndex.smart_stock;
-          let idxErics = qty_ericsson.has(key) ? parseFloat(this.checkValuetoZero(qty_ericsson.get(key))) : dataIndex.qty_ericsson;
-          let idxPrice = edit_price.has(key) ? parseFloat(this.checkValuetoZero(edit_price.get(key))) : dataIndex.unit_price;
-          let idxCurr = curr_item.has(key) ? curr_item.get(key) : dataIndex.currency;
-          let idxInsen = insen_item.has(key) ? parseFloat(this.checkValuetoZero(insen_item.get(key))) : dataIndex.incentive;
-          let total_price = (dataIndex.qty_tech - (idxSmart + idxErics))*idxPrice;
-          let net_total = ((dataIndex.qty_tech - (idxSmart + idxErics))*idxPrice)-idxInsen;
-          let dataUpdate = {
-            "smart_stock" : idxSmart,
-            "qty_ericsson" : idxErics,
-            "unit_price" : idxPrice,
-            "currency" : idxCurr,
-            "total_price" : total_price,
-            "incentive" : idxInsen,
-            "net_total" : net_total
-          }
-          const respondPatchQTY = await this.patchDatatoAPI('/boq_comm_items_op/'+key, dataUpdate, dataIndex._etag);
-          if(respondPatchQTY !== undefined){
-            if(respondPatchQTY.status >= 200 && respondPatchQTY.status < 300){
-              respondStockPrice.push(respondPatchQTY.status);
-              commItems[commItems.findIndex(e => e._id === key)]["_etag"] = respondPatchQTY.data._etag;
-            }
+        let idxSmart = qty_smart.has(key) ? parseFloat(this.checkValuetoZero(qty_smart.get(key))) : dataIndex.smart_stock;
+        let idxErics = qty_ericsson.has(key) ? parseFloat(this.checkValuetoZero(qty_ericsson.get(key))) : dataIndex.qty_ericsson;
+        let idxPrice = edit_price.has(key) ? parseFloat(this.checkValuetoZero(edit_price.get(key))) : dataIndex.unit_price;
+        let idxCurr = curr_item.has(key) ? curr_item.get(key) : dataIndex.currency;
+        let idxInsen = insen_item.has(key) ? parseFloat(this.checkValuetoZero(insen_item.get(key))) : dataIndex.incentive;
+        let total_price = (dataIndex.qty_tech - (idxSmart + idxErics))*idxPrice;
+        let net_total = ((dataIndex.qty_tech - (idxSmart + idxErics))*idxPrice)-idxInsen;
+        let dataUpdate = {
+          "smart_stock" : idxSmart,
+          "qty_ericsson" : idxErics,
+          "unit_price" : idxPrice,
+          "currency" : idxCurr,
+          "total_price" : total_price,
+          "incentive" : idxInsen,
+          "net_total" : net_total
+        }
+        const respondPatchQTY = await this.patchDatatoAPI('/boq_comm_items_op/'+key, dataUpdate, dataIndex._etag);
+        if(respondPatchQTY !== undefined){
+          if(respondPatchQTY.status >= 200 && respondPatchQTY.status < 300){
+            respondStockPrice.push(respondPatchQTY.status);
+            commItems[commItems.findIndex(e => e._id === key)]["_etag"] = respondPatchQTY.data._etag;
           }
         }
-
       }
 
       for(let j = 0; j < commItems.length; j++){
@@ -447,13 +435,13 @@ class CommercialBoq extends Component {
       if(respondStockPrice.length === (AllEdit.size)){
         let updateComm = {
           "rev1" : "PA",
-          "rev1_by" : this.state.userEmail,
+          "rev1_by" : localStorage.getItem('user_Email'),
           "rev1_date" : DateNow.toString(),
         }
         const respondUpdateComm = await this.patchDatatoAPI('/boq_comm_op/'+_id_Comm, updateComm, _etag_Comm);
         const LinkDetail = '/Boq/Commercial/Detail/'+this.state.boq_comm_API._id;
         this.setState({action_status : 'success', action_message : 'Your Commercial BOQ has been updated'}, () => {
-          this.toggleLoading();
+          this.toggleLoading(); 
           setTimeout(function(){ window.location.reload(); }, 2000);
         })
       }else{
@@ -503,13 +491,53 @@ class CommercialBoq extends Component {
     }
 
     getAllPP(){
-      this.getDatafromAPI('/pp_sorted_non_page?projection={"_id" : 1,"pp_id" : 1, "pp_group" : 1, "name" :1, "unit" : 1, "phy_group" : 1, "product_type" : 1, "pp_key" : 1, "pp_cust_number" : 1, "fas_category" : 1}').then( resPP => {
+      this.getDatafromAPI('/pp_sorted_non_page?projection={"_id" : 1,"pp_id" : 1, "pp_group" : 1, "name" :1, "unit" : 1, "phy_group" : 1, "product_type" : 1, "pp_key" : 1, "pp_cust_number" : 1}').then( resPP => {
         if(resPP !== undefined){
           if(resPP.data._items.length !== 0){
             this.setState({ pp_all : resPP.data._items});
           }
         }
       })
+    }
+
+    getDataItemTechComm(){
+      this.getDatafromAPI('/boq_tech_find_item_comm').then( resItem => {
+        if(resItem !== undefined){
+          if(resItem.data !== undefined){
+            this.prepareListTechNonComm(resItem.data._items);
+            // this.setState({boq_item_tech_comm : resItem.data._items }, () => {
+            //   this.prepareListTechNonComm(resItem.data._items);
+            // });
+            console.log("resItem.data._items", resItem.data._items);
+          }
+        }
+      })
+    }
+
+    prepareListTechNonComm(items){
+      let itemNonComm = [];
+      for(let i = 0; i < items.length; i++){
+        // if(items[i].list_of_id_boq_comm !== undefined && items[i].list_of_item_boq !== undefined){
+          if(items[i].list_of_id_boq_comm.length === items[i].list_of_item_boq.length){
+            itemNonComm.push(items[i]);
+          }
+        // }
+      }
+      this.paginationListTechNonComm(itemNonComm);
+      console.log("resItem.data._items pilih", itemNonComm);
+    }
+    
+    paginationListTechNonComm(items){
+      let perPage = this.state.perPageTech;
+      let itemNonComm = [];
+      if(perPage !== items.length){
+        let pageNow = this.state.activePageTech-1;
+        itemNonComm = items.slice(pageNow * perPage, (pageNow+1)*perPage);
+      }else{
+        itemNonComm = items;
+      }
+      this.setState({boq_item_tech_comm : itemNonComm });
+      // this.setState({data_item_pagination : dataTechPage});
     }
 
     // componentWillMount(){
@@ -579,17 +607,10 @@ class CommercialBoq extends Component {
 
     componentWillMount(){
       //Change It
-        this.getListTechBOQ();
-    }
-
-    getListTechBOQ(){
       const urlAPITech = '?where={}';
-      this.getDatafromAPI('/boq_tech_sorted_non_page?embedded={"created_by" :1}&where={"created_by" : {"$exists" : 1}}').then(res => {
+      this.getDatafromAPI('/boq_tech_sorted_non_page').then(res => {
         if(res !== undefined){
-          this.setState({boq_tech_API : res.data._items}, () => {
-            this.filterBOQTech("");
-          });
-          console.log("List boq_tech_API inputValue", this.state.boq_tech_API);
+          this.setState({boq_tech_API : res.data._items});
         }
       })
       this.getProjectAll();
@@ -632,57 +653,48 @@ class CommercialBoq extends Component {
         this.getDataCommAPI();
       }else{
         this.getAllPP();
+        this.getTechnicalList();
+        this.getDataItemTechComm();
       }
     }
 
     async getDataCommfromTech(boqTechSelect){
-      this.toggleLoading();
       let embeddedTech = '?embedded={"created_by" : 1, "updated_by" : 1, "list_of_id_site" : 1}';
       const res = await this.getDatafromAPI('/boq_tech_sorted/'+boqTechSelect+embeddedTech);
       if(res !== undefined){
         if(res.data !== undefined){
-          if(res.data.list_of_id_site !== undefined){
-            const sumPackage = this.countPerItemFromDataBase(res.data.list_of_id_site);
-            console.log("sumPackage", sumPackage);
-            const resPP = this.state.pp_all;
-            const getProject = this
-            const commView = this.dataComm(resPP, sumPackage, res.data.list_of_id_site[0].list_of_site_items);
-            this.getDatafromAPI('/boq_tech_sorted/'+boqTechSelect+'?embedded={"list_of_id_boq_comm":1,"list_of_id_boq_comm.list_of_id_item":1}').then(resTech => {
-              if(resTech !== undefined){
-                if(resTech.data.list_of_id_boq_comm !== undefined){
-                  let listPicked = []
-                  resTech.data.list_of_id_boq_comm.map(e => e.list_of_id_item.map( i => listPicked.push(i.id_pp_doc)))
-                  console.log("data APUI TECh", listPicked)
-                  this.DataGroupingView(commView, listPicked);
-                }else{
-                  this.DataGroupingView(commView);
-                }
+          const sumPackage = this.countPerItemFromDataBase(res.data.list_of_id_site);
+          console.log("sumPackage", sumPackage);
+          const resPP = this.state.pp_all;
+          const commView = this.dataComm(resPP, sumPackage);
+          this.getDatafromAPI('/boq_tech_sorted/'+boqTechSelect+'?embedded={"list_of_id_boq_comm":1,"list_of_id_boq_comm.list_of_id_item":1}').then(resTech => {
+            if(resTech !== undefined){
+              if(resTech.data.list_of_id_boq_comm !== undefined){
+                let listPicked = []
+                resTech.data.list_of_id_boq_comm.map(e => e.list_of_id_item.map( i => listPicked.push(i.id_pp_doc)))
+                console.log("data APUI TECh", listPicked)
+                this.DataGroupingView(commView, listPicked);
+              }else{
+                this.DataGroupingView(commView);
               }
-            })
-            this.setState({prev_boq_tech_select : this.state.Boq_Technical_Select});
-            this.toggleLoading();
-            // this.setState({commercialData : commView}, () => {
-            //   this.setState({prev_boq_tech_select : this.state.Boq_Technical_Select});
-            // });
-          }else{
-            this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'});
-            this.toggleLoading();
-          }
+            }
+          })
+          this.setState({prev_boq_tech_select : this.state.Boq_Technical_Select});
+          // this.setState({commercialData : commView}, () => {
+          //   this.setState({prev_boq_tech_select : this.state.Boq_Technical_Select});
+          // });
         }else{
-          this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'});
-          this.toggleLoading();
+          this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
         }
       }else{
-        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'});
-        this.toggleLoading();
+        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
       }
-
     }
 
     componentDidUpdate(){
       if(this.state.prev_boq_tech_select !== this.state.Boq_Technical_Select){
         if(this.state.Boq_Technical_Select !== ""){
-          //this.getDataCommfromTech(this.state.Boq_Technical_Select);
+          this.getDataCommfromTech(this.state.Boq_Technical_Select);
         }
       }
     }
@@ -707,8 +719,8 @@ class CommercialBoq extends Component {
           "incentive" : 0,
           "net_total" : 0,
           "list_of_id_pp" : PPindex.map(e => e._id),
-          "created_by" : this.state.userId,
-          "updated_by" : this.state.userId,
+          "created_by" : localStorage.getItem('user_ID'),
+          "updated_by" : localStorage.getItem('user_ID'),
           "deleted" : 0
         }
         dataGroupSumm.push(dataGroupComm);
@@ -728,22 +740,21 @@ class CommercialBoq extends Component {
     }
   }
 
-    dataComm(dataPP, SummPP, dataPPTech){
+    dataComm(dataPP, SummPP){
       let dataSumm = [];
       for(let i = 0 ; i < dataPP.length; i++){
         let PPindex = dataPP.find(PP => PP._id === Object.keys(SummPP)[i]);
-        let PPTechIndex = dataPPTech.find( PP => PP.id_pp_doc === Object.keys(SummPP)[i]);
         if(PPindex !== undefined){
           const dataItemsComm = {
             "id_pp_doc" : PPindex._id,
             "pp_id" :  PPindex.pp_id,
-            "pp_key" :  PPTechIndex.pp_key !== undefined ? PPTechIndex.pp_key : this.checkValueReturn(PPindex.pp_key, PPindex.pp_id),
-            "pp_group" : PPTechIndex.pp_group !== undefined ? PPTechIndex.pp_group : PPindex.pp_group,
-            "package_name" : PPTechIndex.package_name !== undefined ? PPTechIndex.package_name : PPindex.name,
-            "product_type" : PPTechIndex.product_type !== undefined ? PPTechIndex.product_type : PPindex.product_type,
-            "pp_cust_number" : PPTechIndex.pp_cust_number !== undefined ? PPTechIndex.pp_cust_number : this.checkValueReturn(PPindex.pp_cust_number, PPindex.name),
-            "phy_group" : PPTechIndex.phy_group !== undefined ? PPTechIndex.phy_group : PPindex.phy_group,
-            "unit" : PPTechIndex.unit !== undefined ? PPTechIndex.unit :  PPindex.unit,
+            "pp_key" :  this.checkValueReturn(PPindex.pp_key, PPindex.pp_id),
+            "pp_group" : PPindex.pp_group,
+            "package_name" : PPindex.name,
+            "product_type" : PPindex.product_type,
+            "pp_cust_number" : this.checkValueReturn(PPindex.pp_cust_number, PPindex.name),
+            "phy_group" : PPindex.phy_group,
+            "unit" : PPindex.unit,
             "unit_price" : PPindex.price == null ? 0 : PPindex.price,
             "qty_tech" : Object.values(SummPP)[i],
             "qty_early_start" : null,
@@ -754,10 +765,9 @@ class CommercialBoq extends Component {
             "qty_po" : null,
             "incentive" : 0,
             "net_total" : 0,
-            "fas_assignment_id" : PPindex.fas_category !== undefined ? PPindex.fas_category : null,
             "total_price" : Object.values(SummPP)[i] * (PPindex.price == null ? 0 : PPindex.price),
-            "created_by" : this.state.userId,
-            "updated_by" : this.state.userId,
+            "created_by" : localStorage.getItem('user_ID'),
+            "updated_by" : localStorage.getItem('user_ID'),
             "deleted" : 0
           }
           dataSumm.push(dataItemsComm);
@@ -795,7 +805,6 @@ class CommercialBoq extends Component {
         }
       this.setState(prevState => ({ commercialData:  itemsDatas}));
       this.setState({groupingView : OnlyGrouping});
-      // this.toggleLoading();
     }
 
     saveCommtoAPI = async () => {
@@ -832,29 +841,22 @@ class CommercialBoq extends Component {
             "id_boq_tech_doc" : BoqTechSelect._id,
             "version_boq_tech" : BoqTechSelect.version,
             "rev1" : "PA",
-            "rev1_by" : this.state.userEmail,
+            "rev1_by" : localStorage.getItem('user_Email'),
             "rev1_date" : DateNow.toString(),
             "po_status" : "PO-NR",
             "opportunity_id" : BoqTechSelect.opportunity_id,
             "early_start" : false,
             "note_6" : BoqTechSelect.note_6,
-            "created_by" : this.state.userId,
-            "updated_by" : this.state.userId,
+            "created_by" : localStorage.getItem('user_ID'),
+            "updated_by" : localStorage.getItem('user_ID'),
             "po_number" : null,
             "version" : "0",
             "deleted" : 0
           }
-          let dataProject = undefined;
           if(BoqTechSelect.hasOwnProperty('id_project_doc')){
-            if(BoqTechSelect.id_project_doc !== null && BoqTechSelect.project_name !== ""){
+            if(BoqTechSelect.id_project_doc !== null){
               data_comm['id_project_doc'] = BoqTechSelect.id_project_doc
               data_comm['project_name'] = BoqTechSelect.project_name;
-              const getDataProject = await this.getDatafromAPI('/project_op/'+BoqTechSelect.id_project_doc);
-              if(getDataProject !== undefined){
-                if(getDataProject.data !== undefined){
-                  dataProject = getDataProject.data;
-                }
-              }
             }
           }
           const respondPost = await this.postDatatoAPI('/boq_comm_op', data_comm);
@@ -867,9 +869,6 @@ class CommercialBoq extends Component {
               dataItemsComm[i]["id_po_doc"] = null;
               dataItemsComm[i]["po_number"] = null;
               dataItemsComm[i]["version"] = "0";
-              if(dataProject !== undefined){
-                dataItemsComm[i]["fas_assignment_id"] = null;
-              }
             }
             const respondPostItems = await this.postDatatoAPI('/boq_comm_items_op', dataItemsComm);
             if(respondPostItems.data !== undefined){
@@ -917,7 +916,7 @@ class CommercialBoq extends Component {
                       if(dataCommItems.length !== 0){
                         this.setState({commercialData : dataCommItems, boq_comm_API : respondGetComm.data,
                           action_status : 'success', action_message : 'Your Commercial BOQ has been created'}, () => {
-                            this.toggleLoading();
+                            this.toggleLoading(); 
                             this.DataGroupingView(dataCommItems);
                             //this.setState({ redirectSign : 3000});
                             setTimeout(function(){this.setState({redirectSign : true})}.bind(this) , 1500);
@@ -935,12 +934,12 @@ class CommercialBoq extends Component {
             this.setState({action_status : 'failed', action_message : 'Sorry, There is something wrong, please try again'}, () => {this.toggleLoading()})
           }
         }else{
-          this.setState({action_status : 'failed', action_message : 'Sorry, There is something wrong, please try again'}, () => {this.toggleLoading()})
+          this.setState({action_status : 'failed', action_message : 'Sorry, There is something wrong, please try again'}, () => {this.toggleLoading()})          
         }
       }else{
         this.setState({action_status : 'failed', action_message : 'Sorry, There is something wrong, please try again'}, () => {this.toggleLoading()})
       }
-
+        
     }
 
     saveProjecttoDB = async () =>{
@@ -949,7 +948,7 @@ class CommercialBoq extends Component {
       const data_Project = {
         "id_project_doc" : this.state.project_select,
         "project_name" : this.state.project_name_select
-      }
+      } 
       const respondGetTech = await this.getDatafromAPI('/boq_tech_op/'+ dataComm.id_boq_tech_doc+'?embedded={"list_of_id_site" :1, "list_of_id_boq_comm" :1}');
       console.log("respondGetTech", respondGetTech);
       const respondUpdateTech = await this.patchDatatoAPI('/boq_tech_op/'+respondGetTech.data._id, data_Project, respondGetTech.data._etag);
@@ -965,9 +964,9 @@ class CommercialBoq extends Component {
             }
           }
           const dataSitesTech = respondGetTech.data.list_of_id_site;
-          // for(let i = 0; i < dataSitesTech.length; i++){
-          //   let respondUpdateTechList = await this.patchDatatoAPI('/boq_tech_sites_op/'+dataSitesTech[i]._id, data_Project, dataSitesTech[i]._etag)
-          // }
+          for(let i = 0; i < dataSitesTech.length; i++){
+            let respondUpdateTechList = await this.patchDatatoAPI('/boq_tech_sites_op/'+dataSitesTech[i]._id, data_Project, dataSitesTech[i]._etag)
+          }
           const respondUpdateComm = await this.patchDatatoAPI('/boq_comm_op/'+dataComm._id, data_Project, dataComm._etag);
           if(respondUpdateComm.status < 400){
             this.getDatafromAPI('/boq_comm_audit/'+dataComm._id+'?embedded={"created_by":1, "updated_by" : 1}').then(respondAPIGetComm => {
@@ -979,7 +978,7 @@ class CommercialBoq extends Component {
                   setTimeout(function() { this.setState({redirectSign : 2000})}.bind(this), 2000 );
                   // this.setState({redirectSign : 2000})
                 }
-
+                
               });
             })
           }
@@ -988,7 +987,7 @@ class CommercialBoq extends Component {
         this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'}, () => {this.toggleLoading()})
       }
     }
-
+    
     handleChangeOpportunity(e){
       this.setState({ opportunity_id : e.target.value});
     }
@@ -1035,20 +1034,8 @@ class CommercialBoq extends Component {
         dataStoreRev.push(dataStoreRevIndex);
       }
       commDataRev["id_document"] = commDataRev._id;
-      if(commDataRev["created_by"] !== null && commDataRev["created_by"] !== undefined){
-        if(commDataRev["created_by"]._id !== undefined){
-          commDataRev["created_by"] = this.state.userId;
-        }else{
-          commDataRev["created_by"] = this.state.userId;
-        }
-      }
-      if(commDataRev["updated_by"] !== null && commDataRev["updated_by"] !== undefined){
-        if(commDataRev["updated_by"]._id !== undefined){
-          commDataRev["updated_by"] = this.state.userId;
-        }else{
-          commDataRev["updated_by"] = this.state.userId;
-        }
-      }
+      commDataRev["created_by"] = commDataRev.created_by._id;
+      commDataRev["updated_by"] = commDataRev.updated_by._id;
       commDataRev["version_comment"] = this.state.note_version;
       delete commDataRev._id;
       delete commDataRev._etag;
@@ -1061,9 +1048,9 @@ class CommercialBoq extends Component {
         "version" : (getVerNumber+1).toString(),
         "version_comment" : null,
         "rev1" : "PA",
-        "rev1_by" : this.state.userEmail,
+        "rev1_by" : localStorage.getItem('user_Email'),
         "rev1_date" : DateNow.toString(),
-        "updated_by" : this.state.userId
+        "updated_by" : localStorage.getItem("user_ID")
       }
       const respondUpdateComm = await this.patchDatatoAPI('/boq_comm_op/'+dataComm._id, dataUpdateComm, dataComm._etag);
       if(this.state.rowsComm.length !== 0){
@@ -1190,7 +1177,7 @@ class CommercialBoq extends Component {
       const value = e.target.value;
       const commData = this.state.commercialData;
       for(let i = 0; i < commData.length; i++){
-        currAll.set(commData[i]._id, value);
+        currAll.set(commData[i].pp_id, value);
       }
       console.log("currencyChangeAll", currAll );
       this.setState({ currencyChange : currAll, currencyChangeAll : value });
@@ -1206,20 +1193,18 @@ class CommercialBoq extends Component {
       let fileObj = event.target.files[0];
       const date = new Date();
       const DateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-      if(fileObj !== undefined){
-        ExcelRenderer(fileObj, (err, rest) => {
-          if(err){
-            console.log(err);
-          }
-          else{
-            console.log('rest.rows', rest.rows);
-            this.checkFormat(rest.rows);
-            this.setState({
-              rowsComm: rest.rows}, ()=> {
-            });
-          }
-        });
-      }
+      ExcelRenderer(fileObj, (err, rest) => {
+        if(err){
+          console.log(err);
+        }
+        else{
+          console.log('rest.rows', rest.rows);
+          this.checkFormat(rest.rows);
+          this.setState({
+            rowsComm: rest.rows}, ()=> {
+          });
+        }
+      });
     }
 
     checkFormat(dataXLS){
@@ -1269,7 +1254,7 @@ class CommercialBoq extends Component {
     // packageView(packageData, pt, group){
     //   let itemsDatas = {
     //     "pp_group" : [],
-    //     "items" : [],
+    //     "items" : [], 
     //   };
     //   if(packageData.length !== 0){
     //     let getGroup = packageData.filter(d => d.product_type === pt && d.phy_group === group)
@@ -1295,13 +1280,13 @@ class CommercialBoq extends Component {
       const dataPrint=this.state.commercialData;
       const dataGroup=this.state.groupingView
 
-      const headerPackage = ["package_key", "product_package", "unit", "quantity", "smart_stock", "qty_ericsson","unit_price", "currency","total_quantity", "total_price", "product_type"];
+      const headerPackage = ["package_key", "product_package", "unit", "quantity", "smart_stock", "qty_ericsson","unit_price", "currency","total_quantity", "total_price", "incentive", "net_price", "product_type"];
       let dataforPrint = [];
       const header = ws.addRow(headerPackage);
       header.font = { bold: true }
       for(let i = 0; i < dataPrint.length; i++){
         const total_price = (dataPrint[i].qty_tech - (dataPrint[i].qty_ericsson + dataPrint[i].smart_stock)) * dataPrint[i].unit_price;
-        let dataIndex = [dataPrint[i].pp_id, dataPrint[i].package_name, dataPrint[i].unit, dataPrint[i].qty_tech, dataPrint[i].smart_stock, dataPrint[i].qty_ericsson, dataPrint[i].unit_price, dataPrint[i].currency, (dataPrint[i].qty_tech - (dataPrint[i].qty_ericsson + dataPrint[i].smart_stock)), total_price, dataPrint[i].product_type];
+        let dataIndex = [dataPrint[i].pp_id, dataPrint[i].package_name, dataPrint[i].unit, dataPrint[i].qty_tech, dataPrint[i].smart_stock, dataPrint[i].qty_ericsson, dataPrint[i].unit_price, dataPrint[i].currency, (dataPrint[i].qty_tech - (dataPrint[i].qty_ericsson + dataPrint[i].smart_stock)), total_price, dataPrint[i].incentive, dataPrint[i].net_total, dataPrint[i].product_type];
         ws.addRow(dataIndex);
         dataforPrint.push(dataIndex);
       }
@@ -1328,17 +1313,17 @@ class CommercialBoq extends Component {
       ws.getCell('A4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
 
       const preparedEmail = ws.mergeCells('A5:E5');
-      ws.getCell('A5').value = this.state.userEmail;
+      ws.getCell('A5').value = dataComm.created_by.email;
       ws.getCell('A5').alignment  = {horizontal: 'left' };
       ws.getCell('A5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
-      // const DocumentNo = ws.mergeCells('F4:K4');
+      const DocumentNo = ws.mergeCells('F4:K4');
       ws.getCell('F4').value = 'Document No.';
       ws.getCell('F4').font  = { size: 8 };
       ws.getCell('F4').alignment  = {vertical: 'top', horizontal: 'left' };
       ws.getCell('F4').border = {top: {style:'thin'}, left: {style:'thin'},  right: {style:'thin'} };
 
-      // const DocumentNum = ws.mergeCells('F5:K5');
+      const DocumentNum = ws.mergeCells('F5:K5');
       ws.getCell('F5').value = dataComm.no_boq_comm;
       ws.getCell('F5').alignment  = {horizontal: 'left' };
       ws.getCell('F5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
@@ -1366,7 +1351,7 @@ class CommercialBoq extends Component {
       ws.getCell('F7').alignment  = {vertical: 'top', horizontal: 'left' };
       ws.getCell('F7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
-      // const revDoc = ws.mergeCells('I6:K6');
+      const revDoc = ws.mergeCells('I6:K6');
       ws.getCell('I6').value = 'Rev';
       ws.getCell('I6').font  = { size: 8 };
       ws.getCell('I6').alignment  = {vertical: 'top', horizontal: 'left' };
@@ -1388,7 +1373,7 @@ class CommercialBoq extends Component {
       ws.getCell('A9').alignment  = {vertical: 'middle', horizontal: 'center' };
       ws.getCell('A9').border = {bottom: {style:'double'}, };
 
-      const POInfo = ws.mergeCells('G9:I9');
+      const POInfo = ws.mergeCells('G9:K9');
       ws.getCell('G9').value = 'Project Order Information';
       ws.getCell('G9').font  = { size: 14, bold : true };
       ws.getCell('G9').alignment  = {vertical: 'middle', horizontal: 'center' };
@@ -1409,11 +1394,12 @@ class CommercialBoq extends Component {
       ws.mergeCells('G11:H11');
       ws.mergeCells('G12:H12');
 
-      // ws.mergeCells('I10:K10');
+      ws.mergeCells('I10:K10');
       ws.getCell('I10').value = dataComm.po_number;
-      ws.getCell('I11').value = this.state.userEmail;
-      // ws.mergeCells('I12:K12');
-      ws.getCell('I12').value = dataComm.created_on;
+      ws.mergeCells('I11:K11');
+      ws.getCell('I11').value = dataComm.created_by.email;
+      ws.mergeCells('I12:K12');
+      ws.getCell('I12').value = toTimeZone(dataComm.created_on);
 
       if(this.checkValuetoString(dataComm.note_1).length !== 0 && this.checkValuetoString(dataComm.note_name_1).length !== 0 || this.checkValuetoString(dataComm.note_2).length !== 0 && this.checkValuetoString(dataComm.note_name_2).length !== 0){
         let getlastnullrow = ws.lastRow._number+1;
@@ -1435,8 +1421,8 @@ class CommercialBoq extends Component {
       }
 
       ws.addRow([""]);
-      ws.addRow(["Material Desciption", "Total Qty in Technical", "Existing Stock Qty (Smart)","Existing Stock Qty (Ericsson)", "Quotation Net Qty", dataComm.early_start === true ? "Early Start Qty" : "In PO Qty", "Unit Price", "Currency", "Total Price"]);
-      ['A','B','C','D','E','F','G','H','I'].map( key => {
+      ws.addRow(["Material Desciption", "Total Qty in Technical", "Existing Stock Qty (Smart)","Existing Stock Qty (Ericsson)", "Quotation Net Qty", dataComm.early_start === true ? "Early Start Qty" : "In PO Qty", "Unit Price", "Currency", "Total Price", "Incentive", "Net Total"]);
+      ['A','B','C','D','E','F','G','H','I', 'J', 'K'].map( key => {
         ws.getCell(key+(ws.lastRow._number)).fill = {
           type : 'pattern',
           pattern : 'solid',
@@ -1444,56 +1430,48 @@ class CommercialBoq extends Component {
         }
       })
 
-      let phyNameTotal = [];
-      let phyNetTotal = [];
-      let phyTotal = [];
       for(let h = 0; h < prod_type.length; h++){
         ws.addRow(["Product Type : "+prod_type[h]]);
         let phy_item_group = dataPrint.filter(pp => pp.product_type === prod_type[h]);
         let phy_group = [...new Set(phy_item_group.map(({ phy_group }) => phy_group))];
         const getRowLast = ws.lastRow._number;
-        ws.mergeCells('A'+(getRowLast)+':I'+(getRowLast));
+        ws.mergeCells('A'+(getRowLast)+':K'+(getRowLast));
         ws.getCell('A'+(getRowLast)).fill = {type : 'pattern', pattern : 'solid', fgColor : {argb:'FFF8F6DF'}};
         for(let i = 0; i < phy_group.length; i++){
           let phy_item = dataPrint.filter(pp => pp.phy_group === phy_group[i] && pp.product_type === prod_type[h]);
           ws.addRow(["Physical Group : "+phy_group[i]]);
           const getRowLast = ws.lastRow._number;
-          ws.mergeCells('A'+(getRowLast)+':I'+(getRowLast));
+          ws.mergeCells('A'+(getRowLast)+':K'+(getRowLast));
           // ws.getCell('A'+(getRowLast)).fill = {type : 'pattern', pattern : 'solid', fgColor : {argb:'7F81C784'}}
           if(dataComm.early_start === true){
             for(let j=0; j < phy_item.length; j++){
-              ws.addRow([phy_item[j].package_name, phy_item[j].qty_tech, phy_item[j].smart_stock, phy_item[j].qty_ericsson, phy_item[j].qty_comm_quotation, phy_item[j].qty_early_start, phy_item[j].unit_price, phy_item[j].currency, phy_item[j].total_price]);
+              ws.addRow([phy_item[j].package_name, phy_item[j].qty_tech, phy_item[j].smart_stock, phy_item[j].qty_ericsson, phy_item[j].qty_comm_quotation, phy_item[j].qty_early_start, phy_item[j].unit_price, phy_item[j].currency, phy_item[j].total_price, phy_item[j].incentive, phy_item[j].net_total]);
             }
           }else{
             for(let j=0; j < phy_item.length; j++){
-              ws.addRow([phy_item[j].package_name, phy_item[j].qty_tech, phy_item[j].smart_stock, phy_item[j].qty_ericsson, phy_item[j].qty_comm_quotation, phy_item[j].qty_po, phy_item[j].unit_price, phy_item[j].currency, phy_item[j].total_price]);
+              ws.addRow([phy_item[j].package_name, phy_item[j].qty_tech, phy_item[j].smart_stock, phy_item[j].qty_ericsson, phy_item[j].qty_comm_quotation, phy_item[j].qty_po, phy_item[j].unit_price, phy_item[j].currency, phy_item[j].total_price, phy_item[j].incentive, phy_item[j].net_total]);
             }
           }
-          let total_prc = phy_item.reduce((a,b) => a + b.total_price, 0);
+          let total_qty = phy_item.reduce((a,b) => a + b.total_price, 0);
           let net_total = phy_item.reduce((a,b) => a + b.net_total, 0);
-          phyNameTotal.push(phy_group[i]+" ("+prod_type[h]+")");
-          phyNetTotal.push(net_total);
-          phyTotal.push(total_prc);
-
+          ws.addRow(["Physical Group Total"]);
+          let getRowLastTotal = ws.lastRow._number;
+          ws.getCell('A'+(getRowLastTotal)).font  = {bold : true };
+          ws.mergeCells('A'+(getRowLastTotal)+':H'+(getRowLastTotal));
+          ws.getCell('I'+(getRowLastTotal)).value = total_qty;
+          ws.getCell('K'+(getRowLastTotal)).value = net_total;
         }
       }
-      ws.addRow([""]);
-      for(let z = 0; z < phyNameTotal.length; z++){
-        ws.addRow([phyNameTotal[z]+" Total"]);
-        let getRowLastTotal = ws.lastRow._number;
-        ws.getCell('A'+(getRowLastTotal)).font  = {bold : true };
-        ws.mergeCells('A'+(getRowLastTotal)+':H'+(getRowLastTotal));
-        ws.getCell('I'+(getRowLastTotal)).value = phyTotal[z];
-
-      }
-
+      
       ws.addRow([""]);
       ws.addRow(["Total"]);
       let getRowLastTotal = ws.lastRow._number;
       ws.mergeCells('A'+(getRowLastTotal)+':H'+(getRowLastTotal));
       ws.getCell('I'+(getRowLastTotal)).value = this.state.total_comm.totalPriceComm;
+      ws.getCell('K'+(getRowLastTotal)).value = this.state.total_comm.netTotalComm;
       ws.getCell('A'+(getRowLastTotal)).font  = {bold : true };
       ws.getCell('I'+(getRowLastTotal)).font  = {bold : true };
+      ws.getCell('K'+(getRowLastTotal)).font  = {bold : true };
 
       const comFormat = await wb.xlsx.writeBuffer()
       saveAs(new Blob([comFormat]), 'Commercial BOQ '+dataComm.no_boq_comm+' Report.xlsx')
@@ -1597,23 +1575,16 @@ class CommercialBoq extends Component {
       })
     }
     filterBOQTech = (inputValue) => {
-      console.log("inputValue", inputValue.length);
-      const test = [];
-      this.state.boq_tech_API.map(i =>
-          test.push({'label' : (i.project_name !== null ? i.project_name + ' # ' : i.note_6 !== undefined ? i.note_6 + ' # ' : '') + i.no_boq_tech + (i.created_by !== undefined ? ' (bamidadmin@e-dpm.com)' : ''), 'value' : i._id})
+      const test = []
+      this.state.boq_tech_API.map(i => 
+          test.push({'label' : i.no_boq_tech, 'value' : i._id})    
       )
       this.setState({databoq : test})
-      if(inputValue.length === 0){
-        console.log("inputValue if", inputValue.length, "  ", test);
-        return test;
-      }else{
-        return this.state.databoq.filter(i =>
-          i.label.toLowerCase().includes(inputValue.toLowerCase())
-        );
-      }
-
+      console.log("tesboq", test)
+      return this.state.databoq.filter(i =>
+        i.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
     };
-
     loadOptions = (inputValue, callback) => {
       setTimeout(() => {
         callback(this.filterBOQTech(inputValue));
@@ -1623,11 +1594,8 @@ class CommercialBoq extends Component {
     handleInputChange = (newValue) => {
       // const inputValue = newValue.replace(/\W/g, '');
       // this.setState({inputValue});
-      const setTech = this.state.boq_tech_API.find(e => e._id === newValue.value);
       console.log("inpval", newValue)
-      this.setState({Boq_Technical_Select : newValue.value, boq_tech_select : setTech}, () => {
-        this.getDataCommfromTech(newValue.value);
-      })
+      this.setState({Boq_Technical_Select : newValue.value});
       return newValue;
     };
 
@@ -1720,7 +1688,7 @@ class CommercialBoq extends Component {
         return items = [];
       }
     }
-
+    
     countTotalPrice(packageData, pt, group){
       let count = 0;
       if(packageData.length !== 0){
@@ -1748,9 +1716,8 @@ class CommercialBoq extends Component {
     }
 
     render() {
-      console.log("currency", this.state.currencyChange)
       if(this.state.redirectSign !== false){
-        return (<Redirect to={'/detail-commercial/'+this.state.boq_comm_API._id} />);
+        return (<Redirect to={'/Boq/Commercial/Detail/'+this.state.boq_comm_API._id} />);
       }
       console.log('data BOQ Commercial', this.state.boq_comm_API);
       console.log('data BOQ Commercial Item', this.state.commercialData);
@@ -1787,14 +1754,120 @@ class CommercialBoq extends Component {
 
       return (
         <div>
-          <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
+          <AlertProcess alertAct={this.state.action_status} messageAct={this.state.action_message}/>
+          {this.state.boq_comm_API === null ? (
+            <StepFlow 
+              nowSign={"com"} 
+              commercialSign={true}
+              commercialArr={[]}
+            />
+          ) : (
+            <StepFlow 
+              nowSign={"com"} 
+              commercialSign={true}
+              commercialArr={[this.state.boq_comm_API._id]}
+            />
+          )}
           <Row>
+            <Col xl="12">
+              <Card>
+                <CardHeader>
+                  List Technical BOQ
+                </CardHeader>
+                <CardBody>
+                  <Row>
+                    <Col xl="5">
+                      <Table hover bordered responsive size="sm">
+                        <thead>
+                          <tr>
+                            <th>Project</th>
+                            <th>No Tech</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {this.state.boq_item_tech_comm.map( tech =>
+                            <tr onClick={(e) => this.cobaClickRow(tech._id)}>
+                              <td>{tech.project_name}</td>
+                              <td>{tech.no_boq_tech}</td>
+                              <td>{tech.creator[0].email}</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </Table>
+                    </Col>
+                    <Col xl="7">
+                      <Table hover bordered responsive size="sm">
+                        <thead>
+                          <tr>
+                            <th>
+                              <Checkbox name="item_all" checked={this.state.checkedPackage_all} onChange={this.handleChangeChecklistAll}/>
+                            </th>
+                            <th>Product Package</th>
+                            <th>ID Variant</th>
+                            <th>Product Package Variant</th>
+                            <th>Unit</th>
+                            <th>Qty</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {this.state.groupingView.map(pt =>
+                            <React.Fragment>
+                              <tr style={{backgroundColor : '#f8f6df'}}>
+                                <td colSpan="6" style={{textAlign: 'left', borderLefttWidth : '0px'}}>Product Type : <span style={{fontWeight : '700'}}>{pt.product_type}</span></td>
+                              </tr>
+                              {pt.groups.map(grp => 
+                                <React.Fragment>
+                                  <tr>
+                                    <td colSpan="6" style={{textAlign: 'left', fontWeight : '500'}}>Physical Group : <span style={{fontWeight : '700'}}>{grp}</span></td>
+                                  </tr>
+                                  {this.packageView(this.state.commercialData, pt.product_type, grp).map((itm) => 
+                                    <React.Fragment>
+                                      <tr>
+                                        <td>
+                                          <Checkbox name={itm.pp_id} checked={this.state.checkedPackage.get(itm.pp_id)} onChange={this.handleChangeChecklist}/>
+                                        </td>
+                                        <td style={{textAlign : 'left'}}>{itm.pp_group}</td>
+                                        <td style={{textAlign : 'left'}}>{itm.pp_id}</td>
+                                        <td style={{textAlign : 'left'}}>{itm.package_name}</td>
+                                        <td>{itm.unit}</td>
+                                        <td>{ itm.qty_tech.toLocaleString() }</td>
+                                      </tr>
+                                    </React.Fragment>
+                                  )}
+                                </React.Fragment>
+                              )}
+                            </React.Fragment>
+                          )}
+                          
+                          <tr>
+                            <td>
+                              {/* <Checkbox name={itm.pp_id} checked={this.state.checkedPackage.get(itm.pp_id)} onChange={this.handleChangeChecklist}/> */}
+                            </td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                          </tr>
+                        </tbody>
+                      </Table>
+                    </Col>
+                  </Row>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col xl="10">
+            </Col>
             <Col xl="12">
               <Card>
                 <CardHeader>
                   <span style={{lineHeight :'2', fontSize : '17px'}}> Commercial BOQ </span>
                   {this.state.boq_comm_API !== null && (
                     <React.Fragment>
+                      <Link to={'/Boq/Commercial/Group/'+this.state.boq_comm_API._id}>
+                          <Button color="primary" style={{float : 'right'}}  onClick={this.showGroupToggle}> <i className="fa fa-eye">&nbsp;&nbsp;</i> Product Package</Button>
+                      </Link>
                       <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
                         <DropdownToggle caret color="secondary">
                           <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download Commercial File
@@ -1813,17 +1886,18 @@ class CommercialBoq extends Component {
                       <Row>
                       <Col md="12">
                       {/* Show Select BOQ Technical */}
-                      {this.state.boq_comm_API === null && this.props.match.params.id === undefined ?(
+                      {this.state.boq_comm_API === null && this.props.match.params.id == undefined ?( 
                         <table width="70%" className="table-header">
                           <tr>
                             <td width="15%">BOQ Technical</td>
-                            <td width="60%">
-                              <Select
+                            <td width="35%">
+                              <AsyncSelect
                                 cacheOptions
-                                options={this.state.databoq}
-                                // defaultOptions
-                                onChange={this.handleInputChange}
-                            />
+                                loadOptions={this.loadOptions}
+                                defaultOptions
+                                onChange={this.handleInputChange}                               
+                            />  
+                            
                           </td>
                             <td>
                               <Button className="btn-success" style={{margin : '10px'}} color="success" onClick={this.saveCommtoAPI} disabled={this.state.checkedPackage.size == 0}>
@@ -1831,26 +1905,9 @@ class CommercialBoq extends Component {
                                 {this.state.rowsComm.length == 0 ? 'Save' : this.state.commercialData.length !== 0 ? 'Save' : 'Loading..'}
                               </Button>
                             </td>
-
+                          
                             </tr>
                         </table>
-                        ) : (<div></div>)}
-                        {this.state.boq_comm_API === null && this.props.match.params.id === undefined && this.state.boq_tech_select.project_name !== undefined ?(
-                          <table style={{fontSize : '12px', marginTop : '10px'}}>
-                            <tbody>
-                              <tr>
-                                <td>Project {this.state.boq_tech_select.project_name !== null ? 'Name' : 'Note'}</td>
-                                <td>:</td>
-                                <td>{this.state.boq_tech_select.project_name !== null ? this.state.boq_tech_select.project_name : this.state.boq_tech_select.note_6 }</td>
-                              </tr>
-                              <tr>
-                                <td>Technical Create By</td>
-                                <td>:</td>
-                                <td>{"bamidadmin@e-dpm.com"}</td>
-                              </tr>
-                              <tr></tr>
-                            </tbody>
-                          </table>
                         ) : (<div></div>)}
                         {/* End Show Select BOQ Technical */}
                         {/* Show Select Project */}
@@ -1901,7 +1958,7 @@ class CommercialBoq extends Component {
                         )}
                         {/* End Show import XLS */}
                       </Col>
-                     </Row>
+                     </Row>                
                      <Row>
                     <Col sm="12" md="12">
                     <table style={{width : '100%', marginBottom : '0px'}}>
@@ -1910,14 +1967,9 @@ class CommercialBoq extends Component {
                           <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>COMMERCIAL BOQ</td>
                         </tr>
                         {this.state.boq_comm_API !== null && (
-                          <React.Fragment>
-                            <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
-                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.boq_comm_API.no_boq_comm}</td>
-                            </tr>
-                            <tr style={{fontWeight : '390', fontSize : '11px', fontStyle:'oblique'}}>
-                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Technical BOQ : {this.state.boq_comm_API.no_boq_tech+" - Ver"+this.state.boq_comm_API.version_boq_tech}</td>
-                            </tr>
-                          </React.Fragment>
+                        <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
+                          <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.boq_comm_API.no_boq_comm}</td>
+                        </tr>
                         )}
                       </tbody>
                     </table>
@@ -1926,7 +1978,7 @@ class CommercialBoq extends Component {
                   </Row>
 
                   <div style={{padding:"10px", fontSize:'15px'}}>
-
+                    
                     {this.state.boq_comm_API !== null &&  (
                     <React.Fragment>
                       <Row>
@@ -1941,21 +1993,25 @@ class CommercialBoq extends Component {
                               <td>:</td>
                               <td colspan="2" style={{paddingLeft:'10px'}}>{!this.state.boq_comm_API.hasOwnProperty('project_name') ? "" : this.state.boq_comm_API.project_name }</td>
                             </tr>
+                            {/* <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                              <td >Commercial Indentifier &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                              <td >: &nbsp; {this.state.boq_comm_API.no_boq_comm}</td>
+                            </tr> */}
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>Version</td>
                               <td>:</td>
                               <td style={{paddingLeft:'10px'}} colspan="2">
                                 <Input type="select" value={this.state.version_selected === null? this.state.version_now : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "120px", height: "30px"}}>
                                   {this.state.list_version.map(ver =>
-                                    <option value={ver.version}>{ver.version}</option>
+                                    <option value={ver.version}>{(ver.rev1 !== 'A' ? 'PA' : 'A')+ver.version}</option>
                                   )}
-                                  <option value={this.state.version_now}>{this.state.version_now}</option>
+                                  <option value={this.state.version_now}>{(this.state.boq_comm_API.rev1 !== 'A' ? 'PA' : 'A')+this.state.version_now}</option>
                                 </Input>
                               </td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>Early Start </td>
-                              <td>:</td>
+                              <td>:</td>  
                               {this.state.early_start === true ? (
                                 <td style={{paddingLeft:'10px'}} colspan="2"><i class="fa fa-check"></i></td>
                               ) : (
@@ -1965,7 +2021,7 @@ class CommercialBoq extends Component {
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>Opportunity ID </td>
                               <td>:</td>
-                              <td style={{paddingLeft:'10px'}}>
+                              <td style={{paddingLeft:'10px'}}> 
                                 {this.state.boq_comm_API.opportunity_id}
                               </td>
                               <td  style={{paddingLeft:'5px'}}></td>
@@ -1981,21 +2037,29 @@ class CommercialBoq extends Component {
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>CPO Identifier </td>
-                              <td>:</td>
+                              <td>:</td>                            
                               <td style={{paddingLeft:'10px'}} colspan="2">
-                              {this.state.boq_comm_API.po_number == null && this.state.boq_comm_API.rev1 !== "A" ? (<span style={{fontSize : '12px', color: 'red'}}>CBOQ not yet approved</span>) :
+                              {this.state.boq_comm_API.po_number == null && this.state.boq_comm_API.rev1 !== "A" ? (<span style={{fontSize : '12px', color: 'red'}}>CBOQ not yet approved</span>) : 
                               this.state.boq_comm_API.po_number == null && this.state.boq_comm_API.rev1 === "A" ? (<span style={{fontSize : '12px', color: 'rgba(255,160,0 ,1)'}}>Please assign PO / Esta</span>) : this.state.boq_comm_API.po_number}
                               </td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>Updated By</td>
-                              <td>:</td>
-                              <td style={{paddingLeft:'10px'}} colspan="2">{"bamidadmin@e-dpm.com"}</td>
+                              <td>:</td>                            
+                              <td style={{paddingLeft:'10px'}} colspan="2">{this.state.boq_comm_API.updated_by.email}</td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>Date </td>
+                              <td>:</td>                            
+                              <td style={{paddingLeft:'10px'}} colspan="2">{toTimeZone(this.state.boq_comm_API.created_on)}</td>
+                            </tr>
+                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                              <td>Project Note </td>
                               <td>:</td>
-                              <td style={{paddingLeft:'10px'}} colspan="2">{this.state.boq_comm_API.created_on}</td>
+                              <td style={{paddingLeft:'10px'}}> 
+                                {this.state.boq_comm_API.note_6}
+                              </td>
+                              <td style={{paddingLeft:'5px'}}></td>
                             </tr>
                             {/* <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td >Show by</td>
@@ -2007,12 +2071,78 @@ class CommercialBoq extends Component {
                         </table>
                         </Col>
                       </Row>
+                      <div>
+                      <Card>
+                      <CardBody style={{padding : '10px'}}>
+                        <Row>
+                          <Col sm="6" md="6">
+                            <div>
+                            <table style={{width : '100%', marginBottom : '0px'}} className="table-header">
+                                <tbody>
+                                <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                                  <td>
+                                    <Input style={{height : '22px', fontSize : '15px',fontWeight : '400'}} type="text" name="1" placeholder="Note Name" onChange={this.handleChangeFieldNote} value={this.state.fieldNoteChange[1] == null ? this.state.boq_comm_API.note_name_1 : this.state.fieldNoteChange[1]}/>
+                                  </td>
+                                  <td>:</td>
+                                  <td style={{paddingLeft:'10px'}}>
+                                    <Input style={{height : '22px', fontSize : '15px',fontWeight : '400'}} type="text" name="1" placeholder="Note" onChange={this.handleChangeNote} value={this.state.noteChange[1] == null ? this.state.boq_comm_API.note_1 : this.state.noteChange[1]}/>
+                                  </td>
+                                  <td  style={{paddingLeft:'5px'}}></td>
+                                </tr>
+                                <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                                  <td>
+                                    <Input style={{height : '22px', fontSize : '15px',fontWeight : '400'}} type="text" name="3" placeholder="Note Name" onChange={this.handleChangeFieldNote} value={this.state.fieldNoteChange[3] == null ? this.state.boq_comm_API.note_name_3 : this.state.fieldNoteChange[3]}/>
+                                  </td>
+                                  <td>:</td>
+                                  <td style={{paddingLeft:'10px'}}>
+                                    <Input style={{height : '22px', fontSize : '15px', fontWeight : '400'}} type="text" name="3" placeholder="Note" onChange={this.handleChangeNote} value={this.state.noteChange[3] == null ? this.state.boq_comm_API.note_3 : this.state.noteChange[3]}/> 
+                                  </td>
+                                  <td  style={{paddingLeft:'5px'}}></td>
+                                </tr>
+                              </tbody>
+                            </table>
+                            </div>
+                          </Col>
+                          <Col sm="6" md="6">
+                            <div>
+                            <table style={{width : '100%', marginBottom : '0px'}} className="table-header">
+                                <tbody>
+                                  <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                                    <td>
+                                      <Input style={{height : '22px', fontSize : '15px',fontWeight : '400'}} type="text" name="2" placeholder="Note Name" onChange={this.handleChangeFieldNote} value={this.state.fieldNoteChange[2] == null ? this.state.boq_comm_API.note_name_2 : this.state.fieldNoteChange[2]}/>
+                                    </td>
+                                    <td>:</td>
+                                    <td style={{paddingLeft:'10px'}}>
+                                      <Input style={{height : '22px', fontSize : '15px',fontWeight : '400'}} type="text" name="2" placeholder="Note" onChange={this.handleChangeNote} value={this.state.noteChange[2] == null ? this.state.boq_comm_API.note_2 : this.state.noteChange[2]}/>  
+                                    </td>
+                                    <td  style={{paddingLeft:'5px'}}></td>
+                                  </tr>
+                                  <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                                    <td>
+                                      <Input style={{height : '22px', fontSize : '15px',fontWeight : '400'}} type="text" name="4" placeholder="Note Name" onChange={this.handleChangeFieldNote} value={this.state.fieldNoteChange[4] == null ? this.state.boq_comm_API.note_name_4 : this.state.fieldNoteChange[4]}/>
+                                    </td>
+                                    <td>:</td>
+                                    <td style={{paddingLeft:'10px'}}>
+                                      <Input style={{height : '22px', fontSize : '15px',fontWeight : '400'}} type="text" name="4" placeholder="Note" onChange={this.handleChangeNote} value={this.state.noteChange[4] == null ? this.state.boq_comm_API.note_4 : this.state.noteChange[4]}/> 
+                                    </td>
+                                    <td  style={{paddingLeft:'5px'}}></td>
+                                  </tr>
+                              </tbody>
+                            </table>
+                            </div>
+                          </Col>
+                        </Row>
+                        </CardBody>
+                        <CardFooter style={{padding : '5px 20px 5px 20px'}}>
+                          <button style={{float : 'right'}} onClick={this.saveNote}>Save Note</button>
+                        </CardFooter>
+                      </Card>
+                    </div>
                     </React.Fragment>
                     )}
                   </div>
-                  <div class='divtable'>
-                    <table hover bordered responsive size="sm" width="100%">
-                      <thead class="fixed">
+                  <Table hover bordered responsive size="sm">
+                    <thead>
                       <tr style={{backgroundColor : '#c6f569'}}>
                         {this.state.boq_comm_API === null &&(
                           <React.Fragment>
@@ -2026,51 +2156,52 @@ class CommercialBoq extends Component {
                           )
                         }
                         <th style={{width :'100px', verticalAlign : 'middle'}} >ID</th>
-                        <th style={{width :'300px', verticalAlign : 'middle'}} >Product Description</th>
+                        <th style={{width :'300px', verticalAlign : 'middle'}} >Material Description</th>
                         <th style={{verticalAlign : 'middle'}}>Unit</th>
                         <th style={{verticalAlign : 'middle'}}>Qty in Technical</th>
                         <th style={{verticalAlign : 'middle'}}>Existing Stock (Smart)</th>
                         <th style={{verticalAlign : 'middle'}}>Existing Stock (Ericsson)</th>
                         <th style={{verticalAlign : 'middle'}}>Unit Price</th>
                         <th style={{verticalAlign : 'middle', minWidth : '75px'}}>Currency
-                        {this.state.boq_comm_API !== null && (
                           <Input type="select" onChange={this.handleChangeCurrencyAll} value={this.state.currencyChangeAll}>
-                            <option value={""}></option>
+                            {/* <option value={false}></option> */}
                             <option value={"USD"}>USD</option>
                             <option value={"PHP"}>PHP</option>
                           </Input>
-                        )}
                         </th>
                         <th style={{verticalAlign : 'middle'}}>Quotation Qty</th>
                         {this.state.boq_comm_API !== null && (
                           <th style={{verticalAlign : 'middle'}}>{this.state.boq_comm_API.early_start === true ? "Early Start Qty" : "PO Qty" }</th>
                         )}
+                        {/* <th style={{verticalAlign : 'middle'}}>In PO Quotation Qty</th> */}
                         <th style={{verticalAlign : 'middle'}}>Total Price</th>
+                        <th style={{verticalAlign : 'middle'}}>Incentive</th>
+                        <th style={{verticalAlign : 'middle'}}>Net Price</th>
                       </tr>
                     </thead>
                     {this.state.groupingView.length !== 0 ?
                       this.state.groupingView.map(pt =>
                       <React.Fragment>
-                        <tbody style={{borderTopWidth : '0px'}}  class="fixbody">
+                        <tbody style={{borderTopWidth : '0px'}}>
                           {this.state.boq_comm_API === null ? (
                               <tr style={{backgroundColor : '#f8f6df'}}>
                                 <td style={{textAlign: 'left', borderRightWidth : '0px'}}></td>
-                                <td colSpan={"11"} style={{textAlign: 'left', borderLefttWidth : '0px'}}>Product Type : <span style={{fontWeight : '700'}}>{pt.product_type}</span></td>
+                                <td colSpan={"13"} style={{textAlign: 'left', borderLefttWidth : '0px'}}>Product Type : <span style={{fontWeight : '700'}}>{pt.product_type}</span></td>
                               </tr>) : (
                             <tr style={{backgroundColor : '#f8f6df'}}>
-                              <td colSpan="11" style={{textAlign: 'left', borderLefttWidth : '0px'}}>Product Type : <span style={{fontWeight : '700'}}>{pt.product_type}</span></td>
+                              <td colSpan="13" style={{textAlign: 'left', borderLefttWidth : '0px'}}>Product Type : <span style={{fontWeight : '700'}}>{pt.product_type}</span></td>
                             </tr> )}
                         </tbody>
                         {pt.groups.map(grp =>
                           <React.Fragment>
-                            <tbody style={{borderTopWidth : '0px'}} class="fixbody">
+                            <tbody style={{borderTopWidth : '0px'}}>
                               {this.state.boq_comm_API === null ? (
                                 <tr>
                                   <td></td>
-                                  <td colSpan={"14"} style={{textAlign: 'left', fontWeight : '500'}}>Physical Group : <span style={{fontWeight : '700'}}>{grp}</span></td>
+                                  <td colSpan={"13"} style={{textAlign: 'left', fontWeight : '500'}}>Physical Group : <span style={{fontWeight : '700'}}>{grp}</span></td>
                                 </tr> ) : (
                                 <tr>
-                                  <td colSpan="14" style={{textAlign: 'left', fontWeight : '500'}}>Physical Group : <span style={{fontWeight : '700'}}>{grp}</span></td>
+                                  <td colSpan="13" style={{textAlign: 'left', fontWeight : '500'}}>Physical Group : <span style={{fontWeight : '700'}}>{grp}</span></td>
                                 </tr>)}
                               {this.packageView(this.state.commercialData, pt.product_type, grp).map((itm) =>
                                 <React.Fragment>
@@ -2079,7 +2210,7 @@ class CommercialBoq extends Component {
                                       <React.Fragment>
                                       <td style={{verticalAlign :'middle'}}>
                                       <Checkbox name={itm.pp_id} checked={this.state.checkedPackage.get(itm.pp_id)} onChange={this.handleChangeChecklist}/>
-                                    </td>
+                                    </td> 
                                     <td rowSpan>{itm.pp_group}</td>
                                     </React.Fragment>)}
                                     <td style={{verticalAlign :'middle', textAlign : 'left'}}>{ itm.pp_id }</td>
@@ -2104,7 +2235,7 @@ class CommercialBoq extends Component {
                                     {/* <td>{itm.currency}</td> */}
                                     <td>
                                     {this.state.boq_comm_API === null ?  itm.currency : this.state.boq_comm_API.project_name == null ? itm.currency : (
-                                      <Input type="select" onChange={this.handleChangeCurrency} name={itm._id} value={this.state.currencyChange.has(itm._id) ? this.state.currencyChange.get(itm._id) : itm.currency}>
+                                      <Input type="select" onChange={this.handleChangeCurrency} name={itm.pp_id} value={this.state.currencyChange.has(itm.pp_id) ? this.state.currencyChange.get(itm.pp_id) : itm.currency}>
                                         {/* <option value={false}></option> */}
                                         <option value={"USD"}>USD</option>
                                         <option value={"PHP"}>PHP</option>
@@ -2112,52 +2243,60 @@ class CommercialBoq extends Component {
                                     )}
                                     {/* {itm.currency} */}
                                     </td>
-                                    <td align='center' style={{verticalAlign :'middle'}}>{ (itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)).toLocaleString() }</td>
+                                    <td style={{verticalAlign :'middle'}}>{ (itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)).toLocaleString() }</td>
                                     {this.state.boq_comm_API !== null && (
-                                      <td align='center' style={{verticalAlign :'middle'}}>
+                                      <td style={{verticalAlign :'middle'}}>
                                         {this.state.boq_comm_API.early_start === true ? itm.qty_early_start : this.state.boq_comm_API.po_number !== null ? itm.qty_po : "" }
                                       </td>
                                     )}
                                     {/* <td style={{verticalAlign :'middle'}}>{ this.state.early_start === false ? (itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)) : "" }</td> */}
-                                    <td align='center' style={{verticalAlign :'middle'}}>{ ((itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)) * itm.unit_price).toLocaleString() }</td>
+                                    <td style={{verticalAlign :'middle'}}>{ ((itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)) * itm.unit_price).toLocaleString() }</td>
+                                    <td style={{verticalAlign :'middle'}}>
+                                      {this.state.boq_comm_API === null ? itm.incentive : this.state.boq_comm_API.project_name == null ? itm.incentive : (
+                                        <Input type="number" name={itm._id} className="BoQ-style-qty" placeholder="incentive" onChange={this.handleChangeincentive} value={!this.state.incentiveChange.has(itm._id) ? itm.incentive : this.state.incentiveChange.get(itm._id) } disabled={this.state.version_selected !== this.state.version_now}/>
+                                      ) }
+                                    </td>
+                                    <td style={{verticalAlign :'middle'}}>{ (((itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)) * itm.unit_price)-itm.incentive).toLocaleString() }</td>
                                 </tr>
                                 </React.Fragment>
                               )}
                               {this.state.boq_comm_API !== null && (
-                              <tr style={{backgroundColor:'#f3f3f3'}}>
+                              <tr>
                                 <td colSpan="10" style={{textAlign : 'left'}}>Physical group Total</td>
-                                <td align='center'>{this.countTotalPrice(this.state.commercialData, pt.product_type, grp).toLocaleString()}</td>
+                                <td>{this.countTotalPrice(this.state.commercialData, pt.product_type, grp).toLocaleString()}</td>
+                                <td></td>
+                                <td>{this.countNetTotal(this.state.commercialData, pt.product_type, grp).toLocaleString()}</td>
                               </tr>
                               )}
-                                <tr><td colSpan="11"></td></tr>
                             </tbody>
                           </React.Fragment>
                         )}
                         {this.state.boq_comm_API !== null && (
-                          <tr><td colSpan="11"></td></tr>
+                          <tr><td colSpan="13"></td></tr>
                         )}
                       </React.Fragment>
                       ) : (
                       <tbody>
                         <tr>
                           {this.props.match.params.id == undefined? (
-                            <td colSpan="12">Please Select BOQ Technical</td>
+                            <td colSpan="15">Please Select BOQ Technical</td>
                           ) : (
-                            <td colSpan="11">Please Wait, Loading Data...</td>
+                            <td colSpan="13">Please Wait, Loading Data...</td>
                           )}
                         </tr>
                       </tbody>
                           )}
                       {this.state.boq_comm_API !== null && (
-                      <tbody class="fixed2 fixbody">
+                      <tbody>
                           <tr>
                             <td colSpan="10" style={{textAlign : 'left'}}>Total Commercial</td>
                             <td>{this.state.total_comm.totalPriceComm !== undefined ? this.state.total_comm.totalPriceComm.toLocaleString() : 0}</td>
+                            <td></td>
+                            <td>{this.state.total_comm.netTotalComm !== undefined ? this.state.total_comm.netTotalComm.toLocaleString() : 0}</td>
                           </tr>
                       </tbody>
                       )}
-                  </table>
-                  </div>
+                  </Table>
                   {this.state.boq_comm_API !== null &&  (
 		               <React.Fragment>
                     <div style={{marginBottom : "20px"}}>
@@ -2166,24 +2305,12 @@ class CommercialBoq extends Component {
                         <table className="table-footer">
                           <tbody>
                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                              <td >Version </td>
+                              <td>: &nbsp; {(this.state.boq_comm_API.rev1 !== 'A' ? 'PA' : 'A') +this.state.boq_comm_API.version}</td>
+                            </tr>
+                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
                               <td >Approved By </td>
                               <td >: &nbsp; {this.state.boq_comm_API.rev1 === "PA" ? "Pre Approved" : this.state.boq_comm_API.rev1 == "WA" ? "Waiting Approve" : this.state.boq_comm_API.rev1_by}</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                              <td >Submitted By </td>
-                              <td >: &nbsp; {this.state.boq_comm_API.submitted === undefined ? "Not Submitted" : this.state.boq_comm_API.submitted == "NS" ? "Not Submitted" : this.state.boq_comm_API.submitted_by}</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                              <td >Submitted Date </td>
-                              <td >: &nbsp; {this.state.boq_comm_API.submitted === undefined ? "Not Submitted" : this.state.boq_comm_API.submitted == "NS" ? "Not Submitted" : this.state.boq_comm_API.submitted_date}</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                              <td >Clarified By </td>
-                              <td >: &nbsp; {this.state.boq_comm_API.clarified === undefined ? "Not Submitted" : this.state.boq_comm_API.clarified == "NS" ? "Not Submitted" : this.state.boq_comm_API.clarified_by}</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                              <td >Clarified Date </td>
-                              <td >: &nbsp; {this.state.boq_comm_API.clarified === undefined ? "Not Submitted" : this.state.boq_comm_API.clarified == "NS" ? "Not Submitted" : this.state.boq_comm_API.clarified_date}</td>
                             </tr>
                           </tbody>
                         </table>
@@ -2197,17 +2324,31 @@ class CommercialBoq extends Component {
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
                               <td >COM BOQ Created By &nbsp;</td>
-                              <td >: &nbsp; bamidadmin@e-dpm.com</td>
+                              <td >: &nbsp; {this.state.boq_comm_API.created_by.email}</td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
                               <td >COM BOQ Created Date </td>
-                              <td >: &nbsp; {this.state.boq_comm_API.created_on}</td>
+                              <td >: &nbsp; {toTimeZone(this.state.boq_comm_API.created_on)}</td>
                             </tr>
                           </tbody>
                         </table>
                         </Col>
                       </Row>
                     </div>
+                    {/* <div style={{padding : '0 10px 0 10px'}}>
+                      <button onClick={this.exportCommercial} style={{marginRight: '10px'}}>Download Commercial Report</button>
+                      <button onClick={this.exportCommercialTemplate}>Download Commercial Format</button>
+                    </div> */}
+                    <table>
+                      <tr>
+                        <td>Version Comment : </td>
+                        <td>
+                          &nbsp;
+                          <textarea style={{width : '500px'}} onChange={this.handleChangeVerComment} value={this.state.note_version !== null ?  this.state.note_version : this.state.boq_comm_API.version_comment === undefined || this.state.boq_comm_API.version_comment === null ? '' : this.state.boq_comm_API.version_comment }></textarea>
+                        </td>
+                      </tr>
+                    </table>
+		                
 		               </React.Fragment>
                     )}
 
@@ -2218,6 +2359,20 @@ class CommercialBoq extends Component {
                 </CardBody>
                 <CardFooter>
                   <Row>
+                  {/* {this.state.boq_comm_API !== null &&  (
+                    <Col>
+                      <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}}>
+                        <DropdownToggle caret color="secondary">
+                          <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download Commercial File
+                        </DropdownToggle>
+                        <DropdownMenu>
+                          <DropdownItem header> Commercial File</DropdownItem>
+                          <DropdownItem onClick={this.exportCommercial}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Commercial Report</DropdownItem>
+                          <DropdownItem onClick={this.exportCommercialTemplate}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Commercial Format</DropdownItem>
+                        </DropdownMenu>
+                      </Dropdown>
+                    </Col>
+                  )} */}
                   </Row>
                 </CardFooter>
               </Card>
@@ -2308,11 +2463,4 @@ class CommercialBoq extends Component {
     }
   }
 
-  const mapStateToProps = (state) => {
-    return {
-      dataLogin : state.loginData,
-      SidebarMinimize : state.minimizeSidebar
-    }
-  }
-
-  export default connect(mapStateToProps)(CommercialBoq);
+  export default CommercialNew;

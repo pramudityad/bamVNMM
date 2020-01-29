@@ -1,35 +1,38 @@
 import React, { Component, Fragment } from 'react';
-import { Card, CardHeader, CardFooter, CardBody, Table, Row, Col, Button} from 'reactstrap';
+import { Card, CardHeader, CardBody, CardFooter, Table, Row, Col, Button} from 'reactstrap';
 import { Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
+import ReactExport from "react-data-export";
 import axios from 'axios';
-import { Link } from 'react-router-dom';
 import {Form, FormGroup, Label, Input, FormText} from 'reactstrap';
+import { Link } from 'react-router-dom';
 import {OutTable, ExcelRenderer} from 'react-excel-renderer';
 import './boqCommercial.css';
-import Excel from 'exceljs';
+import Excel from 'exceljs/modern.browser';
 import { saveAs } from 'file-saver';
-import { connect } from 'react-redux';
-
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+import { toTimeZone, checkValue } from "../../helper/basicFunction.js";
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
 );
 
-const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
+const StepFlow = React.lazy(() => import('../../views/Defaultview/StepFlow'));
+
+//const API_URL = 'http://localhost:5000/smartapi';
+//const API_URL = 'http://api-dev.smart.pdb.e-dpm.com/smartapi';
 const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
-class CommercialBoqApproval extends Component {
+const ExcelFile = ReactExport.ExcelFile;
+const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
+const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
+
+class DetailBoqCommGroup extends Component {
     constructor(props) {
       super(props);
 
       this.state = {
-        userRole : this.props.dataLogin.role,
-        userId : this.props.dataLogin._id,
-        userName : this.props.dataLogin.userName,
-        userEmail : this.props.dataLogin.email,
+        userRole : JSON.parse(localStorage.getItem('user_Roles')),
         boq_comm_API : null,
         boq_tech_API : [],
         boq_tech_sites : [],
@@ -206,22 +209,6 @@ class CommercialBoqApproval extends Component {
       }
     }
 
-    async apiSendEmail(data){
-      try {
-        let respond = await axios.post(API_EMAIL, data, {
-          headers : {'Content-Type':'application/json'},
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Patch data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = undefined;
-        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
-        console.log("respond Patch data", err);
-        return respond;
-      }
-    }
 
     handleChangeEarlyStart(e){
       const isChecked = e.target.checked;
@@ -259,55 +246,17 @@ class CommercialBoqApproval extends Component {
       }
     }
 
-    getPOList(){
-      this.getDatafromAPI('/po_non_page').then(resp => {
-        if(resp !== undefined){
-          this.setState({list_po_number : resp.data._items});
-        }
-      })
-    }
-
-    getDataCommAPI(){
-      this.getDatafromAPI('/boq_comm_audit/'+this.props.match.params.id+'?embedded={"created_by":1, "updated_by" : 1}').then(resComm => {
-        if(resComm !== undefined){
+    componentDidMount(){
+      if(this.props.match.params.id !== undefined){
+        this.getDatafromAPI('/boq_comm_audit/'+this.props.match.params.id+'?embedded={"created_by":1, "updated_by" : 1, "list_of_id_item" : 1}').then(resComm => {
+          if(resComm == undefined){resComm ={}; resComm["data"] = undefined}
           if(resComm.data !== undefined){
             if(resComm.data.early_start !== undefined){
               this.setState({ early_start:  resComm.data.early_start, version_now : resComm.data.version, version_selected : resComm.data.version });
             }
-            const arrayIdItems = '"'+resComm.data.list_of_id_item.join('", "')+'"';
-            const where_id_Items = '?where={"_id" : {"$in" : ['+arrayIdItems+']}}';
-            this.getDatafromAPI('/boq_comm_items_non_page'+where_id_Items).then(resItems =>{
-              if(resItems.data._items.length !== 0){
-                this.DataGroupingView(resItems.data._items);
-                console.log("data Comm resComm");
-                this.getListVersion(this.props.match.params.id);
-                this.setState({commercialData : resItems.data._items, boq_comm_API : resComm.data, curr_rev : resComm.data.version, commercialData_now : resItems.data._items});
-              }
-            })
-          }else{
-            this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
-          }
-        }
-      })
-    }
-
-    componentDidMount(){
-      if(this.props.match.params.id !== undefined){
-        this.getDatafromAPI('/boq_comm_audit/'+this.props.match.params.id+'?embedded={"created_by":1, "updated_by" : 1, "list_of_id_item" : 1}').then(resComm => {
-          if(resComm !== undefined){if(resComm.data !== undefined){
-            if(resComm.data.early_start !== undefined){
-              this.setState({ early_start:  resComm.data.early_start, version_now : resComm.data.version, version_selected : resComm.data.version });
-              if(resComm.data.hasOwnProperty("po_number") === false && resComm.data.rev1 === "A"){
-                this.getPOList();
-              }else{
-                if(resComm.data.po_number === null && resComm.data.rev1 === "A"){
-                  this.getPOList();
-                }
-              }
-            }
             this.setState({commercialData : resComm.data.list_of_id_item, boq_comm_API : resComm.data, curr_rev : resComm.data.version, commercialData_now : resComm.data.list_of_id_item});
-            this.DataGroupingView(resComm.data.list_of_id_item);
-          }}else{
+            this.countGroupFromComm(resComm.data.list_of_id_item);
+          }else{
             this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
           }
         })
@@ -315,6 +264,7 @@ class CommercialBoqApproval extends Component {
     }
 
     DataGroupingView(itemsDatas, dataItemsPicked){
+    console.log("arrayGroup", itemsDatas);
       let item_nonCom = [];
       let total_price_comm = 0;
       let net_total_comm = 0;
@@ -338,8 +288,8 @@ class CommercialBoqApproval extends Component {
           }
           OnlyGrouping.push(dataGroup);
         }
+        console.log("arrayGroup", itemsDatas);
       this.setState(prevState => ({ commercialData:  itemsDatas}));
-      this.countGroupFromComm(itemsDatas);
       this.setState({groupingView : OnlyGrouping});
     }
 
@@ -354,6 +304,7 @@ class CommercialBoqApproval extends Component {
     }
 
     packageView(packageData, pt, group){
+        console.log("arrayGroup", packageData);
       let items = [];
       if(packageData.length !== 0){
         let itemsget = packageData.filter(d => d.product_type === pt && d.phy_group === group);
@@ -374,7 +325,6 @@ class CommercialBoqApproval extends Component {
       const dataPrint=this.state.commercialData;
       const dataGroup=this.state.groupingView;
       const prod_type = [...new Set(dataPrint.map(({ product_type }) => product_type))];
-      //const phy_group = [...new Set(dataPrint.map(({ phy_group }) => phy_group))];
       const DatePrint = new Date();
       const DatePrintOnly = DatePrint.getFullYear()+'-'+(DatePrint.getMonth()+1).toString().padStart(2, '0')+'-'+DatePrint.getDay().toString().padStart(2, '0');
 
@@ -385,17 +335,17 @@ class CommercialBoqApproval extends Component {
       ws.getCell('A4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
 
       const preparedEmail = ws.mergeCells('A5:E5');
-      ws.getCell('A5').value = this.state.userEmail;
+      ws.getCell('A5').value = dataComm.created_by.email;
       ws.getCell('A5').alignment  = {horizontal: 'left' };
       ws.getCell('A5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
-      // const DocumentNo = ws.mergeCells('F4:K4');
+      const DocumentNo = ws.mergeCells('F4:I4');
       ws.getCell('F4').value = 'Document No.';
       ws.getCell('F4').font  = { size: 8 };
       ws.getCell('F4').alignment  = {vertical: 'top', horizontal: 'left' };
       ws.getCell('F4').border = {top: {style:'thin'}, left: {style:'thin'},  right: {style:'thin'} };
 
-      // const DocumentNum = ws.mergeCells('F5:K5');
+      const DocumentNum = ws.mergeCells('F5:I5');
       ws.getCell('F5').value = dataComm.no_boq_comm;
       ws.getCell('F5').alignment  = {horizontal: 'left' };
       ws.getCell('F5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
@@ -412,29 +362,29 @@ class CommercialBoqApproval extends Component {
       ws.getCell('D6').alignment  = {vertical: 'top', horizontal: 'left' };
       ws.getCell('D6').border = {top: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
-      const dateDoc = ws.mergeCells('F6:H6');
+      const dateDoc = ws.mergeCells('F6:G6');
       ws.getCell('F6').value = 'Date';
       ws.getCell('F6').font  = { size: 8 };
       ws.getCell('F6').alignment  = {vertical: 'top', horizontal: 'left' };
       ws.getCell('F6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
 
-      const dateDocument = ws.mergeCells('F7:H7');
+      const dateDocument = ws.mergeCells('F7:G7');
       ws.getCell('F7').value = DatePrintOnly;
       ws.getCell('F7').alignment  = {vertical: 'top', horizontal: 'left' };
       ws.getCell('F7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
-      // const revDoc = ws.mergeCells('I6:K6');
-      ws.getCell('I6').value = 'Rev';
-      ws.getCell('I6').font  = { size: 8 };
-      ws.getCell('I6').alignment  = {vertical: 'top', horizontal: 'left' };
-      ws.getCell('I6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+      const revDoc = ws.mergeCells('H6:I6');
+      ws.getCell('H6').value = 'Rev';
+      ws.getCell('H6').font  = { size: 8 };
+      ws.getCell('H6').alignment  = {vertical: 'top', horizontal: 'left' };
+      ws.getCell('H6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
-      const revDocNum = ws.mergeCells('I7:K7');
-      ws.getCell('I7').value = (dataComm.rev1 !== 'A' ? 'PA' : 'A')+ dataComm.version;
-      ws.getCell('I7').alignment  = {vertical: 'top', horizontal: 'left' };
-      ws.getCell('I7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+      const revDocNum = ws.mergeCells('H7:I7');
+      ws.getCell('H7').value = (dataComm.rev1 !== 'A' ? 'PA' : 'A')+ dataComm.version;
+      ws.getCell('H7').alignment  = {vertical: 'top', horizontal: 'left' };
+      ws.getCell('H7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
-      const CommInfoTitle = ws.mergeCells('A8:K8');
+      const CommInfoTitle = ws.mergeCells('A8:I8');
       ws.getCell('A8').value = 'COMMERCIAL BOQ';
       ws.getCell('A8').font  = { size: 16, bold : true };
       ws.getCell('A8').alignment  = {vertical: 'middle', horizontal: 'center' };
@@ -461,16 +411,12 @@ class CommercialBoqApproval extends Component {
 
       ws.mergeCells('B10:C10');
       ws.mergeCells('B11:C11');
-
-      ws.mergeCells('G10:H10');
-      ws.mergeCells('G11:H11');
-      ws.mergeCells('G12:H12');
-
-      // ws.mergeCells('I10:K10');
-      ws.getCell('I10').value = dataComm.po_number;
-      ws.getCell('I11').value = this.state.userEmail;
-      // ws.mergeCells('I12:K12');
-      ws.getCell('I12').value = dataComm.created_on;
+      ws.mergeCells('H10:I10');
+      ws.getCell('H10').value = dataComm.po_number;
+      ws.mergeCells('H11:11');
+      ws.getCell('H11').value = dataComm.created_by.email;
+      ws.mergeCells('H12:I12');
+      ws.getCell('H12').value = toTimeZone(dataComm.created_on);
 
       if(this.checkValuetoString(dataComm.note_1).length !== 0 && this.checkValuetoString(dataComm.note_name_1).length !== 0 || this.checkValuetoString(dataComm.note_2).length !== 0 && this.checkValuetoString(dataComm.note_name_2).length !== 0){
         let getlastnullrow = ws.lastRow._number+1;
@@ -492,7 +438,7 @@ class CommercialBoqApproval extends Component {
       }
 
       ws.addRow([""]);
-      ws.addRow(["Material Desciption", "Total Qty in Technical", "Existing Stock Qty (Smart)","Existing Stock Qty (Ericsson)", "Quotation Net Qty", dataComm.early_start === true ? "Early Start Qty" : "In PO Qty", "Unit Price", "Currency", "Total Price"]);
+      ws.addRow(["Material Desciption", "Total Qty in Technical", "Existing Stock Qty (Smart)","Existing Stock Qty (Ericsson)", "Commercial Quotation Net Qty", "Currency", "Total Price", "Incentive", "Net Total" ]);
       ['A','B','C','D','E','F','G','H','I'].map( key => {
         ws.getCell(key+(ws.lastRow._number)).fill = {
           type : 'pattern',
@@ -500,12 +446,12 @@ class CommercialBoqApproval extends Component {
           fgColor : {argb:'FF0ACD7D'}
         }
       })
-
       let phyNameTotal = [];
       let phyNetTotal = [];
       let phyTotal = [];
+      
       for(let h = 0; h < prod_type.length; h++){
-        ws.addRow(["Product Type : "+prod_type[h]]);
+        ws.addRow([prod_type[h]]);
         let phy_item_group = dataPrint.filter(pp => pp.product_type === prod_type[h]);
         let phy_group = [...new Set(phy_item_group.map(({ phy_group }) => phy_group))];
         const getRowLast = ws.lastRow._number;
@@ -513,47 +459,45 @@ class CommercialBoqApproval extends Component {
         ws.getCell('A'+(getRowLast)).fill = {type : 'pattern', pattern : 'solid', fgColor : {argb:'FFF8F6DF'}};
         for(let i = 0; i < phy_group.length; i++){
           let phy_item = dataPrint.filter(pp => pp.phy_group === phy_group[i] && pp.product_type === prod_type[h]);
-          ws.addRow(["Physical Group : "+phy_group[i]]);
+          ws.addRow([phy_group[i]]);
           const getRowLast = ws.lastRow._number;
           ws.mergeCells('A'+(getRowLast)+':I'+(getRowLast));
-          // ws.getCell('A'+(getRowLast)).fill = {type : 'pattern', pattern : 'solid', fgColor : {argb:'7F81C784'}}
-          if(dataComm.early_start === true){
-            for(let j=0; j < phy_item.length; j++){
-              ws.addRow([phy_item[j].package_name, phy_item[j].qty_tech, phy_item[j].smart_stock, phy_item[j].qty_ericsson, phy_item[j].qty_comm_quotation, phy_item[j].qty_early_start, phy_item[j].unit_price, phy_item[j].currency, phy_item[j].total_price]);
-            }
-          }else{
-            for(let j=0; j < phy_item.length; j++){
-              ws.addRow([phy_item[j].package_name, phy_item[j].qty_tech, phy_item[j].smart_stock, phy_item[j].qty_ericsson, phy_item[j].qty_comm_quotation, phy_item[j].qty_po, phy_item[j].unit_price, phy_item[j].currency, phy_item[j].total_price]);
-            }
+          // ws.getCell('A'+(getRowLast)).fill = {type : 'pattern', pattern : 'solid'};
+          for(let j=0; j < phy_item.length; j++){
+            ws.addRow([phy_item[j].pp_group, phy_item[j].qty_tech, phy_item[j].smart_stock, phy_item[j].qty_ericsson, phy_item[j].qty_comm_quotation, phy_item[j].currency, phy_item[j].total_price, phy_item[j].incentive, phy_item[j].net_total ]);
           }
           let total_prc = phy_item.reduce((a,b) => a + b.total_price, 0);
           let net_total = phy_item.reduce((a,b) => a + b.net_total, 0);
           phyNameTotal.push(phy_group[i]+" ("+prod_type[h]+")");
           phyNetTotal.push(net_total);
           phyTotal.push(total_prc);
-
+          
         }
       }
+
       ws.addRow([""]);
       for(let z = 0; z < phyNameTotal.length; z++){
         ws.addRow([phyNameTotal[z]+" Total"]);
         let getRowLastTotal = ws.lastRow._number;
         ws.getCell('A'+(getRowLastTotal)).font  = {bold : true };
-        ws.mergeCells('A'+(getRowLastTotal)+':H'+(getRowLastTotal));
-        ws.getCell('I'+(getRowLastTotal)).value = phyTotal[z];
-
+        ws.mergeCells('A'+(getRowLastTotal)+':F'+(getRowLastTotal));
+        ws.getCell('G'+(getRowLastTotal)).value = phyTotal[z];
+        ws.getCell('I'+(getRowLastTotal)).value = phyNetTotal[z];
       }
+      
 
       ws.addRow([""]);
       ws.addRow(["Total"]);
       let getRowLastTotal = ws.lastRow._number;
-      ws.mergeCells('A'+(getRowLastTotal)+':H'+(getRowLastTotal));
-      ws.getCell('I'+(getRowLastTotal)).value = this.state.total_comm.totalPriceComm;
+      ws.mergeCells('A'+(getRowLastTotal)+':F'+(getRowLastTotal));
+      ws.getCell('G'+(getRowLastTotal)).value = this.state.total_comm.totalPriceComm;
+      ws.getCell('I'+(getRowLastTotal)).value = this.state.total_comm.netTotalComm;
       ws.getCell('A'+(getRowLastTotal)).font  = {bold : true };
+      ws.getCell('G'+(getRowLastTotal)).font  = {bold : true };
       ws.getCell('I'+(getRowLastTotal)).font  = {bold : true };
 
       const comFormat = await wb.xlsx.writeBuffer()
-      saveAs(new Blob([comFormat]), 'Commercial BOQ '+dataComm.no_boq_comm+' Report.xlsx')
+      saveAs(new Blob([comFormat]), 'Commercial BOQ '+dataComm.no_boq_comm+' Group Report.xlsx')
     }
 
     savePO(){
@@ -569,7 +513,7 @@ class CommercialBoqApproval extends Component {
               commAPI["id_po_doc"] = this.state.po_selected;
               commAPI["po_number"] = this.state.po_number_selected.toString();
               commAPI["_etag"] = res.data._etag;
-              this.setState({boq_comm_API : commAPI, action_status : 'success', action_message : 'PO Number has been saved'});
+              this.setState({boq_comm_API : commAPI, action_status : 'success', action_message : 'PO Number have been saved'});
             }
           }
         })
@@ -584,105 +528,28 @@ class CommercialBoqApproval extends Component {
       }));
     }
 
-    approvedBoqComm = async(e) => {
-      this.toggleLoading();
+    approvedBoqComm = (e) => {
       const statusApp = e.target.value;
       const date = new Date();
       const DateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
       console.log('jam tostring', DateNow.toString());
       const dataComm = this.state.boq_comm_API;
       let dataApprove = {}
-      let EmailReceiver = [];
-      if(statusApp === "WA"){
-        const getUserApproval = await this.getDatafromAPI('/user_all?where={"roles" : "5d6ceb0c0dbae80ce605274e"}');
-        if(getUserApproval !== undefined){
-          if(getUserApproval.data !== undefined){
-            if(getUserApproval.data._items.length !== 0){
-              EmailReceiver = getUserApproval.data._items.map(e => e.email);
-            }
-          }
-        }
-      }
-      switch(statusApp){
-        case 'C':
-          dataApprove["clarified"] = statusApp.toString();
-          dataApprove["clarified_by"] = this.state.userEmail;
-          dataApprove["clarified_date"] = DateNow.toString();
-          break;
-        case 'S':
-          dataApprove["submitted"] = statusApp.toString();
-          dataApprove["submitted_by"] = this.state.userEmail;
-          dataApprove["submitted_date"] = DateNow.toString();
-          break;
-        default:
-          dataApprove["rev1"] = statusApp.toString();
-          dataApprove["rev1_by"] = this.state.userEmail;
-          dataApprove["rev1_date"] = DateNow.toString();
-          break;
-      }
-      // if(statusApp === 'C'){
-      //   dataApprove["clarifed"] = statusApp.toString();
-      //   dataApprove["clarifed_by"] = localStorage.getItem('user_Email');
-      //   dataApprove["clarifed_date"] = DateNow.toString();
-      // }
-      // if(statusApp === 'S'){
-      //   dataApprove["submitted"] = statusApp.toString();
-      //   dataApprove["submitted_by"] = localStorage.getItem('user_Email');
-      //   dataApprove["submitted_date"] = DateNow.toString();
-      // }
-      // if(statusApp !== 'S' && statusApp !== 'C'){
-      //   dataApprove["rev1"] = statusApp.toString();
-      //   dataApprove["rev1_by"] = localStorage.getItem('user_Email');
-      //   dataApprove["rev1_date"] = DateNow.toString();
-      // }
-
-      console.log('dataApprove', JSON.stringify(dataApprove));
-      let revPatch = await this.patchDatatoAPI('/boq_comm_op/'+dataComm._id, dataApprove, dataComm._etag)
-      if(revPatch !== undefined){
-          if(revPatch.data !== undefined){
-            console.log("revPatch", revPatch);
-            let dataEmail = {};
-            if(statusApp === "R"){
-              dataEmail = {
-                "to": dataComm.rev1_by,
-                "subject":"Request Rejected",
-                "body": "Hello your request for "+dataComm.no_boq_comm+ " is rejected"
+      dataApprove["rev1"] = statusApp.toString();
+      dataApprove["rev1_by"] = localStorage.getItem('user_Email');
+      dataApprove["rev1_date"] = DateNow.toString();
+      console.log('dataApprove', dataApprove);
+      this.patchDatatoAPI('/boq_comm_op/'+dataComm._id, dataApprove, dataComm._etag).then( revPatch => {
+          if(revPatch !== undefined){
+              if(revPatch.data !== undefined){
+                  dataComm["rev1"] = dataApprove.rev1;
+                  dataComm["rev1_by"] = dataApprove.rev1_by;
+                  dataComm["rev1_date"] = dataApprove.rev1_date;
+                  dataComm['_etag'] = revPatch.data._etag;
+                  this.setState({action_status : 'succes', action_message : 'BOQ Technical '+dataComm.no_boq_comm+' has been approved', API_Tech : dataComm});
               }
-              let sendEmail = await this.apiSendEmail(dataEmail);
-            }
-            if(statusApp === "WA" && EmailReceiver.length !== 0){
-              let bodyEmail = "<span style='font-size:30px;font-weight:800;'>Approval Request</span><br/><br/><span>You have a request for BOQ Management System Approval</span><br/><br/><span style='font-size:20px;font-weight:600;'>Approve or Reject rquest</span><br/><br/><span>This is automate generate email from BOQ Management system . Follow this link to approve request : <a href='https://smart.e-dpm.com/#/Boq/Commercial/Approval/"+dataComm._id+"'>"+dataComm.no_boq_comm+"</a></span><br/><br/><span style='font-size:20px;font-weight:600;'>Don't know what this is?</span><br/><br/><span>This message is sent from DPM BOQ Management System, since you are registered as one of the approval role. Questions are welcome to dpm.notification@ericsson.com</span>";
-              dataEmail = {
-                "to": EmailReceiver.join("; "),
-                "subject":"Request for Approval Commercial BOQ",
-                "body": bodyEmail
-              }
-              // let sendEmail = await this.apiSendEmail(dataEmail);
-            }
-            switch(statusApp){
-              case 'C':
-                dataComm["clarified"] = dataApprove.clarified;
-                dataComm["clarified_by"] = dataApprove.clarified_by;
-                dataComm["clarified_date"] = dataApprove.clarified_date;
-                dataComm['_etag'] = revPatch.data._etag;
-                break;
-              case 'S':
-                dataComm["submitted"] = dataApprove.submitted;
-                dataComm["submitted_by"] = dataApprove.submitted_by;
-                dataComm["submitted_date"] = dataApprove.submitted_date;
-                dataComm['_etag'] = revPatch.data._etag;
-                break;
-              default:
-                dataComm["rev1"] = dataApprove.rev1;
-                dataComm["rev1_by"] = dataApprove.rev1_by;
-                dataComm["rev1_date"] = dataApprove.rev1_date;
-                dataComm['_etag'] = revPatch.data._etag;
-                break;
-            }
-            this.setState({action_status : 'succes', action_message : 'BOQ Technical '+dataComm.no_boq_comm+' has been approved', API_Tech : dataComm});
           }
-      }
-      this.toggleLoading();
+      })
     }
 
     countGroupFromComm(commData){
@@ -700,13 +567,18 @@ class CommercialBoqApproval extends Component {
           "qty_comm_quotation" : groupQTY.reduce((a,b) => a + b.qty_comm_quotation, 0),
           "qty_po" : groupQTY.reduce((a,b) => a + b.qty_po, 0),
           "total_price" : groupQTY.reduce((a,b) => a + b.total_price, 0),
+          "currency" : groupQTY[0].currency,
           "phy_group" : groupQTY[0].phy_group,
           "product_type" : groupQTY[0].product_type,
+          "incentive" : groupQTY.reduce((a,b) => a + b.incentive, 0),
+          "net_total" : groupQTY.reduce((a,b) => a + b.net_total, 0),
         }
         arrayGroup.push(GroupData);
       }
       console.log("arrayGroup", arrayGroup);
-      this.setState({commercialDataGroup : arrayGroup});
+    //   this.setState({commercialDataGroup : arrayGroup});
+      this.DataGroupingView(arrayGroup);
+    //   this.setState({commercialDataGroup : arrayGroup});
     }
 
     countTotalPrice(packageData, pt, group){
@@ -737,7 +609,7 @@ class CommercialBoqApproval extends Component {
 
     render() {
       console.log('data BOQ Commercial', this.state.boq_comm_API);
-      console.log('data BOQ Commercial Item', this.state.commercialData);
+      console.log('arrayGroup', this.state.commercialData);
       console.log('data Excel Row BOQ Comm', this.state.rowsComm);
       console.log('data BOQ Tech', this.state.qty_cust);
       console.log('checked Package', this.state.checkedPackage);
@@ -771,20 +643,35 @@ class CommercialBoqApproval extends Component {
 
       return (
         <div>
-          <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
-          <div>
+          <AlertProcess alertAct={this.state.action_status} messageAct={this.state.action_message}/>
+          {this.state.boq_comm_API === null ? (
+            <StepFlow 
+              nowSign={"com"} 
+              commercialSign={true}
+              commercialArr={[]}
+            />
+          ) : (
+            <StepFlow 
+              nowSign={"com"} 
+              commercialSign={true}
+              commercialArr={[this.state.boq_comm_API._id]}
+            />
+          )}
+          <Row>
             <Col xl="12">
               <Card>
                 <CardHeader>
-                <span style={{lineHeight :'2', fontSize : '17px'}}> Commercial BOQ </span>
+                  <span style={{lineHeight :'2', fontSize : '17px'}}> Commercial BOQ (Product Package)</span>
                   {this.state.boq_comm_API !== null && (
                     <React.Fragment>
+                      <Link to={'/Boq/Commercial/Approval/'+this.state.boq_comm_API._id}>
+                          <Button color="primary" style={{float : 'right'}}  onClick={this.showGroupToggle}> <i className="fa fa-eye">&nbsp;&nbsp;</i> Variant</Button>
+                      </Link>
                         <Button style={{float : 'right', marginRight : '10px'}} onClick={this.exportCommercial} color="secondary">
                           <i className="fa fa-download" aria-hidden="true"> &nbsp; </i> Download Commercial Report
                         </Button>
                     </React.Fragment>
                   )}
-
                 </CardHeader>
                 <CardBody className='card-UploadBoq'>
                   <Row>
@@ -850,19 +737,18 @@ class CommercialBoqApproval extends Component {
                               <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>PROJECT ORDER INFORMATION</td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>CPO Identifier &nbsp;&nbsp;</td>
-                              <td style={{verticalAlign : 'middle'}} valign="middle">: &nbsp;
-                              {this.state.boq_comm_API.po_number == null && this.state.boq_comm_API.rev1 !== "A" ? (<span style={{fontSize : '12px', color: 'red'}}>CBOQ not yet approved</span>) :
-                              this.state.boq_comm_API.po_number == null && this.state.boq_comm_API.rev1 === "A" ? (<span style={{fontSize : '12px', color: 'rgba(255,160,0 ,1)'}}>Please assign PO / Esta</span>) : this.state.boq_comm_API.po_number}
+                              <td >CPO Identifier &nbsp;&nbsp;</td>
+                              <td >: &nbsp;&nbsp;
+                              { this.state.boq_comm_API.hasOwnProperty("po_number") === false ? "" : this.state.boq_comm_API.po_number }
                               </td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td >Updated By &nbsp;</td>
-                              <td >: &nbsp; {this.state.userEmail}</td>
+                              <td >: &nbsp; {this.state.boq_comm_API.updated_by.email}</td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td >Date </td>
-                              <td >: &nbsp; {this.state.boq_comm_API.created_on}</td>
+                              <td >: &nbsp; {toTimeZone(this.state.boq_comm_API.created_on)}</td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>{this.state.boq_comm_API.note_name_2}</td>
@@ -881,17 +767,18 @@ class CommercialBoqApproval extends Component {
                   </div>
                   <div class='divtable'>
                     <table hover bordered responsive size="sm" width='100%'>
-                      <thead class='fixed'>
+                      <thead class="fixed">
                         <tr style={{backgroundColor : '#c6f569'}}>
-                          <th style={{width :'300px', verticalAlign : 'middle'}} >Material Description</th>
+                          <th style={{width :'300px', verticalAlign : 'middle'}} >Commercial PP Name</th>
                           <th style={{verticalAlign : 'middle'}}>Qty in Technical</th>
-                          <th style={{verticalAlign : 'middle'}}>Early Start Qty</th>
                           <th style={{verticalAlign : 'middle'}}>Existing Stock (Smart)</th>
                           <th style={{verticalAlign : 'middle'}}>Existing Stock (Ericsson)</th>
-                          <th style={{verticalAlign : 'middle'}}>Unit Price</th>
+                          {/* <th style={{verticalAlign : 'middle'}}>Unit Price</th> */}
                           <th style={{verticalAlign : 'middle'}}>Currency</th>
                           <th style={{verticalAlign : 'middle'}}>Quotation Qty</th>
-                          <th style={{verticalAlign : 'middle'}}>In PO Quotation Qty</th>
+                          {this.state.boq_comm_API !== null && (
+                            <th style={{verticalAlign : 'middle'}}>{this.state.boq_comm_API.early_start === true ? "Early Start Qty" : "PO Qty" }</th>
+                          )}
                           <th style={{verticalAlign : 'middle'}}>Total Price</th>
                           <th style={{verticalAlign : 'middle'}}>Incentive</th>
                           <th style={{verticalAlign : 'middle'}}>Net Price</th>
@@ -900,38 +787,41 @@ class CommercialBoqApproval extends Component {
                       {this.state.groupingView.length !== 0 ?
                         this.state.groupingView.map(pt =>
                         <React.Fragment>
-                          <tbody style={{borderTopWidth : '0px'}} class='fixbody'>
+                          <tbody style={{borderTopWidth : '0px'}} class="fixbody">
                               <tr style={{backgroundColor : '#f8f6df'}}>
-                                <td colSpan="12" style={{textAlign: 'left', borderLefttWidth : '0px'}}>Product Type : {pt.product_type}</td>
+                                <td colSpan="10" style={{textAlign: 'left', borderLefttWidth : '0px'}}>Product Type :{pt.product_type}</td>
                               </tr>
                           </tbody>
                           {pt.groups.map(grp =>
                             <React.Fragment>
-                              <tbody style={{borderTopWidth : '0px'}} class='fixbody'>
+                              <tbody style={{borderTopWidth : '0px'}} class="fixbody">
                                   <tr>
-                                    <td colSpan="12" style={{textAlign: 'left', fontWeight : '500'}}>Physical Group : {grp}</td>
+                                    <td colSpan="10" style={{textAlign: 'left', fontWeight : '500'}}>Physical Group : {grp}</td>
                                   </tr>
                                 {this.packageView(this.state.commercialData, pt.product_type, grp).map((itm) =>
                                   <React.Fragment>
                                   <tr>
-                                      <td style={{verticalAlign :'middle', textAlign : 'left'}}>{ itm.package_name }</td>
+                                      <td style={{verticalAlign :'middle', textAlign : 'left'}}>{itm.pp_group}</td>
                                       <td align='center' style={{verticalAlign :'middle'}}>{ itm.qty_tech.toLocaleString() }</td>
-                                      <td align='center' style={{verticalAlign :'middle'}}>{ this.state.boq_comm_API.early_start === true ? (itm.qty_early_start).toLocaleString() : null }</td>
                                       <td align='center' style={{verticalAlign :'middle'}}>{itm.smart_stock.toLocaleString()}</td>
                                       <td align='center' style={{verticalAlign :'middle'}}>{itm.qty_ericsson.toLocaleString()}</td>
-                                      <td align='center' style={{verticalAlign :'middle'}}>{itm.unit_price.toLocaleString()}</td>
+                                      {/* <td style={{verticalAlign :'middle'}}>{itm.unit_price.toLocaleString()}</td> */}
                                       <td align='center' style={{verticalAlign :'middle'}}>{itm.currency}</td>
                                       <td align='center' style={{verticalAlign :'middle'}}>{ (itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)).toLocaleString() }</td>
-                                      <td align='center' style={{verticalAlign :'middle'}}>{ this.state.boq_comm_API.po_number !== null ? (itm.qty_po).toLocaleString() : null }</td>
-                                      <td align='center' style={{verticalAlign :'middle'}}>{ ((itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)) * itm.unit_price).toLocaleString() }</td>
-                                      <td align='center' style={{verticalAlign :'middle'}}>{ itm.incentive !== undefined ? itm.incentive.toLocaleString() : 0 }</td>
-                                      <td align='center' style={{verticalAlign :'middle'}}>{ (((itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)) * itm.unit_price)-itm.incentive).toLocaleString() }</td>
+                                      {this.state.boq_comm_API !== null && (
+                                        <td align='center' style={{verticalAlign :'middle'}}>
+                                          {this.state.boq_comm_API.early_start === true ? itm.qty_early_start : this.state.boq_comm_API.po_number !== null ? itm.qty_po : "" }
+                                        </td>
+                                      )}
+                                      <td align='center' style={{verticalAlign :'middle'}}>{ (itm.total_price).toLocaleString() }</td>
+                                      <td align='center' style={{verticalAlign :'middle'}}>{ (itm.incentive).toLocaleString() }</td>
+                                      <td align='center' style={{verticalAlign :'middle'}}>{ (itm.net_total).toLocaleString() }</td>
                                   </tr>
                                   </React.Fragment>
                                 )}
                                 {this.state.boq_comm_API !== null && (
                                 <tr style={{backgroundColor:'#f3f3f3'}}>
-                                  <td colSpan="9" style={{textAlign : 'left'}}>Physical group Total</td>
+                                  <td colSpan="7" style={{textAlign : 'left'}}>Physical group Total</td>
                                   <td align='center' >{this.countTotalPrice(this.state.commercialData, pt.product_type, grp).toLocaleString()}</td>
                                   <td></td>
                                   <td align='center' >{this.countNetTotal(this.state.commercialData, pt.product_type, grp).toLocaleString()}</td>
@@ -942,27 +832,27 @@ class CommercialBoqApproval extends Component {
                             </React.Fragment>
                           )}
                           {this.state.boq_comm_API !== null && (
-                            <tr><td colSpan="12"></td></tr>
+                            <tr><td colSpan="10"></td></tr>
                           )}
                         </React.Fragment>
                         ) : (
-                          <tbody class='fixbody'>
-                            <tr>
-                                <td colSpan="12">Please Wait, Loading Data...</td>
-                            </tr>
-                          </tbody>
+                        <tbody>
+                          <tr>
+                            <td colSpan="10">Please wait..</td>
+                          </tr>
+                        </tbody>
                             )}
                             {this.state.boq_comm_API !== null && (
                         <tbody class="fixed2 fixbody">
                             <tr>
-                              <td colSpan="9" style={{textAlign : 'left'}}>Total Commercial</td>
-                              <td align='center' >{this.state.total_comm.totalPriceComm !== undefined ? this.state.total_comm.totalPriceComm.toLocaleString() : 0}</td>
+                              <td colSpan="7" style={{textAlign : 'left'}}>Total Commercial</td>
+                              <td>{this.state.total_comm.totalPriceComm !== undefined ? this.state.total_comm.totalPriceComm.toLocaleString() : 0}</td>
                               <td></td>
-                              <td align='center' >{this.state.total_comm.netTotalComm !== undefined ? this.state.total_comm.netTotalComm.toLocaleString() : 0}</td>
+                              <td>{this.state.total_comm.netTotalComm !== undefined ? this.state.total_comm.netTotalComm.toLocaleString() : 0}</td>
                             </tr>
                         </tbody>
                         )}
-                    </table>
+                      </table>
                   </div>
                   {this.state.boq_comm_API !== null &&  (
 		               <React.Fragment>
@@ -994,64 +884,58 @@ class CommercialBoqApproval extends Component {
                               <td >: &nbsp; {this.state.boq_comm_API.no_boq_tech+" - Ver"+this.state.boq_comm_API.version_boq_tech} </td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                              <td >COM BOQ Created By &nbsp;</td>
-                              <td >: &nbsp; {this.state.userEmail}</td>
+                              <td > Created By &nbsp;</td>
+                              <td >: &nbsp; {this.state.boq_comm_API.created_by.email}</td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                              <td >COM BOQ Created Date </td>
-                              <td >: &nbsp; {this.state.boq_comm_API.created_on}</td>
+                              <td >Created Date </td>
+                              <td >: &nbsp; {toTimeZone(this.state.boq_comm_API.created_on)}</td>
                             </tr>
                           </tbody>
                         </table>
                         </Col>
                       </Row>
                     </div>
+		                {/* <button onClick={this.exportCommercial} style={{marginRight: '10px'}}>Download Commercial Report</button> */}
 		               </React.Fragment>
                     )}
-
-                    {this.state.boq_comm_API !== null && this.state.boq_comm_API !== undefined &&
-                      <React.Fragment>
-                      </React.Fragment>
-                    }
-                </CardBody>
+                   </CardBody>
                 <CardFooter>
-                    <Row>
-                      <Col>
-                          {this.state.boq_comm_API !== null && this.state.boq_comm_API !== undefined &&
-                            <div style={{float:'right', display:'inline-flex'}}>
-                      {this.state.boq_comm_API.rev1 === "PA" ? (
+                  <Row>
+                    {/* <Col>
+                        <Button onClick={this.exportCommercial} color="secondary">
+                            <i className="fa fa-download" aria-hidden="true"> &nbsp; </i> Download Commercial Report
+                        </Button>
+                    </Col> */}
+                    <Col>
+                    {this.state.boq_comm_API !== null && this.state.boq_comm_API !== undefined &&
+                      <div style={{float:'right', display:'inline-flex'}}>
+                      {this.state.userRole.includes('Admin') || this.state.userRole.includes('PDB-Dash') && this.state.boq_comm_API.rev1 === "PA" ? (
                         <Button className="btn-success" color="success" value="WA" onClick={this.approvedBoqComm} disabled={this.state.boq_comm_API.rev1 === "A"}>
                             {this.state.boq_comm_API.rev1 === "PA" ? "Request Approve" : "Approve"}
                         </Button>
-                      ): ""}
-                      {this.state.boq_comm_API.rev1 === "WA" || this.state.boq_comm_API.rev1 === "A"  ? (
-                        <Button  style={{marginRight : '10px'}} className="btn-success" color="success" value="A" onClick={this.approvedBoqComm} disabled={this.state.boq_comm_API.rev1 === "A"}>
+                      ): this.state.userRole.includes('Flow-Commercial') && this.state.boq_comm_API.rev1 === "PA" ? (
+                        <Button className="btn-success" color="success" value="WA" onClick={this.approvedBoqComm} disabled={this.state.boq_comm_API.rev1 === "A"}>
+                            {this.state.boq_comm_API.rev1 === "PA" ? "Request Approve" : "Approve"}
+                        </Button>
+                      ) : ""}
+                      {this.state.userRole.includes('Admin') || this.state.userRole.includes('PDB-Dash') && this.state.boq_comm_API.rev1 === "WA" || this.state.boq_comm_API.rev1 === "A"  ? (
+                        <Button className="btn-success" color="success" value="A" onClick={this.approvedBoqComm} disabled={this.state.boq_comm_API.rev1 === "A"}>
                             {this.state.boq_comm_API.rev1 === "A" ? "Approved" : "Approve"}
                         </Button>
-                      ): ""}
-                      { this.state.boq_comm_API.rev1 === "WA" || this.state.boq_comm_API.rev1 === "R"  ? (
-                        <Button className="btn-success" color="warning" value="R" onClick={this.approvedBoqComm} disabled={this.state.boq_comm_API.rev1 === "R"}>
-                            {this.state.boq_comm_API.rev1 === "R" ? "Rejected" : "Reject"}
+                      ): this.state.userRole.includes('Flow-comAprv1') == true && this.state.boq_comm_API.rev1 === "WA" ? (
+                        <Button className="btn-success" color="success" value="A" onClick={this.approvedBoqComm} disabled={this.state.boq_comm_API.rev1 === "A"}>
+                            {this.state.boq_comm_API.rev1 === "A" ? "Approved" : "Approve"}
                         </Button>
-                      ): ""}
-                      {( this.state.boq_comm_API.rev1 === "A" || this.state.boq_comm_API.submitted === "S" ) && this.state.boq_comm_API.rev1 === "A" ? (
-                        <Button style={{marginRight : '10px'}} className="btn-success" color="info" value="S" onClick={this.approvedBoqComm} disabled={this.state.boq_comm_API.submitted === "S"}>
-                            {this.state.boq_comm_API.submitted === "S" ? "Submitted" : "Submit"}
-                        </Button>
-                      ): ""}
-                      {( this.state.boq_comm_API.submitted === "S" || this.state.boq_comm_API.clarified === "C" ) && this.state.boq_comm_API.rev1 === "A" ? (
-                        <Button className="btn-success" color="info" value="C" onClick={this.approvedBoqComm} disabled={this.state.boq_comm_API.clarified === "C"}>
-                            {this.state.boq_comm_API.clarified === "C" ? "Clarified" : "Clarify"}
-                        </Button>
-                      ): ""}
+                      ) : ""}
                       </div>
                     }
                     </Col>
-                    </Row>
+                  </Row>
                 </CardFooter>
               </Card>
             </Col>
-          </div>
+          </Row>
 
           {/* Modal Loading */}
           <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className + ' loading-modal'}>
@@ -1118,11 +1002,4 @@ class CommercialBoqApproval extends Component {
     }
   }
 
-  const mapStateToProps = (state) => {
-    return {
-      dataLogin : state.loginData,
-      SidebarMinimize : state.minimizeSidebar
-    }
-  }
-
-  export default connect(mapStateToProps)(CommercialBoqApproval);
+  export default DetailBoqCommGroup;
