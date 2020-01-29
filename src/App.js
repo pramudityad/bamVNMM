@@ -61,8 +61,9 @@ class App extends Component {
         "username" : keycloak.preferred_username
       }
     }
-    const getLogin = await this.postDatatoAPILogin('/loginUser', dataReq)
+    const getLogin = await this.postDatatoAPILogin('/loginUser', dataReq);
     if(getLogin.data !== undefined){
+      localStorage.setItem('user_data_login', JSON.stringify(getLogin.data));
       this.setState({dataLogin : getLogin.data});
       this.props.saveDataUser({
         "_id_user" : getLogin.data.validUser._id,
@@ -80,25 +81,48 @@ class App extends Component {
     }
   }
 
-  componentDidMount() {
+  loginKeycloack(){
     const keycloak = Keycloak('/keycloakBAMID.json');
     keycloak.init({onLoad: 'login-required'}).then(authenticated => {
       keycloak.loadUserInfo().then(userInfo => {
-        this.getDataLogin(userInfo).then(resLogin => {
-          if(resLogin !== undefined){
-            this.setState({ key: keycloak, authenticated: authenticated });
-          }
-        });
+        if(localStorage.getItem('user_data_login') === null){
+          this.getDataLogin(userInfo).then(resLogin => {
+            if(resLogin !== undefined){
+              localStorage.setItem('keycloack_data_login', JSON.stringify(keycloak));
+              localStorage.setItem('authenticated_data_login', authenticated);
+              this.setState({ key: keycloak, authenticated: authenticated });
+            }
+          });
+        }else{
+          this.getDatafromLocalStorage(keycloak, authenticated);
+        }
       });
     })
+  }
+
+  componentDidMount() {
+    this.loginKeycloack();
+  }
+
+  getDatafromLocalStorage(keycloak, authenticated){
+    const dataLogin = JSON.parse(localStorage.getItem('user_data_login'));
+    this.props.saveDataUser({
+      "_id_user" : dataLogin.validUser._id,
+      "email_user" : dataLogin.validUser.email,
+      "roles_user" : dataLogin.listRole,
+      "user_name" : dataLogin.validUser.username,
+      "account_id" : "1",
+      "token" : dataLogin.token,
+      "sso_id" : keycloak.sub,
+      "name" : dataLogin.validUser.first_name+" "+dataLogin.validUser.last_name
+    });
+    this.setState({dataLogin : dataLogin});
+    this.setState({ key: keycloak, authenticated: authenticated });
   }
 
   render() {
     if (this.state.key !== null) {
       if (this.state.authenticated){
-        this.state.key.loadUserInfo().then(userInfo => {
-          console.log("this.state.key", this.state.key);
-        });
         return (
           <BrowserRouter>
               <React.Suspense fallback={loading()}>
