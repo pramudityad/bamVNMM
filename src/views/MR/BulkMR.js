@@ -282,6 +282,7 @@ class BulkMR extends Component {
       rowsXLS: newDataXLS,
       action_status : null,
     });
+    console.log("newDataXLS", JSON.stringify(newDataXLS));
     this.checkingDataMR(newDataXLS);
     // this.formatDataTSSR(newDataXLS);
   }
@@ -482,11 +483,20 @@ class BulkMR extends Component {
       const id_upload = dataXLS[i][this.getIndex(dataXLS[0],'id')];
       const find_mr_id = getMRID.find(e => e.mr_id === id_upload);
       if(find_mr_id !== undefined){
+        const dataStatus = [{
+          "mr_status_name": "MATERIAL_REQUEST",
+          "mr_status_value": "UPDATED",
+          "mr_status_date": dateNow,
+          "mr_status_updater": this.state.userEmail,
+          "mr_status_updater_id": this.state.userId
+        }];
         let patchData = {};
         patchData["eta"] = id_eta+" 23:59:59";
         patchData["requested_eta"] = id_eta+" 23:59:59";
         patchData["etd"] = id_etd+" 00:00:00";
         patchData["dsp_company"] = this.checkDSPbyID(id_dsp);
+        patchData["current_mr_status"] = "MR UPDATED";
+        patchData["mr_status"] = find_mr_id.mr_status.concat(dataStatus);
         const respondPatchMR = await this.patchDatatoAPIBAM('/mr_op/'+find_mr_id._id, patchData, find_mr_id._etag);
         if(respondPatchMR.data !== undefined && respondPatchMR.status >= 200 && respondPatchMR.status <= 300 ){
           dataPatchMRSuc.push(respondPatchMR.data._id);
@@ -549,6 +559,11 @@ class BulkMR extends Component {
           "eta" : id_eta+" 23:59:00",
           "site_info" : list_site,
           "mr_milestones" : [],
+          "origin_warehouse" : {
+            "title" : "Warehouse",
+            "value" : dataXLS[i][this.getIndex(dataXLS[0],'origin_warehouse')],
+            "address" : "",
+          },
           "mr_status" : [
             {
                 "mr_status_name": "IMPLEMENTED",
@@ -574,12 +589,14 @@ class BulkMR extends Component {
         dataBulkMR.push(mr_data);
       }
     }
-    const respondSaveMR = await this.postDatatoAPIBAM('/mr_op', dataBulkMR);
-    if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
-      if(dataBulkMR.length > 1){
-        dataBulkMRSuc = dataBulkMRSuc.concat(respondSaveMR.data._items.map(e => e._id))
-      }else{
-        dataBulkMRSuc.push(respondSaveMR.data._id)
+    if(dataBulkMR.length !== 0){
+      const respondSaveMR = await this.postDatatoAPIBAM('/mr_op', dataBulkMR);
+      if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
+        if(dataBulkMR.length > 1){
+          dataBulkMRSuc = dataBulkMRSuc.concat(respondSaveMR.data._items.map(e => e._id))
+        }else{
+          dataBulkMRSuc.push(respondSaveMR.data._id)
+        }
       }
     }
     if((dataXLS.length-1) === (dataBulkMRSuc.length + dataPatchMRSuc.length)){
@@ -719,10 +736,10 @@ class BulkMR extends Component {
                         <td>WTS</td>
                         <td>Warehouse to Site</td>
                       </tr>
-                      <tr>
+                      {/*<tr>
                         <td>STS</td>
                         <td>Site to Site</td>
-                      </tr>
+                      </tr>*/}
                       <tr>
                         <td>WTW</td>
                         <td>Warehouse to Warehouse</td>

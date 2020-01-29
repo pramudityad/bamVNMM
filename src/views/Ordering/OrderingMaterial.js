@@ -881,18 +881,18 @@ class OrderingMaterial extends Component {
                 <table style={{width : '35%'}} className="table-header">
                   <tbody>
                     <tr>
-                      <td style={{whiteSpace: 'nowrap'}}>Project Identifier</td>
-                      <td>:</td>
-                      <td style={{paddingLeft:'10px', whiteSpace: 'nowrap'}}>
-                      {this.state.OrderInfo === null && this.props.match.params.id === undefined ? (
-                          <Input type="select" onChange={this.handleChangeProject} values={this.state.project_select} style={{minWidth : '150px'}}>
-                            <option value=""></option>
-                            {this.state.list_project.map( lp =>
-                              <option value={lp._id}>{lp.project_name}</option>
-                            )}
-                          </Input>
-                        ) : this.state.commercialData.length !== 0 && this.state.commercialData !== null ? this.state.commercialData.project_name : null}
-                      </td>
+                        <td style={{whiteSpace: 'nowrap'}}>Project Identifier</td>
+                        <td>:</td>
+                        <td style={{paddingLeft:'10px', whiteSpace: 'nowrap'}}>
+                        {this.state.OrderInfo === null && this.props.match.params.id === undefined ? (
+                            <Input type="select" onChange={this.handleChangeProject} values={this.state.project_select} style={{minWidth : '150px'}}>
+                                <option value=""></option>
+                                {this.state.list_project.map( lp =>
+                                <option value={lp._id}>{lp.project_name}</option>
+                                )}
+                            </Input>
+                            ) : this.state.commercialData.length !== 0 && this.state.commercialData !== null ? this.state.commercialData.project_name : null}
+                        </td>
                     </tr>
                     <tr>
                       <td style={{whiteSpace: 'nowrap'}}>Commercial Identifier</td>

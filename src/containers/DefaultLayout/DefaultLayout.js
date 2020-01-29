@@ -32,6 +32,7 @@ class DefaultLayout extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      navMenu : navigation,
       minimize : this.props.SidebarMinimize,
     }
   }
@@ -40,11 +41,13 @@ class DefaultLayout extends Component {
 
   signOut(e) {
     e.preventDefault();
+    localStorage.clear();
     this.props.history.push('/');
     this.props.keycloak.logout();
   }
 
   componentDidMount(){
+    this.showMenuByRole();
     // this.getDataLogin();
     // // if(this.props.keycloak === undefined){
     // //   console.log("logout");
@@ -53,6 +56,10 @@ class DefaultLayout extends Component {
     // // }else{
     // //   this.getDataLogin();
     // // }
+  }
+
+  showMenuByRole(){
+    console.log("showMenuByRole", navigation);
   }
 
   componentDidUpdate(){
@@ -71,13 +78,12 @@ class DefaultLayout extends Component {
           </Suspense>
         </AppHeader>
         <div className="app-body">
-          {console.log("console.log(this.state.minimize);", this.state.minimize)}
           {this.state.minimize !== true ? (
             <AppSidebar fixed display="lg" minimized={false}>
               <AppSidebarHeader />
               <AppSidebarForm />
               <Suspense>
-              <AppSidebarNav navConfig={navigation} {...this.props} router={router}/>
+              <AppSidebarNav navConfig={this.state.navMenu} {...this.props} router={router}/>
               </Suspense>
               <AppSidebarFooter />
               <AppSidebarMinimizer />
@@ -110,7 +116,7 @@ class DefaultLayout extends Component {
                         )} />
                     ) : (null);
                   })}
-                  <Redirect from="/" to="/wh-dashboard" />
+                  <Redirect from="/" to="/dashboard" />
                 </Switch>
               </Suspense>
             </Container>

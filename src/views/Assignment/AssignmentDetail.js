@@ -3,10 +3,15 @@ import { Card, CardHeader, CardBody, Row, Col, Button, Input, CardFooter } from 
 import { Form, FormGroup, Label } from 'reactstrap';
 import axios from 'axios';
 import { connect } from 'react-redux';
+import './assignment.css';
+
+const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const username_tsel = 'adminbamidsuper';
 const password_tsel = 'F760qbAg2sml';
+
+const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 class AssignmentDetail extends Component {
   constructor(props) {
@@ -18,6 +23,9 @@ class AssignmentDetail extends Component {
       userId : this.props.dataLogin._id,
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
+      action_message : null,
+      action_message : null,
       bast_assign_form : new Map(),
     }
     this.notifyASP = this.notifyASP.bind(this);
@@ -43,6 +51,87 @@ class AssignmentDetail extends Component {
     } catch(err) {
       let respond = err;
       console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async getDataFromAPINode(url) {
+    try {
+      let respond = await axios.get(API_URL_Node+url, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data node", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data node", err);
+      return respond;
+    }
+  }
+
+  async postDatatoAPINode(url, data) {
+    try {
+      let respond = await axios.post(API_URL_Node+url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond Post data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond Post data ", err);
+      return respond;
+    }
+  }
+
+  async patchDataToAPI(url, data, _etag) {
+    try {
+      let respond = await axios.patch(API_URL_tsel+url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'If-Match': _etag
+        },
+        auth: {
+          username: username_tsel,
+          password: password_tsel
+        }
+      })
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log('respond patch data', respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = undefined;
+      this.setState({action_status: 'failed', action_message: 'Sorry, there is something wrong, please try again!'});
+      console.log('respond patch data', err);
+      return respond;
+    }
+  }
+
+  async patchDatatoAPINode(url, data){
+    try {
+      let respond = await axios.patch(API_URL_Node +url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Patch data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Patch data", err.response);
       return respond;
     }
   }
@@ -115,30 +204,6 @@ class AssignmentDetail extends Component {
       }
     }
     return ssow_content;
-  }
-
-  async patchDataToAPI(url, data, _etag) {
-    try {
-      let respond = await axios.patch(API_URL_tsel+url, data, {
-        headers: {
-          'Content-Type':'application/json',
-          'If-Match': _etag
-        },
-        auth: {
-          username: username_tsel,
-          password: password_tsel
-        }
-      })
-      if(respond.status >= 200 && respond.status < 300) {
-        console.log('respond patch data', respond);
-      }
-      return respond;
-    } catch(err) {
-      let respond = undefined;
-      this.setState({action_status: 'failed', action_message: 'Sorry, there is something wrong, please try again!'});
-      console.log('respond patch data', err);
-      return respond;
-    }
   }
 
   async notifyASP(e) {
@@ -270,7 +335,7 @@ class AssignmentDetail extends Component {
     }
   }
 
-  saveBastNumber(){
+  async saveBastNumber(){
     const dataAssignment = this.state.data_assignment;
     const formBast = this.state.bast_assign_form;
     const dataBast = {
@@ -294,15 +359,26 @@ class AssignmentDetail extends Component {
       "Item_Status" : formBast.get("item_status")
     }
     let assignBast = {
-      "account_id" : 1,
+      "account_id" : "1",
       "data" : [dataBast]
     };
-    console.log("assignBast", assignBast);
+    const respondAssignBast = await this.patchDatatoAPINode('/aspAssignment/updateBastNumber/'+dataAssignment._id, assignBast);
+    if(respondAssignBast.data !== undefined && respondAssignBast.status >= 200 && respondAssignBast.status <= 300 ){
+      this.setState({action_status : 'success', action_message : 'BAST Number has been assign'});
+    }else{
+      console.log("respondAssignBast.response", respondAssignBast.response);
+      this.setState({action_status : 'failed', action_message : respondAssignBast.response.data.error});
+    }
   }
 
   render() {
     return (
       <div className="animated fadeIn">
+        <Row className="row-alert-fixed">
+          <Col xs="12" lg="12">
+            <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
+          </Col>
+        </Row>
         <Row>
           <Col xs="12" lg="12">
             {this.state.data_assignment !== null && (
@@ -455,7 +531,7 @@ class AssignmentDetail extends Component {
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>PO</Label>
-                        <Input type="text" name="po" readOnly />
+                        <Input type="text" name="po" readOnly value={this.state.data_assignment.PO_Number}/>
                       </FormGroup>
                     </Col>
                     <Col md="4">

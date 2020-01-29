@@ -340,6 +340,9 @@ class BulkAssignment extends Component {
           if(data_ssow.ssow_id !== null){
             data_ssow["ssow_id"] = data_ssow.ssow_id.toString();
           }
+          if(data_ssow.ssow_unit !== null){
+            data_ssow["ssow_unit"] = data_ssow.ssow_unit.toString();
+          }
           if(data_ssow.ssow_activity_number !== null){
             data_ssow["ssow_activity_number"] = data_ssow.ssow_activity_number.toString();
           }
@@ -369,6 +372,7 @@ class BulkAssignment extends Component {
           "SH_ID": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'activity_id')]).toString(),
           "Vendor_Code_Number": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'vendor_code')]),
           "SOW_Type": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'sow_type')]),
+          "Payment_Terms": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'payment_terms')]),
           "SSOW_List" : ssow_data,
           "ASP_Assignment_Status" : current_status,
           "Current_Status" : "ASP ASSIGNMENT CREATED",
@@ -391,6 +395,7 @@ class BulkAssignment extends Component {
         let twoSentence = actionMessage.length !== 0 ? " and " : "";
         actionMessage = actionMessage+twoSentence+"SSOW ID or Activity Number Can't null, Please Check SSOW Number : "+err_ssow_no.join(", ");
       }
+      console.log("dataAssignment", dataAssignment);
       if(actionStatus === 'failed'){
         this.setState({ action_status : 'failed', action_message : actionMessage});
       }else{
@@ -538,10 +543,17 @@ class BulkAssignment extends Component {
                 const getActNo = dataSSOWActNoAPI.find(e => e.activity_number === ssowData.ssow_activity_number);
                 if(getSSOW !== undefined && getActNo !== undefined ){
                   ssowData["ssow_description"] = getSSOW.description;
-                  ssowData["ssow_unit"] = getActNo.ssow_type;
+                  ssowData["ssow_unit"] = assignmentData.SSOW_List[j].ssow_unit === null ? getActNo.ssow_type : assignmentData.SSOW_List[j].ssow_unit;;
                   ssowData["ssow_price"] = getActNo.price === null ? 0 : getActNo.price;
                   ssowData["ssow_total_price"] = ssowData.ssow_price * ssowData.ssow_qty;
                   total_val_asg = total_val_asg + ssowData.ssow_total_price;
+                  if(ssowData.ssow_unit === null){
+                    ssowData["ssow_unit"] = "act";
+                  }else{
+                    if(ssowData.ssow_unit.length === 0){
+                      ssowData["ssow_unit"] = "act";
+                    }
+                  }
                   list_ssow.push(ssowData);
                 }else{
                   if(getSSOW === undefined){
@@ -571,10 +583,17 @@ class BulkAssignment extends Component {
               const getActNo = dataSSOWActNoAPI.find(e => e.activity_number === ssowData.ssow_activity_number);
               if(getSSOW !== undefined && getActNo !== undefined ){
                 ssowData["ssow_description"] = getSSOW.description;
-                ssowData["ssow_unit"] = getActNo.ssow_type;
+                ssowData["ssow_unit"] = assignmentData.SSOW_List[j].ssow_unit === null ? getActNo.ssow_type : assignmentData.SSOW_List[j].ssow_unit;
                 ssowData["ssow_price"] = getActNo.price === null ? 0 : getActNo.price;
                 ssowData["ssow_total_price"] = ssowData.ssow_price * ssowData.ssow_qty;
                 total_val_asg = total_val_asg + ssowData.ssow_total_price;
+                if(ssowData.ssow_unit === null){
+                  ssowData["ssow_unit"] = "act";
+                }else{
+                  if(ssowData.ssow_unit.length === 0){
+                    ssowData["ssow_unit"] = "act";
+                  }
+                }
                 list_ssow.push(ssowData);
               }else{
                 if(getSSOW === undefined){
@@ -646,7 +665,7 @@ class BulkAssignment extends Component {
         }
         if(uploadSSOW.length === (dataBulkASGSuc.length + dataPatchASGSuc.length) ){
           this.setState({ action_status : 'success', action_message : 'Created New : '+dataBulkASGSuc.length+' data, Update Data : '+dataPatchASGSuc.length+' data' }, () => {
-            setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 4000);
+            // setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 4000);
           });
         }else{
           this.setState({action_status : 'failed'});
@@ -674,7 +693,7 @@ class BulkAssignment extends Component {
       indexSSOW = 25;
     }
 
-    let headerRow = ["id", "project", "sow_type", "vendor_code", "vendor_name", "activity_id"];
+    let headerRow = ["id", "project", "sow_type", "vendor_code", "vendor_name", "activity_id", "payment_terms"];
 
     for(let i = 1; i <= indexSSOW; i++){
       headerRow.push("ssow_"+sow_type.toLowerCase()+"_id_"+i.toString());

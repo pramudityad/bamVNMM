@@ -434,9 +434,13 @@ class PSUpload extends Component {
     const respondSaveMRPP = await this.postDatatoAPIBAM('/mr_pp_op', ppMRsave);
     if(respondSaveMRPP.data !== undefined && respondSaveMRPP.status >= 200 && respondSaveMRPP.status <= 300 ){
       if(ppMRsave.length === 1){
-        this.saveMrMattoAPI(_id_mr, mr_id, _etag_mr, [respondSaveMRPP.data]);
+        ppMRsave[0]["id_mr_pp_doc"] = respondSaveMRPP.data;
+        this.saveMrMattoAPI(_id_mr, mr_id, _etag_mr, ppMRsave);
       }else{
-        this.saveMrMattoAPI(_id_mr, mr_id, _etag_mr, respondSaveMRPP.data._items);
+        for(let i = 0; i < ppMRsave.length; i++){
+          ppMRsave[i]["id_mr_pp_doc"] = respondSaveMRPP.data._items[i];
+        }
+        this.saveMrMattoAPI(_id_mr, mr_id, _etag_mr, ppMRsave);
       }
     }else{
       this.setState({action_status : 'failed'});
@@ -454,12 +458,13 @@ class PSUpload extends Component {
     let indexNE = 0;
     for(let i = 0; i < dataPPTssr.length; i++){
       let dataTSSRBomItemIndex = dataTSSRBOMNE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
+      let getdataFromSavePPMR = list_data_post_pp_mr.find(e => e.id_pp_doc === dataPPTssr[i]._id && e.site_id === dataTSSRBOMNE.site_id);
       for(let j = 0; j < dataPPTssr[i].list_of_material.length; j++){
         const dataMatIndex = dataPPTssr[i].list_of_material[j];
         let matSave = {
           "id_mr_doc" : _id_mr,
           "mr_id" : mr_id,
-          "id_mr_pp_doc" : list_id_pp_mr[i],
+          "id_mr_pp_doc" : getdataFromSavePPMR.id_mr_pp_doc._id,
           "id_pp_doc" : dataPPTssr[i]._id,
           "pp_id" : dataPPTssr[i].pp_id,
           "id_site_doc" : dataTSSRBOMNE.id_site_doc,
@@ -486,12 +491,13 @@ class PSUpload extends Component {
     if(this.state.tssr_site_FE !== null){
       for(let i = 0; i < dataPPTssr.length; i++){
         let dataTSSRBomItemIndex = dataTSSRBOMFE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
+        let getdataFromSavePPMR = list_data_post_pp_mr.find(e => e.id_pp_doc === dataPPTssr[i]._id && e.site_id === dataTSSRBOMFE.site_id);
         for(let j = 0; j < dataPPTssr[i].list_of_material.length; j++){
           const dataMatIndex = dataPPTssr[i].list_of_material[j];
           let matSave = {
             "id_mr_doc" : _id_mr,
             "mr_id" : mr_id,
-            "id_mr_pp_doc" : list_id_pp_mr[i+indexNE],
+            "id_mr_pp_doc" : getdataFromSavePPMR.id_mr_pp_doc._id,
             "id_pp_doc" : dataPPTssr[i]._id,
             "pp_id" : dataPPTssr[i].pp_id,
             "id_site_doc" : dataTSSRBOMFE.id_site_doc,
@@ -514,14 +520,20 @@ class PSUpload extends Component {
         }
       }
     }
-    const respondSaveMRMat = await this.postDatatoAPIBAM('/mr_md_op', matMRsave);
-    if(respondSaveMRMat.data !== undefined && respondSaveMRMat.status >= 200 && respondSaveMRMat.status <= 300 ){
+    if(matMRsave.length !== 0){
+      const respondSaveMRMat = await this.postDatatoAPIBAM('/mr_md_op', matMRsave);
+      if(respondSaveMRMat.data !== undefined && respondSaveMRMat.status >= 200 && respondSaveMRMat.status <= 300 ){
+        this.setState({action_status : 'success'}, () => {
+          setTimeout(function(){ this.setState({ redirectSign : _id_mr}); }.bind(this), 3000);
+        });
+      }else{
+        this.setState({action_status : 'failed'});
+        // this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
+      }
+    }else{
       this.setState({action_status : 'success'}, () => {
         setTimeout(function(){ this.setState({ redirectSign : _id_mr}); }.bind(this), 3000);
       });
-    }else{
-      this.setState({action_status : 'failed'});
-      // this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
     }
   }
 
@@ -560,7 +572,7 @@ class PSUpload extends Component {
             <table>
               <tbody>
                 <tr>
-                  <td style={{width : '150px'}}>TSSR</td>
+                  <td style={{width : '150px'}}>PlantSpec</td>
                   <td>:</td>
                   <td style={{width : '300px'}}>
                     <Select

@@ -7,6 +7,8 @@ import {connect} from 'react-redux';
 import Select from 'react-select';
 import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
 import 'react-vertical-timeline-component/style.min.css';
+import { withScriptjs } from "react-google-maps";
+import GMap from './MapComponent';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -46,6 +48,8 @@ class MRDetail extends Component {
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
+    this.getQtyMRMDNE = this.getQtyMRMDNE.bind(this);
+    this.getQtyMRMDFE = this.getQtyMRMDFE.bind(this);
     this.changeTabsSubmenu = this.changeTabsSubmenu.bind(this);
     this.requestForApproval = this.requestForApproval.bind(this);
     this.ApproveMR = this.ApproveMR.bind(this);
@@ -134,6 +138,17 @@ class MRDetail extends Component {
     }
   }
 
+  checkValueReturn(value1, value2){
+    // if value undefined return Value2
+    if( typeof value1 !== 'undefined' && value1 !== null) {
+      console.log('value1', value1);
+      return value1;
+    }else{
+      console.log('value2', value2);
+      return value2;
+    }
+  }
+
   getDataMR(_id_MR){
     this.getDatafromAPIBAM('/mr_op/'+_id_MR).then(resMR => {
       if(resMR.data !== undefined){
@@ -197,6 +212,36 @@ class MRDetail extends Component {
     const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
     if(getDataPPMR !== undefined){
       return getDataPPMR.qty;
+    }else{
+      return 0;
+    }
+  }
+
+  getQtyMRMDNE(pp_id, mr_id){
+    const itemMRBom = this.state.mr_site_NE.mr_pp;
+    const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
+    if(getDataPPMR !== undefined){
+      const getDataMDMR = getDataPPMR.mr_md.find(e => e.material_id === mr_id);
+      if(getDataMDMR !== undefined){
+        return getDataMDMR.qty;
+      }else{
+        return 0;
+      }
+    }else{
+      return 0;
+    }
+  }
+
+  getQtyMRMDFE(pp_id, mr_id){
+    const itemMRBom = this.state.mr_site_FE.mr_pp;
+    const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
+    if(getDataPPMR !== undefined){
+      const getDataMDMR = getDataPPMR.mr_md.find(e => e.material_id === mr_id);
+      if(getDataMDMR !== undefined){
+        return getDataMDMR.qty;
+      }else{
+        return 0;
+      }
     }else{
       return 0;
     }
@@ -345,7 +390,7 @@ class MRDetail extends Component {
     let dataMR = this.state.data_mr;
     const requestAprv = [{
       "mr_status_name": "MATERIAL_REQUEST",
-      "mr_status_value": "MR REQUESTED",
+      "mr_status_value": "REQUESTED",
       "mr_status_date": dateNow,
       "mr_status_updater": this.state.userEmail,
       "mr_status_updater_id": this.state.userId,
@@ -368,7 +413,7 @@ class MRDetail extends Component {
     let dataMR = this.state.data_mr;
     const statusAprv = [{
       "mr_status_name": "MATERIAL_REQUEST",
-      "mr_status_value": "MR REQUESTED",
+      "mr_status_value": "APPROVED",
       "mr_status_date": dateNow,
       "mr_status_updater": this.state.userEmail,
       "mr_status_updater_id": this.state.userId,
@@ -396,11 +441,22 @@ class MRDetail extends Component {
   async updateDataMR(){
     const dataForm = this.state.update_mr_name_form;
     const dataMR = this.state.data_mr;
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    const dataStatus = [{
+      "mr_status_name": "MATERIAL_REQUEST",
+      "mr_status_value": "UPDATED",
+      "mr_status_date": dateNow,
+      "mr_status_updater": this.state.userEmail,
+      "mr_status_updater_id": this.state.userId
+    }];
     let patchData = {};
-    patchData["eta"] = dataForm[3]+" 23:59:59";
-    patchData["requested_eta"] = dataForm[3]+" 23:59:59";
-    patchData["etd"] = dataForm[2]+" 00:00:00";
-    patchData["dsp_company"] = dataForm[1];
+    patchData["eta"] = dataForm[3] !== null ? dataForm[3]+" 23:59:59" : dataMR.eta;
+    patchData["requested_eta"] = dataForm[3] !== null ? dataForm[3]+" 23:59:59" : dataMR.requested_eta;
+    patchData["etd"] = dataForm[2] !== null ? dataForm[2]+" 23:59:59" : dataMR.etd;
+    patchData["dsp_company"] = dataForm[1] !== null ? dataForm[1]+" 23:59:59" : dataMR.dsp_company;
+    patchData["current_mr_status"] = "MR UPDATED";
+    patchData["mr_status"] = dataMR.mr_status.concat(dataStatus);
     const respondPatchMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, patchData, dataMR._etag);
     if(respondPatchMR.data !== undefined && respondPatchMR.status >= 200 && respondPatchMR.status <= 300 ){
       this.setState({action_status : 'success'});
@@ -413,6 +469,8 @@ class MRDetail extends Component {
     const background = {
       backgroundColor: '#e3e3e3',
     };
+
+    const MapLoader = withScriptjs(GMap);
 
     console.log("tabs_submenu", this.state.tabs_submenu);
     return (
@@ -439,6 +497,9 @@ class MRDetail extends Component {
               </NavItem>
               <NavItem>
                 <NavLink href="#" active={this.state.tabs_submenu[2]} value="2" onClick={this.changeTabsSubmenu.bind(this, 2)}>Progress Overview</NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink href="#" active={this.state.tabs_submenu[3]} value="2" onClick={this.changeTabsSubmenu.bind(this, 3)}>Map View</NavLink>
               </NavItem>
             </Nav>
             </div>
@@ -496,6 +557,11 @@ class MRDetail extends Component {
                               </Input>
                             )}
                           </td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>Origin {this.state.data_mr.origin_warehouse.title}</td>
+                          <td>: </td>
+                          <td>{this.state.data_mr.origin_warehouse.value}</td>
                         </tr>
                         <tr>
                           <td style={{width : '200px'}}>ETD</td>
@@ -563,6 +629,11 @@ class MRDetail extends Component {
                           <td style={{width : '175px'}}>MR Type</td>
                           <td>: </td>
                           <td>{this.state.data_mr.mr_type}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>&nbsp;</td>
+                          <td></td>
+                          <td></td>
                         </tr>
                         <tr>
                           <td style={{width : '200px'}}>&nbsp;</td>
@@ -705,9 +776,9 @@ class MRDetail extends Component {
                             <td style={{textAlign : 'right'}}>{material.material_id}</td>
                             <td style={{textAlign : 'left'}}>{material.material_name}</td>
                             <td>{material.material_unit}</td>
-                            <td align='center'>{this.getQtyMRPPNE(pp.pp_id)*material.qty}</td>
+                            <td align='center'>{this.getQtyMRMDNE(pp.pp_id, material.material_id)}</td>
                             {this.state.mr_site_FE !== null ? (
-                              <td align='center'>{this.getQtyMRPPFE(pp.pp_id)*material.qty}</td>
+                              <td align='center'>{this.getQtyMRMDFE(pp.pp_id, material.material_id)}</td>
                             ):(<Fragment></Fragment>)}
                           </tr>
                         )}
@@ -750,6 +821,15 @@ class MRDetail extends Component {
                   </Col>
                 </Row>
               </div>
+            </Fragment>
+          )}
+          {this.state.tabs_submenu[3] === true && (
+            <Fragment>
+                {/* <GoogleMap site_lat={-6.3046027} site_lng={106.7951936} /> */}
+                <MapLoader
+                  googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyAoCmcgwc7MN40js68RpcZdSzh9yLrmLF4"
+                  loadingElement={<div style={{ height: '100%' }} />}
+                />
             </Fragment>
           )}
           </CardBody>

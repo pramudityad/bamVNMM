@@ -173,7 +173,7 @@ class DSAList extends Component {
                   <tbody>
                     {this.state.dsa_list.length === 0 && (
                       <tr>
-                        <td colSpan="6">No Data Available</td>
+                        <td colSpan="7">No Data Available</td>
                       </tr>
                     )}
                     {this.state.dsa_list.map((list, i) =>
@@ -185,8 +185,8 @@ class DSAList extends Component {
                         </td>
                         <td>{list.dsa_number}</td>
                         <td>{list.dsa_total_value}</td>
-                        <td></td>
-                        <td></td>
+                        <td>{list.origin_warehouse.value}</td>
+                        <td>{list.site_info[0].site_id}</td>
                         <td>{list.dimension_volume}</td>
                         <td>{list.dimension_weight}</td>
                       </tr>

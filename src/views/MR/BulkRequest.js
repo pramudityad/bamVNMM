@@ -249,7 +249,7 @@ class BulkRequest extends Component {
       let dataMR = dataMRChecked[i];
       const requestAprv = [{
         "mr_status_name": "MATERIAL_REQUEST",
-        "mr_status_value": "MR REQUESTED",
+        "mr_status_value": "REQUESTED",
         "mr_status_date": dateNow,
         "mr_status_updater": this.state.userEmail,
         "mr_status_updater_id": this.state.userId,

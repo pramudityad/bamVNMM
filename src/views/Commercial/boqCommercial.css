@@ -4,9 +4,21 @@
     margin-bottom: 15px;
   }
 
-.table-bordered th, .table-bordered td {
-  vertical-align: middle;
-  text-align: center;
+  .modal.show .modal-dialog {
+    margin-top: 200px;
+  }
+
+  .loading-modal .modal-content {
+    width: 200px;
+  }
+
+  .modal-content {
+    width: 300px;
+  }
+
+  .table-bordered th, .table-bordered td {
+    vertical-align: middle;
+    text-align: center;
 }
 
 .boq-tech-status-PA {
