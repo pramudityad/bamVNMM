@@ -20,6 +20,11 @@ export default {
           icon: 'icon-drawer',
         },
         {
+          name: 'TSSR Matrix BOQ ',
+          url: '/list-tssr-matix',
+          icon: 'icon-drawer',
+        },
+        {
           name: 'Plant Spec List',
           url: '/ps-list',
           icon: 'icon-briefcase',
@@ -96,6 +101,7 @@ export default {
       name: 'Order Created',
       url: '/order-created',
       icon: 'icon-envelope-open',
+      role : ["BAM-LDM"]
     },
     {
       name: 'MR Milestones',
