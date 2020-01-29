@@ -363,7 +363,7 @@ class ListCommercial extends Component {
                         <th>PO Number</th>
                         <th>Ver.</th>
                         <th style={{'width' : '150px', textAlign : 'center'}}>Status</th>
-                        <th style={{'width' : '200px', textAlign : 'center'}}>Action</th>
+                        <th style={{'width' : '250px', textAlign : 'center'}}>Action</th>
                     </tr>
                     <tr>
                       <td>
@@ -461,6 +461,11 @@ class ListCommercial extends Component {
                               </Link>
                               <Link to={'/approval-commercial/'+boq._id}>
                                 <Button size="sm" color="warning" style={{marginRight : '10px'}}>
+                                  <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; Approval
+                                </Button>
+                              </Link>
+                              <Link to={'/po-commercial/'+boq._id}>
+                                <Button size="sm" color="secondary" style={{marginRight : '10px'}}>
                                   <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; Approval
                                 </Button>
                               </Link>

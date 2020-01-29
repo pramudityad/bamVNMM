@@ -1,37 +1,35 @@
 import React, { Component, Fragment } from 'react';
 import { Card, CardHeader, CardBody, CardFooter,Table, Row, Col, Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Collapse} from 'reactstrap';
 import { Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
-import ReactExport from "react-data-export";
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import {Form, FormGroup, Label, Input, FormText} from 'reactstrap';
 import {OutTable, ExcelRenderer} from 'react-excel-renderer';
 import './boqCommercial.css';
-import Excel from 'exceljs/modern.browser';
+import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import CreatableSelect from 'react-select/creatable';
+import { connect } from 'react-redux';
+
+const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
 );
 
-const StepFlow = React.lazy(() => import('../../views/Defaultview/StepFlow'));
-
-
 const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
-const ExcelFile = ReactExport.ExcelFile;
-const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
-const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
-
-class UploadBoqPO extends Component {
+class BoqCommPO extends Component {
     constructor(props) {
       super(props);
 
       this.state = {
-        userRole : JSON.parse(localStorage.getItem('user_Roles')),
+        userRole : this.props.dataLogin.role,
+        userId : this.props.dataLogin._id,
+        userName : this.props.dataLogin.userName,
+        userEmail : this.props.dataLogin.email,
         boq_comm_API : null,
         boq_tech_API : [],
         boq_tech_sites : [],
@@ -101,15 +99,15 @@ class UploadBoqPO extends Component {
     onEntering() {
       this.setState({ status: 'Opening...' });
     }
-  
+
     onEntered() {
       this.setState({ status: 'Opened' });
     }
-  
+
     onExiting() {
       this.setState({ status: 'Closing...' });
     }
-  
+
     onExited() {
       this.setState({ status: 'Closed' });
     }
@@ -132,7 +130,7 @@ class UploadBoqPO extends Component {
         return props;
       }
     }
-    
+
     toggleUpload() {
     this.setState({ collapse: !this.state.collapse });
   }
@@ -298,9 +296,12 @@ class UploadBoqPO extends Component {
             DataComm["po_status"] = dataUpdateComm.po_status;
             DataComm["_etag"] = resp.data._etag;
             // this.setState()
-            this.setState({action_status : 'success', action_message : 'Your Early Start status has been updated'}, () => {this.toggleLoading(); setTimeout(function(){ window.location.reload(); }, 2500);})
+            this.setState({action_status : 'success', action_message : 'Your Early Start status has been updated'}, () => {
+              this.toggleLoading();
+              // setTimeout(function(){ window.location.reload(); }, 2500);
+            })
             // this.toggleLoading();
-            setTimeout(function(){ window.location.reload(); }, 2000);
+            // setTimeout(function(){ window.location.reload(); }, 2000);
           }
         })
       }else{
@@ -339,10 +340,10 @@ class UploadBoqPO extends Component {
         }
       })
     }
-    
+
     prepareListPOSelection(listPO){
       let dataPOSelection = [];
-      listPO.map( po => 
+      listPO.map( po =>
         dataPOSelection.push({'label' : po.po_number, 'value' : po._id})
       )
       this.setState({list_po_number_selection : dataPOSelection}, () => {
@@ -421,10 +422,10 @@ class UploadBoqPO extends Component {
             })
           }else{
             this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
-          } 
+          }
         }else{
           this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
-        } 
+        }
         })
       }
     }
@@ -490,7 +491,7 @@ class UploadBoqPO extends Component {
       ws.getCell('A4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
 
       const preparedEmail = ws.mergeCells('A5:E5');
-      ws.getCell('A5').value = dataComm.created_by.email;
+      ws.getCell('A5').value = this.state.userEmail;
       ws.getCell('A5').alignment  = {horizontal: 'left' };
       ws.getCell('A5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
@@ -535,7 +536,7 @@ class UploadBoqPO extends Component {
       ws.getCell('I6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
       const revDocNum = ws.mergeCells('I7:J7');
-      ws.getCell('I7').value = (dataComm.rev1 !== 'A' ? 'PA' : 'A')+ dataComm.version;
+      ws.getCell('I7').value = dataComm.version;
       ws.getCell('I7').alignment  = {vertical: 'top', horizontal: 'left' };
       ws.getCell('I7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
@@ -569,7 +570,7 @@ class UploadBoqPO extends Component {
       ws.mergeCells('H10:J10');
       ws.getCell('H10').value = dataComm.po_number;
       ws.mergeCells('H11:J11');
-      ws.getCell('H11').value = dataComm.created_by.email;
+      ws.getCell('H11').value = this.state.userEmail;
       ws.mergeCells('H12:J12');
       ws.getCell('H12').value = dataComm.created_on.split(" ")[0];
 
@@ -648,7 +649,7 @@ class UploadBoqPO extends Component {
               this.savePOQty();
           }
         }
-        
+
     }
 
     savePONumber = async () => {
@@ -678,7 +679,10 @@ class UploadBoqPO extends Component {
                       }
                   }
                 }
-                this.setState({commercialData : commItemAPI, boq_comm_API : commAPI, action_status : 'success', action_message : 'PO Number has been saved'}, () => {this.toggleLoading(); setTimeout(function(){ window.location.reload(); }, 2000);});
+                this.setState({commercialData : commItemAPI, boq_comm_API : commAPI, action_status : 'success', action_message : 'PO Number has been saved'}, () => {
+                  this.toggleLoading();
+                  // setTimeout(function(){ window.location.reload(); }, 2000);
+                });
             }
         }
     }else{
@@ -704,8 +708,8 @@ class UploadBoqPO extends Component {
         }
         if(respondPOsaving.length === po_qty.size){
             this.setState({action_status : 'success', action_message : 'PO QTY has been saved'}, () => {
-              this.toggleLoading(); 
-              setTimeout(function(){ window.location.reload(); }, 2000);
+              this.toggleLoading();
+              // setTimeout(function(){ window.location.reload(); }, 2000);
             })
         }else{
             this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'}, () => {this.toggleLoading()})
@@ -730,7 +734,10 @@ class UploadBoqPO extends Component {
           }
       }
       if(respondPOsaving.length === po_qty.size){
-          this.setState({action_status : 'success', action_message : 'Early Start QTY has been saved'}, () => {this.toggleLoading(); setTimeout(function(){ window.location.reload(); }, 2000);})
+          this.setState({action_status : 'success', action_message : 'Early Start QTY has been saved'}, () => {
+            this.toggleLoading();
+            // setTimeout(function(){ window.location.reload(); }, 2000);
+          })
       }else{
           this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'}, () => {this.toggleLoading()})
       }
@@ -774,8 +781,8 @@ class UploadBoqPO extends Component {
     let dataPONew = {
       "po_number" : inputValue.toString(),
       "po_year" : (dateNow.getFullYear()).toString(),
-      "created_by" : localStorage.getItem('user_ID'),
-      "updated_by" : localStorage.getItem('user_ID')
+      "created_by" : this.state.userEmail,
+      "updated_by" : this.state.userEmail
     }
     let dataCreatePO = await this.postDatatoAPI('/po_op', dataPONew );
     if(dataCreatePO === undefined){dataCreatePO = {}}
@@ -785,7 +792,7 @@ class UploadBoqPO extends Component {
     }
     this.toggleLoading();
     this.setState({list_po_number_selection : dataPO}, () => {
-      
+
     });
   }
 
@@ -825,20 +832,7 @@ class UploadBoqPO extends Component {
 
       return (
         <div>
-          <AlertProcess alertAct={this.state.action_status} messageAct={this.state.action_message}/>
-          {this.state.boq_comm_API === null ? (
-            <StepFlow 
-              nowSign={"com"} 
-              commercialSign={true}
-              commercialArr={[]}
-            />
-          ) : (
-            <StepFlow 
-              nowSign={"com"} 
-              commercialSign={true}
-              commercialArr={[this.state.boq_comm_API._id]}
-            />
-          )}
+          <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
           <Row>
             <Col xl="12">
               <Card>
@@ -846,9 +840,6 @@ class UploadBoqPO extends Component {
                   <span style={{lineHeight :'2', fontSize : '17px'}}> Commercial BOQ </span>
                   {this.state.boq_comm_API !== null && (
                     <React.Fragment>
-                      <Link to={'/Boq/Commercial/Group/'+this.state.boq_comm_API._id}>
-                          <Button color="primary" style={{float : 'right'}}  onClick={this.showGroupToggle}> <i className="fa fa-eye">&nbsp;&nbsp;</i> PP</Button>
-                      </Link>
                         <Button style={{float : 'right', marginRight : '10px'}} onClick={this.exportCommercial} color="secondary">
                           <i className="fa fa-download" aria-hidden="true"> &nbsp; </i> Download Commercial Report
                         </Button>
@@ -889,7 +880,7 @@ class UploadBoqPO extends Component {
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>Version &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
                               <td>:</td>
-                              <td style={{paddingLeft:'10px'}}> {(this.state.boq_comm_API.rev1 !== 'A' ? 'PA' : 'A') +this.state.boq_comm_API.version}</td>
+                              <td style={{paddingLeft:'10px'}}> {this.state.boq_comm_API.version}</td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td >Early Start </td>
@@ -905,14 +896,6 @@ class UploadBoqPO extends Component {
                               <td>Opportunity ID </td>
                               <td>:</td>
                               <td style={{paddingLeft:'10px'}}> {this.state.boq_comm_API.opportunity_id}</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>{this.state.boq_comm_API.note_name_1}</td>
-                              <td colspan="2">{this.checkValuetoString(this.state.boq_comm_API.note_1).length !== 0 ? ": "+this.state.boq_comm_API.note_1 : ""}</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>{this.state.boq_comm_API.note_name_3}</td>
-                              <td colspan="2">{this.checkValuetoString(this.state.boq_comm_API.note_3).length !== 0 ? ": "+this.state.boq_comm_API.note_3 : ""}</td>
                             </tr>
                           </tbody>
                         </table>
@@ -946,26 +929,17 @@ class UploadBoqPO extends Component {
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td >Updated By &nbsp;</td>
                               <td>:</td>
-                              <td style={{paddingLeft:'10px'}}>{this.state.boq_comm_API.updated_by.email}</td>
+                              <td style={{paddingLeft:'10px'}}>{"bamidadmin@e-dpm.com"}</td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td >Date </td>
-                              <td>:</td>                              
+                              <td>:</td>
                               <td style={{paddingLeft:'10px'}}> {this.state.boq_comm_API.created_on.split(" ")[0]}</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>{this.state.boq_comm_API.note_name_2}</td>
-                              <td colspan="2">{this.checkValuetoString(this.state.boq_comm_API.note_2).length !== 0 ? ": "+this.state.boq_comm_API.note_2 : ""}</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>{this.state.boq_comm_API.note_name_4}</td>
-                              <td colspan="2">{this.checkValuetoString(this.state.boq_comm_API.note_4).length !== 0 ? ": "+this.state.boq_comm_API.note_4 : ""}</td>
                             </tr>
                             <tr>
                               <td></td>
                               <td></td>
                               <td>
-                              
                               </td>
                             </tr>
                           </tbody>
@@ -991,7 +965,6 @@ class UploadBoqPO extends Component {
                           <th style={{verticalAlign : 'middle'}}>In PO Quotation Qty</th>
                           <th style={{verticalAlign : 'middle'}}>Total Price</th>
                           <th style={{verticalAlign : 'middle'}}>Net Price</th>
-                          <th style={{verticalAlign : 'middle'}}>FAS ID</th>
                         </tr>
                       </thead>
                       {this.state.groupingView.length !== 0 ?
@@ -999,14 +972,14 @@ class UploadBoqPO extends Component {
                         <React.Fragment>
                           <tbody style={{borderTopWidth : '0px'}} class='fixbody'>
                               <tr style={{backgroundColor : '#f8f6df'}}>
-                                <td colSpan="13" style={{textAlign: 'left', borderLefttWidth : '0px'}}>Product Type : {pt.product_type}</td>
+                                <td colSpan="12" style={{textAlign: 'left', borderLefttWidth : '0px'}}>Product Type : {pt.product_type}</td>
                               </tr>
                           </tbody>
                           {pt.groups.map(grp =>
                             <React.Fragment>
                               <tbody style={{borderTopWidth : '0px'}} class='fixbody'>
                                   <tr>
-                                    <td colSpan="13" style={{textAlign: 'left', fontWeight : '500'}}>Physical Group : {grp}</td>
+                                    <td colSpan="12" style={{textAlign: 'left', fontWeight : '500'}}>Physical Group : {grp}</td>
                                   </tr>
                                 {this.packageView(this.state.commercialData, pt.product_type, grp).map((itm) =>
                                   <React.Fragment>
@@ -1017,7 +990,7 @@ class UploadBoqPO extends Component {
                                       <td style={{verticalAlign :'middle'}}>
                                         {this.state.boq_comm_API === null ? "" : this.state.early_start === true ? (
                                           <Input type="number" name={itm._id} className="BoQ-style-qty" placeholder="qty" onChange={this.editQtyPO} value={!this.state.qty_po.has(itm._id) ? itm.qty_early_start : this.state.qty_po.get(itm._id) } />
-                                        ) : null}                                       
+                                        ) : null}
                                       </td>
                                       <td style={{verticalAlign :'middle'}}>{itm.smart_stock.toLocaleString()}</td>
                                       <td style={{verticalAlign :'middle'}}>{itm.qty_ericsson.toLocaleString()}</td>
@@ -1027,15 +1000,14 @@ class UploadBoqPO extends Component {
                                       <td style={{verticalAlign :'middle'}}>
                                         {this.state.boq_comm_API === null ? "" : this.state.boq_comm_API.po_number !== null ? (
                                           <Input type="number" name={itm._id} className="BoQ-style-qty" placeholder="qty" onChange={this.editQtyPO} value={!this.state.qty_po.has(itm._id) ? itm.qty_po : this.state.qty_po.get(itm._id) } />
-                                        ) : null}                                       
+                                        ) : null}
                                       </td>
                                       <td style={{verticalAlign :'middle'}}>{ ((itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)) * itm.unit_price).toLocaleString() }</td>
                                       <td style={{verticalAlign :'middle'}}>{ (((itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)) * itm.unit_price)-itm.incentive).toLocaleString() }</td>
-                                      <td style={{verticalAlign :'middle'}}>{ itm.fas_assignment_id }</td>
                                   </tr>
                                   </React.Fragment>
                                 )}
-                                <tr><td colSpan="13"></td></tr>
+                                <tr><td colSpan="12"></td></tr>
                               </tbody>
                             </React.Fragment>
                           )}
@@ -1044,61 +1016,67 @@ class UploadBoqPO extends Component {
                           <tbody class="fixbody">
                             <tr>
                               {this.props.match.params.id == undefined? (
-                                <td colSpan="13">Please Select BOQ Technical</td>
+                                <td colSpan="12">Please Select BOQ Technical</td>
                               ) : (
-                                <td colSpan="13">Please Wait, Loading Data...</td>
+                                <td colSpan="12">Please Wait, Loading Data...</td>
                               )}
-                              
+
                             </tr>
                           </tbody>
                             )}
                     </table>
                   </div>
                   {this.state.boq_comm_API !== null &&  (
-		               <React.Fragment>
-                    <div style={{marginBottom : "20px"}}>
-                      <Row style={{paddingLeft : '10px'}}>
-                        <Col sm="6" md="7">
-                        <table className="table-footer">
-                          <tbody>
-                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                              <td >Approved By </td>
-                              <td >: &nbsp; {this.state.boq_comm_API.rev1 === "PA" ? "Pre Approved" : this.state.boq_comm_API.rev1 == "WA" ? "Waiting Approve" : this.state.boq_comm_API.rev1_by}</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                              <td >Submitted By </td>
-                              <td >: &nbsp; {this.state.boq_comm_API.submitted === undefined ? "Not Submitted" : this.state.boq_comm_API.submitted == "NS" ? "Not Submitted" : this.state.boq_comm_API.submitted_by}</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                              <td >Submitted Date </td>
-                              <td >: &nbsp; {this.state.boq_comm_API.submitted === undefined ? "Not Submitted" : this.state.boq_comm_API.submitted == "NS" ? "Not Submitted" : this.state.boq_comm_API.submitted_date}</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                        </Col>
-                        <Col sm="6" md="5">
-                        <table className="table-footer" style={{float : 'right',marginRight : '20px'}}>
-                          <tbody>
-                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                              <td >Technical Indentifier &nbsp;&nbsp;&nbsp;</td>
-                              <td >: &nbsp; {this.state.boq_comm_API.no_boq_tech+" - Ver"+this.state.boq_comm_API.version_boq_tech} </td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                              <td >COM BOQ Created By &nbsp;</td>
-                              <td >: &nbsp; {this.state.boq_comm_API.created_by.email}</td>
-                            </tr>
-                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                              <td >COM BOQ Created Date </td>
-                              <td >: &nbsp; {this.state.boq_comm_API.created_on}</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                        </Col>
-                      </Row>
-                    </div>
-                    <div style={{padding : '0 10px 0 10px'}}>
-                    </div>
-		               </React.Fragment>
+                    <React.Fragment>
+                     <div style={{marginBottom : "20px"}}>
+                       <Row style={{paddingLeft : '10px'}}>
+                         <Col sm="6" md="7">
+                         <table className="table-footer">
+                           <tbody>
+                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                               <td >Approved By </td>
+                               <td >: &nbsp; {this.state.boq_comm_API.rev1 === "PA" ? "Pre Approved" : this.state.boq_comm_API.rev1 == "WA" ? "Waiting Approve" : this.state.boq_comm_API.rev1_by}</td>
+                             </tr>
+                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                               <td >Submitted By </td>
+                               <td >: &nbsp; {this.state.boq_comm_API.submitted === undefined ? "Not Submitted" : this.state.boq_comm_API.submitted == "NS" ? "Not Submitted" : this.state.boq_comm_API.submitted_by}</td>
+                             </tr>
+                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                               <td >Submitted Date </td>
+                               <td >: &nbsp; {this.state.boq_comm_API.submitted === undefined ? "Not Submitted" : this.state.boq_comm_API.submitted == "NS" ? "Not Submitted" : this.state.boq_comm_API.submitted_date}</td>
+                             </tr>
+                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                               <td >Clarified By </td>
+                               <td >: &nbsp; {this.state.boq_comm_API.clarified === undefined ? "Not Submitted" : this.state.boq_comm_API.clarified == "NS" ? "Not Submitted" : this.state.boq_comm_API.clarified_by}</td>
+                             </tr>
+                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                               <td >Clarified Date </td>
+                               <td >: &nbsp; {this.state.boq_comm_API.clarified === undefined ? "Not Submitted" : this.state.boq_comm_API.clarified == "NS" ? "Not Submitted" : this.state.boq_comm_API.clarified_date}</td>
+                             </tr>
+                           </tbody>
+                         </table>
+                         </Col>
+                         <Col sm="6" md="5">
+                         <table className="table-footer" style={{float : 'right',marginRight : '20px'}}>
+                           <tbody>
+                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                               <td >Technical Indentifier &nbsp;&nbsp;&nbsp;</td>
+                               <td >: &nbsp; {this.state.boq_comm_API.no_boq_tech+" - Ver"+this.state.boq_comm_API.version_boq_tech} </td>
+                             </tr>
+                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                               <td >COM BOQ Created By &nbsp;</td>
+                               <td >: &nbsp; bamidadmin@e-dpm.com</td>
+                             </tr>
+                             <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                               <td >COM BOQ Created Date </td>
+                               <td >: &nbsp; {this.state.boq_comm_API.created_on}</td>
+                             </tr>
+                           </tbody>
+                         </table>
+                         </Col>
+                       </Row>
+                     </div>
+ 		               </React.Fragment>
                     )}
                 </CardBody>
                 <CardFooter>
@@ -1204,4 +1182,11 @@ class UploadBoqPO extends Component {
     }
   }
 
-  export default UploadBoqPO;
+  const mapStateToProps = (state) => {
+    return {
+      dataLogin : state.loginData,
+      SidebarMinimize : state.minimizeSidebar
+    }
+  }
+
+  export default connect(mapStateToProps)(BoqCommPO);
