@@ -974,7 +974,7 @@ class PackageUpload extends React.Component {
 
     const datapackageSelected = this.state.packageSelected;
 
-    let ppIdArray = ["site_title", "site_id", "site_name"];
+    let ppIdArray = ["project", "site_id", "site_name"];
     let phyGroupArray = ["", "", ""];
 
     ppIdArray = ppIdArray.concat(datapackageSelected.map(pp => pp.pp_id+" /// "+pp.product_name));
@@ -1105,7 +1105,7 @@ class PackageUpload extends React.Component {
                         <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
                       </td>
                     </tr>
-                    <tr>
+                    {/* }<tr>
                       <td>Project Tag</td>
                       <td>:</td>
                       <td style={{paddingLeft:"7px"}}>
@@ -1119,7 +1119,7 @@ class PackageUpload extends React.Component {
                           isDisabled = {this.state.rowsXLS.length === 0}
                         />
                       </td>
-                      </tr>
+                      </tr> */}
                       </tbody>
                   </table>
                 </div>
@@ -1229,9 +1229,9 @@ class PackageUpload extends React.Component {
                 </Col>
 
                 <Col>
-                {/* }<div style={{float:'right', margin: '5px', display:'inline-flex'}}>
+                <div style={{float:'right', margin: '5px', display:'inline-flex'}}>
                   <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
-                </div> */}
+                </div>
                 <div style={{float:'right', margin: '5px', display:'inline-flex'}}>
                 <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTSSRFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp; Download PS Format</Button>
                 </div>

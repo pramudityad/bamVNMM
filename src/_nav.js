@@ -20,10 +20,15 @@ export default {
           icon: 'icon-drawer',
         },
         {
-          name: 'TSSR Matrix BOQ ',
-          url: '/list-tssr-matix',
-          icon: 'icon-drawer',
+          name: 'Ordering BOQ',
+          url: '/list-ordering',
+          icon: 'icon-briefcase',
         },
+//        {
+//          name: 'TSSR Matrix BOQ ',
+//          url: '/list-tssr-matix',
+//          icon: 'icon-drawer',
+//        },
         {
           name: 'Plant Spec List',
           url: '/ps-list',

@@ -395,14 +395,6 @@ class CommercialBoq extends Component {
       const AllEdit = new Map([...qty_smart, ...edit_price, ...qty_ericsson, ...curr_item, ...insen_item]);
       let respondStockPrice = [];
       let dataProject = undefined;
-      if(dataComm.project_name !== null){
-        const getDataProject = await this.getDatafromAPI('/project_op/'+dataComm.id_project_doc);
-          if(getDataProject !== undefined){
-            if(getDataProject.data !== undefined){
-              dataProject = getDataProject.data;
-            }
-          }
-      }
       for (const [key, value] of AllEdit.entries()) {
         const dataIndex = commItems.find(e => e._id === key);
         if(dataIndex !== undefined){
@@ -587,7 +579,7 @@ class CommercialBoq extends Component {
 
     getListTechBOQ(){
       const urlAPITech = '?where={}';
-      this.getDatafromAPI('/boq_tech_sorted_non_page?embedded={"created_by" :1}&where={"created_by" : {"$exists" : 1}}').then(res => {
+      this.getDatafromAPI('/boq_tech_sorted_non_page?embedded={"created_by" :1}&where={"created_by" : {"$exists" : 1}, "project_name" : {"$ne" : null}}').then(res => {
         if(res !== undefined){
           this.setState({boq_tech_API : res.data._items}, () => {
             this.filterBOQTech("");
@@ -852,12 +844,6 @@ class CommercialBoq extends Component {
             if(BoqTechSelect.id_project_doc !== null && BoqTechSelect.project_name !== ""){
               data_comm['id_project_doc'] = BoqTechSelect.id_project_doc
               data_comm['project_name'] = BoqTechSelect.project_name;
-              const getDataProject = await this.getDatafromAPI('/project_op/'+BoqTechSelect.id_project_doc);
-              if(getDataProject !== undefined){
-                if(getDataProject.data !== undefined){
-                  dataProject = getDataProject.data;
-                }
-              }
             }
           }
           const respondPost = await this.postDatatoAPI('/boq_comm_op', data_comm);
@@ -870,9 +856,7 @@ class CommercialBoq extends Component {
               dataItemsComm[i]["id_po_doc"] = null;
               dataItemsComm[i]["po_number"] = null;
               dataItemsComm[i]["version"] = "0";
-              if(dataProject !== undefined){
-                dataItemsComm[i]["fas_assignment_id"] = null;
-              }
+              dataItemsComm[i]["fas_assignment_id"] = null;
             }
             const respondPostItems = await this.postDatatoAPI('/boq_comm_items_op', dataItemsComm);
             if(respondPostItems.data !== undefined){
@@ -1266,27 +1250,6 @@ class CommercialBoq extends Component {
         return items = [];
       }
     }
-
-    // packageView(packageData, pt, group){
-    //   let itemsDatas = {
-    //     "pp_group" : [],
-    //     "items" : [],
-    //   };
-    //   if(packageData.length !== 0){
-    //     let getGroup = packageData.filter(d => d.product_type === pt && d.phy_group === group)
-    //     if( getGroup.length !== 0){
-    //       let grp = [...new Set(getGroup.map(e => e.pp_group))];
-    //       itemsDatas["pp_group"] = grp;
-    //       for(let i=0; i < grp.length; i++){
-    //         itemsDatas["items"] = itemsDatas.items.concat(packageData.filter(d => d.product_type === pt && d.phy_group === group && d.pp_group == grp[i]));
-    //       }
-    //     }
-    //     console.log("{itemsDatas")
-    //     return itemsDatas
-    //   }else{
-    //     return itemsDatas
-    //   }
-    // }
 
     exportCommercialTemplate = async () => {
       const wb = new Excel.Workbook()
