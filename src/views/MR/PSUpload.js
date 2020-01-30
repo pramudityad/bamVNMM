@@ -547,7 +547,7 @@ class PSUpload extends Component {
     const name = e.target.name;
     const value = e.target.value;
     this.setState(prevState => ({ qty_fe : prevState.qty_fe.set(name, value) }));
-}
+  }
 
   componentDidMount(){
     this.getDataMR(this.props.match.params.id);
