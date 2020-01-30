@@ -180,7 +180,7 @@ class JointCheck extends Component {
     let currStatus = [
       {
           "mr_status_name": "JOINT_CHECK",
-          "mr_status_value": "FINISHED",
+          "mr_status_value": "FINISH",
           "mr_status_date": dateNow,
           "mr_status_updater": this.state.userEmail,
           "mr_status_updater_id": this.state.userId
@@ -197,7 +197,7 @@ class JointCheck extends Component {
     let successUpdate = [];
     let updateMR = {};
     updateMR['current_milestones'] = "MS_JOINT_CHECK";
-    updateMR['current_mr_status'] = "JOINT CHECK FINISHED";
+    updateMR['current_mr_status'] = "JOINT CHECK FINISH";
     updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
     updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
     let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);

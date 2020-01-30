@@ -168,7 +168,7 @@ class WarehouseDashboard extends Component {
 
   getOrderCreated() {
     this.getDataFromAPI('/mr_op?where={"current_mr_status":"MR REQUESTED"}').then(res => {
-      console.log("Order Created xx", res);
+      console.log("Order Created", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
         this.setState({order_created : items.total});
@@ -177,7 +177,7 @@ class WarehouseDashboard extends Component {
   }
 
   getOrderReceived() {
-    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_ORDER_RECEIVED"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_mr_status": "MR APPROVED", "current_milestones":"MS_ORDER_RECEIVED"}').then(res => {
       console.log("Order Received", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -187,7 +187,7 @@ class WarehouseDashboard extends Component {
   }
 
   getOrderProcessing() {
-    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_ORDER_PROCESSING"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED"}').then(res => {
       console.log("Order Processing", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -197,7 +197,7 @@ class WarehouseDashboard extends Component {
   }
 
   getReadyToDeliver() {
-    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_READY_TO_DELIVER"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_READY_TO_DELIVER"}').then(res => {
       console.log("Ready To Deliver", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -207,7 +207,7 @@ class WarehouseDashboard extends Component {
   }
 
   getJointCheck() {
-    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_JOINT_CHECK"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_READY_TO_DELIVER"}').then(res => {
       console.log("Joint Check", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -217,7 +217,7 @@ class WarehouseDashboard extends Component {
   }
 
   getLoadingProcess() {
-    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_LOADING_PROCESS"}').then(res => {
+    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_JOINT_CHECK"}').then(res => {
       console.log("Loading Process", res);
       if(res.data !== undefined) {
         const items = res.data._meta;

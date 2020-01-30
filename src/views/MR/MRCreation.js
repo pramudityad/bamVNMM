@@ -52,12 +52,14 @@ class MRCreation extends Component {
         redirectSign : false,
         action_status : null,
         action_message : null,
+        toggle_display : "new"
     };
     this.saveMRtoAPI = this.saveMRtoAPI.bind(this);
     this.handleChangeFormMRCreation = this.handleChangeFormMRCreation.bind(this);
     this.handleChangeMRType = this.handleChangeMRType.bind(this);
     this.handleChangeProject = this.handleChangeProject.bind(this);
     this.handleChangeCD = this.handleChangeCD.bind(this);
+    this.showHide = this.showHide.bind(this);
   }
 
   async getDatafromAPIBMS(url){
@@ -153,7 +155,7 @@ class MRCreation extends Component {
         console.log("respond Patch data", respond);
       }
       return respond;
-    }catch (err) {
+    } catch (err) {
       let respond = err;
       console.log("respond Patch data", err);
       return respond;
@@ -284,6 +286,11 @@ class MRCreation extends Component {
           "value" : dataFormName[8],
           "address" : "",
         },
+        "destination" : {
+          "title" : "Warehouse",
+          "value" : dataFormName[9],
+          "address" : "",
+        },
         "mr_milestones" : [],
         "mr_status" : [
           {
@@ -309,11 +316,11 @@ class MRCreation extends Component {
       }
       console.log("data new MR", JSON.stringify(mr_data));
       const respondSaveMR = await this.postDatatoAPIBAM('/mr_op', mr_data);
-      if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
+      if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
         this.setState({ action_status : 'success' }, () => {
           setTimeout(function(){ this.setState({ redirectSign : respondSaveMR.data._id}); }.bind(this), 3000);
         });
-      }else{
+      } else{
         this.setState({ action_status : 'failed' });
       }
   }
@@ -339,6 +346,16 @@ class MRCreation extends Component {
     this.setState({cd_id_selected : value, data_cd_id_selected : data_CD}, () => {
       this.getDataCDProject();
     });
+  }
+
+  showHide(e) {
+    if(e.target.value === "Relocation") {
+      this.setState({toggle_display : "relocation"});
+    } else if(e.target.value === "Return") {
+      this.setState({toggle_display : "return"});
+    } else {
+      this.setState({toggle_display : "new"});
+    }
   }
 
   render() {
@@ -392,7 +409,7 @@ class MRCreation extends Component {
                   </FormGroup>
                 </Col>
               </Row>
-              <Row form>
+              <Row form hidden={this.state.toggle_display === "return" || this.state.toggle_display === "relocation"}>
                 <Col md={6}>
                   <FormGroup>
                     <Label>Site NE</Label>
@@ -424,11 +441,12 @@ class MRCreation extends Component {
                 <Col md={6}>
                   <FormGroup>
                     <Label>MR Type</Label>
-                    <Input type="select" name="3" value={this.state.create_mr_form[3]} onChange={this.handleChangeFormMRCreation}>
+                    <Input type="select" name="3" value={this.state.create_mr_form[3]} onChange={e => {this.handleChangeFormMRCreation(e); this.showHide(e)}}>
                       <option value="" disabled selected hidden>Select MR Type</option>
                       <option value="New">New</option>
                       <option value="Upgrade">Upgrade</option>
                       <option value="Relocation">Relocation</option>
+                      <option value="Return">Return</option>
                     </Input>
                   </FormGroup>
                 </Col>
@@ -437,28 +455,44 @@ class MRCreation extends Component {
                     <Label>MR Delivery Type</Label>
                     <Input type="select" name="4" value={this.state.create_mr_form[4]} onChange={this.handleChangeFormMRCreation}>
                       <option value="" disabled selected hidden>Select MR Delivery Type</option>
-                      <option value="Warehouse to Site">Warehouse to Site</option>
-                      {/*<option value="Site to Site">Site to Site</option>*/}
-                      <option value="Warehouse to Warehouse">Warehouse to Warehouse</option>
+                      <option value="Warehouse to Site" hidden={this.state.toggle_display !== "new"}>Warehouse to Site</option>
+                      <option value="Site to Warehouse" hidden={this.state.toggle_display !== "return"}>Site to Warehouse</option>
+                      <option value="Site to Site" hidden={this.state.toggle_display !== "relocation"}>Site to Site</option>
+                      <option value="Warehouse to Warehouse" hidden={this.state.toggle_display !== "relocation"}>Warehouse to Warehouse</option>
                     </Input>
                   </FormGroup>
                 </Col>
               </Row>
               <Row form>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Origin</Label>
-                  <Input type="select" name="8" value={this.state.create_mr_form[8]} onChange={this.handleChangeFormMRCreation}>
-                    <option value="" disabled selected hidden>Select Origin</option>
-                    <option value={"JKT"}>Jakarta</option>
-                    <option value={"MKS"}>Makassar</option>
-                    <option value={"PLB"}>Palembang</option>
-                    <option value={"PKB"}>Pekanbaru</option>
-                    <option value={"PDG"}>Padang</option>
-                    <option value={"MND"}>Manado</option>
-                  </Input>
-                </FormGroup>
-              </Col>
+                <Col md={6}>
+                  <FormGroup>
+                    <Label>Origin</Label>
+                    <Input type="select" name="8" value={this.state.create_mr_form[8]} onChange={this.handleChangeFormMRCreation} hidden={this.state.toggle_display === "return"}>
+                      <option value="" disabled selected hidden>Select Origin</option>
+                      <option value={"JKT"}>Jakarta</option>
+                      <option value={"MKS"}>Makassar</option>
+                      <option value={"PLB"}>Palembang</option>
+                      <option value={"PKB"}>Pekanbaru</option>
+                      <option value={"PDG"}>Padang</option>
+                      <option value={"MND"}>Manado</option>
+                    </Input>
+                    <Input type="text" name="8" onChange={this.handleChangeFormMRCreation} hidden={this.state.toggle_display !== "return"} />
+                  </FormGroup>
+                </Col>
+                <Col md={6} hidden={this.state.toggle_display === "new"}>
+                  <FormGroup>
+                    <Label>Destination</Label>
+                    <Input type="select" name="9" value={this.state.create_mr_form[9]} onChange={this.handleChangeFormMRCreation}>
+                      <option value="" disabled selected hidden>Select Destination</option>
+                      <option value={"JKT"}>Jakarta</option>
+                      <option value={"MKS"}>Makassar</option>
+                      <option value={"PLB"}>Palembang</option>
+                      <option value={"PKB"}>Pekanbaru</option>
+                      <option value={"PDG"}>Padang</option>
+                      <option value={"MND"}>Manado</option>
+                    </Input>
+                  </FormGroup>
+                </Col>
               </Row>
               <Row form>
                 <Col md={6}>
@@ -480,7 +514,7 @@ class MRCreation extends Component {
                   </FormGroup>
                 </Col>
               </Row>
-              </Form>
+            </Form>
           </CardBody>
           <CardFooter>
             <Button color='success' style={{float : 'right'}} onClick={this.saveMRtoAPI}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create MR</Button>

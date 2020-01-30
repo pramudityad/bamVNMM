@@ -30,7 +30,8 @@ class DSACreation extends Component {
       list_dsa_selection : [],
       list_dsa_selected : new Array(10).fill(null),
       action_status : null,
-      action_message : ""
+      action_message : "",
+      destination : "",
     }
 
     this.loadOptionsMR = this.loadOptionsMR.bind(this);
@@ -98,6 +99,11 @@ class DSACreation extends Component {
   handleChangeMR = async (newValue) => {
     let dataMR = this.state.list_mr_selection.find(e => e._id === newValue.value);
     this.setState({list_mr_selected : dataMR});
+    if(dataMR.mr_type === "Return" || dataMR.mr_type === "Relocation") {
+      this.setState({destination : dataMR.destination.value});
+    } else {
+      this.setState({destination : dataMR.site_info[0].site_id});
+    }
     const getNN = await this.getDataFromAPI_tsel('/custdel_sorted_non_page?where={"WP_ID":"'+dataMR.cd_id+'"}');
     this.setState({network_number : getNN.data._items[0].CD_Info_Network_Number});
     let dataForm = this.state.create_dsa_form;
@@ -753,10 +759,10 @@ class DSACreation extends Component {
                           <Input type="text" name="10" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.origin_warehouse.value : ""} onChange={this.handleChangeForm} readOnly />
                         </FormGroup>
                         <FormGroup style={{paddingLeft: "16px"}}>
-                          <Label>To (Site NE)</Label>
-                          <Input type="text" name="11" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.site_info[0].site_id : ""} onChange={this.handleChangeForm} readOnly />
+                          <Label>To {this.state.list_mr_selected !== null && (this.state.list_mr_selected.mr_type === "New" || this.state.list_mr_selected.mr_type === null) ? "(Site NE)" : "(Warehouse)"}</Label>
+                          <Input type="text" name="11" value={this.state.destination} onChange={this.handleChangeForm} readOnly />
                         </FormGroup>
-                        {this.state.list_mr_selected !== null ? this.state.list_mr_selected.site_info[1] !== undefined ? (
+                        {this.state.list_mr_selected !== null ? this.state.list_mr_selected.site_info[1] !== undefined && this.state.list_mr_selected.mr_type !== "Return" && this.state.list_mr_selected.mr_type !== "Relocation" ? (
                           <FormGroup style={{paddingLeft: "16px"}}>
                             <Label>To (Site FE)</Label>
                             <Input type="text" name="11" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.site_info[1].site_id : ""} onChange={this.handleChangeForm} readOnly />

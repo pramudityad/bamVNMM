@@ -110,7 +110,7 @@ class OrderProcessing extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": "MR RECEIVED", "current_milestones": "MS_ORDER_RECEIVED", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_PROCESSING", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
@@ -137,7 +137,7 @@ class OrderProcessing extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": "MR RECEIVED", "current_milestones": "MS_ORDER_RECEIVED", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_PROCESSING", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
       console.log("MR List All", res);
@@ -232,18 +232,18 @@ class OrderProcessing extends Component {
     let currStatus = [
       {
           "mr_status_name": "ORDER_PROCESSING",
-          "mr_status_value": "FINISHED",
+          "mr_status_value": "FINISH",
           "mr_status_date": dateNow,
           "mr_status_updater": this.state.userEmail,
           "mr_status_updater_id": this.state.userId
       },
       {
         "mr_status_name": "READY_TO_DELIVER",
-        "mr_status_value": "REQUESTED",
+        "mr_status_value": "CONFIRMED",
         "mr_status_date": dateNow,
         "mr_status_updater": this.state.userEmail,
         "mr_status_updater_id": this.state.userId
-    }
+      }
     ];
     let currMilestones = [
       {
@@ -257,12 +257,12 @@ class OrderProcessing extends Component {
         "ms_date": dateNow,
         "ms_updater": this.state.userEmail,
         "ms_updater_id": this.state.userId
-    }
+      }
     ];
     let successUpdate = [];
     let updateMR = {};
     updateMR['current_milestones'] = "MS_READY_TO_DELIVER";
-    updateMR['current_mr_status'] = "RTD REQUESTED";
+    updateMR['current_mr_status'] = "READY TO DELIVER";
     updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
     updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
     let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
