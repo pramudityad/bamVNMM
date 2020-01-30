@@ -454,7 +454,7 @@ class MRDetail extends Component {
     patchData["eta"] = dataForm[3] !== null ? dataForm[3]+" 23:59:59" : dataMR.eta;
     patchData["requested_eta"] = dataForm[3] !== null ? dataForm[3]+" 23:59:59" : dataMR.requested_eta;
     patchData["etd"] = dataForm[2] !== null ? dataForm[2]+" 23:59:59" : dataMR.etd;
-    patchData["dsp_company"] = dataForm[1] !== null ? dataForm[1]+" 23:59:59" : dataMR.dsp_company;
+    patchData["dsp_company"] = dataForm[1] !== null ? dataForm[1] : dataMR.dsp_company;
     patchData["current_mr_status"] = "MR UPDATED";
     patchData["mr_status"] = dataMR.mr_status.concat(dataStatus);
     const respondPatchMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, patchData, dataMR._etag);

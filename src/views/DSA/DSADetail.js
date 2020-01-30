@@ -23,6 +23,7 @@ class DSADetail extends Component {
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
       network_number : null,
+      destination : ""
     }
 
     this.submitDSA = this.submitDSA.bind(this);
@@ -77,6 +78,11 @@ class DSADetail extends Component {
     this.getDataFromAPI('/mr_op/'+_id_MR).then(res => {
       if(res.data !== undefined) {
         this.setState({ data_dsa : res.data });
+        if(this.state.data_dsa.mr_type === "Return" || this.state.data_dsa.mr_type === "Relocation") {
+          this.setState({destination : this.state.data_dsa.destination.value});
+        } else {
+          this.setState({destination : this.state.data_dsa.site_info[0].site_id});
+        }
         this.getDataFromAPI_tsel('/custdel_sorted_non_page?where={"WP_ID":"'+this.state.data_dsa.cd_id+'"}').then(res => {
           if(res.data !== undefined) {
             this.setState({ network_number : res.data._items[0].CD_Info_Network_Number });
@@ -403,13 +409,13 @@ class DSADetail extends Component {
                           <h6>Destination</h6>
                           <FormGroup style={{paddingLeft: "16px"}}>
                             <Label>From</Label>
-                            <Input type="text" name="10" readOnly value={this.state.data_dsa.origin_warehouse.value} />
+                            <Input type="text" name="10" value={this.state.data_dsa !== null ? this.state.data_dsa.origin_warehouse.value : ""} onChange={this.handleChangeForm} readOnly />
                           </FormGroup>
                           <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>To (Site NE)</Label>
-                            <Input type="text" name="11" value={this.state.data_dsa !== null ? this.state.data_dsa.site_info[0].site_id : ""} onChange={this.handleChangeForm} readOnly />
+                            <Label>To {this.state.data_dsa !== null && (this.state.data_dsa.mr_type === "New" || this.state.data_dsa.mr_type === null) ? "(Site NE)" : "(Warehouse)"}</Label>
+                            <Input type="text" name="11" value={this.state.destination} onChange={this.handleChangeForm} readOnly />
                           </FormGroup>
-                          {this.state.data_dsa !== null ? this.state.data_dsa.site_info[1] !== undefined ? (
+                          {this.state.data_dsa !== null ? this.state.data_dsa.site_info[1] !== undefined && this.state.data_dsa.mr_type !== "Return" && this.state.data_dsa.mr_type !== "Relocation" ? (
                             <FormGroup style={{paddingLeft: "16px"}}>
                               <Label>To (Site FE)</Label>
                               <Input type="text" name="11" value={this.state.data_dsa !== null ? this.state.data_dsa.site_info[1].site_id : ""} onChange={this.handleChangeForm} readOnly />

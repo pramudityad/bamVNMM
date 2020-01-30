@@ -180,7 +180,7 @@ class LoadingProcess extends Component {
     let currStatus = [
       {
           "mr_status_name": "LOADING_PROCESS",
-          "mr_status_value": "FINISHED",
+          "mr_status_value": "FINISH",
           "mr_status_date": dateNow,
           "mr_status_updater": this.state.userEmail,
           "mr_status_updater_id": this.state.userId
@@ -197,7 +197,7 @@ class LoadingProcess extends Component {
     let successUpdate = [];
     let updateMR = {};
     updateMR['current_milestones'] = "MS_LOADING_PROCESS";
-    updateMR['current_mr_status'] = "LOADING PROCESS FINISHED";
+    updateMR['current_mr_status'] = "LOADING PROCESS FINISH";
     updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
     updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
     let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
@@ -461,7 +461,7 @@ class LoadingProcess extends Component {
                     )}
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
-                        <td><Button outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Proceed</Button></td>
+                        <td><Button outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Done</Button></td>
                         <td><Link to={'/mr-detail/'+list._id}>{list.mr_id}</Link></td>
                         <td>{list.implementation_id}</td>
                         <td>{list.project_name}</td>
