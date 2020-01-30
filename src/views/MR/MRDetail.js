@@ -594,15 +594,25 @@ class MRDetail extends Component {
                         {this.state.mr_site_NE !== null && (
                           <Fragment>
                           <tr>
-                            <td style={{width : '200px'}}>Site ID NE</td>
+                            {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
+                              <td style={{width : '200px'}}>Destination {this.state.data_mr.destination.title}</td>
+                            ) : (
+                              <td style={{width : '200px'}}>Site ID NE</td>
+                            )}
                             <td>: &nbsp;</td>
-                            <td>{this.state.mr_site_NE.site_id}</td>
+                            {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
+                              <td style={{width : '200px'}}>{this.state.data_mr.destination.value}</td>
+                            ) : (
+                              <td>{this.state.mr_site_NE.site_id}</td>
+                            )}
                           </tr>
-                          <tr>
-                            <td style={{width : '200px'}}>Site Name NE</td>
-                            <td>:</td>
-                            <td>{this.state.mr_site_NE.site_name}</td>
-                          </tr>
+                          {this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
+                            <tr>
+                              <td style={{width : '200px'}}>Site Name NE</td>
+                              <td>:</td>
+                              <td>{this.state.mr_site_NE.site_name}</td>
+                            </tr>
+                          ) : ""}
                           </Fragment>
                         )}
                         </Fragment>
@@ -668,7 +678,7 @@ class MRDetail extends Component {
                           <td></td>
                           <td></td>
                         </tr>
-                        {this.state.mr_site_FE !== null && (
+                        {this.state.mr_site_FE !== null && this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
                           <Fragment>
                           <tr>
                             <td style={{width : '200px'}}>Site ID FE</td>
@@ -681,7 +691,7 @@ class MRDetail extends Component {
                             <td>{this.state.mr_site_FE.site_name}</td>
                           </tr>
                           </Fragment>
-                        )}
+                        ) : ("")}
                         </Fragment>
                       )}
                     </tbody>
@@ -700,15 +710,25 @@ class MRDetail extends Component {
                         {this.state.mr_site_NE !== null && (
                           <Fragment>
                           <tr>
-                            <td style={{width : '200px'}}>Site ID NE</td>
+                            {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
+                              <td style={{width : '200px'}}>Destination {this.state.data_mr.destination.title}</td>
+                            ) : (
+                              <td style={{width : '200px'}}>Site ID NE</td>
+                            )}
                             <td>: &nbsp;</td>
-                            <td>{this.state.mr_site_NE.site_id}</td>
+                            {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
+                              <td style={{width : '200px'}}>{this.state.data_mr.destination.value}</td>
+                            ) : (
+                              <td>{this.state.mr_site_NE.site_id}</td>
+                            )}
                           </tr>
-                          <tr>
-                            <td style={{width : '200px'}}>Site Name NE</td>
-                            <td>:</td>
-                            <td>{this.state.mr_site_NE.site_name}</td>
-                          </tr>
+                          {this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
+                            <tr>
+                              <td style={{width : '200px'}}>Site Name NE</td>
+                              <td>:</td>
+                              <td>{this.state.mr_site_NE.site_name}</td>
+                            </tr>
+                          ) : ""}
                           </Fragment>
                         )}
                         </Fragment>
@@ -721,7 +741,7 @@ class MRDetail extends Component {
                     <tbody>
                       {this.state.data_mr !== null && (
                         <Fragment>
-                        {this.state.mr_site_FE !== null && (
+                        {this.state.mr_site_FE !== null && this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
                           <Fragment>
                           <tr>
                             <td style={{width : '200px'}}>Site ID FE</td>
@@ -734,7 +754,7 @@ class MRDetail extends Component {
                             <td>{this.state.mr_site_FE.site_name}</td>
                           </tr>
                           </Fragment>
-                        )}
+                        ) : ("")}
                         </Fragment>
                       )}
                     </tbody>
@@ -751,12 +771,14 @@ class MRDetail extends Component {
                       <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
                       <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
                     </tr>
-                    <tr>
-                      <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
-                      {this.state.mr_site_FE !== null ? (
-                        <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
-                      ):(<Fragment></Fragment>)}
-                    </tr>
+                    {this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
+                      <tr>
+                        <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
+                        {this.state.mr_site_FE !== null ? (
+                          <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
+                        ):(<Fragment></Fragment>)}
+                      </tr>
+                    ) : ""}
                   </thead>
                   <tbody>
                   {this.state.mr_site_NE !== null && (

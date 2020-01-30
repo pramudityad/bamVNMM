@@ -93,6 +93,9 @@ mrschema = {
         'schema' : {
             'type' : 'dict',
             'schema' : {
+                '_id': {
+                    'type': 'objectid'
+                },
                 'id_tssr_boq_site_doc' : {
                     'type': 'objectid',
                     'required': True,
@@ -190,6 +193,9 @@ mrschema = {
         'schema': {
             'type': 'dict',
             'schema': {
+                '_id': {
+                    'type': 'objectid'
+                },
                 'ms_name': {
                     'type': 'string',
                     'required': True,
@@ -222,6 +228,9 @@ mrschema = {
         'schema': {
             'type': 'dict',
             'schema': {
+                '_id': {
+                    'type': 'objectid'
+                },
                 'mr_status_name': {
                     'type': 'string',
                     'required': True,
@@ -246,6 +255,9 @@ mrschema = {
                     'type': 'objectid',
                     'required': True,
                     'nullable': True
+                },
+                'mr_previous_status': {
+                    'type': 'string'
                 }
             }
         }
@@ -259,6 +271,9 @@ mrschema = {
         'schema': {
             'type': 'dict',
             'schema': {
+                '_id': {
+                    'type': 'objectid'
+                },
                 'mr_contact_title': {
                     'type': 'string',
                     'required': True,
@@ -436,10 +451,13 @@ mrschema = {
     },
     'primary_section' : {
         'type': 'list',
-        'required': True,
+        'default': [],
         'schema': {
             'type': 'dict',
             'schema': {
+                '_id': {
+                    'type': 'objectid'
+                },
                 'category': {
                     'type': 'string',
                     'required': True,
@@ -486,6 +504,7 @@ mrschema = {
     'second_section' : {
         'type': 'dict',
         'default' : None,
+        'nullable' : True,
         'schema': {
             'po_number': {
                 'type': 'string',
@@ -496,6 +515,9 @@ mrschema = {
                 'schema': {
                     'type': 'dict',
                     'schema': {
+                        '_id': {
+                            'type': 'objectid'
+                        },
                         'category': {
                             'type': 'string',
                             'required': True,
@@ -544,6 +566,7 @@ mrschema = {
     'third_section' : {
         'type': 'dict',
         'default' : None,
+        'nullable' : True,
         'schema': {
             'po_number': {
                 'type': 'string',
@@ -559,6 +582,9 @@ mrschema = {
                 'schema': {
                     'type': 'dict',
                     'schema': {
+                        '_id': {
+                            'type': 'objectid'
+                        },
                         'type_of_cost': {
                             'type': 'string',
                             'required': True,
@@ -587,13 +613,17 @@ mrschema = {
     'current_dsa_status' : {
         'type': 'string',
         'required': False,
-        'default' : None
+        'default' : None,
+        'nullable' : True
     },
     'dsa_status' : {
         'type': 'list',
         'schema': {
             'type': 'dict',
             'schema': {
+                '_id': {
+                    'type': 'objectid'
+                },
                 'dsa_status_name': {
                     'type': 'string',
                     'required': True,
