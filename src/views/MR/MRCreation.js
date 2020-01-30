@@ -419,20 +419,6 @@ class MRCreation extends Component {
                     </Input>
                   </FormGroup>
                 </Col>
-                <Col md={6}>
-                  <FormGroup>
-                    <Label>Origin</Label>
-                    <Input type="select" name="8" value={this.state.create_mr_form[8]} onChange={this.handleChangeFormMRCreation}>
-                      <option value="" disabled selected hidden>Select Origin</option>
-                      <option value={"JKT"}>Jakarta</option>
-                      <option value={"MKS"}>Makassar</option>
-                      <option value={"PLB"}>Palembang</option>
-                      <option value={"PKB"}>Pekanbaru</option>
-                      <option value={"PDG"}>Padang</option>
-                      <option value={"MND"}>Manado</option>
-                    </Input>
-                  </FormGroup>
-                </Col>
               </Row>
               <Row form>
                 <Col md={6}>
@@ -442,6 +428,7 @@ class MRCreation extends Component {
                       <option value="" disabled selected hidden>Select MR Type</option>
                       <option value="New">New</option>
                       <option value="Upgrade">Upgrade</option>
+                      <option value="Relocation">Relocation</option>
                     </Input>
                   </FormGroup>
                 </Col>
@@ -456,6 +443,22 @@ class MRCreation extends Component {
                     </Input>
                   </FormGroup>
                 </Col>
+              </Row>
+              <Row form>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Origin</Label>
+                  <Input type="select" name="8" value={this.state.create_mr_form[8]} onChange={this.handleChangeFormMRCreation}>
+                    <option value="" disabled selected hidden>Select Origin</option>
+                    <option value={"JKT"}>Jakarta</option>
+                    <option value={"MKS"}>Makassar</option>
+                    <option value={"PLB"}>Palembang</option>
+                    <option value={"PKB"}>Pekanbaru</option>
+                    <option value={"PDG"}>Padang</option>
+                    <option value={"MND"}>Manado</option>
+                  </Input>
+                </FormGroup>
+              </Col>
               </Row>
               <Row form>
                 <Col md={6}>

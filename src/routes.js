@@ -61,6 +61,7 @@ const AssignmentCreation = React.lazy(() => import('./views/Assignment/Assignmen
 const AssignmentList = React.lazy(() => import('./views/Assignment/AssignmentList'));
 const BulkAssignment = React.lazy(() => import('./views/Assignment/BulkAssignment'));
 const AssignmentDetail = React.lazy(() => import('./views/Assignment/AssignmentDetail'));
+const AssignmentEdit = React.lazy(() => import('./views/Assignment/AssignmentEdit'));
 const AssignBast = React.lazy(() => import('./views/Assignment/AssignBast'));
 const BulkRequest = React.lazy(() => import('./views/MR/BulkRequest'));
 const BulkNotifytoASP = React.lazy(() => import('./views/Assignment/BulkNotifytoASP'));
@@ -154,6 +155,7 @@ const routes = [
   { path: '/assignment-list', exact: true, name: 'Assignment List', component: AssignmentList },
   { path: '/bulk-assignment-creation', exact: true, name: 'Bulk Assignment Creation', component: BulkAssignment },
   { path: '/assignment-detail/:id', exact: true, name: 'Assignment Detail', component: AssignmentDetail },
+  { path: '/assignment-edit/:id', exact: true, name: 'Assignment Edit', component: AssignmentEdit },
   { path: '/bulk-assignment-notify', exact: true, name: 'Bulk Assignment Notify to ASP', component: BulkNotifytoASP },
   { path: '/list-technical', exact: true, name: 'List Technical BOQ', component: ListTechnical },
   { path: '/detail-technical/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },

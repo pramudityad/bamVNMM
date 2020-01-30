@@ -179,26 +179,16 @@ class OrderReceived extends Component {
     const dataMR = this.state.mr_list.find(e => e._id === _id);
     let currStatus = [
       {
-          "mr_status_name": "ORDER_PROCESSING",
-          "mr_status_value": "FINISHED",
+          "mr_status_name": "MATERIAL_REQUEST",
+          "mr_status_value": "RECEIVED",
           "mr_status_date": dateNow,
           "mr_status_updater": this.state.userEmail,
           "mr_status_updater_id": this.state.userId
       }
     ];
-    let currMilestones = [
-      {
-          "ms_name": "MS_ORDER_PROCESSING",
-          "ms_date": dateNow,
-          "ms_updater": this.state.userEmail,
-          "ms_updater_id": this.state.userId
-      }
-    ];
     let successUpdate = [];
     let updateMR = {};
-    updateMR['current_milestones'] = "MS_ORDER_PROCESSING";
-    updateMR['current_mr_status'] = "ORDER PROCESSING FINISHED";
-    updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
+    updateMR['current_mr_status'] = "MR RECEIVED";
     updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
     let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
     if(res !== undefined) {
@@ -294,7 +284,6 @@ class OrderReceived extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2" style={{verticalAlign: "middle"}}>Action</th>
                       <th>MR ID</th>
                       <th>Implementation ID</th>
                       <th>Project Name</th>
@@ -461,7 +450,6 @@ class OrderReceived extends Component {
                     )}
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
-                        <td><Button outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Proceed</Button></td>
                         <td><Link to={'/mr-detail/'+list._id}>{list.mr_id}</Link></td>
                         <td>{list.implementation_id}</td>
                         <td>{list.project_name}</td>

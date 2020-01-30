@@ -179,16 +179,23 @@ class ReadyToDeliver extends Component {
     const dataMR = this.state.mr_list.find(e => e._id === _id);
     let currStatus = [
       {
-          "mr_status_name": "JOINT_CHECK",
-          "mr_status_value": "FINISHED",
+          "mr_status_name": "READY_TO_DELIVER",
+          "mr_status_value": "REQUESTED",
           "mr_status_date": dateNow,
           "mr_status_updater": this.state.userEmail,
           "mr_status_updater_id": this.state.userId
+      },
+      {
+        "mr_status_name": "READY_TO_DELIVER",
+        "mr_status_value": "APPROVED",
+        "mr_status_date": dateNow,
+        "mr_status_updater": this.state.userEmail,
+        "mr_status_updater_id": this.state.userId
       }
     ];
     let currMilestones = [
       {
-          "ms_name": "MS_JOINT_CHECK",
+          "ms_name": "MS_READY_TO_DELIVER",
           "ms_date": dateNow,
           "ms_updater": this.state.userEmail,
           "ms_updater_id": this.state.userId
@@ -196,8 +203,8 @@ class ReadyToDeliver extends Component {
     ];
     let successUpdate = [];
     let updateMR = {};
-    updateMR['current_milestones'] = "MS_JOINT_CHECK";
-    updateMR['current_mr_status'] = "JOINT CHECK FINISHED";
+    updateMR['current_milestones'] = "MS_READY_TO_DELIVER";
+    updateMR['current_mr_status'] = "RTD APPROVED";
     updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
     updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
     let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);

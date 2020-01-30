@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import React, { Component, Fragment } from 'react';
+import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
@@ -12,6 +12,8 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
+const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class OrderProcessing extends Component {
   constructor(props) {
     super(props);
@@ -21,6 +23,7 @@ class OrderProcessing extends Component {
       userId : this.props.dataLogin._id,
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
       mr_list : [],
       prevPage : 0,
       activePage : 1,
@@ -29,7 +32,13 @@ class OrderProcessing extends Component {
       filter_list : new Array(14).fill(""),
       mr_all : [],
       action_status : null,
-      action_message : ""
+      action_message : "",
+      modalNotComplete : false,
+      data_material : null,
+      site_NE : "",
+      site_FE : "",
+      qty_ne : new Map(),
+      qty_fe : new Map(),
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -38,7 +47,11 @@ class OrderProcessing extends Component {
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
     this.proceedMilestone = this.proceedMilestone.bind(this);
-    this.notComplete = this.notComplete.bind(this);
+    this.submitLOM = this.submitLOM.bind(this);
+    this.toggleNotComplete = this.toggleNotComplete.bind(this);
+    this.getQtySiteFE = this.getQtySiteFE.bind(this);
+    this.editQtyNE = this.editQtyNE.bind(this);
+    this.editQtyFE = this.editQtyFE.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -61,6 +74,25 @@ class OrderProcessing extends Component {
     }
   }
 
+  async getDataFromAPINode(url) {
+    try {
+      let respond = await axios.get(API_URL_Node+url, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data node", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data node", err);
+      return respond;
+    }
+  }
+
   getMRList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
@@ -78,7 +110,7 @@ class OrderProcessing extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_PROCESSING", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": "MR RECEIVED", "current_milestones": "MS_ORDER_RECEIVED", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_PROCESSING", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
@@ -105,7 +137,7 @@ class OrderProcessing extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_PROCESSING", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": "MR RECEIVED", "current_milestones": "MS_ORDER_RECEIVED", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_PROCESSING", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
       console.log("MR List All", res);
@@ -172,6 +204,25 @@ class OrderProcessing extends Component {
     }
   }
 
+  async patchDatatoAPINode(url, data) {
+    try {
+      let respond = await axios.patch(API_URL_Node+url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond Patch data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond Patch data", err.response);
+      return respond;
+    }
+  }
+
   async proceedMilestone(e) {
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
@@ -180,20 +231,33 @@ class OrderProcessing extends Component {
     const dataMR = this.state.mr_list.find(e => e._id === _id);
     let currStatus = [
       {
-          "mr_status_name": "READY_TO_DELIVER",
-          "mr_status_value": "REQUESTED",
+          "mr_status_name": "ORDER_PROCESSING",
+          "mr_status_value": "FINISHED",
           "mr_status_date": dateNow,
           "mr_status_updater": this.state.userEmail,
           "mr_status_updater_id": this.state.userId
-      }
+      },
+      {
+        "mr_status_name": "READY_TO_DELIVER",
+        "mr_status_value": "REQUESTED",
+        "mr_status_date": dateNow,
+        "mr_status_updater": this.state.userEmail,
+        "mr_status_updater_id": this.state.userId
+    }
     ];
     let currMilestones = [
       {
-          "ms_name": "MS_READY_TO_DELIVER",
+          "ms_name": "MS_ORDER_PROCESSING",
           "ms_date": dateNow,
           "ms_updater": this.state.userEmail,
           "ms_updater_id": this.state.userId
-      }
+      },
+      {
+        "ms_name": "MS_READY_TO_DELIVER",
+        "ms_date": dateNow,
+        "ms_updater": this.state.userEmail,
+        "ms_updater_id": this.state.userId
+    }
     ];
     let successUpdate = [];
     let updateMR = {};
@@ -213,7 +277,7 @@ class OrderProcessing extends Component {
     }
   }
 
-  async notComplete(e) {
+  async submitLOM(e) {
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
@@ -221,19 +285,19 @@ class OrderProcessing extends Component {
     const dataMR = this.state.mr_list.find(e => e._id === _id);
     let currStatus = [
       {
-          "mr_status_name": "LACK_OF_MATERIAL",
-          "mr_status_value": "YES",
-          "mr_status_date": dateNow,
-          "mr_status_updater": this.state.userEmail,
-          "mr_status_updater_id": this.state.userId
+        "mr_status_name": "LACK_OF_MATERIAL",
+        "mr_status_value": "YES",
+        "mr_status_date": dateNow,
+        "mr_status_updater": this.state.userEmail,
+        "mr_status_updater_id": this.state.userId
       }
     ];
     let currMilestones = [
       {
-          "ms_name": null,
-          "ms_date": dateNow,
-          "ms_updater": this.state.userEmail,
-          "ms_updater_id": this.state.userId
+        "ms_name": null,
+        "ms_date": dateNow,
+        "ms_updater": this.state.userEmail,
+        "ms_updater_id": this.state.userId
       }
     ];
     let successUpdate = [];
@@ -242,15 +306,86 @@ class OrderProcessing extends Component {
     updateMR['current_mr_status'] = "LACK OF MATERIAL";
     updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
     updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
-    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
-    if(res !== undefined) {
-      if(res.data !== undefined) {
-        successUpdate.push(res.data);
+
+    let lomData = [];
+    let updateLOM = {};
+    for(let i = 0; i < this.state.data_material.packages.length; i++) {
+      let materialData = [];
+      for(let j = 0; j < this.state.data_material.packages[i].materials.length; j++) {
+        if(this.state.qty_ne.has(this.state.data_material.packages[i].materials[j].id_mc_doc) !== false || this.state.qty_fe.has(this.state.data_material.packages[i].materials[j].id_mc_doc) !== false) {
+          let material = {
+            "id_mr_doc": this.state.data_material.packages[i].materials[j].id_mr_doc,
+            "id_mr_pp_doc": this.state.data_material.packages[i].materials[j].id_mr_pp_doc,
+            "id_pp_doc": this.state.data_material.packages[i].materials[j].id_pp_doc,
+            "id_site_doc": this.state.data_material.packages[i].materials[j].id_site_doc,
+            "id_mc_doc": this.state.data_material.packages[i].materials[j].id_mc_doc,
+            "id_po_doc": this.state.data_material.packages[i].materials[j].id_po_doc,
+            "add_photo": this.state.data_material.packages[i].materials[j].add_photo,
+            "deleted": this.state.data_material.packages[i].materials[j].deleted,
+            "mr_id": this.state.data_material.packages[i].materials[j].mr_id,
+            "pp_id": this.state.data_material.packages[i].materials[j].pp_id,
+            "site_id": this.state.data_material.packages[i].materials[j].site_id,
+            "material_id": this.state.data_material.packages[i].materials[j].material_id,
+            "material_name": this.state.data_material.packages[i].materials[j].material_name,
+            "material_type": this.state.data_material.packages[i].materials[j].material_type,
+            "uom": this.state.data_material.packages[i].materials[j].uom,
+            "qty": this.state.data_material.packages[i].materials[j].site_id === this.state.site_NE.site_id ? this.state.qty_ne.get(this.state.data_material.packages[i].materials[j].id_mc_doc) : this.state.qty_fe.get(this.state.data_material.packages[i].materials[j].id_mc_doc),
+            "qty_scan": this.state.data_material.packages[i].materials[j].qty_scan,
+            "po_number": this.state.data_material.packages[i].materials[j].po_number,
+            "serial_numbers": [],
+            "created_by": this.state.data_material.packages[i].materials[j].created_by,
+            "updated_by": this.state.data_material.packages[i].materials[j].updated_by,
+            "priority": this.state.data_material.packages[i].materials[j].priority,
+            "updated_on": this.state.data_material.packages[i].materials[j].updated_on,
+            "created_on": this.state.data_material.packages[i].materials[j].created_on
+          }
+          if(material.qty !== undefined) {
+            if(material.qty !== 0 && material.qty !== "0") {
+              materialData.push(material);
+            }
+          }
+        }
+      }
+      let lom = {
+        "id_mr_doc": this.state.data_material.packages[i].id_mr_doc,
+        "mr_id": this.state.data_material.packages[i].mr_id,
+        "id_pp_doc": this.state.data_material.packages[i].id_pp_doc,
+        "pp_id": this.state.data_material.packages[i].pp_id,
+        "id_site_doc": this.state.data_material.packages[i].id_site_doc,
+        "site_id": this.state.data_material.packages[i].site_id,
+        "product_name": this.state.data_material.packages[i].project_name,
+        "product_type": this.state.data_material.packages[i].product_type,
+        "physical_group": this.state.data_material.packages[i].physical_group,
+        "uom": this.state.data_material.packages[i].uom,
+        "qty": 1,
+        "qty_scan": this.state.data_material.packages[i].qty_scan,
+        "id_po_doc": this.state.data_material.packages[i].id_po_doc,
+        "po_number": this.state.data_material.packages[i].po_number,
+        "deleted": this.state.data_material.packages[i].deleted,
+        "created_by": this.state.data_material.packages[i].created_by,
+        "updated_by": this.state.data_material.packages[i].updated_by,
+        "add_photo": this.state.data_material.packages[i].add_photo,
+        "updated_on": this.state.data_material.packages[i].updated_on,
+        "created_on": this.state.data_material.packages[i].created_on,
+        "materials": materialData
+      }
+      if(materialData.length !== 0) {
+        lomData.push(lom);
       }
     }
-    if(successUpdate.length !== 0){
+
+    updateLOM['lom_data'] = lomData;
+    updateLOM['ps_completion_status'] = "NOT COMPLETE";
+    console.log('data LOM', JSON.stringify(updateLOM));
+
+    // let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
+    let resLOM = await this.patchDatatoAPINode('/matreq/orderProcessing/'+_id, updateLOM, _etag);
+    if(resLOM.data !== undefined) {
+      successUpdate.push(resLOM.data);
+    }
+    if(successUpdate.length !== 0) {
       this.setState({action_status : "success"});
-      setTimeout(function(){ window.location.reload(); }, 2000);
+      // setTimeout(function(){ window.location.reload(); }, 2000);
     }
   }
 
@@ -277,6 +412,47 @@ class OrderProcessing extends Component {
     this.setState({filter_list : dataFilter, activePage: 1}, () => {
       this.onChangeDebounced(e);
     })
+  }
+
+  toggleNotComplete(e){
+    const modalNotComplete = this.state.modalNotComplete;
+    if(modalNotComplete === false) {
+      const _id_mr = e.currentTarget.id;
+      this.getDataFromAPINode('/matreq/'+_id_mr).then(res => {
+        if(res.data !== undefined) {
+          this.setState({data_material : res.data}, () => {
+            console.log("Data Material", this.state.data_material);
+          });
+          this.setState({site_NE : this.state.data_material.site_info.find( e => e.site_title === "NE")});
+          this.setState({site_FE : this.state.data_material.site_info.find( e => e.site_title === "FE")});
+        }
+      })
+    }
+    this.setState(prevState => ({
+      modalNotComplete: !prevState.modalNotComplete
+    }));
+  }
+
+  getQtySiteFE(pp_id) {
+    const item = this.state.data_material.packages;
+    const getQtyData = item.find(e => e.pp_id === pp_id && e.site_id === this.state.site_FE.site_id);
+    if(getQtyData !== undefined) {
+      return getQtyData.qty;
+    } else {
+      return 0;
+    }
+  }
+
+  editQtyNE = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+    this.setState(prevState => ({ qty_ne : prevState.qty_ne.set(name, value) }));
+  }
+
+  editQtyFE = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+    this.setState(prevState => ({ qty_fe : prevState.qty_fe.set(name, value) }));
   }
 
   onChangeDebounced(e) {
@@ -505,7 +681,7 @@ class OrderProcessing extends Component {
                       <tr key={list._id}>
                         <td>
                           <Button outline color="success" size="sm" className="btn-pill" style={{width: "120px", marginBottom: "4px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-check" style={{marginRight: "8px"}}></i>Complete</Button>
-                          <Button outline color="danger" size="sm" className="btn-pill" style={{width: "120px"}} id={list._id} value={list._etag} onClick={this.notComplete}><i className="fa fa-times" style={{marginRight: "8px"}}></i>Not Complete</Button>
+                          <Button outline color="danger" size="sm" className="btn-pill" style={{width: "120px"}} id={list._id} value={list._etag} onClick={this.toggleNotComplete}><i className="fa fa-times" style={{marginRight: "8px"}}></i>Not Complete</Button>
                         </td>
                         <td><Link to={'/mr-detail/'+list._id}>{list.mr_id}</Link></td>
                         <td>{list.implementation_id}</td>
@@ -538,6 +714,54 @@ class OrderProcessing extends Component {
             </Card>
           </Col>
         </Row>
+        <Modal isOpen={this.state.modalNotComplete} toggle={this.toggleNotComplete} size="lg">
+          <ModalHeader>Lack of Materials</ModalHeader>
+          <ModalBody>
+            <Table hover bordered striped responsive size="sm">
+              <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
+                <tr>
+                  <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
+                  <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
+                  <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
+                  <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
+                </tr>
+                <tr>
+                  <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
+                  <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site FE</th>
+                </tr>
+              </thead>
+              <tbody>
+              {this.state.data_material !== null && (
+                this.state.data_material.packages.map(pp =>
+                  pp.site_id === this.state.site_NE.site_id && (
+                    <Fragment>
+                    <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                      <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
+                      <td>{pp.product_name}</td>
+                      <td>{pp.uom}</td>
+                      <td align='center'>{pp.qty}</td>
+                      <td align='center'>{this.getQtySiteFE(pp.pp_id)}</td>
+                    </tr>
+                    {pp.materials.map(mat => 
+                      <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                        <td style={{textAlign : 'right'}}>{mat.material_id}</td>
+                        <td style={{textAlign : 'left'}}>{mat.material_name}</td>
+                        <td>{mat.uom}</td>
+                        <td align='center'><Input onChange={this.editQtyNE} type="number" name={mat.id_mc_doc} style={{textAlign : 'center'}} min="0"/></td>
+                        <td align='center'><Input onChange={this.editQtyFE} type="number" name={mat.id_mc_doc} style={{textAlign : 'center'}} min="0"/></td>
+                      </tr>
+                    )}
+                  </Fragment>
+                  )
+                )
+              )}
+              </tbody>
+            </Table>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="primary" style={{float: "right"}} id={this.state.data_material !== null ? this.state.data_material._id : ""} value={this.state.data_material !== null ? this.state.data_material._etag : ""} onClick={this.submitLOM}><i className="fa fa-edit" style={{marginRight: "8px"}}></i> Submit LOM</Button>
+          </ModalFooter>
+        </Modal>
       </div>
     );
   }

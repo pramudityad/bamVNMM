@@ -779,7 +779,7 @@ class DSACreation extends Component {
                       <Col md="6">
                         <FormGroup style={{paddingLeft: "16px"}}>
                           <Label>Address</Label>
-                          <Input type="textarea" name="14" rows="3" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.origin_warehouse.address : ""} onChange={this.handleChangeForm} />
+                          <Input type="textarea" name="14" rows="3" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.origin_warehouse.address : null} onChange={this.handleChangeForm} />
                         </FormGroup>
                       </Col>
                     </Row>
