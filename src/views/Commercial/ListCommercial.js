@@ -143,7 +143,7 @@ class ListCommercial extends Component {
     let filter_no_comm = this.state.filter_list[2] === null ? '"no_boq_comm":{"$exists" : 1}' : '"no_boq_comm":{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
     let filter_project = this.state.filter_list[3] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
     let filter_po = this.state.filter_list[6] === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "'+this.state.filter_list[6]+'", "$options" : "i"}';
-    let filter_ver = this.state.filter_list[5] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
+    let filter_ver = this.state.filter_list[7] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
     let filter_created_by = '"created_by":{"$exists" : 1}';
     if(this.state.filter_list[4] !== null){
       if(this.state.filter_createdBy.length !== 0){
@@ -363,7 +363,7 @@ class ListCommercial extends Component {
                         <th>PO Number</th>
                         <th>Ver.</th>
                         <th style={{'width' : '150px', textAlign : 'center'}}>Status</th>
-                        <th style={{'width' : '200px', textAlign : 'center'}}>Action</th>
+                        <th style={{'width' : '300px', textAlign : 'center'}}>Action</th>
                     </tr>
                     <tr>
                       <td>
@@ -462,6 +462,11 @@ class ListCommercial extends Component {
                               <Link to={'/approval-commercial/'+boq._id}>
                                 <Button size="sm" color="warning" style={{marginRight : '10px'}}>
                                   <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; Approval
+                                </Button>
+                              </Link>
+                              <Link to={'/po-commercial/'+boq._id}>
+                                <Button size="sm" color="secondary" style={{marginRight : '10px'}}>
+                                  <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; PO Assign
                                 </Button>
                               </Link>
                             </td>

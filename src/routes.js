@@ -72,6 +72,7 @@ const DSACreation = React.lazy(() => import('./views/DSA/DSACreation'));
 const ListCommercial = React.lazy(() => import('./views/Commercial/ListCommercial'));
 const DetailCommercial = React.lazy(() => import('./views/Commercial/CommercialBoq'));
 const ApprovalCommercial = React.lazy(() => import('./views/Commercial/CommercialBoqApproval'));
+const POCommercial = React.lazy(() => import('./views/Commercial/BoqCommPO'));
 const ListTssrMatrix = React.lazy(() => import('./views/TssrMatrix/ListTSSRBoq'));
 const DetailTssrMatrix = React.lazy(() => import('./views/TssrMatrix/UploadTSSRMatrix'));
 const NewTssrMatrix = React.lazy(() => import('./views/TssrMatrix/TSSRbyTech'));
@@ -158,6 +159,7 @@ const routes = [
   { path: '/bulk-assignment-notify', exact: true, name: 'Bulk Assignment Notify to ASP', component: BulkNotifytoASP },
   { path: '/list-technical', exact: true, name: 'List Technical BOQ', component: ListTechnical },
   { path: '/detail-technical/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+  { path: '/new-technical', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
   { path: '/approval-technical/:id', exact: true, name: 'Approval for Technical BOQ', component: ApprovalTechnical },
   { path: '/dsa-creation', exact: true, name: 'DSA Creation', component: DSACreation },
   { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
@@ -167,6 +169,10 @@ const routes = [
   { path: '/tssr-matix-creation', exact: true, name: 'TSSR Matrix BOQ Creation', component: NewTssrMatrix },
   { path: '/detail-tssr-matix/:id', exact: true, name: 'Detail TSSR Matrix BOQ', component: DetailTssrMatrix },
   { path: '/approval-commercial/:id', exact: true, name: 'Approval for Commercial BOQ', component: ApprovalCommercial },
+  { path: '/po-commercial/:id', exact: true, name: 'PO for Commercial BOQ', component: POCommercial },
+  { path: '/list-ordering', exact: true, name: 'List Commercial BOQ', component: ListOrdering },
+  { path: '/new-ordering', name: 'New Ordering Material', component: DetailOrdering},
+  { path: '/detail-ordering/:id', exact: true, name: 'List Commercial BOQ', component: DetailOrdering },
   { path: '/assign-bast/:id', exact: true, name: 'Assign Bast', component: AssignBast },
   { path: '/dsa-list', exact: true, name: 'DSA List', component: DSAList },
   { path: '/dsa-detail/:id', exact: true, name: 'DSA Detail', component: DSADetail },

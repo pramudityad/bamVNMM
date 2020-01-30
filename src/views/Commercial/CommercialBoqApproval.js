@@ -430,7 +430,7 @@ class CommercialBoqApproval extends Component {
       ws.getCell('I6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
       const revDocNum = ws.mergeCells('I7:K7');
-      ws.getCell('I7').value = (dataComm.rev1 !== 'A' ? 'PA' : 'A')+ dataComm.version;
+      ws.getCell('I7').value = dataComm.version;
       ws.getCell('I7').alignment  = {vertical: 'top', horizontal: 'left' };
       ws.getCell('I7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
@@ -818,7 +818,7 @@ class CommercialBoqApproval extends Component {
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>Version &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-                              <td>: &nbsp; {(this.state.boq_comm_API.rev1 !== 'A' ? 'PA' : 'A') +this.state.boq_comm_API.version}</td>
+                              <td>: &nbsp; {this.state.boq_comm_API.version}</td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td >Early Start </td>

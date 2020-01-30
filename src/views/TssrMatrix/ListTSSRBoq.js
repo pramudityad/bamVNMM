@@ -223,7 +223,6 @@ class ListTSSRBoq extends Component {
                     <tr>
                         <th>TSSR BOQ Document</th>
                         <th>Project</th>
-                        <th style={{'width' : '200px', textAlign : 'center'}}>Created by.</th>
                         <th style={{'width' : '200px', textAlign : 'center'}}>Tech BOQ ref.</th>
                         <th style={{'width' : '300px', textAlign : 'center'}}>Action</th>
                     </tr>
@@ -248,16 +247,6 @@ class ListTSSRBoq extends Component {
                           </InputGroup>
                         </div>
                       </td>
-                      <td>
-                        <div className="controls">
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={3} size="sm" onChange={this.handleFilterListName} value={this.state.filter_list[3]}/>
-                          </InputGroup>
-                        </div>
-                      </td>
                       <td style={{width:'125px'}}>
                         <div className="controls">
                           <InputGroup className="input-prepend">
@@ -277,7 +266,6 @@ class ListTSSRBoq extends Component {
                         <tr key={tssr._id}>
                             <td style={{verticalAlign : 'middle'}}>{tssr.no_tssr_boq}</td>
                             <td style={{verticalAlign : 'middle'}}>{tssr.project_name}</td>
-                            <td style={{verticalAlign : 'middle'}}>{tssr.created_by !== undefined ? tssr.created_by.email : ""}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>{tssr.no_boq_tech}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
                               <Link to={'/detail-tssr-matix/'+tssr._id}>
