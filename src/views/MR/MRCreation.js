@@ -262,6 +262,19 @@ class MRCreation extends Component {
       }
       list_site.push(site_fe);
     }
+    const origin_place = {
+      "title" : dataFormName[4].split(" to ", 2)[0],
+      "value" : dataFormName[8],
+      "address" : "",
+    };
+    let destination_place = undefined;
+    if(dataForm[3] === "Relocation" || dataForm[3] === "Return"){
+      destination_place = {
+        "title" : dataFormName[4].split(" to ", 2)[1],
+        "value" : dataFormName[9],
+        "address" : "",
+      };
+    }
     const mr_data = {
       	"mr_id" : "MR"+numberingMR,
         "implementation_id" : "IMP"+numberingMR,
@@ -281,16 +294,8 @@ class MRCreation extends Component {
         "requested_eta" : dataForm[6]+" 23:59:59",
         "eta" : dataForm[6]+" 23:59:59",
         "site_info" : list_site,
-        "origin_warehouse" : {
-          "title" : "Warehouse",
-          "value" : dataFormName[8],
-          "address" : "",
-        },
-        "destination" : {
-          "title" : "Warehouse",
-          "value" : dataFormName[9],
-          "address" : "",
-        },
+        "origin_warehouse" : origin_place,
+        "destination" : destination_place,
         "mr_milestones" : [],
         "mr_status" : [
           {
@@ -314,6 +319,7 @@ class MRCreation extends Component {
         "created_by" : this.state.userId,
         "updated_by" : this.state.userId
       }
+      console.log("data new MR", mr_data);
       console.log("data new MR", JSON.stringify(mr_data));
       const respondSaveMR = await this.postDatatoAPIBAM('/mr_op', mr_data);
       if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
@@ -377,6 +383,32 @@ class MRCreation extends Component {
               <Row form>
                 <Col md={6}>
                   <FormGroup>
+                    <Label>MR Type</Label>
+                    <Input type="select" name="3" value={this.state.create_mr_form[3]} onChange={e => {this.handleChangeFormMRCreation(e); this.showHide(e)}}>
+                      <option value="" disabled selected hidden>Select MR Type</option>
+                      <option value="New">New</option>
+                      <option value="Upgrade">Upgrade</option>
+                      <option value="Relocation">Relocation</option>
+                      <option value="Return">Return</option>
+                    </Input>
+                  </FormGroup>
+                </Col>
+                <Col md={6}>
+                  <FormGroup>
+                    <Label>MR Delivery Type</Label>
+                    <Input type="select" name="4" value={this.state.create_mr_form[4]} onChange={this.handleChangeFormMRCreation}>
+                      <option value="" disabled selected hidden>Select MR Delivery Type</option>
+                      <option value="Warehouse to Site" hidden={this.state.toggle_display !== "new"}>Warehouse to Site</option>
+                      <option value="Site to Warehouse" hidden={this.state.toggle_display !== "return"}>Site to Warehouse</option>
+                      <option value="Site to Site" hidden={this.state.toggle_display !== "relocation"}>Site to Site</option>
+                      <option value="Warehouse to Warehouse" hidden={this.state.toggle_display !== "relocation"}>Warehouse to Warehouse</option>
+                    </Input>
+                  </FormGroup>
+                </Col>
+              </Row>
+              <Row form>
+                <Col md={6}>
+                  <FormGroup>
                     <Label>CD ID</Label>
                     <Input type="select" name="0" value={this.state.cd_id_selected} onChange={this.handleChangeCD}>
                       <option value="" disabled selected hidden>Select CD ID</option>
@@ -433,32 +465,6 @@ class MRCreation extends Component {
                       <option value={2}>PT MITT Delivery</option>
                       <option value={3}>PT IXT Delivery</option>
                       <option value={4}>PT ARA Delivery</option>
-                    </Input>
-                  </FormGroup>
-                </Col>
-              </Row>
-              <Row form>
-                <Col md={6}>
-                  <FormGroup>
-                    <Label>MR Type</Label>
-                    <Input type="select" name="3" value={this.state.create_mr_form[3]} onChange={e => {this.handleChangeFormMRCreation(e); this.showHide(e)}}>
-                      <option value="" disabled selected hidden>Select MR Type</option>
-                      <option value="New">New</option>
-                      <option value="Upgrade">Upgrade</option>
-                      <option value="Relocation">Relocation</option>
-                      <option value="Return">Return</option>
-                    </Input>
-                  </FormGroup>
-                </Col>
-                <Col md={6}>
-                  <FormGroup>
-                    <Label>MR Delivery Type</Label>
-                    <Input type="select" name="4" value={this.state.create_mr_form[4]} onChange={this.handleChangeFormMRCreation}>
-                      <option value="" disabled selected hidden>Select MR Delivery Type</option>
-                      <option value="Warehouse to Site" hidden={this.state.toggle_display !== "new"}>Warehouse to Site</option>
-                      <option value="Site to Warehouse" hidden={this.state.toggle_display !== "return"}>Site to Warehouse</option>
-                      <option value="Site to Site" hidden={this.state.toggle_display !== "relocation"}>Site to Site</option>
-                      <option value="Warehouse to Warehouse" hidden={this.state.toggle_display !== "relocation"}>Warehouse to Warehouse</option>
                     </Input>
                   </FormGroup>
                 </Col>

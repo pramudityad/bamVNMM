@@ -391,6 +391,7 @@ class PSUpload extends Component {
         "pp_id" : dataPPTssr[i].pp_id,
         "id_site_doc" : dataTSSRBOMNE.id_site_doc,
         "site_id" : dataTSSRBOMNE.site_id,
+        "site_name" : dataTSSRBOMNE.site_name,
         "product_name" : dataPPTssr[i].product_name,
         "product_type" : dataPPTssr[i].product_type,
         "physical_group" : dataPPTssr[i].physical_group,
@@ -416,6 +417,7 @@ class PSUpload extends Component {
           "pp_id" : dataPPTssr[i].pp_id,
           "id_site_doc" : dataTSSRBOMFE.id_site_doc,
           "site_id" : dataTSSRBOMFE.site_id,
+          "site_name" : dataTSSRBOMFE.site_name,
           "product_name" : dataPPTssr[i].product_name,
           "product_type" : dataPPTssr[i].product_type,
           "physical_group" : dataPPTssr[i].physical_group,
@@ -469,6 +471,7 @@ class PSUpload extends Component {
           "pp_id" : dataPPTssr[i].pp_id,
           "id_site_doc" : dataTSSRBOMNE.id_site_doc,
           "site_id" : dataTSSRBOMNE.site_id,
+          "site_name" : dataTSSRBOMNE.site_name,
           "id_mc_doc" : dataMatIndex._id,
           "material_id" : dataMatIndex.material_id,
           "material_name" : dataMatIndex.material_name,
@@ -502,6 +505,7 @@ class PSUpload extends Component {
             "pp_id" : dataPPTssr[i].pp_id,
             "id_site_doc" : dataTSSRBOMFE.id_site_doc,
             "site_id" : dataTSSRBOMFE.site_id,
+            "site_name" : dataTSSRBOMFE.site_name,
             "id_mc_doc" : dataMatIndex._id,
             "material_id" : dataMatIndex.material_id,
             "material_name" : dataMatIndex.material_name,
@@ -623,20 +627,32 @@ class PSUpload extends Component {
                 <Col md="4">
                 <table className="table-header">
                   <tbody>
-                      <tr>
-                        <td>Site ID NE</td>
-                        <td>: &nbsp;</td>
-                        <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_id}</td>
-                      </tr>
-                      <tr>
-                        <td>Site Name NE</td>
-                        <td>:</td>
-                        <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_name}</td>
-                      </tr>
+                    <Fragment>
+                      {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
+                        <tr>
+                          <td style={{width : '200px'}}>Destination {this.state.data_mr.destination.title}</td>
+                          <td>:</td>
+                          <td style={{width : '200px'}}>{this.state.data_mr.destination.value}</td>
+                        </tr>
+                      ) : (
+                        <Fragment>
+                        <tr>
+                          <td style={{width : '200px'}}>Site ID NE</td>
+                          <td>:</td>
+                          <td>{this.state.tssr_site_NE.site_id}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '200px'}}>Site Name NE</td>
+                          <td>:</td>
+                          <td>{this.state.tssr_site_NE.site_name}</td>
+                        </tr>
+                        </Fragment>
+                      )}
+                    </Fragment>
                   </tbody>
                 </table>
                 </Col>
-                {this.state.tssr_site_FE !== null ? (
+                {this.state.tssr_site_FE !== null && this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
                   <Col md="4">
                   <table className="table-header">
                     <tbody>
@@ -658,6 +674,13 @@ class PSUpload extends Component {
             )}
             </Row>
               <hr className="upload-line-ordering"></hr>
+              {this.state.data_mr !== null ?
+                this.state.data_mr.sow_type === "RBS" && this.state.tssr_site_FE !== null ? (
+                  <span style={{color : 'red'}}>You just can choose Plant Spec with same SOW type</span>
+                ) : this.state.data_mr.sow_type === "TRM" && this.state.tssr_site_FE === null ? (
+                  <span style={{color : 'red'}}>You just can choose Plant Spec with same SOW type</span>
+                ) : (<Fragment></Fragment> ) : (<Fragment></Fragment>
+              )}
               <div className='divtable2'>
                 <Table hover bordered striped responsive size="sm">
                   <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
@@ -667,12 +690,15 @@ class PSUpload extends Component {
                       <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
                       <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
                     </tr>
-                    <tr>
-                      <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
-                      {this.state.data_tssr_sites[1] !== undefined ? (
-                        <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
-                      ):(<Fragment></Fragment>)}
-                    </tr>
+                    {this.state.data_mr !== null ?
+                      this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
+                        <tr>
+                          <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
+                          {this.state.tssr_site_FE !== null ? (
+                            <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
+                          ):(<Fragment></Fragment>)}
+                        </tr>
+                      ) : <Fragment></Fragment> : <Fragment></Fragment>}
                   </thead>
                   <tbody>
                     {this.state.list_pp_material_tssr.map( pp =>

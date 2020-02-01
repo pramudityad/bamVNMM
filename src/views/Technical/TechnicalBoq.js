@@ -97,6 +97,7 @@ class TechnicalBoq extends Component {
     this.handleChangeVerComment = this.handleChangeVerComment.bind(this);
     this.selectProject = this.selectProject.bind(this);
     this.saveProjecttoDB = this.saveProjecttoDB.bind(this);
+    this.exportFormatTechnical = this.exportFormatTechnical.bind(this);
     }
 
     numberToAlphabet(number){
@@ -240,9 +241,6 @@ class TechnicalBoq extends Component {
       }
       return respond;
     }catch (err) {
-if(this.state.modal_loading === true){
-        this.toggleLoading();
-      }
       let respond = undefined;
       this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
       console.log("respond Patch data", err);
@@ -1575,7 +1573,7 @@ if(this.state.modal_loading === true){
             "subject":"Request for Approval Technical BOQ "+dataTech.no_boq_tech,
             "body": bodyEmail
           }
-          let sendEmail = await this.apiSendEmail(dataEmail);
+          // let sendEmail = await this.apiSendEmail(dataEmail);
         }
           dataTech['rev'] = dataApprove.rev;
           dataTech['rev_by'] = dataApprove.rev_by;
@@ -1677,6 +1675,30 @@ if(this.state.modal_loading === true){
         this.toggleLoading();
       })
     }
+  }
+
+  exportFormatTechnical = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataTech = this.state.API_Tech;
+    const dataAPI = this.state.data_item;
+    const dataHeader = this.state.Package_Header;
+
+    let ppIdRow = ["project", "site_id", "site_name"];
+    let ppTypeRow = ["", "", ""];
+
+    ppIdRow = ppIdRow.concat(dataHeader.IDPP.map((pp,i) => pp+" /// "+dataHeader.name[i]));
+    ppTypeRow = ppTypeRow.concat(dataHeader.type);
+
+    ws.addRow(ppTypeRow);
+    ws.addRow(ppIdRow);
+    for(let i = 0; i < dataAPI.length ; i++){
+      ws.addRow([dataTech.project_name !== null ? dataTech.project_name : "", dataAPI[i].site_id, dataAPI[i].site_name].concat(dataAPI[i].list_qty_items));
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_boq_tech+' Uploader Template.xlsx');
   }
 
     render() {
@@ -1835,7 +1857,7 @@ if(this.state.modal_loading === true){
                           <DropdownMenu>
                             <DropdownItem header> Technical File</DropdownItem>
                             <DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Report</DropdownItem>
-                            <PrintTechnical dataApi={this.state.data_item} dataHeader={this.state.Package_Header} Tech_info={this.state.API_Tech} versionAlpha={this.state.API_Tech.version}/>
+                            <DropdownItem onClick={this.exportFormatTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Format</DropdownItem>
                           </DropdownMenu>
                         </Dropdown>
                       </Col>

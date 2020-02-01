@@ -452,6 +452,54 @@ const mainChartOpts = {
   },
 };
 
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+const month = ['July', 'August', 'September', 'October', 'November', 'Desember'];
+console.log("month", month.map(e => e));
+
+const bar = {
+  labels: month,
+  datasets: [
+    {
+      label: 'MoS',
+      backgroundColor: 'rgba(121,134,203,0.4)',
+      borderColor: 'rgba(121,134,203,0.7)',
+      borderWidth: 0.5,
+      hoverBackgroundColor: 'rgba(63,81,181,0.7)',
+      hoverBorderColor: 'rgba(63,81,181,1)',
+      data: month.map(e => getRandomInt(65,100)),
+    },
+    {
+      label: 'Installed',
+      backgroundColor: 'rgba(79,195,247,0.5)',
+      borderColor: 'rgba(79,195,247,1)',
+      borderWidth: 0.5,
+      hoverBackgroundColor: 'rgba(3,169,244,0.7)',
+      hoverBorderColor: 'rgba(3,169,244,1)',
+      data: month.map(e => getRandomInt(45,75)),
+    },
+    {
+      label: 'On Air',
+      backgroundColor: 'rgba(0, 184, 148,0.4)',
+      borderColor: 'rgba(0, 184, 148,1)',
+      borderWidth: 0.5,
+      hoverBackgroundColor: 'rgba(0, 184, 148,0.7)',
+      hoverBorderColor: 'rgba(0, 184, 148,1)',
+      data: month.map(e => getRandomInt(20,65)),
+    },
+  ],
+};
+
+const options = {
+  tooltips: {
+    enabled: false,
+    custom: CustomTooltips
+  },
+  maintainAspectRatio: false
+}
+
 class Dashboard extends Component {
   constructor(props) {
     super(props);
@@ -584,6 +632,26 @@ class Dashboard extends Component {
         <Row>
           <Col>
             <Card>
+              <CardHeader>
+                CD Chart
+                <div className="card-header-actions">
+                  <a href="http://www.chartjs.org" className="card-header-action">
+                    <small className="text-muted">docs</small>
+                  </a>
+                </div>
+              </CardHeader>
+              <CardBody>
+                <div className="chart-wrapper" style={{ height: 300 + 'px', marginTop: 40 + 'px' }}>
+                  <Bar data={bar} options={options} />
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        {/*}
+        <Row>
+          <Col>
+            <Card>
               <CardBody>
                 <Row>
                   <Col sm="5">
@@ -600,12 +668,12 @@ class Dashboard extends Component {
                     </ButtonToolbar>
                   </Col>
                 </Row>
-                <div className="chart-wrapper" style={{ height: 300 + 'px', marginTop: 40 + 'px' }}>
+                <div className="chart-wrapper" style={{ height: 400 + 'px', marginTop: 40 + 'px' }}>
                   <Line data={mainChart} options={mainChartOpts} height={300} />
                 </div>
               </CardBody>
               <CardFooter>
-                {/* }<Row className="text-center">
+                <Row className="text-center">
                   <Col sm={12} md className="mb-sm-2 mb-0">
                     <div className="text-muted">Visits</div>
                     <strong>29.703 Users (40%)</strong>
@@ -631,11 +699,11 @@ class Dashboard extends Component {
                     <strong>Average Rate (40.15%)</strong>
                     <Progress className="progress-xs mt-2" color="primary" value="40" />
                   </Col>
-                </Row> */}
+                </Row>
               </CardFooter>
             </Card>
           </Col>
-        </Row>
+        </Row>*/}
       </div>
     );
   }

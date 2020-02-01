@@ -239,25 +239,9 @@ class AssignmentDetail extends Component {
   }
 
   async acceptASG(e) {
-    const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-    const _etag = e.target.value;
-    const _id = e.target.id;
-    let currStatus = [
-      {
-        "status_name": "ASP_ASSIGNMENT",
-        "status_value": "ACCEPTED",
-        "status_date": dateNow,
-        "status_updater": this.state.userEmail,
-        "status_updater_id": this.state.userId
-      }
-    ];
     let successUpdate = [];
-    let updateASG = {};
-    updateASG['Current_Status'] = "ASP ASSIGNMENT ACCEPT";
-    updateASG['ASP_Assignment_Status'] = this.state.data_assignment.ASP_Assignment_Status.concat(currStatus);
-    updateASG['ASP_Acceptance_Date'] = dateNow;
-    let res = await this.patchDataToAPI('/asp_assignment_op/'+_id, updateASG, _etag);
+    const _id = e.target.id;
+    let res = await this.patchDatatoAPINode('/aspAssignment/acceptAspAssignment/'+_id);
     if(res !== undefined) {
       if(res.data !== undefined) {
         successUpdate.push(res.data);

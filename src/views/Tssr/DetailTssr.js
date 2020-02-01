@@ -7,6 +7,7 @@ import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
+import Select from 'react-select';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -85,6 +86,9 @@ class DetailTssr extends Component {
         cd_id_selected : null,
         dataTssrUpload : [],
         dataTssrRevUpload : [],
+        list_technical_ref : [],
+        list_technical_ref_selection : [],
+        technical_ref_selected : null,
         waiting_status : null,
         action_status : null,
         action_message : null,
@@ -95,6 +99,8 @@ class DetailTssr extends Component {
     this.prepareEdit = this.prepareEdit.bind(this);
     this.prepareRevision = this.prepareRevision.bind(this);
     this.exportFormatTSSR = this.exportFormatTSSR.bind(this);
+    this.handleChangeTechRef = this.handleChangeTechRef.bind(this);
+    this.referenceWithTechBoq = this.referenceWithTechBoq.bind(this);
   }
 
     async getDatafromAPIBMS(url){
@@ -113,6 +119,29 @@ class DetailTssr extends Component {
       }catch (err) {
         let respond = err;
         console.log("respond Get Data", err);
+        return respond;
+      }
+    }
+
+    async patchDatatoAPIBMS(url, data, _etag){
+      try {
+        let respond = await axios.patch(API_URL_BMS_Phil +url, data, {
+          headers : {'Content-Type':'application/json'},
+          auth: {
+            username: usernamePhilApi,
+            password: passwordPhilApi
+          },
+          headers : {
+            "If-Match" : _etag
+          },
+        })
+        if(respond.status >= 200 && respond.status < 300){
+          console.log("respond Patch data", respond);
+        }
+        return respond;
+      }catch (err) {
+        let respond = err;
+        console.log("respond Patch data", err);
         return respond;
       }
     }
@@ -477,19 +506,34 @@ class DetailTssr extends Component {
   }
 
   getDataTssr(_id_tssr){
+    //Get Data TSSR Parent
     this.getDatafromAPIBAM('/tssr_op/'+_id_tssr).then( resTssr => {
       if(resTssr.data !== undefined){
         this.setState({ data_tssr : resTssr.data, data_tssr_current : resTssr.data, version_current : resTssr.data.version });
         if(resTssr.data.project_name === null || resTssr.data.project_name === "" ){
           this.getDataProject();
         }
+        //Get Data TSSR Sites
         this.getDatafromAPIBAM('/tssr_sites_sorted_nonpage?where={"id_tssr_boq_doc" : "'+_id_tssr+'"}').then( resSites => {
           if(resSites.data !== undefined){
+            //Get Data TSSR Items
             this.getDatafromAPIBAM('/tssr_site_items_sorted_nonpage?where={"id_tssr_boq_doc" : "'+_id_tssr+'"}').then( resItem => {
               if(resItem.data !== undefined){
                 const itemsTssr = resItem.data._items;
                 const itemUniq = [...new Set(itemsTssr.map(({ id_pp_doc}) => id_pp_doc))];
                 this.setState({ data_tssr_sites : resSites.data._items, data_tssr_sites_item : resItem.data._items, data_tssr_sites_current : resSites.data._items, data_tssr_sites_item_current : resItem.data._items  }, () => {
+                  //Get Data Technical Ref
+                  this.getDatafromAPIBMS('/boq_tech_sites_op?projection={"site_id" : 1, "no_boq_tech" : 1, "id_boq_tech_doc" : 1, "tssr_boq_id" : 1}&where={"tssr_boq_id" : "'+resTssr.data.no_tssr_boq+'"}').then( resRef => {
+                    if(resRef.data !== undefined){
+                      if(resRef.data._items.length !== 0){
+                        this.setState({ list_technical_ref : null, technical_ref_selected : resRef.data._items[0].no_boq_tech});
+                      }else{
+                        this.getListTechnicalForRef();
+                      }
+                    }else{
+                      this.getListTechnicalForRef();
+                    }
+                  })
                   this.getPPandMaterial(itemUniq);
                   this.prepareView();
                 });
@@ -668,9 +712,7 @@ class DetailTssr extends Component {
     if(dataFormat.length === 0 && this.state.version_current !== this.state.version_selected){
       dataFormat = this.state.dataTssrRevUpload;
     }
-    console.log("version pre", version);
     if(dataSiteNE !== null){
-      console.log("version Try NE");
       const SiteNENew = dataFormat.find(e => e.site_id === dataSiteNE.site_id);
       if(SiteNENew !== undefined && dataSiteNE.site_id === SiteNENew.site_id){
         const itemFormatNew = SiteNENew.list_of_site_items;
@@ -687,7 +729,6 @@ class DetailTssr extends Component {
       }
     }
     if(dataSiteFE !== null){
-      console.log("version Try FE");
       const SiteFENew = dataFormat.find(e => e.site_id === dataSiteFE.site_id);
       if(SiteFENew !== undefined && dataSiteFE.site_id === SiteFENew.site_id){
         const itemFormatNew = SiteFENew.list_of_site_items;
@@ -706,13 +747,17 @@ class DetailTssr extends Component {
     const patchDataParent = await this.patchDatatoAPIBAM('/tssr_op/'+dataTSSR._id, {"version" : version.toString() }, dataTSSR._etag);
     if(signSucRev === undefined){
       if(signSuc.length === 2 && patchDataParent.data !== undefined){
-        this.setState({action_status : "success"});
+        this.setState({action_status : "success"}, () => {
+          setTimeout(function(){ window.location.reload(); }, 3000);
+        });
       }else{
         this.setState({action_status : "failed"});
       }
     }else{
       if((signSuc.length+signSucRev.length) === 5 && patchDataParent.data !== undefined){
-        this.setState({action_status : "success"});
+        this.setState({action_status : "success"}, () => {
+          setTimeout(function(){ window.location.reload(); }, 3000);
+        });
       }else{
         this.setState({action_status : "failed"});
       }
@@ -720,7 +765,6 @@ class DetailTssr extends Component {
   }
 
   async editPP(itemNew, itemSame, version, dataTssr, dataSite){
-    console.log("version ed", version);
     const date = new Date();
     const dateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
     let sucEdit = [];
@@ -993,9 +1037,68 @@ class DetailTssr extends Component {
     saveAs(new Blob([MRFormat]), 'Plant Spec '+this.state.data_tssr.no_tssr_boq+' Uploader Template.xlsx');
   }
 
+  getListTechnicalForRef(){
+    const dataPSParent = this.state.data_tssr;
+    const dataTSSRBOM = this.state.data_tssr_sites;
+    let whereTech = '';
+    if(dataTSSRBOM.length > 1){
+      whereTech = 'where={"$or" : [{"site_id" : "'+dataTSSRBOM[0].site_id+'"}, {"site_id" : "'+dataTSSRBOM[1].site_id+'"}] }';
+    }else{
+      whereTech = 'where={"site_id" : "'+dataTSSRBOM[0].site_id+'"}';
+    }
+    if(dataTSSRBOM.length > 0){
+      this.getDatafromAPIBMS('/boq_tech_sites_op'+'?projection={"site_id" : 1, "site_name" : 1, "_etag" : 1, "id_boq_tech_doc" : 1,  "no_boq_tech" : 1, "tssr_boq_id" : 1}&'+whereTech).then( res => {
+        if(res.data !== undefined){
+          this.setState({list_technical_ref : res.data._items}, () => {
+            this.prepareSelectionTechRef( res.data._items);
+          });
+        }
+      })
+    }
+  }
+
+  prepareSelectionTechRef(techRef){
+    const dataTSSRBOM = this.state.data_tssr_sites;
+    const techRefUniq = [...new Set(techRef.map(({ no_boq_tech }) => no_boq_tech))];
+    let listTech = [];
+    for(let i = 0; i < techRefUniq.length; i++){
+      const getTech = techRef.filter(e => e.no_boq_tech === techRefUniq[i]);
+      if(getTech.length >= dataTSSRBOM.length){
+        listTech.push({"value" : getTech[0]._id, "label" : getTech[0].no_boq_tech });
+      }
+    }
+    this.setState({list_technical_ref_selection : listTech});
+  }
+
+  handleChangeTechRef = (newValue) => {
+    this.setState({technical_ref_selected : newValue.label});
+    return newValue;
+  }
+
+  async referenceWithTechBoq(){
+    const dataTSSRBOM = this.state.data_tssr_sites;
+    const techSelected = this.state.list_technical_ref.filter(e => e.no_boq_tech === this.state.technical_ref_selected);
+    let sucPatch = [];
+    for(let i = 0; i < dataTSSRBOM.length; i++){
+      const patchWill = techSelected.find(e => e.site_id === dataTSSRBOM[i].site_id);
+      if(patchWill !== undefined){
+        const patchData = await this.patchDatatoAPIBMS('/boq_tech_sites_op/'+patchWill._id, {"tssr_boq_id" : dataTSSRBOM[0].no_tssr_boq}, patchWill._etag);
+        if(patchData.data !== undefined){
+          sucPatch.push(patchData.data._id);
+        }
+      }
+    }
+    if(sucPatch.length === dataTSSRBOM.length){
+      this.setState({ action_status : 'success' }, () => {
+        setTimeout(function(){ window.location.reload(); }, 3000);
+      });
+    }else{
+      this.setState({ action_status : 'failed' });
+    }
+  }
+
   render() {
-    console.log("Excel Render", JSON.stringify(this.state.rowsXLS));
-    console.log("Excel Render revUpload", this.state.dataTssrRevUpload);
+    console.log("Excel Render revUpload", this.state.data_tssr_sites);
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -1055,6 +1158,39 @@ class DetailTssr extends Component {
               </table>
               <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
               <Fragment>
+              <Row>
+              {this.state.tssr_site_NE !== null && (
+              <Col style={{marginBottom : '20px'}}>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Technical Ref</td>
+                      <td>:</td>
+                      {this.state.list_technical_ref !== null ? (
+                        <Fragment>
+                          <td style={{paddingLeft:'10px', width : '200px'}}>
+                            <Select
+                              cacheOptions
+                              options={this.state.list_technical_ref_selection}
+                              onChange={this.handleChangeTechRef}
+                            />
+                          </td>
+                          <td style={{paddingLeft:'10px', width : '100px'}}>
+                            <Button size="sm" color="primary" style={{float: "right"}} sm disabled={this.state.technical_ref_selected === null} onClick={this.referenceWithTechBoq}>Submit</Button>
+                          </td>
+                        </Fragment>
+                      ) : (
+                        <td style={{paddingLeft:'10px', width : '200px'}}>
+                          {this.state.technical_ref_selected}
+                        </td>
+                      )}
+
+                    </tr>
+                  </tbody>
+                </table>
+              </Col>
+              )}
+              </Row>
               <Row>
               {this.state.tssr_site_NE !== null && (
                 <Fragment>
