@@ -278,6 +278,9 @@ class OrderProcessing extends Component {
   }
 
   async submitLOM(e) {
+    this.setState(prevState => ({
+      modalNotComplete: !prevState.modalNotComplete
+    }));
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
@@ -325,6 +328,7 @@ class OrderProcessing extends Component {
             "mr_id": this.state.data_material.packages[i].materials[j].mr_id,
             "pp_id": this.state.data_material.packages[i].materials[j].pp_id,
             "site_id": this.state.data_material.packages[i].materials[j].site_id,
+            "site_name": this.state.data_material.packages[i].materials[j].site_name,
             "material_id": this.state.data_material.packages[i].materials[j].material_id,
             "material_name": this.state.data_material.packages[i].materials[j].material_name,
             "material_type": this.state.data_material.packages[i].materials[j].material_type,
@@ -353,7 +357,8 @@ class OrderProcessing extends Component {
         "pp_id": this.state.data_material.packages[i].pp_id,
         "id_site_doc": this.state.data_material.packages[i].id_site_doc,
         "site_id": this.state.data_material.packages[i].site_id,
-        "product_name": this.state.data_material.packages[i].project_name,
+        "site_name": this.state.data_material.packages[i].site_name,
+        "product_name": this.state.data_material.packages[i].product_name,
         "product_type": this.state.data_material.packages[i].product_type,
         "physical_group": this.state.data_material.packages[i].physical_group,
         "uom": this.state.data_material.packages[i].uom,
@@ -379,13 +384,15 @@ class OrderProcessing extends Component {
     console.log('data LOM', JSON.stringify(updateLOM));
 
     // let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
-    let resLOM = await this.patchDatatoAPINode('/matreq/orderProcessing/'+_id, updateLOM, _etag);
+    let resLOM = await this.patchDatatoAPINode('/matreq/finishOrderProcessing/'+_id, updateLOM);
     if(resLOM.data !== undefined) {
       successUpdate.push(resLOM.data);
     }
     if(successUpdate.length !== 0) {
       this.setState({action_status : "success"});
-      // setTimeout(function(){ window.location.reload(); }, 2000);
+      setTimeout(function(){ window.location.reload(); }, 2000);
+    }else{
+      this.setState({action_status : 'failed'});
     }
   }
 
@@ -727,7 +734,9 @@ class OrderProcessing extends Component {
                 </tr>
                 <tr>
                   <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
-                  <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site FE</th>
+                  {this.state.site_FE !== undefined && (
+                    <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site FE</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -740,15 +749,20 @@ class OrderProcessing extends Component {
                       <td>{pp.product_name}</td>
                       <td>{pp.uom}</td>
                       <td align='center'>{pp.qty}</td>
-                      <td align='center'>{this.getQtySiteFE(pp.pp_id)}</td>
+                      {this.state.site_FE !== undefined && (
+                        <td align='center'>{this.getQtySiteFE(pp.pp_id)}</td>
+                      )}
                     </tr>
-                    {pp.materials.map(mat => 
+                    {pp.materials.map(mat =>
                       <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
                         <td style={{textAlign : 'right'}}>{mat.material_id}</td>
                         <td style={{textAlign : 'left'}}>{mat.material_name}</td>
                         <td>{mat.uom}</td>
                         <td align='center'><Input onChange={this.editQtyNE} type="number" name={mat.id_mc_doc} style={{textAlign : 'center'}} min="0"/></td>
-                        <td align='center'><Input onChange={this.editQtyFE} type="number" name={mat.id_mc_doc} style={{textAlign : 'center'}} min="0"/></td>
+                        {this.state.site_FE !== undefined && (
+                          <td align='center'><Input onChange={this.editQtyFE} type="number" name={mat.id_mc_doc} style={{textAlign : 'center'}} min="0"/></td>
+                        )}
+
                       </tr>
                     )}
                   </Fragment>
