@@ -15,6 +15,11 @@ export default {
           icon: 'icon-layers',
         },
         {
+          name: 'Config Manager',
+          url: '/config-manager',
+          icon: 'icon-briefcase',
+        },
+        {
           name: 'Commercial BOQ ',
           url: '/list-commercial',
           icon: 'icon-drawer',
