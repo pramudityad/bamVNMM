@@ -82,7 +82,7 @@ const BulkChangeApproval = React.lazy(() => import('./views/MR/ListChangeApprova
 const BulkApproval = React.lazy(() => import('./views/MR/ListBulkApproval'));
 const ListOrdering = React.lazy(() => import('./views/Ordering/ListOrdering'));
 const DetailOrdering = React.lazy(() => import('./views/Ordering/OrderingMaterial'));
-const ConfigManager = React.lazy(() => import('./views/ConfigManagement/PackageUpload'));
+const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUpload'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [

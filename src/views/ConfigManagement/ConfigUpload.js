@@ -11,6 +11,8 @@ import Select from 'react-select';
 import { saveAs } from 'file-saver';
 import Excel from 'exceljs';
 import {connect} from 'react-redux';
+import mydata from './data/getAllPackage.json'
+import mydata2 from './data/getAllPackage2.json'
 // const StepFlow = React.lazy(() => import('../../views/Defaultview/StepFlow'));
 
 
@@ -22,11 +24,12 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
 // const usernamePhilApi = 'pdbdash';
 // const passwordPhilApi = 'rtkO6EZLkxL1';
 
-const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
+const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
-class PackageUpload extends React.Component {
+
+class ConfigUpload extends React.Component {
 
   constructor(props) {
       super(props);
@@ -35,6 +38,7 @@ class PackageUpload extends React.Component {
         userId : this.props.dataLogin._id,
         userName : this.props.dataLogin.userName,
         userEmail : this.props.dataLogin.email,
+        tokenUser : this.props.dataLogin.token,
         pp_all : [],
         material_all : [],
         project_all : [],
@@ -47,6 +51,7 @@ class PackageUpload extends React.Component {
         action_status : null,
         action_message : "",
         product_package : [],
+        config_package : [],
         material_catalogue : [],
         dataParent : [],
         total_dataParent : 0,
@@ -150,13 +155,12 @@ class PackageUpload extends React.Component {
       }
     }
 
-    async postDatatoAPIBAM(url, data){
+    async postDatatoAPINode(url, data){
       try {
         let respond = await axios.post(API_URL_BAM +url, data, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernameBAM,
-            password: passwordBAM
+          headers: {
+            'Content-Type':'application/json',
+            'Authorization': 'Bearer '+this.state.tokenUser
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -169,6 +173,12 @@ class PackageUpload extends React.Component {
         return respond;
       }
     }
+
+    // postDataConfig = async () => {
+    //   axios
+    //     .post('https://api2-dev.bam-id.e-dpm.com/bamidapi/packageConfig/checkPackageConfig')
+    //     .then()
+    // }
 
     async patchDatatoAPIBAM(url, data, _etag){
       try {
@@ -311,15 +321,22 @@ class PackageUpload extends React.Component {
     }
   }
 
+  // maybe not needed
   fileHandlerMaterial = (event) => {
+    // this.toggleLoading();
     let fileObj = event.target.files[0];
+    const productPackageXLS = this.state.rowsXLS;
     if(fileObj !== undefined){
       ExcelRenderer(fileObj, (err, rest) => {
         if(err){
+          // this.setState({ action_status : 'failed', action_message : 'Please check your format'}, () => {
+          //   this.toggleLoading();
+          // });
           console.log(err);
         }
         else{
-          console.log("excel render", JSON.stringify(rest.rows));
+          // console.log("excel render", JSON.stringify(rest.rows));
+          const checkConfig = this.postDatatoAPINode('/packageConfig/checkPackageConfig', {"configData": productPackageXLS})
           this.setState({
             rowsXLS: rest.rows
           }, ()=> {
@@ -330,43 +347,51 @@ class PackageUpload extends React.Component {
     }
   }
 
-  checkFormatPackage(dataXLSHeader){
-    // cek the import data is for Product Package or Not
-    if(this.getIndex(dataXLSHeader,'PP / Material') !== -1 && this.getIndex(dataXLSHeader,'product_key') !== -1 && this.getIndex(dataXLSHeader,'material_code') === -1 && (this.getIndex(dataXLSHeader,'product_package') !== -1 ||
-      this.getIndex(dataXLSHeader,'product_package_physical_group') !== -1 || this.getIndex(dataXLSHeader,'product_package_type') !== -1 || this.getIndex(dataXLSHeader,'product_package') !== -1 || this.getIndex(dataXLSHeader,'price') !== -1 )){
+  checkFormatConfig(dataXLSHeader){
+    // cek the import data is for Config or Not
+    if(this.getIndex(dataXLSHeader,'config_id') !== -1 && this.getIndex(dataXLSHeader,'sap_number') !== -1 && this.getIndex(dataXLSHeader,'pp_id') === -1 && (this.getIndex(dataXLSHeader,'qyt') !== -1 ||
+      this.getIndex(dataXLSHeader,'price') !== -1 || this.getIndex(dataXLSHeader,'currency'))){
       return true;
     }else{
       return false;
     }
   }
 
-  checkFormatMaterial(dataXLSHeader){
-    // cek the import data is for Material or Not
-    if(this.getIndex(dataXLSHeader,'PP / Material') !== -1 && this.getIndex(dataXLSHeader,'product_key') !== -1 && this.getIndex(dataXLSHeader,'material_code') !== -1 &&
-      this.getIndex(dataXLSHeader,'material_name') !== -1 && this.getIndex(dataXLSHeader,'quantity') !== -1 && this.getIndex(dataXLSHeader,'unit') !== -1){
-      return true;
-    }else{
-      return false;
-    }
+  handlerProductPackage = async () => {
+    // let stat = true;
+    // this.toggleLoading();
+    const productPackageXLS = this.state.rowsXLS;
+    // console.log(productPackageXLS);
+    const postConfig = await this.postDatatoAPINode('/packageConfig/checkPackageConfig', {"configData": productPackageXLS})
+    // if(stat === true){
+    //   // this.savePackagetoDB(productPackageXLS);
+    //   const postConfig = await this.postDatatoAPINode('/packageConfig/checkPackageConfig', {"configData": productPackageXLS})
+    // }else{
+    //   {
+    //     this.setState({ action_status : 'failed', action_message : 'Please check your format'}, () => {
+    //       this.toggleLoading();
+    //     });
+    //   }
+    // }
   }
 
   saveProductPackage = async () => {
-    this.toggleLoading();
+    // this.toggleLoading();
     const productPackageXLS = this.state.rowsXLS;
-    const isPackage = this.checkFormatPackage(productPackageXLS[0]);
-    const isMaterial = this.checkFormatMaterial(productPackageXLS[0]);
-    if(isPackage === true){
-      this.savePackagetoDB(productPackageXLS);
-    }else{
-      if(isMaterial === true){
-        const PackageNull = [];
-        this.formatJustChild(PackageNull);
-      }else{
-        this.setState({ action_status : 'failed', action_message : 'Please check your format'}, () => {
-          this.toggleLoading();
-        });
-      }
-    }
+    // console.log(productPackageXLS);
+    const isConfig = this.checkFormatConfig(productPackageXLS[0]);
+    const postConfig = await this.postDatatoAPINode('/packageConfig/saveConfigBulk', {"configData": productPackageXLS})
+
+    // if(isConfig === true){
+    //   this.savePackagetoDB(productPackageXLS);
+    //   const postConfig = await this.postDatatoAPINode('/packageConfig/saveConfigBulk', {"configData": productPackageXLS})
+    // }else{
+    //   {
+    //     this.setState({ action_status : 'failed', action_message : 'Please check your format'}, () => {
+    //       this.toggleLoading();
+    //     });
+    //   }
+    // }
   }
 
   formatJustChild = async (newPackagePro) => {
@@ -485,139 +510,6 @@ class PackageUpload extends React.Component {
     }
   }
 
-  async savePackagetoDB(dataImport){
-    const dataHeader = dataImport[0];
-    const onlyParent = dataImport.map(e => e).filter( e => (this.checkValuetoString(e[this.getIndex(dataHeader,'PP / Material')])).toLowerCase() === "pp");
-    let product_package = [];
-    let ppAlready = [];
-    let ppError = [];
-    let ppSpace = [];
-    if(onlyParent !== undefined && onlyParent.length !== 0){
-      for(let i = 0; i < onlyParent.length; i++){
-        let pp_id = this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_key')]);
-        let pp_name = this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_package')]);
-        if(pp_name === null || pp_name === undefined){pp_name = pp_id}
-        // const countPP = pp_count+i;
-        const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
-        let pp_id_Gen = "PP"+ppcountID+" / "+pp_name;
-        const pp = {
-          "pp_id" : pp_id,
-          "pp_key" : pp_id_Gen,
-          "pp_group" : this.checkValue(onlyParent[i][this.getIndex(dataHeader,'cust_product_name')]),
-          "product_name" : pp_name.toString(),
-          "uom" : this.checkValue(onlyParent[i][this.getIndex(dataHeader,'unit')]),
-          "pp_cust_number" : this.checkValue(onlyParent[i][this.getIndex(dataHeader,'cust_product_number')]),
-          "physical_group" : this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_package_physical_group')]),
-          "product_type" : this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_package_type')]),
-          "pricing_group" : 0,
-          "price" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'price')], 0),
-          "year" : "2020",
-          "variant_name" : null,
-          "notes" : this.checkValuetoString(onlyParent[i][this.getIndex(dataHeader,'note')]).toString(),
-          "deleted" : 0,
-          "created_by" : this.state.userId,
-          "updated_by" : this.state.userId
-        }
-        if(pp.physical_group !== undefined && pp.physical_group !== null){
-          pp["physical_group"] = pp.physical_group.toString();
-        }
-        if(pp.product_type !== undefined && pp.product_type !== null){
-          pp["product_type"] = pp.product_type.toString();
-        }
-        if(pp.pp_group === null || pp.pp_group === undefined){
-          pp["pp_group"] = pp.pp_id;
-        }
-        let findPP = this.state.pp_all.find( e => e.pp_id === pp_id);
-        if(findPP === undefined && pp_id !== null){
-          if(/\s/.test(pp_id) === true){
-            ppSpace.push(i+2);
-          }else{
-            product_package.push(pp);
-          }
-        }else{
-          if(pp_id === null){
-            ppError.push(i+2)
-          }else{
-            if(findPP !== undefined){
-              ppAlready.push(pp_id);
-              let PPAlIndex = Object.assign({}, pp);
-              PPAlIndex = {
-                "pp_group" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'cust_product_name')], findPP.pp_group).toString(),
-                "product_name" : this.checkValueReturn(this.checkValue(onlyParent[i][this.getIndex(dataHeader,'product_package')]), findPP.product_name),
-                "uom" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'unit')], findPP.uom),
-                "pp_cust_number" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'cust_product_number')], findPP.pp_cust_number),
-                "physical_group" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'product_package_physical_group')], findPP.physical_group),
-                "product_type" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'product_package_type')], findPP.product_type),
-                "pricing_group" : 0,
-                "price" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'price')], findPP.price),
-                "year" : "2020",
-                "variant_name" : null,
-                "notes" : this.checkValueReturn(onlyParent[i][this.getIndex(dataHeader,'note')], findPP.note).toString(),
-                "deleted" : 0,
-                "updated_by" : this.state.userId
-              }
-              if(PPAlIndex.uom !== null){
-                PPAlIndex["uom"] = PPAlIndex.uom.toString();
-              }
-              if(PPAlIndex.physical_group !== undefined && PPAlIndex.physical_group !== null){
-                PPAlIndex["physical_group"] = PPAlIndex.physical_group.toString();
-              }
-              if(PPAlIndex.product_type !== undefined && PPAlIndex.product_type !== null){
-                PPAlIndex["product_type"] = PPAlIndex.product_type.toString();
-              }
-              let resPatch = await this.patchDatatoAPIBAM('/pp_op/'+findPP._id, PPAlIndex, findPP._etag);
-              console.log("resPatch", resPatch)
-            }
-          }
-        }
-      }
-      console.log('pp_id', JSON.stringify(product_package));
-      if(ppError.length === 0 && product_package.length !== 0 && ppSpace.length === 0){
-        let res = await this.postDatatoAPIBAM('/pp_op', product_package)
-        if(res !== undefined){
-          if(res.data !== undefined && res.status < 400){
-            if(ppAlready.length === 0){
-              this.setState({action_status : 'success'}, () => {this.toggleLoading();
-                setTimeout(function(){ window.location.reload(); }, 2000);
-              });
-            }else{
-              this.setState({action_status : 'success', action_message : 'Your data has been save, and we update Some data because the data are already in system, please refresh'}, () => {this.toggleLoading();
-                setTimeout(function(){ window.location.reload(); }, 2000);
-              });
-            }
-          }else{
-            this.setState({action_status : 'failed', action_message : 'There is something error, please try again later'}, () => {
-              this.toggleLoading();
-            });
-          }
-        }else{
-          this.setState({action_status : 'failed', action_message : 'There is something error, please try again later'}, () => {
-            this.toggleLoading();
-          });
-        }
-      }else{
-        if(product_package.length === 0 && ppAlready.length !== 0 && ppError.length === 0 && ppSpace.length === 0 ){
-          this.setState({ action_status : 'failed', action_message : 'We just Update your data because all of your data are already in systems, please refresh'}, () => {
-            this.toggleLoading();
-          });
-        }else{
-          if(ppSpace.length !== 0){
-            this.setState({ action_status : 'failed', action_message : 'Product key CANNOT has SPACE, please check in row '+ppSpace.join(", ")}, () => {
-              this.toggleLoading();
-            });
-          }else{
-            this.setState({ action_status : 'failed', action_message : 'Product key CANNOT be NULL, please check in row '+ppError.join(", ")}, () => {
-              this.toggleLoading();
-            });
-          }
-        }
-      }
-    }else{
-      this.setState({ action_status : 'failed', action_message : 'Please check your format'}, () => {
-        this.toggleLoading();
-      });
-    }
-  }
 
   getAllPP(){
     const filter_name = this.state.filter_name;
@@ -1011,12 +903,12 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["PP / Material",  "product_key", "product_package", "unit", "price", "product_package_physical_group", "product_package_type", "cust_product_number", "cust_product_name", "note"]);
-    ws.addRow(["PP",  "product key 1", "L1 Name 1", "pc", 0 ,"Radio", "HW", "customer product number 1", "customer product name 1",""]);
-    ws.addRow(["PP",  "product key 2", "L2 Name 2", "pc", 0 ,"Radio", "HW", "customer product number 2", "customer product name 2",""]);
+    ws.addRow(["config_id", "sap_number", "pp_id", "qyt", "price", "currency", "description"]);
+    ws.addRow(["CONFIG_TEST01", "SAP_TEST01", "PPID01", 2, 2400, "USD", ""]);
+    ws.addRow(["CONFIG_TEST01", "SAP_TEST01", "PPID02", 4, 1300, "USD", ""]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), 'PP Uploader Template.xlsx');
+    saveAs(new Blob([PPFormat]), 'Config Uploader Template.xlsx');
   }
 
   exportFormatMaterial = async () =>{
@@ -1077,9 +969,9 @@ class PackageUpload extends React.Component {
                         </DropdownToggle>
                         <DropdownMenu>
                           <DropdownItem header>Uploader Template</DropdownItem>
-                          <DropdownItem onClick={this.exportFormatPackage}>> Product Package Template</DropdownItem>
+                          <DropdownItem onClick={this.exportFormatPackage}>> Config Template</DropdownItem>
                           <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
-                          <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
+                          <DropdownItem onClick={this.downloadAll}>> Download All Config</DropdownItem>
                         </DropdownMenu>
                       </Dropdown>
                     </div>
@@ -1148,7 +1040,7 @@ class PackageUpload extends React.Component {
                         <option key={project._id} value={project._id}>{project.project_name}</option>
                       )}
                     </select>*/}
-                    <input className="search-box-material" type="text" name='filter' placeholder="Search Package Name" onChange={this.handleChangeFilter} value={this.state.filter_name } />
+                    <input className="search-box-material" type="text" name='filter' placeholder="Search Config Name" onChange={this.handleChangeFilter} value={this.state.filter_name } />
                 </div>
                 </div>
                   </Col>
@@ -1157,7 +1049,7 @@ class PackageUpload extends React.Component {
                   <Col>
                 <div className='divtable'>
                   <table hover bordered responsive size="sm" width='100%'>
-                    <thead style={{backgroundColor:'#c6f569'}} className='fixed'>
+                    <thead style={{backgroundColor:'#73818f'}} className='fixed'>
                       <tr align="center">
                         <th>
                           <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll}/>
@@ -1166,47 +1058,75 @@ class PackageUpload extends React.Component {
                         <th>SAP</th>
                         <th>Product ID</th>
                         <th>Product Name</th>
-                        <th>Unit</th>
+                        {/* <th>Unit</th> */}
                         <th>Qty</th>
                         <th>Price</th>
-                        {/* <th>Product Package</th>
-                        <th>Physical Group</th>
-                        <th>Product / Material Type</th> */}
                         <th></th>
                       </tr>
                     </thead>
                     <tbody>
-                    {this.state.product_package.map(pp =>
+                    {/* dummy data */}
+                    {/* {mydata.map(pp =>
                       <React.Fragment key={pp._id+"frag"}>
-                        <tr style={{backgroundColor: '#E5FCC2'}} className='fixbody' key={pp._id}>
+                        <tr className='fixbody' key={pp._id}>
                           <td align="center"><Checkbox name={pp._id} checked={this.state.packageChecked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp}/></td>
-                          <td colSpan="2" style={{textAlign : 'left'}}>{pp.product_name}</td>
-                          <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
-                          <td style={{textAlign : 'center'}}>{pp.uom}</td>
-                          <td style={{textAlign : 'left'}}></td>
-                          <td style={{textAlign : 'center'}}>{pp.price}</td>
-                          {/* <td style={{textAlign : 'left'}}>{pp.pp_group}</td>
-                          <td style={{textAlign : 'center'}}>{pp.physical_group}</td>
-                          <td style={{textAlign : 'center'}}>{pp.product_type}</td> */}
+                          <td style={{textAlign : 'center'}}>{pp.config_id}</td>
+                          <td style={{textAlign : 'center'}}>{pp.sap_number}</td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
                           <td>
                             <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
                               <i className="fa fa-pencil" aria-hidden="true"></i>
                             </Button>
                           </td>
                         </tr>
-                        { pp.list_of_material.map(mat =>
-                          <tr className='fixbodymat' key={mat._id}>
+                        { pp.package_list.map(pl =>
+                          <tr className='fixbodymat' key={pl.id_pp_doc}>
                             <td style={{textAlign : 'left'}}></td>
                             <td style={{textAlign : 'left'}}></td>
-                            <td style={{textAlign : 'left'}}>{mat.material_name}</td>
-                            <td style={{textAlign : 'left'}}>{mat.material_id}</td>
-                            <td style={{textAlign : 'center'}}>{mat.uom}</td>
-                            <td style={{textAlign : 'center'}}>{mat.qty}</td>
                             <td style={{textAlign : 'left'}}></td>
-                            {/* }<td style={{textAlign : 'left'}}></td>
+                            <td style={{textAlign : 'center'}}>{pl.pp_id}</td>
+                            <td style={{textAlign : 'center'}}>{pl.pp_group}</td>
+                            {pl.productPackage.map(pc =>
+                            <td style={{textAlign : 'center'}}>{pc.uom}</td>
+                            )}
+                            <td style={{textAlign : 'center'}}>{pl.qty}</td>
+                            <td style={{textAlign : 'center'}}>{pl.price}</td>
+                          </tr>
+                        ) }
+                      </React.Fragment>
+                    )} */}
+                    {mydata2.data.map(pp =>
+                      <React.Fragment key={pp._id+"frag"}>
+                        <tr className='fixbody' key={pp._id}>
+                          <td align="center"><Checkbox name={pp._id} checked={this.state.packageChecked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp}/></td>
+                          <td style={{textAlign : 'center'}}>{pp.config_id}</td>
+                          <td style={{textAlign : 'center'}}>{pp.sap_number}</td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td>
+                            <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
+                              <i className="fa fa-pencil" aria-hidden="true"></i>
+                            </Button>
+                          </td>
+                        </tr>
+                        { pp.package_list.map(pl =>
+                          <tr className='fixbodymat' key={pl.id_pp_doc}>
                             <td style={{textAlign : 'left'}}></td>
-                            <td style={{textAlign : 'center'}}>{mat.material_type}</td> */}
-                            <td></td>
+                            <td style={{textAlign : 'left'}}></td>
+                            <td style={{textAlign : 'left'}}></td>
+                            <td style={{textAlign : 'center'}}>{pl.pp_id}</td>
+                            <td style={{textAlign : 'center'}}>{pl.pp_group}</td>
+                            {/* {pl.productPackage.map(pc =>
+                            <td style={{textAlign : 'center'}}>{pc.uom}</td>
+                            )} */}
+                            <td style={{textAlign : 'center'}}>{pl.qty}</td>
+                            <td style={{textAlign : 'center'}}>{pl.price}</td>
                           </tr>
                         ) }
                       </React.Fragment>
@@ -1252,7 +1172,7 @@ class PackageUpload extends React.Component {
 
         {/* Modal New PP */}
         <Modal isOpen={this.state.modalPPForm} toggle={this.togglePPForm} className="formmaterial">
-          <ModalHeader>Form Product Package</ModalHeader>
+          <ModalHeader>Form Config</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
@@ -1442,4 +1362,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(PackageUpload);
+export default connect(mapStateToProps)(ConfigUpload);

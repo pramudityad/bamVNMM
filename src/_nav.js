@@ -2,32 +2,32 @@ export default {
   items: [
     {
       name: 'BOQ & Product',
-      icon: 'icon-drawer',
+      icon: 'icon-folder-alt',
       children: [
         {
           name: 'Product Manager',
           url: '/product-package',
-          icon: 'icon-layers',
-        },
-        {
-          name: 'Technical BOQ',
-          url: '/list-technical',
-          icon: 'icon-layers',
+          icon: 'icon-folder',
         },
         {
           name: 'Config Manager',
           url: '/config-manager',
-          icon: 'icon-briefcase',
+          icon: 'icon-doc',
+        },
+        {
+          name: 'Technical BOQ',
+          url: '/list-technical',
+          icon: 'icon-docs',
         },
         {
           name: 'Commercial BOQ ',
           url: '/list-commercial',
-          icon: 'icon-drawer',
+          icon: 'icon-tag',
         },
         {
           name: 'Ordering BOQ',
           url: '/list-ordering',
-          icon: 'icon-briefcase',
+          icon: 'icon-cursor',
         },
 //        {
 //          name: 'TSSR Matrix BOQ ',
@@ -37,13 +37,13 @@ export default {
         {
           name: 'Plant Spec List',
           url: '/ps-list',
-          icon: 'icon-briefcase',
+          icon: 'icon-menu',
         },
       ]
     },
     {
       name: 'Assignment',
-      icon: 'icon-drawer',
+      icon: 'icon-docs',
       children: [
         {
           name: 'Assignment List',
@@ -59,7 +59,7 @@ export default {
     },
     {
       name: 'Material Request',
-      icon: 'icon-drawer',
+      icon: 'icon-note',
       children: [
         {
           name: 'WH Dashboard',
@@ -79,7 +79,7 @@ export default {
         {
           name: 'Bulk MR Request',
           url: '/bulk-mr-request',
-          icon: 'icon-list',
+          icon: 'icon-plus',
         },
         {
           name: 'Bulk MR Approval Changes',
@@ -89,7 +89,7 @@ export default {
         {
           name: 'Bulk MR Approval',
           url: '/bulk-mr-approval',
-          icon: 'icon-list',
+          icon: 'icon-check',
         }
       ]
     },
@@ -115,7 +115,7 @@ export default {
     },
     {
       name: 'MR Milestones',
-      icon: 'icon-drawer',
+      icon: 'icon-paper-plane',
       children: [
         {
           name: 'Order Received',
