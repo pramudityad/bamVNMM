@@ -82,6 +82,7 @@ const BulkChangeApproval = React.lazy(() => import('./views/MR/ListChangeApprova
 const BulkApproval = React.lazy(() => import('./views/MR/ListBulkApproval'));
 const ListOrdering = React.lazy(() => import('./views/Ordering/ListOrdering'));
 const DetailOrdering = React.lazy(() => import('./views/Ordering/OrderingMaterial'));
+const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUpload'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -159,8 +160,8 @@ const routes = [
   { path: '/bulk-assignment-notify', exact: true, name: 'Bulk Assignment Notify to ASP', component: BulkNotifytoASP },
   { path: '/list-technical', exact: true, name: 'List Technical BOQ', component: ListTechnical },
   { path: '/detail-technical/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+  { path: '/approval-technical/:id', exact: true, name: 'Approval Technical BOQ', component: ApprovalTechnical },
   { path: '/new-technical', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
-  { path: '/approval-technical/:id', exact: true, name: 'Approval for Technical BOQ', component: ApprovalTechnical },
   { path: '/dsa-creation', exact: true, name: 'DSA Creation', component: DSACreation },
   { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
   { path: '/commercial-creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
@@ -178,6 +179,7 @@ const routes = [
   { path: '/dsa-detail/:id', exact: true, name: 'DSA Detail', component: DSADetail },
   { path: '/ordering-list', exact: true, name: 'Ordering List', component: ListOrdering },
   { path: '/ordering-detail/:id', exact: true, name: 'Ordering Detail', component: DetailOrdering },
+  { path: '/config-manager', exact: true, name: 'Config Manager', component: ConfigManager },
 
 ];
 

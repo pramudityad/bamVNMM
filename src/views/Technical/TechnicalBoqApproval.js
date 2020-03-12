@@ -10,12 +10,25 @@ import Pagination from "react-js-pagination";
 import Select from 'react-select';
 import {connect} from 'react-redux';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
+const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+
 class TechnicalBoqApproval extends Component {
     constructor(props) {
       super(props);
 
       this.state = {
-        userRole : JSON.parse(localStorage.getItem('user_Roles')),
+        userRole : this.props.dataLogin.role,
+        userId : this.props.dataLogin._id,
+        userName : this.props.dataLogin.userName,
+        userEmail : this.props.dataLogin.email,
+        tokenUser : this.props.dataLogin.token,
+        action_message : null,
+        action_status : null,
+        data_tech_boq : null,
+        data_tech_boq_sites : [],
+        view_tech_header_table : {"config_id" : [], "type" : []},
         rowsXLS : [],
         perPage : 25,
         prevPage : 1,
@@ -25,6 +38,7 @@ class TechnicalBoqApproval extends Component {
         dropdownOpen: new Array(1).fill(false),
         fieldNoteChange : new Array(8).fill(null),
       };
+      this.approvalTechnical = this.approvalTechnical.bind(this);
       this.toggleDropdown = this.toggleDropdown.bind(this);
       this.toggleUpload = this.toggleUpload.bind(this);
       this.onEntering = this.onEntering.bind(this);
@@ -109,39 +123,94 @@ class TechnicalBoqApproval extends Component {
       return data.findIndex(e => this.isSameValue(e,value));
     }
 
-    componentDidMount(){
-
-    }
-
-
-    fileHandlerTechnical = (event) => {
-      let fileObj = event.target.files[0];
-      const date = new Date();
-      const DateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-      if(fileObj !== undefined){
-        ExcelRenderer(fileObj, (err, rest) => {
-          if(err){
-            console.log(err);
-          }
-          else{
-            this.ArrayEmptytoNull(rest.rows, DateNow);
-          }
+    async getDataFromAPINODE(url) {
+      try {
+        let respond = await axios.get(API_URL_NODE+url, {
+          headers : {
+            'Content-Type':'application/json',
+            'Authorization': 'Bearer '+this.state.tokenUser
+          },
         });
+        if(respond.status >= 200 && respond.status < 300) {
+          console.log("respond data", respond);
+        }
+        return respond;
+      } catch(err) {
+        let respond = err;
+        console.log("respond data", err);
+        return respond;
       }
     }
 
-    ArrayEmptytoNull(dataXLS, DateNow){
-      let newDataXLS = [];
-      for(let i = 0; i < dataXLS.length; i++){
-        let col = [];
-        for(let j = 0; j < dataXLS[1].length; j++){
-          col.push(this.checkValue(dataXLS[i][j]));
+    async patchDatatoAPINODE(url, data){
+      try {
+        let respond = await axios.patch(API_URL_NODE +url, data, {
+          headers : {
+            'Content-Type':'application/json',
+            'Authorization': 'Bearer '+this.state.tokenUser
+          },
+        })
+        if(respond.status >= 200 && respond.status < 300){
+          console.log("respond Post Data", respond);
         }
-        newDataXLS.push(col);
+        return respond;
+      }catch (err) {
+        let respond = err;
+        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+        console.log("respond Post Data", err);
+        return respond;
       }
-      this.setState({
-        rowsXLS: newDataXLS
-      });
+    }
+
+    componentDidMount(){
+      // this.getAllSites();
+      this.getTechBoqData(this.props.match.params.id);
+    }
+
+    getTechBoqData(_id_tech){
+      this.getDataFromAPINODE('/techBoq/'+_id_tech).then(res => {
+        if(res.data !== undefined){
+          const dataTech = res.data;
+          console.log("res.data", res.data.data);
+          this.setState({data_tech_boq : dataTech.data});
+          if(res.data.data !== undefined){
+            console.log("res.data sites", dataTech.data.techBoqSite);
+            this.setState({data_tech_boq_sites : dataTech.data.techBoqSite, list_version : new Array(parseInt(dataTech.data.version)+1).fill("0")}, () => {
+              console.log("res.data version", this.state.list_version);
+              this.viewTechBoqData(dataTech.data.techBoqSite);
+            });
+          }
+        }
+      })
+    }
+
+    viewTechBoqData(data_sites){
+      if(data_sites.length !== 0){
+        const configId = data_sites[0].siteItemConfig.map(e => e.config_id);
+        const typeHeader = data_sites[0].siteItemConfig.map(e => "CONFIG");
+        this.setState({view_tech_header_table : {"config_id" : configId, "type" : typeHeader }});
+      }
+    }
+
+    async approvalTechnical(e){
+      let currValue = e.currentTarget.value;
+      if(currValue !== undefined){
+        currValue = parseInt(currValue);
+      }
+      let patchData = await this.patchDatatoAPINODE('/techBoq/approval/'+this.state.data_tech_boq._id, {"operation":currValue})
+      if(patchData.data !== undefined){
+        this.setState({action_status : 'success'});
+      }else{
+        if(patchData.response !== undefined){
+          if(patchData.response.data !== undefined){
+            this.setState({action_status : 'failed', action_message : patchData.response.data.error })
+          }else{
+            this.setState({action_status : 'failed'});
+          }
+        }else{
+          this.setState({action_status : 'failed'});
+        }
+      }
     }
 
     numToSSColumn(num){
@@ -158,6 +227,7 @@ class TechnicalBoqApproval extends Component {
     render() {
       return (
         <div>
+          <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
           <Row>
             <Col xl="12">
               <Card>
@@ -181,148 +251,114 @@ class TechnicalBoqApproval extends Component {
                 </CardHeader>
                 <CardBody className='card-UploadBoq'>
                   <React.Fragment>
-                  <Row>
-                    <Col sm="12" md="12">
-                    <table style={{width : '100%', marginBottom : '0px', marginLeft : '10px'}}>
-                      <tbody>
-                        <tr style={{fontWeight : '425', fontSize : '23px'}}>
-                          <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>TECHNICAL BOQ</td>
-                        </tr>
-                        <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
-                          <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : TECBOQ-200120-0001</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col sm="6" md="6">
-                    <div style={{marginLeft : '10px'}}>
-                    <table style={{width : '100%', marginBottom : '5px'}} className="table-header">
-                      <tbody>
+                  {this.state.data_tech_boq !== null && (
+                    <React.Fragment>
+                    <Row>
+                      <Col sm="12" md="12">
+                      <table style={{width : '100%', marginBottom : '0px', marginLeft : '10px'}}>
+                        <tbody>
+                          <tr style={{fontWeight : '425', fontSize : '23px'}}>
+                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>TECHNICAL BOQ</td>
+                          </tr>
+                          <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
+                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.data_tech_boq.no_tech_boq}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col sm="6" md="6">
+                      <div style={{marginLeft : '10px'}}>
+                      <table style={{width : '100%', marginBottom : '5px'}} className="table-header">
+                        <tbody>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td style={{textAlign : 'left'}}>Version</td>
+                            <td style={{textAlign : 'left'}}>:</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.version}</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td style={{textAlign : 'left'}}>Created On &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                            <td style={{textAlign : 'left'}}>:</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.created_on}</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                              <td>&nbsp; </td>
+                              <td></td>
+                              <td></td>
+                              <td style={{paddingLeft:'5px'}}></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      </div>
+                      </Col>
+                      <Col sm="6" md="6">
+                      <div style={{marginTop: '3px', marginLeft : '10px'}}>
+                      <table style={{width : '100%', marginBottom : '5px'}} className="table-header">
+                        <tbody>
                         <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                          <td style={{textAlign : 'left'}}>Version</td>
-                          <td style={{textAlign : 'left'}}>:</td>
-                          <td style={{textAlign : 'left'}} colspan={2}>0</td>
-                        </tr>
-                        <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                          <td style={{textAlign : 'left'}}>Created by</td>
-                          <td style={{textAlign : 'left'}}>:</td>
-                          <td style={{textAlign : 'left'}} colspan={2}>bamid@bam.com</td>
-                        </tr>
-                        <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                          <td style={{textAlign : 'left'}}>Created Date &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-                          <td style={{textAlign : 'left'}}>:</td>
-                          <td style={{textAlign : 'left'}} colspan={2}>2019-01-23 </td>
-                        </tr>
-                        <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                            <td>&nbsp; </td>
-                            <td></td>
-                            <td></td>
-                            <td style={{paddingLeft:'5px'}}></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    </div>
-                    </Col>
-                    <Col sm="6" md="6">
-                    <div style={{marginTop: '3px', marginLeft : '10px'}}>
-                    <table style={{width : '100%', marginBottom : '5px'}} className="table-header">
-                      <tbody>
-                      <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                          <td style={{textAlign : 'left'}}>Project </td>
-                          <td style={{textAlign : 'left'}}>:</td>
-                          <td style={{textAlign : 'left'}} colspan={2}>LTE 2020</td>
-                        </tr>
-                        <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                          <td style={{textAlign : 'left'}}>Updated By </td>
-                          <td style={{textAlign : 'left'}}>:</td>
-                          <td style={{textAlign : 'left'}} colspan={2}>bamid@bamid.com</td>
-                        </tr>
-                        <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                          <td style={{textAlign : 'left'}}>Updated On </td>
-                          <td style={{textAlign : 'left'}}>:</td>
-                          <td style={{textAlign : 'left'}} colspan={2}>2020-01-15</td>
-                        </tr>
-                        <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                          <td style={{textAlign : 'left'}}>Approved By</td>
-                          <td style={{textAlign : 'left'}}>:</td>
-                          <td style={{textAlign : 'left'}} colspan={2}>approval@bamid.com</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    </div>
-                    </Col>
-                  </Row>
+                            <td style={{textAlign : 'left'}}>Project </td>
+                            <td style={{textAlign : 'left'}}>:</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.project_name}</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td style={{textAlign : 'left'}}>Updated On </td>
+                            <td style={{textAlign : 'left'}}>:</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.updated_on}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      </div>
+                      </Col>
+                    </Row>
+                    </React.Fragment>
+                    )}
                   <div>
                   </div>
                   </React.Fragment>
-                    <div style={{display : 'inline-flex', marginBottom : '5px'}}>
-                      <span style={{padding: '4px'}}>Show per Page : </span>
-                      <Input className="select-per-page" name="PO" type="select" value={this.state.perPage} >
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="All">All</option>
-                      </Input>
-                    </div>
+                  {/*<div style={{display : 'inline-flex', marginBottom : '5px'}}>
+                    <span style={{padding: '4px'}}>Show per Page : </span>
+                    <Input className="select-per-page" name="PO" type="select" onChange={this.handleChangeShow} value={this.state.perPage} >
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                      <option value={this.state.data_item.length}>All</option>
+                    </Input>
+                  </div> */}
                     <Table hover bordered striped responsive size="sm">
                       <thead>
-                        <tr style={{backgroundColor : "#c6f569", fontWeight : "500"}}>
-                            <th rowSpan="2">Site ID</th>
-                            <th rowSpan="2">Site Name</th>
-                            <th>HW</th>
-                            <th>HW</th>
-                            <th>HW</th>
-                            <th>HW</th>
-                            <th>SVC</th>
-                            <th>SVC</th>
+                        <tr>
+                          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+                            Tower ID
+                          </th>
+                          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+                            Tower Name
+                          </th>
+                          {this.state.view_tech_header_table.type.map(type =>
+                            <th>{type}</th>
+                          )}
                         </tr>
-                        <tr style={{backgroundColor: '#f8f6df'}}>
-                          <th>pptest1</th>
-                          <th>pptest2</th>
-                          <th>pptest3</th>
-                          <th>pptest4</th>
-                          <th>pptest5</th>
-                          <th>pptest6</th>
+                        <tr>
+                          {this.state.view_tech_header_table.config_id.map(conf =>
+                            <th>{conf}</th>
+                          )}
                         </tr>
                       </thead>
                       <tbody>
+                      {this.state.data_tech_boq_sites.map(site =>
                         <tr>
-                          <td>FJ01</td>
-                          <td>FJ Name 01</td>
-                          <td>1</td>
-                          <td>2</td>
-                          <td>1</td>
-                          <td>4</td>
-                          <td>5</td>
-                          <td>1</td>
+                          <td>{site.site_id}</td>
+                          <td>{site.site_name}</td>
+                          {site.siteItemConfig.map(conf =>
+                            <td>{conf.qty}</td>
+                          )}
                         </tr>
-                        <tr>
-                          <td>FJ02</td>
-                          <td>FJ Name 02</td>
-                          <td>2</td>
-                          <td>2</td>
-                          <td>1</td>
-                          <td>4</td>
-                          <td>5</td>
-                          <td>4</td>
-                        </tr>
-                        <tr>
-                          <td>FJ03</td>
-                          <td>FJ Name 03</td>
-                          <td>5</td>
-                          <td>3</td>
-                          <td>1</td>
-                          <td>1</td>
-                          <td>5</td>
-                          <td>1</td>
-                        </tr>
+                      )}
                       </tbody>
                     </Table>
-                    <nav>
+                    {/*}<nav>
                       <div>
                         <Pagination
                             activePage={this.state.activePage}
@@ -333,12 +369,12 @@ class TechnicalBoqApproval extends Component {
                             linkClass="page-link"
                         />
                       </div>
-                    </nav>
+                    </nav> */}
                 </CardBody>
                 <CardFooter>
                   <div>
-                    <Button color="success" size="sm">Approve</Button>
-                    <Button color="danger" size="sm" style={{marginLeft : '10px'}}>Reject</Button>
+                    <Button color="success" size="sm" value="2" onClick={this.approvalTechnical}>Approve</Button>
+                    <Button color="danger" size="sm" style={{marginLeft : '10px'}} value="3" onClick={this.approvalTechnical}>Reject</Button>
                   </div>
                 </CardFooter>
               </Card>

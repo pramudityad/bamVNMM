@@ -16,11 +16,19 @@ const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class ListTechnical extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
+      list_tech_boq : [],
         Tech_All : [],
         prevPage : 0,
         activePage : 1,
@@ -29,16 +37,31 @@ class ListTechnical extends Component {
         filter_list : new Array(8).fill(null),
         filter_createdBy : [],
         activity_list : [],
-        userRole : this.props.dataLogin.role,
-        userId : this.props.dataLogin._id,
-        userName : this.props.dataLogin.userName,
-        userEmail : this.props.dataLogin.email
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.handleFilterListName = this.handleFilterListName.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.onChangeDebouncedName = debounce(this.onChangeDebouncedName, 1000);
+  }
+
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios.get(API_URL_NODE+url, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
   }
 
   numberToAlphabet(number){
@@ -49,6 +72,19 @@ class ListTechnical extends Component {
     }else{
       return (num + 9).toString(36).toUpperCase();
     }
+  }
+
+  getTechBoqList(){
+    let filter_no_tech = this.state.filter_list[1] === null ? '"no_tech_boq":{"$exists" : 1}' : '"no_tech_boq":{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
+    let filter_project = this.state.filter_list[2] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
+    let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
+    let filter_status = this.state.filter_list[5] === null ? '"approval_status":{"$exists" : 1}' : '"approval_status":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
+    let where = 'q={'+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+'}';
+    this.getDataFromAPINODE('/techBoqList?srt=_id:-1&'+where).then(res => {
+      if(res.data !== undefined){
+        this.setState({list_tech_boq : res.data.data});
+      }
+    })
   }
 
   getListBOQ(){
@@ -108,9 +144,9 @@ class ListTechnical extends Component {
       });
     }
   }
-  
+
   componentDidMount(){
-    this.getListBOQ();
+    this.getTechBoqList();
   }
 
   handlePageChange(pageNumber) {
@@ -134,7 +170,7 @@ class ListTechnical extends Component {
   }
 
   onChangeDebounced(e) {
-    this.getListBOQ();
+    this.getTechBoqList();
   }
 
   handleFilterListName(e){
@@ -188,91 +224,81 @@ class ListTechnical extends Component {
                   <tr>
                     <th>Technical BOQ Document</th>
                     <th>Project</th>
+                    <th>Creator</th>
                     <th>Ver.</th>
                     <th style={{'width' : '150px', textAlign : 'center'}}>Status</th>
                     <th style={{'width' : '225px', textAlign : 'center'}}>Action</th>
                   </tr>
                   <tr>
-                    <td>
-                      <div className="controls">
-                        <InputGroup className="input-prepend">
-                          <InputGroupAddon addonType="prepend">
-                            <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                          </InputGroupAddon>
-                          <Input type="text" placeholder="Search" name={1} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[1]}/>
-                        </InputGroup>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="controls">
-                        <InputGroup className="input-prepend">
-                          <InputGroupAddon addonType="prepend">
-                            <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                          </InputGroupAddon>
-                          <Input type="text" placeholder="Search" name={2} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[2]}/>
-                        </InputGroup>
-                      </div>
-                    </td>
-                    <td style={{width:'125px'}}>
-                      <div className="controls">
-                        <InputGroup className="input-prepend">
-                          <InputGroupAddon addonType="prepend">
-                            <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                          </InputGroupAddon>
-                          <Input type="text" placeholder="Search" name={4} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[4]}/>
-                        </InputGroup>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="controls">
-                        <InputGroup className="input-prepend">
-                          <InputGroupAddon addonType="prepend">
-                            <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                          </InputGroupAddon>
-                          <Input type="text" placeholder="Search" name={5} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[5]}/>
-                        </InputGroup>
-                      </div>
-                    </td>
-                    <td>
-                    </td>
-                  </tr>
+                      <td>
+                        <div className="controls">
+                          <InputGroup className="input-prepend">
+                            <InputGroupAddon addonType="prepend">
+                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                            </InputGroupAddon>
+                            <Input type="text" placeholder="Search" name={1} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[1]}/>
+                          </InputGroup>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="controls">
+                          <InputGroup className="input-prepend">
+                            <InputGroupAddon addonType="prepend">
+                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                            </InputGroupAddon>
+                            <Input type="text" placeholder="Search" name={2} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[2]}/>
+                          </InputGroup>
+                        </div>
+                      </td>
+                      <td></td>
+                      <td style={{width:'125px'}}>
+                        <div className="controls">
+                          <InputGroup className="input-prepend">
+                            <InputGroupAddon addonType="prepend">
+                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                            </InputGroupAddon>
+                            <Input type="text" placeholder="Search" name={4} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[4]}/>
+                          </InputGroup>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="controls">
+                          <InputGroup className="input-prepend">
+                            <InputGroupAddon addonType="prepend">
+                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                            </InputGroupAddon>
+                            <Input type="text" placeholder="Search" name={5} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[5]}/>
+                          </InputGroup>
+                        </div>
+                      </td>
+                      <td>
+                      </td>
+                    </tr>
               </thead>
               <tbody>
-                    {this.state.Tech_All.map((boq,i) =>
+                    {this.state.list_tech_boq.map((boq,i) =>
                         <tr key={boq._id}>
-                            <td style={{verticalAlign : 'middle'}}>{boq.delta_rev !== undefined ? "DELTA-"+boq.no_boq_tech : boq.no_boq_tech}</td>
+                            <td style={{verticalAlign : 'middle'}}>{boq.no_tech_boq}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.project_name}</td>
+                            <td style={{verticalAlign : 'middle'}}>{boq.creator[0].email}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.version}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              {boq.rev === "PA" || boq.rev === "R" ? (
-                                <span className="boq-tech-status-PA">{boq.rev}</span>
-                              ) : boq.rev === "WA" ? (
-                                <span className="boq-tech-status-WA">{boq.rev}</span>
+                              {boq.approval_status === "PRE APPROVAL" || boq.approval_status === "R" ? (
+                                <span className="boq-tech-status-PA">{boq.approval_status}</span>
+                              ) : boq.approval_status === "TECH BOQ REQUEST FOR APPROVAL" ? (
+                                <span className="boq-tech-status-WA">{boq.approval_status}</span>
                               ) : (
-                                <span className="boq-tech-status-A">{boq.rev}</span>
+                                <span className="boq-tech-status-A">{boq.approval_status}</span>
                               )}
                             </td>
-                            {boq.delta_rev === undefined ? (
-                              <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                                  <Link to={'/detail-technical/'+boq._id}>
-                                    <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
-                                  </Link>
-                                  <Link to={'/Boq/Technical/Approval/'+boq._id}>
-                                    <Button color="warning" size="sm"> <i className="fa fa-check-circle" aria-hidden="true">&nbsp;</i> Approval</Button>
-                                  </Link>
+                            <td style={{verticalAlign : 'middle', textAlign : "center"}}>
+                              <Link to={'/detail-technical/'+boq._id}>
+                                <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
+                              </Link>
+                              <Link to={'/approval-technical/'+boq._id}>
+                                <Button color="warning" size="sm"> <i className="fa fa-check-circle" aria-hidden="true">&nbsp;</i> Approval</Button>
+                              </Link>
                             </td>
-                            ) : boq.delta_rev === 'A' ? (
-                              <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                                  <Link to={'/detail-technical/'+boq._id}>
-                                    <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
-                                  </Link>
-                                  <Link to={'/Boq/Technical/Approval/'+boq._id}>
-                                    <Button color="warning" size="sm"> <i className="fa fa-check-circle" aria-hidden="true">&nbsp;</i> Approval</Button>
-                                  </Link>
-                              </td>
-                            ) : (
-                              <td>Please Approve Delta TSSR</td>
-                            )}
                         </tr>
                     )}
                 </tbody>

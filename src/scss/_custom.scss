@@ -153,6 +153,67 @@ body {
     }
 }
 
+// breadcrumb XL
+.breadcrumb--xl .breadcrumb{
+  background-color: #1976D2;
+}
+
+.breadcrumb--xl .breadcrumb a {
+  color: #FFF;
+}
+
+.breadcrumb--xl .breadcrumb-item + .breadcrumb-item::before {
+    display: inline-block;
+    padding-right: 0.5rem;
+    color: #FFF;
+    content: "/";
+}
+
+.breadcrumb--xl .breadcrumb-item.active {
+    color: #FFF;
+}
+
+// breadcrumb Telkom
+.breadcrumb--tsel .breadcrumb{
+  background-color: #ef5350;
+}
+
+.breadcrumb--tsel .breadcrumb a {
+  color: #FFF;
+}
+
+.breadcrumb--tsel .breadcrumb-item + .breadcrumb-item::before {
+    display: inline-block;
+    padding-right: 0.5rem;
+    color: #FFF;
+    content: "/";
+}
+
+.breadcrumb--tsel .breadcrumb-item.active {
+    color: #FFF;
+}
+
+// breadcrumb indosat
+.breadcrumb--indosat .breadcrumb{
+  background-color: #fcd401;
+}
+
+.breadcrumb--indosat .breadcrumb a {
+  color: #424242;
+}
+
+.breadcrumb--indosat .breadcrumb-item + .breadcrumb-item::before {
+    display: inline-block;
+    padding-right: 0.5rem;
+    color: #424242;
+    content: "/";
+}
+
+.breadcrumb--indosat .breadcrumb-item.active {
+    color: #424242;
+}
+
+
 
 
 // loader End

@@ -25,6 +25,7 @@ class AssignmentList extends Component {
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.getAssignmentList = this.getAssignmentList.bind(this);
+    this.downloadASGList = this.downloadASGList.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -51,7 +52,6 @@ class AssignmentList extends Component {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     this.getDataFromAPI('/asp_assignment_sorted?&max_results='+maxPage+'&page='+page).then(res => {
-      console.log("Assignment List Sorted", res);
       if(res.data !== undefined) {
         const items = res.data._items;
         const totalData = res.data._meta;
@@ -69,6 +69,27 @@ class AssignmentList extends Component {
     this.setState({activePage: pageNumber}, () => {
       this.getAssignmentList();
     });
+  }
+
+  async downloadASGList() {
+    let listASGAll = [];
+    let getASG = await this.getDataFromAPI('/asp_assignment_sorted_non_page');
+    if(getASG.data !== undefined){
+      listASGAll = getASG.data._items;
+    }
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let headerRow = ["Assignment ID", "Account Name", " Project Name", " SOW Type", " NW  NW Activity Terms of Payment", " Item Status Work Status"];
+    ws.addRow(headerRow);
+
+    for(let i = 0; i < listASGAll.length; i++){
+      let list = listASGAll[i];
+      ws.addRow([list.Assignment_No, list.Account_Name, list.Project, list.SOW_Type, list.NW, list.NW_Activity, list.Payment_Terms, list.Item_Status, list.Work_Status])
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Assignment List.xlsx');
   }
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
@@ -94,7 +115,7 @@ class AssignmentList extends Component {
                 </span>
                 <Link to={'/assignment-creation'}><Button color="success" style={{float : 'right'}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create Assignment</Button></Link>
                 <Link to={'/bulk-assignment-creation'}><Button color="success" style={{float : 'right', marginRight: "8px"}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create Assignment Bulk</Button></Link>
-                <Button style={downloadAssignment} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment List</Button>
+                <Button style={downloadAssignment} outline color="success" onClick={this.downloadASGList} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment List</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
