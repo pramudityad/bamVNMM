@@ -73,6 +73,8 @@ class ConfigUpload extends React.Component {
       collapse: false,
       loadprojectdata: [],
       modalPPFedit: false,
+      config_checked : new Map(),
+      config_selected : [],
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -396,18 +398,18 @@ class ConfigUpload extends React.Component {
   handleChangeChecklist(e) {
     const item = e.target.name;
     const isChecked = e.target.checked;
-    const dataMaterial = this.state.product_package;
-    let packageSelected = this.state.packageSelected;
+    const dataConfig = this.state.config_package;
+    let configSelected = this.state.config_selected;
     if (isChecked === true) {
-      const getMaterial = dataMaterial.find(pp => pp._id === item);
-      packageSelected.push(getMaterial);
+      const getConfig = dataConfig.find(conf => conf._id === item);
+      configSelected.push(getConfig);
     } else {
-      packageSelected = packageSelected.filter(function (pp) {
-        return pp._id !== item;
+      configSelected = configSelected.filter(function (conf) {
+        return conf._id !== item;
       });
     }
-    this.setState({ packageSelected: packageSelected });
-    this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(item, isChecked) }));
+    this.setState({ config_selected: configSelected });
+    this.setState(prevState => ({ config_checked: prevState.config_checked.set(item, isChecked) }));
     // console.log("packageSelected", dataMaterial);
   }
 
@@ -696,16 +698,16 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const datapackageSelected = this.state.packageSelected;
+    const dataConfigSelected = this.state.config_selected;
 
-    let ppIdArray = ["project", "site_id", "site_name"];
-    let phyGroupArray = ["", "", ""];
+    let confArray = ["site_title", "site_id", "site_name"];
+    let typeArray = ["", "", ""];
 
-    ppIdArray = ppIdArray.concat(datapackageSelected.map(pp => pp.pp_id + " /// " + pp.product_name));
-    phyGroupArray = phyGroupArray.concat(datapackageSelected.map(pp => pp.product_type));
+    typeArray = typeArray.concat(dataConfigSelected.map(e => "CONFIG"));
+    confArray = confArray.concat(dataConfigSelected.map(e => e.config_id));
 
-    ws.addRow(phyGroupArray);
-    ws.addRow(ppIdArray);
+    ws.addRow(typeArray);
+    ws.addRow(confArray);
 
     const techFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([techFormat]), 'Technical BOQ Format.xlsx');
@@ -724,7 +726,7 @@ class ConfigUpload extends React.Component {
     ppIdArray = ppIdArray.concat(datapackageChecked.map(pp => pp.pp_id + " /// " + pp.product_name));
     phyGroupArray = phyGroupArray.concat(datapackageChecked.map(pp => pp.product_type));
 
-    ws.addRow(phyGroupArray);
+    ws.addRow(ppIdArray);
     ws.addRow(ppIdArray);
 
     const tssrFormat = await wb.xlsx.writeBuffer();
@@ -849,7 +851,7 @@ class ConfigUpload extends React.Component {
                         <span style={{ marginRight: '10px' }}>
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
                           Select All
-                    </span>
+                        </span>
                         <span style={{ marginRight: '10px' }}>Project Tag : </span>
                         {/*}<select style={{marginRight: '10px', marginTop : '2.85px', borderBottomWidth : '2.5px'}} className="search-box-project" name="ProjectFilter" type="select" onChange={this.handleChangeProjectFilter} value={this.state.project_filter}>
                       <option value="all">All</option>
@@ -887,7 +889,7 @@ class ConfigUpload extends React.Component {
                           {this.state.config_package.map(pp =>
                             <React.Fragment key={pp._id + "frag"}>
                               <tr className='fixbody' key={pp._id}>
-                                <td align="center"><Checkbox name={pp._id} checked={this.state.packageChecked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
+                                <td align="center"><Checkbox name={pp._id} checked={this.state.config_checked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_id}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.sap_number}</td>
                                 <td></td>
@@ -937,9 +939,6 @@ class ConfigUpload extends React.Component {
                   <Col>
                     <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                       <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
-                    </div>
-                    <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
-                      <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTSSRFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp; Download PS Format</Button>
                     </div>
                   </Col>
                 </Row>
