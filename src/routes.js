@@ -82,6 +82,7 @@ const BulkChangeApproval = React.lazy(() => import('./views/MR/ListChangeApprova
 const BulkApproval = React.lazy(() => import('./views/MR/ListBulkApproval'));
 const ListOrdering = React.lazy(() => import('./views/Ordering/ListOrdering'));
 const DetailOrdering = React.lazy(() => import('./views/Ordering/OrderingMaterial'));
+const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUpload'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -178,6 +179,7 @@ const routes = [
   { path: '/dsa-detail/:id', exact: true, name: 'DSA Detail', component: DSADetail },
   { path: '/ordering-list', exact: true, name: 'Ordering List', component: ListOrdering },
   { path: '/ordering-detail/:id', exact: true, name: 'Ordering Detail', component: DetailOrdering },
+  { path: '/config-manager', exact: true, name: 'Config Manager', component: ConfigManager },
 
 ];
 
