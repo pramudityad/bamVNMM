@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { HashRouter, Route, Switch, BrowserRouter } from 'react-router-dom';
+import { HashRouter, Route, Switch, BrowserRouter, Redirect, Router } from 'react-router-dom';
 import './App.scss';
 import axios from 'axios';
 import Keycloak from 'keycloak-js';
@@ -16,6 +16,7 @@ const Login = React.lazy(() => import('./views/Pages/Login'));
 const Register = React.lazy(() => import('./views/Pages/Register'));
 const Page404 = React.lazy(() => import('./views/Pages/Page404'));
 const Page500 = React.lazy(() => import('./views/Pages/Page500'));
+const LogError = React.lazy(() => import('./views/Pages/LogError'));
 
 const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -51,6 +52,7 @@ class App extends Component {
   }
 
   async getDataLogin(keycloak){
+    console.log("get again");
     const dataReq = {
       "account_id" : "1",
       "cas_id" : keycloak.sub,
@@ -70,7 +72,8 @@ class App extends Component {
         "email_user" : getLogin.data.validUser.email,
         "roles_user" : getLogin.data.listRole,
         "user_name" : getLogin.data.validUser.username,
-        "account_id" : "1",
+        "account_id" : "3",
+        "account_id" : "xl",
         "token" : getLogin.data.token,
         "sso_id" : keycloak.sub,
         "name" : getLogin.data.validUser.first_name+" "+getLogin.data.validUser.last_name
@@ -91,6 +94,13 @@ class App extends Component {
               localStorage.setItem('keycloack_data_login', JSON.stringify(keycloak));
               localStorage.setItem('authenticated_data_login', authenticated);
               this.setState({ key: keycloak, authenticated: authenticated });
+            }else{
+              this.setState({ key: keycloak, authenticated: authenticated }, () => {
+                return (<BrowserRouter><Redirect to={'/LoginError'} /></BrowserRouter>);
+              });
+
+              // this.setState({ key: keycloak, authenticated: authenticated });
+              // keycloak.logout();
             }
           });
         }else{
@@ -111,34 +121,49 @@ class App extends Component {
       "email_user" : dataLogin.validUser.email,
       "roles_user" : dataLogin.listRole,
       "user_name" : dataLogin.validUser.username,
-      "account_id" : "1",
+      "account_id" : "3",
+      "account_id" : "xl",
       "token" : dataLogin.token,
       "sso_id" : keycloak.sub,
       "name" : dataLogin.validUser.first_name+" "+dataLogin.validUser.last_name
     });
     this.setState({dataLogin : dataLogin});
-    this.setState({ key: keycloak, authenticated: authenticated });
+    this.setState({ key: keycloak, authenticated: authenticated }, () => {
+      if(dataLogin === null){
+        console.log("local");
+        return (<BrowserRouter><Redirect to={'/LoginError'} /></BrowserRouter>);
+      }
+    });
   }
 
   render() {
-    if (this.state.key !== null) {
-      if (this.state.authenticated){
-        return (
-          <BrowserRouter>
-              <React.Suspense fallback={loading()}>
-                <Switch>
-                  <Route exact path="/login" name="Login Page" render={props => <Login {...props}/>} />
-                  <Route exact path="/register" name="Register Page" render={props => <Register {...props}/>} />
-                  <Route exact path="/404" name="Page 404" render={props => <Page404 {...props}/>} />
-                  <Route exact path="/500" name="Page 500" render={props => <Page500 {...props}/>} />
-                  <Route path="/" name="Home" render={props => <DefaultLayout {...props} keycloak={this.state.key} dataLogin={this.state.dataLogin}/>} />
-                </Switch>
-              </React.Suspense>
-          </BrowserRouter>
-        );
-      }else return (<div>Unable to authenticate!</div>)
-    }
-    return (<div></div>);
+    console.log("data Login key", this.state.key);
+    console.log("data Login auth", this.state.authenticated);
+    console.log("data Login", this.state.dataLogin);
+    // if(this.state.key !== null && this.state.authenticated && this.state.dataLogin === null ){
+    //   return (<BrowserRouter>
+    //     <React.Suspense fallback={loading()}>
+    //     <Route exact path="/LoginError" name="Login Error" render={props => <LogError {...props} keycloak={this.state.key}/>} />
+    //     <Redirect to={'/LoginError'} />
+    //     </React.Suspense>
+    //   </BrowserRouter>);
+    // }
+    return (
+      <BrowserRouter>
+          <React.Suspense fallback={loading()}>
+            <Switch>
+              <Route exact path="/login" name="Login Page" render={props => <Login {...props}/>} />
+              <Route exact path="/register" name="Register Page" render={props => <Register {...props}/>} />
+              <Route exact path="/404" name="Page 404" render={props => <Page404 {...props}/>} />
+              <Route exact path="/500" name="Page 500" render={props => <Page500 {...props}/>} />
+              <Route exact path="/LoginError" name="Login Error" render={props => <LogError {...props} keycloak={this.state.key}/>} />
+              {this.state.key !== null && this.state.authenticated === true && this.state.dataLogin !== null ? (
+                <Route path="/" name="Home" render={props => <DefaultLayout {...props} keycloak={this.state.key} dataLogin={this.state.dataLogin}/>} />
+              ) : (<div></div>)}
+            </Switch>
+          </React.Suspense>
+      </BrowserRouter>
+    );
   }
 }
 

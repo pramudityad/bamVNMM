@@ -24,6 +24,8 @@ const API_URL_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const usernameTsel = 'adminbamidsuper';
 const passwordTsel = 'F760qbAg2sml';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class TechnicalBoq extends Component {
   constructor(props) {
     super(props);
@@ -34,6 +36,15 @@ class TechnicalBoq extends Component {
       userId : this.props.dataLogin._id,
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
+      rowsTech: [],
+      result_check_tech: null,
+      data_tech_boq : null,
+      data_tech_boq_sites : [],
+      data_tech_boq_sites_version : [],
+      data_tech_boq_sites_pagination : [],
+      view_tech_header_table : {"config_id" : [], "type" : []},
+      list_version : [],
       pp_all : [],
       sites_all : [],
       API_Tech : [],
@@ -54,7 +65,6 @@ class TechnicalBoq extends Component {
       current_rev : null,
       select_rev : null,
       modal_loading : false,
-      list_version : [],
       version_now : null,
       version_selected : null,
       collapse: false,
@@ -77,8 +87,11 @@ class TechnicalBoq extends Component {
       progress_count : 0,
       progress_failed : 0,
     };
-    this.approvedBoqTech = this.approvedBoqTech.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
+    this.selectProject = this.selectProject.bind(this);
+    this.saveTechBoq = this.saveTechBoq.bind(this);
+    this.updateTechBoq = this.updateTechBoq.bind(this);
+    this.approvedBoqTech = this.approvedBoqTech.bind(this);
     this.overwriteDataSites = this.overwriteDataSites.bind(this);
     this.toggleDropdown = this.toggleDropdown.bind(this);
     this.toggleUpload = this.toggleUpload.bind(this);
@@ -95,9 +108,9 @@ class TechnicalBoq extends Component {
     this.handleChangeOpportunity = this.handleChangeOpportunity.bind(this);
     this.saveOpportunityNote = this.saveOpportunityNote.bind(this);
     this.handleChangeVerComment = this.handleChangeVerComment.bind(this);
-    this.selectProject = this.selectProject.bind(this);
     this.saveProjecttoDB = this.saveProjecttoDB.bind(this);
     this.exportFormatTechnical = this.exportFormatTechnical.bind(this);
+    this.approvalTechnical = this.approvalTechnical.bind(this);
     }
 
     numberToAlphabet(number){
@@ -137,6 +150,65 @@ class TechnicalBoq extends Component {
 
   onExited() {
     this.setState({ status: 'Closed' });
+  }
+
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios.get(API_URL_NODE+url, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async postDatatoAPINODE(url, data){
+    try {
+      let respond = await axios.post(API_URL_NODE +url, data, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+      console.log("respond Post Data", err);
+      return respond;
+    }
+  }
+
+  async patchDatatoAPINODE(url, data){
+    try {
+      let respond = await axios.patch(API_URL_NODE +url, data, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+      console.log("respond Post Data", err);
+      return respond;
+    }
   }
 
   async getDataFromAPITSEL(url) {
@@ -265,34 +337,84 @@ class TechnicalBoq extends Component {
     }
   }
 
-  getBOQTechAPI(_id_Tech){
-    this.setState({})
-    let url = '/boq_tech_audit/'+_id_Tech+'?embedded={"created_by" : 1, "updated_by" : 1, "list_of_id_site" : 1}';
-    if(_id_Tech == undefined){
-      url = '/boq_tech_audit?embedded={"created_by" : 1, "updated_by" : 1, "list_of_id_site" : 1}'
-    }
-    this.getDatafromAPI(url).then(res => {
-      if(res !== undefined){
-        if(res.data.list_of_id_site !== undefined){
-          this.setState({ API_Tech : res.data});
-          this.getCommTechAPI(_id_Tech);
-          this.setState({ API_Tech_Sites : res.data.list_of_id_site, data_item : []}, () => {
-            this.viewTech(this.state.API_Tech_Sites);
+  getTechBoqData(_id_tech){
+    this.getDataFromAPINODE('/techBoq/'+_id_tech).then(res => {
+      if(res.data !== undefined){
+        const dataTech = res.data;
+        console.log("res.data", res.data.data);
+        this.setState({data_tech_boq : dataTech.data});
+        if(res.data.data !== undefined){
+          console.log("res.data sites", dataTech.data.techBoqSite);
+          this.setState({data_tech_boq_sites : dataTech.data.techBoqSite, list_version : new Array(parseInt(dataTech.data.version)+1).fill("0")}, () => {
+            console.log("res.data version", this.state.list_version);
+            this.viewTechBoqData(dataTech.data.techBoqSite);
           });
-          if(res.data.project_name === null){
-            this.getProjectAll();
-          }
-          if(res.data.list_of_id_site.length === 0){
-            this.setState({action_status : 'failed'});
-          }
-          // this.getSitesTechDataAPI(res.data.list_of_id_site);
-          this.setState({version_now : res.data.version, version_selected : res.data.version});
-          this.getListVersion(_id_Tech);
-        }else{
-          this.setState({action_status : 'failed'});
         }
       }
     })
+  }
+
+  viewTechBoqData(data_sites){
+    if(data_sites.length !== 0){
+      const configId = data_sites[0].siteItemConfig.map(e => e.config_id);
+      const typeHeader = data_sites[0].siteItemConfig.map(e => "CONFIG");
+      this.setState({view_tech_header_table : {"config_id" : configId, "type" : typeHeader }});
+    }
+  }
+
+  async updateTechBoq(e){
+    let revisionType = e.currentTarget.value;
+    let revision = true;
+    if(revisionType === "save"){
+      revision = false;
+    }
+    this.toggleLoading();
+    const dataChecked = this.state.result_check_tech;
+    const dataPatch = {
+      "revision" : revision,
+      "sites_data" : dataChecked.tech_data,
+      "configList" : dataChecked.configList
+    }
+    let patchTech = await this.patchDatatoAPINODE('/techBoq/updateTechBoqData/'+this.state.data_tech_boq._id, dataPatch);
+    if(patchTech.data !== undefined){
+      this.setState({action_status : 'success'});
+    }else{
+      this.setState({action_status : 'failed'});
+    }
+    this.toggleLoading();
+  }
+
+  handleChangeVersion(e){
+    const value = e.target.value;
+    this.setState({version_selected : value}, () => {
+      if(value !== this.state.data_tech_boq.version){
+        this.getVersionTechBoqData(this.props.match.params.id, value);
+      }else{
+        this.getTechBoqData(this.props.match.params.id);
+      }
+    });
+  }
+
+  getVersionTechBoqData(_id_tech, ver){
+    console.log()
+    this.getDataFromAPINODE('/techBoq/'+_id_tech+'/ver/'+ver).then(res => {
+      if(res.data !== undefined){
+        const dataTech = res.data;
+        if(res.data.data !== undefined){
+          this.setState({data_tech_boq_sites_version : dataTech.data.techBoqSiteVersion}, () => {
+            this.viewTechBoqDataVersion(dataTech.data.techBoqSiteVersion);
+          });
+        }
+      }
+    })
+  }
+
+  viewTechBoqDataVersion(data_sites){
+    if(data_sites.length !== 0){
+      const configId = data_sites[0].siteItemConfigVersion.map(e => e.config_id);
+      const typeHeader = data_sites[0].siteItemConfigVersion.map(e => "Config");
+      this.setState({view_tech_header_table : {"config_id" : configId, "type" : typeHeader }});
+    }
   }
 
   getProjectAll(){
@@ -309,6 +431,55 @@ class TechnicalBoq extends Component {
     const text = e.target[index].text;
     this.setState({project_select : value, project_name_selected : text});
   }
+
+  async approvalTechnical(e){
+    let currValue = e.currentTarget.value;
+    if(currValue !== undefined){
+      currValue = parseInt(currValue);
+    }
+    let patchData = await this.patchDatatoAPINODE('/techBoq/approval/'+this.state.data_tech_boq._id, {"operation":currValue})
+    if(patchData.data !== undefined){
+      this.setState({action_status : 'success'});
+    }else{
+      if(patchData.response !== undefined){
+        if(patchData.response.data !== undefined){
+          this.setState({action_status : 'failed', action_message : patchData.response.data.error })
+        }else{
+          this.setState({action_status : 'failed'});
+        }
+      }else{
+        this.setState({action_status : 'failed'});
+      }
+    }
+  }
+
+    getBOQTechAPI(_id_Tech){
+      this.setState({})
+      let url = '/boq_tech_audit/'+_id_Tech+'?embedded={"created_by" : 1, "updated_by" : 1, "list_of_id_site" : 1}';
+      if(_id_Tech == undefined){
+        url = '/boq_tech_audit?embedded={"created_by" : 1, "updated_by" : 1, "list_of_id_site" : 1}'
+      }
+      this.getDatafromAPI(url).then(res => {
+        if(res !== undefined){
+          if(res.data.list_of_id_site !== undefined){
+            this.setState({ API_Tech : res.data});
+            this.getCommTechAPI(_id_Tech);
+            this.setState({ API_Tech_Sites : res.data.list_of_id_site, data_item : []}, () => {
+              this.viewTech(this.state.API_Tech_Sites);
+            });
+
+            if(res.data.list_of_id_site.length === 0){
+              this.setState({action_status : 'failed'});
+            }
+            // this.getSitesTechDataAPI(res.data.list_of_id_site);
+            this.setState({version_now : res.data.version, version_selected : res.data.version});
+            this.getListVersion(_id_Tech);
+          }else{
+            this.setState({action_status : 'failed'});
+          }
+        }
+      })
+    }
 
   saveProjecttoDB(){
     const dataTech = this.state.API_Tech;
@@ -417,7 +588,11 @@ class TechnicalBoq extends Component {
 
   componentDidMount(){
     // this.getAllSites();
-    this.getBOQTechAPI(this.props.match.params.id);
+    if(this.props.match.params.id === undefined){
+      this.getProjectAll();
+    }else{
+      this.getTechBoqData(this.props.match.params.id);
+    }
   }
 
 
@@ -434,7 +609,6 @@ class TechnicalBoq extends Component {
         else{
           this.setState({action_status : null, action_message : "", data_format : []})
           this.ArrayEmptytoNull(rest.rows, DateNow);
-          console.log("rest.rows", JSON.stringify(rest.rows));
         }
       });
     }
@@ -452,14 +626,49 @@ class TechnicalBoq extends Component {
     this.setState({
       rowsTech: newDataXLS
     });
-    if(this.props.match.params.id !== undefined){
-      if(this.state.API_Tech.length !== 0){
-        if(this.state.API_Tech.list_of_id_boq_comm.length !== 0){
-          this.checkIsEqual(newDataXLS);
+    this.checkingFormatTech(newDataXLS);
+  }
+
+  async checkingFormatTech(rowsTech){
+    let postCheck = await this.postDatatoAPINODE('/techBoq/checkTechBoqData', {"techBoqData" : rowsTech});
+    if(postCheck.data !== undefined){
+      const dataCheck = postCheck.data;
+      let siteNew = [];
+      const listSites = dataCheck.tech_data.map(e => e.site_info);
+      for(let i = 0; i < listSites.length; i++){
+        if(listSites[i].new_site === true){
+          siteNew.push(listSites[i].site_id);
         }
       }
+      if(siteNew.length !== 0){
+        this.setState({action_status : 'failed'});
+      }else{
+        this.setState({result_check_tech : dataCheck});
+      }
+    }else{
+      this.setState({action_status : 'failed'});
     }
-    this.formatDataTech(newDataXLS);
+  }
+
+  saveTechBoq = async () => {
+    this.toggleLoading();
+    const dataChecked = this.state.result_check_tech;
+    const projectData = {
+		    "id_project_doc": this.state.project_select,
+		      "project_name": this.state.project_name_selected,
+	  }
+    const dataPost = {
+      "tech_boq_info" : projectData,
+      "sites_data" : dataChecked.tech_data,
+      "configList" : dataChecked.configList
+    }
+    let postTech = await this.postDatatoAPINODE('/techBoq/createTechBoqData', dataPost);
+    if(postTech.data !== undefined){
+      this.setState({action_status : 'success'});
+    }else{
+      this.setState({action_status : 'failed'});
+    }
+    this.toggleLoading();
   }
 
   formatDataTech = async(dataXLS) => {
@@ -684,52 +893,6 @@ class TechnicalBoq extends Component {
     let dateNow = false;
     dateNow = (now_date === DateNow);
     return dateNow;
-  }
-
-  saveBOQTech = async () => {
-    this.toggleLoading();
-    this.setState({progress_count : '10%', progress_data : '100%'});
-    let resAmount = await this.getDatafromAPI('/amountboqtech/5d24454a951c58496433be19');
-    const data_Sites = this.state.data_format;
-    const cekUndefined = data_Sites.find(e => e.list_of_site_items.id_pp_doc == undefined);
-    if(cekUndefined.length !== 0){
-      let Tech_count = resAmount.data.boq_tech_data+1;
-      // if(this.compareDatewithNow(resAmount.data.updated_on) === false){
-      //   Tech_count = 1;
-      // }
-      let getSites = await this.getAllSites(data_Sites.map(e => e.site_id));
-      for(let i = 0; i < data_Sites.length; i++){
-        let sitesIndex = getSites.find(site => site.site_id === data_Sites[i].site_id.toString());
-        if(sitesIndex === undefined){
-          let DataSite = {
-            "site_id" : data_Sites[i].site_id,
-            "site_name" : data_Sites[i].site_name,
-            "longitude": null, "latitude": null, "customer_area": null, "province": null, "city": null, "address": null, "site_type": null, "search_ring_status": null, "lessor_type": null, "land_classification": null, "lessor_name": null, "lessor_contact": null, "distance_from_nominal_in_meter": null, "candidate_status": null, "tower_type": null, "tower_height_in_meter": null, "permanent_power_solution": null, "electrical_cooperative": null, "temporary_power_supplier": null, "tx_readiness_status": null, "tx_readiness_remarks": null, "tx_readiness_plan_date": null, "tx_readiness_actual": null, "ac_dc_power_status": null, "ac_dc_power_remarks": null, "ac_dc_power_plan_date": null, "ac_dc_power_actual_date": null, "tower_status": null, "tower_remarks": null, "tower_plan_date": null, "tower_actual_date": null, "access_status": null, "access_remarks": null, "access_plan_date": null, "access_actual_date": null,
-            "deleted" : 0,
-            "created_by" : this.state.userId,
-            "updated_by" : this.state.userId
-          }
-          const postSites = await this.postDatatoAPI('/site_op', DataSite);
-          if(postSites !== undefined){
-            data_Sites[i]['site_name'] = data_Sites[i].site_name;
-            data_Sites[i]['id_site_doc'] = postSites.data._id;
-          }
-        }else{
-          data_Sites[i]['site_name'] = sitesIndex.site_name;
-          data_Sites[i]['id_site_doc'] = sitesIndex._id;
-        }
-      }
-      if(resAmount !== undefined){
-        const update_amount = {
-          "boq_tech_data" : Tech_count
-        }
-        this.updateAmount(update_amount, resAmount.data._etag);
-        this.saveTechtoDB(Tech_count, data_Sites);
-      }
-    }else{
-      this.setState({action_status : 'failed' , action_message : "" }, () => {this.toggleLoading()});
-    }
-
   }
 
   prepareBOQTech = async () => {
@@ -1494,17 +1657,6 @@ class TechnicalBoq extends Component {
     })
   }
 
-  handleChangeVersion(e){
-    const value = e.target.value;
-    this.setState({version_selected : value}, () => {
-      if(value == this.state.version_now){
-        this.getBOQTechAPI(this.props.match.params.id);
-      }else{
-        this.getBOQRevAPI(this.props.match.params.id);
-      }
-    });
-  }
-
   formatDataRev(dataItems){
     let dataStoreRev = [];
     for(let i = 0; i < dataItems.length; i++){
@@ -1681,20 +1833,31 @@ class TechnicalBoq extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataTech = this.state.API_Tech;
-    const dataAPI = this.state.data_item;
-    const dataHeader = this.state.Package_Header;
+    const dataTech = this.state.data_tech_boq;
+    let dataSites = [];
+    if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+      dataSites = this.state.data_tech_boq_sites_version;
+    }else{
+      dataSites = this.state.data_tech_boq_sites;
+    }
+    const dataHeader = this.state.view_tech_header_table;
 
-    let ppIdRow = ["project", "site_id", "site_name"];
+    let ppIdRow = ["site_title", "site_id", "site_name"];
     let ppTypeRow = ["", "", ""];
 
-    ppIdRow = ppIdRow.concat(dataHeader.IDPP.map((pp,i) => pp+" /// "+dataHeader.name[i]));
+    ppIdRow = ppIdRow.concat(dataHeader.config_id);
     ppTypeRow = ppTypeRow.concat(dataHeader.type);
 
     ws.addRow(ppTypeRow);
     ws.addRow(ppIdRow);
-    for(let i = 0; i < dataAPI.length ; i++){
-      ws.addRow([dataTech.project_name !== null ? dataTech.project_name : "", dataAPI[i].site_id, dataAPI[i].site_name].concat(dataAPI[i].list_qty_items));
+    for(let i = 0; i < dataSites.length ; i++){
+      let qtyConfig = []
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        qtyConfig = dataSites[i].siteItemConfigVersion.map(e => e.qty);
+      }else{
+        qtyConfig = dataSites[i].siteItemConfig.map(e => e.qty);
+      }
+      ws.addRow([null, dataSites[i].site_id, dataSites[i].site_name].concat(qtyConfig));
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
@@ -1837,17 +2000,11 @@ class TechnicalBoq extends Component {
                 <CardHeader>
                   {this.state.data_item.length === 0 && this.state.API_Tech.no_boq_tech === undefined && this.props.match.params.id == undefined ? (
                     <React.Fragment>
-                      <span style={{marginTop:'8px', position:'absolute'}}>Detail Technical BOQ</span>
-                      <div className="card-header-actions" style={{display:'inline-flex'}}>
-                      <Link to='/Boq/Tssr/Delta'>
-                        <Button color="success"><i className="fa fa-plus" aria-hidden="true"></i>&nbsp; Create by TSSR Delta</Button>
-                      </Link>
-                      </div>
+                      <span>Detail Technical BOQ</span>
                     </React.Fragment>
                   ) : (
                     <React.Fragment>
                       <span style={{marginTop:'8px', position:'absolute'}}>Detail Technical BOQ</span>
-
                       <div className="card-header-actions" style={{display:'inline-flex'}}>
                       <Col>
                         <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}}>
@@ -1861,7 +2018,6 @@ class TechnicalBoq extends Component {
                           </DropdownMenu>
                         </Dropdown>
                       </Col>
-
                         <div>
                           <Button block color="primary" onClick={this.toggleUpload} id="toggleCollapse1">
                               <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Update
@@ -1879,16 +2035,28 @@ class TechnicalBoq extends Component {
 
                     {this.state.data_item.length === 0 && this.state.API_Tech.no_boq_tech === undefined && this.props.match.params.id == undefined ? (
                       <React.Fragment>
+                      <Row></Row>
                         <input type="file" onChange={this.fileHandlerTechnical.bind(this)} style={{"padding":"10px 10px 5px 10px","visiblity":"hidden"}} />
-                        <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveBOQTech} disabled={this.state.action_status === 'failed' || this.state.data_format.length == 0 }>
-                          {this.state.rowsTech.length == 0 ? 'Save' : this.state.data_format.length !== 0 ? 'Save' : 'Loading..'}
+                        <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveTechBoq} disabled={this.state.action_status === 'failed' || this.state.result_check_tech === 0 }>
+                          {this.state.rowsTech.length == 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
                         </Button>
                         <div style={{marginLeft : '10px', fontSize : '10px', color : 'red'}}><span>Please download Technical format uploader in Material Menu or <Link to='/Material'>Click Here</Link></span></div>
+                        <Row>
+                        <Col md="4">
+                          <div>
+                            <Input name="project" type="select" onChange={this.selectProject} value={this.state.project_select}>
+                                <option value=""></option>
+                                {this.state.project_all.map( project =>
+                                  <option value={project._id}>{project.Project}</option>
+                                )}
+                            </Input>
+                          </div>
+                        </Col>
+                        </Row>
                         <hr className="upload-line"></hr>
                       </React.Fragment>
                     ) : (<React.Fragment></React.Fragment>)}
-
-                    {this.state.data_item.length !== 0 && this.state.API_Tech.list_of_id_boq_comm.length === 0 ? (
+                    {this.state.data_tech_boq !== null ? (
                       <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>
                         <CardBody style={{padding: '5px'}}>
                           <Row>
@@ -1900,14 +2068,14 @@ class TechnicalBoq extends Component {
                             <Col>
                               <div>
                                 <React.Fragment>
-                                  <Button style={{'float' : 'right'}} color="warning" onClick={this.overwriteDataSites} disabled={this.state.action_status === 'failed' || this.state.data_format.length === 0}>
+                                  <Button style={{'float' : 'right'}} color="warning" onClick={this.updateTechBoq} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
                                   <i className="fa fa-paste">&nbsp;&nbsp;</i>
-                                    {this.state.rowsTech.length == 0 ? 'Save' : this.state.data_format.length !== 0 ? 'Save' : 'Loading..'}
+                                    {this.state.rowsTech.length === 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
                                   </Button>
                                 </React.Fragment>
-                                <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.revisionTech} disabled={this.state.action_status === 'failed' || this.state.data_format.length === 0}>
+                                <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.updateTechBoq} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
                                   <i className="fa fa-copy">&nbsp;&nbsp;</i>
-                                  {this.state.rowsTech.length == 0 ? 'Revision' : this.state.data_format.length !== 0 ? 'Revision' : 'Loading..'}
+                                  {this.state.rowsTech.length === 0 ? 'Revision' : this.state.result_check_tech !== null ? 'Revision' : 'Loading..'}
                                 </Button>
                               </div>
                             </Col>
@@ -1964,7 +2132,7 @@ class TechnicalBoq extends Component {
 
                   </React.Fragment>
                   {/*  )} */}
-                  {this.state.data_item.length !== 0 && (
+                  {this.state.data_tech_boq !== null && (
                     <React.Fragment>
                     <Row>
                       <Col sm="12" md="12">
@@ -1974,10 +2142,7 @@ class TechnicalBoq extends Component {
                             <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>TECHNICAL BOQ</td>
                           </tr>
                           <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
-                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.API_Tech.no_boq_tech}</td>
-                          </tr>
-                          <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
-                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500', fontSize : '10px'}}>Commercial : {this.state.list_commercial_tech.map(e => e.no_boq_comm + ' ; ')}</td>
+                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.data_tech_boq.no_tech_boq}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -1989,31 +2154,21 @@ class TechnicalBoq extends Component {
                       <div style={{marginLeft : '10px'}}>
                       <table style={{width : '100%', marginBottom : '5px'}} className="table-header">
                         <tbody>
-                          {/* <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                            <td style={{textAlign : 'left'}}>Technical BOQ</td>
-                            <td style={{textAlign : 'left'}}>: &nbsp; {this.state.API_Tech.no_boq_tech}</td>
-                          </tr> */}
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Version</td>
                             <td style={{textAlign : 'left'}}>:</td>
                             <td style={{textAlign : 'left'}} colspan={2}>
-                              <Input type="select" value={this.state.version_selected === null? this.state.version_now : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "100px", height : "30px"}}>
-                              {this.state.list_version.map(ver =>
-                                <option value={ver.version}>{ver.version}</option>
+                              <Input type="select" value={this.state.version_selected === null? this.state.data_tech_boq.version : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "100px", height : "30px"}}>
+                                {this.state.list_version.map((e,i) =>
+                                  <option value={i}>{i}</option>
                                 )}
-                                <option value={this.state.version_now}>{(this.state.API_Tech.rev !== "A" ? "PA" : "A")+this.state.version_now}</option>
                               </Input>
                             </td>
                           </tr>
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                            <td style={{textAlign : 'left'}}>Created by</td>
+                            <td style={{textAlign : 'left'}}>Created On &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.userEmail}</td>
-                          </tr>
-                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                            <td style={{textAlign : 'left'}}>Created Date &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-                            <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.API_Tech.created_on}</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.created_on}</td>
                           </tr>
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>&nbsp; </td>
@@ -2032,22 +2187,12 @@ class TechnicalBoq extends Component {
                         <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Project </td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.API_Tech.project_name}</td>
-                          </tr>
-                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                            <td style={{textAlign : 'left'}}>Updated By </td>
-                            <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.userEmail}</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.project_name}</td>
                           </tr>
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Updated On </td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.API_Tech.updated_on}</td>
-                          </tr>
-                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                            <td style={{textAlign : 'left'}}>Approved By</td>
-                            <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}> {this.state.API_Tech.rev === "PA "? "Pre Approved" : this.state.API_Tech.rev === "WA" ? "Waiting Approve" : this.state.API_Tech.rev_by !== null ? this.state.API_Tech.rev_by : "Pre Approved" }</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.updated_on}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -2056,10 +2201,10 @@ class TechnicalBoq extends Component {
                     </Row>
                     </React.Fragment>
                     )}
-                    {this.state.data_item.length === 0 && this.state.API_Tech.no_boq_tech === undefined && this.props.match.params.id == undefined ? (
-                    <TableView dataApi={this.state.data_item} dataXLS={this.state.rowsTech} dataHeader={this.state.Package_Header} project_name={this.state.API_Tech.project_name} paramsID={this.props.match.params.id} summaryQTY={this.state.summaryQTYTech}/>
+                    {this.state.data_tech_boq_sites.length === 0 && this.state.data_tech_boq === null && this.props.match.params.id === undefined ? (
+                    <div></div>
                     ) : (<React.Fragment>
-                      <div style={{display : 'inline-flex', marginBottom : '5px'}}>
+                      {/*<div style={{display : 'inline-flex', marginBottom : '5px'}}>
                         <span style={{padding: '4px'}}>Show per Page : </span>
                         <Input className="select-per-page" name="PO" type="select" onChange={this.handleChangeShow} value={this.state.perPage} >
                           <option value="5">5</option>
@@ -2068,8 +2213,53 @@ class TechnicalBoq extends Component {
                           <option value="50">50</option>
                           <option value={this.state.data_item.length}>All</option>
                         </Input>
-                      </div>
-                      <TableView dataApi={this.state.data_item_pagination} dataXLS={this.state.rowsTech} dataHeader={this.state.Package_Header} project_name={this.state.API_Tech.project_name} paramsID={this.props.match.params.id} summaryQTY={this.state.summaryQTYTech}/>
+                      </div> */}
+                      <Table hover bordered striped responsive size="sm">
+                        <thead>
+                        <tr>
+                          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+                            Tower ID
+                          </th>
+                          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+                            Tower Name
+                          </th>
+                          {this.state.view_tech_header_table.type.map(type =>
+                            <th>{type}</th>
+                          )}
+                        </tr>
+                        <tr>
+                          {this.state.view_tech_header_table.config_id.map(conf =>
+                            <th>{conf}</th>
+                          )}
+                        </tr>
+                        </thead>
+                        {(this.state.version_selected !== null && this.state.data_tech_boq.version !== this.state.version_selected) ? (
+                          <tbody>
+                          {this.state.data_tech_boq_sites_version.map(site =>
+                            <tr>
+                              <td>{site.site_id}</td>
+                              <td>{site.site_name}</td>
+                              {site.siteItemConfigVersion.map(conf =>
+                                <td>{conf.qty}</td>
+                              )}
+                            </tr>
+                          )}
+                          </tbody>
+                        ) : (
+                          <tbody>
+                          {this.state.data_tech_boq_sites.map(site =>
+                            <tr>
+                              <td>{site.site_id}</td>
+                              <td>{site.site_name}</td>
+                              {site.siteItemConfig.map(conf =>
+                                <td>{conf.qty}</td>
+                              )}
+                            </tr>
+                          )}
+                          </tbody>
+                        )}
+                      </Table>
+                      {/*
                       <nav>
                         <div>
                           <Pagination
@@ -2082,20 +2272,20 @@ class TechnicalBoq extends Component {
                               linkClass="page-link"
                           />
                         </div>
-                      </nav>
+                      </nav>*/}
                       </React.Fragment>
                     )}
 
                     </CardBody>
                   <CardFooter>
-                    {this.state.data_item.length !== 0 && (
+                    {this.state.data_tech_boq !== null && (
                     <Row>
                       <Col>
-                        {this.state.data_item.length !== 0 ? this.state.API_Tech.rev == 'PA' && (
-                          <Button className="btn-success" style={{'float' : 'right'}} color="success" value="WA" onClick={this.approvedBoqTech} disabled={!this.state.API_Tech.rev === "PA"}>
-                              {this.state.API_Tech.rev === "PA" ? "Request Approve" : "Requested"}
+                        {this.state.data_tech_boq.approval_status === "PRE APPROVAL" && (
+                          <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value="1" onClick={this.approvalTechnical} disabled={!this.state.API_Tech.approval_status === "PRE APPROVAL"}>
+                              {this.state.data_tech_boq.approval_status === "PRE APPROVAL" ? "Request Approve" : "Requested"}
                           </Button>
-                        ) : (<React.Fragment></React.Fragment>) }
+                        )}
                       </Col>
                      </Row>
                     )}
@@ -2108,7 +2298,7 @@ class TechnicalBoq extends Component {
           <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className}>
             <ModalBody>
               <div style={{textAlign : 'center'}}>
-                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
               </div>
               <div style={{textAlign : 'center'}}>
                 Loading ...
