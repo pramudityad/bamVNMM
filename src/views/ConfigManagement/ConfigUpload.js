@@ -888,7 +888,7 @@ class ConfigUpload extends React.Component {
                           {/* dummy data */}
                           {this.state.config_package.map(pp =>
                             <React.Fragment key={pp._id + "frag"}>
-                              <tr className='fixbody' key={pp._id}>
+                              <tr style={{backgroundColor: '#d3d9e7'}} className='fixbody' key={pp._id}>
                                 <td align="center"><Checkbox name={pp._id} checked={this.state.config_checked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_id}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.sap_number}</td>
