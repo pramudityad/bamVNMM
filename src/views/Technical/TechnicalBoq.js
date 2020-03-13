@@ -641,12 +641,20 @@ class TechnicalBoq extends Component {
         }
       }
       if(siteNew.length !== 0){
-        this.setState({action_status : 'failed'});
+        this.setState({action_status : 'failed', action_message : '[ '+siteNew.join(', ')+' ] => Not available, please create this sites in PDB'});
       }else{
         this.setState({result_check_tech : dataCheck});
       }
     }else{
-      this.setState({action_status : 'failed'});
+      if(postCheck.response !== undefined){
+        if(postCheck.response.error !== undefined){
+          this.setState({action_status : 'failed', action_message : postCheck.response.error});
+        }else{
+          this.setState({action_status : 'failed'});
+        }
+      }else{
+        this.setState({action_status : 'failed'});
+      }
     }
   }
 
@@ -664,7 +672,9 @@ class TechnicalBoq extends Component {
     }
     let postTech = await this.postDatatoAPINODE('/techBoq/createTechBoqData', dataPost);
     if(postTech.data !== undefined){
-      this.setState({action_status : 'success'});
+      this.setState({action_status : 'success'}, () => {
+        setTimeout(function(){ this.setState({ redirectSign : postTech.data.techBoq._id}); }.bind(this), 3000);
+      });
     }else{
       this.setState({action_status : 'failed'});
     }
@@ -1861,7 +1871,7 @@ class TechnicalBoq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_boq_tech+' Uploader Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Uploader Template.xlsx');
   }
 
     render() {
@@ -2202,7 +2212,17 @@ class TechnicalBoq extends Component {
                     </React.Fragment>
                     )}
                     {this.state.data_tech_boq_sites.length === 0 && this.state.data_tech_boq === null && this.props.match.params.id === undefined ? (
-                    <div></div>
+                    <Table hover bordered striped responsive size="sm">
+                      <tbody>
+                        {this.state.rowsTech.map(row =>
+                          <tr>
+                            {row.map(col =>
+                              <td>{col}</td>
+                            )}
+                          </tr>
+                        )}
+                      </tbody>
+                    </Table>
                     ) : (<React.Fragment>
                       {/*<div style={{display : 'inline-flex', marginBottom : '5px'}}>
                         <span style={{padding: '4px'}}>Show per Page : </span>

@@ -285,7 +285,7 @@ class ListTechnical extends Component {
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
                               {boq.approval_status === "PRE APPROVAL" || boq.approval_status === "R" ? (
                                 <span className="boq-tech-status-PA">{boq.approval_status}</span>
-                              ) : boq.approval_status === "TECH BOQ REQUEST FOR APPROVAL" ? (
+                              ) : boq.approval_status === "REQUEST FOR APPROVAL" ? (
                                 <span className="boq-tech-status-WA">{boq.approval_status}</span>
                               ) : (
                                 <span className="boq-tech-status-A">{boq.approval_status}</span>
