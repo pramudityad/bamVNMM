@@ -5,12 +5,12 @@ import { Alert, Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 const propTypes = {
     actionMessage : PropTypes.string,
     actionStatus : PropTypes.string,
-  };
+};
 
-  const defaultProps = {
+const defaultProps = {
     actionMessage : null,
     actionStatus : null,
-  };
+};
 
 
 class DefaultNotif extends Component {

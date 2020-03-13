@@ -18,8 +18,8 @@ const propTypes = {
 const defaultProps = {
     dsp_lat: -6.2915605,
     dsp_lng: 106.7999035,
-    site_lat: -6.2626619,
-    site_lng: 106.7826552,
+    site_lat: -6.2915605,
+    site_lng: 106.7999035,
 }
 
 class MapComponent extends Component {

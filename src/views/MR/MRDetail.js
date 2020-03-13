@@ -9,8 +9,11 @@ import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timel
 import 'react-vertical-timeline-component/style.min.css';
 import { withScriptjs } from "react-google-maps";
 import GMap from './MapComponent';
+import LoadingAnim from '../DefaultView/LoadLoader';
+import { usePromiseTracker, trackPromise } from 'react-promise-tracker';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const DefaultAlert = React.lazy(() => import('../../views/DefaultView/DefaultAlert'));
 
 const API_URL_BMS_Phil = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
@@ -20,9 +23,19 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
+
+const LoadIndicator = props => {
+  const { promiseInProgress } = usePromiseTracker();
+  return (
+    promiseInProgress &&
+    <LoadingAnim/>
+  )
+}
 
 class MRDetail extends Component {
   constructor(props) {
@@ -45,6 +58,19 @@ class MRDetail extends Component {
         edit_detail : false,
         action_status : null,
         action_message : null,
+
+        userRole : this.props.dataLogin.role,
+        userId : this.props.dataLogin._id,
+        userName : this.props.dataLogin.userName,
+        userEmail : this.props.dataLogin.email,
+        tokenUser : this.props.dataLogin.token,
+
+        // DSP and Site locations, default
+        site_lat: -6.2626619,
+        site_lng: 106.7826552,
+        dsp_lat : -6.2626619,
+        dsp_lng : 106.7826552,
+
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
@@ -58,15 +84,20 @@ class MRDetail extends Component {
     this.updateDataMR = this.updateDataMR.bind(this);
   }
 
+  handleToUpdate()
+  {
+    this.setState({ action_status: null, action_message: null }, () => { window.location.reload() })
+  }
+  
   async getDatafromAPIBMS(url){
     try {
-      let respond = await axios.get(API_URL_BMS_Phil +url, {
+      let respond = await trackPromise(axios.get(API_URL_BMS_Phil +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
           password: passwordPhilApi
         },
-      })
+      }));
       if(respond.status >= 200 && respond.status < 300){
         console.log("respond Get Data", respond);
       }
@@ -80,20 +111,39 @@ class MRDetail extends Component {
 
   async getDatafromAPIBAM(url){
     try {
-      let respond = await axios.get(API_URL_BAM +url, {
+      let respond = await trackPromise(axios.get(API_URL_BAM +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernameBAM,
           password: passwordBAM
         },
-      })
+      }));
       if(respond.status >= 200 && respond.status < 300){
-        console.log("respond Get Data", respond);
+        console.log("respond Get Datax", respond);
       }
       return respond;
     }catch (err) {
       let respond = err;
       console.log("respond Get Data", err);
+      return respond;
+    }
+  }
+
+  async getDataFromAPINode(url) {
+    try {
+      let respond = await axios.get(API_URL_Node+url, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data node", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data node", err);
       return respond;
     }
   }
@@ -165,6 +215,43 @@ class MRDetail extends Component {
           }
         })
       }
+    })
+  }
+
+  getLocDSP(_id_MR){
+    this.getDatafromAPIBAM('/mr_op/'+_id_MR).then(resMR => {
+      if ( resMR.data !== undefined && resMR.data.sow_type === "RBS" )
+      {
+        const site_NE = resMR.data.site_info.find( e => e.site_title === "NE");
+
+        if ( site_NE !== undefined && site_NE.site_latitude !== null && site_NE.site_longitude !== null )
+        {
+          this.setState({ site_lat: site_NE.site_latitude, site_lng: site_NE.site_longitude });
+        }
+
+        this.getDataFromAPINode('/getMRLocationById/'+_id_MR).then(resLoc => {
+          
+          if ( resLoc.data !== undefined ) 
+          {
+            this.setState({ dsp_lat: resLoc.data.updated_location.latitude, dsp_lng: resLoc.data.updated_location.longitude });
+          }
+        })
+      }
+      // else if ( resMR.data !== undefined && resMR.data.sow_type === "TRM" )
+      // {
+      //   const site_NE = resMR.data.site_info.find( e => e.site_title === "NE");
+      //   const site_FE = resMR.data.site_info.find( e => e.site_title === "FE");
+
+      //   if ( site_NE !== undefined && site_NE.site_latitude !== null && site_NE.site_longitude !== null )
+      //   {
+
+      //   }
+
+      //   if ( site_FE !== undefined && site_FE.site_latitude !== null && site_FE.site_longitude !== null )
+      //   {
+
+      //   }
+      // }
     })
   }
 
@@ -277,102 +364,91 @@ class MRDetail extends Component {
     });
   }
 
-  milestoneStat(ms_name, ms_date, ms_updater, index)
+  mrStat(st_name, st_value, st_date, st_updater, index)
   {
-    switch ( ms_name )
+    let status = ''
+    let action = ''
+    let bg_color = 'rgb(33, 150, 243)'
+
+    if ( st_name === 'IMPLEMENTATION' )
     {
-      case 'MS_ORDER_CREATED':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Order Created</h3>
-          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-          </p>
-        </VerticalTimelineElement>;
-      case 'MS_ORDER_RECEIVED':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Order Received</h3>
-          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-          </p>
-        </VerticalTimelineElement>;
-      case 'MS_ORDER_PROCESSING':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Order Processing</h3>
-          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-          </p>
-        </VerticalTimelineElement>;
-      case 'MS_READY_TO_DELIVER':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(227, 30, 16)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Ready to Deliver</h3>
-          <h4 className="vertical-timeline-element-subtitle">confirmed by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      case 'MS_JOINT_CHECK':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Joint Check</h3>
-          <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-          </p>
-        </VerticalTimelineElement>;
-      case 'MS_LOADING_PROCESS':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Loading Process</h3>
-          <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-          </p>
-        </VerticalTimelineElement>;
-      default:
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date=""
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Data not available</h3>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-          </p>
-        </VerticalTimelineElement>;
+      status = st_name
     }
+    else if ( st_name === 'PLANTSPEC' && st_value !== 'NOT ASSIGNED' )
+    {
+      status = st_name
+      action = st_value+' '
+    }
+    else if ( st_name === 'MATERIAL_REQUEST' )
+    {
+      status = 'MATERIAL REQUEST'
+      action = st_value+' '
+    }
+    else if ( st_name === 'ORDER_PROCESSING' )
+    {
+      status = 'ORDER PROCESSING'
+      action = st_value+' '
+    }
+    else if ( st_name === 'LACK_OF_MATERIAL' )
+    {
+      status = 'LACK OF MATERIAL'
+      action = 'Stated '
+    }
+    else if ( st_name === 'LOM_CONFIRMATION' )
+    {
+      status = st_value
+      action = 'Stated '
+    }
+    else if ( st_name === 'READY_TO_DELIVER' )
+    {
+      status = 'READY TO DELIVER'
+      action = st_value+' '
+    }
+    else if ( st_name === 'JOINT_CHECK' )
+    {
+      status = 'JOINT CHECK'
+      action = st_value+' '
+    }
+    else if ( st_name === 'LOADING_PROCESS' )
+    {
+      status = 'LOADING PROCESS'
+      action = st_value+' '
+    }
+    else if ( st_name === 'DISPATCH' )
+    {
+      status = st_value
+      action = 'Initiated '
+    }
+    else if ( st_name === 'MATERIAL_REQUEST' )
+    {
+      status = ''
+      action = st_value+' '
+    }
+    else if ( st_name === 'MATERIAL' )
+    {
+      status = 'MATERIAL ON SITE'
+      action = 'Acknowledged '
+    }
+    else {
+
+      return;
+    }
+
+    return <VerticalTimelineElement
+      className="vertical-timeline-element--work"
+      date={st_date}
+      iconStyle={{ background: bg_color, color: '#fff' }}
+
+    >
+      <h3 className="vertical-timeline-element-title">{status}</h3>
+      <h4 className="vertical-timeline-element-subtitle">{action}by <b>{st_updater}</b></h4>
+      
+    </VerticalTimelineElement>;
   }
 
   componentDidMount(){
     this.getDataMR(this.props.match.params.id);
+    this.getLocDSP(this.props.match.params.id);
     document.title = 'MR Detail | BAM';
   }
 
@@ -457,7 +533,7 @@ class MRDetail extends Component {
     patchData["dsp_company"] = dataForm[1] !== null ? dataForm[1] : dataMR.dsp_company;
     patchData["current_mr_status"] = "MR UPDATED";
     patchData["mr_status"] = dataMR.mr_status.concat(dataStatus);
-    const respondPatchMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, patchData, dataMR._etag);
+    const respondPatchMR = await trackPromise(this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, patchData, dataMR._etag));
     if(respondPatchMR.data !== undefined && respondPatchMR.status >= 200 && respondPatchMR.status <= 300 ){
       this.setState({action_status : 'success'});
     }else{
@@ -472,15 +548,17 @@ class MRDetail extends Component {
 
     const MapLoader = withScriptjs(GMap);
 
+    let handleToUpdate = this.handleToUpdate;
+
     console.log("tabs_submenu", this.state.tabs_submenu);
     return (
       <div>
-        <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
+        <DefaultAlert actionMessage={this.state.action_message} actionStatus={this.state.action_status} handleToUpdate={handleToUpdate.bind(this)} />
         <Row>
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-info-circle" style={{marginRight: "8px"}}></i>MR Detail</span>
+            <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-info-circle" style={{marginRight: "8px"}}></i>MR Detail <LoadIndicator /></span>
             <Button style={{float : 'right'}} color="warning" onClick={this.changeEditable}>Editable</Button>
             {this.state.edit_detail !== false && (
               <Button style={{float : 'right', marginRight : '10px'}} color="success" onClick={this.updateDataMR}>Save</Button>
@@ -496,7 +574,7 @@ class MRDetail extends Component {
                 <NavLink href="#" active={this.state.tabs_submenu[1]} value="1" onClick={this.changeTabsSubmenu.bind(this, 1)}>MR Material</NavLink>
               </NavItem>
               <NavItem>
-                <NavLink href="#" active={this.state.tabs_submenu[2]} value="2" onClick={this.changeTabsSubmenu.bind(this, 2)}>Progress Overview</NavLink>
+                <NavLink href="#" active={this.state.tabs_submenu[2]} value="2" onClick={this.changeTabsSubmenu.bind(this, 2)}>Status Progress</NavLink>
               </NavItem>
               <NavItem>
                 <NavLink href="#" active={this.state.tabs_submenu[3]} value="2" onClick={this.changeTabsSubmenu.bind(this, 3)}>Map View</NavLink>
@@ -833,8 +911,8 @@ class MRDetail extends Component {
                       >
                         <VerticalTimeline>
                           {this.state.data_mr !== null &&
-                            this.state.data_mr.mr_milestones.map((ms, i) => {
-                              return this.milestoneStat(ms.ms_name, ms.ms_date, ms.ms_updater, i)
+                            this.state.data_mr.mr_status.map((st, i) => {
+                              return this.mrStat(st.mr_status_name, st.mr_status_value, st.mr_status_date, st.mr_status_updater, i)
                             })
                           }
                         </VerticalTimeline>
@@ -847,10 +925,11 @@ class MRDetail extends Component {
           )}
           {this.state.tabs_submenu[3] === true && (
             <Fragment>
-                {/* <GoogleMap site_lat={-6.3046027} site_lng={106.7951936} /> */}
                 <MapLoader
                   googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyAoCmcgwc7MN40js68RpcZdSzh9yLrmLF4"
                   loadingElement={<div style={{ height: '100%' }} />}
+                  site_lat={this.state.site_lat} site_lng={this.state.site_lng}
+                  dsp_lat={this.state.dsp_lat} dsp_lng={this.state.dsp_lng}
                 />
             </Fragment>
           )}
