@@ -628,8 +628,7 @@ class CommercialBoq extends Component {
 
     componentDidMount(){
       if(this.props.match.params.id !== undefined){
-        // this.getDataCommAPI();
-        this.getDataCommercial();
+        this.getDataCommAPI();
       }else{
         this.getAllPP();
       }
@@ -1803,10 +1802,57 @@ class CommercialBoq extends Component {
                             </tr>
                         </table>
                         ) : (<div></div>)}
+                        {this.state.boq_comm_API === null && this.props.match.params.id === undefined && this.state.boq_tech_select.project_name !== undefined ?(
+                          <table style={{fontSize : '12px', marginTop : '10px'}}>
+                            <tbody>
+                              <tr>
+                                <td>Project {this.state.boq_tech_select.project_name !== null ? 'Name' : 'Note'}</td>
+                                <td>:</td>
+                                <td>{this.state.boq_tech_select.project_name !== null ? this.state.boq_tech_select.project_name : this.state.boq_tech_select.note_6 }</td>
+                              </tr>
+                              <tr>
+                                <td>Technical Create By</td>
+                                <td>:</td>
+                                <td>{"bamidadmin@e-dpm.com"}</td>
+                              </tr>
+                              <tr></tr>
+                            </tbody>
+                          </table>
+                        ) : (<div></div>)}
                         {/* End Show Select BOQ Technical */}
-
+                        {/* Show Select Project */}
+                        {this.state.boq_comm_API !== null && this.state.boq_comm_API !== undefined &&  (
+                          this.state.boq_comm_API.hasOwnProperty('project_name') === false && (
+                            <Form className="form-horizontal">
+                              <FormGroup row style={{"padding-left":"10px"}}>
+                                <Col md="2">
+                                  <Label style={{marginTop : "10px"}}>Project</Label>
+                                </Col>
+                                <Col xs="12" md="6">
+                                  <Input name="project" type="select" onChange={this.selectProject} value={this.state.project_select}>
+                                    <option value=""></option>
+                                    {/* <option value="Demo 1">Demo 1</option>
+                                      <option value="Demo 2">Demo 2</option> */}
+                                    {this.state.project_all.map( project =>
+                                      <option value={project._id}>{project.project_name}</option>
+                                    )}
+                                  </Input>
+                                  <FormText className="help-block">Please Select Project</FormText>
+                                </Col>
+                                <Col xs="12" md="4">
+                                <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveProjecttoDB} disabled={this.state.project_select == null || this.state.project_select == ""}>
+                                  <i className="fa fa-save">&nbsp;&nbsp;</i>
+                                  Save Project
+                                </Button>
+                                </Col>
+                              </FormGroup>
+                            </Form>
+                          )
+                        )}
+                        {/* End Show Select Project */}
                         {/* Show import XLS */}
-                        {this.state.data_comm_boq !== null &&  (
+                        {this.state.boq_comm_API !== null &&  (
+                          this.state.boq_comm_API.hasOwnProperty('project_name') === true && (
                           <React.Fragment>
                             <input type="file" onChange={this.fileHandlerCommercial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} />
                               <Button style={{'float' : 'right',margin : '8px'}} color="warning" onClick={this.overwriteDataItems} disabled={this.state.action_status == 'failed'}>
@@ -1818,6 +1864,7 @@ class CommercialBoq extends Component {
                                 Revision
                               </Button>
                           </React.Fragment>
+                          )
                         )}
                         {/* End Show import XLS */}
                       </Col>
@@ -1829,10 +1876,13 @@ class CommercialBoq extends Component {
                         <tr style={{fontWeight : '425', fontSize : '23px'}}>
                           <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>COMMERCIAL BOQ</td>
                         </tr>
-                        {this.state.data_comm_boq !== null && (
+                        {this.state.boq_comm_API !== null && (
                           <React.Fragment>
                             <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
-                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.data_comm_boq.no_comm_boq}</td>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.boq_comm_API.no_boq_comm}</td>
+                            </tr>
+                            <tr style={{fontWeight : '390', fontSize : '11px', fontStyle:'oblique'}}>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Technical BOQ : {this.state.boq_comm_API.no_boq_tech+" - Ver"+this.state.boq_comm_API.version_boq_tech}</td>
                             </tr>
                           </React.Fragment>
                         )}
@@ -1843,95 +1893,299 @@ class CommercialBoq extends Component {
                   </Row>
 
                   <div style={{padding:"10px", fontSize:'15px'}}>
-                  <React.Fragment>
-                    <Row>
-                      <Col sm="6" md="6">
+
+                    {this.state.boq_comm_API !== null &&  (
+                    <React.Fragment>
+                      <Row>
+                        <Col sm="6" md="7">
                         <table className="table-header">
                           <tbody>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>COMMERCIAL INFORMATION</td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td style={{width : '150px'}}>Project </td>
+                              <td style={{width : '150px'}}>Project Identifier </td>
                               <td>:</td>
-                              <td colspan="2" style={{paddingLeft:'10px'}}>{this.state.data_comm_boq.project_name}</td>
+                              <td colspan="2" style={{paddingLeft:'10px'}}>{!this.state.boq_comm_API.hasOwnProperty('project_name') ? "" : this.state.boq_comm_API.project_name }</td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>Version</td>
                               <td>:</td>
-                              <td style={{paddingLeft:'10px'}} colspan="2">{<td colspan="2" style={{paddingLeft:'10px'}}>{this.state.data_comm_boq.version}</td>}</td>
+                              <td style={{paddingLeft:'10px'}} colspan="2">
+                                <Input type="select" value={this.state.version_selected === null? this.state.version_now : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "120px", height: "30px"}}>
+                                  {this.state.list_version.map(ver =>
+                                    <option value={ver.version}>{ver.version}</option>
+                                  )}
+                                  <option value={this.state.version_now}>{this.state.version_now}</option>
+                                </Input>
+                              </td>
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td></td>
-                              <td></td>
-                              <td></td>
+                              <td>Early Start </td>
+                              <td>:</td>
+                              {this.state.early_start === true ? (
+                                <td style={{paddingLeft:'10px'}} colspan="2"><i class="fa fa-check"></i></td>
+                              ) : (
+                                <td colspan="2">&nbsp;</td>
+                              )}
                             </tr>
                             <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td></td>
-                              <td></td>
-                              <td></td>
+                              <td>Opportunity ID </td>
+                              <td>:</td>
+                              <td style={{paddingLeft:'10px'}}>
+                                {this.state.boq_comm_API.opportunity_id}
+                              </td>
+                              <td  style={{paddingLeft:'5px'}}></td>
                             </tr>
                           </tbody>
                         </table>
-                      </Col>
-                      <Col sm="6" md="6">
-                      </Col>
-                    </Row>
-                  </React.Fragment>
-
+                        </Col>
+                        <Col sm="6" md="5">
+                        <table style={{float : 'right', marginRight : '10px'}} className="table-header">
+                          <tbody>
+                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                              <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>PROJECT ORDER INFORMATION</td>
+                            </tr>
+                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                              <td>CPO Identifier </td>
+                              <td>:</td>
+                              <td style={{paddingLeft:'10px'}} colspan="2">
+                              {this.state.boq_comm_API.po_number == null && this.state.boq_comm_API.rev1 !== "A" ? (<span style={{fontSize : '12px', color: 'red'}}>CBOQ not yet approved</span>) :
+                              this.state.boq_comm_API.po_number == null && this.state.boq_comm_API.rev1 === "A" ? (<span style={{fontSize : '12px', color: 'rgba(255,160,0 ,1)'}}>Please assign PO / Esta</span>) : this.state.boq_comm_API.po_number}
+                              </td>
+                            </tr>
+                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                              <td>Updated By</td>
+                              <td>:</td>
+                              <td style={{paddingLeft:'10px'}} colspan="2">{"bamidadmin@e-dpm.com"}</td>
+                            </tr>
+                            <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                              <td>Date </td>
+                              <td>:</td>
+                              <td style={{paddingLeft:'10px'}} colspan="2">{this.state.boq_comm_API.created_on}</td>
+                            </tr>
+                            {/* <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                              <td >Show by</td>
+                              <td >: &nbsp;
+                              <button onClick={this.showGroupToggle}>{this.state.toggleShowGroup == false ? "Group" : "PP"}</button>
+                              </td>
+                            </tr> */}
+                          </tbody>
+                        </table>
+                        </Col>
+                      </Row>
+                    </React.Fragment>
+                    )}
                   </div>
                   <div class='divtable'>
-                    <Table hover bordered responsive size="sm" width="100%">
-                        <thead class="fixed">
-                        <tr>
-                          <th>Site ID</th>
-                          <th>Site Name</th>
-                          <th>Config ID</th>
-                          <th>Qty</th>
-                          <th>Price</th>
-                          <th>Currency</th>
-                        </tr>
-                      </thead>
-                      {this.state.data_comm_boq_items.map(site =>
-                        <tbody>
-                          {site.items.map(item =>
-                            <tr>
-                              <td>{item.site_id_doc}</td>
-                              <td>{item.site_name_doc}</td>
-                              <td>{item.config_id}</td>
-                              <td>{item.qty}</td>
-                              <td>{item.price}</td>
-                              <td>{item.currency}</td>
-                            </tr>
-                          )}
+                    <table hover bordered responsive size="sm" width="100%">
+                      <thead class="fixed">
+                      <tr style={{backgroundColor : '#c6f569'}}>
+                        {this.state.boq_comm_API === null &&(
+                          <React.Fragment>
+                            <th style={{width :'50px', verticalAlign : 'middle'}}>
+                              {this.state.commercialData.length !== 0 && (
+                                <Checkbox name="item_all" checked={this.state.checkedPackage_all} onChange={this.handleChangeChecklistAll}/>
+                              )}
+                            </th>
+                            <th style={{width :'100px', verticalAlign : 'middle'}} >Group Name</th>
+                          </React.Fragment>
+                          )
+                        }
+                        <th style={{width :'100px', verticalAlign : 'middle'}} >ID</th>
+                        <th style={{width :'300px', verticalAlign : 'middle'}} >Product Description</th>
+                        <th style={{verticalAlign : 'middle'}}>Unit</th>
+                        <th style={{verticalAlign : 'middle'}}>Qty in Technical</th>
+                        <th style={{verticalAlign : 'middle'}}>Existing Stock (Smart)</th>
+                        <th style={{verticalAlign : 'middle'}}>Existing Stock (Ericsson)</th>
+                        <th style={{verticalAlign : 'middle'}}>Unit Price</th>
+                        <th style={{verticalAlign : 'middle', minWidth : '75px'}}>Currency
+                        {this.state.boq_comm_API !== null && (
+                          <Input type="select" onChange={this.handleChangeCurrencyAll} value={this.state.currencyChangeAll}>
+                            <option value={""}></option>
+                            <option value={"USD"}>USD</option>
+                            <option value={"PHP"}>IDR</option>
+                          </Input>
+                        )}
+                        </th>
+                        <th style={{verticalAlign : 'middle'}}>Quotation Qty</th>
+                        {this.state.boq_comm_API !== null && (
+                          <th style={{verticalAlign : 'middle'}}>{this.state.boq_comm_API.early_start === true ? "Early Start Qty" : "PO Qty" }</th>
+                        )}
+                        <th style={{verticalAlign : 'middle'}}>Total Price</th>
+                      </tr>
+                    </thead>
+                    {this.state.data_comm_boq_items.map(item =>
+                      <tbody>
+                        {items.map(item =>
+                          <tr>
+                            <td>{item.site_id_doc}</td>
+                            <td>{item.site_name_doc}</td>
+                            <td>{item.config_id}</td>
+                            <td>{item.qty}</td>
+                            <td>{item.price}</td>
+                            <td>{item.currency}</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    )}
+                    {this.state.data_comm_boq_items.length !== 0 ?
+                      this.state.groupingView.map(pt =>
+                      <React.Fragment>
+                        <tbody style={{borderTopWidth : '0px'}}  class="fixbody">
+                          {this.state.boq_comm_API === null ? (
+                              <tr style={{backgroundColor : '#f8f6df'}}>
+                                <td style={{textAlign: 'left', borderRightWidth : '0px'}}></td>
+                                <td colSpan={"11"} style={{textAlign: 'left', borderLefttWidth : '0px'}}>Product Type : <span style={{fontWeight : '700'}}>{pt.product_type}</span></td>
+                              </tr>) : (
+                            <tr style={{backgroundColor : '#f8f6df'}}>
+                              <td colSpan="11" style={{textAlign: 'left', borderLefttWidth : '0px'}}>Product Type : <span style={{fontWeight : '700'}}>{pt.product_type}</span></td>
+                            </tr> )}
                         </tbody>
+                        {pt.groups.map(grp =>
+                          <React.Fragment>
+                            <tbody style={{borderTopWidth : '0px'}} class="fixbody">
+                              {this.state.boq_comm_API === null ? (
+                                <tr>
+                                  <td></td>
+                                  <td colSpan={"14"} style={{textAlign: 'left', fontWeight : '500'}}>Physical Group : <span style={{fontWeight : '700'}}>{grp}</span></td>
+                                </tr> ) : (
+                                <tr>
+                                  <td colSpan="14" style={{textAlign: 'left', fontWeight : '500'}}>Physical Group : <span style={{fontWeight : '700'}}>{grp}</span></td>
+                                </tr>)}
+                              {this.packageView(this.state.commercialData, pt.product_type, grp).map((itm) =>
+                                <React.Fragment>
+                                <tr>
+                                    {this.state.boq_comm_API === null &&(
+                                      <React.Fragment>
+                                      <td style={{verticalAlign :'middle'}}>
+                                      <Checkbox name={itm.pp_id} checked={this.state.checkedPackage.get(itm.pp_id)} onChange={this.handleChangeChecklist}/>
+                                    </td>
+                                    <td rowSpan>{itm.pp_group}</td>
+                                    </React.Fragment>)}
+                                    <td style={{verticalAlign :'middle', textAlign : 'left'}}>{ itm.pp_id }</td>
+                                    <td style={{verticalAlign :'middle', textAlign : 'left'}}>{ itm.package_name }</td>
+                                    <td style={{verticalAlign :'middle'}}>{ itm.unit }</td>
+                                    <td style={{verticalAlign :'middle'}}>{ itm.qty_tech.toLocaleString() }</td>
+                                    <td style={{verticalAlign :'middle'}}>
+                                      {this.state.boq_comm_API === null ?  itm.smart_stock : this.state.boq_comm_API.project_name == null ? itm.smart_stock : (
+                                        <Input type="number" name={itm._id} className="BoQ-style-qty" placeholder="qty" onChange={this.editQtyCust} value={!this.state.qty_cust.has(itm._id) ? itm.smart_stock : this.state.qty_cust.get(itm._id) } disabled={this.state.version_selected !== this.state.version_now}/>
+                                      )}
+                                    </td>
+                                    <td style={{verticalAlign :'middle'}}>
+                                    {this.state.boq_comm_API === null ? itm.qty_ericsson : this.state.boq_comm_API.project_name == null ? itm.qty_ericsson : (
+                                        <Input type="number" name={itm._id} className="BoQ-style-qty" placeholder="qty" onChange={this.editQtyEricsson} value={!this.state.qty_ericsson.has(itm._id) ? itm.qty_ericsson : this.state.qty_ericsson.get(itm._id) } disabled={this.state.version_selected !== this.state.version_now}/>
+                                      ) }
+                                    </td>
+                                    <td style={{verticalAlign :'middle'}}>
+                                      {this.state.boq_comm_API === null ? itm.unit_price : this.state.boq_comm_API.project_name == null ? itm.unit_price : (
+                                        <Input type="number" name={itm._id} className="BoQ-style-qty" placeholder="price" onChange={this.editUnitPrice} value={!this.state.unit_price.has(itm._id) ? itm.unit_price : this.state.unit_price.get(itm._id) } disabled={this.state.version_selected !== this.state.version_now}/>
+                                      ) }
+                                    </td>
+                                    {/* <td>{itm.currency}</td> */}
+                                    <td>
+                                    {this.state.boq_comm_API === null ?  itm.currency : this.state.boq_comm_API.project_name == null ? itm.currency : (
+                                      <Input type="select" onChange={this.handleChangeCurrency} name={itm._id} value={this.state.currencyChange.has(itm._id) ? this.state.currencyChange.get(itm._id) : itm.currency}>
+                                        {/* <option value={false}></option> */}
+                                        <option value={"USD"}>USD</option>
+                                        <option value={"PHP"}>IDR</option>
+                                      </Input>
+                                    )}
+                                    {/* {itm.currency} */}
+                                    </td>
+                                    <td align='center' style={{verticalAlign :'middle'}}>{ (itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)).toLocaleString() }</td>
+                                    {this.state.boq_comm_API !== null && (
+                                      <td align='center' style={{verticalAlign :'middle'}}>
+                                        {this.state.boq_comm_API.early_start === true ? itm.qty_early_start : this.state.boq_comm_API.po_number !== null ? itm.qty_po : "" }
+                                      </td>
+                                    )}
+                                    {/* <td style={{verticalAlign :'middle'}}>{ this.state.early_start === false ? (itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)) : "" }</td> */}
+                                    <td align='center' style={{verticalAlign :'middle'}}>{ ((itm.qty_tech -  (itm.smart_stock+itm.qty_ericsson)) * itm.unit_price).toLocaleString() }</td>
+                                </tr>
+                                </React.Fragment>
+                              )}
+                              {this.state.boq_comm_API !== null && (
+                              <tr style={{backgroundColor:'#f3f3f3'}}>
+                                <td colSpan="10" style={{textAlign : 'left'}}>Physical group Total</td>
+                                <td align='center'>{this.countTotalPrice(this.state.commercialData, pt.product_type, grp).toLocaleString()}</td>
+                              </tr>
+                              )}
+                                <tr><td colSpan="11"></td></tr>
+                            </tbody>
+                          </React.Fragment>
+                        )}
+                        {this.state.boq_comm_API !== null && (
+                          <tr><td colSpan="11"></td></tr>
+                        )}
+                      </React.Fragment>
+                      ) : (
+                      <tbody>
+                        <tr>
+                          {this.props.match.params.id == undefined? (
+                            <td colSpan="12">Please Select BOQ Technical</td>
+                          ) : (
+                            <td colSpan="11">Please Wait, Loading Data...</td>
+                          )}
+                        </tr>
+                      </tbody>
+                          )}
+                      {this.state.boq_comm_API !== null && (
+                      <tbody class="fixed2 fixbody">
+                          <tr>
+                            <td colSpan="10" style={{textAlign : 'left'}}>Total Commercial</td>
+                            <td>{this.state.total_comm.totalPriceComm !== undefined ? this.state.total_comm.totalPriceComm.toLocaleString() : 0}</td>
+                          </tr>
+                      </tbody>
                       )}
-                    </Table>
+                  </table>
                   </div>
                   {this.state.boq_comm_API !== null &&  (
 		               <React.Fragment>
                     <div style={{marginBottom : "20px"}}>
                       <Row style={{paddingLeft : '10px'}}>
                         <Col sm="6" md="7">
-                          <table className="table-footer" style={{float : 'right',marginRight : '20px'}}>
-                            <tbody>
-                              <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                                <td >Technical Indentifier &nbsp;&nbsp;&nbsp;</td>
-                                <td >: &nbsp; {this.state.data_comm_boq.list_of_tech[0].no_tech_boq} </td>
-                              </tr>
-                              <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                                <td >COM BOQ Created By &nbsp;</td>
-                                <td >: &nbsp; {this.state.data_comm_boq.creator[0].email}</td>
-                              </tr>
-                              <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                                <td >COM BOQ Created Date </td>
-                                <td >: &nbsp; {this.state.data_comm_boq.created_on}</td>
-                              </tr>
-                            </tbody>
-                          </table>
+                        <table className="table-footer">
+                          <tbody>
+                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                              <td >Approved By </td>
+                              <td >: &nbsp; {this.state.boq_comm_API.rev1 === "PA" ? "Pre Approved" : this.state.boq_comm_API.rev1 == "WA" ? "Waiting Approve" : this.state.boq_comm_API.rev1_by}</td>
+                            </tr>
+                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                              <td >Submitted By </td>
+                              <td >: &nbsp; {this.state.boq_comm_API.submitted === undefined ? "Not Submitted" : this.state.boq_comm_API.submitted == "NS" ? "Not Submitted" : this.state.boq_comm_API.submitted_by}</td>
+                            </tr>
+                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                              <td >Submitted Date </td>
+                              <td >: &nbsp; {this.state.boq_comm_API.submitted === undefined ? "Not Submitted" : this.state.boq_comm_API.submitted == "NS" ? "Not Submitted" : this.state.boq_comm_API.submitted_date}</td>
+                            </tr>
+                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                              <td >Clarified By </td>
+                              <td >: &nbsp; {this.state.boq_comm_API.clarified === undefined ? "Not Submitted" : this.state.boq_comm_API.clarified == "NS" ? "Not Submitted" : this.state.boq_comm_API.clarified_by}</td>
+                            </tr>
+                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                              <td >Clarified Date </td>
+                              <td >: &nbsp; {this.state.boq_comm_API.clarified === undefined ? "Not Submitted" : this.state.boq_comm_API.clarified == "NS" ? "Not Submitted" : this.state.boq_comm_API.clarified_date}</td>
+                            </tr>
+                          </tbody>
+                        </table>
                         </Col>
                         <Col sm="6" md="5">
-
+                        <table className="table-footer" style={{float : 'right',marginRight : '20px'}}>
+                          <tbody>
+                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                              <td >Technical Indentifier &nbsp;&nbsp;&nbsp;</td>
+                              <td >: &nbsp; {this.state.boq_comm_API.no_boq_tech+" - Ver"+this.state.boq_comm_API.version_boq_tech} </td>
+                            </tr>
+                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                              <td >COM BOQ Created By &nbsp;</td>
+                              <td >: &nbsp; bamidadmin@e-dpm.com</td>
+                            </tr>
+                            <tr style={{fontWeight : '425', fontSize : '12px'}}>
+                              <td >COM BOQ Created Date </td>
+                              <td >: &nbsp; {this.state.boq_comm_API.created_on}</td>
+                            </tr>
+                          </tbody>
+                        </table>
                         </Col>
                       </Row>
                     </div>
