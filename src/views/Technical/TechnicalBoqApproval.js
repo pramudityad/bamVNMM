@@ -372,10 +372,13 @@ class TechnicalBoqApproval extends Component {
                     </nav> */}
                 </CardBody>
                 <CardFooter>
+                {this.state.data_tech_boq !== null ?
+                this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" ? (
                   <div>
                     <Button color="success" size="sm" value="2" onClick={this.approvalTechnical}>Approve</Button>
                     <Button color="danger" size="sm" style={{marginLeft : '10px'}} value="3" onClick={this.approvalTechnical}>Reject</Button>
                   </div>
+                ) : <div></div> : <div></div>}
                 </CardFooter>
               </Card>
             </Col>
