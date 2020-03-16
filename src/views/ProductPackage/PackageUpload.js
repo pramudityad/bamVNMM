@@ -219,12 +219,12 @@ class PackageUpload extends React.Component {
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond Post Data", respond);
+        // console.log("respond Post Data", respond);
       }
       return respond;
     } catch (err) {
       let respond = err;
-      console.log("respond Post Data err", err);
+      // console.log("respond Post Data err", err);
       return respond;
     }
   }
@@ -836,9 +836,11 @@ class PackageUpload extends React.Component {
     this.togglePPForm();
     this.toggleLoading();
     let respondSaveNew = undefined;
+    let ppData = [];
     const dataPPNew = this.state.PPForm;
     const dataAllPP = this.state.pp_all;
-    if (dataAllPP.find(e => e.pp_id === dataPPNew[1]) !== undefined) {
+    // console.log(dataAllPP);
+    // if (dataAllPP.find(e => e.pp_id === dataPPNew[1]) !== undefined) {
       const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
       const pp_name = dataPPNew[1];
       let pp_id_Gen = "PP" + ppcountID + " / " + pp_name;
@@ -850,10 +852,9 @@ class PackageUpload extends React.Component {
         "uom": dataPPNew[4],
         "qty": dataPPNew[5],
         "pp_cust_number": this.checkValue(dataPPNew[8]),
-        "pp_group": this.checkValue(dataPPNew[6]),
-        "deleted": 0,
-        "created_by": this.state.userId,
-        "updated_by": this.state.userId
+        "pp_group": this.checkValue(dataPPNew[6])
+        // "created_by": this.state.userId,
+        // "updated_by": this.state.userId
       }
       if (pp.pp_group === undefined || pp.pp_group === null) {
         pp["pp_group"] = pp.product_name;
@@ -869,24 +870,38 @@ class PackageUpload extends React.Component {
           pp["pp_cust_number"] = pp.pp_id;
         }
       }
-      let postData = await this.postDatatoAPINode('/productpackage/manyProductPackage', pp);
-      if (postData === undefined) { postData = {}; postData["data"] = undefined }
-      if (postData.data !== undefined) {
-        respondSaveNew = postData.data;
-      }
-      if (respondSaveNew !== undefined) {
-        this.setState({ action_status: 'success' }, () => {
-          this.toggleLoading();
-          setTimeout(function () { window.location.reload(); }, 2000);
+      ppData.push(pp);
+      // return ppData;
+      // console.log('pp data', ppData);
+      let postData = await this.postDatatoAPINode('/productpackage/manyProductPackage', {"ppData" : ppData})
+        .then(res => {
+          console.log('response postData', res);
+          if(res.data !== undefined){
+            this.toggleLoading();
+            console.log('single PP success created');
+          }else{
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+            this.toggleLoading();
+          }
         });
-      } else {
-        this.setState({ action_status: 'failed' });
-        this.toggleLoading();
-      }
-    } else {
-      this.toggleLoading();
-      this.setState({ action_status: 'failed', action_message: 'Duplicated PP ID' });
-    }
+      // console.log('postData Save', postData);
+      // if (postData === undefined) { postData = {}; postData["data"] = undefined }
+      // if (postData.data !== undefined) {
+      //   respondSaveNew = postData.data;
+      // }
+      // if (respondSaveNew !== undefined) {
+      //   this.setState({ action_status: 'success' }, () => {
+      //     this.toggleLoading();
+      //     setTimeout(function () { window.location.reload(); }, 2000);
+      //   });
+      // } else {
+      //   this.setState({ action_status: 'failed' });
+      //   this.toggleLoading();
+      // }
+    // } else {
+    //   this.toggleLoading();
+    //   this.setState({ action_status: 'failed', action_message: 'Duplicated PP ID' });
+    // }
   }
 
   componentDidUpdate() {
