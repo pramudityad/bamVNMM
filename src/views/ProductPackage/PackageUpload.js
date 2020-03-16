@@ -229,6 +229,25 @@ class PackageUpload extends React.Component {
     }
   }
 
+  async patchDatatoAPINode(url, data) {
+    try {
+      let respond = await axios.patch(API_URL_BAM + url, data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.state.tokenUser
+        },
+      })
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond Post Data err", err);
+      return respond;
+    }
+  }
+
   changeFilterName(value) {
     this.getPackageDataAPI(value, this.state.project_filter);
     this.getAllPP();
@@ -291,12 +310,12 @@ class PackageUpload extends React.Component {
   // }
 
   getPackageDataAPI() {
-    this.getDatatoAPINode('/productpackage')
+    this.getDatatoAPINode('/productpackage?lmt='+this.state.perPage+'&pg='+this.state.activePage)
       .then(res => {
         // console.log("res config data", res);
         if (res.data !== undefined) {
           console.log("res config data", res.data);
-          this.setState({ product_package: res.data.data, prevPage: this.state.activePage })
+          this.setState({ product_package: res.data.data, prevPage: this.state.activePage, total_dataParent : res.data.totalResults });
         } else {
           this.setState({ product_package: [], total_dataParent: 0, prevPage: this.state.activePage });
         }
@@ -790,7 +809,9 @@ class PackageUpload extends React.Component {
   }
 
   handlePageChange(pageNumber) {
-    this.setState({ activePage: pageNumber, packageChecked_all: false });
+    this.setState({ activePage: pageNumber, packageChecked_all: false }, () => {
+      this.getPackageDataAPI();
+    });
   }
 
   viewProjectSelected(select_project_tag) {
@@ -888,7 +909,7 @@ class PackageUpload extends React.Component {
         pp["pp_cust_number"] = pp.pp_id;
       }
     }
-    let patchData = await this.patchDatatoAPIBAM('/productpackage/updateManyProductPackage', {"ppData" : [pp]});
+    let patchData = await this.patchDatatoAPINode('/productpackage/updateManyProductPackage', {"ppData" : [pp]});
     if (patchData === undefined) { patchData = {}; patchData["data"] = undefined }
     if (patchData.data !== undefined) {
       this.setState({ action_status: 'success' }, () => {
@@ -963,11 +984,11 @@ class PackageUpload extends React.Component {
     }
   }
 
-  componentDidUpdate() {
-    if (this.state.prevPage !== this.state.activePage) {
-      this.getPackageDataAPI(this.state.filter_name, this.state.project_filter);
-    }
-  }
+  // componentDidUpdate() {
+  //   if (this.state.prevPage !== this.state.activePage) {
+  //     this.getPackageDataAPI(this.state.filter_name, this.state.project_filter);
+  //   }
+  // }
 
   handleSelectProjectChange = (newValue) => {
     if (newValue !== null) {
@@ -1271,7 +1292,7 @@ class PackageUpload extends React.Component {
                     <Pagination
                       activePage={this.state.activePage}
                       itemsCountPerPage={this.state.perPage}
-                      totalItemsCount={this.state.total_dataParent.total}
+                      totalItemsCount={this.state.total_dataParent}
                       pageRangeDisplayed={5}
                       onChange={this.handlePageChange}
                       itemClass="page-item"

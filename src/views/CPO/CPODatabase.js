@@ -18,7 +18,7 @@ const passwordPhilApi = 'rtkO6EZLkxL1';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class ListTechnical extends Component {
+class CPODatabase extends Component {
   constructor(props) {
     super(props);
 
@@ -208,100 +208,39 @@ class ListTechnical extends Component {
         <Card>
           <CardHeader>
             <React.Fragment>
-              <span style={{marginTop:'8px'}}>Technical BOQ List</span>
-              {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
-                <div className="card-header-actions" style={{marginRight:'5px'}}>
-                    <Link to='/new-technical'>
-                    <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
-                    </Link>
-                </div>
-                ) : ""}
+              <span >CPO DB List</span>
             </React.Fragment>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <Table hover bordered striped responsive size="sm">
               <thead>
                   <tr>
-                    <th>Technical BOQ Document</th>
-                    <th>Project</th>
-                    <th>Creator</th>
-                    <th>Ver.</th>
-                    <th style={{'width' : '150px', textAlign : 'center'}}>Status</th>
-                    <th style={{'width' : '225px', textAlign : 'center'}}>Action</th>
+                    <th>Project Code</th>
+                    <th>Tower ID Plan</th>
+                    <th>Tower ID Actual</th>
+                    <th>Config</th>
+                    <th>SAP</th>
+                    <th>Qty</th>
+                    <th>Coupa Unit Price 	</th>
+                    <th>Coupa Total Price</th>
+                    <th>Curr</th>
+                    <th>Prodef</th>
                   </tr>
-                  <tr>
-                      <td>
-                        <div className="controls">
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={1} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[1]}/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls">
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={2} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[2]}/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td></td>
-                      <td style={{width:'125px'}}>
-                        <div className="controls">
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={4} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[4]}/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls">
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={5} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[5]}/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                      </td>
-                    </tr>
               </thead>
               <tbody>
-                    {this.state.list_tech_boq.map((boq,i) =>
-                        <tr key={boq._id}>
-                            <td style={{verticalAlign : 'middle'}}>{boq.no_tech_boq}</td>
-                            <td style={{verticalAlign : 'middle'}}>{boq.project_name}</td>
-                            <td style={{verticalAlign : 'middle'}}>{boq.creator[0].email}</td>
-                            <td style={{verticalAlign : 'middle'}}>{boq.version}</td>
-                            <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              {boq.approval_status === "PRE APPROVAL" || boq.approval_status === "REJECTED" ? (
-                                <span className="boq-tech-status-PA">{boq.approval_status}</span>
-                              ) : boq.approval_status === "REQUEST FOR APPROVAL" ? (
-                                <span className="boq-tech-status-WA">{boq.approval_status}</span>
-                              ) : (
-                                <span className="boq-tech-status-A">{boq.approval_status}</span>
-                              )}
-                            </td>
-                            <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              <Link to={'/detail-technical/'+boq._id}>
-                                <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
-                              </Link>
-                              <Link to={'/approval-technical/'+boq._id}>
-                                <Button color="warning" size="sm"> <i className="fa fa-check-circle" aria-hidden="true">&nbsp;</i> Approval</Button>
-                              </Link>
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
+                <tr>
+                  <td>TSEL 2020</td>
+                  <td>T01</td>
+                  <td>T01</td>
+                  <td>CONFIG_TEST_1</td>
+                  <td>SAPTEST01</td>
+                  <td>1</td>
+                  <td>1500</td>
+                  <td>1500</td>
+                  <td>USD</td>
+                  <td>SL/H313</td>
+                </tr>
+              </tbody>
             </Table>
             <nav>
                 <div>
@@ -334,4 +273,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(ListTechnical);
+export default connect(mapStateToProps)(CPODatabase);

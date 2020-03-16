@@ -1476,12 +1476,11 @@ class TechnicalBoq extends Component {
     const wb = new Excel.Workbook()
     const ws = wb.addWorksheet()
 
-    const dataTech = this.state.API_Tech;
-    const dataAPI = this.state.data_item;
-    const dataHeader = this.state.Package_Header;
+    const dataTech = this.state.data_tech_boq;
+    const dataSites = this.state.data_tech_boq_sites;
+    const dataHeader = this.state.view_tech_header_table;
     const DatePrint = new Date();
     const DatePrintOnly = DatePrint.getFullYear()+'-'+(DatePrint.getMonth()+1).toString().padStart(2, '0')+'-'+DatePrint.getDay().toString().padStart(2, '0');
-    const summaryQTY = this.state.summaryQTYTech;
 
     const prepared = ws.mergeCells('A4:E4');
     ws.getCell('A4').value = 'prepared';
@@ -1501,7 +1500,7 @@ class TechnicalBoq extends Component {
     ws.getCell('F4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
 
     const DocumentNum = ws.mergeCells('F5:I5');
-    ws.getCell('F5').value = dataTech.no_boq_tech;
+    ws.getCell('F5').value = dataTech.no_tech_boq;
     ws.getCell('F5').alignment  = {horizontal: 'left' };
     ws.getCell('F5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
@@ -1537,7 +1536,7 @@ class TechnicalBoq extends Component {
     const revStatus = dataTech.rev !== 'A' ? "PA" : "A";
 
     const revDocNum = ws.mergeCells('H7:I7');
-    ws.getCell('H7').value = revStatus+dataTech.version;
+    ws.getCell('H7').value = dataTech.version;
     ws.getCell('H7').alignment  = {horizontal: 'left' };
     ws.getCell('H7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
@@ -1547,8 +1546,7 @@ class TechnicalBoq extends Component {
     ws.getCell('A9').alignment  = {vertical: 'middle', horizontal: 'center' };
     ws.getCell('A9').border = {bottom: {style:'double'} };
 
-    ws.addRow(["Project ID",": "+dataTech.project_name,"","","","", "Opportunity ID", dataTech.opportunity_id,""]);
-    ws.addRow(["Created By",": "+this.state.userEmail,"","","","", "Updated By", this.state.userEmail,""]);
+    ws.addRow(["Project",": "+dataTech.project_name,"","","","", "", "",""]);
     ws.addRow(["Created On",": "+dataTech.created_on,"","","","", "Updated On", dataTech.updated_on,""]);
     ws.mergeCells('B10:C10');
     ws.mergeCells('B11:C11');
@@ -1579,21 +1577,12 @@ class TechnicalBoq extends Component {
 
     ws.addRow([""]);
 
-    const rowHeaderSum = ["","","Summary Qty"].concat(summaryQTY);
-    const rowHeader1 = ["","",""].concat(dataHeader.type);
-    const rowHeader2 = ["Project","Site ID","Site Name"].concat(dataHeader.name);
-    ws.addRow(rowHeaderSum);
+    const rowHeader1 = ["",""].concat(dataHeader.config_id.map(e => "CONFIG"));
+    const rowHeader2 = ["Tower ID","Tower Name"].concat(dataHeader.config_id.map(e => e));
     let getlastrowHeaderSum = ws.lastRow._number;
-    for(let i = 3; i < rowHeaderSum.length+1; i++){
-      ws.getCell(this.numToSSColumn(i)+getlastrowHeaderSum.toString()).fill = {
-        type : 'pattern',
-        pattern : 'solid',
-        fgColor : {argb:'7F81C784'}
-      }
-    }
     ws.addRow(rowHeader1);
     let getlastrowHeader1 = ws.lastRow._number;
-    for(let i = 4; i < rowHeader1.length+1; i++){
+    for(let i = 3; i < rowHeader1.length+1; i++){
       ws.getCell(this.numToSSColumn(i)+getlastrowHeader1.toString()).fill = {
         type : 'pattern',
         pattern : 'solid',
@@ -1610,12 +1599,12 @@ class TechnicalBoq extends Component {
       }
     }
 
-    for(let i = 0; i < dataAPI.length ; i++){
-      ws.addRow([ dataTech.project_name, dataAPI[i].site_id, dataAPI[i].site_name].concat(dataAPI[i].list_qty_items));
+    for(let i = 0; i < dataSites.length ; i++){
+      ws.addRow([ dataSites[i].site_id, dataSites[i].site_name].concat(dataSites[i].siteItemConfig.map(e => e.qty)));
     }
 
     const techFormat = await wb.xlsx.writeBuffer()
-    saveAs(new Blob([techFormat]), 'Technical BOQ '+dataTech.no_boq_tech+' Report.xlsx')
+    saveAs(new Blob([techFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Report.xlsx')
   }
 
   toggleLoading(){
