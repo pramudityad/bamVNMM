@@ -29,6 +29,7 @@ class ListTechnical extends Component {
       userEmail : this.props.dataLogin.email,
       tokenUser : this.props.dataLogin.token,
       list_tech_boq : [],
+      modal_delete : false,
         Tech_All : [],
         prevPage : 0,
         activePage : 1,
@@ -48,6 +49,25 @@ class ListTechnical extends Component {
   async getDataFromAPINODE(url) {
     try {
       let respond = await axios.get(API_URL_NODE+url, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async deleteDataFromAPINODE(url) {
+    try {
+      let respond = await axios.delete(API_URL_NODE+url, {
         headers : {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser
@@ -199,6 +219,26 @@ class ListTechnical extends Component {
     const now_date = NowDate.getFullYear()+"/"+(NowDate.getMonth()+1)+"/"+NowDate.getDate();
     return DateNow;
   }
+  //
+  // toggleDelete(e){
+  //   let value = null;
+  //   this.setState(prevState => ({
+  //     modal_delete: !prevState.modal_delete
+  //   }));
+  //   if(e !== undefined){
+  //     if(e.currentTarget.value === undefined){
+  //       value = e.target.value;
+  //     }else{
+  //       value = e.currentTarget.value;
+  //     }
+  //   }
+  //   this.setState({modal_delete_noBOQ : value})
+  // }
+
+  deleteTechBoq(e){
+    const _id_tech = e.currentTarget.value;
+    const delTech = this.deleteDataFromAPINODE('/techBoq/deleteOneTechBoq/'+_id_tech);
+  }
 
   render() {
     return (
@@ -298,6 +338,9 @@ class ListTechnical extends Component {
                               <Link to={'/approval-technical/'+boq._id}>
                                 <Button color="warning" size="sm"> <i className="fa fa-check-circle" aria-hidden="true">&nbsp;</i> Approval</Button>
                               </Link>
+                              {/*<Button  size="sm" color="danger" style={{color : "white"}} value={boq._id} onClick={e => this.deleteTechBoq(e, "value")}>
+                                  <i className="fa fa-trash" aria-hidden="true"></i>
+                              </Button> */}
                             </td>
                         </tr>
                     )}
