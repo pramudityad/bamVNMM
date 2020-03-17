@@ -879,12 +879,12 @@ class CPODatabase extends React.Component {
                               <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />
                             </th>
                             <th style={{ minWidth: '150px' }}>PO Number</th>
-                            <th>Date</th>
-                            <th>Payment Terms</th>
+                            <th>Year</th>
+                            {/* <th>Payment Terms</th> */}
                             <th>Currency</th>
-                            {/* <th>Unit</th> */}
-                            <th>Contract</th>
-                            <th>Contact</th>
+                            <th>Price</th>
+                            <th>Number of Sites</th>
+                            {/* <th>Contact</th> */}
                             <th></th>
                           </tr>
                         </thead>
