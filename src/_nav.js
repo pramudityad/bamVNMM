@@ -20,6 +20,11 @@ export default {
           icon: 'icon-docs',
         },
         {
+          name: 'Technical CPO',
+          url: '/list-technical-cpo',
+          icon: 'icon-docs',
+        },
+        {
           name: 'Commercial BOQ ',
           url: '/list-commercial',
           icon: 'icon-tag',
