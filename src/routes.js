@@ -65,9 +65,11 @@ const AssignmentEdit = React.lazy(() => import('./views/Assignment/AssignmentEdi
 const AssignBast = React.lazy(() => import('./views/Assignment/AssignBast'));
 const BulkRequest = React.lazy(() => import('./views/MR/BulkRequest'));
 const BulkNotifytoASP = React.lazy(() => import('./views/Assignment/BulkNotifytoASP'));
+
 const ListTechnical = React.lazy(() => import('./views/Technical/ListTechnical'));
 const DetailTechnical = React.lazy(() => import('./views/Technical/TechnicalBoq'));
 const ApprovalTechnical = React.lazy(() => import('./views/Technical/TechnicalBoqApproval'));
+
 const DSACreation = React.lazy(() => import('./views/DSA/DSACreation'));
 const ListCommercial = React.lazy(() => import('./views/Commercial/ListCommercial'));
 const DetailCommercial = React.lazy(() => import('./views/Commercial/CommercialBoq'));
@@ -84,6 +86,11 @@ const BulkApproval = React.lazy(() => import('./views/MR/ListBulkApproval'));
 const ListOrdering = React.lazy(() => import('./views/Ordering/ListOrdering'));
 const DetailOrdering = React.lazy(() => import('./views/Ordering/OrderingMaterial'));
 const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUpload'));
+const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabase'));
+
+const ListCPOTechnical = React.lazy(() => import('./views/TechnicalCPO/ListTechnicalCPO'));
+const DetailCPOTechnical = React.lazy(() => import('./views/TechnicalCPO/DetailTechnicalCPO'));
+const NewCPOTechnical = React.lazy(() => import('./views/TechnicalCPO/ListTechnicalCPO'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -182,8 +189,14 @@ const routes = [
   { path: '/dsa-detail/:id', exact: true, name: 'DSA Detail', component: DSADetail },
   { path: '/ordering-list', exact: true, name: 'Ordering List', component: ListOrdering },
   { path: '/ordering-detail/:id', exact: true, name: 'Ordering Detail', component: DetailOrdering },
+
   { path: '/config-manager', exact: true, name: 'Config Manager', component: ConfigManager },
 
+  { path: '/cpo-database', exact: true, name: 'CPO Database', component: CPODatabase },
+
+  { path: '/list-technical-cpo', exact: true, name: 'List CPO', component: ListCPOTechnical },
+  { path: '/detail-technical-cpo/:id', exact: true, name: 'Detail CPO', component: DetailCPOTechnical },
+  { path: '/new-technical-cpo', exact: true, name: 'New CPO', component: NewCPOTechnical },
 ];
 
 export default routes;

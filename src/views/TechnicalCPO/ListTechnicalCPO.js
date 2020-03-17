@@ -4,7 +4,7 @@ import { Redirect, Route, Switch, Link } from 'react-router-dom';
 import { Form, FormGroup, Label } from 'reactstrap';
 import axios from 'axios';
 import Pagination from "react-js-pagination";
-import './boqTechnical.css';
+import './TechnicalCPO.css';
 import {connect} from 'react-redux';
 import debounce from 'lodash.debounce';
 
@@ -18,7 +18,7 @@ const passwordPhilApi = 'rtkO6EZLkxL1';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class CPODatabase extends Component {
+class ListTechnical extends Component {
   constructor(props) {
     super(props);
 
@@ -29,6 +29,7 @@ class CPODatabase extends Component {
       userEmail : this.props.dataLogin.email,
       tokenUser : this.props.dataLogin.token,
       list_tech_boq : [],
+      modal_delete : false,
         Tech_All : [],
         prevPage : 0,
         activePage : 1,
@@ -48,6 +49,25 @@ class CPODatabase extends Component {
   async getDataFromAPINODE(url) {
     try {
       let respond = await axios.get(API_URL_NODE+url, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async deleteDataFromAPINODE(url) {
+    try {
+      let respond = await axios.delete(API_URL_NODE+url, {
         headers : {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser
@@ -199,6 +219,26 @@ class CPODatabase extends Component {
     const now_date = NowDate.getFullYear()+"/"+(NowDate.getMonth()+1)+"/"+NowDate.getDate();
     return DateNow;
   }
+  //
+  // toggleDelete(e){
+  //   let value = null;
+  //   this.setState(prevState => ({
+  //     modal_delete: !prevState.modal_delete
+  //   }));
+  //   if(e !== undefined){
+  //     if(e.currentTarget.value === undefined){
+  //       value = e.target.value;
+  //     }else{
+  //       value = e.currentTarget.value;
+  //     }
+  //   }
+  //   this.setState({modal_delete_noBOQ : value})
+  // }
+
+  deleteTechBoq(e){
+    const _id_tech = e.currentTarget.value;
+    const delTech = this.deleteDataFromAPINODE('/techBoq/deleteOneTechBoq/'+_id_tech);
+  }
 
   render() {
     return (
@@ -208,39 +248,103 @@ class CPODatabase extends Component {
         <Card>
           <CardHeader>
             <React.Fragment>
-              <span >CPO DB List</span>
+              <span style={{marginTop:'8px'}}>Technical CPO List</span>
+              {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
+                <div className="card-header-actions" style={{marginRight:'5px'}}>
+                    <Link to='/new-technical'>
+                    <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
+                    </Link>
+                </div>
+                ) : ""}
             </React.Fragment>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <Table hover bordered striped responsive size="sm">
               <thead>
                   <tr>
-                    <th>Project Code</th>
-                    <th>Tower ID Plan</th>
-                    <th>Tower ID Actual</th>
-                    <th>Config</th>
-                    <th>SAP</th>
-                    <th>Qty</th>
-                    <th>Coupa Unit Price 	</th>
-                    <th>Coupa Total Price</th>
-                    <th>Curr</th>
-                    <th>Prodef</th>
+                    <th>PO Number</th>
+                    {/* <th>Project</th>
+                    <th>Creator</th>
+                    <th>Ver.</th>
+                    <th style={{'width' : '150px', textAlign : 'center'}}>Status</th>
+                    <th style={{'width' : '225px', textAlign : 'center'}}>Action</th> */}
                   </tr>
+                  <tr>
+                      <td>
+                        <div className="controls">
+                          <InputGroup className="input-prepend">
+                            <InputGroupAddon addonType="prepend">
+                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                            </InputGroupAddon>
+                            <Input type="text" placeholder="Search" name={1} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[1]}/>
+                          </InputGroup>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="controls">
+                          <InputGroup className="input-prepend">
+                            <InputGroupAddon addonType="prepend">
+                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                            </InputGroupAddon>
+                            <Input type="text" placeholder="Search" name={2} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[2]}/>
+                          </InputGroup>
+                        </div>
+                      </td>
+                      <td></td>
+                      <td style={{width:'125px'}}>
+                        <div className="controls">
+                          <InputGroup className="input-prepend">
+                            <InputGroupAddon addonType="prepend">
+                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                            </InputGroupAddon>
+                            <Input type="text" placeholder="Search" name={4} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[4]}/>
+                          </InputGroup>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="controls">
+                          <InputGroup className="input-prepend">
+                            <InputGroupAddon addonType="prepend">
+                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                            </InputGroupAddon>
+                            <Input type="text" placeholder="Search" name={5} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[5]}/>
+                          </InputGroup>
+                        </div>
+                      </td>
+                      <td>
+                      </td>
+                    </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>TSEL 2020</td>
-                  <td>T01</td>
-                  <td>T01</td>
-                  <td>CONFIG_TEST_1</td>
-                  <td>SAPTEST01</td>
-                  <td>1</td>
-                  <td>1500</td>
-                  <td>1500</td>
-                  <td>USD</td>
-                  <td>SL/H313</td>
-                </tr>
-              </tbody>
+                    {this.state.list_tech_boq.map((boq,i) =>
+                        <tr key={boq._id}>
+                            <td style={{verticalAlign : 'middle'}}>{boq.no_tech_boq}</td>
+                            <td style={{verticalAlign : 'middle'}}>{boq.project_name}</td>
+                            <td style={{verticalAlign : 'middle'}}>{boq.creator[0].email}</td>
+                            <td style={{verticalAlign : 'middle'}}>{boq.version}</td>
+                            <td style={{verticalAlign : 'middle', textAlign : "center"}}>
+                              {boq.approval_status === "PRE APPROVAL" || boq.approval_status === "REJECTED" ? (
+                                <span className="boq-tech-status-PA">{boq.approval_status}</span>
+                              ) : boq.approval_status === "REQUEST FOR APPROVAL" ? (
+                                <span className="boq-tech-status-WA">{boq.approval_status}</span>
+                              ) : (
+                                <span className="boq-tech-status-A">{boq.approval_status}</span>
+                              )}
+                            </td>
+                            <td style={{verticalAlign : 'middle', textAlign : "center"}}>
+                              <Link to={'/detail-technical/'+boq._id}>
+                                <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
+                              </Link>
+                              {/* <Link to={'/approval-technical/'+boq._id}>
+                                <Button color="warning" size="sm"> <i className="fa fa-check-circle" aria-hidden="true">&nbsp;</i> Approval</Button>
+                              </Link> */}
+                              {/*<Button  size="sm" color="danger" style={{color : "white"}} value={boq._id} onClick={e => this.deleteTechBoq(e, "value")}>
+                                  <i className="fa fa-trash" aria-hidden="true"></i>
+                              </Button> */}
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
             </Table>
             <nav>
                 <div>
@@ -273,4 +377,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(CPODatabase);
+export default connect(mapStateToProps)(ListTechnical);
