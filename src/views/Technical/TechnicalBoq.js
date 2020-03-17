@@ -110,6 +110,8 @@ class TechnicalBoq extends Component {
     this.handleChangeVerComment = this.handleChangeVerComment.bind(this);
     this.saveProjecttoDB = this.saveProjecttoDB.bind(this);
     this.exportFormatTechnical = this.exportFormatTechnical.bind(this);
+    this.exportFormatTechnicalHorizontal = this.exportFormatTechnicalHorizontal.bind(this);
+    this.exportFormatTechnicalVertical = this.exportFormatTechnicalVertical.bind(this);
     this.approvalTechnical = this.approvalTechnical.bind(this);
     }
 
@@ -360,6 +362,12 @@ class TechnicalBoq extends Component {
       const typeHeader = data_sites[0].siteItemConfig.map(e => "CONFIG");
       this.setState({view_tech_header_table : {"config_id" : configId, "type" : typeHeader }});
     }
+  }
+
+  headerTechBoqDataNote(data_sites){
+    const dataNote = data_sites.map( e=> e.notes).reduce((l, n) => l.concat(n), []);
+    const headerNoteUniq = [...new Set(dataNote.map(({ note_name }) => note_name))];
+    return headerNoteUniq;
   }
 
   async updateTechBoq(e){
@@ -631,6 +639,7 @@ class TechnicalBoq extends Component {
 
   async checkingFormatTech(rowsTech){
     let postCheck = await this.postDatatoAPINODE('/techBoq/checkTechBoqData', {"techBoqData" : rowsTech});
+    console.log("postCheck", JSON.stringify(postCheck));
     if(postCheck.data !== undefined){
       const dataCheck = postCheck.data;
       let siteNew = [];
@@ -670,6 +679,7 @@ class TechnicalBoq extends Component {
       "sites_data" : dataChecked.tech_data,
       "configList" : dataChecked.configList
     }
+    console.log("dataPost", JSON.stringify(dataPost));
     let postTech = await this.postDatatoAPINODE('/techBoq/createTechBoqData', dataPost);
     if(postTech.data !== undefined){
       this.setState({action_status : 'success'}, () => {
@@ -1841,8 +1851,14 @@ class TechnicalBoq extends Component {
     }
     const dataHeader = this.state.view_tech_header_table;
 
-    let ppIdRow = ["site_title", "site_id", "site_name"];
+    let ppIdRow = ["site_title", "tower_id", "tower_name"];
     let ppTypeRow = ["", "", ""];
+
+    const header_note = this.headerTechBoqDataNote(this.state.data_tech_boq_sites);
+    // ppTypeRow = ppTypeRow.concat(dataHeader.type);
+
+    ppIdRow = ppIdRow.concat(header_note)
+    ppTypeRow = ppTypeRow.concat(header_note.map(e => "NOTE"));
 
     ppIdRow = ppIdRow.concat(dataHeader.config_id);
     ppTypeRow = ppTypeRow.concat(dataHeader.type);
@@ -1852,8 +1868,11 @@ class TechnicalBoq extends Component {
     for(let i = 0; i < dataSites.length ; i++){
       let qtyConfig = []
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
         qtyConfig = dataSites[i].siteItemConfigVersion.map(e => e.qty);
       }else{
+        header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
+        console.log("console.log", dataSites[i].notes );
         qtyConfig = dataSites[i].siteItemConfig.map(e => e.qty);
       }
       ws.addRow([null, dataSites[i].site_id, dataSites[i].site_name].concat(qtyConfig));
@@ -1861,6 +1880,93 @@ class TechnicalBoq extends Component {
 
     const MRFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Uploader Template.xlsx');
+  }
+
+  exportFormatTechnicalHorizontal = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataTech = this.state.data_tech_boq;
+    let dataSites = [];
+    if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+      dataSites = this.state.data_tech_boq_sites_version;
+    }else{
+      dataSites = this.state.data_tech_boq_sites;
+    }
+    const dataHeader = this.state.view_tech_header_table;
+
+    let ppIdRow = ["site_title", "tower_id", "tower_name"];
+    let ppTypeRow = ["", "", ""];
+
+    let ppIdRowheader = [];
+
+    const header_note = this.headerTechBoqDataNote(this.state.data_tech_boq_sites);
+    // ppTypeRow = ppTypeRow.concat(dataHeader.type);
+
+    ppIdRow = ppIdRow.concat(header_note)
+    // ppTypeRow = ppTypeRow.concat(header_note.map(e => "NOTE"));
+
+    dataHeader.config_id.map((e,idx) => ppIdRowheader = ppIdRowheader.concat(["BOQ "+(idx+1), "QTY "+(idx+1)]));
+
+    ppIdRow = ppIdRow.concat(ppIdRowheader);
+    // ws.addRow(ppTypeRow);
+    ws.addRow(ppIdRow);
+    for(let i = 0; i < dataSites.length ; i++){
+      let qtyConfig = []
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
+        dataSites[i].siteItemConfigVersion.map(e => qtyConfig = qtyConfig.concat([e.config_id, e.qty]));
+      }else{
+        header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
+        dataSites[i].siteItemConfig.map(e => e.qty !== 0 ? qtyConfig = qtyConfig.concat([e.config_id, e.qty]) : "");
+      }
+      ws.addRow([dataSites[i].site_id, dataSites[i].site_name].concat(qtyConfig));
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Horizontal.xlsx');
+  }
+
+  exportFormatTechnicalVertical = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataTech = this.state.data_tech_boq;
+    let dataSites = [];
+    if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+      dataSites = this.state.data_tech_boq_sites_version;
+    }else{
+      dataSites = this.state.data_tech_boq_sites;
+    }
+    const dataHeader = this.state.view_tech_header_table;
+
+    let ppIdRow = ["tower_id", "tower_name"];
+    let ppTypeRow = ["", ""];
+
+    let ppIdRowheader = [];
+
+    dataHeader.config_id.map((e,idx) => ppIdRowheader = ppIdRowheader.concat(["BOQ "+(idx+1), "QTY "+(idx+1)]));
+
+    ppIdRow = ppIdRow.concat(ppIdRowheader);
+    // ppTypeRow = ppTypeRow.concat(dataHeader.type);
+
+    ws.addRow(ppTypeRow);
+    ws.addRow(ppIdRow);
+    for(let i = 0; i < dataSites.length ; i++){
+      let qtyConfig = []
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        for(let j = 0; j < dataSites[i].siteItemConfigVersion.length; j++ ){
+          ws.addRow([null, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfigVersion[j].config_id, dataSites[i].siteItemConfigVersion[j].qty]);
+        }
+      }else{
+        for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
+          ws.addRow([null, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].qty]);
+        }
+      }
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Vertical.xlsx');
   }
 
     render() {
@@ -2013,6 +2119,9 @@ class TechnicalBoq extends Component {
                           <DropdownMenu>
                             <DropdownItem header> Technical File</DropdownItem>
                             <DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Report</DropdownItem>
+                            <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Horizontal</DropdownItem>
+                            <DropdownItem onClick={this.exportFormatTechnicalVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Vertical</DropdownItem>
+
                             <DropdownItem onClick={this.exportFormatTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Format</DropdownItem>
                           </DropdownMenu>
                         </Dropdown>

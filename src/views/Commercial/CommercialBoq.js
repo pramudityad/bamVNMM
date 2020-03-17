@@ -28,6 +28,8 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class CommercialBoq extends Component {
     constructor(props) {
       super(props);
@@ -35,11 +37,16 @@ class CommercialBoq extends Component {
       this.state = {
         data_comm_boq : {},
         data_comm_boq_items : [],
+        list_tech_boq : [],
+        list_tech_boq_selection : [],
+        data_tech_boq_selected : null,
+        data_tech_boq_sites_selected : [],
 
         userRole : this.props.dataLogin.role,
         userId : this.props.dataLogin._id,
         userName : this.props.dataLogin.userName,
         userEmail : this.props.dataLogin.email,
+        tokenUser : this.props.dataLogin.token,
         boq_comm_API : null,
         pp_all : [],
         boq_tech_API : [],
@@ -111,7 +118,7 @@ class CommercialBoq extends Component {
       this.handleChangePO = this.handleChangePO.bind(this);
       this.savePO = this.savePO.bind(this);
       this.showGroupToggle = this.showGroupToggle.bind(this);
-      this.filterBOQTech = this.filterBOQTech.bind(this);
+      this.filterTechBoq = this.filterTechBoq.bind(this);
       this.loadOptions = this.loadOptions.bind(this);
       this.handleInputChange = this.handleInputChange.bind(this);
       this.saveNote = this.saveNote.bind(this);
@@ -214,6 +221,45 @@ class CommercialBoq extends Component {
     getIndex(data, value){
       //get index of value in Array
       return data.findIndex(e => this.isSameValue(e,value));
+    }
+
+    async getDataFromAPINODE(url) {
+      try {
+        let respond = await axios.get(API_URL_NODE+url, {
+          headers : {
+            'Content-Type':'application/json',
+            'Authorization': 'Bearer '+this.state.tokenUser
+          },
+        });
+        if(respond.status >= 200 && respond.status < 300) {
+          console.log("respond data", respond);
+        }
+        return respond;
+      } catch(err) {
+        let respond = err;
+        console.log("respond data", err);
+        return respond;
+      }
+    }
+
+    async postDatatoAPINODE(url, data){
+      try {
+        let respond = await axios.post(API_URL_NODE +url, data, {
+          headers : {
+            'Content-Type':'application/json',
+            'Authorization': 'Bearer '+this.state.tokenUser
+          },
+        })
+        if(respond.status >= 200 && respond.status < 300){
+          console.log("respond Post Data", respond);
+        }
+        return respond;
+      }catch (err) {
+        let respond = err;
+        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+        console.log("respond Post Data", err);
+        return respond;
+      }
     }
 
     async getDatafromAPIBAM(url){
@@ -576,23 +622,10 @@ class CommercialBoq extends Component {
     //   }
     // }
 
-    componentWillMount(){
-      //Change It
-        this.getListTechBOQ();
-    }
-
-    getListTechBOQ(){
-      const urlAPITech = '?where={}';
-      this.getDatafromAPI('/boq_tech_sorted_non_page?embedded={"created_by" :1}&where={"created_by" : {"$exists" : 1}, "project_name" : {"$ne" : null}}').then(res => {
-        if(res !== undefined){
-          this.setState({boq_tech_API : res.data._items}, () => {
-            this.filterBOQTech("");
-          });
-          console.log("List boq_tech_API inputValue", this.state.boq_tech_API);
-        }
-      })
-      this.getProjectAll();
-    }
+    // componentWillMount(){
+    //   //Change It
+    //     this.getListTechBOQ();
+    // }
 
     async getDataCommAPI(){
       let resComm = await this.getDatafromAPI('/boq_comm_audit/'+this.props.match.params.id+'?embedded={"created_by":1, "updated_by" : 1}')
@@ -629,15 +662,30 @@ class CommercialBoq extends Component {
     componentDidMount(){
       if(this.props.match.params.id !== undefined){
         // this.getDataCommAPI();
-        this.getDataCommercial();
+        this.getDataCommercial(this.props.match.params.id);
       }else{
-        this.getAllPP();
+        this.getTechBoqList();
       }
     }
 
-    getDataCommercial(){
-      const getComm = jsonData.data;
-      this.setState({data_comm_boq : getComm, data_comm_boq_items : getComm.site});
+    getTechBoqList(){
+      this.getDataFromAPINODE('/techBoqList?srt=_id:-1').then(res => {
+        if(res.data !== undefined){
+          this.setState({list_tech_boq : res.data.data}, () => {
+            this.filterTechBoq("");
+          });
+        }
+      })
+    }
+
+    async getDataCommercial(_id){
+      // const getComm1 = jsonData.data;
+      // this.setState({data_comm_boq : getComm1, data_comm_boq_items : getComm1.site});
+      let getComm = await this.getDataFromAPINODE('/commBoq/'+_id)
+      if(getComm.data !== undefined){
+        const dataComm = getComm.data;
+        this.setState({data_comm_boq : dataComm.data, data_comm_boq_items : dataComm.data.site});
+      }
     }
 
     async getDataCommfromTech(boqTechSelect){
@@ -805,139 +853,18 @@ class CommercialBoq extends Component {
 
     saveCommtoAPI = async () => {
       this.toggleLoading();
-      const date = new Date();
-      const DateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-      const dataItemsAll = this.state.commercialData;
-      const dataItemsIDAll = [...new Set(dataItemsAll.map(({ pp_id }) => pp_id))];
-      let dataItemsComm = [];
-      for(let i = 0; i < dataItemsIDAll.length; i++){
-        if(this.state.checkedPackage.get(dataItemsIDAll[i]) === true){
-          let dataIndex = dataItemsAll.filter(e => e.pp_id === dataItemsIDAll[i]);
-          for(let j = 0; j < dataIndex.length; j++){ dataItemsComm.push(dataIndex[j])}
-        }
-      }
-      console.log("dataItemsComm",dataItemsComm)
-      if(dataItemsComm.length == 0){
-        dataItemsComm = dataItemsAll;
-      }
-      const respondAmountComm = await this.getDatafromAPI('/amountboqcomm');
-      const BoqTechSelect = this.state.boq_tech_API.find(t => t._id === this.state.Boq_Technical_Select);
-      if(respondAmountComm.data !== undefined && BoqTechSelect !== undefined){
-        const numberComm = respondAmountComm.data._items[0].boq_comm_data;
-        const updata_amount = {
-          "boq_comm_data" : numberComm+1
-        }
-        const respondUpdateAmount = this.patchDatatoAPI('/amountboqcomm/'+respondAmountComm.data._items[0]._id, updata_amount, respondAmountComm.data._items[0]._etag, 0);
-        if(respondUpdateAmount !== undefined){
-          const date = new Date();
-          const num_comm = "COMBOQ-"+date.getFullYear().toString().substr(-2)+(date.getMonth()+1).toString().padStart(2, '0')+date.getDate().toString().padStart(2, '0')+"-"+(numberComm+1).toString().padStart(4, '0');
-          const data_comm = {
-            "no_boq_comm" : num_comm,
-            "no_boq_tech" : BoqTechSelect.no_boq_tech,
-            "id_boq_tech_doc" : BoqTechSelect._id,
-            "version_boq_tech" : BoqTechSelect.version,
-            "rev1" : "PA",
-            "rev1_by" : this.state.userEmail,
-            "rev1_date" : DateNow.toString(),
-            "po_status" : "PO-NR",
-            "opportunity_id" : BoqTechSelect.opportunity_id,
-            "early_start" : false,
-            "note_6" : BoqTechSelect.note_6,
-            "created_by" : this.state.userId,
-            "updated_by" : this.state.userId,
-            "po_number" : null,
-            "version" : "0",
-            "deleted" : 0
-          }
-          let dataProject = undefined;
-          if(BoqTechSelect.hasOwnProperty('id_project_doc')){
-            if(BoqTechSelect.id_project_doc !== null && BoqTechSelect.project_name !== ""){
-              data_comm['id_project_doc'] = BoqTechSelect.id_project_doc
-              data_comm['project_name'] = BoqTechSelect.project_name;
-            }
-          }
-          const respondPost = await this.postDatatoAPI('/boq_comm_op', data_comm);
-          if(respondPost !== undefined){
-            for(let i = 0; i < dataItemsComm.length; i++){
-              dataItemsComm[i]["id_boq_comm_doc"] = respondPost.data._id;
-              dataItemsComm[i]["no_boq_comm"] = num_comm;
-              dataItemsComm[i]["id_boq_tech_doc"] = BoqTechSelect._id;
-              dataItemsComm[i]["no_boq_tech"] = BoqTechSelect.no_boq_tech;
-              dataItemsComm[i]["id_po_doc"] = null;
-              dataItemsComm[i]["po_number"] = null;
-              dataItemsComm[i]["version"] = "0";
-              dataItemsComm[i]["fas_assignment_id"] = null;
-            }
-            const respondPostItems = await this.postDatatoAPI('/boq_comm_items_op', dataItemsComm);
-            if(respondPostItems.data !== undefined){
-              let updateComm = {"list_of_id_item" : null, "list_of_id_item_group" : []};
-              if(dataItemsComm.length == 1){
-                updateComm =  await {
-                  "list_of_id_item" : [respondPostItems.data._id]
-                }
-              }else{
-                updateComm = await {
-                  "list_of_id_item" : respondPostItems.data._items.map(e => e._id)
-                }
-              }
-              const respondUpdateComm = await this.patchDatatoAPI('/boq_comm_op/'+respondPost.data._id, updateComm, respondPost.data._etag);
-              if(respondUpdateComm.data !== undefined){
-                if(BoqTechSelect !== undefined){
-                  let updateTech = {
-                    "id_boq_comm_doc" : respondPost.data._id,
-                    "no_boq_comm" : num_comm
-                  }
-                  if(BoqTechSelect.list_of_id_boq_comm !== undefined){
-                    updateTech["list_of_id_boq_comm"] = BoqTechSelect.list_of_id_boq_comm.concat(respondPost.data._id);
-                  }else{
-                    updateTech["list_of_id_boq_comm"] = [respondPost.data._id];
-                  }
-                  console.log("patchDatatoAPI", JSON.stringify(updateTech));
-                  const respondUpdateTech = await this.patchDatatoAPI('/boq_tech_op/'+BoqTechSelect._id, updateTech, BoqTechSelect._etag);
-                  if(respondUpdateTech.data !== undefined){
-                    const respondGetComm = await this.getDatafromAPI('/boq_comm_audit/'+respondPost.data._id+'?embedded={"created_by":1, "updated_by" : 1}');
-                    if(respondGetComm.data !== undefined){
-                      let dataCommItems = [];
-                      let arrayDataCommItems = respondGetComm.data.list_of_id_item;
-                      let getNumberPage = Math.ceil(arrayDataCommItems.length / 20);
-                      for(let i = 0 ; i < getNumberPage; i++){
-                        let DataPaginationItems = arrayDataCommItems.slice(i * 20, (i+1)*20);
-                        let arrayIdItems = '"'+DataPaginationItems.join('", "')+'"';
-                        let where_id_Items = '?where={"_id" : {"$in" : ['+arrayIdItems+']}}';
-                        let resItems = await this.getDatafromAPI('/boq_comm_items_non_page'+where_id_Items);
-                        if(resItems !== undefined){
-                          if(resItems.data !== undefined){
-                            dataCommItems = dataCommItems.concat(resItems.data._items);
-                          }
-                        }
-                      }
-                      if(dataCommItems.length !== 0){
-                        this.setState({commercialData : dataCommItems, boq_comm_API : respondGetComm.data,
-                          action_status : 'success', action_message : 'Your Commercial BOQ has been created'}, () => {
-                            this.toggleLoading();
-                            this.DataGroupingView(dataCommItems);
-                            //this.setState({ redirectSign : 3000});
-                            setTimeout(function(){this.setState({redirectSign : true})}.bind(this) , 1500);
-                          });
-                      }
-                    }
-
-                  }
-                }
-              }else{
-                this.setState({action_status : 'failed', action_message : 'Sorry, There is something wrong, please try again'}, () => {this.toggleLoading()})
-              }
-            }
-          }else{
-            this.setState({action_status : 'failed', action_message : 'Sorry, There is something wrong, please try again'}, () => {this.toggleLoading()})
-          }
-        }else{
-          this.setState({action_status : 'failed', action_message : 'Sorry, There is something wrong, please try again'}, () => {this.toggleLoading()})
-        }
+      console.log("Comm Data", JSON.stringify(this.state.data_tech_boq_selected));
+      let postComm = await this.postDatatoAPINODE('/commBoq/createCommercial', {"data" : this.state.data_tech_boq_selected});
+      if(postComm.data !== undefined){
+        this.setState({action_status : 'success'});
       }else{
-        this.setState({action_status : 'failed', action_message : 'Sorry, There is something wrong, please try again'}, () => {this.toggleLoading()})
+        if(postComm.response !== undefined){
+          this.setState({action_status : 'failed', action_message : postComm.response.error });
+        }else{
+          this.setState({action_status : 'failed' });
+        }
       }
-
+      this.toggleLoading();
     }
 
     saveProjecttoDB = async () =>{
@@ -1570,18 +1497,16 @@ class CommercialBoq extends Component {
           this.DataGroupingView(res.data._items);
       })
     }
-    filterBOQTech = (inputValue) => {
-      console.log("inputValue", inputValue.length);
-      const test = [];
-      this.state.boq_tech_API.map(i =>
-          test.push({'label' : (i.project_name !== null ? i.project_name + ' # ' : i.note_6 !== undefined ? i.note_6 + ' # ' : '') + i.no_boq_tech + (i.created_by !== undefined ? ' (bamidadmin@e-dpm.com)' : ''), 'value' : i._id})
+    filterTechBoq = (inputValue) => {
+      const list = [];
+      this.state.list_tech_boq.map(i =>
+          list.push({'label' : i.no_tech_boq, 'value' : i._id})
       )
-      this.setState({databoq : test})
+      this.setState({list_tech_boq_selection : list})
       if(inputValue.length === 0){
-        console.log("inputValue if", inputValue.length, "  ", test);
-        return test;
+        return list;
       }else{
-        return this.state.databoq.filter(i =>
+        return this.state.list_tech_boq_selection.filter(i =>
           i.label.toLowerCase().includes(inputValue.toLowerCase())
         );
       }
@@ -1590,20 +1515,29 @@ class CommercialBoq extends Component {
 
     loadOptions = (inputValue, callback) => {
       setTimeout(() => {
-        callback(this.filterBOQTech(inputValue));
-      }, 1000);
+        callback(this.filterTechBoq(inputValue));
+      }, 500);
     };
 
     handleInputChange = (newValue) => {
       // const inputValue = newValue.replace(/\W/g, '');
       // this.setState({inputValue});
-      const setTech = this.state.boq_tech_API.find(e => e._id === newValue.value);
-      console.log("inpval", newValue)
-      this.setState({Boq_Technical_Select : newValue.value, boq_tech_select : setTech}, () => {
-        this.getDataCommfromTech(newValue.value);
-      })
+      this.setState({data_tech_boq_sites_selected : [], data_tech_boq_selected : null })
+      this.getTechBoqData(newValue.value)
       return newValue;
     };
+
+    getTechBoqData(_id_tech){
+      this.getDataFromAPINODE('/techBoq/'+_id_tech).then(res => {
+        if(res.data !== undefined){
+          const dataTech = res.data;
+          this.setState({data_tech_boq_selected : dataTech.data});
+          if(res.data.data !== undefined){
+            this.setState({data_tech_boq_sites_selected : dataTech.data.techBoqSite});
+          }
+        }
+      })
+    }
 
     // saveNote = (e) => {
     //   const commAPI = this.state.boq_comm_API;
@@ -1722,7 +1656,6 @@ class CommercialBoq extends Component {
     }
 
     render() {
-      console.log("currency", this.state.currencyChange)
       if(this.state.redirectSign !== false){
         return (<Redirect to={'/detail-commercial/'+this.state.boq_comm_API._id} />);
       }
@@ -1781,32 +1714,33 @@ class CommercialBoq extends Component {
                       <Row>
                       <Col md="12">
                       {/* Show Select BOQ Technical */}
-                      {this.state.boq_comm_API === null && this.props.match.params.id === undefined ?(
+                      {this.props.match.params.id === undefined ?(
                         <table width="70%" className="table-header">
-                          <tr>
-                            <td width="15%">BOQ Technical</td>
-                            <td width="60%">
-                              <Select
-                                cacheOptions
-                                options={this.state.databoq}
-                                // defaultOptions
-                                onChange={this.handleInputChange}
-                            />
-                          </td>
-                            <td>
-                              <Button className="btn-success" style={{margin : '10px'}} color="success" onClick={this.saveCommtoAPI} disabled={this.state.checkedPackage.size == 0}>
-                                <i className="fa fa-save">&nbsp;&nbsp;</i>
-                                {this.state.rowsComm.length == 0 ? 'Save' : this.state.commercialData.length !== 0 ? 'Save' : 'Loading..'}
-                              </Button>
-                            </td>
-
+                          <tbody>
+                            <tr>
+                              <td width="15%">Technical Boq</td>
+                              <td width="60%">
+                                <Select
+                                  cacheOptions
+                                  options={this.state.list_tech_boq_selection}
+                                  // defaultOptions
+                                  onChange={this.handleInputChange}
+                              />
+                              </td>
+                              <td>
+                                <Button className="btn-success" style={{margin : '10px'}} color="success" onClick={this.saveCommtoAPI} >
+                                  <i className="fa fa-save">&nbsp;&nbsp;</i>
+                                  {this.state.data_tech_boq_selected === null ? 'Save' : this.state.data_tech_boq_sites_selected.length !== 0 ? 'Save' : 'Loading..'}
+                                </Button>
+                              </td>
                             </tr>
+                          </tbody>
                         </table>
                         ) : (<div></div>)}
                         {/* End Show Select BOQ Technical */}
 
                         {/* Show import XLS */}
-                        {this.state.data_comm_boq !== null &&  (
+                        {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
                           <React.Fragment>
                             <input type="file" onChange={this.fileHandlerCommercial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} />
                               <Button style={{'float' : 'right',margin : '8px'}} color="warning" onClick={this.overwriteDataItems} disabled={this.state.action_status == 'failed'}>
@@ -1827,9 +1761,11 @@ class CommercialBoq extends Component {
                     <table style={{width : '100%', marginBottom : '0px'}}>
                       <tbody>
                         <tr style={{fontWeight : '425', fontSize : '23px'}}>
-                          <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>COMMERCIAL BOQ</td>
+                          <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>
+                          {this.props.match.params.id === undefined ? "CREATE" : ""} COMMERCIAL BOQ
+                          </td>
                         </tr>
-                        {this.state.data_comm_boq !== null && (
+                        {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
                           <React.Fragment>
                             <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
                               <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.data_comm_boq.no_comm_boq}</td>
@@ -1881,11 +1817,35 @@ class CommercialBoq extends Component {
 
                   </div>
                   <div class='divtable'>
+                  {this.props.match.params.id === undefined ? (
                     <Table hover bordered responsive size="sm" width="100%">
                         <thead class="fixed">
                         <tr>
-                          <th>Site ID</th>
-                          <th>Site Name</th>
+                          <th>Tower ID</th>
+                          <th>Tower Name</th>
+                          <th>Config ID</th>
+                          <th>Qty</th>
+                        </tr>
+                      </thead>
+                      {this.state.data_tech_boq_sites_selected.map(site =>
+                        <tbody>
+                          {site.siteItemConfig.map(conf =>
+                            <tr>
+                              <td>{site.site_id}</td>
+                              <td>{site.site_name}</td>
+                              <td>{conf.config_id}</td>
+                              <td>{conf.qty}</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      )}
+                    </Table>
+                  ) : (
+                    <Table hover bordered responsive size="sm" width="100%">
+                        <thead class="fixed">
+                        <tr>
+                          <th>Tower ID</th>
+                          <th>Tower Name</th>
                           <th>Config ID</th>
                           <th>Qty</th>
                           <th>Price</th>
@@ -1896,8 +1856,8 @@ class CommercialBoq extends Component {
                         <tbody>
                           {site.items.map(item =>
                             <tr>
-                              <td>{item.site_id_doc}</td>
-                              <td>{item.site_name_doc}</td>
+                              <td>{item.site_id}</td>
+                              <td>{item.site_name}</td>
                               <td>{item.config_id}</td>
                               <td>{item.qty}</td>
                               <td>{item.price}</td>
@@ -1907,6 +1867,7 @@ class CommercialBoq extends Component {
                         </tbody>
                       )}
                     </Table>
+                  )}
                   </div>
                   {this.state.boq_comm_API !== null &&  (
 		               <React.Fragment>
