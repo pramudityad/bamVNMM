@@ -1854,11 +1854,11 @@ class TechnicalBoq extends Component {
     let ppIdRow = ["site_title", "tower_id", "tower_name"];
     let ppTypeRow = ["", "", ""];
 
-    const header_note = this.headerTechBoqDataNote(this.state.data_tech_boq_sites);
+    const header_note = await this.headerTechBoqDataNote(dataSites);
     // ppTypeRow = ppTypeRow.concat(dataHeader.type);
 
-    ppIdRow = ppIdRow.concat(header_note)
-    ppTypeRow = ppTypeRow.concat(header_note.map(e => "NOTE"));
+    // ppIdRow = ppIdRow.concat(header_note);
+    // ppTypeRow = ppTypeRow.concat(header_note.map(e => "NOTE"));
 
     ppIdRow = ppIdRow.concat(dataHeader.config_id);
     ppTypeRow = ppTypeRow.concat(dataHeader.type);
@@ -1868,11 +1868,10 @@ class TechnicalBoq extends Component {
     for(let i = 0; i < dataSites.length ; i++){
       let qtyConfig = []
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-        header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
+        // header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
         qtyConfig = dataSites[i].siteItemConfigVersion.map(e => e.qty);
       }else{
-        header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
-        console.log("console.log", dataSites[i].notes );
+        // header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
         qtyConfig = dataSites[i].siteItemConfig.map(e => e.qty);
       }
       ws.addRow([null, dataSites[i].site_id, dataSites[i].site_name].concat(qtyConfig));
@@ -1900,7 +1899,7 @@ class TechnicalBoq extends Component {
 
     let ppIdRowheader = [];
 
-    const header_note = this.headerTechBoqDataNote(this.state.data_tech_boq_sites);
+    const header_note = await this.headerTechBoqDataNote(dataSites);
     // ppTypeRow = ppTypeRow.concat(dataHeader.type);
 
     ppIdRow = ppIdRow.concat(header_note)
