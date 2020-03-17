@@ -309,12 +309,12 @@ class PackageUpload extends React.Component {
   //   })
   // }
 
-  getPackageDataAPI() {
+  getPackageDataAPI() { 
     this.getDatatoAPINode('/productpackage?lmt='+this.state.perPage+'&pg='+this.state.activePage)
       .then(res => {
         // console.log("res config data", res);
         if (res.data !== undefined) {
-          console.log("res config data", res.data);
+          console.log("res pp data", res.data);
           this.setState({ product_package: res.data.data, prevPage: this.state.activePage, total_dataParent : res.data.totalResults });
         } else {
           this.setState({ product_package: [], total_dataParent: 0, prevPage: this.state.activePage });
