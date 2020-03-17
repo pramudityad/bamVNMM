@@ -22,8 +22,8 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
 // const usernamePhilApi = 'pdbdash';
 // const passwordPhilApi = 'rtkO6EZLkxL1';
 
-const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
-const usernameBAM = 'bamidadmin@e-dpm.com';
+const API_URL_BAM = 'http://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameBAM = 'adminbamidsuper';
 const passwordBAM = 'F760qbAg2sml';
 
 
@@ -50,6 +50,7 @@ class CPODatabase extends React.Component {
       action_message: "",
       product_package: [],
       config_package: [],
+      po_op_data: [],
       check_config_package: [],
       material_catalogue: [],
       dataParent: [],
@@ -66,7 +67,7 @@ class CPODatabase extends React.Component {
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
       modalPPForm: false,
-      PPForm: new Array(9).fill(null),
+      PPForm: new Array(5).fill(null),
       accordion: [false],
       collapse: false,
       loadprojectdata: [],
@@ -138,38 +139,40 @@ class CPODatabase extends React.Component {
 
   async getDatatoAPINode(url) {
     try {
-      let respond = await axios.get(API_URL_BAM + url, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + this.state.tokenUser
-        },
-      })
-      if (respond.status >= 200 && respond.status < 300) {
-        // console.log("respond Get Data", respond);
+      let respond = await axios.get(API_URL_BAM+url, {
+        headers: {'Content-Type':'application/json'},
+        auth: {
+          username: usernameBAM,
+          password: passwordBAM
+        }
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
       }
       return respond;
-    } catch (err) {
+    } catch(err) {
       let respond = err;
-      // console.log("respond Get Data err", err);
+      console.log("respond data", err);
       return respond;
     }
   }
 
   async postDatatoAPINode(url, data) {
     try {
-      let respond = await axios.post(API_URL_BAM + url, data, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + this.state.tokenUser
-        },
-      })
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond Post Data", respond);
+      let respond = await axios.post(API_URL_BAM+url, data, {
+        headers: {'Content-Type':'application/json'},
+        auth: {
+          username: usernameBAM,
+          password: passwordBAM
+        }
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
       }
       return respond;
-    } catch (err) {
+    } catch(err) {
       let respond = err;
-      console.log("respond Post Data err", err);
+      console.log("respond data", err);
       return respond;
     }
   }
@@ -217,16 +220,16 @@ class CPODatabase extends React.Component {
   }
 
   getPackageDataAPI(){
-    // this.getDatatoAPINode('/packageconfig?lmt='+this.state.perPage+'&pg='+this.state.activePage)
-    // .then(res =>{
-    //   // console.log("res config data", res);
-    //   if(res.data !== undefined){
-    //     console.log("res config data", res.data);
-    //     this.setState({ config_package : res.data.data, prevPage : this.state.activePage, total_dataParent : res.data.totalResults })
-    //   }else{
-    //     this.setState({ config_package : [], total_dataParent : 0, prevPage : this.state.activePage});
-    //   }
-    // })
+    this.getDatatoAPINode('/po_op')
+    .then(res =>{
+      console.log("res cpo data", res);
+      if(res.data !== undefined){
+        console.log("res cpo  dalem", res.data._items);
+        this.setState({ po_op_data : res.data._items, prevPage : this.state.activePage, total_dataParent : res.data.totalResults })
+      }else{
+        this.setState({ po_op_data : [], total_dataParent : 0, prevPage : this.state.activePage});
+      }
+    })
   }
 
   handleChangeProjectTag = (e) => {
@@ -304,7 +307,7 @@ class CPODatabase extends React.Component {
                 this.setState({ check_config_package: res.data.configData, rowsXLS: rest.rows })
                 this.toggleLoading();
               } else {
-                // console.log("res.data", res.response.data.error);
+                console.log("res.data", res.response.data.error);
                 this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
                   this.toggleLoading();
                 });
@@ -581,63 +584,40 @@ class CPODatabase extends React.Component {
   async saveNewPP() {
     this.togglePPForm();
     this.toggleLoading();
+    let poData = [];
     let respondSaveNew = undefined;
     const dataPPNew = this.state.PPForm;
     const dataAllPP = this.state.pp_all;
-    if (dataAllPP.find(e => e.pp_id === dataPPNew[0]) !== undefined) {
+    // if (dataAllPP.find(e => e.pp_id === dataPPNew[0]) !== undefined) {
       const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
-      const pp_name = dataPPNew[1];
-      let pp_id_Gen = "PP" + ppcountID + " / " + pp_name;
+      const po_num = dataPPNew[0];
+      // let pp_id_Gen = "PP" + ppcountID + " / " + pp_name;
       let pp = {
-        "pp_id": dataPPNew[0],
-        "pp_key": pp_id_Gen,
-        "pp_group": this.checkValue(dataPPNew[6]),
-        "product_name": pp_name.toString(),
-        "uom": dataPPNew[2],
-        "pp_cust_number": this.checkValue(dataPPNew[5]),
-        "physical_group": dataPPNew[4],
-        "product_type": dataPPNew[3],
-        "pricing_group": 0,
-        "price": dataPPNew[8],
-        "year": "2020",
-        "variant_name": null,
-        "notes": dataPPNew[7],
-        "deleted": 0,
-        "created_by": this.state.userId,
-        "updated_by": this.state.userId
+        "po_number": po_num.toString(),
+        "po_year": dataPPNew[1],
+        "currency": dataPPNew[2],
+        "value": dataPPNew[3],
+        "number_of_sites": dataPPNew[4]
+        // "created_by": this.state.userId,
+        // "updated_by": this.state.userId
       }
-      if (pp.pp_group === undefined || pp.pp_group === null) {
-        pp["pp_group"] = pp.product_name;
-      } else {
-        if (pp.pp_group.length === 0) {
-          pp["pp_group"] = pp.product_name;
-        }
-      }
-      if (pp.pp_cust_number === null || pp.pp_cust_number === undefined) {
-        pp["pp_cust_number"] = pp.pp_id;
-      } else {
-        if (pp.pp_cust_number.length === 0) {
-          pp["pp_cust_number"] = pp.pp_id;
-        }
-      }
-      let postData = await this.postDatatoAPIBAM('/pp_op', pp);
-      if (postData === undefined) { postData = {}; postData["data"] = undefined }
-      if (postData.data !== undefined) {
-        respondSaveNew = postData.data;
-      }
-      if (respondSaveNew !== undefined) {
-        this.setState({ action_status: 'success' }, () => {
+      poData.push(pp);
+      console.log(pp);
+      let postData = await this.postDatatoAPINode('/po_op', pp)
+      .then(res => {
+        console.log('response postData', res);
+        if(res.data !== undefined){
           this.toggleLoading();
-          setTimeout(function () { window.location.reload(); }, 2000);
-        });
-      } else {
-        this.setState({ action_status: 'failed' });
-        this.toggleLoading();
-      }
-    } else {
-      this.toggleLoading();
-      this.setState({ action_status: 'failed', action_message: 'Duplicated PP ID' });
-    }
+          console.log('single PO success created');
+        }else{
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          this.toggleLoading();
+        }
+      });
+    // } else {
+    //   this.toggleLoading();
+    //   this.setState({ action_status: 'failed', action_message: 'Duplicated PP ID' });
+    // }
   }
 
   // componentDidUpdate() {
@@ -884,42 +864,26 @@ class CPODatabase extends React.Component {
                             <th>Currency</th>
                             <th>Price</th>
                             <th>Number of Sites</th>
-                            {/* <th>Contact</th> */}
                             <th></th>
                           </tr>
                         </thead>
                         <tbody>
-                          {/* dummy data */}
-                          {this.state.config_package.map(pp =>
-                            <React.Fragment key={pp._id + "frag"}>
-                              <tr style={{backgroundColor: '#d3d9e7'}} className='fixbody' key={pp._id}>
-                                <td align="center"><Checkbox name={pp._id} checked={this.state.config_checked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
-                                <td style={{ textAlign: 'center' }}>{pp.config_id}</td>
-                                <td style={{ textAlign: 'center' }}>{pp.sap_number}</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
+                          {this.state.po_op_data.map(po =>
+                            <React.Fragment key={po._id + "frag"}>
+                              <tr style={{backgroundColor: '#d3d9e7'}} className='fixbody' key={po._id}>
+                                <td align="center"><Checkbox name={po._id} checked={this.state.config_checked.get(po._id)} onChange={this.handleChangeChecklist} value={po} /></td>
+                                <td style={{ textAlign: 'center' }}>{po.po_number}</td>
+                                <td style={{ textAlign: 'center' }}>{po.po_year}</td>
+                                <td style={{ textAlign: 'center' }}>{po.currency}</td>
+                                <td style={{ textAlign: 'center' }}>{po.value}</td>
+                                <td style={{ textAlign: 'center' }}>{po.number_of_sites}</td>
                                 <td></td>
                                 <td>
-                                  <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
+                                  <Button size='sm' color="secondary" value={po._id} onClick={this.togglePPedit} title='Edit'>
                                     <i className="fa fa-pencil" aria-hidden="true"></i>
                                   </Button>
                                 </td>
                               </tr>
-                              {pp.package_list.map(pl =>
-                                <tr className='fixbodymat' key={pl.id_pp_doc}>
-                                  <td style={{ textAlign: 'left' }}></td>
-                                  <td style={{ textAlign: 'left' }}></td>
-                                  <td style={{ textAlign: 'left' }}></td>
-                                  <td style={{ textAlign: 'center' }}>{pl.pp_id}</td>
-                                  <td style={{ textAlign: 'center' }}>{pl.pp_group}</td>
-                                  {/* {pl.productPackage.map(pc =>
-                            <td style={{textAlign : 'center'}}>{pc.uom}</td>
-                            )} */}
-                                  <td style={{ textAlign: 'center' }}>{pl.qty}</td>
-                                  <td style={{ textAlign: 'center' }}>{pl.price}</td>
-                                </tr>
-                              )}
                             </React.Fragment>
                           )}
                         </tbody>
@@ -965,54 +929,32 @@ class CPODatabase extends React.Component {
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="pp_key">Product Key</Label>
+                  <Label htmlFor="po_number">PO Number</Label>
                   <Input type="text" name="0" placeholder="" value={this.state.PPForm[0]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="package_name" >Name</Label>
+                  <Label htmlFor="po_year" >Year</Label>
                   <Input type="text" name="1" placeholder="" value={this.state.PPForm[1]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup row>
                   <Col xs="4">
                     <FormGroup>
-                      <Label htmlFor="unit" >Unit</Label>
+                      <Label htmlFor="currency" >Currency</Label>
                       <Input type="text" name="2" placeholder="" value={this.state.PPForm[2]} onChange={this.handleChangeForm} />
                     </FormGroup>
                   </Col>
                   <Col xs="4">
                     <FormGroup>
-                      <Label htmlFor="product_type" >Type</Label>
-                      <Input type="text" name="3" placeholder="" value={this.state.PPForm[3]} onChange={this.handleChangeForm} />
+                      <Label htmlFor="value" >Price</Label>
+                      <Input type="number" min="0" name="3" placeholder="" value={this.state.PPForm[3]} onChange={this.handleChangeForm} />
                     </FormGroup>
                   </Col>
                   <Col xs="4">
                     <FormGroup>
-                      <Label htmlFor="physical_group" >Physical Group</Label>
-                      <Input type="text" name="4" placeholder="" value={this.state.PPForm[4]} onChange={this.handleChangeForm} />
+                      <Label htmlFor="number_of_sites" >Number of Sites</Label>
+                      <Input type="number" min="0" name="4" placeholder="" value={this.state.PPForm[4]} onChange={this.handleChangeForm} />
                     </FormGroup>
                   </Col>
-                </FormGroup>
-                <FormGroup row>
-                  <Col xs="8">
-                    <FormGroup>
-                      <Label htmlFor="pp_id" >Product Number (Cust)</Label>
-                      <Input type="text" name="5" placeholder="" value={this.state.PPForm[5]} onChange={this.handleChangeForm} />
-                    </FormGroup>
-                  </Col>
-                  <Col xs="4">
-                    <FormGroup>
-                      <Label htmlFor="price" >Price</Label>
-                      <Input type="number" name="8" placeholder="" value={this.state.PPForm[8]} onChange={this.handleChangeForm} />
-                    </FormGroup>
-                  </Col>
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="pp_group" >Product Name (Cust)</Label>
-                  <Input type="text" name="6" placeholder="" value={this.state.PPForm[6]} onChange={this.handleChangeForm} />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="note" >Note</Label>
-                  <Input type="text" name="7" placeholder="" value={this.state.PPForm[7]} onChange={this.handleChangeForm} />
                 </FormGroup>
               </Col>
             </Row>
