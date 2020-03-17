@@ -6,6 +6,7 @@ import axios from 'axios';
 import Pagination from "react-js-pagination";
 import './boqCommercial.css';
 import { Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
+import {connect} from 'react-redux';
 import debounce from 'lodash.debounce';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
@@ -20,11 +21,19 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
 );
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class ListCommercial extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
+      list_comm_boq : [],
         action_status : null,
         action_message : "",
         boq_comm_all : [],
@@ -50,6 +59,25 @@ class ListCommercial extends Component {
     this.handleFilterListName = this.handleFilterListName.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.onChangeDebouncedName = debounce(this.onChangeDebouncedName, 1000);
+  }
+
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios.get(API_URL_NODE+url, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
   }
 
   toggleLoading(){
@@ -193,7 +221,20 @@ class ListCommercial extends Component {
   }
 
   componentDidMount(){
-    this.getListBoQ();
+    this.getCommBoqList();
+  }
+
+  getCommBoqList(){
+    // let filter_no_tech = this.state.filter_list[1] === null ? '"no_tech_boq":{"$exists" : 1}' : '"no_tech_boq":{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
+    // let filter_project = this.state.filter_list[2] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
+    // let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
+    // let filter_status = this.state.filter_list[5] === null ? '"approval_status":{"$exists" : 1}' : '"approval_status":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
+    // let where = 'q={'+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+'}';
+    this.getDataFromAPINODE('/commBoq?srt=_id:-1').then(res => {
+      if(res.data !== undefined){
+        this.setState({list_comm_boq : res.data.data});
+      }
+    })
   }
 
   handlePageChange(pageNumber) {
@@ -357,25 +398,13 @@ class ListCommercial extends Component {
             <Table hover bordered striped responsive size="sm">
                 <thead>
                     <tr>
-                        <th>Tehnical BOQ Document</th>
                         <th>Commercial BOQ Document</th>
                         <th>Project</th>
-                        <th>PO Number</th>
                         <th>Ver.</th>
                         <th style={{'width' : '150px', textAlign : 'center'}}>Status</th>
                         <th style={{'width' : '300px', textAlign : 'center'}}>Action</th>
                     </tr>
                     <tr>
-                      <td>
-                        <div className="controls">
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={1} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[1]}/>
-                          </InputGroup>
-                        </div>
-                      </td>
                       <td>
                         <div className="controls">
                           <InputGroup className="input-prepend">
@@ -407,50 +436,24 @@ class ListCommercial extends Component {
                         </div>
                       </td>
                       <td>
-                        <div className="controls">
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={7} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[7]}/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
                       </td>
                       <td>
                       </td>
                     </tr>
                 </thead>
                 <tbody>
-                    {this.state.boq_comm_all.map((boq, i) =>
+                    {this.state.list_comm_boq.map((boq, i) =>
                         <tr key={boq._id}>
-                            <td style={{verticalAlign : 'middle'}}>{boq.no_boq_tech}</td>
-                            <td style={{verticalAlign : 'middle'}}>{boq.no_boq_comm}</td>
+                            <td style={{verticalAlign : 'middle'}}>{boq.no_comm_boq}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.project_name}</td>
-                            <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.po_number}</td>
-                            <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.version}</td>
+                            <td style={{verticalAlign : 'middle', textAlign : "center", width : '100px'}}>{boq.version}</td>
                             <td style={{verticalAlign : 'middle'}}>
-                              {boq.rev1 === "PA" || boq.rev1 === "R" ? (
-                                <span className="boq-tech-status-PA">{boq.rev1}</span>
-                              ) : boq.rev1 === "WA" ? (
-                                <span className="boq-tech-status-WA">{boq.rev1}</span>
+                              {boq.approval_status === "PRE APPROVAL" || boq.approval_status === "R" ? (
+                                <span className="boq-tech-status-PA">{boq.approval_status}</span>
+                              ) : boq.approval_status === "WA" ? (
+                                <span className="boq-tech-status-WA">{boq.approval_status}</span>
                               ) : (
-                                <span className="boq-tech-status-A">{boq.rev1}</span>
-                              )}
-                              {boq.po_status === "PO-NR" ? (
-                                <span className="boq-tech-status-PA">{boq.po_status}</span>
-                              ) : boq.rev1 === "PO-WA" ? (
-                                <span className="boq-tech-status-WA">{boq.po_status}</span>
-                              ) : (
-                                <span className="boq-tech-status-A">{boq.po_status}</span>
-                              )}
-                              {boq.submitted === undefined ? (
-                                <span className="boq-tech-status-PA">NS</span>
-                              ) : boq.submitted === "NS" ? (
-                                <span className="boq-tech-status-PA">NS</span>
-                              ) : (
-                                <span className="boq-tech-status-A">{boq.submitted}</span>
+                                <span className="boq-tech-status-A">{boq.approval_status}</span>
                               )}
                             </td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
@@ -534,4 +537,10 @@ class ListCommercial extends Component {
   }
 }
 
-export default ListCommercial;
+const mapStateToProps = (state) => {
+  return {
+    dataLogin : state.loginData
+  }
+}
+
+export default connect(mapStateToProps)(ListCommercial);

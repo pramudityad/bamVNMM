@@ -298,7 +298,7 @@ class ConfigUpload extends React.Component {
           console.log(err);
         }
         else {
-          // console.log("excel render", JSON.stringify(rest.rows));
+          console.log("excel render", JSON.stringify(rest.rows));
           this.postDatatoAPINode('/packageConfig/checkPackageConfig', { "configData": rest.rows })
             .then(res => {
               console.log("res.data", res);
@@ -333,16 +333,17 @@ class ConfigUpload extends React.Component {
     const isConfig = true;
     console.log(isConfig);
     if (isConfig === true) {
-      // this.savePackagetoDB(productPackageXLS);
-      const postConfig = await this.postDatatoAPINode('/packageConfig/saveConfigBulk', { "configData": this.state.check_config_package })
+      console.log("this.state.check_config_package", JSON.stringify(this.state.check_config_package));
+      const postConfig = await this.postDatatoAPINode('/packageConfig/saveConfigBulk', { "configData": this.state.check_config_package });
+      this.setState({ action_status: 'success'}, () => {
+        this.toggleLoading();
+      });
       this.toggleLoading();
       console.log(postConfig);
     } else {
-      {
-        this.setState({ action_status: 'failed', action_message: 'Please check your format' }, () => {
+        this.setState({ action_status: 'failed', action_message: 'There is something error' }, () => {
           this.toggleLoading();
         });
-      }
     }
   }
 
@@ -704,8 +705,8 @@ class ConfigUpload extends React.Component {
 
     const dataConfigSelected = this.state.config_selected;
 
-    let confArray = ["site_title", "site_id", "site_name"];
-    let typeArray = ["", "", ""];
+    let confArray = ["site_title", "site_id", "site_name", "Site Config","Prioritization","Condition"];
+    let typeArray = ["", "", "", "NOTE", "NOTE", "NOTE"];
 
     typeArray = typeArray.concat(dataConfigSelected.map(e => "CONFIG"));
     confArray = confArray.concat(dataConfigSelected.map(e => e.config_id));
@@ -724,8 +725,8 @@ class ConfigUpload extends React.Component {
     const datapackageChecked = this.state.packageSelected;
     console.log("datapackageChecked", datapackageChecked);
 
-    let ppIdArray = ["site_title", "site_id", "site_name"];
-    let phyGroupArray = ["", "", ""];
+    let ppIdArray = ["site_title", "site_id", "site_name", "Site Config","Prioritization","Condition"];
+    let phyGroupArray = ["", "", "", "NOTE", "NOTE", "NOTE"];
 
     ppIdArray = ppIdArray.concat(datapackageChecked.map(pp => pp.pp_id + " /// " + pp.product_name));
     phyGroupArray = phyGroupArray.concat(datapackageChecked.map(pp => pp.product_type));
