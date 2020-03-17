@@ -72,6 +72,7 @@ const DSACreation = React.lazy(() => import('./views/DSA/DSACreation'));
 const ListCommercial = React.lazy(() => import('./views/Commercial/ListCommercial'));
 const DetailCommercial = React.lazy(() => import('./views/Commercial/CommercialBoq'));
 const ApprovalCommercial = React.lazy(() => import('./views/Commercial/CommercialBoqApproval'));
+const POAssign = React.lazy(() => import('./views/Commercial/POAssign'))
 const POCommercial = React.lazy(() => import('./views/Commercial/BoqCommPO'));
 const ListTssrMatrix = React.lazy(() => import('./views/TssrMatrix/ListTSSRBoq'));
 const DetailTssrMatrix = React.lazy(() => import('./views/TssrMatrix/UploadTSSRMatrix'));
@@ -166,6 +167,8 @@ const routes = [
   { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
   { path: '/commercial-creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
   { path: '/detail-commercial/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
+  { path: '/po-assign-commercial/:id', exact: true, name: 'PO Assign Commercial BOQ', component: POAssign },
+
   { path: '/list-tssr-matix', exact: true, name: 'List TSSR Matrix BOQ', component: ListTssrMatrix },
   { path: '/tssr-matix-creation', exact: true, name: 'TSSR Matrix BOQ Creation', component: NewTssrMatrix },
   { path: '/detail-tssr-matix/:id', exact: true, name: 'Detail TSSR Matrix BOQ', component: DetailTssrMatrix },

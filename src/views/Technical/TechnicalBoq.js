@@ -24,6 +24,10 @@ const API_URL_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const usernameTsel = 'adminbamidsuper';
 const passwordTsel = 'F760qbAg2sml';
 
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
+
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 class TechnicalBoq extends Component {
@@ -233,6 +237,26 @@ class TechnicalBoq extends Component {
     }
   }
 
+  async getDataFromAPIXL(url) {
+    try {
+      let respond = await axios.get(API_URL_XL+url, {
+        headers: {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        }
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
   async getDatafromAPIBAM(url){
     try {
       let respond = await axios.get(API_URL_BAM +url, {
@@ -426,7 +450,7 @@ class TechnicalBoq extends Component {
   }
 
   getProjectAll(){
-    this.getDataFromAPITSEL('/project_sorted_non_page').then( resp => {
+    this.getDataFromAPIXL('/project_sorted_non_page').then( resp => {
       if(resp !== undefined){
         this.setState({project_all : resp.data._items});
       }
@@ -1851,11 +1875,11 @@ class TechnicalBoq extends Component {
     }
     const dataHeader = this.state.view_tech_header_table;
 
-    let ppIdRow = ["site_title", "tower_id", "tower_name"];
+    let ppIdRow = ["site_title", "site_id", "site_name"];
     let ppTypeRow = ["", "", ""];
 
     const header_note = await this.headerTechBoqDataNote(dataSites);
-    // ppTypeRow = ppTypeRow.concat(dataHeader.type);
+    ppTypeRow = ppTypeRow.concat(dataHeader.type);
 
     // ppIdRow = ppIdRow.concat(header_note);
     // ppTypeRow = ppTypeRow.concat(header_note.map(e => "NOTE"));

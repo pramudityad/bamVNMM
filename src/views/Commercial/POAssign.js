@@ -24,19 +24,23 @@ const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
-const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const usernameBAM = 'bamidadmin@e-dpm.com';
-const passwordBAM = 'F760qbAg2sml';
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class CommercialBoq extends Component {
+class POAssign extends Component {
     constructor(props) {
       super(props);
 
       this.state = {
         data_comm_boq : null,
         data_comm_boq_items : [],
+        list_po_data : [],
+        list_po_data_selection : [],
+        data_po_data_selected : null,
+        list_po_data_selected : [],
         list_tech_boq : [],
         list_tech_boq_selection : [],
         data_tech_boq_selected : null,
@@ -68,7 +72,7 @@ class CommercialBoq extends Component {
         unit_price : new Map(),
         curr_rev : null,
         action_status : null,
-        action_message : null,
+        action_message : "",
         checkedPackage : new Map(),
         checkedPackage_all : false,
         get_item_ilang : [],
@@ -118,7 +122,7 @@ class CommercialBoq extends Component {
       this.handleChangePO = this.handleChangePO.bind(this);
       this.savePO = this.savePO.bind(this);
       this.showGroupToggle = this.showGroupToggle.bind(this);
-      this.filterTechBoq = this.filterTechBoq.bind(this);
+      this.filterPOData = this.filterPOData.bind(this);
       this.loadOptions = this.loadOptions.bind(this);
       this.handleInputChange = this.handleInputChange.bind(this);
       this.saveNote = this.saveNote.bind(this);
@@ -243,26 +247,6 @@ class CommercialBoq extends Component {
       }
     }
 
-    async patchDatatoAPINODE(url, data){
-      try {
-        let respond = await axios.patch(API_URL_NODE +url, data, {
-          headers : {
-            'Content-Type':'application/json',
-            'Authorization': 'Bearer '+this.state.tokenUser
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Post Data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = err;
-        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
-        console.log("respond Post Data", err);
-        return respond;
-      }
-    }
-
     async postDatatoAPINODE(url, data){
       try {
         let respond = await axios.post(API_URL_NODE +url, data, {
@@ -283,13 +267,13 @@ class CommercialBoq extends Component {
       }
     }
 
-    async getDatafromAPIBAM(url){
+    async getDatafromAPIEXEL(url){
       try {
-        let respond = await axios.get(API_URL_BAM +url, {
+        let respond = await axios.get(API_URL_XL +url, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernameBAM,
-            password: passwordBAM
+            username: usernameXL,
+            password: passwordXL
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -566,7 +550,7 @@ class CommercialBoq extends Component {
     }
 
     getAllPP(){
-      this.getDatafromAPIBAM('/pp_sorted_nonpage?projection={"_id" : 1,"pp_id" : 1, "pp_group" : 1, "product_name" :1, "uom" : 1, "physical_group" : 1, "product_type" : 1, "pp_key" : 1, "pp_cust_number" : 1}').then( resPP => {
+      this.getDatafromAPIEXEL('/pp_sorted_nonpage?projection={"_id" : 1,"pp_id" : 1, "pp_group" : 1, "product_name" :1, "uom" : 1, "physical_group" : 1, "product_type" : 1, "pp_key" : 1, "pp_cust_number" : 1}').then( resPP => {
         if(resPP !== undefined){
           if(resPP.data !== undefined){
             console.log("resPP.data", resPP.data);
@@ -577,77 +561,6 @@ class CommercialBoq extends Component {
         }
       })
     }
-
-    // componentWillMount(){
-    //   //Change It
-    //   const urlAPITech = '?where={"rev" : "A"}';
-    //   this.getDatafromAPI('/boq_tech_sorted_non_page'+urlAPITech).then(res => {
-    //     if(res !== undefined){
-    //       this.setState({boq_tech_API : res.data._items});
-    //     }
-    //   })
-    //   this.getProjectAll();
-    // }
-
-    // getDataCommAPI(){
-    //   this.getDatafromAPI('/boq_comm_audit/'+this.props.match.params.id+'?embedded={"created_by":1, "updated_by" : 1}').then(resComm => {
-    //     if(resComm.data !== undefined){
-    //       if(resComm.data.early_start !== undefined){
-    //         this.setState({ early_start:  resComm.data.early_start, version_now : resComm.data.version, version_selected : resComm.data.version });
-    //       }
-    //       const arrayIdItems = '"'+resComm.data.list_of_id_item.join('", "')+'"';
-    //       const where_id_Items = '?where={"_id" : {"$in" : ['+arrayIdItems+']}}';
-    //       this.getDatafromAPI('/boq_comm_items_non_page'+where_id_Items).then(resItems =>{
-    //         if(resItems.data._items.length !== 0){
-    //           this.DataGroupingView(resItems.data._items);
-    //           console.log("data Comm resComm");
-    //           this.getListVersion(this.props.match.params.id);
-    //           this.setState({commercialData : resItems.data._items, boq_comm_API : resComm.data, curr_rev : resComm.data.version, commercialData_now : resItems.data._items});
-    //         }
-    //       })
-    //     }else{
-    //       this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
-    //     }
-    //   })
-    // }
-
-    // componentDidMount(){
-    //   if(this.props.match.params.id !== undefined){
-    //     this.getDatafromAPI('/boq_comm_audit/'+this.props.match.params.id+'?embedded={"created_by":1, "updated_by" : 1}').then(resComm => {
-    //       if(resComm.data !== undefined){
-    //         if(resComm.data.early_start !== undefined){
-    //           this.setState({ early_start:  resComm.data.early_start, version_now : resComm.data.version, version_selected : resComm.data.version });
-    //           if(resComm.data.hasOwnProperty("po_number") === false){
-    //             this.getPOList();
-    //           }else{
-    //             if(resComm.data.po_number === null){
-    //               this.getPOList();
-    //             }
-    //           }
-    //         }
-    //         const arrayIdItems = '"'+resComm.data.list_of_id_item.join('", "')+'"';
-    //         const where_id_Items = '?where={"_id" : {"$in" : ['+arrayIdItems+']}}';
-    //         this.getDatafromAPI('/boq_comm_items_non_page'+where_id_Items).then(resItems =>{
-    //           if(resItems.data._items.length !== 0){
-    //             this.DataGroupingView(resItems.data._items);
-    //             this.getListVersion(this.props.match.params.id);
-    //             this.setState({commercialData : resItems.data._items, boq_comm_API : resComm.data, curr_rev : resComm.data.version, commercialData_now : resItems.data._items});
-    //           }
-    //         })
-    //       }else{
-    //         this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
-    //       }
-    //     })
-    //   }else{
-    //     this.getAllPP();
-    //   }
-    // }
-
-    // componentWillMount(){
-    //   //Change It
-    //     this.getListTechBOQ();
-    // }
-
     async getDataCommAPI(){
       let resComm = await this.getDatafromAPI('/boq_comm_audit/'+this.props.match.params.id+'?embedded={"created_by":1, "updated_by" : 1}')
         if(resComm === undefined){ resComm["data"] = undefined }
@@ -684,20 +597,40 @@ class CommercialBoq extends Component {
       if(this.props.match.params.id !== undefined){
         // this.getDataCommAPI();
         this.getDataCommercial(this.props.match.params.id);
-      }else{
-        this.getTechBoqList();
+        this.getPODataList();
       }
     }
 
-    getTechBoqList(){
-      this.getDataFromAPINODE('/techBoqList?srt=_id:-1').then(res => {
-        if(res.data !== undefined){
-          this.setState({list_tech_boq : res.data.data}, () => {
-            this.filterTechBoq("");
-          });
-        }
-      })
+    async getPODataList(){
+      let getPOList = await this.getDatafromAPIEXEL('/po_op');
+      if(getPOList.data !== undefined){
+        console.log("list_po_data 1", getPOList.data);
+        this.setState({list_po_data : getPOList.data._items });
+        this.filterPOData("");
+      }
     }
+
+    filterPOData = (inputValue) => {
+      const list = [];
+      console.log("list_po_data 2", this.state.list_po_data);
+      this.state.list_po_data.map(i =>
+          list.push({'label' : i.po_number, 'value' : i._id})
+      )
+      this.setState({list_po_data_selection : list})
+      if(inputValue.length === 0){
+        return list;
+      }else{
+        return this.state.list_po_data_selection.filter(i =>
+          i.label.toLowerCase().includes(inputValue.toLowerCase())
+        );
+      }
+    }
+
+    loadOptions = (inputValue, callback) => {
+      setTimeout(() => {
+        callback(this.filterTechBoq(inputValue));
+      }, 500);
+    };
 
     async getDataCommercial(_id){
       // const getComm1 = jsonData.data;
@@ -739,11 +672,7 @@ class CommercialBoq extends Component {
         "version_check": revision,
         "data" : dataComm
       }
-      let updateComm = await this.patchDatatoAPINODE('/commBoq/updateCommercial/'+dataComm._id, updateCommBoq );
-      if(updateComm.data !== undefined){
-        this.setState({action_status : 'success'})
-      }
-      console.log("dataComm Update", JSON.stringify(updateCommBoq));
+      console.log("dataComm Update", updateCommBoq);
       this.toggleLoading();
     }
 
@@ -1550,33 +1479,11 @@ class CommercialBoq extends Component {
           this.DataGroupingView(res.data._items);
       })
     }
-    filterTechBoq = (inputValue) => {
-      const list = [];
-      this.state.list_tech_boq.map(i =>
-          list.push({'label' : i.no_tech_boq, 'value' : i._id})
-      )
-      this.setState({list_tech_boq_selection : list})
-      if(inputValue.length === 0){
-        return list;
-      }else{
-        return this.state.list_tech_boq_selection.filter(i =>
-          i.label.toLowerCase().includes(inputValue.toLowerCase())
-        );
-      }
-
-    };
-
-    loadOptions = (inputValue, callback) => {
-      setTimeout(() => {
-        callback(this.filterTechBoq(inputValue));
-      }, 500);
-    };
 
     handleInputChange = (newValue) => {
       // const inputValue = newValue.replace(/\W/g, '');
       // this.setState({inputValue});
-      this.setState({data_tech_boq_sites_selected : [], data_tech_boq_selected : null })
-      this.getTechBoqData(newValue.value)
+      this.setState({data_po_data_selected : newValue.value});
       return newValue;
     };
 
@@ -1766,32 +1673,6 @@ class CommercialBoq extends Component {
 
                       <Row>
                       <Col md="12">
-                      {/* Show Select BOQ Technical */}
-                      {this.props.match.params.id === undefined ?(
-                        <table width="70%" className="table-header">
-                          <tbody>
-                            <tr>
-                              <td width="15%">Technical Boq</td>
-                              <td width="60%">
-                                <Select
-                                  cacheOptions
-                                  options={this.state.list_tech_boq_selection}
-                                  // defaultOptions
-                                  onChange={this.handleInputChange}
-                              />
-                              </td>
-                              <td>
-                                <Button className="btn-success" style={{margin : '10px'}} color="success" onClick={this.saveCommtoAPI} >
-                                  <i className="fa fa-save">&nbsp;&nbsp;</i>
-                                  {this.state.data_tech_boq_selected === null ? 'Save' : this.state.data_tech_boq_sites_selected.length !== 0 ? 'Save' : 'Loading..'}
-                                </Button>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                        ) : (<div></div>)}
-                        {/* End Show Select BOQ Technical */}
-
                         {/* Show import XLS */}
                         {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
                           <React.Fragment>
@@ -1869,12 +1750,38 @@ class CommercialBoq extends Component {
                         </Row>
                       </React.Fragment>
                     )}
-
                   </div>
+                  <Row>
+                    <Col sm="6" md="6">
+                    </Col>
+                  </Row>
+                  {/* Show Select BOQ Technical */}
+                    <table width="70%" className="table-header">
+                      <tbody>
+                        <tr>
+                          <td width="15%">PO Number</td>
+                          <td width="30%">
+                            <Select
+                              cacheOptions
+                              options={this.state.list_po_data_selection}
+                              // defaultOptions
+                              onChange={this.handleInputChange}
+                          />
+                          </td>
+                          <td>
+                            <Button className="btn-success" style={{margin : '10px'}} color="success" onClick={this.saveCommtoAPI} >
+                              <i className="fa fa-save">&nbsp;&nbsp;</i>
+                              {this.state.data_tech_boq_selected === null ? 'Save' : this.state.data_tech_boq_sites_selected.length !== 0 ? 'Save' : 'Loading..'}
+                            </Button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    {/* End Show Select BOQ Technical */}
                   <div class='divtable'>
                   {this.props.match.params.id === undefined ? (
                     <Table hover bordered responsive size="sm" width="100%">
-                        <thead class="fixed">
+                        <thead>
                         <tr>
                           <th>Tower ID</th>
                           <th>Tower Name</th>
@@ -1897,7 +1804,7 @@ class CommercialBoq extends Component {
                     </Table>
                   ) : (
                     <Table hover bordered responsive size="sm" width="100%">
-                        <thead class="fixed">
+                        <thead>
                         <tr>
                           <th>Tower ID</th>
                           <th>Tower Name</th>
@@ -1905,8 +1812,7 @@ class CommercialBoq extends Component {
                           <th>Qty</th>
                           <th>Price</th>
                           <th>Incentive</th>
-                          <th>Total Price</th>
-                          <th>Total Price after Incentive</th>
+                          <th>Net Price</th>
                         </tr>
                       </thead>
                       {this.state.data_comm_boq_items.map(site =>
@@ -1918,18 +1824,8 @@ class CommercialBoq extends Component {
                               <td>{item.config_id}</td>
                               <td>{item.qty}</td>
                               <td>{item.price}</td>
-                              <td style={{width : '150px'}}>
-                                <Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder="incentive"
-                                  onChange={this.handleChangeincentive}
-                                  value={!this.state.incentiveChange.has(item.site_id+' /// '+item.config_id) ? item.incentive : this.state.incentiveChange.get(item.site_id+' /// '+item.config_id) }
-                                />
-                              </td>
+                              <td style={{width : '150px'}}>{item.incentive}</td>
                               <td>{item.total_price}</td>
-                              <td style={{width : '250px'}}>{item.net_price_incentive}</td>
                             </tr>
                           )}
                         </tbody>
@@ -2071,4 +1967,4 @@ class CommercialBoq extends Component {
     }
   }
 
-  export default connect(mapStateToProps)(CommercialBoq);
+  export default connect(mapStateToProps)(POAssign);

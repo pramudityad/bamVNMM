@@ -467,7 +467,7 @@ class ListCommercial extends Component {
                                   <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; Approval
                                 </Button>
                               </Link>
-                              <Link to={'/po-commercial/'+boq._id}>
+                              <Link to={'/po-assign-commercial/'+boq._id}>
                                 <Button size="sm" color="secondary" style={{marginRight : '10px'}}>
                                   <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; PO Assign
                                 </Button>
