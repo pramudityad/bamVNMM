@@ -147,12 +147,12 @@ class ConfigUpload extends React.Component {
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
-        // console.log("respond Post Data", respond);
+        console.log("respond Post Data", respond);
       }
       return respond;
     } catch (err) {
       let respond = err;
-      // console.log("respond Post Data err", err);
+      console.log("respond Post Data err", err);
       return respond;
     }
   }
@@ -288,6 +288,7 @@ class ConfigUpload extends React.Component {
     }
   }
 
+  // check Package Config
   fileHandlerMaterial = (event) => {
     this.toggleLoading();
     let fileObj = event.target.files[0];
@@ -391,7 +392,7 @@ class ConfigUpload extends React.Component {
 
   componentDidMount() {
     this.getPackageDataAPI();
-    this.getAllPP();
+    // this.getAllPP();
     document.title = 'Config Manager | BAM';
   }
 
@@ -733,13 +734,14 @@ class ConfigUpload extends React.Component {
     saveAs(new Blob([tssrFormat]), 'PS BOQ Format.xlsx');
   }
 
-  exportFormatPackage = async () => {
+  // Config Template XLSX bulk upload
+  exportFormatConfig = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["config_id", "sap_number", "pp_id", "qyt", "price", "currency", "description"]);
-    ws.addRow(["CONFIG_TEST01", "SAP_TEST01", "PPID01", 2, 2400, "USD", ""]);
-    ws.addRow(["CONFIG_TEST01", "SAP_TEST01", "PPID02", 4, 1300, "USD", ""]);
+    ws.addRow(["config_id", "sap_number", "pp_id", "qty", "price", "currency", "config_description", "config_type", "qty_commercial"]);
+    ws.addRow(["CONFIG_TEST01", "SAP_TEST01", "PPID01", 2, 2400, "USD", "conf_desc_example", "conf_type_example", 235]);
+    ws.addRow(["CONFIG_TEST01", "SAP_TEST01", "PPID02", 4, 1300, "USD", "conf_desc_example", "conf_type_example", 127]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'Config Uploader Template.xlsx');
@@ -803,7 +805,7 @@ class ConfigUpload extends React.Component {
                         </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatPackage}>> Config Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatConfig}>> Config Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>> Download All Config</DropdownItem>
                       </DropdownMenu>

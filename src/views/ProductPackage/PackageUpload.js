@@ -219,12 +219,12 @@ class PackageUpload extends React.Component {
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond Post Data", respond);
+        // console.log("respond Post Data", respond);
       }
       return respond;
     } catch (err) {
       let respond = err;
-      console.log("respond Post Data err", err);
+      // console.log("respond Post Data err", err);
       return respond;
     }
   }
@@ -926,29 +926,25 @@ class PackageUpload extends React.Component {
     this.togglePPForm();
     this.toggleLoading();
     let respondSaveNew = undefined;
+    let ppData = [];
     const dataPPNew = this.state.PPForm;
     const dataAllPP = this.state.pp_all;
-    if (dataAllPP.find(e => e.pp_id === dataPPNew[0]) !== undefined) {
+    // console.log(dataAllPP);
+    // if (dataAllPP.find(e => e.pp_id === dataPPNew[1]) !== undefined) {
       const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
       const pp_name = dataPPNew[1];
       let pp_id_Gen = "PP" + ppcountID + " / " + pp_name;
       let pp = {
         "pp_id": dataPPNew[0],
-        "pp_key": pp_id_Gen,
-        "pp_group": this.checkValue(dataPPNew[6]),
         "product_name": pp_name.toString(),
-        "uom": dataPPNew[2],
-        "pp_cust_number": this.checkValue(dataPPNew[5]),
-        "physical_group": dataPPNew[4],
-        "product_type": dataPPNew[3],
-        "pricing_group": 0,
-        "price": dataPPNew[8],
-        "year": "2020",
-        "variant_name": null,
-        "notes": dataPPNew[7],
-        "deleted": 0,
-        "created_by": this.state.userId,
-        "updated_by": this.state.userId
+        "product_type": dataPPNew[2],
+        "physical_group": dataPPNew[3],
+        "uom": dataPPNew[4],
+        "qty": dataPPNew[5],
+        "pp_cust_number": this.checkValue(dataPPNew[8]),
+        "pp_group": this.checkValue(dataPPNew[6])
+        // "created_by": this.state.userId,
+        // "updated_by": this.state.userId
       }
       if (pp.pp_group === undefined || pp.pp_group === null) {
         pp["pp_group"] = pp.product_name;
@@ -964,24 +960,38 @@ class PackageUpload extends React.Component {
           pp["pp_cust_number"] = pp.pp_id;
         }
       }
-      let postData = await this.postDatatoAPIBAM('/pp_op', pp);
-      if (postData === undefined) { postData = {}; postData["data"] = undefined }
-      if (postData.data !== undefined) {
-        respondSaveNew = postData.data;
-      }
-      if (respondSaveNew !== undefined) {
-        this.setState({ action_status: 'success' }, () => {
-          this.toggleLoading();
-          setTimeout(function () { window.location.reload(); }, 2000);
+      ppData.push(pp);
+      // return ppData;
+      // console.log('pp data', ppData);
+      let postData = await this.postDatatoAPINode('/productpackage/manyProductPackage', {"ppData" : ppData})
+        .then(res => {
+          console.log('response postData', res);
+          if(res.data !== undefined){
+            this.toggleLoading();
+            console.log('single PP success created');
+          }else{
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+            this.toggleLoading();
+          }
         });
-      } else {
-        this.setState({ action_status: 'failed' });
-        this.toggleLoading();
-      }
-    } else {
-      this.toggleLoading();
-      this.setState({ action_status: 'failed', action_message: 'Duplicated PP ID' });
-    }
+      // console.log('postData Save', postData);
+      // if (postData === undefined) { postData = {}; postData["data"] = undefined }
+      // if (postData.data !== undefined) {
+      //   respondSaveNew = postData.data;
+      // }
+      // if (respondSaveNew !== undefined) {
+      //   this.setState({ action_status: 'success' }, () => {
+      //     this.toggleLoading();
+      //     setTimeout(function () { window.location.reload(); }, 2000);
+      //   });
+      // } else {
+      //   this.setState({ action_status: 'failed' });
+      //   this.toggleLoading();
+      // }
+    // } else {
+    //   this.toggleLoading();
+    //   this.setState({ action_status: 'failed', action_message: 'Duplicated PP ID' });
+    // }
   }
 
   // componentDidUpdate() {
@@ -1321,62 +1331,62 @@ class PackageUpload extends React.Component {
           </Col>
         </Row>
 
-        {/* Modal New PP */}
+        {/* Modal New Single PP */}
         <Modal isOpen={this.state.modalPPForm} toggle={this.togglePPForm} className="formmaterial">
           <ModalHeader>Form Product Package</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="pp_key">Product Key</Label>
+                  <Label htmlFor="pp_id">PP ID</Label>
                   <Input type="text" name="0" placeholder="" value={this.state.PPForm[0]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="package_name" >Name</Label>
+                  <Label htmlFor="product_name">Product Name</Label>
                   <Input type="text" name="1" placeholder="" value={this.state.PPForm[1]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup row>
                   <Col xs="4">
                     <FormGroup>
-                      <Label htmlFor="unit" >Unit</Label>
+                      <Label htmlFor="product_type" >Product Type</Label>
                       <Input type="text" name="2" placeholder="" value={this.state.PPForm[2]} onChange={this.handleChangeForm} />
                     </FormGroup>
                   </Col>
                   <Col xs="4">
                     <FormGroup>
-                      <Label htmlFor="product_type" >Type</Label>
+                      <Label htmlFor="physical_group" >Physical Group</Label>
                       <Input type="text" name="3" placeholder="" value={this.state.PPForm[3]} onChange={this.handleChangeForm} />
                     </FormGroup>
                   </Col>
                   <Col xs="4">
                     <FormGroup>
-                      <Label htmlFor="physical_group" >Physical Group</Label>
+                      <Label htmlFor="uom" >Unit Of Measure</Label>
                       <Input type="text" name="4" placeholder="" value={this.state.PPForm[4]} onChange={this.handleChangeForm} />
                     </FormGroup>
                   </Col>
                 </FormGroup>
                 <FormGroup row>
-                  <Col xs="8">
-                    <FormGroup>
-                      <Label htmlFor="pp_id" >Product Number (Cust)</Label>
-                      <Input type="text" name="5" placeholder="" value={this.state.PPForm[5]} onChange={this.handleChangeForm} />
-                    </FormGroup>
-                  </Col>
                   <Col xs="4">
                     <FormGroup>
-                      <Label htmlFor="price" >Price</Label>
-                      <Input type="number" name="8" placeholder="" value={this.state.PPForm[8]} onChange={this.handleChangeForm} />
+                      <Label htmlFor="qty" >Quantity</Label>
+                      <Input type="number" min="1" name="5" placeholder="" value={this.state.PPForm[5]} onChange={this.handleChangeForm} />
+                    </FormGroup>
+                  </Col>
+                  <Col xs="6">
+                    <FormGroup>
+                      <Label htmlFor="pp_cust_number" >Product Number (Cust)</Label>
+                      <Input type="text" name="8" placeholder="" value={this.state.PPForm[8]} onChange={this.handleChangeForm} />
                     </FormGroup>
                   </Col>
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="pp_group" >Product Name (Cust)</Label>
+                  <Label htmlFor="pp_group" >PP Group</Label>
                   <Input type="text" name="6" placeholder="" value={this.state.PPForm[6]} onChange={this.handleChangeForm} />
                 </FormGroup>
-                <FormGroup>
+                {/* <FormGroup>
                   <Label htmlFor="note" >Note</Label>
                   <Input type="text" name="7" placeholder="" value={this.state.PPForm[7]} onChange={this.handleChangeForm} />
-                </FormGroup>
+                </FormGroup> */}
               </Col>
             </Row>
           </ModalBody>
