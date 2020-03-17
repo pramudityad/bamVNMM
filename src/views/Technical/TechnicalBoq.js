@@ -24,6 +24,10 @@ const API_URL_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const usernameTsel = 'adminbamidsuper';
 const passwordTsel = 'F760qbAg2sml';
 
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
+
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 class TechnicalBoq extends Component {
@@ -233,6 +237,26 @@ class TechnicalBoq extends Component {
     }
   }
 
+  async getDataFromAPIXL(url) {
+    try {
+      let respond = await axios.get(API_URL_XL+url, {
+        headers: {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        }
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
   async getDatafromAPIBAM(url){
     try {
       let respond = await axios.get(API_URL_BAM +url, {
@@ -343,12 +367,9 @@ class TechnicalBoq extends Component {
     this.getDataFromAPINODE('/techBoq/'+_id_tech).then(res => {
       if(res.data !== undefined){
         const dataTech = res.data;
-        console.log("res.data", res.data.data);
         this.setState({data_tech_boq : dataTech.data});
         if(res.data.data !== undefined){
-          console.log("res.data sites", dataTech.data.techBoqSite);
           this.setState({data_tech_boq_sites : dataTech.data.techBoqSite, list_version : new Array(parseInt(dataTech.data.version)+1).fill("0")}, () => {
-            console.log("res.data version", this.state.list_version);
             this.viewTechBoqData(dataTech.data.techBoqSite);
           });
         }
@@ -426,7 +447,7 @@ class TechnicalBoq extends Component {
   }
 
   getProjectAll(){
-    this.getDataFromAPITSEL('/project_sorted_non_page').then( resp => {
+    this.getDataFromAPIXL('/project_sorted_non_page').then( resp => {
       if(resp !== undefined){
         this.setState({project_all : resp.data._items});
       }
@@ -1851,14 +1872,13 @@ class TechnicalBoq extends Component {
     }
     const dataHeader = this.state.view_tech_header_table;
 
-    let ppIdRow = ["site_title", "tower_id", "tower_name"];
+    let ppIdRow = ["site_title", "site_id", "site_name"];
     let ppTypeRow = ["", "", ""];
 
     const header_note = await this.headerTechBoqDataNote(dataSites);
-    // ppTypeRow = ppTypeRow.concat(dataHeader.type);
 
-    // ppIdRow = ppIdRow.concat(header_note);
-    // ppTypeRow = ppTypeRow.concat(header_note.map(e => "NOTE"));
+    ppIdRow = ppIdRow.concat(header_note);
+    ppTypeRow = ppTypeRow.concat(header_note.map(e => "NOTE"));
 
     ppIdRow = ppIdRow.concat(dataHeader.config_id);
     ppTypeRow = ppTypeRow.concat(dataHeader.type);
@@ -1868,11 +1888,15 @@ class TechnicalBoq extends Component {
     for(let i = 0; i < dataSites.length ; i++){
       let qtyConfig = []
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-        // header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
-        qtyConfig = dataSites[i].siteItemConfigVersion.map(e => e.qty);
+        for(let j = 0; j < header_note.length; j++ ){
+          qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === header_note[j]) !== undefined ? dataSites[i].notes.find(z => z.note_name === header_note[j]).note_value : null);
+        }
+        qtyConfig = qtyConfig.concat(dataSites[i].siteItemConfigVersion.map(e => e.qty));
       }else{
-        // header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
-        qtyConfig = dataSites[i].siteItemConfig.map(e => e.qty);
+        for(let j = 0; j < header_note.length; j++ ){
+          qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === header_note[j]) !== undefined ? dataSites[i].notes.find(z => z.note_name === header_note[j]).note_value : null);
+        }
+        qtyConfig = qtyConfig.concat(dataSites[i].siteItemConfig.map(e => e.qty));
       }
       ws.addRow([null, dataSites[i].site_id, dataSites[i].site_name].concat(qtyConfig));
     }
@@ -1939,27 +1963,18 @@ class TechnicalBoq extends Component {
     }
     const dataHeader = this.state.view_tech_header_table;
 
-    let ppIdRow = ["tower_id", "tower_name"];
-    let ppTypeRow = ["", ""];
+    let ppIdRow = ["tower_id", "tower_name", "Configuration BOQ", "Qty"];
 
-    let ppIdRowheader = [];
-
-    dataHeader.config_id.map((e,idx) => ppIdRowheader = ppIdRowheader.concat(["BOQ "+(idx+1), "QTY "+(idx+1)]));
-
-    ppIdRow = ppIdRow.concat(ppIdRowheader);
-    // ppTypeRow = ppTypeRow.concat(dataHeader.type);
-
-    ws.addRow(ppTypeRow);
     ws.addRow(ppIdRow);
     for(let i = 0; i < dataSites.length ; i++){
       let qtyConfig = []
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
         for(let j = 0; j < dataSites[i].siteItemConfigVersion.length; j++ ){
-          ws.addRow([null, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfigVersion[j].config_id, dataSites[i].siteItemConfigVersion[j].qty]);
+          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfigVersion[j].config_id, dataSites[i].siteItemConfigVersion[j].qty]);
         }
       }else{
         for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
-          ws.addRow([null, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].qty]);
+          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].qty]);
         }
       }
     }

@@ -254,7 +254,10 @@ class PackageUpload extends React.Component {
   }
 
   handleChangeFilter = (e) => {
-    const value = e.target.value;
+    let value = e.target.value;
+    if(value.length === 0){
+      value = null;
+    }
     this.setState({ filter_name: value }, () => {
       this.changeFilterDebounce(value);
     });
@@ -309,7 +312,7 @@ class PackageUpload extends React.Component {
   //   })
   // }
 
-  getPackageDataAPI() { 
+  getPackageDataAPI() {
     this.getDatatoAPINode('/productpackage?lmt='+this.state.perPage+'&pg='+this.state.activePage)
       .then(res => {
         // console.log("res config data", res);
@@ -1187,21 +1190,6 @@ class PackageUpload extends React.Component {
                               <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{ "padding": "10px", "visiblity": "hidden" }} />
                             </td>
                           </tr>
-                          {/* }<tr>
-                      <td>Project Tag</td>
-                      <td>:</td>
-                      <td style={{paddingLeft:"7px"}}>
-                        <Select
-                          isMulti
-                          name="ProjectTag"
-                          options={this.state.loadprojectdata}
-                          className="basic-multi-select"
-                          classNamePrefix="select"
-                          onChange={this.handleSelectProjectChange}
-                          isDisabled = {this.state.rowsXLS.length === 0}
-                        />
-                      </td>
-                      </tr> */}
                         </tbody>
                       </table>
                     </div>
@@ -1216,21 +1204,13 @@ class PackageUpload extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: '10px' }}>
-                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Material List</span>
+                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Product List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
-                        <span style={{ marginRight: '10px' }}>
+                        {/* <span style={{ marginRight: '10px' }}>
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
                           Select All
-                    </span>
-                        <span style={{ marginRight: '10px' }}>Project Tag : </span>
-                        {/*}<select style={{marginRight: '10px', marginTop : '2.85px', borderBottomWidth : '2.5px'}} className="search-box-project" name="ProjectFilter" type="select" onChange={this.handleChangeProjectFilter} value={this.state.project_filter}>
-                      <option value="all">All</option>
-                      <option value="none">None</option>
-                      {this.state.project_all.map( project =>
-                        <option key={project._id} value={project._id}>{project.project_name}</option>
-                      )}
-                    </select>*/}
-                        <input className="search-box-material" type="text" name='filter' placeholder="Search Package Name" onChange={this.handleChangeFilter} value={this.state.filter_name} />
+                        </span> */}
+                        <input className="search-box-material" type="text" name='filter' placeholder="Search Product Name" onChange={this.handleChangeFilter} value={this.state.filter_name} />
                       </div>
                     </div>
                   </Col>
@@ -1242,7 +1222,7 @@ class PackageUpload extends React.Component {
                         <thead style={{ backgroundColor: '#c6f569' }} className='fixed'>
                           <tr align="center">
                             <th>
-                              <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />
+                              {/* <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} /> */}
                             </th>
                             <th style={{ minWidth: '150px' }}>Product Package</th>
                             <th>Material Name</th>
@@ -1309,11 +1289,7 @@ class PackageUpload extends React.Component {
                       linkClass="page-link"
                     />
                   </Col>
-
                   <Col>
-                    <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
-                      <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
-                    </div>
                     <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                       <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTSSRFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp; Download PS Format</Button>
                     </div>

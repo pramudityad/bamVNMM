@@ -4,15 +4,16 @@
     margin-bottom: 15px;
   }
 
-  .table-bordered th, .table-bordered td {
+.table-bordered th {
+    vertical-align: middle !important;
+    display: table-cell;
+}
+
+.table-bordered td {
     vertical-align: middle;
     text-align: center;
 }
 
-.table-bordered th, .table-bordered td {
-    vertical-align: middle;
-    text-align: center;
-}
 .upload-line {
     border: 2px solid rgba(129,199,132 ,1);
   }

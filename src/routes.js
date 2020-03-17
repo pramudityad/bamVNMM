@@ -74,6 +74,7 @@ const DSACreation = React.lazy(() => import('./views/DSA/DSACreation'));
 const ListCommercial = React.lazy(() => import('./views/Commercial/ListCommercial'));
 const DetailCommercial = React.lazy(() => import('./views/Commercial/CommercialBoq'));
 const ApprovalCommercial = React.lazy(() => import('./views/Commercial/CommercialBoqApproval'));
+const POAssign = React.lazy(() => import('./views/Commercial/POAssign'))
 const POCommercial = React.lazy(() => import('./views/Commercial/BoqCommPO'));
 const ListTssrMatrix = React.lazy(() => import('./views/TssrMatrix/ListTSSRBoq'));
 const DetailTssrMatrix = React.lazy(() => import('./views/TssrMatrix/UploadTSSRMatrix'));
@@ -87,9 +88,8 @@ const DetailOrdering = React.lazy(() => import('./views/Ordering/OrderingMateria
 const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUpload'));
 const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabase'));
 
-const ListCPOTechnical = React.lazy(() => import('./views/TechnicalCPO/ListTechnicalCPO'));
-const DetailCPOTechnical = React.lazy(() => import('./views/TechnicalCPO/DetailTechnicalCPO'));
-const NewCPOTechnical = React.lazy(() => import('./views/TechnicalCPO/ListTechnicalCPO'));
+const ListCPOBoq = React.lazy(() => import('./views/TechnicalCPO/ListCPOBoq'));
+const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -173,6 +173,8 @@ const routes = [
   { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
   { path: '/commercial-creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
   { path: '/detail-commercial/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
+  { path: '/po-assign-commercial/:id', exact: true, name: 'PO Assign Commercial BOQ', component: POAssign },
+
   { path: '/list-tssr-matix', exact: true, name: 'List TSSR Matrix BOQ', component: ListTssrMatrix },
   { path: '/tssr-matix-creation', exact: true, name: 'TSSR Matrix BOQ Creation', component: NewTssrMatrix },
   { path: '/detail-tssr-matix/:id', exact: true, name: 'Detail TSSR Matrix BOQ', component: DetailTssrMatrix },
@@ -191,9 +193,9 @@ const routes = [
 
   { path: '/cpo-database', exact: true, name: 'CPO Database', component: CPODatabase },
 
-  { path: '/list-technical-cpo', exact: true, name: 'List CPO', component: ListCPOTechnical },
-  { path: '/detail-technical-cpo/:id', exact: true, name: 'Detail CPO', component: DetailCPOTechnical },
-  { path: '/new-technical-cpo', exact: true, name: 'New CPO', component: NewCPOTechnical },
+  { path: '/list-cpo-boq', exact: true, name: 'List CPO BOQ', component: ListCPOBoq },
+  { path: '/detail-cpo-boq/:id', exact: true, name: 'CPO BOQ Detail', component: DetailCPOBoq },
+  { path: '/cpo-boq-creation', exact: true, name: 'CPO BOQ Creation', component: DetailCPOBoq },
 ];
 
 export default routes;
