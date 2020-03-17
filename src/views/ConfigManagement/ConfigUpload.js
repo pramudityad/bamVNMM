@@ -810,8 +810,6 @@ class ConfigUpload extends React.Component {
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfig}>> Config Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>> Download All Config</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -843,8 +841,8 @@ class ConfigUpload extends React.Component {
                   </CardBody>
                   <CardFooter>
                     <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
-                    {/* <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.checkProductPackage}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;Check </Button> */}
-                    <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>
+                    {/* <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.checkProductPackage}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;Check </Button>
+                    <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>*/}
                   </CardFooter>
                 </Card>
               </Collapse>
@@ -854,18 +852,10 @@ class ConfigUpload extends React.Component {
                     <div style={{ marginBottom: '10px' }}>
                       <span style={{ fontSize: '20px', fontWeight: '500' }}>Config List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
-                        <span style={{ marginRight: '10px' }}>
+                        {/* <span style={{ marginRight: '10px' }}>
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
                           Select All
-                        </span>
-                        <span style={{ marginRight: '10px' }}>Project Tag : </span>
-                        {/*}<select style={{marginRight: '10px', marginTop : '2.85px', borderBottomWidth : '2.5px'}} className="search-box-project" name="ProjectFilter" type="select" onChange={this.handleChangeProjectFilter} value={this.state.project_filter}>
-                      <option value="all">All</option>
-                      <option value="none">None</option>
-                      {this.state.project_all.map( project =>
-                        <option key={project._id} value={project._id}>{project.project_name}</option>
-                      )}
-                    </select>*/}
+                        </span> */}
                         <input className="search-box-material" type="text" name='filter' placeholder="Search Config Name" onChange={this.handleChangeFilter} value={this.state.filter_name} />
                       </div>
                     </div>
@@ -878,7 +868,7 @@ class ConfigUpload extends React.Component {
                         <thead style={{ backgroundColor: '#73818f' }} className='fixed'>
                           <tr align="center">
                             <th>
-                              <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />
+                              {/* }<Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} /> */}
                             </th>
                             <th style={{ minWidth: '150px' }}>Config</th>
                             <th>SAP</th>
@@ -903,9 +893,9 @@ class ConfigUpload extends React.Component {
                                 <td></td>
                                 <td></td>
                                 <td>
-                                  <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
+                                  {/* }<Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
                                     <i className="fa fa-pencil" aria-hidden="true"></i>
-                                  </Button>
+                                  </Button> */}
                                 </td>
                               </tr>
                               {pp.package_list.map(pl =>
@@ -915,9 +905,6 @@ class ConfigUpload extends React.Component {
                                   <td style={{ textAlign: 'left' }}></td>
                                   <td style={{ textAlign: 'center' }}>{pl.pp_id}</td>
                                   <td style={{ textAlign: 'center' }}>{pl.pp_group}</td>
-                                  {/* {pl.productPackage.map(pc =>
-                            <td style={{textAlign : 'center'}}>{pc.uom}</td>
-                            )} */}
                                   <td style={{ textAlign: 'center' }}>{pl.qty}</td>
                                   <td style={{ textAlign: 'center' }}>{pl.price}</td>
                                 </tr>

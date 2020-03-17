@@ -66,7 +66,7 @@ class CPODatabase extends React.Component {
       select_project_tag_new: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
-      modalPPForm: false,
+      modalPOForm: false,
       PPForm: new Array(5).fill(null),
       accordion: [false],
       collapse: false,
@@ -75,14 +75,14 @@ class CPODatabase extends React.Component {
       config_checked : new Map(),
       config_selected : [],
     }
-    this.togglePPForm = this.togglePPForm.bind(this);
+    this.togglePOForm = this.togglePOForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.toggleAccordion = this.toggleAccordion.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
     this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
     this.toggleCheckout = this.toggleCheckout.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterDebounce = debounce(this.changeFilterName, 1000);
+    this.changeFilterDebounce = debounce(this.changeFilterName, 500);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.onEntering = this.onEntering.bind(this);
@@ -92,7 +92,7 @@ class CPODatabase extends React.Component {
     this.handleSelectProjectChange = this.handleSelectProjectChange.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
-    this.saveNewPP = this.saveNewPP.bind(this);
+    this.saveNewPO = this.saveNewPO.bind(this);
     this.togglePPedit = this.togglePPedit.bind(this);
     this.saveUpdatePP = this.saveUpdatePP.bind(this);
     this.getAllPP = this.getAllPP.bind(this);
@@ -199,55 +199,29 @@ class CPODatabase extends React.Component {
   }
 
   changeFilterName(value) {
-    this.getPackageDataAPI(value, this.state.project_filter);
-    this.getAllPP();
+    this.getPODataList();
   }
 
   handleChangeFilter = (e) => {
-    const value = e.target.value;
+    let value = e.target.value;
+    if(value.length === 0){
+      value = null;
+    }
     this.setState({ filter_name: value }, () => {
       this.changeFilterDebounce(value);
     });
   }
 
-  handleChangeProjectFilter = (e) => {
-    const value = e.target.value;
-    this.setState({ project_filter: value }, () => {
-      this.getAllPP();
-    });
-    this.getPackageDataAPI(this.state.filter_name, value);
-
-  }
-
-  getPackageDataAPI(){
-    this.getDatatoAPINode('/po_op')
+  getPODataList(){
+    let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "'+this.state.filter_name+'", "$options" : "i"}';
+    this.getDatatoAPINode('/po_op?max_results='+this.state.perPage+'&page='+this.state.activePage+'&where={'+po_number+'}')
     .then(res =>{
-      console.log("res cpo data", res);
       if(res.data !== undefined){
-        console.log("res cpo  dalem", res.data._items);
-        this.setState({ po_op_data : res.data._items, prevPage : this.state.activePage, total_dataParent : res.data.totalResults })
+        this.setState({ po_op_data : res.data._items, prevPage : this.state.activePage, total_dataParent : res.data._meta.total })
       }else{
         this.setState({ po_op_data : [], total_dataParent : 0, prevPage : this.state.activePage});
       }
     })
-  }
-
-  handleChangeProjectTag = (e) => {
-    const value = e.target.value;
-    const index = e.target.selectedIndex;
-    const text = e.target[index].text;
-    this.setState(prevState => ({ select_project_tag: prevState.select_project_tag.set(value, text) }));
-  }
-
-
-  async prepareView(data_pp) {
-    let product_package = data_pp;
-    const material_catalogue = this.state.material_catalogue;
-    for (let i = 0; i < product_package.length; i++) {
-      const material = material_catalogue.filter(e => e.pp_id === product_package[i].pp_id);
-      product_package[i]["list_of_material"] = material;
-    }
-    this.setState({ product_package: product_package });
   }
 
   isSameValue(element, value) {
@@ -393,7 +367,7 @@ class CPODatabase extends React.Component {
   }
 
   componentDidMount() {
-    this.getPackageDataAPI();
+    this.getPODataList();
     // this.getAllPP();
     document.title = 'CPO Database | BAM';
   }
@@ -464,7 +438,7 @@ class CPODatabase extends React.Component {
   handlePageChange(pageNumber) {
     console.log(`active page ${pageNumber}`)
     this.setState({ activePage: pageNumber, packageChecked_all: false }, () => {
-      this.getPackageDataAPI();
+      this.getPODataList();
     });
   }
 
@@ -487,9 +461,9 @@ class CPODatabase extends React.Component {
     }));
   }
 
-  togglePPForm() {
+  togglePOForm() {
     this.setState(prevState => ({
-      modalPPForm: !prevState.modalPPForm
+      modalPOForm: !prevState.modalPOForm
     }));
   }
 
@@ -581,8 +555,8 @@ class CPODatabase extends React.Component {
     }
   }
 
-  async saveNewPP() {
-    this.togglePPForm();
+  async saveNewPO() {
+    this.togglePOForm();
     this.toggleLoading();
     let poData = [];
     let respondSaveNew = undefined;
@@ -622,7 +596,7 @@ class CPODatabase extends React.Component {
 
   // componentDidUpdate() {
   //   if (this.state.prevPage !== this.state.activePage) {
-  //     this.getPackageDataAPI(this.state.filter_name, this.state.project_filter);
+  //     this.getPODataList(this.state.filter_name, this.state.project_filter);
   //   }
   // }
 
@@ -779,27 +753,10 @@ class CPODatabase extends React.Component {
             <Card style={{}}>
               <CardHeader>
                 <span style={{ marginTop: '8px', position: 'absolute' }}>CPO Database</span>
-                <div className="card-header-actions" style={{ display: 'inline-flex' }}>
-                  <div style={{ marginRight: "10px" }}>
-                    <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
-                      <DropdownToggle caret color="light">
-                        Download Template
-                        </DropdownToggle>
-                      <DropdownMenu>
-                        <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatConfig}>> CPO Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>> Download All Config</DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
-                  </div>
-                  {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
-                    <div>
-                      <Button block color="success" onClick={this.toggleAddNew} id="toggleCollapse1">
-                        <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> New
-                        </Button>
-                    </div>
-                  ) : ("")}
+                <div>
+                  <Button color="primary" style={{ float: 'right' }} onClick={this.togglePOForm}>
+                    <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form
+                  </Button>
                 </div>
               </CardHeader>
               <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>
@@ -822,7 +779,7 @@ class CPODatabase extends React.Component {
                   <CardFooter>
                     <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
                     {/* <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.checkProductPackage}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;Check </Button> */}
-                    <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>
+                    <Button color="primary" style={{ float: 'right' }} onClick={this.togglePOForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>
                   </CardFooter>
                 </Card>
               </Collapse>
@@ -832,18 +789,6 @@ class CPODatabase extends React.Component {
                     <div style={{ marginBottom: '10px' }}>
                       <span style={{ fontSize: '20px', fontWeight: '500' }}>CPO List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
-                        <span style={{ marginRight: '10px' }}>
-                          <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
-                          Select All
-                        </span>
-                        <span style={{ marginRight: '10px' }}>Project Tag : </span>
-                        {/*}<select style={{marginRight: '10px', marginTop : '2.85px', borderBottomWidth : '2.5px'}} className="search-box-project" name="ProjectFilter" type="select" onChange={this.handleChangeProjectFilter} value={this.state.project_filter}>
-                      <option value="all">All</option>
-                      <option value="none">None</option>
-                      {this.state.project_all.map( project =>
-                        <option key={project._id} value={project._id}>{project.project_name}</option>
-                      )}
-                    </select>*/}
                         <input className="search-box-material" type="text" name='filter' placeholder="Search CPO" onChange={this.handleChangeFilter} value={this.state.filter_name} />
                       </div>
                     </div>
@@ -855,34 +800,22 @@ class CPODatabase extends React.Component {
                       <table hover bordered responsive size="sm" width='100%'>
                         <thead style={{ backgroundColor: '#73818f' }} className='fixed'>
                           <tr align="center">
-                            <th>
-                              <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />
-                            </th>
                             <th style={{ minWidth: '150px' }}>PO Number</th>
                             <th>Year</th>
-                            {/* <th>Payment Terms</th> */}
                             <th>Currency</th>
                             <th>Price</th>
                             <th>Number of Sites</th>
-                            <th></th>
                           </tr>
                         </thead>
                         <tbody>
                           {this.state.po_op_data.map(po =>
                             <React.Fragment key={po._id + "frag"}>
                               <tr style={{backgroundColor: '#d3d9e7'}} className='fixbody' key={po._id}>
-                                <td align="center"><Checkbox name={po._id} checked={this.state.config_checked.get(po._id)} onChange={this.handleChangeChecklist} value={po} /></td>
                                 <td style={{ textAlign: 'center' }}>{po.po_number}</td>
                                 <td style={{ textAlign: 'center' }}>{po.po_year}</td>
                                 <td style={{ textAlign: 'center' }}>{po.currency}</td>
                                 <td style={{ textAlign: 'center' }}>{po.value}</td>
                                 <td style={{ textAlign: 'center' }}>{po.number_of_sites}</td>
-                                <td></td>
-                                <td>
-                                  <Button size='sm' color="secondary" value={po._id} onClick={this.togglePPedit} title='Edit'>
-                                    <i className="fa fa-pencil" aria-hidden="true"></i>
-                                  </Button>
-                                </td>
                               </tr>
                             </React.Fragment>
                           )}
@@ -903,19 +836,6 @@ class CPODatabase extends React.Component {
                       linkClass="page-link"
                     />
                   </Col>
-
-                  <Col>
-                    <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
-                      <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
-                    </div>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col>
-                    <div>
-                      <span style={{ color: 'red' }}>*</span><span>NOTE : Please select Product Package first, before download Technical Format or Material Template.</span>
-                    </div>
-                  </Col>
                 </Row>
               </CardBody>
             </Card>
@@ -923,7 +843,7 @@ class CPODatabase extends React.Component {
         </Row>
 
         {/* Modal New PP */}
-        <Modal isOpen={this.state.modalPPForm} toggle={this.togglePPForm} className="formmaterial">
+        <Modal isOpen={this.state.modalPOForm} toggle={this.togglePOForm} className="formmaterial">
           <ModalHeader>Form Config</ModalHeader>
           <ModalBody>
             <Row>
@@ -936,31 +856,23 @@ class CPODatabase extends React.Component {
                   <Label htmlFor="po_year" >Year</Label>
                   <Input type="text" name="1" placeholder="" value={this.state.PPForm[1]} onChange={this.handleChangeForm} />
                 </FormGroup>
-                <FormGroup row>
-                  <Col xs="4">
-                    <FormGroup>
-                      <Label htmlFor="currency" >Currency</Label>
-                      <Input type="text" name="2" placeholder="" value={this.state.PPForm[2]} onChange={this.handleChangeForm} />
-                    </FormGroup>
-                  </Col>
-                  <Col xs="4">
-                    <FormGroup>
-                      <Label htmlFor="value" >Price</Label>
-                      <Input type="number" min="0" name="3" placeholder="" value={this.state.PPForm[3]} onChange={this.handleChangeForm} />
-                    </FormGroup>
-                  </Col>
-                  <Col xs="4">
-                    <FormGroup>
-                      <Label htmlFor="number_of_sites" >Number of Sites</Label>
-                      <Input type="number" min="0" name="4" placeholder="" value={this.state.PPForm[4]} onChange={this.handleChangeForm} />
-                    </FormGroup>
-                  </Col>
+                <FormGroup>
+                  <Label htmlFor="currency" >Currency</Label>
+                  <Input type="text" name="2" placeholder="" value={this.state.PPForm[2]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >Price</Label>
+                  <Input type="number" min="0" name="3" placeholder="" value={this.state.PPForm[3]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="number_of_sites" >Number of Sites</Label>
+                  <Input type="number" min="0" name="4" placeholder="" value={this.state.PPForm[4]} onChange={this.handleChangeForm} />
                 </FormGroup>
               </Col>
             </Row>
           </ModalBody>
           <ModalFooter>
-            <Button color="success" onClick={this.saveNewPP}>Submit</Button>
+            <Button color="success" onClick={this.saveNewPO}>Submit</Button>
           </ModalFooter>
         </Modal>
         {/*  Modal New PP*/}

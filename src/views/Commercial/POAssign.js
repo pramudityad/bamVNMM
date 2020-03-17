@@ -72,7 +72,7 @@ class POAssign extends Component {
         unit_price : new Map(),
         curr_rev : null,
         action_status : null,
-        action_message : "",
+        action_message : null,
         checkedPackage : new Map(),
         checkedPackage_all : false,
         get_item_ilang : [],
@@ -132,6 +132,7 @@ class POAssign extends Component {
       this.handleChangeVerComment = this.handleChangeVerComment.bind(this);
       this.handleChangeCurrencyAll = this.handleChangeCurrencyAll.bind(this);
       this.updateCommercial = this.updateCommercial.bind(this);
+      this.updatePOAssign = this.updatePOAssign.bind(this);
     }
 
     toggleUpload() {
@@ -250,6 +251,26 @@ class POAssign extends Component {
     async postDatatoAPINODE(url, data){
       try {
         let respond = await axios.post(API_URL_NODE +url, data, {
+          headers : {
+            'Content-Type':'application/json',
+            'Authorization': 'Bearer '+this.state.tokenUser
+          },
+        })
+        if(respond.status >= 200 && respond.status < 300){
+          console.log("respond Post Data", respond);
+        }
+        return respond;
+      }catch (err) {
+        let respond = err;
+        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+        console.log("respond Post Data", err);
+        return respond;
+      }
+    }
+
+    async patchDatatoAPINODE(url, data){
+      try {
+        let respond = await axios.patch(API_URL_NODE +url, data, {
           headers : {
             'Content-Type':'application/json',
             'Authorization': 'Bearer '+this.state.tokenUser
@@ -1483,7 +1504,7 @@ class POAssign extends Component {
     handleInputChange = (newValue) => {
       // const inputValue = newValue.replace(/\W/g, '');
       // this.setState({inputValue});
-      this.setState({data_po_data_selected : newValue.value});
+      this.setState({data_po_data_selected : {"_id" : newValue.value, "po_number" : newValue.label} });
       return newValue;
     };
 
@@ -1615,10 +1636,37 @@ class POAssign extends Component {
       }
     }
 
-    render() {
-      if(this.state.redirectSign !== false){
-        return (<Redirect to={'/detail-commercial/'+this.state.boq_comm_API._id} />);
+    async updatePOAssign(){
+      this.toggleLoading();
+      let dataComm = Object.assign({}, this.state.data_comm_boq);
+      let poSelected = this.state.data_po_data_selected;
+      if(dataComm.site !== undefined){
+        delete dataComm.site;
       }
+      const dataPO = [{
+        "id_po_doc" : poSelected._id,
+        "po_number" : poSelected.po_number
+      }];
+      dataComm["po_data"] = dataComm.po_data.concat(dataPO);
+      let updateCommBoq = {
+        "version_check": false,
+        "data" : dataComm
+      }
+      let updateComm = await this.patchDatatoAPINODE('/commBoq/updateCommercial/'+dataComm._id, updateCommBoq );
+      if(updateComm.data !== undefined){
+        this.setState({action_status : 'success'});
+      }else{
+        if(updateComm.response !== undefined){
+          this.setState({action_status : 'failed', action_message : updateComm.response.error });
+        }else{
+          this.setState({action_status : 'failed' });
+        }
+        this.setState({action_status : 'success'});
+      }
+      this.toggleLoading();
+    }
+
+    render() {
 
       function AlertProcess(props){
         const alert = props.alertAct;
@@ -1670,27 +1718,7 @@ class POAssign extends Component {
                   )}
                 </CardHeader>
                 <CardBody className='card-UploadBoq'>
-
-                      <Row>
-                      <Col md="12">
-                        {/* Show import XLS */}
-                        {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
-                          <React.Fragment>
-                            {/* }<input type="file" onChange={this.fileHandlerCommercial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} /> */}
-                              <Button style={{'float' : 'right',margin : '8px'}} color="warning" onClick={this.updateCommercial} value="save">
-                                <i className="fa fa-paste">&nbsp;&nbsp;</i>
-                                Save
-                              </Button>
-                              <Button style={{'float' : 'right',margin : '8px'}} color="secondary" onClick={this.updateCommercial} value="revision">
-                                <i className="fa fa-copy">&nbsp;&nbsp;</i>
-                                Revision
-                              </Button>
-                          </React.Fragment>
-                        )}
-                        {/* End Show import XLS */}
-                      </Col>
-                     </Row>
-                     <Row>
+                  <Row>
                     <Col sm="12" md="12">
                     <table style={{width : '100%', marginBottom : '0px'}}>
                       <tbody>
@@ -1746,63 +1774,43 @@ class POAssign extends Component {
                             </table>
                           </Col>
                           <Col sm="6" md="6">
+                            <tbody style={{float : 'right', 'marginRight' : '50px'}}>
+                              <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                                <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>PO INFORMATION</td>
+                              </tr>
+                              <tr>
+                                <td style={{width : '100px'}}>PO Number </td>
+                                <td>:</td>
+                                <td>
+                                  {this.state.data_comm_boq.po_data.map(po =>
+                                    <tr>
+                                      <td colSpan="2" style={{textAlign : 'left'}}>{po.po_number}</td>
+                                    </tr>
+                                  )}
+                                  <tr>
+                                    <td style={{width : '200px'}}>
+                                      <Select
+                                        cacheOptions
+                                        options={this.state.list_po_data_selection}
+                                        // defaultOptions
+                                        onChange={this.handleInputChange}
+                                      />
+                                    </td>
+                                    <td>
+                                      <Button className="btn-success" style={{margin : '10px'}} color="success" onClick={this.updatePOAssign} disabled={this.state.data_po_data_selected === null} >
+                                        Save
+                                      </Button>
+                                    </td>
+                                  </tr>
+                                </td>
+                              </tr>
+                            </tbody>
                           </Col>
                         </Row>
                       </React.Fragment>
                     )}
                   </div>
-                  <Row>
-                    <Col sm="6" md="6">
-                    </Col>
-                  </Row>
-                  {/* Show Select BOQ Technical */}
-                    <table width="70%" className="table-header">
-                      <tbody>
-                        <tr>
-                          <td width="15%">PO Number</td>
-                          <td width="30%">
-                            <Select
-                              cacheOptions
-                              options={this.state.list_po_data_selection}
-                              // defaultOptions
-                              onChange={this.handleInputChange}
-                          />
-                          </td>
-                          <td>
-                            <Button className="btn-success" style={{margin : '10px'}} color="success" onClick={this.saveCommtoAPI} >
-                              <i className="fa fa-save">&nbsp;&nbsp;</i>
-                              {this.state.data_tech_boq_selected === null ? 'Save' : this.state.data_tech_boq_sites_selected.length !== 0 ? 'Save' : 'Loading..'}
-                            </Button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    {/* End Show Select BOQ Technical */}
                   <div class='divtable'>
-                  {this.props.match.params.id === undefined ? (
-                    <Table hover bordered responsive size="sm" width="100%">
-                        <thead>
-                        <tr>
-                          <th>Tower ID</th>
-                          <th>Tower Name</th>
-                          <th>Config ID</th>
-                          <th>Qty</th>
-                        </tr>
-                      </thead>
-                      {this.state.data_tech_boq_sites_selected.map(site =>
-                        <tbody>
-                          {site.siteItemConfig.map(conf =>
-                            <tr>
-                              <td>{site.site_id}</td>
-                              <td>{site.site_name}</td>
-                              <td>{conf.config_id}</td>
-                              <td>{conf.qty}</td>
-                            </tr>
-                          )}
-                        </tbody>
-                      )}
-                    </Table>
-                  ) : (
                     <Table hover bordered responsive size="sm" width="100%">
                         <thead>
                         <tr>
@@ -1831,7 +1839,6 @@ class POAssign extends Component {
                         </tbody>
                       )}
                     </Table>
-                  )}
                   </div>
                   {this.state.boq_comm_API !== null &&  (
 		               <React.Fragment>
@@ -1913,48 +1920,6 @@ class POAssign extends Component {
             </ModalFooter>
           </Modal>
           {/* end Modal Loading */}
-
-          {/* Modal Edit Commercial */}
-          <Modal isOpen={this.state.modalEdit} toggle={this.toggleEdit} className={this.props.className}>
-            <ModalHeader toggle={this.toggleEdit}>Checkout</ModalHeader>
-            <ModalBody>
-            <div>
-              <Row><Col md="12">
-              <Form className="form-horizontal">
-                <FormGroup row style={{"padding-left":"10px"}}>
-                  <Col md="2">
-                    <Label style={{marginTop : "10px"}}>Project</Label>
-                  </Col>
-                  <Col xs="12" md="10">
-                    <Input name="project" type="select">
-                      <option value=""></option>
-                      <option value="Demo 1">Project Demo 1</option>
-                      <option value="Demo 1">Project Demo 2</option>
-                    </Input>
-                    <FormText className="help-block">Please Select Project</FormText>
-                  </Col>
-                  <Col xs="12" md="6">
-                  </Col>
-                </FormGroup>
-              </Form>
-              </Col></Row>
-              <Row><Col md="12">
-                <input type="file" style={{"padding":"10px","visiblity":"hidden"}} />
-              </Col></Row>
-            </div>
-            </ModalBody>
-            <ModalFooter>
-              <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success">
-                <i className="fa fa-save">&nbsp;&nbsp;</i>
-                Revision and Save Project
-              </Button>
-              <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success">
-                <i className="fa fa-save">&nbsp;&nbsp;</i>
-                Revision BOQ
-              </Button>
-            </ModalFooter>
-          </Modal>
-          {/* End Modal Edit Commercial */}
         </div>
       );
     }

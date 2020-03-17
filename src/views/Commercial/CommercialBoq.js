@@ -36,12 +36,14 @@ class CommercialBoq extends Component {
 
       this.state = {
         data_comm_boq : null,
+        data_comm_boq_version : null,
         data_comm_boq_items : [],
+        data_comm_boq_items_version : [],
         list_tech_boq : [],
         list_tech_boq_selection : [],
         data_tech_boq_selected : null,
         data_tech_boq_sites_selected : [],
-
+        list_version : [],
         userRole : this.props.dataLogin.role,
         userId : this.props.dataLogin._id,
         userName : this.props.dataLogin.userName,
@@ -78,7 +80,6 @@ class CommercialBoq extends Component {
         po_selected : null,
         po_number_selected : null,
         project_all: [],
-        list_version : [],
         version_now: null,
         version_selected : null,
         format_rev : [],
@@ -107,13 +108,10 @@ class CommercialBoq extends Component {
       this.editQtyEricsson = this.editQtyEricsson.bind(this);
       this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
       this.handleChangeEarlyStart = this.handleChangeEarlyStart.bind(this);
-      this.handleChangeOpportunity = this.handleChangeOpportunity.bind(this);
       this.handleChangeNote = this.handleChangeNote.bind(this);
       this.handleChangeFieldNote = this.handleChangeFieldNote.bind(this);
       this.selectBoqTechnical = this.selectBoqTechnical.bind(this);
-      this.getDataCommfromTech = this.getDataCommfromTech.bind(this);
       this.selectProject = this.selectProject.bind(this);
-      this.overwriteDataItems = this.overwriteDataItems.bind(this);
       this.handleChangeVersion = this.handleChangeVersion.bind(this);
       this.handleChangePO = this.handleChangePO.bind(this);
       this.savePO = this.savePO.bind(this);
@@ -578,112 +576,9 @@ class CommercialBoq extends Component {
       })
     }
 
-    // componentWillMount(){
-    //   //Change It
-    //   const urlAPITech = '?where={"rev" : "A"}';
-    //   this.getDatafromAPI('/boq_tech_sorted_non_page'+urlAPITech).then(res => {
-    //     if(res !== undefined){
-    //       this.setState({boq_tech_API : res.data._items});
-    //     }
-    //   })
-    //   this.getProjectAll();
-    // }
-
-    // getDataCommAPI(){
-    //   this.getDatafromAPI('/boq_comm_audit/'+this.props.match.params.id+'?embedded={"created_by":1, "updated_by" : 1}').then(resComm => {
-    //     if(resComm.data !== undefined){
-    //       if(resComm.data.early_start !== undefined){
-    //         this.setState({ early_start:  resComm.data.early_start, version_now : resComm.data.version, version_selected : resComm.data.version });
-    //       }
-    //       const arrayIdItems = '"'+resComm.data.list_of_id_item.join('", "')+'"';
-    //       const where_id_Items = '?where={"_id" : {"$in" : ['+arrayIdItems+']}}';
-    //       this.getDatafromAPI('/boq_comm_items_non_page'+where_id_Items).then(resItems =>{
-    //         if(resItems.data._items.length !== 0){
-    //           this.DataGroupingView(resItems.data._items);
-    //           console.log("data Comm resComm");
-    //           this.getListVersion(this.props.match.params.id);
-    //           this.setState({commercialData : resItems.data._items, boq_comm_API : resComm.data, curr_rev : resComm.data.version, commercialData_now : resItems.data._items});
-    //         }
-    //       })
-    //     }else{
-    //       this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
-    //     }
-    //   })
-    // }
-
-    // componentDidMount(){
-    //   if(this.props.match.params.id !== undefined){
-    //     this.getDatafromAPI('/boq_comm_audit/'+this.props.match.params.id+'?embedded={"created_by":1, "updated_by" : 1}').then(resComm => {
-    //       if(resComm.data !== undefined){
-    //         if(resComm.data.early_start !== undefined){
-    //           this.setState({ early_start:  resComm.data.early_start, version_now : resComm.data.version, version_selected : resComm.data.version });
-    //           if(resComm.data.hasOwnProperty("po_number") === false){
-    //             this.getPOList();
-    //           }else{
-    //             if(resComm.data.po_number === null){
-    //               this.getPOList();
-    //             }
-    //           }
-    //         }
-    //         const arrayIdItems = '"'+resComm.data.list_of_id_item.join('", "')+'"';
-    //         const where_id_Items = '?where={"_id" : {"$in" : ['+arrayIdItems+']}}';
-    //         this.getDatafromAPI('/boq_comm_items_non_page'+where_id_Items).then(resItems =>{
-    //           if(resItems.data._items.length !== 0){
-    //             this.DataGroupingView(resItems.data._items);
-    //             this.getListVersion(this.props.match.params.id);
-    //             this.setState({commercialData : resItems.data._items, boq_comm_API : resComm.data, curr_rev : resComm.data.version, commercialData_now : resItems.data._items});
-    //           }
-    //         })
-    //       }else{
-    //         this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
-    //       }
-    //     })
-    //   }else{
-    //     this.getAllPP();
-    //   }
-    // }
-
-    // componentWillMount(){
-    //   //Change It
-    //     this.getListTechBOQ();
-    // }
-
-    async getDataCommAPI(){
-      let resComm = await this.getDatafromAPI('/boq_comm_audit/'+this.props.match.params.id+'?embedded={"created_by":1, "updated_by" : 1}')
-        if(resComm === undefined){ resComm["data"] = undefined }
-        if(resComm.data !== undefined){
-          if(resComm.data.early_start !== undefined){
-            this.setState({ early_start:  resComm.data.early_start, version_now : resComm.data.version, version_selected : resComm.data.version });
-          }
-          let dataCommItems = [];
-          let arrayDataCommItems = resComm.data.list_of_id_item;
-          let getNumberPage = Math.ceil(arrayDataCommItems.length / 20);
-          for(let i = 0 ; i < getNumberPage; i++){
-            let DataPaginationItems = arrayDataCommItems.slice(i * 20, (i+1)*20);
-            let arrayIdItems = '"'+DataPaginationItems.join('", "')+'"';
-            let where_id_Items = '?where={"_id" : {"$in" : ['+arrayIdItems+']}}';
-            let resItems = await this.getDatafromAPI('/boq_comm_items_non_page'+where_id_Items);
-            if(resItems !== undefined){
-              if(resItems.data !== undefined){
-                dataCommItems = dataCommItems.concat(resItems.data._items);
-              }
-            }
-          }
-          if(dataCommItems.length !== 0){
-            this.DataGroupingView(dataCommItems);
-            console.log("data Comm resComm");
-            this.getListVersion(this.props.match.params.id);
-            this.setState({commercialData : dataCommItems, boq_comm_API_now : resComm.data, boq_comm_API : resComm.data, curr_rev : resComm.data.version, commercialData_now : dataCommItems});
-          }
-        }else{
-          this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
-        }
-    }
-
     componentDidMount(){
       if(this.props.match.params.id !== undefined){
-        // this.getDataCommAPI();
-        this.getDataCommercial(this.props.match.params.id);
+        this.getCommBoqData(this.props.match.params.id);
       }else{
         this.getTechBoqList();
       }
@@ -699,13 +594,11 @@ class CommercialBoq extends Component {
       })
     }
 
-    async getDataCommercial(_id){
-      // const getComm1 = jsonData.data;
-      // this.setState({data_comm_boq : getComm1, data_comm_boq_items : getComm1.site});
+    async getCommBoqData(_id){
       let getComm = await this.getDataFromAPINODE('/commBoq/'+_id)
       if(getComm.data !== undefined){
         const dataComm = getComm.data;
-        this.setState({data_comm_boq : dataComm.data, data_comm_boq_items : dataComm.data.site});
+        this.setState({data_comm_boq : dataComm.data, data_comm_boq_items : dataComm.data.site, list_version : new Array(parseInt(dataComm.data.version)+1).fill("0")});
       }
     }
 
@@ -741,92 +634,45 @@ class CommercialBoq extends Component {
       }
       let updateComm = await this.patchDatatoAPINODE('/commBoq/updateCommercial/'+dataComm._id, updateCommBoq );
       if(updateComm.data !== undefined){
-        this.setState({action_status : 'success'})
-      }
-      console.log("dataComm Update", JSON.stringify(updateCommBoq));
-      this.toggleLoading();
-    }
-
-    async getDataCommfromTech(boqTechSelect){
-      this.toggleLoading();
-      let embeddedTech = '?embedded={"created_by" : 1, "updated_by" : 1, "list_of_id_site" : 1}';
-      const res = await this.getDatafromAPI('/boq_tech_sorted/'+boqTechSelect+embeddedTech);
-      if(res !== undefined){
-        if(res.data !== undefined){
-          if(res.data.list_of_id_site !== undefined){
-            const sumPackage = this.countPerItemFromDataBase(res.data.list_of_id_site);
-            console.log("sumPackage", sumPackage);
-            const resPP = this.state.pp_all;
-            const getProject = this
-            const commView = this.dataComm(resPP, sumPackage, res.data.list_of_id_site[0].list_of_site_items);
-            this.getDatafromAPI('/boq_tech_sorted/'+boqTechSelect+'?embedded={"list_of_id_boq_comm":1,"list_of_id_boq_comm.list_of_id_item":1}').then(resTech => {
-              if(resTech !== undefined){
-                if(resTech.data.list_of_id_boq_comm !== undefined){
-                  let listPicked = []
-                  resTech.data.list_of_id_boq_comm.map(e => e.list_of_id_item.map( i => listPicked.push(i.id_pp_doc)))
-                  console.log("data APUI TECh", listPicked)
-                  this.DataGroupingView(commView, listPicked);
-                }else{
-                  this.DataGroupingView(commView);
-                }
-              }
-            })
-            this.setState({prev_boq_tech_select : this.state.Boq_Technical_Select});
-            this.toggleLoading();
-            // this.setState({commercialData : commView}, () => {
-            //   this.setState({prev_boq_tech_select : this.state.Boq_Technical_Select});
-            // });
-          }else{
-            this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'});
-            this.toggleLoading();
-          }
-        }else{
-          this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'});
-          this.toggleLoading();
-        }
+        this.setState({action_status : 'success'});
       }else{
-        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'});
-        this.toggleLoading();
+        this.setState({action_status : 'success'});
       }
-
+      this.toggleLoading();
     }
 
-    componentDidUpdate(){
-      if(this.state.prev_boq_tech_select !== this.state.Boq_Technical_Select){
-        if(this.state.Boq_Technical_Select !== ""){
-          //this.getDataCommfromTech(this.state.Boq_Technical_Select);
+    handleChangeVersion(e){
+      const value = e.target.value;
+      this.setState({version_selected : value}, () => {
+        if(value !== this.state.data_comm_boq.version){
+          this.setState({incentiveChange : new Map()});
+          this.getVersionCommBoqData(this.props.match.params.id, value);
+        }else{
+          this.setState({incentiveChange : new Map()});
+          this.getCommBoqData(this.props.match.params.id);
         }
-      }
+      });
     }
 
-    dataCommGroup(dataPP, sumPPGroup){
-      let dataGroupSumm = [];
-      for(let i = 0 ; i < Object.keys(sumPPGroup).length; i++){
-        let PPindex = dataPP.filter(PP => PP.pp_group === Object.keys(sumPPGroup)[i]);
-        const dataGroupComm = {
-          "pp_group" : Object.keys(sumPPGroup)[i],
-          "product_type" : PPindex[0].product_type,
-          "phy_group" : PPindex[0].physical_group,
-          "unit" : PPindex[0].unit,
-          "unit_price" : PPindex[0].price,
-          "qty_tech" : Object.values(sumPPGroup)[i],
-          "qty_early_start" : null,
-          "smart_stock" : 0,
-          "qty_ericsson" : 0,
-          "qty_comm_quotation" : Object.values(sumPPGroup)[i],
-          "qty_po" : null,
-          "total_price" : 0,
-          "incentive" : 0,
-          "net_total" : 0,
-          "list_of_id_pp" : PPindex.map(e => e._id),
-          "created_by" : this.state.userId,
-          "updated_by" : this.state.userId,
-          "deleted" : 0
+    getVersionCommBoqData(_id_comm, ver){
+      this.getDataFromAPINODE('/commBoq/'+_id_comm+'/ver/'+ver).then(res => {
+        if(res.data !== undefined){
+          const dataComm = res.data;
+          this.setState({data_comm_boq_items_version : dataComm.data.siteVersion}, () => {
+            this.getDataFormCommBoq(dataComm.data.siteVersion);
+          });
         }
-        dataGroupSumm.push(dataGroupComm);
+      })
+    }
+
+    getDataFormCommBoq(itemsSite){
+      let incentiveAmount = new Map();
+      for(let i = 0; i < itemsSite.length; i++){
+        for(let j = 0; j < itemsSite[i].itemsVersion.length; j++){
+          let incentiveAmountIdx = itemsSite[i].itemsVersion[j].incentive !== undefined ? itemsSite[i].itemsVersion[j].incentive : 0;
+          incentiveAmount.set(itemsSite[i].itemsVersion[j].site_id+' /// '+itemsSite[i].itemsVersion[j].config_id, incentiveAmountIdx);
+        }
       }
-      console.log("sumPackage", dataGroupSumm);
-      return dataGroupSumm;
     }
 
   checkValueReturn(value1, value2){
@@ -915,7 +761,9 @@ class CommercialBoq extends Component {
       console.log("Comm Data", JSON.stringify(this.state.data_tech_boq_selected));
       let postComm = await this.postDatatoAPINODE('/commBoq/createCommercial', {"data" : this.state.data_tech_boq_selected});
       if(postComm.data !== undefined){
-        this.setState({action_status : 'success'});
+        this.setState({action_status : 'success'}, () => {
+          setTimeout(function() { this.setState({redirectSign : postComm.data.cboqInfo._id })}.bind(this), 2000 );
+        });
       }else{
         if(postComm.response !== undefined){
           this.setState({action_status : 'failed', action_message : postComm.response.error });
@@ -924,222 +772,6 @@ class CommercialBoq extends Component {
         }
       }
       this.toggleLoading();
-    }
-
-    saveProjecttoDB = async () =>{
-      this.toggleLoading();
-      const dataComm = this.state.boq_comm_API;
-      const data_Project = {
-        "id_project_doc" : this.state.project_select,
-        "project_name" : this.state.project_name_select
-      }
-      const respondGetTech = await this.getDatafromAPI('/boq_tech_op/'+ dataComm.id_boq_tech_doc+'?embedded={"list_of_id_site" :1, "list_of_id_boq_comm" :1}');
-      console.log("respondGetTech", respondGetTech);
-      const respondUpdateTech = await this.patchDatatoAPI('/boq_tech_op/'+respondGetTech.data._id, data_Project, respondGetTech.data._etag);
-      if(respondUpdateTech !== undefined){
-        if(respondUpdateTech.data !== undefined){
-          const list_of_id_boq_comm = respondGetTech.data.list_of_id_boq_comm;
-          console.log("respondGetTech", list_of_id_boq_comm);
-          if(list_of_id_boq_comm.length > 1){
-            for(let j = 0; j < list_of_id_boq_comm.length; j++){
-              if(list_of_id_boq_comm[j]._id !== dataComm._id){
-                let respondUpdateCommList = await this.patchDatatoAPI('/boq_comm_op/'+list_of_id_boq_comm[j]._id, data_Project, list_of_id_boq_comm[j]._etag);
-              }
-            }
-          }
-          const dataSitesTech = respondGetTech.data.list_of_id_site;
-          // for(let i = 0; i < dataSitesTech.length; i++){
-          //   let respondUpdateTechList = await this.patchDatatoAPI('/boq_tech_sites_op/'+dataSitesTech[i]._id, data_Project, dataSitesTech[i]._etag)
-          // }
-          const respondUpdateComm = await this.patchDatatoAPI('/boq_comm_op/'+dataComm._id, data_Project, dataComm._etag);
-          if(respondUpdateComm.status < 400){
-            this.getDatafromAPI('/boq_comm_audit/'+dataComm._id+'?embedded={"created_by":1, "updated_by" : 1}').then(respondAPIGetComm => {
-              this.setState({boq_comm_API : respondAPIGetComm.data}, () => {
-                this.toggleLoading();
-                if(this.props.match.params.id !== undefined){
-                  setTimeout(function(){ window.location.reload(); }, 2000);
-                }else{
-                  setTimeout(function() { this.setState({redirectSign : 2000})}.bind(this), 2000 );
-                  // this.setState({redirectSign : 2000})
-                }
-
-              });
-            })
-          }
-        }
-      }else{
-        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'}, () => {this.toggleLoading()})
-      }
-    }
-
-    handleChangeOpportunity(e){
-      this.setState({ opportunity_id : e.target.value});
-    }
-
-    overwriteDataItems(){
-      this.toggleLoading();
-      const dataComm = this.state.boq_comm_API;
-      const getVerNumber = parseInt(dataComm.version);
-      if(this.state.rowsComm.length !== 0){
-        const dataXLS = this.state.rowsComm;
-        let dataItems = this.state.commercialData;
-        if(this.state.version_selected !== this.state.version_now){
-          dataItems = this.state.commercialData_now;
-        }
-        // const getverNumber = Math.max.apply(Math, dataItems.map( o => o.version));
-        this.LoopOverwrite(1, dataXLS, dataItems, getVerNumber);
-      }else{
-        this.saveSmartStockorPrice(getVerNumber.toString(), dataComm._id, dataComm._etag);
-      }
-    }
-
-    revisionDataItems = async () => {
-      this.toggleLoading();
-      let dataStoreRev = [];
-      const date = new Date();
-      const DateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-      const dataXLS = this.state.rowsComm;
-      let dataComm = this.state.boq_comm_API;
-      let dataItems = this.state.commercialData;
-      if(this.state.version_selected.toString() !== this.state.version_now.toString()){
-        dataComm = this.state.boq_comm_API_now;
-        dataItems = this.state.commercialData_now;
-      }
-      let commDataRev = Object.assign({}, dataComm);
-      // const getVerNumber = Math.max.apply(Math, dataItems.map( o => o.version));
-      const getVerNumber = parseInt(dataComm.version);
-      for(let i = 0; i < dataItems.length; i++){
-        let dataStoreRevIndex = Object.assign({}, dataItems[i]);
-        dataStoreRevIndex["id_document"] = dataStoreRevIndex._id
-        delete dataStoreRevIndex._id;
-        delete dataStoreRevIndex._etag;
-        delete dataStoreRevIndex._links;
-        delete dataStoreRevIndex.created_on;
-        dataStoreRev.push(dataStoreRevIndex);
-      }
-      commDataRev["id_document"] = commDataRev._id;
-      if(commDataRev["created_by"] !== null && commDataRev["created_by"] !== undefined){
-        if(commDataRev["created_by"]._id !== undefined){
-          commDataRev["created_by"] = this.state.userId;
-        }else{
-          commDataRev["created_by"] = this.state.userId;
-        }
-      }
-      if(commDataRev["updated_by"] !== null && commDataRev["updated_by"] !== undefined){
-        if(commDataRev["updated_by"]._id !== undefined){
-          commDataRev["updated_by"] = this.state.userId;
-        }else{
-          commDataRev["updated_by"] = this.state.userId;
-        }
-      }
-      commDataRev["version_comment"] = this.state.note_version;
-      delete commDataRev._id;
-      delete commDataRev._etag;
-      delete commDataRev._links;
-      delete commDataRev.created_on;
-      console.log("commDataRev", JSON.stringify(dataStoreRev));
-      const respondRevComm = await this.postDatatoAPI('/boq_comm_items_rev', dataStoreRev);
-      const respondRevItem = await this.postDatatoAPI('/boq_comm_rev', commDataRev);
-      const dataUpdateComm = {
-        "version" : (getVerNumber+1).toString(),
-        "version_comment" : null,
-        "rev1" : "PA",
-        "rev1_by" : this.state.userEmail,
-        "rev1_date" : DateNow.toString(),
-        "updated_by" : this.state.userId
-      }
-      const respondUpdateComm = await this.patchDatatoAPI('/boq_comm_op/'+dataComm._id, dataUpdateComm, dataComm._etag);
-      if(this.state.rowsComm.length !== 0){
-        const respondRevLoop = await this.LoopOverwrite(1, dataXLS, dataItems, dataUpdateComm.version);
-        if(respondRevLoop !== undefined){
-          this.getDatafromAPI('/boq_comm_audit/'+this.props.match.params.id+'?embedded={"created_by":1, "updated_by" : 1}').then(resComm => {
-            if(resComm !== undefined){
-              this.setState({boq_comm_API : resComm.data});
-              this.setState({action_status : 'success', action_message : 'Your Commercial BOQ has been save, please Refresh your page'}, () => {this.toggleLoading()});
-            }
-          })
-        }
-      }else{
-        this.saveSmartStockorPrice(dataUpdateComm.version.toString(), dataComm._id, respondUpdateComm.data._etag);
-      }
-    }
-
-    async LoopOverwrite(indexXLS, dataNewXLS, dataOld, verNumber){
-      if(indexXLS >= dataNewXLS.length){
-        const resComm = await this.getDatafromAPI('/boq_comm_audit/'+this.props.match.params.id+'?embedded={"created_by":1, "updated_by" : 1}')
-          if(resComm !== undefined){
-            if(resComm.data !== undefined){
-              let dataCommItems = [];
-              let arrayDataCommItems = resComm.data.list_of_id_item;
-              let getNumberPage = Math.ceil(arrayDataCommItems.length / 20);
-              for(let i = 0 ; i < getNumberPage; i++){
-                let DataPaginationItems = arrayDataCommItems.slice(i * 20, (i+1)*20);
-                let arrayIdItems = '"'+DataPaginationItems.join('", "')+'"';
-                let where_id_Items = '?where={"_id" : {"$in" : ['+arrayIdItems+']}}';
-                let resItems = await this.getDatafromAPI('/boq_comm_items_non_page'+where_id_Items);
-                if(resItems !== undefined){
-                  if(resItems.data !== undefined){
-                    dataCommItems = dataCommItems.concat(resItems.data._items);
-                  }
-                }
-              }
-              if(dataCommItems.length !== 0){
-                this.DataGroupingView(dataCommItems);
-                this.setState({action_status : 'success', action_message : 'Your Commercial BOQ has been updated, please Refresh your page'}, () => {
-                  this.toggleLoading();
-                  setTimeout(function(){ window.location.reload(); }, 3000);
-                })
-                this.setState({commercialData : dataCommItems, boq_comm_API : resComm.data});
-                return resComm.data;
-              }
-            }else{
-              return undefined;
-            }
-          }else{
-            return undefined;
-          }
-      }else{
-        const findData = dataOld.find(d => d.pp_id === dataNewXLS[indexXLS][this.getIndex(dataNewXLS[0],'package_key')]);
-        // console.log("findData", (dataNewXLS[indexXLS][this.getIndex(dataNewXLS[0],'package_key')]).split(" /// ",1));
-        if(findData !== undefined && dataNewXLS.length > 1){
-          let price = this.checkValuetoZero(dataNewXLS[indexXLS][this.getIndex(dataNewXLS[0],'unit_price')]);
-          let qtyCust = this.checkValuetoZero(dataNewXLS[indexXLS][this.getIndex(dataNewXLS[0],'smart_stock')]);
-          let qtyEricsson = this.checkValuetoZero(dataNewXLS[indexXLS][this.getIndex(dataNewXLS[0],'qty_ericsson')]);
-          let currency = this.checkValue(dataNewXLS[indexXLS][this.getIndex(dataNewXLS[0],'currency')]);
-          let incentive = this.checkValuetoZero(dataNewXLS[indexXLS][this.getIndex(dataNewXLS[0],'incentive')]);
-          if(price === undefined || price === null){
-            price = findData.unit_price
-          }
-          if(qtyCust === undefined || qtyCust === null){
-            qtyCust = findData.qty_cust
-          }
-          const updateData = {
-            "unit_price" : price,
-            "smart_stock" : qtyCust,
-            "qty_ericsson" : qtyEricsson,
-            "currency" : currency,
-            "qty_comm_quotation" : (findData.qty_tech - (qtyCust + qtyEricsson)),
-            "total_price" : (findData.qty_tech - (qtyCust + qtyEricsson)) * price,
-            "incentive" : incentive,
-            "net_total" : ((findData.qty_tech - (qtyCust + qtyEricsson)) * price)-incentive,
-            "version" : verNumber.toString()
-          }
-          const respondUpdate = this.patchDatatoAPI('/boq_comm_items_op/'+findData._id, updateData, findData._etag);
-          if(respondUpdate.status >= 400){
-            this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please check your format data and try again'}, () => {this.toggleLoading()})
-          }else{
-            this.LoopOverwrite(indexXLS+1, dataNewXLS, dataOld, verNumber);
-          }
-        }else{
-          if(dataNewXLS[indexXLS].length === 0){
-            this.LoopOverwrite(indexXLS+1, dataNewXLS, dataOld, verNumber);
-          }else{
-            this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please check your format data and try again'}, () => {this.toggleLoading()})
-          }
-
-          // this.LoopOverwrite(indexXLS+1, dataNewXLS, dataOld, verNumber);
-        }
-      }
     }
 
     editQtyCust = (e) => {
@@ -1490,18 +1122,6 @@ class CommercialBoq extends Component {
       })
     }
 
-    handleChangeVersion(e){
-      const value = e.target.value;
-      this.setState({version_selected : value}, () => {
-        if(value == this.state.version_now){
-          this.getDataCommAPI(this.props.match.params.id);
-          this.setState({rowsComm : []});
-        }else{
-          this.getBOQRevAPI(this.props.match.params.id);
-        }
-      });
-    }
-
     getBOQRevAPI(_id_Comm){
       const version = this.state.version_selected;
       let dataComm = this.state.boq_comm_API;
@@ -1849,7 +1469,13 @@ class CommercialBoq extends Component {
                                 <tr style={{fontWeight : '425', fontSize : '15px'}}>
                                   <td>Version</td>
                                   <td>:</td>
-                                  <td colspan="2" style={{paddingLeft:'10px'}}>{this.state.data_comm_boq.version}</td>
+                                  <td colspan="2" style={{paddingLeft:'10px'}}>
+                                    <Input type="select" value={this.state.version_selected === null? this.state.data_comm_boq.version : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "100px", height : "30px"}}>
+                                      {this.state.list_version.map((e,i) =>
+                                        <option value={i}>{i}</option>
+                                      )}
+                                    </Input>
+                                  </td>
                                 </tr>
                                 <tr style={{fontWeight : '425', fontSize : '15px'}}>
                                   <td>Technical Boq Ref</td>
@@ -1865,6 +1491,17 @@ class CommercialBoq extends Component {
                             </table>
                           </Col>
                           <Col sm="6" md="6">
+                            <tbody style={{float : 'right', 'marginRight' : '100px'}}>
+                              <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                                <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>PO INFORMATION</td>
+                              </tr>
+                              <tr>
+                                <td style={{width : '100px'}}>PO Number </td>
+                                <td>: &nbsp;&nbsp;</td>
+                                <td>{this.state.data_comm_boq.po_data.map(po => po.po_number + "  ")}
+                                </td>
+                              </tr>
+                            </tbody>
                           </Col>
                         </Row>
                       </React.Fragment>
@@ -1909,15 +1546,17 @@ class CommercialBoq extends Component {
                           <th>Total Price after Incentive</th>
                         </tr>
                       </thead>
-                      {this.state.data_comm_boq_items.map(site =>
-                        <tbody>
-                          {site.items.map(item =>
+                      <tbody>
+                      {(this.state.version_selected !== null && this.state.data_comm_boq.version !== this.state.version_selected) ?
+                        this.state.data_comm_boq_items_version.map(site =>
+                          site.itemsVersion.map(item =>
                             <tr>
                               <td>{item.site_id}</td>
                               <td>{item.site_name}</td>
                               <td>{item.config_id}</td>
                               <td>{item.qty}</td>
                               <td>{item.price}</td>
+                              <td>{item.total_price}</td>
                               <td style={{width : '150px'}}>
                                 <Input
                                   type="number"
@@ -1928,12 +1567,32 @@ class CommercialBoq extends Component {
                                   value={!this.state.incentiveChange.has(item.site_id+' /// '+item.config_id) ? item.incentive : this.state.incentiveChange.get(item.site_id+' /// '+item.config_id) }
                                 />
                               </td>
-                              <td>{item.total_price}</td>
                               <td style={{width : '250px'}}>{item.net_price_incentive}</td>
                             </tr>
-                          )}
-                        </tbody>
-                      )}
+                          )) : this.state.data_comm_boq_items.map(site =>
+                          site.items.map(item =>
+                            <tr>
+                              <td>{item.site_id}</td>
+                              <td>{item.site_name}</td>
+                              <td>{item.config_id}</td>
+                              <td>{item.qty}</td>
+                              <td>{item.price}</td>
+                              <td>{item.total_price}</td>
+                              <td style={{width : '150px'}}>
+                                <Input
+                                  type="number"
+                                  name={item.site_id+' /// '+item.config_id}
+                                  className="BoQ-style-qty"
+                                  placeholder="incentive"
+                                  onChange={this.handleChangeincentive}
+                                  value={!this.state.incentiveChange.has(item.site_id+' /// '+item.config_id) ? item.incentive : this.state.incentiveChange.get(item.site_id+' /// '+item.config_id) }
+                                />
+                              </td>
+                              <td style={{width : '250px'}}>{item.net_price_incentive}</td>
+                            </tr>
+                          ))
+                        }
+                      </tbody>
                     </Table>
                   )}
                   </div>

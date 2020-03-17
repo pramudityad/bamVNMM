@@ -56,9 +56,7 @@ class ListCommercial extends Component {
     this.deleteBOQCOMM = this.deleteBOQCOMM.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
-    this.handleFilterListName = this.handleFilterListName.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
-    this.onChangeDebouncedName = debounce(this.onChangeDebouncedName, 1000);
   }
 
   async getDataFromAPINODE(url) {
@@ -145,26 +143,6 @@ class ListCommercial extends Component {
     }
   }
 
-  // getListBoQ(){
-  //   const page = this.state.activePage;
-  //   let filter_project = this.state.filter_list[2] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
-  //   let filter_tech = this.state.filter_list[0] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[0]+'", "$options" : "i"}';
-  //   let filter_comm = this.state.filter_list[1] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
-  //   let where = 'where={"deleted" : 0, "no_boq_comm" : '+filter_comm+', "project_name" : '+filter_project+', "no_boq_tech" : '+filter_tech+'}';
-  //   axios.get(API_URL +'/boq_comm_audit?'+where+'&max_results='+this.state.perPage+'&page='+page+'&embedded={"created_by" : 1}', {
-  //       headers : {'Content-Type':'application/json'},
-  //       auth: {
-  //           username: usernamePhilApi,
-  //           password: passwordPhilApi
-  //       },
-  //   })
-  //   .then(res => {
-  //       const items = res.data._items;
-  //       const totalData = res.data._meta;
-  //       this.setState({ BOQ_all : items, totalData : totalData, prevPage : this.state.activePage});
-  //     })
-  // }
-
   getListBoQ(){
     const page = this.state.activePage;
     let filter_no_tech = this.state.filter_list[1] === null ? '"no_boq_tech":{"$exists" : 1}' : '"no_boq_tech":{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
@@ -225,12 +203,11 @@ class ListCommercial extends Component {
   }
 
   getCommBoqList(){
-    // let filter_no_tech = this.state.filter_list[1] === null ? '"no_tech_boq":{"$exists" : 1}' : '"no_tech_boq":{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
-    // let filter_project = this.state.filter_list[2] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
-    // let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
-    // let filter_status = this.state.filter_list[5] === null ? '"approval_status":{"$exists" : 1}' : '"approval_status":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
-    // let where = 'q={'+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+'}';
-    this.getDataFromAPINODE('/commBoq?srt=_id:-1').then(res => {
+    let filter_no_comm = this.state.filter_list[2] === null ? '"no_comm_boq":{"$exists" : 1}' : '"no_comm_boq":{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
+    let filter_project = this.state.filter_list[3] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
+    let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
+    let where = '&q={'+filter_no_comm+', '+filter_project+', '+filter_ver+'}';
+    this.getDataFromAPINODE('/commBoq?srt=_id:-1'+where).then(res => {
       if(res.data !== undefined){
         this.setState({list_comm_boq : res.data.data});
       }
@@ -301,14 +278,7 @@ class ListCommercial extends Component {
       this.setState({action_status : 'failed', action_message : ''})
       this.toggleLoading();
     }
-    console.log("indexCOM", indexCOM);
   }
-
-  // componentDidUpdate(){
-  //   if(this.state.prevPage !== this.state.activePage){
-  //     this.getListBoQ();
-  //   }
-  // }
 
   handleFilterList(e){
     const index = e.target.name;
@@ -324,24 +294,7 @@ class ListCommercial extends Component {
   }
 
   onChangeDebounced(e) {
-    this.getListBoQ();
-  }
-
-  handleFilterListName(e){
-    const index = e.target.name;
-    let value = e.target.value;
-    if(value !== null && value.length === 0){
-      value = null;
-    }
-    let dataFilter = this.state.filter_list;
-    dataFilter[parseInt(index)] = value;
-    this.setState({filter_list : dataFilter}, () => {
-      this.onChangeDebouncedName();
-    });
-  }
-
-  onChangeDebouncedName(e){
-    this.getListUser();
+    this.getCommBoqList();
   }
 
   render() {
@@ -397,49 +350,49 @@ class ListCommercial extends Component {
             </div> */}
             <Table hover bordered striped responsive size="sm">
                 <thead>
-                    <tr>
-                        <th>Commercial BOQ Document</th>
-                        <th>Project</th>
-                        <th>Ver.</th>
-                        <th style={{'width' : '150px', textAlign : 'center'}}>Status</th>
-                        <th style={{'width' : '300px', textAlign : 'center'}}>Action</th>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div className="controls">
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={2} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[2]}/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls">
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={3} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[3]}/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls">
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={6} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[6]}/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                      </td>
-                      <td>
-                      </td>
-                    </tr>
+                  <tr>
+                      <th>Commercial BOQ Document</th>
+                      <th>Project</th>
+                      <th>Ver.</th>
+                      <th style={{'width' : '150px', textAlign : 'center'}}>Status</th>
+                      <th style={{'width' : '300px', textAlign : 'center'}}>Action</th>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div className="controls">
+                        <InputGroup className="input-prepend">
+                          <InputGroupAddon addonType="prepend">
+                            <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                          </InputGroupAddon>
+                          <Input type="text" placeholder="Search" name={2} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[2]}/>
+                        </InputGroup>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="controls">
+                        <InputGroup className="input-prepend">
+                          <InputGroupAddon addonType="prepend">
+                            <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                          </InputGroupAddon>
+                          <Input type="text" placeholder="Search" name={3} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[3]}/>
+                        </InputGroup>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="controls">
+                        <InputGroup className="input-prepend">
+                          <InputGroupAddon addonType="prepend">
+                            <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                          </InputGroupAddon>
+                          <Input type="text" placeholder="Search" name={4} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[6]}/>
+                        </InputGroup>
+                      </div>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
                 </thead>
                 <tbody>
                     {this.state.list_comm_boq.map((boq, i) =>
@@ -462,11 +415,11 @@ class ListCommercial extends Component {
                                   <i className="fa fa-pencil" aria-hidden="true"></i>&nbsp; Edit
                                 </Button>
                               </Link>
-                              <Link to={'/approval-commercial/'+boq._id}>
+                              {/* }<Link to={'/approval-commercial/'+boq._id}>
                                 <Button size="sm" color="warning" style={{marginRight : '10px'}}>
                                   <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; Approval
                                 </Button>
-                              </Link>
+                              </Link> */}
                               <Link to={'/po-assign-commercial/'+boq._id}>
                                 <Button size="sm" color="secondary" style={{marginRight : '10px'}}>
                                   <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; PO Assign

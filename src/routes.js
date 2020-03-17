@@ -88,9 +88,8 @@ const DetailOrdering = React.lazy(() => import('./views/Ordering/OrderingMateria
 const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUpload'));
 const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabase'));
 
-const ListCPOTechnical = React.lazy(() => import('./views/TechnicalCPO/ListTechnicalCPO'));
-const DetailCPOTechnical = React.lazy(() => import('./views/TechnicalCPO/DetailTechnicalCPO'));
-const NewCPOTechnical = React.lazy(() => import('./views/TechnicalCPO/ListTechnicalCPO'));
+const ListCPOBoq = React.lazy(() => import('./views/TechnicalCPO/ListCPOBoq'));
+const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -194,9 +193,9 @@ const routes = [
 
   { path: '/cpo-database', exact: true, name: 'CPO Database', component: CPODatabase },
 
-  { path: '/list-technical-cpo', exact: true, name: 'List CPO', component: ListCPOTechnical },
-  { path: '/detail-technical-cpo/:id', exact: true, name: 'Detail CPO', component: DetailCPOTechnical },
-  { path: '/new-technical-cpo', exact: true, name: 'New CPO', component: NewCPOTechnical },
+  { path: '/list-cpo-boq', exact: true, name: 'List CPO BOQ', component: ListCPOBoq },
+  { path: '/detail-cpo-boq/:id', exact: true, name: 'CPO BOQ Detail', component: DetailCPOBoq },
+  { path: '/cpo-boq-creation', exact: true, name: 'CPO BOQ Creation', component: DetailCPOBoq },
 ];
 
 export default routes;

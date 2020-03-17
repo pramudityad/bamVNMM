@@ -20,8 +20,8 @@ export default {
           icon: 'icon-docs',
         },
         {
-          name: 'Technical CPO',
-          url: '/list-technical-cpo',
+          name: 'CPO BOQ',
+          url: '/list-cpo-boq',
           icon: 'icon-docs',
         },
         {

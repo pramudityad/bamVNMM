@@ -1,7 +1,7 @@
 import React, { Component, Fragment } from 'react';
 import { Card, CardHeader, CardBody, CardFooter, Table, Row, Col, Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Collapse, Input} from 'reactstrap';
 import axios from 'axios';
-import './TechnicalCPO.css';
+import './CPOBoq.css';
 import { saveAs } from 'file-saver';
 import Pagination from "react-js-pagination";
 import {connect} from 'react-redux';
@@ -24,9 +24,13 @@ const API_URL_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const usernameTsel = 'adminbamidsuper';
 const passwordTsel = 'F760qbAg2sml';
 
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
+
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class TechnicalCPO extends Component {
+class DetailCPOBoq extends Component {
   constructor(props) {
     super(props);
 
@@ -37,12 +41,16 @@ class TechnicalCPO extends Component {
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
       tokenUser : this.props.dataLogin.token,
-      rowsTech: [],
+      rowsCPO: [],
+      list_po_data : [],
+      list_po_data_selection : [],
+      data_po_data_selected : null,
+
       result_check_tech: null,
-      data_tech_boq : null,
-      data_tech_boq_sites : [],
-      data_tech_boq_sites_version : [],
-      data_tech_boq_sites_pagination : [],
+      data_cpo_boq : [],
+      data_cpo_boq_sites : [],
+      data_cpo_boq_sites_version : [],
+      data_cpo_boq_sites_pagination : [],
       view_tech_header_table : {"config_id" : [], "type" : []},
       list_version : [],
       pp_all : [],
@@ -54,7 +62,7 @@ class TechnicalCPO extends Component {
       action_status : null,
       action_message : "",
       checkedItems: new Map(),
-      rowsTech: [],
+      rowsCPO: [],
       Package_Header : [],
       data_item : [],
       data_item_pagination : [],
@@ -109,10 +117,11 @@ class TechnicalCPO extends Component {
     this.saveOpportunityNote = this.saveOpportunityNote.bind(this);
     this.handleChangeVerComment = this.handleChangeVerComment.bind(this);
     this.saveProjecttoDB = this.saveProjecttoDB.bind(this);
-    this.exportFormatTechnical = this.exportFormatTechnical.bind(this);
-    this.exportFormatTechnicalHorizontal = this.exportFormatTechnicalHorizontal.bind(this);
-    this.exportFormatTechnicalVertical = this.exportFormatTechnicalVertical.bind(this);
+    this.exportFormatCPO = this.exportFormatCPO.bind(this);
     this.approvalTechnical = this.approvalTechnical.bind(this);
+    this.filterPOData = this.filterPOData.bind(this);
+    this.handleInputChange = this.handleInputChange.bind(this);
+    this.saveCPOBOQ = this.saveCPOBOQ.bind(this);
     }
 
     numberToAlphabet(number){
@@ -209,6 +218,26 @@ class TechnicalCPO extends Component {
       let respond = err;
       this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
       console.log("respond Post Data", err);
+      return respond;
+    }
+  }
+
+  async getDataFromAPIEXEL(url) {
+    try {
+      let respond = await axios.get(API_URL_XL+url, {
+        headers: {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        }
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
       return respond;
     }
   }
@@ -344,10 +373,10 @@ class TechnicalCPO extends Component {
       if(res.data !== undefined){
         const dataTech = res.data;
         console.log("res.data", res.data.data);
-        this.setState({data_tech_boq : dataTech.data});
+        this.setState({data_cpo_boq : dataTech.data});
         if(res.data.data !== undefined){
           console.log("res.data sites", dataTech.data.techBoqSite);
-          this.setState({data_tech_boq_sites : dataTech.data.techBoqSite, list_version : new Array(parseInt(dataTech.data.version)+1).fill("0")}, () => {
+          this.setState({data_cpo_boq_sites : dataTech.data.techBoqSite, list_version : new Array(parseInt(dataTech.data.version)+1).fill("0")}, () => {
             console.log("res.data version", this.state.list_version);
             this.viewTechBoqData(dataTech.data.techBoqSite);
           });
@@ -383,7 +412,7 @@ class TechnicalCPO extends Component {
       "sites_data" : dataChecked.tech_data,
       "configList" : dataChecked.configList
     }
-    let patchTech = await this.patchDatatoAPINODE('/techBoq/updateTechBoqData/'+this.state.data_tech_boq._id, dataPatch);
+    let patchTech = await this.patchDatatoAPINODE('/techBoq/updateTechBoqData/'+this.state.data_cpo_boq._id, dataPatch);
     if(patchTech.data !== undefined){
       this.setState({action_status : 'success'});
     }else{
@@ -395,7 +424,7 @@ class TechnicalCPO extends Component {
   handleChangeVersion(e){
     const value = e.target.value;
     this.setState({version_selected : value}, () => {
-      if(value !== this.state.data_tech_boq.version){
+      if(value !== this.state.data_cpo_boq.version){
         this.getVersionTechBoqData(this.props.match.params.id, value);
       }else{
         this.getTechBoqData(this.props.match.params.id);
@@ -409,7 +438,7 @@ class TechnicalCPO extends Component {
       if(res.data !== undefined){
         const dataTech = res.data;
         if(res.data.data !== undefined){
-          this.setState({data_tech_boq_sites_version : dataTech.data.techBoqSiteVersion}, () => {
+          this.setState({data_cpo_boq_sites_version : dataTech.data.techBoqSiteVersion}, () => {
             this.viewTechBoqDataVersion(dataTech.data.techBoqSiteVersion);
           });
         }
@@ -425,12 +454,108 @@ class TechnicalCPO extends Component {
     }
   }
 
-  getProjectAll(){
-    this.getDataFromAPITSEL('/project_sorted_non_page').then( resp => {
-      if(resp !== undefined){
-        this.setState({project_all : resp.data._items});
+  async getPODataList(){
+    let getPOList = await this.getDataFromAPIEXEL('/po_non_page');
+    if(getPOList.data !== undefined){
+      this.setState({list_po_data : getPOList.data._items });
+      this.filterPOData("");
+    }
+  }
+
+  filterPOData = (inputValue) => {
+    const list = [];
+    console.log("list_po_data 2", this.state.list_po_data);
+    this.state.list_po_data.map(i =>
+        list.push({'label' : i.po_number, 'value' : i._id})
+    )
+    this.setState({list_po_data_selection : list})
+    if(inputValue.length === 0){
+      return list;
+    }else{
+      return this.state.list_po_data_selection.filter(i =>
+        i.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    }
+  }
+
+  loadOptions = (inputValue, callback) => {
+    setTimeout(() => {
+      callback(this.filterTechBoq(inputValue));
+    }, 500);
+  };
+
+  handleInputChange = (newValue) => {
+    // const inputValue = newValue.replace(/\W/g, '');
+    // this.setState({inputValue});
+    this.setState({data_po_data_selected : {"_id" : newValue.value, "po_number" : newValue.label} });
+    return newValue;
+  };
+
+  async saveCPOBOQ(){
+    const dataXLS = this.state.rowsCPO;
+    let cpoData = [];
+    for(let j = 1; j < dataXLS.length; j++){
+      let xlsRow = dataXLS[j];
+      let cpoIdx = {
+        "prodef": xlsRow[this.getIndex(dataXLS[0], 'prodef')],
+        "wbs": xlsRow[this.getIndex(dataXLS[0], 'wbs')],
+        "project_code": xlsRow[this.getIndex(dataXLS[0], 'project_code')],
+        "program": xlsRow[this.getIndex(dataXLS[0], 'program')],
+        "program_type": xlsRow[this.getIndex(dataXLS[0], 'program_type')],
+        "tower_id_plan": xlsRow[this.getIndex(dataXLS[0], 'tower_id_plan')],
+        "working_on": xlsRow[this.getIndex(dataXLS[0], 'working_on')],
+        "main_sow": xlsRow[this.getIndex(dataXLS[0], 'main_sow')],
+        "combined_scope": xlsRow[this.getIndex(dataXLS[0], 'combined_scope')],
+        "tower_count": xlsRow[this.getIndex(dataXLS[0], 'tower_count')],
+        "region": xlsRow[this.getIndex(dataXLS[0], 'region')],
+        "fas_id": xlsRow[this.getIndex(dataXLS[0], 'fas_id')],
+        "part": xlsRow[this.getIndex(dataXLS[0], 'part')],
+        "config": xlsRow[this.getIndex(dataXLS[0], 'config')],
+        "sap": xlsRow[this.getIndex(dataXLS[0], 'sap')],
+        "sap_description": xlsRow[this.getIndex(dataXLS[0], 'sap_description')],
+        "qty": xlsRow[this.getIndex(dataXLS[0], 'qty')],
+        "boq_part": xlsRow[this.getIndex(dataXLS[0], 'boq_part')],
+        "category": xlsRow[this.getIndex(dataXLS[0], 'category')],
+        "source": xlsRow[this.getIndex(dataXLS[0], 'source')],
+        "coupa_catalogue_item": xlsRow[j][this.getIndex(dataXLS[0], 'coupa_catalogue_item')],
+        "coupa_unit_price": xlsRow[this.getIndex(dataXLS[0], 'coupa_unit_price')],
+        "coupa_total_price": xlsRow[this.getIndex(dataXLS[0], 'coupa_total_price')],
+        "currency": xlsRow[this.getIndex(dataXLS[0], 'currency')],
+        "coupa_requisition_title": xlsRow[this.getIndex(dataXLS[0], 'coupa_requisition_title')],
+        "coupa_network_id": xlsRow[this.getIndex(dataXLS[0], 'coupa_network_id')],
+        "pr_number": xlsRow[this.getIndex(dataXLS[0], 'pr_number')]
       }
-    })
+      if(cpoIdx.coupa_unit_price !== undefined && cpoIdx.coupa_unit_price !== null ){
+        cpoIdx["coupa_unit_price"] = parseFloat(cpoIdx.coupa_unit_price);
+      }
+      if(cpoIdx.coupa_total_price !== undefined && cpoIdx.coupa_total_price !== null ){
+        cpoIdx["coupa_total_price"] = parseFloat(cpoIdx.coupa_total_price);
+      }
+      if(cpoIdx.qty !== undefined && cpoIdx.qty !== null ){
+        cpoIdx["qty"] = parseFloat(cpoIdx.qty);
+      }
+      if(cpoIdx.tower_count !== undefined && cpoIdx.tower_count !== null ){
+        cpoIdx["tower_count"] = parseFloat(cpoIdx.tower_count);
+      }
+      if(cpoIdx.sap !== undefined && cpoIdx.sap !== null ){
+        cpoIdx["sap"] = cpoIdx.sap.toString();
+      }
+      cpoData.push(cpoIdx);
+    }
+    let dataCPO = {
+      "poInfo": {
+          "id_po_doc": this.state.data_po_data_selected._id,
+          "po_number": this.state.data_po_data_selected.po_number,
+      },
+      "cpoBoqData" : cpoData
+    }
+    console.log("cpoData", dataCPO);
+    let postData = await this.postDatatoAPINODE('/cpo/createCpo', dataCPO);
+    if(postData.data !== undefined){
+      this.setState({action_status : 'success'});
+    }else{
+      this.setState({action_status : 'failed'});
+    }
   }
 
   selectProject(e){
@@ -445,7 +570,7 @@ class TechnicalCPO extends Component {
     if(currValue !== undefined){
       currValue = parseInt(currValue);
     }
-    let patchData = await this.patchDatatoAPINODE('/techBoq/approval/'+this.state.data_tech_boq._id, {"operation":currValue})
+    let patchData = await this.patchDatatoAPINODE('/techBoq/approval/'+this.state.data_cpo_boq._id, {"operation":currValue})
     if(patchData.data !== undefined){
       this.setState({action_status : 'success'});
     }else{
@@ -597,10 +722,19 @@ class TechnicalCPO extends Component {
   componentDidMount(){
     // this.getAllSites();
     if(this.props.match.params.id === undefined){
-      this.getProjectAll();
+      this.getPODataList();
     }else{
-      this.getTechBoqData(this.props.match.params.id);
+      this.getCPOBoqData(this.props.match.params.id);
     }
+  }
+
+  getCPOBoqData(_id_cpo){
+    this.getDataFromAPINODE('/cpo/'+_id_cpo).then(res => {
+      if(res.data !== undefined){
+        const dataCPO = res.data;
+        this.setState({data_cpo_boq : dataCPO.data});
+      }
+    })
   }
 
 
@@ -632,13 +766,13 @@ class TechnicalCPO extends Component {
       newDataXLS.push(col);
     }
     this.setState({
-      rowsTech: newDataXLS
+      rowsCPO: newDataXLS
     });
     this.checkingFormatTech(newDataXLS);
   }
 
-  async checkingFormatTech(rowsTech){
-    let postCheck = await this.postDatatoAPINODE('/techBoq/checkTechBoqData', {"techBoqData" : rowsTech});
+  async checkingFormatTech(rowsCPO){
+    let postCheck = await this.postDatatoAPINODE('/techBoq/checkTechBoqData', {"techBoqData" : rowsCPO});
     console.log("postCheck", JSON.stringify(postCheck));
     if(postCheck.data !== undefined){
       const dataCheck = postCheck.data;
@@ -1482,141 +1616,6 @@ class TechnicalCPO extends Component {
     return s || undefined;
   }
 
-  exportTechnical = async () => {
-    const wb = new Excel.Workbook()
-    const ws = wb.addWorksheet()
-
-    const dataTech = this.state.data_tech_boq;
-    const dataSites = this.state.data_tech_boq_sites;
-    const dataHeader = this.state.view_tech_header_table;
-    const DatePrint = new Date();
-    const DatePrintOnly = DatePrint.getFullYear()+'-'+(DatePrint.getMonth()+1).toString().padStart(2, '0')+'-'+DatePrint.getDay().toString().padStart(2, '0');
-
-    const prepared = ws.mergeCells('A4:E4');
-    ws.getCell('A4').value = 'prepared';
-    ws.getCell('A4').alignment  = { vertical: 'top', horizontal: 'left' };
-    ws.getCell('A4').font  = { size: 8 };
-    ws.getCell('A4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
-
-    const preparedEmail = ws.mergeCells('A5:E5');
-    ws.getCell('A5').value = this.state.userEmail;
-    ws.getCell('A5').alignment  = {horizontal: 'left' };
-    ws.getCell('A5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-
-    const DocumentNo = ws.mergeCells('F4:I4');
-    ws.getCell('F4').value = 'Document No.';
-    ws.getCell('F4').font  = { size: 8 };
-    ws.getCell('F4').alignment  = {vertical: 'top', horizontal: 'left' };
-    ws.getCell('F4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
-
-    const DocumentNum = ws.mergeCells('F5:I5');
-    ws.getCell('F5').value = dataTech.no_tech_boq;
-    ws.getCell('F5').alignment  = {horizontal: 'left' };
-    ws.getCell('F5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-
-    const Approved = ws.mergeCells('A6:C7');
-    ws.getCell('A6').value = 'Approved';
-    ws.getCell('A6').font  = { size: 8 };
-    ws.getCell('A6').alignment  = {vertical: 'top', horizontal: 'left' };
-    ws.getCell('A6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}};
-
-    const Checked = ws.mergeCells('D6:E7');
-    ws.getCell('D6').value = 'Checked';
-    ws.getCell('D6').font  = { size: 8 };
-    ws.getCell('D6').alignment  = {vertical: 'top', horizontal: 'left' };
-    ws.getCell('D6').border = {top: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-
-    const dateDoc = ws.mergeCells('F6:G6');
-    ws.getCell('F6').value = 'Date';
-    ws.getCell('F6').font  = { size: 8 };
-    ws.getCell('F6').alignment  = {vertical: 'top', horizontal: 'left' };
-    ws.getCell('F6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
-
-    const dateDocument = ws.mergeCells('F7:G7');
-    ws.getCell('F7').value = DatePrintOnly;
-    ws.getCell('F7').alignment  = {vertical: 'top', horizontal: 'left' };
-    ws.getCell('F7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-
-    const revDoc = ws.mergeCells('H6:I6');
-    ws.getCell('H6').value = 'Rev';
-    ws.getCell('H6').font  = { size: 8 };
-    ws.getCell('H6').alignment  = {vertical: 'top', horizontal: 'left' };
-    ws.getCell('H6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-
-    const revStatus = dataTech.rev !== 'A' ? "PA" : "A";
-
-    const revDocNum = ws.mergeCells('H7:I7');
-    ws.getCell('H7').value = dataTech.version;
-    ws.getCell('H7').alignment  = {horizontal: 'left' };
-    ws.getCell('H7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-
-    ws.mergeCells('A9:I9');
-    ws.getCell('A9').value = 'TECHNICAL BOQ';
-    ws.getCell('A9').font  = { size: 14, bold : true };
-    ws.getCell('A9').alignment  = {vertical: 'middle', horizontal: 'center' };
-    ws.getCell('A9').border = {bottom: {style:'double'} };
-
-    ws.addRow(["Project",": "+dataTech.project_name,"","","","", "", "",""]);
-    ws.addRow(["Created On",": "+dataTech.created_on,"","","","", "Updated On", dataTech.updated_on,""]);
-    ws.mergeCells('B10:C10');
-    ws.mergeCells('B11:C11');
-    ws.mergeCells('B12:C12');
-    ws.mergeCells('H10:I10');
-    ws.mergeCells('H11:I11');
-    ws.mergeCells('H12:I12');
-
-
-    if(this.checkValuetoString(dataTech.note_1).length !== 0 || this.checkValuetoString(dataTech.note_2).length !== 0){
-      let getlastnullrow = ws.lastRow._number+1;
-      ws.mergeCells('B'+(getlastnullrow)+':C'+(getlastnullrow));
-      ws.getCell('A'+(getlastnullrow)).value = dataTech.note_name_1;
-      ws.getCell('B'+(getlastnullrow)).value = dataTech.note_1;
-      ws.mergeCells('H'+(getlastnullrow)+':I'+(getlastnullrow));
-      ws.getCell('G'+(getlastnullrow)).value = dataTech.note_name_2;
-      ws.getCell('H'+(getlastnullrow)).value = dataTech.note_2;
-    }
-    if(this.checkValuetoString(dataTech.note_3).length !== 0 || this.checkValuetoString(dataTech.note_4).length !== 0){
-      let getlastnullrow = ws.lastRow._number+1;
-      ws.mergeCells('B'+(getlastnullrow)+':C'+(getlastnullrow));
-      ws.getCell('A'+(getlastnullrow)).value = dataTech.note_name_3;
-      ws.getCell('B'+(getlastnullrow)).value = dataTech.note_3;
-      ws.mergeCells('H'+(getlastnullrow)+':I'+(getlastnullrow));
-      ws.getCell('G'+(getlastnullrow)).value = dataTech.note_name_4;
-      ws.getCell('H'+(getlastnullrow)).value = dataTech.note_4;
-    }
-
-    ws.addRow([""]);
-
-    const rowHeader1 = ["",""].concat(dataHeader.config_id.map(e => "CONFIG"));
-    const rowHeader2 = ["Tower ID","Tower Name"].concat(dataHeader.config_id.map(e => e));
-    let getlastrowHeaderSum = ws.lastRow._number;
-    ws.addRow(rowHeader1);
-    let getlastrowHeader1 = ws.lastRow._number;
-    for(let i = 3; i < rowHeader1.length+1; i++){
-      ws.getCell(this.numToSSColumn(i)+getlastrowHeader1.toString()).fill = {
-        type : 'pattern',
-        pattern : 'solid',
-        fgColor : {argb:'7F81C784'}
-      }
-    }
-    ws.addRow(rowHeader2);
-    let getlastrowHeader2 = ws.lastRow._number;
-    for(let i = 1; i < rowHeader2.length+1; i++){
-      ws.getCell(this.numToSSColumn(i)+getlastrowHeader2.toString()).fill = {
-        type : 'pattern',
-        pattern : 'solid',
-        fgColor : {argb:'FF0ACD7D'}
-      }
-    }
-
-    for(let i = 0; i < dataSites.length ; i++){
-      ws.addRow([ dataSites[i].site_id, dataSites[i].site_name].concat(dataSites[i].siteItemConfig.map(e => e.qty)));
-    }
-
-    const techFormat = await wb.xlsx.writeBuffer()
-    saveAs(new Blob([techFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Report.xlsx')
-  }
-
   toggleLoading(){
     this.setState(prevState => ({
       modal_loading: !prevState.modal_loading
@@ -1838,140 +1837,19 @@ class TechnicalCPO extends Component {
     }
   }
 
-  exportFormatTechnical = async () =>{
+  exportFormatCPO = async () =>{
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataTech = this.state.data_tech_boq;
-    let dataSites = [];
-    if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-      dataSites = this.state.data_tech_boq_sites_version;
-    }else{
-      dataSites = this.state.data_tech_boq_sites;
-    }
-    const dataHeader = this.state.view_tech_header_table;
+    const ppIdRow = ["prodef","wbs","project_code","program","program_type","tower_id_plan","working_on","main_sow","combined_scope","tower_count","region","fas_id","part","config","sap","sap_description","qty","boq_part","category","source","coupa_catalogue_item","coupa_unit_price","coupa_total_price", "currency", "coupa_requisition_title", "coupa_network_id", "pr_number"];
 
-    let ppIdRow = ["site_title", "tower_id", "tower_name"];
-    let ppTypeRow = ["", "", ""];
-
-    const header_note = await this.headerTechBoqDataNote(dataSites);
-    // ppTypeRow = ppTypeRow.concat(dataHeader.type);
-
-    // ppIdRow = ppIdRow.concat(header_note);
-    // ppTypeRow = ppTypeRow.concat(header_note.map(e => "NOTE"));
-
-    ppIdRow = ppIdRow.concat(dataHeader.config_id);
-    ppTypeRow = ppTypeRow.concat(dataHeader.type);
-
-    ws.addRow(ppTypeRow);
     ws.addRow(ppIdRow);
-    for(let i = 0; i < dataSites.length ; i++){
-      let qtyConfig = []
-      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-        // header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
-        qtyConfig = dataSites[i].siteItemConfigVersion.map(e => e.qty);
-      }else{
-        // header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
-        qtyConfig = dataSites[i].siteItemConfig.map(e => e.qty);
-      }
-      ws.addRow([null, dataSites[i].site_id, dataSites[i].site_name].concat(qtyConfig));
-    }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Uploader Template.xlsx');
-  }
-
-  exportFormatTechnicalHorizontal = async () =>{
-    const wb = new Excel.Workbook();
-    const ws = wb.addWorksheet();
-
-    const dataTech = this.state.data_tech_boq;
-    let dataSites = [];
-    if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-      dataSites = this.state.data_tech_boq_sites_version;
-    }else{
-      dataSites = this.state.data_tech_boq_sites;
-    }
-    const dataHeader = this.state.view_tech_header_table;
-
-    let ppIdRow = ["site_title", "tower_id", "tower_name"];
-    let ppTypeRow = ["", "", ""];
-
-    let ppIdRowheader = [];
-
-    const header_note = await this.headerTechBoqDataNote(dataSites);
-    // ppTypeRow = ppTypeRow.concat(dataHeader.type);
-
-    ppIdRow = ppIdRow.concat(header_note)
-    // ppTypeRow = ppTypeRow.concat(header_note.map(e => "NOTE"));
-
-    dataHeader.config_id.map((e,idx) => ppIdRowheader = ppIdRowheader.concat(["BOQ "+(idx+1), "QTY "+(idx+1)]));
-
-    ppIdRow = ppIdRow.concat(ppIdRowheader);
-    // ws.addRow(ppTypeRow);
-    ws.addRow(ppIdRow);
-    for(let i = 0; i < dataSites.length ; i++){
-      let qtyConfig = []
-      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-        header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
-        dataSites[i].siteItemConfigVersion.map(e => qtyConfig = qtyConfig.concat([e.config_id, e.qty]));
-      }else{
-        header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
-        dataSites[i].siteItemConfig.map(e => e.qty !== 0 ? qtyConfig = qtyConfig.concat([e.config_id, e.qty]) : "");
-      }
-      ws.addRow([dataSites[i].site_id, dataSites[i].site_name].concat(qtyConfig));
-    }
-
-    const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Horizontal.xlsx');
-  }
-
-  exportFormatTechnicalVertical = async () =>{
-    const wb = new Excel.Workbook();
-    const ws = wb.addWorksheet();
-
-    const dataTech = this.state.data_tech_boq;
-    let dataSites = [];
-    if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-      dataSites = this.state.data_tech_boq_sites_version;
-    }else{
-      dataSites = this.state.data_tech_boq_sites;
-    }
-    const dataHeader = this.state.view_tech_header_table;
-
-    let ppIdRow = ["tower_id", "tower_name"];
-    let ppTypeRow = ["", ""];
-
-    let ppIdRowheader = [];
-
-    dataHeader.config_id.map((e,idx) => ppIdRowheader = ppIdRowheader.concat(["BOQ "+(idx+1), "QTY "+(idx+1)]));
-
-    ppIdRow = ppIdRow.concat(ppIdRowheader);
-    // ppTypeRow = ppTypeRow.concat(dataHeader.type);
-
-    ws.addRow(ppTypeRow);
-    ws.addRow(ppIdRow);
-    for(let i = 0; i < dataSites.length ; i++){
-      let qtyConfig = []
-      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-        for(let j = 0; j < dataSites[i].siteItemConfigVersion.length; j++ ){
-          ws.addRow([null, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfigVersion[j].config_id, dataSites[i].siteItemConfigVersion[j].qty]);
-        }
-      }else{
-        for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
-          ws.addRow([null, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].qty]);
-        }
-      }
-    }
-
-    const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Vertical.xlsx');
+    saveAs(new Blob([MRFormat]), 'CPO BOQ Uploader Template.xlsx');
   }
 
     render() {
-      if(this.state.redirectSign !== false){
-        return (<Redirect to={'/detail-technical/'+this.state.redirectSign} />);
-      }
 
       function AlertProcess(props){
         const alert = props.alertAct;
@@ -1999,102 +1877,6 @@ class TechnicalCPO extends Component {
         }
       }
 
-    function PrintTechnical(props){
-        const api_data = props.dataApi;
-        const header_package = props.dataHeader;
-        const dataTech = props.Tech_info;
-        const name_project = props.Tech_info.project_name;
-        let arrayData = [];
-        let row1 = [];
-        if(api_data.length !== 0 && header_package.length !== 0 && header_package.type !== undefined){
-          row1 = ["", "",""].concat(header_package.type);
-          const dataHeaderFormat = header_package.IDPP.map( (e,i) => e+" /// "+header_package.name[i])
-          arrayData.push(["project", "site_id","site_name"].concat(dataHeaderFormat));
-          for(let i = 0; i < api_data.length ; i++){
-            arrayData.push(["", api_data[i].site_id, api_data[i].site_name].concat(api_data[i].list_qty_items));
-          }
-        }
-        const multiDataSet = [
-          {
-            columns: row1,
-            data: arrayData
-          }
-        ];
-        const filename = "Technical BOQ "+dataTech.no_boq_tech+"-"+props.versionAlpha+" Format";
-        return null;
-      }
-
-      function TableView(props){
-        const api_data = props.dataApi;
-        const xls_data = props.dataXLS;
-        const header_package = props.dataHeader;
-        const name_project = props.project_name;
-        const summaryQTY = props.summaryQTY;
-        if(api_data.length !== 0){
-          return (
-            <Table hover bordered striped responsive size="sm">
-              <thead>
-                <tr style={{backgroundColor : "#c6f569", fontWeight : "500"}}>
-                    <td rowSpan="3" style={{minWidth : '150px'}}>Project</td>
-                    <td rowSpan="3">Site ID</td>
-                    <td rowSpan="3">Site Name</td>
-                    {header_package.type.map( type =>
-                      <td>{type}</td>
-                    )}
-                </tr>
-                <tr style={{backgroundColor: '#f8f6df'}}>
-                  {header_package.name.map(name =>
-                      <td>{name}</td>
-                    )}
-                </tr>
-              </thead>
-              <tbody>
-                {api_data.map((data,index) =>
-                  <tr>
-                    <td>{name_project}</td>
-                    <td>{data.site_id}</td>
-                    <td>{data.site_name}</td>
-                    {data.list_qty_items.map(qty =>
-                      <td>{qty.toLocaleString()}</td>
-                    )}
-                  </tr>
-                )}
-
-              </tbody>
-            </Table>
-          )
-        }else{
-          if(xls_data.length !== 0){
-            return (<React.Fragment>
-              <div style={{marginLeft : '5px', fontSize : '10px', color : 'red'}}><span>Project will not be saved from uploader</span></div>
-            <Table hover bordered responsive size="sm">
-              <tbody>
-              {xls_data.map(Tech =>
-                <tr>
-                  {Tech.map(qty =>
-                    <td style={{verticalAlign : 'middle'}}>{qty}</td>
-                  )}
-                </tr>
-              )}
-              </tbody>
-            </Table>
-            </React.Fragment>)
-          }else{
-            if(props.paramsID !== undefined){
-              return <tbody>
-              <tr colSpan="7" style={{textAlign : 'center'}}>
-                Please Wait, Loading Data...</tr>
-              </tbody>
-            }else{
-              return <tbody>
-              <tr colSpan="7">Please Upload Technical BOQ</tr>
-            </tbody>
-            }
-
-          }
-        }
-      }
-
       return (
         <div>
           <AlertProcess alertAct={this.state.action_status} messageAct={this.state.action_message}/>
@@ -2104,11 +1886,7 @@ class TechnicalCPO extends Component {
                 <CardHeader>
                   {this.state.data_item.length === 0 && this.state.API_Tech.no_boq_tech === undefined && this.props.match.params.id == undefined ? (
                     <React.Fragment>
-                      <span>Detail Technical BOQ</span>
-                    </React.Fragment>
-                  ) : (
-                    <React.Fragment>
-                      <span style={{marginTop:'8px', position:'absolute'}}>Detail Technical BOQ</span>
+                      <span style={{marginTop:'8px', position:'absolute'}}>CPO BOQ Creation</span>
                       <div className="card-header-actions" style={{display:'inline-flex'}}>
                       <Col>
                         <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}}>
@@ -2116,23 +1894,16 @@ class TechnicalCPO extends Component {
                             <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download Technical File
                           </DropdownToggle>
                           <DropdownMenu>
-                            <DropdownItem header> Technical File</DropdownItem>
-                            <DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Report</DropdownItem>
-                            <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Horizontal</DropdownItem>
-                            <DropdownItem onClick={this.exportFormatTechnicalVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Vertical</DropdownItem>
-
-                            <DropdownItem onClick={this.exportFormatTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Format</DropdownItem>
+                            <DropdownItem header> CPO File</DropdownItem>
+                            <DropdownItem onClick={this.exportFormatCPO}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Format</DropdownItem>
                           </DropdownMenu>
                         </Dropdown>
                       </Col>
-                        <div>
-                          <Button block color="primary" onClick={this.toggleUpload} id="toggleCollapse1">
-                              <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Update
-                          </Button>
-                        </div>
-
                       </div>
-
+                    </React.Fragment>
+                  ) : (
+                    <React.Fragment>
+                      <span>Detail CPO BOQ</span>
                     </React.Fragment>
                   )}
                 </CardHeader>
@@ -2140,178 +1911,56 @@ class TechnicalCPO extends Component {
                   <React.Fragment>
                   <div>
 
-                    {this.state.data_item.length === 0 && this.state.API_Tech.no_boq_tech === undefined && this.props.match.params.id == undefined ? (
+                    {this.props.match.params.id == undefined ? (
                       <React.Fragment>
                       <Row></Row>
                         <input type="file" onChange={this.fileHandlerTechnical.bind(this)} style={{"padding":"10px 10px 5px 10px","visiblity":"hidden"}} />
-                        <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveTechBoq} disabled={this.state.action_status === 'failed' || this.state.result_check_tech === 0 }>
-                          {this.state.rowsTech.length == 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
+                        <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveCPOBOQ} disabled={this.state.action_status === 'failed' || this.state.result_check_tech === 0 }>
+                          {this.state.rowsCPO.length == 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
                         </Button>
-                        <div style={{marginLeft : '10px', fontSize : '10px', color : 'red'}}><span>Please download Technical format uploader in Material Menu or <Link to='/Material'>Click Here</Link></span></div>
                         <Row>
-                        <Col md="4">
-                          <div>
-                            <Input name="project" type="select" onChange={this.selectProject} value={this.state.project_select}>
-                                <option value=""></option>
-                                {this.state.project_all.map( project =>
-                                  <option value={project._id}>{project.Project}</option>
-                                )}
-                            </Input>
-                          </div>
-                        </Col>
+                          <Col md="4">
+                            <div>
+                              PO Number :
+                              <Select
+                                cacheOptions
+                                options={this.state.list_po_data_selection}
+                                // defaultOptions
+                                onChange={this.handleInputChange}
+                              />
+                            </div>
+                          </Col>
                         </Row>
                         <hr className="upload-line"></hr>
                       </React.Fragment>
                     ) : (<React.Fragment></React.Fragment>)}
-                    {this.state.data_tech_boq !== null ? (
-                      <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>
-                        <CardBody style={{padding: '5px'}}>
-                          <Row>
-                            <Col>
-                              <div>
-                                  <Input type="file" onChange={this.fileHandlerTechnical.bind(this)} />
-                              </div>
-                            </Col>
-                            <Col>
-                              <div>
-                                <React.Fragment>
-                                  <Button style={{'float' : 'right'}} color="warning" onClick={this.updateTechBoq} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
-                                  <i className="fa fa-paste">&nbsp;&nbsp;</i>
-                                    {this.state.rowsTech.length === 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
-                                  </Button>
-                                </React.Fragment>
-                                <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.updateTechBoq} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
-                                  <i className="fa fa-copy">&nbsp;&nbsp;</i>
-                                  {this.state.rowsTech.length === 0 ? 'Revision' : this.state.result_check_tech !== null ? 'Revision' : 'Loading..'}
-                                </Button>
-                              </div>
-                            </Col>
-                          </Row>
-                          {this.state.API_Tech.project_name === null ? (
-                          <Row style={{marginTop : '10px'}}>
-                            <Col>
-                              <div>
-                                <Input name="project" type="select" onChange={this.selectProject} value={this.state.project_select}>
-                                    <option value=""></option>
-                                    {/* <option value="Demo 1">Demo 1</option>
-                                      <option value="Demo 2">Demo 2</option> */}
-                                    {this.state.project_all.map( project =>
-                                      <option value={project._id}>{project.Project}</option>
-                                    )}
-                                </Input>
-                              </div>
-                            </Col>
-                            <Col>
-                              <div>
-                                <Button onClick={this.saveProjecttoDB}>Save Project</Button>
-                              </div>
-                            </Col>
-                          </Row>
-                          ) : ""}
-                          <hr className="upload-line"></hr>
-                        </CardBody>
-                      </Collapse>
-                    ) : (<React.Fragment></React.Fragment>)}
-
-                    {this.state.data_item.length !== 0 ? this.state.API_Tech.list_of_id_boq_comm.length !== 0 ? (
-                      <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>
-                        <CardBody style={{padding: '5px'}}>
-                          <Row>
-                            <Col>
-                              <div>
-                                  <Input type="file" onChange={this.fileHandlerTechnical.bind(this)} />
-                              </div>
-                            </Col>
-                            <Col>
-                              <div>
-                              <Button style={{'float' : 'right',margin : '8px'}} color="secondary" onClick={this.revisionTech} disabled={this.state.action_status === 'failed'}>
-                                <i className="fa fa-copy">&nbsp;&nbsp;</i>
-                                {this.state.rowsTech.length == 0 ? 'Revision' : this.state.data_format.length !== 0 ? 'Revision' : 'Loading..'}
-                              </Button>
-                              </div>
-                            </Col>
-                          </Row>
-                          <hr className="upload-line"></hr>
-                        </CardBody>
-                      </Collapse>
-                    ) : (<React.Fragment></React.Fragment>) : (<React.Fragment></React.Fragment>)}
                   </div>
 
                   </React.Fragment>
                   {/*  )} */}
-                  {this.state.data_tech_boq !== null && (
+                  {this.state.data_cpo_boq.length !== 0 && (
                     <React.Fragment>
                     <Row>
                       <Col sm="12" md="12">
                       <table style={{width : '100%', marginBottom : '0px', marginLeft : '10px'}}>
                         <tbody>
                           <tr style={{fontWeight : '425', fontSize : '23px'}}>
-                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>TECHNICAL BOQ</td>
+                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>CPO BOQ</td>
                           </tr>
                           <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
-                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.data_tech_boq.no_tech_boq}</td>
+                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.props.match.params.id}</td>
                           </tr>
                         </tbody>
                       </table>
                       <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
                       </Col>
                     </Row>
-                    <Row>
-                      <Col sm="6" md="6">
-                      <div style={{marginLeft : '10px'}}>
-                      <table style={{width : '100%', marginBottom : '5px'}} className="table-header">
-                        <tbody>
-                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                            <td style={{textAlign : 'left'}}>Version</td>
-                            <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>
-                              <Input type="select" value={this.state.version_selected === null? this.state.data_tech_boq.version : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "100px", height : "30px"}}>
-                                {this.state.list_version.map((e,i) =>
-                                  <option value={i}>{i}</option>
-                                )}
-                              </Input>
-                            </td>
-                          </tr>
-                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                            <td style={{textAlign : 'left'}}>Created On &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-                            <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.created_on}</td>
-                          </tr>
-                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>&nbsp; </td>
-                              <td></td>
-                              <td></td>
-                              <td style={{paddingLeft:'5px'}}></td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      </div>
-                      </Col>
-                      <Col sm="6" md="6">
-                      <div style={{marginTop: '3px', marginLeft : '10px'}}>
-                      <table style={{width : '100%', marginBottom : '5px'}} className="table-header">
-                        <tbody>
-                        <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                            <td style={{textAlign : 'left'}}>Project </td>
-                            <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.project_name}</td>
-                          </tr>
-                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                            <td style={{textAlign : 'left'}}>Updated On </td>
-                            <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.updated_on}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      </div>
-                      </Col>
-                    </Row>
                     </React.Fragment>
                     )}
-                    {this.state.data_tech_boq_sites.length === 0 && this.state.data_tech_boq === null && this.props.match.params.id === undefined ? (
+                    {this.props.match.params.id === undefined ? (
                     <Table hover bordered striped responsive size="sm">
                       <tbody>
-                        {this.state.rowsTech.map(row =>
+                        {this.state.rowsCPO.map(row =>
                           <tr>
                             {row.map(col =>
                               <td>{col}</td>
@@ -2321,60 +1970,71 @@ class TechnicalCPO extends Component {
                       </tbody>
                     </Table>
                     ) : (<React.Fragment>
-                      {/*<div style={{display : 'inline-flex', marginBottom : '5px'}}>
-                        <span style={{padding: '4px'}}>Show per Page : </span>
-                        <Input className="select-per-page" name="PO" type="select" onChange={this.handleChangeShow} value={this.state.perPage} >
-                          <option value="5">5</option>
-                          <option value="10">10</option>
-                          <option value="25">25</option>
-                          <option value="50">50</option>
-                          <option value={this.state.data_item.length}>All</option>
-                        </Input>
-                      </div> */}
                       <Table hover bordered striped responsive size="sm">
                         <thead>
-                        <tr>
-                          <th rowSpan="2" style={{verticalAlign : "middle"}}>
-                            Tower ID
-                          </th>
-                          <th rowSpan="2" style={{verticalAlign : "middle"}}>
-                            Tower Name
-                          </th>
-                          {this.state.view_tech_header_table.type.map(type =>
-                            <th>{type}</th>
-                          )}
-                        </tr>
-                        <tr>
-                          {this.state.view_tech_header_table.config_id.map(conf =>
-                            <th>{conf}</th>
-                          )}
-                        </tr>
+                          <tr>
+                            <th>PRODEF</th>
+                            <th>WBS</th>
+                            <th>Project Code</th>
+                            <th>Program</th>
+                            <th>Program Type</th>
+                            <th>Tower ID Plan</th>
+                            <th>Working on</th>
+                            <th>Main SOW</th>
+                            <th>Combined Scope</th>
+                            <th>Tower Count</th>
+                            <th>Region</th>
+                            <th>FAS ID</th>
+                            <th>Part</th>
+                            <th>Config</th>
+                            <th>SAP#</th>
+                            <th>SAP Description</th>
+                            <th>Qty</th>
+                            <th>BOQ Part</th>
+                            <th>Category</th>
+                            <th>Source</th>
+                            <th>COUPA Catalogue Item</th>
+                            <th>Coupa Unit Price</th>
+                            <th>Coupa Total Price</th>
+                            <th>Curr</th>
+                            <th>COUPA Requisition Title</th>
+                            <th>COUPA Network ID</th>
+                            <th>PR Number</th>
+                          </tr>
                         </thead>
-                        {(this.state.version_selected !== null && this.state.data_tech_boq.version !== this.state.version_selected) ? (
-                          <tbody>
-                          {this.state.data_tech_boq_sites_version.map(site =>
-                            <tr>
-                              <td>{site.site_id}</td>
-                              <td>{site.site_name}</td>
-                              {site.siteItemConfigVersion.map(conf =>
-                                <td>{conf.qty}</td>
-                              )}
-                            </tr>
-                          )}
-                          </tbody>
-                        ) : (
-                          <tbody>
-                          {this.state.data_tech_boq_sites.map(site =>
-                            <tr>
-                              <td>{site.site_id}</td>
-                              <td>{site.site_name}</td>
-                              {site.siteItemConfig.map(conf =>
-                                <td>{conf.qty}</td>
-                              )}
-                            </tr>
-                          )}
-                          </tbody>
+                        <tbody>
+                        {this.state.data_cpo_boq.map(row =>
+                          <tr>
+                            <td>{row.prodef}</td>
+                            <td>{row.wbs}</td>
+                            <td>{row.project_code}</td>
+                            <td>{row.program}</td>
+                            <td>{row.program_type}</td>
+                            <td>{row.tower_id_plan}</td>
+                            <td>{row.working_on}</td>
+                            <td>{row.main_sow}</td>
+                            <td>{row.combined_scope}</td>
+                            <td>{row.tower_count}</td>
+                            <td>{row.region}</td>
+                            <td>{row.fas_id}</td>
+                            <td>{row.part}</td>
+                            <td>{row.config}</td>
+                            <td>{row.sap}</td>
+                            <td>{row.sap_description}</td>
+                            <td>{row.qty}</td>
+                            <td>{row.boq_part}</td>
+                            <td>{row.category}</td>
+                            <td>{row.source}</td>
+                            <td>{row.coupa_catalogue_item}</td>
+                            <td>{row.coupa_unit_price}</td>
+                            <td>{row.coupa_total_price}</td>
+                            <td>{row.currency}</td>
+                            <td>{row.coupa_requisition_title}</td>
+                            <td>{row.coupa_network_id}</td>
+                            <td>{row.pr_number}</td>
+                          </tr>
                         )}
+                        </tbody>
                       </Table>
                       {/*
                       <nav>
@@ -2395,12 +2055,12 @@ class TechnicalCPO extends Component {
 
                     </CardBody>
                   <CardFooter>
-                    {this.state.data_tech_boq !== null && (
+                    {this.state.data_cpo_boq !== null && (
                     <Row>
                       <Col>
-                        {this.state.data_tech_boq.approval_status === "PRE APPROVAL" && (
+                        {this.state.data_cpo_boq.approval_status === "PRE APPROVAL" && (
                           <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value="1" onClick={this.approvalTechnical} disabled={!this.state.API_Tech.approval_status === "PRE APPROVAL"}>
-                              {this.state.data_tech_boq.approval_status === "PRE APPROVAL" ? "Request Approve" : "Requested"}
+                              {this.state.data_cpo_boq.approval_status === "PRE APPROVAL" ? "Request Approve" : "Requested"}
                           </Button>
                         )}
                       </Col>
@@ -2443,4 +2103,4 @@ class TechnicalCPO extends Component {
     }
   }
 
-  export default connect(mapStateToProps)(TechnicalCPO);
+  export default connect(mapStateToProps)(DetailCPOBoq);
