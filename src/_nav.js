@@ -25,6 +25,11 @@ export default {
           icon: 'icon-tag',
         },
         {
+          name: 'CPO Database ',
+          url: '/cpo-database',
+          icon: 'icon-globe',
+        },
+        {
           name: 'Ordering BOQ',
           url: '/list-ordering',
           icon: 'icon-cursor',
