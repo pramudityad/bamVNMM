@@ -255,7 +255,7 @@ class PackageUpload extends React.Component {
 
   handleChangeFilter = (e) => {
     let value = e.target.value;
-    if(value.length === 0){
+    if (value.length === 0) {
       value = null;
     }
     this.setState({ filter_name: value }, () => {
@@ -313,12 +313,12 @@ class PackageUpload extends React.Component {
   // }
 
   getPackageDataAPI() {
-    this.getDatatoAPINode('/productpackage?lmt='+this.state.perPage+'&pg='+this.state.activePage)
+    this.getDatatoAPINode('/productpackage?lmt=' + this.state.perPage + '&pg=' + this.state.activePage)
       .then(res => {
         // console.log("res config data", res);
         if (res.data !== undefined) {
           console.log("res pp data", res.data);
-          this.setState({ product_package: res.data.data, prevPage: this.state.activePage, total_dataParent : res.data.totalResults });
+          this.setState({ product_package: res.data.data, prevPage: this.state.activePage, total_dataParent: res.data.totalResults });
         } else {
           this.setState({ product_package: [], total_dataParent: 0, prevPage: this.state.activePage });
         }
@@ -413,11 +413,11 @@ class PackageUpload extends React.Component {
     }
   }
 
-  checkFormatMaterial(dataXLSHeader){
+  checkFormatMaterial(dataXLSHeader) {
     // cek the import data is for Material or Not
-    if(this.getIndex(dataXLSHeader,'PP / Material') !== -1 && this.getIndex(dataXLSHeader,'pp_id') !== -1 && this.getIndex(dataXLSHeader,'material_id') !== -1 && (this.getIndex(dataXLSHeader,'material_name') !== -1 || this.getIndex(dataXLSHeader,'quantity') !== -1 || this.getIndex(dataXLSHeader,'uom') !== -1)){
+    if (this.getIndex(dataXLSHeader, 'PP / Material') !== -1 && this.getIndex(dataXLSHeader, 'pp_id') !== -1 && this.getIndex(dataXLSHeader, 'material_id') !== -1 && (this.getIndex(dataXLSHeader, 'material_name') !== -1 || this.getIndex(dataXLSHeader, 'quantity') !== -1 || this.getIndex(dataXLSHeader, 'uom') !== -1)) {
       return true;
-    }else{
+    } else {
       return false;
     }
   }
@@ -432,51 +432,51 @@ class PackageUpload extends React.Component {
       const postPackage = await this.postDatatoAPINode('/productpackage/manyProductPackage', { "ppData": ppData })
         .then(res => {
           if (res.data !== undefined) {
-            this.setState({ action_status : 'success' });
+            this.setState({ action_status: 'success' });
             this.toggleLoading();
           } else {
-            if(res.response !== undefined){
-              if(res.response.error !== undefined){
+            if (res.response !== undefined) {
+              if (res.response.error !== undefined) {
                 this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
                   this.toggleLoading();
                 });
-              }else{
-                this.setState({ action_status: 'failed'}, () => {
+              } else {
+                this.setState({ action_status: 'failed' }, () => {
                   this.toggleLoading();
                 });
               }
-            }else{
-              this.setState({ action_status: 'failed'}, () => {
+            } else {
+              this.setState({ action_status: 'failed' }, () => {
                 this.toggleLoading();
               });
             }
           }
         })
-    } else if (isMaterial === true){
+    } else if (isMaterial === true) {
       let dataMat = await this.getMaterialFormat(productPackageXLS);
       console.log("dataMat", JSON.stringify(dataMat));
       const postMaterial = await this.postDatatoAPINode('/materialcatalogue/manyMaterialCatalogue', { "mcData": dataMat });
-      if(postMaterial.data !== undefined){
-        this.setState({ action_status : 'success' });
+      if (postMaterial.data !== undefined) {
+        this.setState({ action_status: 'success' });
         this.toggleLoading();
-      }else{
-        if(postMaterial.response !== undefined){
-          if(postMaterial.response.error !== undefined){
+      } else {
+        if (postMaterial.response !== undefined) {
+          if (postMaterial.response.error !== undefined) {
             this.setState({ action_status: 'failed', action_message: postMaterial.response.data.error }, () => {
               this.toggleLoading();
             });
-          }else{
-            this.setState({ action_status: 'failed'}, () => {
+          } else {
+            this.setState({ action_status: 'failed' }, () => {
               this.toggleLoading();
             });
           }
-        }else{
-          this.setState({ action_status: 'failed'}, () => {
+        } else {
+          this.setState({ action_status: 'failed' }, () => {
             this.toggleLoading();
           });
         }
       }
-    }else{
+    } else {
       this.setState({ action_status: 'failed', action_message: 'Please check your format' }, () => {
         this.toggleLoading();
       });
@@ -658,7 +658,7 @@ class PackageUpload extends React.Component {
     }
   }
 
-  getMaterialFormat(dataImport){
+  getMaterialFormat(dataImport) {
     const dataHeader = dataImport[0];
     const onlyMaterial = dataImport.map(e => e).filter(e => (this.checkValuetoString(e[this.getIndex(dataHeader, 'PP / Material')])).toLowerCase() === "material");
     let materialList = [];
@@ -689,9 +689,9 @@ class PackageUpload extends React.Component {
       if (matIdx.pp_id === null || matIdx.pp_id === undefined) {
         matIdx["pp_id"] = matIdx.pp_id;
       }
-      if(pp_id !== null && mat_id !== null){
+      if (pp_id !== null && mat_id !== null) {
         materialList.push(matIdx);
-      }else{
+      } else {
         matErr.push(i);
       }
     }
@@ -699,33 +699,34 @@ class PackageUpload extends React.Component {
   }
 
   getAllPP() {
-    const filter_name = this.state.filter_name;
-    const project_filter = this.state.project_filter;
-    let whereName = '';
-    let whereProject = '';
-    if (filter_name !== undefined && filter_name.length !== 0) {
-      whereName = '"$or" : [{"pp_id":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"name":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"product_type":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"physical_group":{"$regex" : "' + filter_name + '", "$options" : "i"}} ]';
-    }
-    if (project_filter !== undefined && project_filter !== null && project_filter.length !== 0) {
-      whereProject = '"list_of_project":{"$in" :["' + project_filter + '"]}'
-    }
-    if (project_filter === 'none') {
-      whereProject = '"list_of_project":null'
-    }
-    if (project_filter === 'all') {
-      whereProject = ''
-    }
-    let where = 'where={' + whereName + whereProject + '}'
-    if (whereName.length !== 0 && whereProject.length !== 0) {
-      where = 'where={' + whereName + ',' + whereProject + '}'
-    }
-    this.getDatafromAPIBAM('/pp_sorted_nonpage?' + where).then(resPP => {
-      if (resPP.data !== undefined) {
-        if (resPP.data._items.length !== 0) {
-          this.prepareData(resPP.data._items);
+    // const filter_name = this.state.filter_name;
+    // const project_filter = this.state.project_filter;
+    // let whereName = '';
+    // let whereProject = '';
+    // if (filter_name !== undefined && filter_name.length !== 0) {
+    //   whereName = '"$or" : [{"pp_id":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"name":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"product_type":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"physical_group":{"$regex" : "' + filter_name + '", "$options" : "i"}} ]';
+    // }
+    // if (project_filter !== undefined && project_filter !== null && project_filter.length !== 0) {
+    //   whereProject = '"list_of_project":{"$in" :["' + project_filter + '"]}'
+    // }
+    // if (project_filter === 'none') {
+    //   whereProject = '"list_of_project":null'
+    // }
+    // if (project_filter === 'all') {
+    //   whereProject = ''
+    // }
+    // let where = 'where={' + whereName + whereProject + '}'
+    // if (whereName.length !== 0 && whereProject.length !== 0) {
+    //   where = 'where={' + whereName + ',' + whereProject + '}'
+    // }
+    this.getDatatoAPINode('/productpackage')
+      .then(resPP => {
+        if (resPP.data !== undefined) {   
+          this.setState({ product_package : resPP.data.data})
+        }else{
+          this.setState({ product_package : []})
         }
-      }
-    })
+      })
   }
 
   async prepareData(data_pp) {
@@ -744,7 +745,7 @@ class PackageUpload extends React.Component {
 
   componentDidMount() {
     this.getPackageDataAPI();
-    // this.getAllPP();
+    this.getAllPP();
     document.title = 'Product Package | BAM';
   }
 
@@ -887,15 +888,15 @@ class PackageUpload extends React.Component {
     const dataPPEdit = this.state.PPForm;
     const dataPP = this.state.product_package.find(e => e.pp_id === dataPPEdit[0]);
     let pp = {
-			"pp_id": dataPPEdit[0],
-			"product_name" : dataPPEdit[1],
-			"product_type": dataPPEdit[3],
-			"physical_group": dataPPEdit[4],
-			"uom": dataPPEdit[2],
-			"qty": 0,
-			"pp_cust_number" : this.checkValue(dataPPEdit[5]),
-			"pp_group" : this.checkValue(dataPPEdit[6])
-		}
+      "pp_id": dataPPEdit[0],
+      "product_name": dataPPEdit[1],
+      "product_type": dataPPEdit[3],
+      "physical_group": dataPPEdit[4],
+      "uom": dataPPEdit[2],
+      "qty": 0,
+      "pp_cust_number": this.checkValue(dataPPEdit[5]),
+      "pp_group": this.checkValue(dataPPEdit[6])
+    }
     this.toggleLoading();
     this.togglePPedit();
     if (pp.pp_group === undefined || pp.pp_group === null) {
@@ -912,14 +913,14 @@ class PackageUpload extends React.Component {
         pp["pp_cust_number"] = pp.pp_id;
       }
     }
-    let patchData = await this.patchDatatoAPINode('/productpackage/updateManyProductPackage', {"ppData" : [pp]});
+    let patchData = await this.patchDatatoAPINode('/productpackage/updateManyProductPackage', { "ppData": [pp] });
     if (patchData === undefined) { patchData = {}; patchData["data"] = undefined }
     if (patchData.data !== undefined) {
       this.setState({ action_status: 'success' }, () => {
         this.toggleLoading();
         setTimeout(function () { window.location.reload(); }, 2000);
       });
-    }else{
+    } else {
       this.toggleLoading();
       this.setState({ action_status: 'failed' });
     }
@@ -934,63 +935,63 @@ class PackageUpload extends React.Component {
     const dataAllPP = this.state.pp_all;
     // console.log(dataAllPP);
     // if (dataAllPP.find(e => e.pp_id === dataPPNew[1]) !== undefined) {
-      const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
-      const pp_name = dataPPNew[1];
-      let pp_id_Gen = "PP" + ppcountID + " / " + pp_name;
-      let pp = {
-        "pp_id": dataPPNew[0],
-        "product_name": pp_name.toString(),
-        "product_type": dataPPNew[2],
-        "physical_group": dataPPNew[3],
-        "uom": dataPPNew[4],
-        "qty": dataPPNew[5],
-        "pp_cust_number": this.checkValue(dataPPNew[8]),
-        "pp_group": this.checkValue(dataPPNew[6])
-        // "created_by": this.state.userId,
-        // "updated_by": this.state.userId
-      }
-      if (pp.pp_group === undefined || pp.pp_group === null) {
+    const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
+    const pp_name = dataPPNew[1];
+    let pp_id_Gen = "PP" + ppcountID + " / " + pp_name;
+    let pp = {
+      "pp_id": dataPPNew[0],
+      "product_name": pp_name.toString(),
+      "product_type": dataPPNew[2],
+      "physical_group": dataPPNew[3],
+      "uom": dataPPNew[4],
+      "qty": dataPPNew[5],
+      "pp_cust_number": this.checkValue(dataPPNew[8]),
+      "pp_group": this.checkValue(dataPPNew[6])
+      // "created_by": this.state.userId,
+      // "updated_by": this.state.userId
+    }
+    if (pp.pp_group === undefined || pp.pp_group === null) {
+      pp["pp_group"] = pp.product_name;
+    } else {
+      if (pp.pp_group.length === 0) {
         pp["pp_group"] = pp.product_name;
-      } else {
-        if (pp.pp_group.length === 0) {
-          pp["pp_group"] = pp.product_name;
-        }
       }
-      if (pp.pp_cust_number === null || pp.pp_cust_number === undefined) {
+    }
+    if (pp.pp_cust_number === null || pp.pp_cust_number === undefined) {
+      pp["pp_cust_number"] = pp.pp_id;
+    } else {
+      if (pp.pp_cust_number.length === 0) {
         pp["pp_cust_number"] = pp.pp_id;
-      } else {
-        if (pp.pp_cust_number.length === 0) {
-          pp["pp_cust_number"] = pp.pp_id;
-        }
       }
-      ppData.push(pp);
-      // return ppData;
-      // console.log('pp data', ppData);
-      let postData = await this.postDatatoAPINode('/productpackage/manyProductPackage', {"ppData" : ppData})
-        .then(res => {
-          console.log('response postData', res);
-          if(res.data !== undefined){
-            this.toggleLoading();
-            console.log('single PP success created');
-          }else{
-            this.setState({ action_status: 'failed', action_message: res.response.data.error });
-            this.toggleLoading();
-          }
-        });
-      // console.log('postData Save', postData);
-      // if (postData === undefined) { postData = {}; postData["data"] = undefined }
-      // if (postData.data !== undefined) {
-      //   respondSaveNew = postData.data;
-      // }
-      // if (respondSaveNew !== undefined) {
-      //   this.setState({ action_status: 'success' }, () => {
-      //     this.toggleLoading();
-      //     setTimeout(function () { window.location.reload(); }, 2000);
-      //   });
-      // } else {
-      //   this.setState({ action_status: 'failed' });
-      //   this.toggleLoading();
-      // }
+    }
+    ppData.push(pp);
+    // return ppData;
+    // console.log('pp data', ppData);
+    let postData = await this.postDatatoAPINode('/productpackage/manyProductPackage', { "ppData": ppData })
+      .then(res => {
+        console.log('response postData', res);
+        if (res.data !== undefined) {
+          this.toggleLoading();
+          console.log('single PP success created');
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          this.toggleLoading();
+        }
+      });
+    // console.log('postData Save', postData);
+    // if (postData === undefined) { postData = {}; postData["data"] = undefined }
+    // if (postData.data !== undefined) {
+    //   respondSaveNew = postData.data;
+    // }
+    // if (respondSaveNew !== undefined) {
+    //   this.setState({ action_status: 'success' }, () => {
+    //     this.toggleLoading();
+    //     setTimeout(function () { window.location.reload(); }, 2000);
+    //   });
+    // } else {
+    //   this.setState({ action_status: 'failed' });
+    //   this.toggleLoading();
+    // }
     // } else {
     //   this.toggleLoading();
     //   this.setState({ action_status: 'failed', action_message: 'Duplicated PP ID' });
@@ -1031,9 +1032,9 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataPP = this.state.pp_all;
+    const dataPP = this.state.product_package;
 
-    let headerRow = ["Product Package Variant Code", "Product Package Variant", "Material Code", "Material Name", "Unit", "Qty", "Price", "Material Type", "Product Package (Customer) Code", "Product Package (Customer)", "Physical Group", "Product Type", "Note"]
+    let headerRow = ["Product Package", "Material Name", "PP / Material Code", "Unit", "Qty", "Price", "Physical Group", "Product / Material Type"]
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -1041,7 +1042,7 @@ class PackageUpload extends React.Component {
     }
 
     for (let i = 0; i < dataPP.length; i++) {
-      ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, "", "", dataPP[i].uom, "", "", "", dataPP[i].pp_cust_number, dataPP[i].pp_group, dataPP[i].physical_group, dataPP[i].product_type, dataPP[i].note])
+      ws.addRow([dataPP[i].product_name, "", dataPP[i].product_name, "", "", dataPP[i].uom, "", "", "", dataPP[i].pp_cust_number, dataPP[i].pp_group, dataPP[i].physical_group, dataPP[i].product_type, dataPP[i].note])
       let getlastrow = ws.lastRow._number;
       ws.mergeCells('B' + getlastrow + ':D' + getlastrow);
       for (let j = 0; j < dataPP[i].list_of_material.length; j++) {

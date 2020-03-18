@@ -40,6 +40,7 @@ class ConfigUpload extends React.Component {
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
       pp_all: [],
+      conf_all: [],
       material_all: [],
       project_all: [],
       project_filter: undefined,
@@ -73,8 +74,8 @@ class ConfigUpload extends React.Component {
       collapse: false,
       loadprojectdata: [],
       modalPPFedit: false,
-      config_checked : new Map(),
-      config_selected : [],
+      config_checked: new Map(),
+      config_selected: [],
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -218,17 +219,17 @@ class ConfigUpload extends React.Component {
 
   }
 
-  getPackageDataAPI(){
-    this.getDatatoAPINode('/packageconfig?lmt='+this.state.perPage+'&pg='+this.state.activePage)
-    .then(res =>{
-      // console.log("res config data", res);
-      if(res.data !== undefined){
-        console.log("res config data", res.data);
-        this.setState({ config_package : res.data.data, prevPage : this.state.activePage, total_dataParent : res.data.totalResults })
-      }else{
-        this.setState({ config_package : [], total_dataParent : 0, prevPage : this.state.activePage});
-      }
-    })
+  getPackageDataAPI() {
+    this.getDatatoAPINode('/packageconfig?lmt=' + this.state.perPage + '&pg=' + this.state.activePage)
+      .then(res => {
+        // console.log("res config data", res);
+        if (res.data !== undefined) {
+          // console.log("res config data", res.data);
+          this.setState({ config_package: res.data.data, prevPage: this.state.activePage, total_dataParent: res.data.totalResults })
+        } else {
+          this.setState({ config_package: [], total_dataParent: 0, prevPage: this.state.activePage });
+        }
+      })
   }
 
   handleChangeProjectTag = (e) => {
@@ -335,46 +336,49 @@ class ConfigUpload extends React.Component {
     if (isConfig === true) {
       console.log("this.state.check_config_package", JSON.stringify(this.state.check_config_package));
       const postConfig = await this.postDatatoAPINode('/packageConfig/saveConfigBulk', { "configData": this.state.check_config_package });
-      this.setState({ action_status: 'success'}, () => {
+      this.setState({ action_status: 'success' }, () => {
         this.toggleLoading();
       });
       this.toggleLoading();
       console.log(postConfig);
     } else {
-        this.setState({ action_status: 'failed', action_message: 'There is something error' }, () => {
-          this.toggleLoading();
-        });
+      this.setState({ action_status: 'failed', action_message: 'There is something error' }, () => {
+        this.toggleLoading();
+      });
     }
   }
 
   getAllPP() {
-    const filter_name = this.state.filter_name;
-    const project_filter = this.state.project_filter;
-    let whereName = '';
-    let whereProject = '';
-    if (filter_name !== undefined && filter_name.length !== 0) {
-      whereName = '"$or" : [{"pp_id":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"name":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"product_type":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"physical_group":{"$regex" : "' + filter_name + '", "$options" : "i"}} ]';
-    }
-    if (project_filter !== undefined && project_filter !== null && project_filter.length !== 0) {
-      whereProject = '"list_of_project":{"$in" :["' + project_filter + '"]}'
-    }
-    if (project_filter === 'none') {
-      whereProject = '"list_of_project":null'
-    }
-    if (project_filter === 'all') {
-      whereProject = ''
-    }
-    let where = 'where={' + whereName + whereProject + '}'
-    if (whereName.length !== 0 && whereProject.length !== 0) {
-      where = 'where={' + whereName + ',' + whereProject + '}'
-    }
-    // this.getDatafromAPIBAM('/pp_sorted_nonpage?' + where).then(resPP => {
-    //   if (resPP.data !== undefined) {
-    //     if (resPP.data._items.length !== 0) {
-    //       this.prepareData(resPP.data._items);
-    //     }
-    //   }
-    // })
+    // const filter_name = this.state.filter_name;
+    // const project_filter = this.state.project_filter;
+    // let whereName = '';
+    // let whereProject = '';
+    // if (filter_name !== undefined && filter_name.length !== 0) {
+    //   whereName = '"$or" : [{"pp_id":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"name":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"product_type":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"physical_group":{"$regex" : "' + filter_name + '", "$options" : "i"}} ]';
+    // }
+    // if (project_filter !== undefined && project_filter !== null && project_filter.length !== 0) {
+    //   whereProject = '"list_of_project":{"$in" :["' + project_filter + '"]}'
+    // }
+    // if (project_filter === 'none') {
+    //   whereProject = '"list_of_project":null'
+    // }
+    // if (project_filter === 'all') {
+    //   whereProject = ''
+    // }
+    // let where = 'where={' + whereName + whereProject + '}'
+    // if (whereName.length !== 0 && whereProject.length !== 0) {
+    //   where = 'where={' + whereName + ',' + whereProject + '}'
+    // }
+    this.getDatatoAPINode('/packageconfig')
+      .then(resConf => {
+        // console.log('conf data all', resConf.data.data)
+        // this.setState({ conf_all : resConf})
+        if (resConf.data !== undefined) {   
+          this.setState({ conf_all : resConf.data.data})
+        }else{
+          this.setState({ conf_all : []})
+        }
+      })
   }
 
   async prepareData(data_pp) {
@@ -393,7 +397,7 @@ class ConfigUpload extends React.Component {
 
   componentDidMount() {
     this.getPackageDataAPI();
-    // this.getAllPP();
+    this.getAllPP();
     document.title = 'Config Manager | BAM';
   }
 
@@ -676,9 +680,12 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataPP = this.state.pp_all;
+    const dataPP = this.state.conf_all;
+    console.log('data conf all', dataPP);
+    // console.log('data conf map', this.state.conf_all.map(e => e.sap_number));
 
-    let headerRow = ["Product Package Variant Code", "Product Package Variant", "Material Code", "Material Name", "Unit", "Qty", "Price", "Material Type", "Product Package (Customer) Code", "Product Package (Customer)", "Physical Group", "Product Type", "Note"]
+
+    let headerRow = ["SAP Number", "Config ID",	"Account ID",	"ID Project Doc",	"Project Name",	"Total Price", "ID PP Doc",	"Qty",	"Qty Commercial",	"Currency",	"Price", "Description",	"PP ID",	"PP Group"]    
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -686,17 +693,19 @@ class ConfigUpload extends React.Component {
     }
 
     for (let i = 0; i < dataPP.length; i++) {
-      ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, "", "", dataPP[i].uom, "", "", "", dataPP[i].pp_cust_number, dataPP[i].pp_group, dataPP[i].physical_group, dataPP[i].product_type, dataPP[i].note])
-      let getlastrow = ws.lastRow._number;
-      ws.mergeCells('B' + getlastrow + ':D' + getlastrow);
-      for (let j = 0; j < dataPP[i].list_of_material.length; j++) {
-        let matIndex = dataPP[i].list_of_material[j];
-        ws.addRow(["", "", matIndex.material_id, matIndex.material_name, matIndex.uom, matIndex.qty, matIndex.material_price, matIndex.material_type, "", "", "", "", ""])
+      // console.log('data conf sap num', dataPP[0].sap_number)
+      ws.addRow([dataPP[i].sap_number, dataPP[i].config_id, dataPP[i].account_id, dataPP[i].id_project_doc, dataPP[i].project_name, dataPP[i].total_price])
+      // let getlastrow = ws.lastRow._number;
+      // ws.mergeCells('B' + getlastrow + ':D' + getlastrow);
+      for (let j = 0; j < dataPP[i].package_list.length; j++) {
+        let package_listIndex = dataPP[i].package_list[j];
+        // console.log('data conf qty', package_listIndex.qty)
+        ws.addRow(["", "", "", "", "", "", package_listIndex.id_pp_doc, package_listIndex.qty, package_listIndex.qty_commercial, package_listIndex.currency, package_listIndex.price, package_listIndex.description, package_listIndex.pp_id, package_listIndex.pp_group])
       }
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Product Package.xlsx');
+    saveAs(new Blob([allocexport]), 'Config Package.xlsx');
   }
 
   exportTechnicalFormat = async () => {
@@ -705,7 +714,7 @@ class ConfigUpload extends React.Component {
 
     const dataConfigSelected = this.state.config_selected;
 
-    let confArray = ["site_title", "site_id", "site_name", "Site Config","Prioritization","Condition"];
+    let confArray = ["site_title", "site_id", "site_name", "Site Config", "Prioritization", "Condition"];
     let typeArray = ["", "", "", "NOTE", "NOTE", "NOTE"];
 
     typeArray = typeArray.concat(dataConfigSelected.map(e => "CONFIG"));
@@ -725,7 +734,7 @@ class ConfigUpload extends React.Component {
     const datapackageChecked = this.state.packageSelected;
     console.log("datapackageChecked", datapackageChecked);
 
-    let ppIdArray = ["site_title", "site_id", "site_name", "Site Config","Prioritization","Condition"];
+    let ppIdArray = ["site_title", "site_id", "site_name", "Site Config", "Prioritization", "Condition"];
     let phyGroupArray = ["", "", "", "NOTE", "NOTE", "NOTE"];
 
     ppIdArray = ppIdArray.concat(datapackageChecked.map(pp => pp.pp_id + " /// " + pp.product_name));
@@ -810,6 +819,7 @@ class ConfigUpload extends React.Component {
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfig}>> Config Template</DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>> Download All Config</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -841,8 +851,7 @@ class ConfigUpload extends React.Component {
                   </CardBody>
                   <CardFooter>
                     <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
-                    {/* <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.checkProductPackage}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;Check </Button>
-                    <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>*/}
+                    {/* <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button> */}
                   </CardFooter>
                 </Card>
               </Collapse>
@@ -884,7 +893,7 @@ class ConfigUpload extends React.Component {
                           {/* dummy data */}
                           {this.state.config_package.map(pp =>
                             <React.Fragment key={pp._id + "frag"}>
-                              <tr style={{backgroundColor: '#d3d9e7'}} className='fixbody' key={pp._id}>
+                              <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={pp._id}>
                                 <td align="center"><Checkbox name={pp._id} checked={this.state.config_checked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_id}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.sap_number}</td>
