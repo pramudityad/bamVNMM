@@ -56,8 +56,8 @@ class ConfigUpload extends React.Component {
       collapse: false,
       loadprojectdata: [],
       modalPPFedit: false,
-      config_checked : new Map(),
-      config_selected : [],
+      config_checked: new Map(),
+      config_selected: [],
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -279,7 +279,7 @@ class ConfigUpload extends React.Component {
     console.log(isConfig);
     if (isConfig === true) {
       const postConfig = await this.postDatatoAPINode('/packageConfig/saveConfigBulk', { "configData": this.state.check_config_package });
-      this.setState({ action_status: 'success'}, () => {
+      this.setState({ action_status: 'success' }, () => {
         this.toggleLoading();
       });
       console.log(postConfig);
@@ -488,9 +488,12 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataPP = this.state.pp_all;
+    const dataPP = this.state.conf_all;
+    console.log('data conf all', dataPP);
+    // console.log('data conf map', this.state.conf_all.map(e => e.sap_number));
 
-    let headerRow = ["Product Package Variant Code", "Product Package Variant", "Material Code", "Material Name", "Unit", "Qty", "Price", "Material Type", "Product Package (Customer) Code", "Product Package (Customer)", "Physical Group", "Product Type", "Note"]
+
+    let headerRow = ["SAP Number", "Config ID",	"Account ID",	"ID Project Doc",	"Project Name",	"Total Price", "ID PP Doc",	"Qty",	"Qty Commercial",	"Currency",	"Price", "Description",	"PP ID",	"PP Group"]
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -498,17 +501,19 @@ class ConfigUpload extends React.Component {
     }
 
     for (let i = 0; i < dataPP.length; i++) {
-      ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, "", "", dataPP[i].uom, "", "", "", dataPP[i].pp_cust_number, dataPP[i].pp_group, dataPP[i].physical_group, dataPP[i].product_type, dataPP[i].note])
-      let getlastrow = ws.lastRow._number;
-      ws.mergeCells('B' + getlastrow + ':D' + getlastrow);
-      for (let j = 0; j < dataPP[i].list_of_material.length; j++) {
-        let matIndex = dataPP[i].list_of_material[j];
-        ws.addRow(["", "", matIndex.material_id, matIndex.material_name, matIndex.uom, matIndex.qty, matIndex.material_price, matIndex.material_type, "", "", "", "", ""])
+      // console.log('data conf sap num', dataPP[0].sap_number)
+      ws.addRow([dataPP[i].sap_number, dataPP[i].config_id, dataPP[i].account_id, dataPP[i].id_project_doc, dataPP[i].project_name, dataPP[i].total_price])
+      // let getlastrow = ws.lastRow._number;
+      // ws.mergeCells('B' + getlastrow + ':D' + getlastrow);
+      for (let j = 0; j < dataPP[i].package_list.length; j++) {
+        let package_listIndex = dataPP[i].package_list[j];
+        // console.log('data conf qty', package_listIndex.qty)
+        ws.addRow(["", "", "", "", "", "", package_listIndex.id_pp_doc, package_listIndex.qty, package_listIndex.qty_commercial, package_listIndex.currency, package_listIndex.price, package_listIndex.description, package_listIndex.pp_id, package_listIndex.pp_group])
       }
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Product Package.xlsx');
+    saveAs(new Blob([allocexport]), 'Config Package.xlsx');
   }
 
   exportTechnicalFormat = async () => {
@@ -517,7 +522,7 @@ class ConfigUpload extends React.Component {
 
     const dataConfigSelected = this.state.config_selected;
 
-    let confArray = ["site_title", "site_id", "site_name", "Site Config","Prioritization","Condition"];
+    let confArray = ["site_title", "site_id", "site_name", "Site Config", "Prioritization", "Condition"];
     let typeArray = ["", "", "", "NOTE", "NOTE", "NOTE"];
 
     typeArray = typeArray.concat(dataConfigSelected.map(e => "CONFIG"));
@@ -561,6 +566,7 @@ class ConfigUpload extends React.Component {
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfig}>> Config Template</DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>> Download All Config</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -635,7 +641,7 @@ class ConfigUpload extends React.Component {
                           {/* dummy data */}
                           {this.state.config_package.map(pp =>
                             <React.Fragment key={pp._id + "frag"}>
-                              <tr style={{backgroundColor: '#d3d9e7'}} className='fixbody' key={pp._id}>
+                              <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={pp._id}>
                                 <td align="center"><Checkbox name={pp._id} checked={this.state.config_checked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_id}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.sap_number}</td>
