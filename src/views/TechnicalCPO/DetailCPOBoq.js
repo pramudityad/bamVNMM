@@ -760,7 +760,7 @@ class DetailCPOBoq extends Component {
     let newDataXLS = [];
     for(let i = 0; i < dataXLS.length; i++){
       let col = [];
-      for(let j = 0; j < dataXLS[1].length; j++){
+      for(let j = 0; j < dataXLS[0].length; j++){
         col.push(this.checkValue(dataXLS[i][j]));
       }
       newDataXLS.push(col);
@@ -768,7 +768,7 @@ class DetailCPOBoq extends Component {
     this.setState({
       rowsCPO: newDataXLS
     });
-    this.checkingFormatTech(newDataXLS);
+    //this.checkingFormatTech(newDataXLS);
   }
 
   async checkingFormatTech(rowsCPO){
@@ -1891,11 +1891,11 @@ class DetailCPOBoq extends Component {
                       <Col>
                         <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}}>
                           <DropdownToggle caret color="secondary">
-                            <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download Technical File
+                            <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download CPO BQO File
                           </DropdownToggle>
                           <DropdownMenu>
                             <DropdownItem header> CPO File</DropdownItem>
-                            <DropdownItem onClick={this.exportFormatCPO}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Format</DropdownItem>
+                            <DropdownItem onClick={this.exportFormatCPO}> <i className="fa fa-file-text-o" aria-hidden="true"></i> CPO Format</DropdownItem>
                           </DropdownMenu>
                         </Dropdown>
                       </Col>
@@ -1916,7 +1916,7 @@ class DetailCPOBoq extends Component {
                       <Row></Row>
                         <input type="file" onChange={this.fileHandlerTechnical.bind(this)} style={{"padding":"10px 10px 5px 10px","visiblity":"hidden"}} />
                         <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveCPOBOQ} disabled={this.state.action_status === 'failed' || this.state.result_check_tech === 0 }>
-                          {this.state.rowsCPO.length == 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
+                          {this.state.rowsCPO.length == 0 ? 'Save' : 'Save'}
                         </Button>
                         <Row>
                           <Col md="4">

@@ -36,14 +36,15 @@
     text-align: center;
 }
 
-.modal-content .formmaterial {
-  width: 700px;
-  right: 150px;
+.modal--form .modal-content {
+  width: 500px;
 }
 
-.modal-content .loading {
-  width: 200px;
+.modal--loading .modal-content {
+  width: 250px;
+  top : 100px;
 }
+
 
 .modal.show .modal-dialog .loading {
   margin-top: 200px;

@@ -11,20 +11,14 @@ import Select from 'react-select';
 import { saveAs } from 'file-saver';
 import Excel from 'exceljs';
 import { connect } from 'react-redux';
-// const StepFlow = React.lazy(() => import('../../views/Defaultview/StepFlow'));
 
+const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
 );
 
-// const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-// const usernamePhilApi = 'pdbdash';
-// const passwordPhilApi = 'rtkO6EZLkxL1';
-
-const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
-const usernameBAM = 'bamidadmin@e-dpm.com';
-const passwordBAM = 'F760qbAg2sml';
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 class PackageUpload extends React.Component {
 
@@ -37,44 +31,30 @@ class PackageUpload extends React.Component {
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
       pp_all: [],
-      material_all: [],
-      project_all: [],
       project_filter: undefined,
       filter_name: "",
       perPage: 10,
       prevPage: 1,
       activePage: 1,
+      total_dataParent: 0,
       rowsXLS: [],
       action_status: null,
-      action_message: "",
+      action_message: null,
       product_package: [],
-      material_catalogue: [],
       dataParent: [],
-      total_dataParent: 0,
-      dataChild: [],
       modalCheckout: false,
       packageSelected: [],
       packageChecked: new Map(),
-      packageChecked_all: false,
-      packageChecked_allPP: false,
-      indexLoopSave: null,
-      select_project_tag: new Map(),
-      select_project_tag_new: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
       modalPPForm: false,
       PPForm: new Array(9).fill(null),
-      accordion: [false],
       collapse: false,
-      loadprojectdata: [],
       modalPPFedit: false,
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
-    this.toggleAccordion = this.toggleAccordion.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
-    this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
-    this.toggleCheckout = this.toggleCheckout.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.changeFilterDebounce = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
@@ -83,14 +63,11 @@ class PackageUpload extends React.Component {
     this.onEntered = this.onEntered.bind(this);
     this.onExiting = this.onExiting.bind(this);
     this.onExited = this.onExited.bind(this);
-    this.handleSelectProjectChange = this.handleSelectProjectChange.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
     this.saveNewPP = this.saveNewPP.bind(this);
     this.togglePPedit = this.togglePPedit.bind(this);
     this.saveUpdatePP = this.saveUpdatePP.bind(this);
-    this.getAllPP = this.getAllPP.bind(this);
-    this.handleChangeChecklistAllPP = this.handleChangeChecklistAllPP.bind(this);
   }
   toggle(i) {
     const newArray = this.state.dropdownOpen.map((element, index) => {
@@ -103,16 +80,6 @@ class PackageUpload extends React.Component {
 
   toggleAddNew() {
     this.setState({ collapse: !this.state.collapse });
-  }
-
-  toggleAccordion(tab) {
-
-    const prevState = this.state.accordion;
-    const state = prevState.map((x, index) => tab === index ? !x : false);
-
-    this.setState({
-      accordion: state,
-    });
   }
 
   onEntering() {
@@ -131,33 +98,12 @@ class PackageUpload extends React.Component {
     this.setState({ status: 'Closed' });
   }
 
-  async getDatafromAPIBAM(url) {
+  async getDatafromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_BAM + url, {
-        headers: { 'Content-Type': 'application/json' },
-        auth: {
-          username: usernameBAM,
-          password: passwordBAM
-        },
-      })
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond Get Data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      console.log("respond Get Data", err);
-      return respond;
-    }
-  }
-
-  async postDatatoAPIBAM(url, data) {
-    try {
-      let respond = await axios.post(API_URL_BAM + url, data, {
-        headers: { 'Content-Type': 'application/json' },
-        auth: {
-          username: usernameBAM,
-          password: passwordBAM
+      let respond = await axios.get(API_URL_NODE + url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.state.tokenUser
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
@@ -166,34 +112,14 @@ class PackageUpload extends React.Component {
       return respond;
     } catch (err) {
       let respond = err;
-      console.log("respond Post Data", err);
+      console.log("respond Post Data err", err);
       return respond;
     }
   }
 
-  async patchDatatoAPIBAM(url, data, _etag) {
+  async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_BAM + url, data, {
-        headers: { 'Content-Type': 'application/json', "If-Match": _etag },
-        auth: {
-          username: usernameBAM,
-          password: passwordBAM
-        },
-      })
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond Patch data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      console.log("respond Patch data", err);
-      return respond;
-    }
-  }
-
-  async getDatatoAPINode(url) {
-    try {
-      let respond = await axios.get(API_URL_BAM + url, {
+      let respond = await axios.post(API_URL_NODE + url, data, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + this.state.tokenUser
@@ -210,28 +136,9 @@ class PackageUpload extends React.Component {
     }
   }
 
-  async postDatatoAPINode(url, data) {
+  async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_BAM + url, data, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + this.state.tokenUser
-        },
-      })
-      if (respond.status >= 200 && respond.status < 300) {
-        // console.log("respond Post Data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      // console.log("respond Post Data err", err);
-      return respond;
-    }
-  }
-
-  async patchDatatoAPINode(url, data) {
-    try {
-      let respond = await axios.patch(API_URL_BAM + url, data, {
+      let respond = await axios.patch(API_URL_NODE + url, data, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + this.state.tokenUser
@@ -250,7 +157,6 @@ class PackageUpload extends React.Component {
 
   changeFilterName(value) {
     this.getPackageDataAPI(value, this.state.project_filter);
-    this.getAllPP();
   }
 
   handleChangeFilter = (e) => {
@@ -265,86 +171,20 @@ class PackageUpload extends React.Component {
 
   handleChangeProjectFilter = (e) => {
     const value = e.target.value;
-    this.setState({ project_filter: value }, () => {
-      this.getAllPP();
-    });
+    this.setState({ project_filter: value });
     this.getPackageDataAPI(this.state.filter_name, value);
-
   }
-
-  handleChangeProjectTag = (e) => {
-    const value = e.target.value;
-    const index = e.target.selectedIndex;
-    const text = e.target[index].text;
-    this.setState(prevState => ({ select_project_tag: prevState.select_project_tag.set(value, text) }));
-  }
-
-  // getPackageDataAPI(filter_name, project_filter){
-  //   const page = this.state.activePage;
-  //   let whereName = '';
-  //   let whereProject = '';
-  //   if(filter_name !== undefined && filter_name.length !== 0){
-  //     whereName = '"$or" : [{"pp_id":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"name":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"product_type":{"$regex" : "'+filter_name+'", "$options" : "i"}}, {"physical_group":{"$regex" : "'+filter_name+'", "$options" : "i"}} ]';
-  //   }
-  //   if(project_filter !== undefined && project_filter !== null && project_filter.length !== 0){
-  //     whereProject = '"list_of_project":{"$in" :["'+project_filter+'"]}'
-  //   }
-  //   if(project_filter === 'none'){
-  //     whereProject = '"list_of_project":null'
-  //   }
-  //   if(project_filter === 'all'){
-  //     whereProject = ''
-  //   }
-  //   let where = 'where={'+whereName+whereProject+'}'
-  //   if(whereName.length !== 0 && whereProject.length !== 0){
-  //     where = 'where={'+whereName+','+whereProject+'}'
-  //   }
-  //   // eslint-disable-next-line
-  //   this.getDatafromAPIBAM('/pp_op?max_results='+this.state.perPage+'&page='+page+'&'+where).then(res => {
-  //       if(res.data !== undefined){
-  //         if(res.data._items !== undefined){
-  //           this.getDataMaterial(res.data._items);
-  //           this.setState({ total_dataParent : res.data._meta, prevPage : this.state.activePage});
-  //       }else{
-  //         this.setState({ product_package : [], total_dataParent : 0, prevPage : this.state.activePage});
-  //       }
-  //     }
-  //   })
-  // }
 
   getPackageDataAPI() {
-    this.getDatatoAPINode('/productpackage?lmt='+this.state.perPage+'&pg='+this.state.activePage)
+    this.getDatafromAPINODE('/productpackage?lmt='+this.state.perPage+'&pg='+this.state.activePage)
       .then(res => {
-        // console.log("res config data", res);
         if (res.data !== undefined) {
-          console.log("res pp data", res.data);
           this.setState({ product_package: res.data.data, prevPage: this.state.activePage, total_dataParent : res.data.totalResults });
         } else {
           this.setState({ product_package: [], total_dataParent: 0, prevPage: this.state.activePage });
         }
       })
   }
-
-  // getDataMaterial(data_pp){
-  //   const array_id_doc = '"'+data_pp.map(e => e._id).join('", "')+'"';
-  //   this.getDatafromAPIBAM('/mc_op?where={"id_pp_doc" : {"$in" : ['+array_id_doc+']}}').then( res => {
-  //     if(res.data !== undefined){
-  //       this.setState({material_catalogue : res.data._items}, () => {
-  //         this.prepareView(data_pp);
-  //       });
-  //     }
-  //   })
-  // }
-
-  // async prepareView(data_pp){
-  //   let product_package = data_pp;
-  //   const material_catalogue = this.state.material_catalogue;
-  //   for(let i = 0; i < product_package.length; i++){
-  //     const material = material_catalogue.filter(e => e.pp_id === product_package[i].pp_id);
-  //     product_package[i]["list_of_material"] = material;
-  //   }
-  //   this.setState({product_package : product_package});
-  // }
 
   isSameValue(element, value) {
     //function for FindIndex
@@ -377,10 +217,8 @@ class PackageUpload extends React.Component {
   checkValueReturn(value1, value2) {
     // if value undefined return Value2
     if (typeof value1 !== 'undefined' && value1 !== null) {
-      console.log('value1', value1);
       return value1;
     } else {
-      console.log('value2', value2);
       return value2;
     }
   }
@@ -393,11 +231,8 @@ class PackageUpload extends React.Component {
           console.log(err);
         }
         else {
-          // console.log("excel render", JSON.stringify(rest.rows));
           this.setState({
             rowsXLS: rest.rows
-          }, () => {
-            // this.formatJustChild();
           });
         }
       });
@@ -406,7 +241,7 @@ class PackageUpload extends React.Component {
 
   checkFormatPackage(dataXLSHeader) {
     // cek the import data is for Product Package or Not
-    if (this.getIndex(dataXLSHeader, 'PP / Material') !== -1 && this.getIndex(dataXLSHeader, 'pp_id') !== -1 && this.getIndex(dataXLSHeader, 'product_name') !== -1 && this.getIndex(dataXLSHeader, 'product_type') !== -1 && this.getIndex(dataXLSHeader, 'physical_group') !== -1 & this.getIndex(dataXLSHeader, 'uom') !== -1 && this.getIndex(dataXLSHeader, 'qty') !== -1 && this.getIndex(dataXLSHeader, 'pp_cust_number') !== -1) {
+    if (this.getIndex(dataXLSHeader, 'PP / Material') !== -1 && this.getIndex(dataXLSHeader, 'package_id') !== -1 && this.getIndex(dataXLSHeader, 'package_name') !== -1 && this.getIndex(dataXLSHeader, 'product_type') !== -1 && this.getIndex(dataXLSHeader, 'physical_group') !== -1 & this.getIndex(dataXLSHeader, 'uom') !== -1 && this.getIndex(dataXLSHeader, 'pp_group_number') !== -1) {
       return true;
     } else {
       return false;
@@ -415,7 +250,7 @@ class PackageUpload extends React.Component {
 
   checkFormatMaterial(dataXLSHeader){
     // cek the import data is for Material or Not
-    if(this.getIndex(dataXLSHeader,'PP / Material') !== -1 && this.getIndex(dataXLSHeader,'pp_id') !== -1 && this.getIndex(dataXLSHeader,'material_id') !== -1 && (this.getIndex(dataXLSHeader,'material_name') !== -1 || this.getIndex(dataXLSHeader,'quantity') !== -1 || this.getIndex(dataXLSHeader,'uom') !== -1)){
+    if(this.getIndex(dataXLSHeader,'PP / Material') !== -1 && this.getIndex(dataXLSHeader,'package_id') !== -1 && this.getIndex(dataXLSHeader,'material_id') !== -1 && (this.getIndex(dataXLSHeader,'material_name') !== -1 || this.getIndex(dataXLSHeader,'quantity') !== -1 || this.getIndex(dataXLSHeader,'uom') !== -1)){
       return true;
     }else{
       return false;
@@ -429,7 +264,7 @@ class PackageUpload extends React.Component {
     const isMaterial = this.checkFormatMaterial(productPackageXLS[0]);
     if (isPackage === true) {
       const ppData = await this.getPackageFormat(productPackageXLS);
-      const postPackage = await this.postDatatoAPINode('/productpackage/manyProductPackage', { "ppData": ppData })
+      const postPackage = await this.postDatatoAPINODE('/productpackage/manyProductPackage', { "ppData": ppData })
         .then(res => {
           if (res.data !== undefined) {
             this.setState({ action_status : 'success' });
@@ -454,8 +289,7 @@ class PackageUpload extends React.Component {
         })
     } else if (isMaterial === true){
       let dataMat = await this.getMaterialFormat(productPackageXLS);
-      console.log("dataMat", JSON.stringify(dataMat));
-      const postMaterial = await this.postDatatoAPINode('/materialcatalogue/manyMaterialCatalogue', { "mcData": dataMat });
+      const postMaterial = await this.postDatatoAPINODE('/materialcatalogue/manyMaterialCatalogue', { "mcData": dataMat });
       if(postMaterial.data !== undefined){
         this.setState({ action_status : 'success' });
         this.toggleLoading();
@@ -483,154 +317,28 @@ class PackageUpload extends React.Component {
     }
   }
 
-
-
-  formatJustChild = async (newPackagePro) => {
-    const dataXLS = this.state.rowsXLS;
-    let materPP = [];
-    let signSuc = [];
-    const materialchild = dataXLS.map(e => e[this.getIndex(dataXLS[0], 'product_key')]).filter((e, n) => n > 0 && newPackagePro.includes(e) !== true);
-    if (materialchild.length !== 0) {
-      let materialchildUniq = [...new Set(materialchild)];
-      materialchildUniq = materialchildUniq.filter(e => e !== undefined && e !== null && e !== '' && e !== "");
-      const RespondGetPP = this.state.pp_all;
-      if (RespondGetPP !== undefined) {
-        if (RespondGetPP.length !== 0) {
-          for (let i = 0; i < materialchildUniq.length; i++) {
-            if (this.state.action_status !== null) {
-              this.setState({ action_status: null });
-            }
-            let dataChild = dataXLS.map(e => e).filter(e => (this.checkValuetoString(e[this.getIndex(dataXLS[0], 'PP / Material')])).toLowerCase() === "material" && e[this.getIndex(dataXLS[0], 'product_key')] === materialchildUniq[i]);
-            const dataParent = RespondGetPP.find(e => e.pp_id === materialchildUniq[i]);
-            if (dataParent !== undefined) {
-              for (let j = 0; j < dataChild.length; j++) {
-                let cekChild = dataParent.list_of_material.find(i => i.material_id === dataChild[j][this.getIndex(dataXLS[0], 'material_code')]);
-                if (cekChild !== undefined) {
-                  let materialType = this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0], 'material_type')], this.checkValueReturn(cekChild.material_type, "active_material"));
-                  if (materialType === 'active' || materialType === 'active_material') {
-                    materialType = "active_material";
-                  } else {
-                    if (materialType === 'passive' || materialType === 'passive_material') {
-                      materialType = "passive_material";
-                    } else {
-                      materialType = "active_material";
-                    }
-                  }
-                  let materialUpdate = {
-                    "material_name": this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0], 'material_name')], cekChild.material_name),
-                    "uom": this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0], 'unit')], cekChild.uom),
-                    "qty": this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0], 'quantity')], cekChild.qty),
-                    "material_price": this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0], 'price')], cekChild.material_price),
-                    "material_type": materialType,
-                    "updated_by": this.state.userId
-                  }
-                  console.log('material_type', JSON.stringify(materialUpdate));
-                  let dataPatch = await this.patchDatatoAPIBAM('/mc_op/' + cekChild._id, materialUpdate, cekChild._etag);
-                  if (dataPatch !== undefined && dataPatch.data !== undefined) {
-                    signSuc.push(dataPatch);
-                    console.log("dataPatch", dataPatch);
-                  } else {
-                    this.setState({ action_status: 'failed' })
-                  }
-                } else {
-                  let materialType = this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0], 'material_type')], 'active');
-                  if (materialType === 'active' || materialType === 'active_material') {
-                    materialType = "active_material";
-                  } else {
-                    if (materialType === 'passive' || materialType === 'passive_material') {
-                      materialType = "passive_material";
-                    } else {
-                      materialType = "active_material";
-                    }
-                  }
-                  let material = {
-                    "id_pp_doc": dataParent._id,
-                    "pp_id": dataParent.pp_id,
-                    "material_id": dataChild[j][this.getIndex(dataXLS[0], 'material_code')],
-                    "material_name": dataChild[j][this.getIndex(dataXLS[0], 'material_name')],
-                    "material_type": materialType,
-                    "uom": this.checkValue(dataChild[j][this.getIndex(dataXLS[0], 'unit')]),
-                    "qty": dataChild[j][this.getIndex(dataXLS[0], 'quantity')],
-                    "material_price": this.checkValueReturn(dataChild[j][this.getIndex(dataXLS[0], 'price')], 0),
-                    "deleted": 0,
-                    "created_by": this.state.userId,
-                    "updated_by": this.state.userId
-                  }
-                  materPP.push(material);
-                }
-              }
-            }
-          }
-        }
-        if (materPP.length !== 0) {
-          console.log('material_type', JSON.stringify(materPP));
-          const PostMat = await this.postDatatoAPIBAM('/mc_op', materPP);
-          if (PostMat.data !== undefined && PostMat.status < 400) {
-            if (PostMat.data._items === undefined) {
-              signSuc.push(PostMat.data);
-            } else {
-              signSuc = signSuc.concat(PostMat.data._items);
-            }
-          } else {
-            this.setState({ action_status: 'failed' })
-          }
-        }
-        if (signSuc.length === materialchild.filter(e => e !== undefined && e !== null && e !== '' && e !== "").length) {
-          this.setState({ action_status: 'success' }, () => {
-            this.toggleLoading();
-            setTimeout(function () { window.location.reload(); }, 2000);
-          });
-        } else {
-          if (signSuc.length !== 0) {
-            this.setState({ action_status: 'success', action_message: 'your data has been saved, but some data not saved or there is some double material in the same package' }, () => {
-              this.toggleLoading();
-            });
-          } else {
-            this.setState({ action_status: 'failed' });
-            this.toggleLoading();
-          }
-        }
-      } else {
-        this.setState({ action_status: 'success' }, () => {
-          this.toggleLoading();
-          setTimeout(function () { window.location.reload(); }, 2000);
-        });
-      }
-    } else {
-      this.setState({ action_status: 'success' }, () => {
-        this.toggleLoading();
-        setTimeout(function () { window.location.reload(); }, 2000);
-      });
-    }
-  }
-
   async getPackageFormat(dataImport) {
     const dataHeader = dataImport[0];
     const onlyParent = dataImport.map(e => e).filter(e => (this.checkValuetoString(e[this.getIndex(dataHeader, 'PP / Material')])).toLowerCase() === "pp");
-    // console.log(onlyParent);
     let product_package = [];
     let ppAlready = [];
     let ppError = [];
     let ppSpace = [];
     if (onlyParent !== undefined && onlyParent.length !== 0) {
       for (let i = 0; i < onlyParent.length; i++) {
-        let pp_id = this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'pp_id')]);
-        let pp_name = this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'product_name')]);
+        let pp_id = this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'package_id')]);
+        let pp_name = this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'package_name')]);
         if (pp_name === null || pp_name === undefined) { pp_name = pp_id }
-        // const countPP = pp_count+i;
         const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
-        // let pp_id_Gen = "PP"+ppcountID+" / "+pp_name;
         const pp = {
           "pp_id": pp_id,
-          "product_name": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'product_name')]),
+          "product_name": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'package_name')]),
           "product_type": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'product_type')]),
           "physical_group": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'physical_group')]),
-          "uom": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'unit')]),
-          "qty": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'qty')]),
-          "pp_cust_number": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'pp_cust_number')]),
-          "pp_group": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'pp_group')]),
+          "uom": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'uom')]),
+          "pp_cust_number": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'pp_group_number')]),
+          "pp_group": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'pp_group_name')]),
         }
-        // console.log("pp data", pp);
         if (pp.physical_group !== undefined && pp.physical_group !== null) {
           pp["physical_group"] = pp.physical_group.toString();
         }
@@ -640,8 +348,6 @@ class PackageUpload extends React.Component {
         if (pp.pp_group === null || pp.pp_group === undefined) {
           pp["pp_group"] = pp.pp_id;
         }
-        // let findPP = this.state.pp_all.find( e => e.pp_id === pp_id);
-        // if(findPP === undefined && pp_id !== null){
         if (/\s/.test(pp_id) === true) {
           ppSpace.push(i + 2);
         } else {
@@ -649,8 +355,6 @@ class PackageUpload extends React.Component {
         }
       }
       return product_package;
-      // }
-      console.log('pp_id', JSON.stringify(product_package));
     } else {
       this.setState({ action_status: 'failed', action_message: 'Please check your format' }, () => {
         this.toggleLoading();
@@ -664,7 +368,7 @@ class PackageUpload extends React.Component {
     let materialList = [];
     let matErr = [];
     for (let i = 0; i < onlyMaterial.length; i++) {
-      let pp_id = this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'pp_id')]);
+      let pp_id = this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'package_id')]);
       let mat_id = this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'material_id')]);
       let mat_name = this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'material_name')]);
       if (mat_name === null || mat_name === undefined) { mat_name = mat_id }
@@ -698,53 +402,8 @@ class PackageUpload extends React.Component {
     return materialList;
   }
 
-  getAllPP() {
-    const filter_name = this.state.filter_name;
-    const project_filter = this.state.project_filter;
-    let whereName = '';
-    let whereProject = '';
-    if (filter_name !== undefined && filter_name.length !== 0) {
-      whereName = '"$or" : [{"pp_id":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"name":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"product_type":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"physical_group":{"$regex" : "' + filter_name + '", "$options" : "i"}} ]';
-    }
-    if (project_filter !== undefined && project_filter !== null && project_filter.length !== 0) {
-      whereProject = '"list_of_project":{"$in" :["' + project_filter + '"]}'
-    }
-    if (project_filter === 'none') {
-      whereProject = '"list_of_project":null'
-    }
-    if (project_filter === 'all') {
-      whereProject = ''
-    }
-    let where = 'where={' + whereName + whereProject + '}'
-    if (whereName.length !== 0 && whereProject.length !== 0) {
-      where = 'where={' + whereName + ',' + whereProject + '}'
-    }
-    this.getDatafromAPIBAM('/pp_sorted_nonpage?' + where).then(resPP => {
-      if (resPP.data !== undefined) {
-        if (resPP.data._items.length !== 0) {
-          this.prepareData(resPP.data._items);
-        }
-      }
-    })
-  }
-
-  async prepareData(data_pp) {
-    let product_package = data_pp;
-    let material_catalogue = [];
-    const dataMaterial = await this.getDatafromAPIBAM('/mc_sorted_nonpage');
-    if (dataMaterial.data !== undefined) {
-      material_catalogue = dataMaterial.data._items;
-    }
-    for (let i = 0; i < product_package.length; i++) {
-      const material = material_catalogue.filter(e => e.pp_id === product_package[i].pp_id);
-      product_package[i]["list_of_material"] = material;
-    }
-    this.setState({ pp_all: product_package });
-  }
-
   componentDidMount() {
     this.getPackageDataAPI();
-    // this.getAllPP();
     document.title = 'Product Package | BAM';
   }
 
@@ -763,71 +422,12 @@ class PackageUpload extends React.Component {
     }
     this.setState({ packageSelected: packageSelected });
     this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(item, isChecked) }));
-    // console.log("packageSelected", dataMaterial);
-  }
-
-  handleChangeChecklistAll(e) {
-    const isChecked = e.target.checked;
-    const dataMaterial = this.state.product_package;
-    let packageSelected = this.state.packageSelected;
-    for (let i = 0; i < dataMaterial.length; i++) {
-      if (isChecked === true) {
-        if (this.state.packageChecked.get(dataMaterial[i]._id) !== true) {
-          packageSelected.push(dataMaterial[i]);
-        }
-        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(dataMaterial[i]._id, true) }));
-      } else {
-        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(dataMaterial[i]._id, false) }));
-        packageSelected = packageSelected.filter(function (pp) {
-          return pp._id !== dataMaterial[i]._id;
-        });
-      }
-    }
-    this.setState({ packageSelected: packageSelected, packageChecked_all: isChecked });
-    console.log("packageSelected", packageSelected);
-  }
-
-  handleChangeChecklistAllPP(e) {
-    const isChecked = e.target.checked;
-    const dataPPAll = this.state.pp_all;
-    let packageSelected = this.state.packageSelected;
-    if (isChecked === true) {
-      for (let i = 0; i < dataPPAll.length; i++) {
-        if (this.state.packageChecked.get(dataPPAll[i]._id) !== true) {
-          packageSelected.push(dataPPAll[i]);
-        }
-        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(dataPPAll[i]._id, true) }));
-      }
-      this.setState({ packageSelected: packageSelected, packageChecked_allPP: isChecked });
-    } else {
-      this.setState({ packageChecked: new Map(), packageSelected: [] });
-      this.setState({ packageChecked_allPP: isChecked });
-    }
-  }
-
-  toggleCheckout() {
-    this.setState(prevState => ({
-      modalCheckout: !prevState.modalCheckout
-    }));
   }
 
   handlePageChange(pageNumber) {
-    this.setState({ activePage: pageNumber, packageChecked_all: false }, () => {
+    this.setState({ activePage: pageNumber}, () => {
       this.getPackageDataAPI();
     });
-  }
-
-  viewProjectSelected(select_project_tag) {
-    let proSelected = [];
-    select_project_tag.forEach((value, key, map) => proSelected.push({ "name_project": value, "id_project": key }));
-    return proSelected;
-  }
-
-  deleteProjectSelected = (e) => {
-    let project_key = e.target.value;
-    let select_project_tag = this.state.select_project_tag;
-    select_project_tag.delete(project_key);
-    this.setState({ select_project_tag: select_project_tag });
   }
 
   toggleLoading() {
@@ -857,15 +457,9 @@ class PackageUpload extends React.Component {
       dataForm[6] = ppEdit.pp_group;
       dataForm[7] = ppEdit.notes;
       dataForm[8] = ppEdit.price;
-      let select_project_tag_edit = [];
-      if (ppEdit.list_of_project !== null && ppEdit.list_of_project !== undefined) {
-        select_project_tag_edit = ppEdit.list_of_project.map(e => e._id);
-      } else {
-        select_project_tag_edit = [];
-      }
-      this.setState({ PPForm: dataForm, select_project_tag_new: select_project_tag_edit });
+      this.setState({ PPForm: dataForm});
     } else {
-      this.setState({ PPForm: new Array(9).fill(null), select_project_tag_new: [] });
+      this.setState({ PPForm: new Array(9).fill(null)});
     }
     this.setState(prevState => ({
       modalPPFedit: !prevState.modalPPFedit
@@ -877,9 +471,7 @@ class PackageUpload extends React.Component {
     const index = e.target.name;
     let dataForm = this.state.PPForm;
     dataForm[parseInt(index)] = value;
-    this.setState({ PPForm: dataForm }, () => {
-      console.log("PPForm", this.state.PPForm);
-    });
+    this.setState({ PPForm: dataForm });
   }
 
   async saveUpdatePP() {
@@ -912,7 +504,7 @@ class PackageUpload extends React.Component {
         pp["pp_cust_number"] = pp.pp_id;
       }
     }
-    let patchData = await this.patchDatatoAPINode('/productpackage/updateManyProductPackage', {"ppData" : [pp]});
+    let patchData = await this.patchDatatoAPINODE('/productpackage/updateManyProductPackage', {"ppData" : [pp]});
     if (patchData === undefined) { patchData = {}; patchData["data"] = undefined }
     if (patchData.data !== undefined) {
       this.setState({ action_status: 'success' }, () => {
@@ -931,89 +523,45 @@ class PackageUpload extends React.Component {
     let respondSaveNew = undefined;
     let ppData = [];
     const dataPPNew = this.state.PPForm;
-    const dataAllPP = this.state.pp_all;
-    // console.log(dataAllPP);
-    // if (dataAllPP.find(e => e.pp_id === dataPPNew[1]) !== undefined) {
-      const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
-      const pp_name = dataPPNew[1];
-      let pp_id_Gen = "PP" + ppcountID + " / " + pp_name;
-      let pp = {
-        "pp_id": dataPPNew[0],
-        "product_name": pp_name.toString(),
-        "product_type": dataPPNew[2],
-        "physical_group": dataPPNew[3],
-        "uom": dataPPNew[4],
-        "qty": dataPPNew[5],
-        "pp_cust_number": this.checkValue(dataPPNew[8]),
-        "pp_group": this.checkValue(dataPPNew[6])
-        // "created_by": this.state.userId,
-        // "updated_by": this.state.userId
-      }
-      if (pp.pp_group === undefined || pp.pp_group === null) {
-        pp["pp_group"] = pp.product_name;
-      } else {
-        if (pp.pp_group.length === 0) {
-          pp["pp_group"] = pp.product_name;
-        }
-      }
-      if (pp.pp_cust_number === null || pp.pp_cust_number === undefined) {
-        pp["pp_cust_number"] = pp.pp_id;
-      } else {
-        if (pp.pp_cust_number.length === 0) {
-          pp["pp_cust_number"] = pp.pp_id;
-        }
-      }
-      ppData.push(pp);
-      // return ppData;
-      // console.log('pp data', ppData);
-      let postData = await this.postDatatoAPINode('/productpackage/manyProductPackage', {"ppData" : ppData})
-        .then(res => {
-          console.log('response postData', res);
-          if(res.data !== undefined){
-            this.toggleLoading();
-            console.log('single PP success created');
-          }else{
-            this.setState({ action_status: 'failed', action_message: res.response.data.error });
-            this.toggleLoading();
-          }
-        });
-      // console.log('postData Save', postData);
-      // if (postData === undefined) { postData = {}; postData["data"] = undefined }
-      // if (postData.data !== undefined) {
-      //   respondSaveNew = postData.data;
-      // }
-      // if (respondSaveNew !== undefined) {
-      //   this.setState({ action_status: 'success' }, () => {
-      //     this.toggleLoading();
-      //     setTimeout(function () { window.location.reload(); }, 2000);
-      //   });
-      // } else {
-      //   this.setState({ action_status: 'failed' });
-      //   this.toggleLoading();
-      // }
-    // } else {
-    //   this.toggleLoading();
-    //   this.setState({ action_status: 'failed', action_message: 'Duplicated PP ID' });
-    // }
-  }
-
-  // componentDidUpdate() {
-  //   if (this.state.prevPage !== this.state.activePage) {
-  //     this.getPackageDataAPI(this.state.filter_name, this.state.project_filter);
-  //   }
-  // }
-
-  handleSelectProjectChange = (newValue) => {
-    if (newValue !== null) {
-      const selectProject = [];
-      newValue.forEach(i => {
-        selectProject.push(i.value)
-      })
-      this.setState({ select_project_tag_new: selectProject });
-    } else {
-      this.setState({ select_project_tag_new: [] })
+    const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
+    const pp_name = dataPPNew[1];
+    let pp_id_Gen = "PP" + ppcountID + " / " + pp_name;
+    let pp = {
+      "pp_id": dataPPNew[0],
+      "product_name": pp_name.toString(),
+      "product_type": dataPPNew[2],
+      "physical_group": dataPPNew[3],
+      "uom": dataPPNew[4],
+      "qty": dataPPNew[5],
+      "pp_cust_number": this.checkValue(dataPPNew[8]),
+      "pp_group": this.checkValue(dataPPNew[6])
     }
-    return newValue;
+    if (pp.pp_group === undefined || pp.pp_group === null) {
+      pp["pp_group"] = pp.product_name;
+    } else {
+      if (pp.pp_group.length === 0) {
+        pp["pp_group"] = pp.product_name;
+      }
+    }
+    if (pp.pp_cust_number === null || pp.pp_cust_number === undefined) {
+      pp["pp_cust_number"] = pp.pp_id;
+    } else {
+      if (pp.pp_cust_number.length === 0) {
+        pp["pp_cust_number"] = pp.pp_id;
+      }
+    }
+    ppData.push(pp);
+    let postData = await this.postDatatoAPINODE('/productpackage/manyProductPackage', {"ppData" : ppData})
+      .then(res => {
+        console.log('response postData', res);
+        if(res.data !== undefined){
+          this.toggleLoading();
+          console.log('single PP success created');
+        }else{
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          this.toggleLoading();
+        }
+    });
   }
 
   numToSSColumn(num) {
@@ -1096,9 +644,9 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["PP / Material", "product_key", "product_package", "unit", "price", "product_package_physical_group", "product_package_type", "cust_product_number", "cust_product_name", "note"]);
-    ws.addRow(["PP", "product key 1", "L1 Name 1", "pc", 0, "Radio", "HW", "customer product number 1", "customer product name 1", ""]);
-    ws.addRow(["PP", "product key 2", "L2 Name 2", "pc", 0, "Radio", "HW", "customer product number 2", "customer product name 2", ""]);
+    ws.addRow(["PP / Material", "package_id", "package_name", "uom", "price", "physical_group", "product_type", "pp_group_number", "pp_group_name"]);
+    ws.addRow(["PP", "product key 1", "L1 Name 1", "pc", 0, "Radio", "HW", "customer product number 1", "customer product name 1"]);
+    ws.addRow(["PP", "product key 2", "L2 Name 2", "pc", 0, "Radio", "HW", "customer product number 2", "customer product name 2"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'PP Uploader Template.xlsx');
@@ -1110,7 +658,7 @@ class PackageUpload extends React.Component {
 
     const dataPrint = this.state.packageSelected;
 
-    ws.addRow(["PP / Material", "material_id", "material_name", "quantity", "uom", "material_type", "pp_id", "product_package_name"]);
+    ws.addRow(["PP / Material", "material_id", "material_name", "quantity", "uom", "material_type", "package_id", "package_name"]);
 
     for (let i = 0; i < dataPrint.length; i++) {
       ws.addRow(["Material", "child id", "child Name", "3", "pc", "active", dataPrint[i].pp_id, dataPrint[i].product_name])
@@ -1120,35 +668,26 @@ class PackageUpload extends React.Component {
     saveAs(new Blob([MaterialFormat]), 'Material Uploader Template.xlsx');
   }
 
-  render() {
-    function AlertProcess(props) {
-      const alert = props.alertAct;
-      let message = props.messageAct;
-      if (message === null || message === undefined) { message = "" }
-      if (alert === 'failed') {
-        return (
-          <div className="alert alert-danger" role="alert">
-            {message.length !== 0 ? message : "Sorry, there was an error when we tried to save it, please reload your page and try again"}
-          </div>
-        )
-      } else {
-        if (alert === 'success') {
-          return (
-            <div className="alert alert-success" role="alert">
-              {message.length !== 0 ? message : "Your data has been saved"}
-            </div>
-          )
-        } else {
-          return (
-            <div></div>
-          )
-        }
-      }
+  exportFormatConfig = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPrint = this.state.packageSelected;
+
+    ws.addRow(["config_id", "sap_number", "pp_id", "qty", "price", "currency", "config_description", "config_type", "qty_commercial"]);
+
+    for (let i = 0; i < dataPrint.length; i++) {
+      ws.addRow(["CONFIG_TEST", "SAP_NUMBER", dataPrint[i].pp_id, 2, 2400, "USD", "conf_desc_example", "conf_type_example", 235]);
     }
 
+    const MaterialFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MaterialFormat]), 'Config Uploader Template.xlsx');
+  }
+
+  render() {
     return (
       <div className="animated fadeIn">
-        <AlertProcess alertAct={this.state.action_status} messageAct={this.state.action_message} />
+        <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
         <Row>
           <Col xl="12">
             <Card style={{}}>
@@ -1164,6 +703,8 @@ class PackageUpload extends React.Component {
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatPackage}>> Product Package Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatConfig} disabled={this.state.packageChecked.length === 0}>> Config Template</DropdownItem>
+
                         <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
@@ -1308,7 +849,7 @@ class PackageUpload extends React.Component {
         </Row>
 
         {/* Modal New Single PP */}
-        <Modal isOpen={this.state.modalPPForm} toggle={this.togglePPForm} className="formmaterial">
+        <Modal isOpen={this.state.modalPPForm} toggle={this.togglePPForm} className="modal--form">
           <ModalHeader>Form Product Package</ModalHeader>
           <ModalBody>
             <Row>
@@ -1373,7 +914,7 @@ class PackageUpload extends React.Component {
         {/*  Modal New PP*/}
 
         {/* Modal Edit PP */}
-        <Modal isOpen={this.state.modalPPFedit} toggle={this.togglePPedit}>
+        <Modal isOpen={this.state.modalPPFedit} toggle={this.togglePPedit} className="modal--form">
           <ModalHeader>Form Update Product Package</ModalHeader>
           <ModalBody>
             <Row>
@@ -1413,12 +954,6 @@ class PackageUpload extends React.Component {
                       <Input type="text" name="5" placeholder="" value={this.state.PPForm[5]} onChange={this.handleChangeForm} />
                     </FormGroup>
                   </Col>
-                  {/* }<Col xs="4">
-                    <FormGroup>
-                      <Label htmlFor="price" >Price</Label>
-                      <Input type="number" name="8" placeholder="" value={this.state.PPForm[8]} onChange={this.handleChangeForm} />
-                    </FormGroup>
-                  </Col> */}
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="pp_group" >Product Name (Cust)</Label>
@@ -1433,40 +968,8 @@ class PackageUpload extends React.Component {
         </Modal>
         {/*  Modal Edit PP*/}
 
-        {/* Modal Checkout Material */}
-        <Modal isOpen={this.state.modalCheckout} toggle={this.toggleCheckout} className={this.props.className}>
-          <ModalHeader toggle={this.toggleCheckout}>Checkout</ModalHeader>
-          <ModalBody>
-            <Table hover bordered striped responsive size="sm">
-              <thead>
-                <tr>
-                  <th>Item Name</th>
-                  <th style={{ width: '50px' }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {this.state.product_package.filter(e => this.state.packageChecked.get(e.product_name) === true).map(pp => {
-                  return (
-                    <tr key={pp.product_name}>
-                      <td >{pp.product_name}</td>
-                      <td>
-                        <Checkbox name={pp.product_name} checked={this.state.packageChecked.get(pp.product_name)} onChange={this.handleChangeChecklist} />
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </Table>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="primary" onClick={this.SubmitBoQ}>Submit</Button>
-            <Button color="secondary" onClick={this.toggleCheckout}>Cancel</Button>
-          </ModalFooter>
-        </Modal>
-        {/* End Modal Checkout Material */}
-
         {/* Modal Loading */}
-        <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className + ' loading '}>
+        <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm modal--loading '}>
           <ModalBody>
             <div style={{ textAlign: 'center' }}>
               <div className="lds-ring"><div></div><div></div><div></div><div></div></div>

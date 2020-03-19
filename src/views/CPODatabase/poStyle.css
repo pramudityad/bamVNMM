@@ -8,23 +8,7 @@
   margin-bottom: 10px;
 }
 
-.search-box-project {
-  border-top: 0;
-  border-right : 0;
-  border-left: 0;
-  border-bottom-color: rgba(165,214,167 ,1);
-  width: 150px;
-  margin-bottom: 10px;
-}
-
 .search-box-material:focus {
-  outline: none !important;
-  border-top: 0;
-  border-right : 0;
-  border-left: 0;
-}
-
-.search-box-project:focus {
   outline: none !important;
   border-top: 0;
   border-right : 0;
@@ -36,13 +20,13 @@
     text-align: center;
 }
 
-.modal-content .formmaterial {
-  width: 700px;
-  right: 150px;
+.modal--form .modal-content {
+  width: 500px;
 }
 
-.modal-content .loading {
-  width: 200px;
+.modal--loading .modal-content {
+  width: 250px;
+  top : 100px;
 }
 
 .modal.show .modal-dialog .loading {

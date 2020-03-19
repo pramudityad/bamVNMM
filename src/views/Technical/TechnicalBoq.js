@@ -1918,7 +1918,7 @@ class TechnicalBoq extends Component {
     }
     const dataHeader = this.state.view_tech_header_table;
 
-    let ppIdRow = ["site_title", "tower_id", "tower_name"];
+    let ppIdRow = ["tower_id", "tower_name"];
     let ppTypeRow = ["", "", ""];
 
     let ppIdRowheader = [];
@@ -2159,7 +2159,7 @@ class TechnicalBoq extends Component {
                       <React.Fragment>
                       <Row></Row>
                         <input type="file" onChange={this.fileHandlerTechnical.bind(this)} style={{"padding":"10px 10px 5px 10px","visiblity":"hidden"}} />
-                        <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveTechBoq} disabled={this.state.action_status === 'failed' || this.state.result_check_tech === 0 }>
+                        <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveTechBoq} disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null }>
                           {this.state.rowsTech.length == 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
                         </Button>
                         <div style={{marginLeft : '10px', fontSize : '10px', color : 'red'}}><span>Please download Technical format uploader in Material Menu or <Link to='/Material'>Click Here</Link></span></div>

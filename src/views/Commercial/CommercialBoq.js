@@ -1541,8 +1541,8 @@ class CommercialBoq extends Component {
                           <th>Config ID</th>
                           <th>Qty</th>
                           <th>Price</th>
-                          <th>Incentive</th>
                           <th>Total Price</th>
+                          <th>Incentive</th>
                           <th>Total Price after Incentive</th>
                         </tr>
                       </thead>

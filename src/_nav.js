@@ -5,7 +5,7 @@ export default {
       icon: 'icon-folder-alt',
       children: [
         {
-          name: 'Product Manager',
+          name: 'Package Manager',
           url: '/product-package',
           icon: 'icon-folder',
         },
