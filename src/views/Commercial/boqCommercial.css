@@ -84,12 +84,13 @@
 /* Use position: sticky to have it stick to the edge
  * and top, right, or left to choose which edge to stick to: */
 
-.fixed th {
+.table-commercial__header--fixed th {
   position: -webkit-sticky; /* for Safari */
   position: sticky;
-  background: #c6f569;
+  background: rgba(69, 140, 173, 1);
   padding : 10px;
   text-align: center;
+  vertical-align: middle;
   top: 0;
 }
 

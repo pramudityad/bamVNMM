@@ -13,16 +13,12 @@ import Excel from 'exceljs';
 import { connect } from 'react-redux';
 import mydata from './data/getAllPackage.json'
 import mydata2 from './data/getAllPackage2.json'
-// const StepFlow = React.lazy(() => import('../../views/Defaultview/StepFlow'));
 
+const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
 );
-
-// const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-// const usernamePhilApi = 'pdbdash';
-// const passwordPhilApi = 'rtkO6EZLkxL1';
 
 const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
@@ -40,37 +36,23 @@ class ConfigUpload extends React.Component {
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
       pp_all: [],
-      conf_all: [],
-      material_all: [],
-      project_all: [],
-      project_filter: undefined,
-      filter_name: "",
+      filter_name: null,
       perPage: 10,
       prevPage: 1,
       activePage: 1,
       rowsXLS: [],
       action_status: null,
-      action_message: "",
+      action_message: null,
       product_package: [],
       config_package: [],
       check_config_package: [],
-      material_catalogue: [],
-      dataParent: [],
-      total_dataParent: 0,
-      dataChild: [],
-      modalCheckout: false,
-      packageSelected: [],
+      dataConfig: [],
+      total_dataConfig: 0,
       packageChecked: new Map(),
-      packageChecked_all: false,
-      packageChecked_allPP: false,
-      indexLoopSave: null,
-      select_project_tag: new Map(),
-      select_project_tag_new: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
       modalPPForm: false,
       PPForm: new Array(9).fill(null),
-      accordion: [false],
       collapse: false,
       loadprojectdata: [],
       modalPPFedit: false,
@@ -79,10 +61,7 @@ class ConfigUpload extends React.Component {
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
-    this.toggleAccordion = this.toggleAccordion.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
-    this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
-    this.toggleCheckout = this.toggleCheckout.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.changeFilterDebounce = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
@@ -91,14 +70,11 @@ class ConfigUpload extends React.Component {
     this.onEntered = this.onEntered.bind(this);
     this.onExiting = this.onExiting.bind(this);
     this.onExited = this.onExited.bind(this);
-    this.handleSelectProjectChange = this.handleSelectProjectChange.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
     this.saveNewPP = this.saveNewPP.bind(this);
     this.togglePPedit = this.togglePPedit.bind(this);
     this.saveUpdatePP = this.saveUpdatePP.bind(this);
-    this.getAllPP = this.getAllPP.bind(this);
-    this.handleChangeChecklistAllPP = this.handleChangeChecklistAllPP.bind(this);
   }
   toggle(i) {
     const newArray = this.state.dropdownOpen.map((element, index) => {
@@ -111,16 +87,6 @@ class ConfigUpload extends React.Component {
 
   toggleAddNew() {
     this.setState({ collapse: !this.state.collapse });
-  }
-
-  toggleAccordion(tab) {
-
-    const prevState = this.state.accordion;
-    const state = prevState.map((x, index) => tab === index ? !x : false);
-
-    this.setState({
-      accordion: state,
-    });
   }
 
   onEntering() {
@@ -148,12 +114,12 @@ class ConfigUpload extends React.Component {
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
-        // console.log("respond Get Data", respond);
+        console.log("respond Get Data", respond);
       }
       return respond;
     } catch (err) {
       let respond = err;
-      // console.log("respond Get Data err", err);
+      console.log("respond Get Data err", err);
       return respond;
     }
   }
@@ -199,8 +165,7 @@ class ConfigUpload extends React.Component {
   }
 
   changeFilterName(value) {
-    this.getPackageDataAPI(value, this.state.project_filter);
-    this.getAllPP();
+    this.getConfigDataAPI();
   }
 
   handleChangeFilter = (e) => {
@@ -210,44 +175,15 @@ class ConfigUpload extends React.Component {
     });
   }
 
-  handleChangeProjectFilter = (e) => {
-    const value = e.target.value;
-    this.setState({ project_filter: value }, () => {
-      this.getAllPP();
-    });
-    this.getPackageDataAPI(this.state.filter_name, value);
-
-  }
-
-  getPackageDataAPI() {
-    this.getDatatoAPINode('/packageconfig?lmt=' + this.state.perPage + '&pg=' + this.state.activePage)
-      .then(res => {
-        // console.log("res config data", res);
-        if (res.data !== undefined) {
-          // console.log("res config data", res.data);
-          this.setState({ config_package: res.data.data, prevPage: this.state.activePage, total_dataParent: res.data.totalResults })
-        } else {
-          this.setState({ config_package: [], total_dataParent: 0, prevPage: this.state.activePage });
-        }
-      })
-  }
-
-  handleChangeProjectTag = (e) => {
-    const value = e.target.value;
-    const index = e.target.selectedIndex;
-    const text = e.target[index].text;
-    this.setState(prevState => ({ select_project_tag: prevState.select_project_tag.set(value, text) }));
-  }
-
-
-  async prepareView(data_pp) {
-    let product_package = data_pp;
-    const material_catalogue = this.state.material_catalogue;
-    for (let i = 0; i < product_package.length; i++) {
-      const material = material_catalogue.filter(e => e.pp_id === product_package[i].pp_id);
-      product_package[i]["list_of_material"] = material;
-    }
-    this.setState({ product_package: product_package });
+  getConfigDataAPI(){
+    this.getDatatoAPINode('/packageconfig?lmt='+this.state.perPage+'&pg='+this.state.activePage)
+    .then(res =>{
+      if(res.data !== undefined){
+        this.setState({ config_package : res.data.data, prevPage : this.state.activePage, total_dataConfig : res.data.totalResults })
+      }else{
+        this.setState({ config_package : [], total_dataConfig : 0, prevPage : this.state.activePage});
+      }
+    })
   }
 
   isSameValue(element, value) {
@@ -299,21 +235,41 @@ class ConfigUpload extends React.Component {
           console.log(err);
         }
         else {
-          console.log("excel render", JSON.stringify(rest.rows));
           this.postDatatoAPINode('/packageConfig/checkPackageConfig', { "configData": rest.rows })
-            .then(res => {
-              console.log("res.data", res);
-              if (res.data !== undefined) {
-                this.setState({ check_config_package: res.data.configData, rowsXLS: rest.rows })
-                this.toggleLoading();
-              } else {
-                // console.log("res.data", res.response.data.error);
-                this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
-                  this.toggleLoading();
+          .then(res => {
+            if (res.data !== undefined) {
+              this.setState({ check_config_package: res.data.configData, rowsXLS: rest.rows })
+              this.toggleLoading();
+            } else {
+              if(res.response !== undefined){
+                if(res.response.data !== undefined){
+                  if(res.response.data.error !== undefined){
+                    if(res.response.data.error.message !== undefined){
+                      this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
+                        this.toggleLoading();
+                      });
+                    }else{
+                      this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
+                        this.toggleLoading();
+                      });
+                    }
+                  }else{
+                    this.setState({ action_status: 'failed'}, () => {
+                      this.toggleLoading();
+                    });
+                  }
+                }else{
+                  this.setState({ action_status: 'failed' }, () => {
+                    this.toggleLoading();
+                  });
+                }
+              }else{
+                this.setState({ action_status: 'failed' }, () => {
+                    this.toggleLoading();
                 });
               }
-            })
-          // this.setState({ rowsXLS: rest.rows })
+            }
+          })
         }
       });
     }
@@ -329,17 +285,15 @@ class ConfigUpload extends React.Component {
   }
 
 
-  saveProductPackage = async () => {
+  saveConfigBulk = async () => {
     this.toggleLoading();
     const isConfig = true;
     console.log(isConfig);
     if (isConfig === true) {
-      console.log("this.state.check_config_package", JSON.stringify(this.state.check_config_package));
       const postConfig = await this.postDatatoAPINode('/packageConfig/saveConfigBulk', { "configData": this.state.check_config_package });
       this.setState({ action_status: 'success' }, () => {
         this.toggleLoading();
       });
-      this.toggleLoading();
       console.log(postConfig);
     } else {
       this.setState({ action_status: 'failed', action_message: 'There is something error' }, () => {
@@ -348,56 +302,8 @@ class ConfigUpload extends React.Component {
     }
   }
 
-  getAllPP() {
-    // const filter_name = this.state.filter_name;
-    // const project_filter = this.state.project_filter;
-    // let whereName = '';
-    // let whereProject = '';
-    // if (filter_name !== undefined && filter_name.length !== 0) {
-    //   whereName = '"$or" : [{"pp_id":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"name":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"product_type":{"$regex" : "' + filter_name + '", "$options" : "i"}}, {"physical_group":{"$regex" : "' + filter_name + '", "$options" : "i"}} ]';
-    // }
-    // if (project_filter !== undefined && project_filter !== null && project_filter.length !== 0) {
-    //   whereProject = '"list_of_project":{"$in" :["' + project_filter + '"]}'
-    // }
-    // if (project_filter === 'none') {
-    //   whereProject = '"list_of_project":null'
-    // }
-    // if (project_filter === 'all') {
-    //   whereProject = ''
-    // }
-    // let where = 'where={' + whereName + whereProject + '}'
-    // if (whereName.length !== 0 && whereProject.length !== 0) {
-    //   where = 'where={' + whereName + ',' + whereProject + '}'
-    // }
-    this.getDatatoAPINode('/packageconfig')
-      .then(resConf => {
-        // console.log('conf data all', resConf.data.data)
-        // this.setState({ conf_all : resConf})
-        if (resConf.data !== undefined) {   
-          this.setState({ conf_all : resConf.data.data})
-        }else{
-          this.setState({ conf_all : []})
-        }
-      })
-  }
-
-  async prepareData(data_pp) {
-    let product_package = data_pp;
-    let material_catalogue = [];
-    const dataMaterial = await this.getDatafromAPIBAM('/mc_sorted_nonpage');
-    if (dataMaterial.data !== undefined) {
-      material_catalogue = dataMaterial.data._items;
-    }
-    for (let i = 0; i < product_package.length; i++) {
-      const material = material_catalogue.filter(e => e.pp_id === product_package[i].pp_id);
-      product_package[i]["list_of_material"] = material;
-    }
-    this.setState({ pp_all: product_package });
-  }
-
   componentDidMount() {
-    this.getPackageDataAPI();
-    this.getAllPP();
+    this.getConfigDataAPI();
     document.title = 'Config Manager | BAM';
   }
 
@@ -416,72 +322,13 @@ class ConfigUpload extends React.Component {
     }
     this.setState({ config_selected: configSelected });
     this.setState(prevState => ({ config_checked: prevState.config_checked.set(item, isChecked) }));
-    // console.log("packageSelected", dataMaterial);
-  }
-
-  handleChangeChecklistAll(e) {
-    const isChecked = e.target.checked;
-    const dataMaterial = this.state.product_package;
-    let packageSelected = this.state.packageSelected;
-    for (let i = 0; i < dataMaterial.length; i++) {
-      if (isChecked === true) {
-        if (this.state.packageChecked.get(dataMaterial[i]._id) !== true) {
-          packageSelected.push(dataMaterial[i]);
-        }
-        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(dataMaterial[i]._id, true) }));
-      } else {
-        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(dataMaterial[i]._id, false) }));
-        packageSelected = packageSelected.filter(function (pp) {
-          return pp._id !== dataMaterial[i]._id;
-        });
-      }
-    }
-    this.setState({ packageSelected: packageSelected, packageChecked_all: isChecked });
-    console.log("packageSelected", packageSelected);
-  }
-
-  handleChangeChecklistAllPP(e) {
-    const isChecked = e.target.checked;
-    const dataPPAll = this.state.pp_all;
-    let packageSelected = this.state.packageSelected;
-    if (isChecked === true) {
-      for (let i = 0; i < dataPPAll.length; i++) {
-        if (this.state.packageChecked.get(dataPPAll[i]._id) !== true) {
-          packageSelected.push(dataPPAll[i]);
-        }
-        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(dataPPAll[i]._id, true) }));
-      }
-      this.setState({ packageSelected: packageSelected, packageChecked_allPP: isChecked });
-    } else {
-      this.setState({ packageChecked: new Map(), packageSelected: [] });
-      this.setState({ packageChecked_allPP: isChecked });
-    }
-  }
-
-  toggleCheckout() {
-    this.setState(prevState => ({
-      modalCheckout: !prevState.modalCheckout
-    }));
   }
 
   handlePageChange(pageNumber) {
     console.log(`active page ${pageNumber}`)
-    this.setState({ activePage: pageNumber, packageChecked_all: false }, () => {
-      this.getPackageDataAPI();
+    this.setState({ activePage: pageNumber }, () => {
+      this.getConfigDataAPI();
     });
-  }
-
-  viewProjectSelected(select_project_tag) {
-    let proSelected = [];
-    select_project_tag.forEach((value, key, map) => proSelected.push({ "name_project": value, "id_project": key }));
-    return proSelected;
-  }
-
-  deleteProjectSelected = (e) => {
-    let project_key = e.target.value;
-    let select_project_tag = this.state.select_project_tag;
-    select_project_tag.delete(project_key);
-    this.setState({ select_project_tag: select_project_tag });
   }
 
   toggleLoading() {
@@ -511,15 +358,9 @@ class ConfigUpload extends React.Component {
       dataForm[6] = ppEdit.pp_group;
       dataForm[7] = ppEdit.notes;
       dataForm[8] = ppEdit.price;
-      let select_project_tag_edit = [];
-      if (ppEdit.list_of_project !== null && ppEdit.list_of_project !== undefined) {
-        select_project_tag_edit = ppEdit.list_of_project.map(e => e._id);
-      } else {
-        select_project_tag_edit = [];
-      }
-      this.setState({ PPForm: dataForm, select_project_tag_new: select_project_tag_edit });
+      this.setState({ PPForm: dataForm });
     } else {
-      this.setState({ PPForm: new Array(9).fill(null), select_project_tag_new: [] });
+      this.setState({ PPForm: new Array(9).fill(null)});
     }
     this.setState(prevState => ({
       modalPPFedit: !prevState.modalPPFedit
@@ -531,9 +372,7 @@ class ConfigUpload extends React.Component {
     const index = e.target.name;
     let dataForm = this.state.PPForm;
     dataForm[parseInt(index)] = value;
-    this.setState({ PPForm: dataForm }, () => {
-      console.log("PPForm", this.state.PPForm);
-    });
+    this.setState({ PPForm: dataForm });
   }
 
   async saveUpdatePP() {
@@ -646,25 +485,6 @@ class ConfigUpload extends React.Component {
     }
   }
 
-  // componentDidUpdate() {
-  //   if (this.state.prevPage !== this.state.activePage) {
-  //     this.getPackageDataAPI(this.state.filter_name, this.state.project_filter);
-  //   }
-  // }
-
-  handleSelectProjectChange = (newValue) => {
-    if (newValue !== null) {
-      const selectProject = [];
-      newValue.forEach(i => {
-        selectProject.push(i.value)
-      })
-      this.setState({ select_project_tag_new: selectProject });
-    } else {
-      this.setState({ select_project_tag_new: [] })
-    }
-    return newValue;
-  }
-
   numToSSColumn(num) {
     var s = '', t;
 
@@ -685,7 +505,7 @@ class ConfigUpload extends React.Component {
     // console.log('data conf map', this.state.conf_all.map(e => e.sap_number));
 
 
-    let headerRow = ["SAP Number", "Config ID",	"Account ID",	"ID Project Doc",	"Project Name",	"Total Price", "ID PP Doc",	"Qty",	"Qty Commercial",	"Currency",	"Price", "Description",	"PP ID",	"PP Group"]    
+    let headerRow = ["SAP Number", "Config ID",	"Account ID",	"ID Project Doc",	"Project Name",	"Total Price", "ID PP Doc",	"Qty",	"Qty Commercial",	"Currency",	"Price", "Description",	"PP ID",	"PP Group"]
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -727,26 +547,6 @@ class ConfigUpload extends React.Component {
     saveAs(new Blob([techFormat]), 'Technical BOQ Format.xlsx');
   }
 
-  exportTSSRFormat = async () => {
-    const wb = new Excel.Workbook();
-    const ws = wb.addWorksheet();
-
-    const datapackageChecked = this.state.packageSelected;
-    console.log("datapackageChecked", datapackageChecked);
-
-    let ppIdArray = ["site_title", "site_id", "site_name", "Site Config", "Prioritization", "Condition"];
-    let phyGroupArray = ["", "", "", "NOTE", "NOTE", "NOTE"];
-
-    ppIdArray = ppIdArray.concat(datapackageChecked.map(pp => pp.pp_id + " /// " + pp.product_name));
-    phyGroupArray = phyGroupArray.concat(datapackageChecked.map(pp => pp.product_type));
-
-    ws.addRow(ppIdArray);
-    ws.addRow(ppIdArray);
-
-    const tssrFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([tssrFormat]), 'PS BOQ Format.xlsx');
-  }
-
   // Config Template XLSX bulk upload
   exportFormatConfig = async () => {
     const wb = new Excel.Workbook();
@@ -760,51 +560,10 @@ class ConfigUpload extends React.Component {
     saveAs(new Blob([PPFormat]), 'Config Uploader Template.xlsx');
   }
 
-  exportFormatMaterial = async () => {
-    const wb = new Excel.Workbook();
-    const ws = wb.addWorksheet();
-
-    const dataPrint = this.state.packageSelected;
-
-    ws.addRow(["PP / Material", "material_code", "material_name", "quantity", "unit", "material_type", "product_key", "product_package"]);
-
-    for (let i = 0; i < dataPrint.length; i++) {
-      ws.addRow(["Material", "child Code", "child Name", "3", "pc", "active", dataPrint[i].pp_id, dataPrint[i].product_name])
-    }
-
-    const MaterialFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MaterialFormat]), 'Material Uploader Template.xlsx');
-  }
-
   render() {
-    function AlertProcess(props) {
-      const alert = props.alertAct;
-      let message = props.messageAct;
-      if (message === null || message === undefined) { message = "" }
-      if (alert === 'failed') {
-        return (
-          <div className="alert alert-danger" role="alert">
-            {message.length !== 0 ? message : "Sorry, there was an error when we tried to save it, please reload your page and try again"}
-          </div>
-        )
-      } else {
-        if (alert === 'success') {
-          return (
-            <div className="alert alert-success" role="alert">
-              {message.length !== 0 ? message : "Your data has been saved"}
-            </div>
-          )
-        } else {
-          return (
-            <div></div>
-          )
-        }
-      }
-    }
-
     return (
       <div className="animated fadeIn">
-        <AlertProcess alertAct={this.state.action_status} messageAct={this.state.action_message} />
+        <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
         <Row>
           <Col xl="12">
             <Card style={{}}>
@@ -850,8 +609,9 @@ class ConfigUpload extends React.Component {
                     </div>
                   </CardBody>
                   <CardFooter>
-                    <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
-                    {/* <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button> */}
+                    <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveConfigBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
+                    {/* <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.checkProductPackage}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;Check </Button>
+                    <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>*/}
                   </CardFooter>
                 </Card>
               </Collapse>
@@ -885,6 +645,7 @@ class ConfigUpload extends React.Component {
                             <th>Product Name</th>
                             {/* <th>Unit</th> */}
                             <th>Qty</th>
+                            <th>Qty Comm</th>
                             <th>Price</th>
                             <th></th>
                           </tr>
@@ -893,10 +654,11 @@ class ConfigUpload extends React.Component {
                           {/* dummy data */}
                           {this.state.config_package.map(pp =>
                             <React.Fragment key={pp._id + "frag"}>
-                              <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={pp._id}>
+                              <tr style={{ backgroundColor: '#d3d9e7', fontWeight : 700 }} className='fixbody' key={pp._id}>
                                 <td align="center"><Checkbox name={pp._id} checked={this.state.config_checked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_id}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.sap_number}</td>
+                                <td style={{ textAlign: 'center' }}>{pp.config_type}</td>
                                 <td></td>
                                 <td></td>
                                 <td></td>
@@ -915,6 +677,7 @@ class ConfigUpload extends React.Component {
                                   <td style={{ textAlign: 'center' }}>{pl.pp_id}</td>
                                   <td style={{ textAlign: 'center' }}>{pl.pp_group}</td>
                                   <td style={{ textAlign: 'center' }}>{pl.qty}</td>
+                                  <td style={{ textAlign: 'center' }}>{pl.qty_commercial}</td>
                                   <td style={{ textAlign: 'center' }}>{pl.price}</td>
                                 </tr>
                               )}
@@ -930,7 +693,7 @@ class ConfigUpload extends React.Component {
                     <Pagination
                       activePage={this.state.activePage}
                       itemsCountPerPage={this.state.perPage}
-                      totalItemsCount={this.state.total_dataParent}
+                      totalItemsCount={this.state.total_dataConfig}
                       pageRangeDisplayed={5}
                       onChange={this.handlePageChange}
                       itemClass="page-item"
@@ -940,7 +703,7 @@ class ConfigUpload extends React.Component {
 
                   <Col>
                     <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
-                      <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
+                      <Button color="warning" disabled={this.state.config_checked.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
                     </div>
                   </Col>
                 </Row>
@@ -1085,38 +848,6 @@ class ConfigUpload extends React.Component {
           </ModalFooter>
         </Modal>
         {/*  Modal Edit PP*/}
-
-        {/* Modal Checkout Material */}
-        <Modal isOpen={this.state.modalCheckout} toggle={this.toggleCheckout} className={this.props.className}>
-          <ModalHeader toggle={this.toggleCheckout}>Checkout</ModalHeader>
-          <ModalBody>
-            <Table hover bordered striped responsive size="sm">
-              <thead>
-                <tr>
-                  <th>Item Name</th>
-                  <th style={{ width: '50px' }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {this.state.product_package.filter(e => this.state.packageChecked.get(e.product_name) === true).map(pp => {
-                  return (
-                    <tr key={pp.product_name}>
-                      <td >{pp.product_name}</td>
-                      <td>
-                        <Checkbox name={pp.product_name} checked={this.state.packageChecked.get(pp.product_name)} onChange={this.handleChangeChecklist} />
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </Table>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="primary" onClick={this.SubmitBoQ}>Submit</Button>
-            <Button color="secondary" onClick={this.toggleCheckout}>Cancel</Button>
-          </ModalFooter>
-        </Modal>
-        {/* End Modal Checkout Material */}
 
         {/* Modal Loading */}
         <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className + ' loading '}>

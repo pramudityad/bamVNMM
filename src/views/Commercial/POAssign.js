@@ -1779,16 +1779,16 @@ class POAssign extends Component {
                                 <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>PO INFORMATION</td>
                               </tr>
                               <tr>
-                                <td style={{width : '100px'}}>PO Number </td>
-                                <td>:</td>
+                                <td style={{width : '100px', verticalAlign : 'top'}}>PO Number </td>
+                                <td style={{verticalAlign : 'top'}} > : &nbsp; &nbsp;</td>
                                 <td>
                                   {this.state.data_comm_boq.po_data.map(po =>
                                     <tr>
-                                      <td colSpan="2" style={{textAlign : 'left'}}>{po.po_number}</td>
+                                      <td colSpan="2" style={{textAlign : 'left', border : '1px solid #c8ced3', paddingLeft : '10px'}}>{po.po_number}</td>
                                     </tr>
                                   )}
                                   <tr>
-                                    <td style={{width : '200px'}}>
+                                    <td style={{width : '200px', border : '1px solid #c8ced3', borderRight : '0px', paddingLeft : '10px'}}>
                                       <Select
                                         cacheOptions
                                         options={this.state.list_po_data_selection}
@@ -1796,7 +1796,7 @@ class POAssign extends Component {
                                         onChange={this.handleInputChange}
                                       />
                                     </td>
-                                    <td>
+                                    <td style={{border : '1px solid #c8ced3', borderLeft : '0px'}}>
                                       <Button className="btn-success" style={{margin : '10px'}} color="success" onClick={this.updatePOAssign} disabled={this.state.data_po_data_selected === null} >
                                         Save
                                       </Button>
@@ -1819,8 +1819,9 @@ class POAssign extends Component {
                           <th>Config ID</th>
                           <th>Qty</th>
                           <th>Price</th>
+                          <th>Total Price</th>
                           <th>Incentive</th>
-                          <th>Net Price</th>
+                          <th>Total Price after Incentive</th>
                         </tr>
                       </thead>
                       {this.state.data_comm_boq_items.map(site =>
@@ -1832,8 +1833,9 @@ class POAssign extends Component {
                               <td>{item.config_id}</td>
                               <td>{item.qty}</td>
                               <td>{item.price}</td>
-                              <td style={{width : '150px'}}>{item.incentive}</td>
                               <td>{item.total_price}</td>
+                              <td style={{width : '150px'}}>{item.incentive}</td>
+                              <td style={{width : '250px'}}>{item.net_price_incentive}</td>
                             </tr>
                           )}
                         </tbody>
