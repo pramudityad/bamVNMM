@@ -20,11 +20,6 @@ export default {
           icon: 'icon-docs',
         },
         {
-          name: 'CPO BOQ',
-          url: '/list-cpo-boq',
-          icon: 'icon-docs',
-        },
-        {
           name: 'Commercial BOQ ',
           url: '/list-commercial',
           icon: 'icon-tag',
@@ -35,10 +30,15 @@ export default {
           icon: 'icon-globe',
         },
         {
-          name: 'Ordering BOQ',
-          url: '/list-ordering',
-          icon: 'icon-cursor',
+          name: 'CPO BOQ',
+          url: '/list-cpo-boq',
+          icon: 'icon-docs',
         },
+        // {
+        //   name: 'Ordering BOQ',
+        //   url: '/list-ordering',
+        //   icon: 'icon-cursor',
+        // },
 //        {
 //          name: 'TSSR Matrix BOQ ',
 //          url: '/list-tssr-matix',

@@ -271,10 +271,22 @@ class PackageUpload extends React.Component {
             this.toggleLoading();
           } else {
             if(res.response !== undefined){
-              if(res.response.error !== undefined){
-                this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
-                  this.toggleLoading();
-                });
+              if(res.response.data !== undefined){
+                if(res.response.data.error !== undefined){
+                  if(res.response.data.error.message !== undefined){
+                    this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
+                      this.toggleLoading();
+                    });
+                  }else{
+                    this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
+                      this.toggleLoading();
+                    });
+                  }
+                }else{
+                  this.setState({ action_status: 'failed'}, () => {
+                    this.toggleLoading();
+                  });
+                }
               }else{
                 this.setState({ action_status: 'failed'}, () => {
                   this.toggleLoading();
@@ -295,10 +307,22 @@ class PackageUpload extends React.Component {
         this.toggleLoading();
       }else{
         if(postMaterial.response !== undefined){
-          if(postMaterial.response.error !== undefined){
-            this.setState({ action_status: 'failed', action_message: postMaterial.response.data.error }, () => {
-              this.toggleLoading();
-            });
+          if(postMaterial.response.data !== undefined){
+            if(postMaterial.response.data.error !== undefined){
+              if(postMaterial.response.data.error.message !== undefined){
+                this.setState({ action_status: 'failed', action_message: postMaterial.response.data.error.message }, () => {
+                  this.toggleLoading();
+                });
+              }else{
+                this.setState({ action_status: 'failed', action_message: postMaterial.response.data.error }, () => {
+                  this.toggleLoading();
+                });
+              }
+            }else{
+              this.setState({ action_status: 'failed'}, () => {
+                this.toggleLoading();
+              });
+            }
           }else{
             this.setState({ action_status: 'failed'}, () => {
               this.toggleLoading();
@@ -348,11 +372,7 @@ class PackageUpload extends React.Component {
         if (pp.pp_group === null || pp.pp_group === undefined) {
           pp["pp_group"] = pp.pp_id;
         }
-        if (/\s/.test(pp_id) === true) {
-          ppSpace.push(i + 2);
-        } else {
-          product_package.push(pp);
-        }
+        product_package.push(pp);
       }
       return product_package;
     } else {
@@ -855,11 +875,11 @@ class PackageUpload extends React.Component {
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="pp_id">PP ID</Label>
+                  <Label htmlFor="pp_id">Package ID</Label>
                   <Input type="text" name="0" placeholder="" value={this.state.PPForm[0]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="product_name">Product Name</Label>
+                  <Label htmlFor="product_name">Package Name</Label>
                   <Input type="text" name="1" placeholder="" value={this.state.PPForm[1]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup row>
@@ -891,13 +911,13 @@ class PackageUpload extends React.Component {
                   </Col>
                   <Col xs="6">
                     <FormGroup>
-                      <Label htmlFor="pp_cust_number" >Product Number (Cust)</Label>
+                      <Label htmlFor="pp_cust_number" >Package Number (Group)</Label>
                       <Input type="text" name="8" placeholder="" value={this.state.PPForm[8]} onChange={this.handleChangeForm} />
                     </FormGroup>
                   </Col>
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="pp_group" >PP Group</Label>
+                  <Label htmlFor="pp_group" >Package Number (Name)</Label>
                   <Input type="text" name="6" placeholder="" value={this.state.PPForm[6]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 {/* <FormGroup>
@@ -920,8 +940,8 @@ class PackageUpload extends React.Component {
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="pp_key">Product Key</Label>
-                  <Input type="text" name="0" placeholder="" value={this.state.PPForm[0]} onChange={this.handleChangeForm} />
+                  <Label htmlFor="pp_key">Package ID</Label>
+                  <Input type="text" name="0" placeholder="" value={this.state.PPForm[0]} onChange={this.handleChangeForm} disabled/>
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="package_name" >Name</Label>
@@ -950,13 +970,13 @@ class PackageUpload extends React.Component {
                 <FormGroup row>
                   <Col xs="12">
                     <FormGroup>
-                      <Label htmlFor="pp_id" >Product Number (Cust)</Label>
+                      <Label htmlFor="pp_id" >Package Number (Group)</Label>
                       <Input type="text" name="5" placeholder="" value={this.state.PPForm[5]} onChange={this.handleChangeForm} />
                     </FormGroup>
                   </Col>
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="pp_group" >Product Name (Cust)</Label>
+                  <Label htmlFor="pp_group" >Package Name (Group)</Label>
                   <Input type="text" name="6" placeholder="" value={this.state.PPForm[6]} onChange={this.handleChangeForm} />
                 </FormGroup>
               </Col>

@@ -114,12 +114,12 @@ class ConfigUpload extends React.Component {
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
-        // console.log("respond Get Data", respond);
+        console.log("respond Get Data", respond);
       }
       return respond;
     } catch (err) {
       let respond = err;
-      // console.log("respond Get Data err", err);
+      console.log("respond Get Data err", err);
       return respond;
     }
   }
@@ -243,9 +243,21 @@ class ConfigUpload extends React.Component {
             } else {
               if(res.response !== undefined){
                 if(res.response.data !== undefined){
-                  this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
-                    this.toggleLoading();
-                  });
+                  if(res.response.data.error !== undefined){
+                    if(res.response.data.error.message !== undefined){
+                      this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
+                        this.toggleLoading();
+                      });
+                    }else{
+                      this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
+                        this.toggleLoading();
+                      });
+                    }
+                  }else{
+                    this.setState({ action_status: 'failed'}, () => {
+                      this.toggleLoading();
+                    });
+                  }
                 }else{
                   this.setState({ action_status: 'failed' }, () => {
                     this.toggleLoading();
@@ -633,6 +645,7 @@ class ConfigUpload extends React.Component {
                             <th>Product Name</th>
                             {/* <th>Unit</th> */}
                             <th>Qty</th>
+                            <th>Qty Comm</th>
                             <th>Price</th>
                             <th></th>
                           </tr>
@@ -641,10 +654,11 @@ class ConfigUpload extends React.Component {
                           {/* dummy data */}
                           {this.state.config_package.map(pp =>
                             <React.Fragment key={pp._id + "frag"}>
-                              <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={pp._id}>
+                              <tr style={{ backgroundColor: '#d3d9e7', fontWeight : 700 }} className='fixbody' key={pp._id}>
                                 <td align="center"><Checkbox name={pp._id} checked={this.state.config_checked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_id}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.sap_number}</td>
+                                <td style={{ textAlign: 'center' }}>{pp.config_type}</td>
                                 <td></td>
                                 <td></td>
                                 <td></td>
@@ -663,6 +677,7 @@ class ConfigUpload extends React.Component {
                                   <td style={{ textAlign: 'center' }}>{pl.pp_id}</td>
                                   <td style={{ textAlign: 'center' }}>{pl.pp_group}</td>
                                   <td style={{ textAlign: 'center' }}>{pl.qty}</td>
+                                  <td style={{ textAlign: 'center' }}>{pl.qty_commercial}</td>
                                   <td style={{ textAlign: 'center' }}>{pl.price}</td>
                                 </tr>
                               )}

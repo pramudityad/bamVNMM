@@ -1929,7 +1929,7 @@ class TechnicalBoq extends Component {
     ppIdRow = ppIdRow.concat(header_note)
     // ppTypeRow = ppTypeRow.concat(header_note.map(e => "NOTE"));
 
-    dataHeader.config_id.map((e,idx) => ppIdRowheader = ppIdRowheader.concat(["BOQ "+(idx+1), "QTY "+(idx+1)]));
+    dataHeader.config_id.map((e,idx) => ppIdRowheader = ppIdRowheader.concat(["BOQ "+(idx+1), "BOQ DESC "+(idx+1),"QTY "+(idx+1)]));
 
     ppIdRow = ppIdRow.concat(ppIdRowheader);
     // ws.addRow(ppTypeRow);
@@ -1938,10 +1938,10 @@ class TechnicalBoq extends Component {
       let qtyConfig = []
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
         header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
-        dataSites[i].siteItemConfigVersion.map(e => qtyConfig = qtyConfig.concat([e.config_id, e.qty]));
+        dataSites[i].siteItemConfigVersion.map(e => qtyConfig = qtyConfig.concat([e.config_id, e.description, e.qty]));
       }else{
         header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
-        dataSites[i].siteItemConfig.map(e => e.qty !== 0 ? qtyConfig = qtyConfig.concat([e.config_id, e.qty]) : "");
+        dataSites[i].siteItemConfig.map(e => e.qty !== 0 ? qtyConfig = qtyConfig.concat([e.config_id, e.description, e.qty]) : "");
       }
       ws.addRow([dataSites[i].site_id, dataSites[i].site_name].concat(qtyConfig));
     }
@@ -1963,18 +1963,18 @@ class TechnicalBoq extends Component {
     }
     const dataHeader = this.state.view_tech_header_table;
 
-    let ppIdRow = ["tower_id", "tower_name", "Configuration BOQ", "Qty"];
+    let ppIdRow = ["tower_id", "tower_name", "Type", "Configuration BOQ", "SAP NUmber", "Qty"];
 
     ws.addRow(ppIdRow);
     for(let i = 0; i < dataSites.length ; i++){
       let qtyConfig = []
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
         for(let j = 0; j < dataSites[i].siteItemConfigVersion.length; j++ ){
-          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfigVersion[j].config_id, dataSites[i].siteItemConfigVersion[j].qty]);
+          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfigVersion[j].config_type, dataSites[i].siteItemConfigVersion[j].config_id, dataSites[i].siteItemConfigVersion[j].sap_number, dataSites[i].siteItemConfigVersion[j].qty]);
         }
       }else{
         for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
-          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].qty]);
+          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfig[j].config_type, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty]);
         }
       }
     }
