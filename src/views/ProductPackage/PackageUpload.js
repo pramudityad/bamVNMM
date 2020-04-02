@@ -664,9 +664,9 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["PP / Material", "package_id", "package_name", "uom", "price", "physical_group", "product_type", "pp_group_number", "pp_group_name"]);
-    ws.addRow(["PP", "product key 1", "L1 Name 1", "pc", 0, "Radio", "HW", "customer product number 1", "customer product name 1"]);
-    ws.addRow(["PP", "product key 2", "L2 Name 2", "pc", 0, "Radio", "HW", "customer product number 2", "customer product name 2"]);
+    ws.addRow(["PP / Material", "Bundle ID", "Bundle Name", "UOM", "Physical Group", "Product Type", "PP Group Number", "PP Group Name"]);
+    ws.addRow(["PP", "product key 1", "L1 Name 1", "pc", "Radio", "HW", "customer product number 1", "customer product name 1"]);
+    ws.addRow(["PP", "product key 2", "L2 Name 2", "pc", "Radio", "HW", "customer product number 2", "customer product name 2"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'PP Uploader Template.xlsx');
@@ -785,9 +785,9 @@ class PackageUpload extends React.Component {
                             <th>
                               {/* <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} /> */}
                             </th>
-                            <th style={{ minWidth: '150px' }}>Product Package</th>
+                            <th style={{ minWidth: '150px' }}>Bundle Name</th>
                             <th>Material Name</th>
-                            <th>PP / Material Code</th>
+                            <th>Bundle ID</th>
                             <th>Unit</th>
                             <th>Qty</th>
                             <th>Price</th>
@@ -875,11 +875,11 @@ class PackageUpload extends React.Component {
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="pp_id">Package ID</Label>
+                  <Label htmlFor="pp_id">Bundle ID</Label>
                   <Input type="text" name="0" placeholder="" value={this.state.PPForm[0]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="product_name">Package Name</Label>
+                  <Label htmlFor="product_name">Bundle Name</Label>
                   <Input type="text" name="1" placeholder="" value={this.state.PPForm[1]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup row>
