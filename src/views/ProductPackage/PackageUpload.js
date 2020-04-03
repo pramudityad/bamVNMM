@@ -693,12 +693,21 @@ class PackageUpload extends React.Component {
     const ws = wb.addWorksheet();
 
     const dataPrint = this.state.packageSelected;
+    console.log('pp selected', dataPrint);
 
-    ws.addRow(["config_id", "sap_number", "pp_id", "qty", "price", "currency", "config_description", "config_type", "qty_commercial"]);
+    let confArray = ["2020_Config-1D", "Coverage", "Cov_2020_Config-4_0610", "2515914", "RBS:COV_2020_CONFIG-4DC", "Service", "Add 1x Radio 2219 B3+ 1xRadio 2217 B1 + Ant 45 degree_Radio2219ExDismantle"];
+    let typeArray = ["Config Name", "Program", "Config name + Program", "SAP Number", "SAP Description", "Category", "Config description"]
+    
+    // ws.addRow(["config_id", "sap_number", "pp_id", "qty", "price", "currency", "config_description", "config_type", "qty_commercial"]);
+    typeArray = typeArray.concat(dataPrint.map(pp => pp.pp_id + " /// " + pp.product_name));
+    confArray = confArray.concat(dataPrint.map(pp => pp.price));
+    
+    // for (let i = 0; i < dataPrint.length; i++) {
+    //   ws.addRow(["CONFIG_TEST", "SAP_NUMBER", dataPrint[i].pp_id, 2, 2400, "USD", "conf_desc_example", "conf_type_example", 235]);
+    // }
 
-    for (let i = 0; i < dataPrint.length; i++) {
-      ws.addRow(["CONFIG_TEST", "SAP_NUMBER", dataPrint[i].pp_id, 2, 2400, "USD", "conf_desc_example", "conf_type_example", 235]);
-    }
+    ws.addRow(typeArray);
+    ws.addRow(confArray);
 
     const MaterialFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MaterialFormat]), 'Config Uploader Template.xlsx');
@@ -724,7 +733,6 @@ class PackageUpload extends React.Component {
                         <DropdownItem onClick={this.exportFormatPackage}>> Product Package Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfig} disabled={this.state.packageChecked.length === 0}>> Config Template</DropdownItem>
-
                         <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
