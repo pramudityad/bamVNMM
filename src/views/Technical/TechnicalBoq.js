@@ -10,6 +10,7 @@ import Excel from 'exceljs';
 import Select from 'react-select';
 import { Redirect, Link } from 'react-router-dom';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
+import jsonData from './TechnicalNewFormat.js';
 
 const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
 const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
@@ -30,6 +31,88 @@ const passwordXL = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
+// const Config_group_type_DEFAULT = ["General Info", "General Info", "General Info", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "SERVICE", "SERVICE", "SERVICE", "SERVICE", "SERVICE", "SERVICE", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME"]
+//
+// const Config_group_DEFAULT = ["TowerID", "Program Name", "SOW", "Config Cabinet", "qty", "Config Add L9", "qty", "Config Add L10", "qty", "Config Add L18", "qty", "Config Add L21", "qty", "Config BB 5212 (Reuse)", "qty", "Config UPG BW 1800", "qty", "Swapped Module/BB", "qty", "Config UPG BW 2100", "qty", "Config Radio B0 MIMO 2T2R", "qty", "Config Kit Radio B1 MIMO 2T2R", "qty", "Config Radio B1 MIMO 2T2R", "qty", "Config Kit Radio B3 MIMO 2T2R", "qty", "Config Radio B3 MIMO 2T2R", "qty", "Config Radio B1 MIMO 4T4R", "qty", "Config Radio B3 MIMO 4T4R", "qty", "Config Radio B1 + B3 DUAL BAND 2T2R", "qty", "Config Radio B1 + B3 DUAL BAND 4T4R", "qty", "Config Multi Sector", "qty", "Config Antenna", "qty", "Config Service 1", "qty", "Config Service 2", "qty", "Config Service 3", "qty", "Material 1 Power", "qty 1", "Material 2 Power", "qty 2", "Material 3 Power", "qty 3", "Material 4 Power", "qty 4", "Material 5 Power", "qty 5", "Service 1 Power Qty 1", "Service 2 Power", "qty 2", "Service 3 Power Qty 3", "Material 1 CME", "qty 1", "Material 2 CME", "qty 2", "Material 3 CME", "qty 3", "Material 4 CME", "qty 4", "Material 5 CME", "qty 5", "Service 1 CME", "SAP Number 1", "qty 1", "Service 2 CME", "SAP Number 2", "qty 2", "Service 3 CME", "SAP Number 3", "qty 3"];
+
+const Config_group_type_DEFAULT = ["HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "SERVICE", "SERVICE", "SERVICE", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME"]
+
+const Config_group_DEFAULT = ["Config Cabinet", "Config Add L9", "Config Add L10", "Config Add L18", "Config Add L21", "Config BB 5212 (Reuse)", "Config UPG BW 1800", "Swapped Module/BB", "Config UPG BW 2100", "Config Radio B0 MIMO 2T2R", "Config Kit Radio B1 MIMO 2T2R", "Config Radio B1 MIMO 2T2R", "Config Kit Radio B3 MIMO 2T2R", "Config Radio B3 MIMO 2T2R", "Config Radio B1 MIMO 4T4R", "Config Radio B3 MIMO 4T4R", "Config Radio B1 + B3 DUAL BAND 2T2R" ,"Config Radio B1 + B3 DUAL BAND 4T4R", "Config Multi Sector", "Config Antenna", "Config Service 2", "Config Service 3", "Config Service 4", "Material 1 Power", "Material 2 Power", "Material 3 Power", "Material 4 Power", "Material 5 Power", "Service 1 Power", "Service 2 Power", "Service 3 Power", "Material 1 CME", "Material 2 CME", "Material 3 CME", "Material 4 CME", "Material 5 CME", "Service 1 CME", "Service 2 CME", "Service 3 CME"];
+
+class TableTechnicalConfig extends React.Component{
+  constructor(props) {
+      super(props);
+  }
+
+  getTechnicalRow(site_data_config, config_group, config_group_type){
+    const dataConfigIdx = site_data_config.find(e => e.config_group === config_group && e.config_group_type === config_group_type);
+    if(dataConfigIdx !== undefined){
+      return ( <Fragment>
+                  <td>{dataConfigIdx.config_id}</td>
+                  <td>{dataConfigIdx.qty}</td>
+                </Fragment>)
+    }else{
+      return ( <Fragment>
+                  <td></td>
+                  <td></td>
+                </Fragment>)
+    }
+  }
+
+  render(){
+    return(
+      <Table hover bordered striped responsive size="sm">
+        <thead>
+        <tr>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            Tower ID
+          </th>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            Program
+          </th>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            SOW
+          </th>
+          {this.props.configHeader.config_group_type_header.map(type =>
+            <Fragment>
+              <th>{type}</th>
+              <th>{type}</th>
+            </Fragment>
+          )}
+        </tr>
+        <tr>
+          {this.props.configHeader.config_group_header.map(conf =>
+            <Fragment>
+              <th>{conf}</th>
+              <th>qty</th>
+            </Fragment>
+          )}
+        </tr>
+        </thead>
+        <tbody>
+        {this.props.dataTechBoqSites.map(site =>
+          <tr>
+            <td>{site.site_id}</td>
+            <td>{site.program}</td>
+            <td>{site.sow}</td>
+            {(this.props.isVersion === "rollback") ? (
+              this.props.configHeader.config_group_header.map((conf,i) =>
+                this.getTechnicalRow(site.siteItemConfigVersion, conf, this.props.configHeader.config_group_type_header[i])
+              )
+            ): (
+              this.props.configHeader.config_group_header.map((conf,i) =>
+                this.getTechnicalRow(site.siteItemConfig, conf, this.props.configHeader.config_group_type_header[i])
+              )
+            )}
+
+          </tr>
+        )}
+        </tbody>
+      </Table>
+    )
+  }
+}
+
 class TechnicalBoq extends Component {
   constructor(props) {
     super(props);
@@ -47,7 +130,8 @@ class TechnicalBoq extends Component {
       data_tech_boq_sites : [],
       data_tech_boq_sites_version : [],
       data_tech_boq_sites_pagination : [],
-      view_tech_header_table : {"config_id" : [], "type" : []},
+      view_tech_header_table : {"config_group_header" : [], "config_group_type_header" : []},
+      view_tech_all_header_table : {"config_group_header" : [], "config_group_type_header" : []},
       list_version : [],
       pp_all : [],
       sites_all : [],
@@ -114,6 +198,7 @@ class TechnicalBoq extends Component {
     this.handleChangeVerComment = this.handleChangeVerComment.bind(this);
     this.saveProjecttoDB = this.saveProjecttoDB.bind(this);
     this.exportFormatTechnical = this.exportFormatTechnical.bind(this);
+    this.exportFormatTechnicalNew = this.exportFormatTechnicalNew.bind(this);
     this.exportFormatTechnicalHorizontal = this.exportFormatTechnicalHorizontal.bind(this);
     this.exportFormatTechnicalVertical = this.exportFormatTechnicalVertical.bind(this);
     this.approvalTechnical = this.approvalTechnical.bind(this);
@@ -381,7 +466,23 @@ class TechnicalBoq extends Component {
     if(data_sites.length !== 0){
       const configId = data_sites[0].siteItemConfig.map(e => e.config_id);
       const typeHeader = data_sites[0].siteItemConfig.map(e => "CONFIG");
-      this.setState({view_tech_header_table : {"config_id" : configId, "type" : typeHeader }});
+      let all_config = data_sites.map(value => value.siteItemConfig.map(child => child)).reduce((l, n) => l.concat(n), []);
+      let config_group_avail_uniq = [...new Set(all_config.map(({ config_group }) => config_group))];
+      let config_group_non_default = [];
+      let config_group_type_avail = [];
+      let config_group_type_non_default = [];
+      for(let i = 0 ; i < config_group_avail_uniq.length; i++){
+        let findConfigGroupType = all_config.find(e => e.config_group === config_group_avail_uniq[i]).config_group_type;
+        config_group_type_avail.push(findConfigGroupType);
+        if(Config_group_DEFAULT.includes(config_group_avail_uniq[i])!== true){
+          config_group_non_default.push(config_group_avail_uniq[i]);
+          config_group_type_non_default.push(findConfigGroupType);
+        }
+      }
+      let config_group_all = Config_group_DEFAULT.concat(config_group_non_default);
+      let config_group_type_all = Config_group_type_DEFAULT.concat(config_group_type_non_default);
+
+      this.setState({view_tech_header_table : {"config_group_header" : config_group_avail_uniq, "config_group_type_header" : config_group_type_avail }, view_tech_all_header_table : {"config_group_header" : config_group_all, "config_group_type_header" : config_group_type_all } });
     }
   }
 
@@ -404,6 +505,8 @@ class TechnicalBoq extends Component {
       "sites_data" : dataChecked.tech_data,
       "configList" : dataChecked.configList
     }
+    console.log("dataPatch JSON", JSON.stringify(dataPatch));
+    console.log("dataPatch", dataPatch);
     let patchTech = await this.patchDatatoAPINODE('/techBoq/updateTechBoqData/'+this.state.data_tech_boq._id, dataPatch);
     if(patchTech.data !== undefined){
       this.setState({action_status : 'success'});
@@ -442,7 +545,24 @@ class TechnicalBoq extends Component {
     if(data_sites.length !== 0){
       const configId = data_sites[0].siteItemConfigVersion.map(e => e.config_id);
       const typeHeader = data_sites[0].siteItemConfigVersion.map(e => "Config");
-      this.setState({view_tech_header_table : {"config_id" : configId, "type" : typeHeader }});
+      let all_config = data_sites.map(value => value.siteItemConfigVersion.map(child => child)).reduce((l, n) => l.concat(n), []);
+      console.log("config_group_avail_uniq", all_config);
+      let config_group_avail_uniq = [...new Set(all_config.map(({ config_group }) => config_group))];
+      let config_group_non_default = [];
+      let config_group_type_avail = [];
+      let config_group_type_non_default = [];
+      for(let i = 0 ; i < config_group_avail_uniq.length; i++){
+        let findConfigGroupType = all_config.find(e => e.config_group === config_group_avail_uniq[i]).config_group_type;
+        config_group_type_avail.push(findConfigGroupType);
+        if(Config_group_DEFAULT.includes(config_group_avail_uniq[i])!== true){
+          config_group_non_default.push(config_group_avail_uniq[i]);
+          config_group_type_non_default.push(findConfigGroupType);
+        }
+      }
+      let config_group_all = Config_group_DEFAULT.concat(config_group_non_default);
+      let config_group_type_all = Config_group_type_DEFAULT.concat(config_group_type_non_default);
+      console.log("config_group_avail_uniq", config_group_avail_uniq);
+      this.setState({view_tech_header_table : {"config_group_header" : config_group_avail_uniq, "config_group_type_header" : config_group_type_avail }, view_tech_all_header_table : {"config_group_header" : config_group_all, "config_group_type_header" : config_group_type_all } });
     }
   }
 
@@ -620,6 +740,9 @@ class TechnicalBoq extends Component {
     if(this.props.match.params.id === undefined){
       this.getProjectAll();
     }else{
+      // this.setState({data_tech_boq : jsonData.data, data_tech_boq_sites : jsonData.data.techBoqSite}, () => {
+      //   this.viewTechBoqData(jsonData.data.techBoqSite);
+      // });
       this.getTechBoqData(this.props.match.params.id);
     }
   }
@@ -659,7 +782,7 @@ class TechnicalBoq extends Component {
   }
 
   async checkingFormatTech(rowsTech){
-    let postCheck = await this.postDatatoAPINODE('/techBoq/checkTechBoqData', {"techBoqData" : rowsTech});
+    let postCheck = await this.postDatatoAPINODE('/techBoq/checkTechBoqDataXL', {"techBoqData" : rowsTech});
     console.log("postCheck", JSON.stringify(postCheck));
     if(postCheck.data !== undefined){
       const dataCheck = postCheck.data;
@@ -1608,8 +1731,8 @@ class TechnicalBoq extends Component {
 
     ws.addRow([""]);
 
-    const rowHeader1 = ["",""].concat(dataHeader.config_id.map(e => "CONFIG"));
-    const rowHeader2 = ["Tower ID","Tower Name"].concat(dataHeader.config_id.map(e => e));
+    const rowHeader1 = ["",""].concat(dataHeader.config_group_type_header.map(e => e));
+    const rowHeader2 = ["Tower ID","Tower Name"].concat(dataHeader.config_group_header.map(e => e));
     let getlastrowHeaderSum = ws.lastRow._number;
     ws.addRow(rowHeader1);
     let getlastrowHeader1 = ws.lastRow._number;
@@ -1870,39 +1993,60 @@ class TechnicalBoq extends Component {
     }else{
       dataSites = this.state.data_tech_boq_sites;
     }
-    const dataHeader = this.state.view_tech_header_table;
 
-    let ppIdRow = ["site_title", "site_id", "site_name"];
-    let ppTypeRow = ["", "", ""];
+    const header_config = this.state.view_tech_all_header_table;
 
-    const header_note = await this.headerTechBoqDataNote(dataSites);
+    let HeaderRow1 = ["General Info", "General Info", "General Info"];
+    let HeaderRow2 = ["tower_id","program","sow"];
 
-    ppIdRow = ppIdRow.concat(header_note);
-    ppTypeRow = ppTypeRow.concat(header_note.map(e => "NOTE"));
+    header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
+    header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
 
-    ppIdRow = ppIdRow.concat(dataHeader.config_id);
-    ppTypeRow = ppTypeRow.concat(dataHeader.type);
-
-    ws.addRow(ppTypeRow);
-    ws.addRow(ppIdRow);
+    ws.addRow(HeaderRow1);
+    ws.addRow(HeaderRow2);
     for(let i = 0; i < dataSites.length ; i++){
       let qtyConfig = []
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-        for(let j = 0; j < header_note.length; j++ ){
-          qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === header_note[j]) !== undefined ? dataSites[i].notes.find(z => z.note_name === header_note[j]).note_value : null);
+        for(let j = 0; j < header_config.config_group_header.length; j++ ){
+          let dataConfigIdx = dataSites[i].siteItemConfigVersion.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+          if(dataConfigIdx !== undefined){
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_name, dataConfigIdx.qty]);
+          }else{
+            qtyConfig = qtyConfig.concat([null, null]);
+          }
         }
-        qtyConfig = qtyConfig.concat(dataSites[i].siteItemConfigVersion.map(e => e.qty));
       }else{
-        for(let j = 0; j < header_note.length; j++ ){
-          qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === header_note[j]) !== undefined ? dataSites[i].notes.find(z => z.note_name === header_note[j]).note_value : null);
+        for(let j = 0; j < header_config.config_group_header.length; j++ ){
+          let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+          if(dataConfigIdx !== undefined){
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_name, dataConfigIdx.qty]);
+          }else{
+            qtyConfig = qtyConfig.concat([null, null]);
+          }
         }
-        qtyConfig = qtyConfig.concat(dataSites[i].siteItemConfig.map(e => e.qty));
       }
-      ws.addRow([null, dataSites[i].site_id, dataSites[i].site_name].concat(qtyConfig));
+      ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow].concat(qtyConfig));
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Uploader Template.xlsx');
+  }
+
+  exportFormatTechnicalNew = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let HeaderRow1 = ["General Info", "General Info", "General Info"];
+    let HeaderRow2 = ["tower_id","program","sow"];
+
+    Config_group_type_DEFAULT.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
+    Config_group_DEFAULT.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
+
+    ws.addRow(HeaderRow1);
+    ws.addRow(HeaderRow2);
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Template.xlsx');
   }
 
   exportFormatTechnicalHorizontal = async () =>{
@@ -1984,6 +2128,7 @@ class TechnicalBoq extends Component {
   }
 
     render() {
+      console.log("length", Config_group_DEFAULT.length, Config_group_type_DEFAULT.length);
       if(this.state.redirectSign !== false){
         return (<Redirect to={'/detail-technical/'+this.state.redirectSign} />);
       }
@@ -2039,77 +2184,6 @@ class TechnicalBoq extends Component {
         return null;
       }
 
-      function TableView(props){
-        const api_data = props.dataApi;
-        const xls_data = props.dataXLS;
-        const header_package = props.dataHeader;
-        const name_project = props.project_name;
-        const summaryQTY = props.summaryQTY;
-        if(api_data.length !== 0){
-          return (
-            <Table hover bordered striped responsive size="sm">
-              <thead>
-                <tr style={{backgroundColor : "#c6f569", fontWeight : "500"}}>
-                    <td rowSpan="3" style={{minWidth : '150px'}}>Project</td>
-                    <td rowSpan="3">Site ID</td>
-                    <td rowSpan="3">Site Name</td>
-                    {header_package.type.map( type =>
-                      <td>{type}</td>
-                    )}
-                </tr>
-                <tr style={{backgroundColor: '#f8f6df'}}>
-                  {header_package.name.map(name =>
-                      <td>{name}</td>
-                    )}
-                </tr>
-              </thead>
-              <tbody>
-                {api_data.map((data,index) =>
-                  <tr>
-                    <td>{name_project}</td>
-                    <td>{data.site_id}</td>
-                    <td>{data.site_name}</td>
-                    {data.list_qty_items.map(qty =>
-                      <td>{qty.toLocaleString()}</td>
-                    )}
-                  </tr>
-                )}
-
-              </tbody>
-            </Table>
-          )
-        }else{
-          if(xls_data.length !== 0){
-            return (<React.Fragment>
-              <div style={{marginLeft : '5px', fontSize : '10px', color : 'red'}}><span>Project will not be saved from uploader</span></div>
-            <Table hover bordered responsive size="sm">
-              <tbody>
-              {xls_data.map(Tech =>
-                <tr>
-                  {Tech.map(qty =>
-                    <td style={{verticalAlign : 'middle'}}>{qty}</td>
-                  )}
-                </tr>
-              )}
-              </tbody>
-            </Table>
-            </React.Fragment>)
-          }else{
-            if(props.paramsID !== undefined){
-              return <tbody>
-              <tr colSpan="7" style={{textAlign : 'center'}}>
-                Please Wait, Loading Data...</tr>
-              </tbody>
-            }else{
-              return <tbody>
-              <tr colSpan="7">Please Upload Technical BOQ</tr>
-            </tbody>
-            }
-
-          }
-        }
-      }
-
       return (
         <div>
           <AlertProcess alertAct={this.state.action_status} messageAct={this.state.action_message}/>
@@ -2119,7 +2193,10 @@ class TechnicalBoq extends Component {
                 <CardHeader>
                   {this.state.data_item.length === 0 && this.state.API_Tech.no_boq_tech === undefined && this.props.match.params.id == undefined ? (
                     <React.Fragment>
-                      <span>Detail Technical BOQ</span>
+                      <span>Create Technical BOQ</span>
+                      <span style={{float : 'right'}}>
+                        <Button size="sm" onClick={this.exportFormatTechnicalNew}>Download Technical Format</Button>
+                      </span>
                     </React.Fragment>
                   ) : (
                     <React.Fragment>
@@ -2208,8 +2285,6 @@ class TechnicalBoq extends Component {
                               <div>
                                 <Input name="project" type="select" onChange={this.selectProject} value={this.state.project_select}>
                                     <option value=""></option>
-                                    {/* <option value="Demo 1">Demo 1</option>
-                                      <option value="Demo 2">Demo 2</option> */}
                                     {this.state.project_all.map( project =>
                                       <option value={project._id}>{project.Project}</option>
                                     )}
@@ -2346,7 +2421,14 @@ class TechnicalBoq extends Component {
                           <option value={this.state.data_item.length}>All</option>
                         </Input>
                       </div> */}
-                      <Table hover bordered striped responsive size="sm">
+
+                      {(this.state.version_selected !== null && this.state.data_tech_boq.version !== this.state.version_selected) ? (
+                        <TableTechnicalConfig dataTechBoqSites={this.state.data_tech_boq_sites_version} configHeader={this.state.view_tech_header_table} isVersion="rollback"/>
+                      ): (
+                        <TableTechnicalConfig dataTechBoqSites={this.state.data_tech_boq_sites} configHeader={this.state.view_tech_header_table}/>
+                      )}
+
+                      {/*<Table hover bordered striped responsive size="sm">
                         <thead>
                         <tr>
                           <th rowSpan="2" style={{verticalAlign : "middle"}}>
@@ -2355,12 +2437,12 @@ class TechnicalBoq extends Component {
                           <th rowSpan="2" style={{verticalAlign : "middle"}}>
                             Tower Name
                           </th>
-                          {this.state.view_tech_header_table.type.map(type =>
+                          {this.state.view_tech_header_table.config_group_type_header.map(type =>
                             <th>{type}</th>
                           )}
                         </tr>
                         <tr>
-                          {this.state.view_tech_header_table.config_id.map(conf =>
+                          {this.state.view_tech_header_table.config_group_header.map(conf =>
                             <th>{conf}</th>
                           )}
                         </tr>

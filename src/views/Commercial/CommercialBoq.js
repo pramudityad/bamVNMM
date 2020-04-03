@@ -97,35 +97,46 @@ class CommercialBoq extends Component {
         currencyChange : new Map(),
         currencyChangeAll : null,
         incentiveChange : new Map(),
+        UnitPriceIDRChange : new Map(),
+        UnitPriceUSDChange : new Map(),
+        TotalPriceIDRChange : new Map(),
+        TotalPriceUSDChange : new Map(),
         total_comm : {},
         boq_tech_select : {},
       };
       this.toggleLoading = this.toggleLoading.bind(this);
       this.toggleDropdown = this.toggleDropdown.bind(this);
       this.toggleUpload = this.toggleUpload.bind(this);
-      this.editQtyCust = this.editQtyCust.bind(this);
-      this.editUnitPrice = this.editUnitPrice.bind(this);
-      this.editQtyEricsson = this.editQtyEricsson.bind(this);
-      this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
-      this.handleChangeEarlyStart = this.handleChangeEarlyStart.bind(this);
-      this.handleChangeNote = this.handleChangeNote.bind(this);
-      this.handleChangeFieldNote = this.handleChangeFieldNote.bind(this);
-      this.selectBoqTechnical = this.selectBoqTechnical.bind(this);
-      this.selectProject = this.selectProject.bind(this);
       this.handleChangeVersion = this.handleChangeVersion.bind(this);
-      this.handleChangePO = this.handleChangePO.bind(this);
-      this.savePO = this.savePO.bind(this);
       this.showGroupToggle = this.showGroupToggle.bind(this);
       this.filterTechBoq = this.filterTechBoq.bind(this);
       this.loadOptions = this.loadOptions.bind(this);
       this.handleInputChange = this.handleInputChange.bind(this);
-      this.saveNote = this.saveNote.bind(this);
       this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
-      this.handleChangeCurrency = this.handleChangeCurrency.bind(this);
+      this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
       this.handleChangeincentive = this.handleChangeincentive.bind(this);
-      this.handleChangeVerComment = this.handleChangeVerComment.bind(this);
-      this.handleChangeCurrencyAll = this.handleChangeCurrencyAll.bind(this);
+      this.handleChangeUnitPriceIDR = this.handleChangeUnitPriceIDR.bind(this);
+      this.handleChangeUnitPriceUSD = this.handleChangeUnitPriceUSD.bind(this);
+      this.handleChangeTotalPriceIDR = this.handleChangeTotalPriceIDR.bind(this);
+      this.handleChangeTotalPriceUSD = this.handleChangeTotalPriceUSD.bind(this);
       this.updateCommercial = this.updateCommercial.bind(this);
+    }
+
+    checkValueReturn(value1, value2){
+      // if value undefined return Value2
+      if( typeof value1 !== 'undefined' && value1 !== null) {
+        console.log('value1', value1);
+        return value1;
+      }else{
+        console.log('value2', value2);
+        return value2;
+      }
+    }
+
+    toggleLoading(){
+      this.setState(prevState => ({
+        modal_loading: !prevState.modal_loading
+      }));
     }
 
     toggleUpload() {
@@ -281,94 +292,6 @@ class CommercialBoq extends Component {
       }
     }
 
-    async getDatafromAPIBAM(url){
-      try {
-        let respond = await axios.get(API_URL_BAM +url, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernameBAM,
-            password: passwordBAM
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Get Data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = err;
-        console.log("respond Get Data", err);
-        return respond;
-      }
-    }
-
-    async getDatafromAPI(url){
-      try {
-        let respond = await axios.get(API_URL +url, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Get Data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = undefined;
-        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
-        console.log("respond Get Data", err);
-        return respond;
-      }
-    }
-
-    async postDatatoAPI(url, data){
-      console.log("respond Post Data", JSON.stringify(data));
-      try {
-        let respond = await axios.post(API_URL +url, data, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Post Data", respond);
-        }
-        console.log("respond Post Data", respond);
-        return respond;
-      }catch (err) {
-        let respond = undefined;
-        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
-        console.log("respond Post Data", err);
-        return respond;
-      }
-    }
-
-    async patchDatatoAPI(url, data, _etag){
-      try {
-        let respond = await axios.patch(API_URL +url, data, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
-          },
-          headers : {
-            "If-Match" : _etag
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Patch data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = undefined;
-        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'})
-        console.log("respond Patch data", err);
-        return respond;
-      }
-    }
-
     handleChangeChecklist(e){
       const item = e.target.name;
       const isChecked = e.target.checked;
@@ -395,181 +318,10 @@ class CommercialBoq extends Component {
       this.setState({get_item_ilang : [item]});
     }
 
-    handleChangeEarlyStart(e){
-      const isChecked = e.target.checked;
-      const commItems = this.state.commercialData;
-      if(isChecked !== false){
-        this.setState({ early_start:  isChecked });
-        this.LoopEarlyQTY(0, commItems);
-      }
-    }
-
-    handleChangePO(e){
-      const value = e.target.value;
-      const index = e.target.selectedIndex;
-      const text = e.target[index].text;
-      this.setState({po_selected : value, po_number_selected : text});
-    }
-
-    LoopEarlyQTY(index, dataCommItem, isChecked){
-      if(index >= dataCommItem.length){
-        let dataUpdateComm = {
-          "early_start" : true
-        }
-        this.patchDatatoAPI('/boq_comm_op/'+this.state.boq_comm_API._id, dataUpdateComm, this.state.boq_comm_API._etag).then( resp => {})
-      }else{
-        let dataUpdate = {
-          "qty_early_start" : dataCommItem[index].qty_comm_quotation
-        }
-        this.patchDatatoAPI('/boq_comm_items_op/'+dataCommItem[index]._id, dataUpdate, dataCommItem[index]._etag).then( resp => {
-          if(resp !== undefined){
-            if(resp.status < 400){
-              this.LoopEarlyQTY(index+1, dataCommItem);
-            }
-          }
-        })
-      }
-    }
-
-    getProjectAll(){
-      this.getDatafromAPI('/project_all').then( resp => {
-        if(resp !== undefined){
-          this.setState({project_all : resp.data._items});
-        }
-      })
-    }
-
-    getPOList(){
-      this.getDatafromAPI('/po_non_page').then(resp => {
-        if(resp !== undefined){
-          this.setState({list_po_number : resp.data._items});
-        }
-      })
-    }
-
-    saveSmartStockorPrice = async (verNumber, _id_Comm, _etag_Comm) => {
-      // this.toggleLoading();
-      console.log("_id_Comm", _id_Comm, _etag_Comm);
-      const qty_smart = this.state.qty_cust;
-      const edit_price = this.state.unit_price;
-      const qty_ericsson = this.state.qty_ericsson;
-      const curr_item = this.state.currencyChange;
-      const insen_item = this.state.incentiveChange;
-      const dataComm = this.state.boq_comm_API;
-      const commItems = this.state.commercialData;
-      const AllEdit = new Map([...qty_smart, ...edit_price, ...qty_ericsson, ...curr_item, ...insen_item]);
-      let respondStockPrice = [];
-      let dataProject = undefined;
-      for (const [key, value] of AllEdit.entries()) {
-        const dataIndex = commItems.find(e => e._id === key);
-        if(dataIndex !== undefined){
-          let idxSmart = qty_smart.has(key) ? parseFloat(this.checkValuetoZero(qty_smart.get(key))) : dataIndex.smart_stock;
-          let idxErics = qty_ericsson.has(key) ? parseFloat(this.checkValuetoZero(qty_ericsson.get(key))) : dataIndex.qty_ericsson;
-          let idxPrice = edit_price.has(key) ? parseFloat(this.checkValuetoZero(edit_price.get(key))) : dataIndex.unit_price;
-          let idxCurr = curr_item.has(key) ? curr_item.get(key) : dataIndex.currency;
-          let idxInsen = insen_item.has(key) ? parseFloat(this.checkValuetoZero(insen_item.get(key))) : dataIndex.incentive;
-          let total_price = (dataIndex.qty_tech - (idxSmart + idxErics))*idxPrice;
-          let net_total = ((dataIndex.qty_tech - (idxSmart + idxErics))*idxPrice)-idxInsen;
-          let dataUpdate = {
-            "smart_stock" : idxSmart,
-            "qty_ericsson" : idxErics,
-            "unit_price" : idxPrice,
-            "currency" : idxCurr,
-            "total_price" : total_price,
-            "incentive" : idxInsen,
-            "net_total" : net_total
-          }
-          const respondPatchQTY = await this.patchDatatoAPI('/boq_comm_items_op/'+key, dataUpdate, dataIndex._etag);
-          if(respondPatchQTY !== undefined){
-            if(respondPatchQTY.status >= 200 && respondPatchQTY.status < 300){
-              respondStockPrice.push(respondPatchQTY.status);
-              commItems[commItems.findIndex(e => e._id === key)]["_etag"] = respondPatchQTY.data._etag;
-            }
-          }
-        }
-
-      }
-
-      for(let j = 0; j < commItems.length; j++){
-        let dataVersion= {"version" : verNumber}
-        const respondPatchVersion = await this.patchDatatoAPI('/boq_comm_items_op/'+commItems[j]._id, dataVersion, commItems[j]._etag);
-        if(respondPatchVersion !== undefined){
-          if(respondPatchVersion.status >= 200 && respondPatchVersion.status < 300){
-            commItems[j]["version"] = verNumber;
-            commItems[j]["_etag"] = respondPatchVersion.data._etag;
-          }
-        }
-      }
-      const date = new Date();
-      const DateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-      if(respondStockPrice.length === (AllEdit.size)){
-        let updateComm = {
-          "rev1" : "PA",
-          "rev1_by" : this.state.userEmail,
-          "rev1_date" : DateNow.toString(),
-        }
-        const respondUpdateComm = await this.patchDatatoAPI('/boq_comm_op/'+_id_Comm, updateComm, _etag_Comm);
-        this.setState({action_status : 'success', action_message : 'Your Commercial BOQ has been updated'}, () => {
-          this.toggleLoading();
-          setTimeout(function(){ window.location.reload(); }, 2000);
-        })
-      }else{
-        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please try again'}, () => {this.toggleLoading()})
-      }
-      this.setState({commercialData : commItems});
-    }
-
-    countPerItemFromDataBase(dataTech){
-      let onlyItem = dataTech.map(value => value.list_of_site_items.map(child => child)).reduce((l, n) => l.concat(n), []);
-      let get_id_package = [...new Set(onlyItem.map(({ id_pp_doc}) => id_pp_doc))];
-      let countData = {};
-      for(let i = 0;  i< get_id_package.length; i++){
-        const materialQTY = onlyItem.filter(d => d.id_pp_doc === get_id_package[i]);
-        countData[get_id_package[i]] = materialQTY.reduce((a,b) => a + b.qty, 0);
-      }
-      return countData;
-    }
-
-    countPerItemGroupFromDataBase(dataTech){
-      let onlyItem = dataTech.map(value => value.list_of_site_items.map(child => child)).reduce((l, n) => l.concat(n), []);
-      let get_id_package = [...new Set(onlyItem.map(({ pp_group }) => pp_group))];
-      let countData = {};
-      for(let i = 0;  i< get_id_package.length; i++){
-        const materialQTY = onlyItem.filter(d => d.pp_group === get_id_package[i]);
-        countData[get_id_package[i]] = materialQTY.reduce((a,b) => a + b.qty, 0);
-      }
-      return countData;
-    }
-
     toggleEdit() {
       this.setState(prevState => ({
         modalEdit: !prevState.modalEdit
       }));
-    }
-
-    selectBoqTechnical(e){
-      const value = e.target.value;
-      this.setState({Boq_Technical_Select : value, groupingView : [], commercialData : []});
-    }
-
-    selectProject(e){
-      const value = e.target.value;
-      const index = e.target.selectedIndex;
-      const text = e.target[index].text;
-      this.setState({project_select : value, project_name_select : text});
-    }
-
-    getAllPP(){
-      this.getDatafromAPIBAM('/pp_sorted_nonpage?projection={"_id" : 1,"pp_id" : 1, "pp_group" : 1, "product_name" :1, "uom" : 1, "physical_group" : 1, "product_type" : 1, "pp_key" : 1, "pp_cust_number" : 1}').then( resPP => {
-        if(resPP !== undefined){
-          if(resPP.data !== undefined){
-            console.log("resPP.data", resPP.data);
-            if(resPP.data._items.length !== 0){
-              this.setState({ pp_all : resPP.data._items});
-            }
-          }
-        }
-      })
     }
 
     componentDidMount(){
@@ -581,7 +333,8 @@ class CommercialBoq extends Component {
     }
 
     getTechBoqList(){
-      this.getDataFromAPINODE('/techBoqList?srt=_id:-1').then(res => {
+      //srt=_id:-1
+      this.getDataFromAPINODE('/techBoqForComm').then(res => {
         if(res.data !== undefined){
           this.setState({list_tech_boq : res.data.data}, () => {
             this.filterTechBoq("");
@@ -604,6 +357,30 @@ class CommercialBoq extends Component {
       this.setState(prevState => ({ incentiveChange: prevState.incentiveChange.set(name, value) }));
     }
 
+    handleChangeUnitPriceIDR = (e) => {
+      const name = e.target.name;
+      let value = e.target.value;
+      this.setState(prevState => ({ UnitPriceIDRChange: prevState.UnitPriceIDRChange.set(name, value) }));
+    }
+
+    handleChangeUnitPriceUSD = (e) => {
+      const name = e.target.name;
+      let value = e.target.value;
+      this.setState(prevState => ({ UnitPriceUSDChange: prevState.UnitPriceUSDChange.set(name, value) }));
+    }
+
+    handleChangeTotalPriceIDR = (e) => {
+      const name = e.target.name;
+      let value = e.target.value;
+      this.setState(prevState => ({ TotalPriceIDRChange: prevState.TotalPriceIDRChange.set(name, value) }));
+    }
+
+    handleChangeTotalPriceUSD = (e) => {
+      const name = e.target.name;
+      let value = e.target.value;
+      this.setState(prevState => ({ TotalPriceUSDChange: prevState.TotalPriceUSDChange.set(name, value) }));
+    }
+
     updateCommercial = async (e) => {
       this.toggleLoading();
       let revisionType = e.currentTarget.value;
@@ -613,14 +390,59 @@ class CommercialBoq extends Component {
       }
       let dataComm = this.state.data_comm_boq;
       const incentive_amount = this.state.incentiveChange;
-      for (const [key, value] of incentive_amount.entries()) {
+      const unit_price_idr_amount = this.state.UnitPriceIDRChange;
+      const unit_price_usd_amount = this.state.UnitPriceUSDChange;
+      const total_price_idr_amount = this.state.TotalPriceIDRChange;
+      const total_price_usd_amount = this.state.TotalPriceUSDChange;
+      for (const [key, value] of unit_price_idr_amount.entries()) {
         const siteKey = key.split(" /// ")[0]
         const configKey = key.split(" /// ")[1]
         const siteIndex = dataComm.site.findIndex(e => e.site_id === siteKey);
         if(siteIndex !== -1){
           const siteConfigIndex = dataComm.site[siteIndex].items.findIndex(e => e.config_id === configKey);
           if(siteConfigIndex !== -1){
-            dataComm.site[siteIndex].items[siteConfigIndex]["incentive"] = parseFloat(value);
+            console.log("idr unit", dataComm.site[siteIndex].site_id, dataComm.site[siteIndex].items[siteConfigIndex].config_id, parseFloat(value) );
+            dataComm.site[siteIndex].items[siteConfigIndex]["net_price_incentive"] = parseFloat(value);
+            console.log("idr total", dataComm.site[siteIndex].items[siteConfigIndex]["net_price_incentive"] );
+          }
+        }
+      }
+      for (const [key, value] of unit_price_usd_amount.entries()) {
+        const siteKey = key.split(" /// ")[0]
+        const configKey = key.split(" /// ")[1]
+        const siteIndex = dataComm.site.findIndex(e => e.site_id === siteKey);
+        if(siteIndex !== -1){
+          const siteConfigIndex = dataComm.site[siteIndex].items.findIndex(e => e.config_id === configKey);
+          if(siteConfigIndex !== -1){
+            console.log("usd unit", dataComm.site[siteIndex].site_id, dataComm.site[siteIndex].items[siteConfigIndex].config_id, parseFloat(value) );
+            dataComm.site[siteIndex].items[siteConfigIndex]["net_price_incentive_usd"] = parseFloat(value);
+            console.log("usd total", dataComm.site[siteIndex].items[siteConfigIndex]["net_price_incentive_usd"] );
+          }
+        }
+      }
+      for (const [key, value] of total_price_idr_amount.entries()) {
+        const siteKey = key.split(" /// ")[0]
+        const configKey = key.split(" /// ")[1]
+        const siteIndex = dataComm.site.findIndex(e => e.site_id === siteKey);
+        if(siteIndex !== -1){
+          const siteConfigIndex = dataComm.site[siteIndex].items.findIndex(e => e.config_id === configKey);
+          if(siteConfigIndex !== -1){
+            console.log("idr total", dataComm.site[siteIndex].site_id, dataComm.site[siteIndex].items[siteConfigIndex].config_id, parseFloat(value) );
+            dataComm.site[siteIndex].items[siteConfigIndex]["total_price_incentive"] = parseFloat(value);
+            console.log("idr total", dataComm.site[siteIndex].items[siteConfigIndex]["total_price_incentive"] );
+          }
+        }
+      }
+      for (const [key, value] of total_price_usd_amount.entries()) {
+        const siteKey = key.split(" /// ")[0]
+        const configKey = key.split(" /// ")[1]
+        const siteIndex = dataComm.site.findIndex(e => e.site_id === siteKey);
+        if(siteIndex !== -1){
+          const siteConfigIndex = dataComm.site[siteIndex].items.findIndex(e => e.config_id === configKey);
+          if(siteConfigIndex !== -1){
+            console.log("usd total", dataComm.site[siteIndex].site_id, dataComm.site[siteIndex].items[siteConfigIndex].config_id, parseFloat(value) );
+            dataComm.site[siteIndex].items[siteConfigIndex]["total_price_incentive_usd"] = parseFloat(value);
+            console.log("usd total", dataComm.site[siteIndex].items[siteConfigIndex]["total_price_incentive_usd"] );
           }
         }
       }
@@ -628,6 +450,7 @@ class CommercialBoq extends Component {
         "version_check": revision,
         "data" : dataComm
       }
+      console.log("usd updateCommBoq", updateCommBoq );
       let updateComm = await this.patchDatatoAPINODE('/commBoq/updateCommercial/'+dataComm._id, updateCommBoq );
       if(updateComm.data !== undefined){
         this.setState({action_status : 'success'});
@@ -662,94 +485,23 @@ class CommercialBoq extends Component {
     }
 
     getDataFormCommBoq(itemsSite){
-      let incentiveAmount = new Map();
+      let UnitPriceIDRAmount = new Map();
+      let UnitPriceUSDAmount = new Map();
+      let TotalPriceIDRAmount = new Map();
+      let TotalPriceUSDAmount = new Map();
       for(let i = 0; i < itemsSite.length; i++){
         for(let j = 0; j < itemsSite[i].itemsVersion.length; j++){
-          let incentiveAmountIdx = itemsSite[i].itemsVersion[j].incentive !== undefined ? itemsSite[i].itemsVersion[j].incentive : 0;
-          incentiveAmount.set(itemsSite[i].itemsVersion[j].site_id+' /// '+itemsSite[i].itemsVersion[j].config_id, incentiveAmountIdx);
+          let UnitPriceIDRAmountIdx = itemsSite[i].itemsVersion[j].net_price_incentive !== undefined ? itemsSite[i].itemsVersion[j].net_price_incentive : 0;
+          UnitPriceIDRAmount.set(itemsSite[i].itemsVersion[j].site_id+' /// '+itemsSite[i].itemsVersion[j].config_id, UnitPriceIDRAmountIdx);
+          let UnitPriceUSDAmountIdx = itemsSite[i].itemsVersion[j].net_price_incentive_usd !== undefined ? itemsSite[i].itemsVersion[j].net_price_incentive_usd : 0;
+          UnitPriceUSDAmount.set(itemsSite[i].itemsVersion[j].site_id+' /// '+itemsSite[i].itemsVersion[j].config_id, UnitPriceUSDAmountIdx);
+          let TotalPriceIDRAmountIdx = itemsSite[i].itemsVersion[j].total_price_incentive !== undefined ? itemsSite[i].itemsVersion[j].total_price_incentive : 0;
+          TotalPriceIDRAmount.set(itemsSite[i].itemsVersion[j].site_id+' /// '+itemsSite[i].itemsVersion[j].config_id, TotalPriceIDRAmountIdx);
+          let TotalPriceUSDAmountIdx = itemsSite[i].itemsVersion[j].total_price_incentive_usd !== undefined ? itemsSite[i].itemsVersion[j].total_price_incentive_usd : 0;
+          TotalPriceUSDAmount.set(itemsSite[i].itemsVersion[j].site_id+' /// '+itemsSite[i].itemsVersion[j].config_id, TotalPriceUSDAmountIdx);
         }
       }
-    }
-
-  checkValueReturn(value1, value2){
-    // if value undefined return Value2
-    if( typeof value1 !== 'undefined' && value1 !== null) {
-      console.log('value1', value1);
-      return value1;
-    }else{
-      console.log('value2', value2);
-      return value2;
-    }
-  }
-
-    dataComm(dataPP, SummPP, dataPPTech){
-      let dataSumm = [];
-      for(let i = 0 ; i < dataPP.length; i++){
-        let PPindex = dataPP.find(PP => PP._id === Object.keys(SummPP)[i]);
-        let PPTechIndex = dataPPTech.find( PP => PP.id_pp_doc === Object.keys(SummPP)[i]);
-        if(PPindex !== undefined){
-          const dataItemsComm = {
-            "id_pp_doc" : PPindex._id,
-            "pp_id" :  PPindex.pp_id,
-            "pp_key" :  PPTechIndex.pp_key !== undefined ? PPTechIndex.pp_key : this.checkValueReturn(PPindex.pp_key, PPindex.pp_id),
-            "pp_group" : PPTechIndex.pp_group !== undefined ? PPTechIndex.pp_group : PPindex.pp_group,
-            "package_name" : PPTechIndex.package_name !== undefined ? PPTechIndex.package_name : PPindex.product_name,
-            "product_type" : PPTechIndex.product_type !== undefined ? PPTechIndex.product_type : PPindex.product_type,
-            "pp_cust_number" : PPTechIndex.pp_cust_number !== undefined ? PPTechIndex.pp_cust_number : this.checkValueReturn(PPindex.pp_cust_number, PPindex.name),
-            "phy_group" : PPTechIndex.phy_group !== undefined ? PPTechIndex.phy_group : PPindex.physical_group,
-            "unit" : PPTechIndex.unit !== undefined ? PPTechIndex.unit :  PPindex.uom,
-            "unit_price" : PPindex.price == null ? 0 : PPindex.price,
-            "qty_tech" : Object.values(SummPP)[i],
-            "qty_early_start" : null,
-            "currency" : "USD",
-            "smart_stock" : 0,
-            "qty_ericsson" : 0,
-            "qty_comm_quotation" : Object.values(SummPP)[i],
-            "qty_po" : null,
-            "incentive" : 0,
-            "net_total" : 0,
-            "fas_assignment_id" : PPindex.fas_category !== undefined ? PPindex.fas_category : null,
-            "total_price" : Object.values(SummPP)[i] * (PPindex.price == null ? 0 : PPindex.price),
-            "created_by" : this.state.userId,
-            "updated_by" : this.state.userId,
-            "deleted" : 0
-          }
-          dataSumm.push(dataItemsComm);
-        }
-      }
-      console.log("dataSumm", dataSumm);
-      return dataSumm;
-    }
-
-    DataGroupingView(itemsDatas, dataItemsPicked){
-      let item_nonCom = [];
-      let total_price_comm = 0;
-      let net_total_comm = 0;
-      if(dataItemsPicked !== undefined && dataItemsPicked.length !== 0){
-        itemsDatas = itemsDatas.filter(i_d => dataItemsPicked.includes(i_d.id_pp_doc) !== true);
-        total_price_comm = itemsDatas.reduce((a,b) => a + b.total_price, 0);
-        net_total_comm = itemsDatas.reduce((a,b) => a + b.net_total, 0);
-      }else{
-        total_price_comm = itemsDatas.reduce((a,b) => a + b.total_price, 0);
-        net_total_comm = itemsDatas.reduce((a,b) => a + b.net_total, 0);
-      }
-      let total_comm = {"totalPriceComm" : total_price_comm, "netTotalComm" : net_total_comm}
-      this.setState({total_comm : total_comm});
-      let OnlyGrouping = [];
-      let OnlyTypeGroup = [...new Set(itemsDatas.map(({ product_type }) => product_type))];
-      // OnlyTypeGroup = OnlyTypeGroup.filter(e => e !== "LCM");
-      // OnlyTypeGroup.push("LCM");
-      for(let i = 0; i < OnlyTypeGroup.length ; i++){
-          const group_item = itemsDatas.filter(d => d.product_type === OnlyTypeGroup[i]);
-          const dataGroup = {
-            "product_type" : OnlyTypeGroup[i],
-            "groups" : [...new Set(group_item.map(({ phy_group }) => phy_group))],
-          }
-          OnlyGrouping.push(dataGroup);
-        }
-      this.setState(prevState => ({ commercialData:  itemsDatas}));
-      this.setState({groupingView : OnlyGrouping});
-      // this.toggleLoading();
+      this.setState({UnitPriceIDRChange : UnitPriceIDRAmount, UnitPriceUSDChange : UnitPriceUSDAmount, TotalPriceIDRChange : TotalPriceIDRAmount, TotalPriceUSDChange : TotalPriceUSDAmount})
     }
 
     prepareDataforSaveComm(dataTech){
@@ -758,6 +510,10 @@ class CommercialBoq extends Component {
       for(let i = 0; i < dataCommNew.techBoqSite.length; i++){
         for(let j = 0; j < dataCommNew.techBoqSite[i].siteItemConfig.length; j++){
           let conf = dataCommNew.techBoqSite[i].siteItemConfig[j];
+          if(conf.qty_res !== undefined){
+            dataCommNew.techBoqSite[i].siteItemConfig[j]["qty"] = conf.qty_res;
+            delete dataCommNew.techBoqSite[i].siteItemConfig[j].qty_rest;
+          }
           if(dataSelection.get(conf.no_tech_boq+" /// "+conf.site_id+" /// "+conf.config_id) !== true){
             dataCommNew.techBoqSite[i].siteItemConfig[j]["deleted"] = true;
           }
@@ -787,41 +543,6 @@ class CommercialBoq extends Component {
         }
       }
       this.toggleLoading();
-    }
-
-    editQtyCust = (e) => {
-      const name = e.target.name;
-      let value = e.target.value;
-      this.setState(prevState => ({ qty_cust: prevState.qty_cust.set(name, value) }));
-    }
-
-    editQtyEricsson = (e) => {
-      const name = e.target.name;
-      let value = e.target.value;
-      this.setState(prevState => ({ qty_ericsson: prevState.qty_ericsson.set(name, value) }));
-    }
-
-    editUnitPrice = (e) => {
-      const name = e.target.name;
-      let value = e.target.value;
-      this.setState(prevState => ({ unit_price: prevState.unit_price.set(name, value) }));
-    }
-
-    handleChangeCurrency = (e) => {
-      const name = e.target.name;
-      const value = e.target.value;
-      this.setState(prevState => ({ currencyChange: prevState.currencyChange.set(name, value) }));
-    }
-
-    handleChangeCurrencyAll = (e) => {
-      let currAll = new Map();
-      const value = e.target.value;
-      const commData = this.state.commercialData;
-      for(let i = 0; i < commData.length; i++){
-        currAll.set(commData[i]._id, value);
-      }
-      console.log("currencyChangeAll", currAll );
-      this.setState({ currencyChange : currAll, currencyChangeAll : value });
     }
 
     fileHandlerCommercial = (event) => {
@@ -856,38 +577,6 @@ class CommercialBoq extends Component {
       }
     }
 
-    // packageView(packageData, pt, group){
-    //   let items = [];
-    //   if(packageData.length !== 0){
-    //     return items = packageData.filter(d => d.product_type === pt && d.phy_group === group);
-    //   }else{
-    //     return items = [];
-    //   }
-    // }
-
-    SortCompare( a, b ) {
-      if ( a < b ){
-        return -1;
-      }
-      if ( a > b ){
-        return 1;
-      }
-      return 0;
-    }
-
-    packageView(packageData, pt, group){
-      let items = [];
-      if(packageData.length !== 0){
-        let itemsget = packageData.filter(d => d.product_type === pt && d.phy_group === group);
-        if(itemsget.length !== 0){
-          itemsget.sort((a,b) => this.SortCompare(a.pp_group, b.pp_group));
-        }
-        return items = itemsget;
-      }else{
-        return items = [];
-      }
-    }
-
     exportCommercialTemplate = async () => {
       const wb = new Excel.Workbook()
       const ws = wb.addWorksheet()
@@ -910,90 +599,6 @@ class CommercialBoq extends Component {
       saveAs(new Blob([comFormat]), 'Commercial BOQ '+dataComm.no_boq_comm+' Format.xlsx')
     }
 
-    savePO(){
-      let commAPI = this.state.boq_comm_API;
-      if(this.state.po_number_selected.length !== 0 && this.state.po_number_selected !== null){
-        const savePO = {
-          "id_po_doc" : this.state.po_selected,
-          "po_number" : this.state.po_number_selected.toString()
-        }
-        this.patchDatatoAPI('/boq_comm_op/'+commAPI._id, savePO, commAPI._etag).then(res => {
-          if(res !== undefined){
-            if(res.status < 400){
-              commAPI["id_po_doc"] = this.state.po_selected;
-              commAPI["po_number"] = this.state.po_number_selected.toString();
-              commAPI["_etag"] = res.data._etag;
-              this.setState({boq_comm_API : commAPI, action_status : 'success', action_message : 'PO Number has been saved'});
-            }
-          }
-        })
-    }else{
-      this.setState({action_status : 'failed', action_message : 'Please Select PO Number'})
-    }
-    }
-
-    toggleLoading(){
-      this.setState(prevState => ({
-        modal_loading: !prevState.modal_loading
-      }));
-    }
-
-    getListVersion(_id){
-      this.getDatafromAPI('/boq_comm_rev_all?where={"id_document":"'+_id+'"}&projection={"version":1, "rev1":1}').then(res => {
-        console.log("rev", res);
-        if(res !== undefined){
-          this.setState({list_version : res.data._items});
-        }
-      })
-    }
-
-    getBOQRevAPI(_id_Comm){
-      const version = this.state.version_selected;
-      let dataComm = this.state.boq_comm_API;
-      const where_id_Sites = '?where={"id_document" : "'+_id_Comm+'", "version" : "'+version+'"}';
-      let url = '/boq_comm_rev'+where_id_Sites;
-      this.getDatafromAPI(url).then(res => {
-        if(res !== undefined){
-          console.log('respond Comm API Rev',res);
-          dataComm["note_name_1"] = res.data._items[0].note_name_1;
-          dataComm["note_1"] = res.data._items[0].note_1;
-          dataComm["note_name_2"] = res.data._items[0].note_name_2;
-          dataComm["note_2"] = res.data._items[0].note_2;
-          dataComm["note_name_3"] = res.data._items[0].note_name_3;
-          dataComm["note_3"] = res.data._items[0].note_3;
-          dataComm["note_name_4"] = res.data._items[0].note_name_4;
-          dataComm["note_4"] = res.data._items[0].note_4;
-          dataComm["version_comment"] = res.data._items[0].version_comment;
-          this.setState({boq_comm_API : dataComm}, () =>{
-            console.log("boq_comm_API rev", this.state.boq_comm_API);
-          });
-          if(res.data._items[0].list_of_id_item !== undefined){
-            this.getItemsCommRevAPI(_id_Comm, version);
-          }
-        }
-      })
-    }
-
-    formatRev(dataRev){
-      let format_rev = [];
-      let header = ["package_key", "smart_stock", "qty_ericsson", "unit_price"];
-      format_rev.push(header);
-      for(let  i = 0; i < dataRev.length; i++){
-        format_rev.push([dataRev[i].pp_id, dataRev[i].smart_stock, dataRev[i].qty_ericsson, dataRev[i].unit_price])
-      }
-      this.setState({format_rev: format_rev, rowsComm : format_rev});
-      console.log("format_rev",format_rev);
-    }
-
-    getItemsCommRevAPI(id_comm, version){
-      // const arraySites = '"'+id_Sites.join('", "')+'"';
-      const where_id_Comm = 'where={"id_boq_comm_doc" : "'+id_comm+'" , "version" : "'+version+'"}';
-      this.getDatafromAPI('/boq_comm_items_rev_all?'+where_id_Comm).then(res => {
-          console.log('respond Items COmm API Rev',res);
-          this.formatRev(res.data._items);
-          this.DataGroupingView(res.data._items);
-      })
-    }
     filterTechBoq = (inputValue) => {
       const list = [];
       this.state.list_tech_boq.map(i =>
@@ -1023,7 +628,7 @@ class CommercialBoq extends Component {
     };
 
     getTechBoqData(_id_tech){
-      this.getDataFromAPINODE('/techBoq/'+_id_tech).then(res => {
+      this.getDataFromAPINODE('/techBoqForComm/'+_id_tech).then(res => {
         if(res.data !== undefined){
           const dataTech = res.data;
           this.setState({data_tech_boq_selected : dataTech.data});
@@ -1032,98 +637,6 @@ class CommercialBoq extends Component {
           }
         }
       })
-    }
-
-    saveNote = () => {
-      const commAPI = this.state.boq_comm_API;
-      let updateNote = { };
-      for(let numbNote = 1; numbNote <= 6; numbNote++){
-        if(numbNote !== 5){
-          updateNote["note_"+numbNote.toString()] = this.state.noteChange[parseInt(numbNote)];
-          if(this.checkValuetoString(this.state.noteChange[parseInt(numbNote)]).length == 0){
-            updateNote["note_"+numbNote.toString()] = this.checkValuetoString(commAPI["note_"+numbNote.toString()]);
-          }
-          updateNote["note_name_"+numbNote.toString()] = this.state.fieldNoteChange[parseInt(numbNote)];
-          if(this.checkValuetoString(this.state.fieldNoteChange[parseInt(numbNote)]).length == 0){
-            updateNote["note_name_"+numbNote.toString()] = this.checkValuetoString(commAPI["note_name_"+numbNote.toString()]);
-          }
-        }
-      }
-      this.patchDatatoAPI('/boq_comm_op/'+commAPI._id, updateNote, commAPI._etag).then(res => {
-        if(res !== undefined){
-          if(res.data !== undefined){
-            this.setState({ boq_comm_API : commAPI, action_status : 'success', action_message : 'Your Commercial BOQ Note has been updated'}, () => {
-              setTimeout(function(){ window.location.reload(); }, 2000);
-            });
-          }
-        }
-      })
-      // console.log("numbNote", JSON.stringify(updateNote));
-    }
-
-    handleChangeNote(e){
-      let noteArray = this.state.noteChange;
-      const index = e.target.name;
-      const value = e.target.value;
-      noteArray[parseInt(index)] = value.toString();
-      this.setState({
-        noteChange: noteArray,
-      });
-    }
-
-    handleChangeVerComment(e){
-      const value = e.target.value;
-      this.setState({note_version : value});
-    }
-
-    handleChangeFieldNote(e){
-      let fieldnoteArray = this.state.fieldNoteChange;
-      const index = e.target.name;
-      const value = e.target.value;
-      fieldnoteArray[parseInt(index)] = value.toString();
-      console.log("note name", fieldnoteArray);
-      this.setState({
-        fieldNoteChange: fieldnoteArray,
-      });
-    }
-
-    packageView(packageData, pt, group){
-      let items = [];
-      if(packageData.length !== 0){
-        let itemsget = packageData.filter(d => d.product_type === pt && d.phy_group === group);
-        if(itemsget.length !== 0){
-          itemsget.sort((a,b) => this.SortCompare(a.pp_group, b.pp_group));
-        }
-        return items = itemsget;
-      }else{
-        return items = [];
-      }
-    }
-
-    countTotalPrice(packageData, pt, group){
-      let count = 0;
-      if(packageData.length !== 0){
-        let itemsget = packageData.filter(d => d.product_type === pt && d.phy_group === group);
-        if(itemsget.length !== 0){
-          count = itemsget.reduce((a,b) => a + b.total_price, 0);
-        }
-        return count;
-      }else{
-        return count;
-      }
-    }
-
-    countNetTotal(packageData, pt, group){
-      let count = 0;
-      if(packageData.length !== 0){
-        let itemsget = packageData.filter(d => d.product_type === pt && d.phy_group === group);
-        if(itemsget.length !== 0){
-          count = itemsget.reduce((a,b) => a + b.net_total, 0);
-        }
-        return count;
-      }else{
-        return count;
-      }
     }
 
     exportCommercial = async () =>{
@@ -1138,18 +651,18 @@ class CommercialBoq extends Component {
         dataSites = this.state.data_comm_boq_items;
       }
 
-      let ppIdRow = ["tower_id", "tower_name", "Type", "Configuration BOQ", "SAP Number", "Qty", "Description", "Price","Incentive","Total Price after Incentive"];
+      let ppIdRow = ["Tower ID", "Program", "SOW", "Category", "Config ID", "SAP", "Qty", "Description", "Unit Price after Incentive (USD)", "Unit Price after Incentive (IDR)", "Total Price after Incentive (USD)", "Total Price after Incentive (IDR)"];
 
       ws.addRow(ppIdRow);
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
           for(let j = 0; j < dataSites[i].itemsVersion.length; j++ ){
-            ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].sap_number, dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].description, dataSites[i].itemsVersion[j].price, dataSites[i].itemsVersion[j].incentive, dataSites[i].itemsVersion[j].net_price_incentive ]);
+            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].sap_number, dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].description, dataSites[i].itemsVersion[j].net_price_incentive_usd, dataSites[i].itemsVersion[j].net_price_incentive, dataSites[i].itemsVersion[j].total_price_incentive_usd, dataSites[i].itemsVersion[j].total_price_incentive]);
           }
         }else{
           for(let j = 0; j < dataSites[i].items.length; j++ ){
-            ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].qty, dataSites[i].items[j].description, dataSites[i].items[j].price, dataSites[i].items[j].incentive, dataSites[i].items[j].net_price_incentive ]);
+            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].qty, dataSites[i].items[j].description, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive, dataSites[i].items[j].total_price_incentive_usd, dataSites[i].items[j].total_price_incentive]);
           }
         }
       }
@@ -1381,13 +894,16 @@ class CommercialBoq extends Component {
                         <thead class="table-commercial__header--fixed">
                         <tr>
                           <th>Tower ID</th>
-                          <th>Tower Name</th>
+                          <th>Program</th>
+                          <th>SOW</th>
+                          <th>Category</th>
                           <th>Config ID</th>
+                          <th>SAP</th>
                           <th>Qty</th>
-                          <th>Price</th>
-                          <th>Total Price</th>
-                          <th>Incentive</th>
-                          <th>Total Price after Incentive</th>
+                          <th>Unit Price after Incentive (USD)</th>
+                          <th>Unit Price after Incentive (IDR)</th>
+                          <th>Total Price after Incentive (USD)</th>
+                          <th>Total Price after Incentive (IDR)</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1396,43 +912,103 @@ class CommercialBoq extends Component {
                           site.itemsVersion.map(item =>
                             <tr>
                               <td>{item.site_id}</td>
-                              <td>{item.site_name}</td>
+                              <td>{site.program}</td>
+                              <td>{site.sow}</td>
+                              <td>{item.config_type}</td>
                               <td>{item.config_id}</td>
+                              <td>{item.sap_number}</td>
                               <td>{item.qty}</td>
-                              <td>{item.price}</td>
-                              <td>{item.total_price}</td>
-                              <td style={{width : '150px'}}>
+                              <td style={{width : '120px'}}>
                                 <Input
                                   type="number"
                                   name={item.site_id+' /// '+item.config_id}
                                   className="BoQ-style-qty"
-                                  placeholder="incentive"
-                                  onChange={this.handleChangeincentive}
-                                  value={!this.state.incentiveChange.has(item.site_id+' /// '+item.config_id) ? item.incentive : this.state.incentiveChange.get(item.site_id+' /// '+item.config_id) }
+                                  placeholder=""
+                                  onChange={this.handleChangeUnitPriceUSD}
+                                  value={!this.state.UnitPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive_usd : this.state.UnitPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
                                 />
                               </td>
-                              <td style={{width : '250px'}}>{item.net_price_incentive}</td>
+                              <td style={{width : '120px'}}>
+                                <Input
+                                  type="number"
+                                  name={item.site_id+' /// '+item.config_id}
+                                  className="BoQ-style-qty"
+                                  placeholder=""
+                                  onChange={this.handleChangeUnitPriceIDR}
+                                  value={!this.state.UnitPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive : this.state.UnitPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
+                                />
+                              </td>
+                              <td style={{width : '120px'}}>
+                                <Input
+                                  type="number"
+                                  name={item.site_id+' /// '+item.config_id}
+                                  className="BoQ-style-qty"
+                                  placeholder=""
+                                  onChange={this.handleChangeTotalPriceUSD}
+                                  value={!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
+                                />
+                              </td>
+                              <td style={{width : '120px'}}>
+                                <Input
+                                  type="number"
+                                  name={item.site_id+' /// '+item.config_id}
+                                  className="BoQ-style-qty"
+                                  placeholder=""
+                                  onChange={this.handleChangeTotalPriceIDR}
+                                  value={!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
+                                />
+                              </td>
                             </tr>
                           )) : this.state.data_comm_boq_items.map(site =>
                           site.items.map(item =>
                             <tr>
                               <td>{item.site_id}</td>
-                              <td>{item.site_name}</td>
+                              <td>{site.program}</td>
+                              <td>{site.sow}</td>
+                              <td>{item.config_type}</td>
                               <td>{item.config_id}</td>
+                              <td>{item.sap_number}</td>
                               <td>{item.qty}</td>
-                              <td>{item.price}</td>
-                              <td>{item.total_price}</td>
-                              <td style={{width : '150px'}}>
+                              <td style={{width : '120px'}}>
                                 <Input
                                   type="number"
                                   name={item.site_id+' /// '+item.config_id}
                                   className="BoQ-style-qty"
-                                  placeholder="incentive"
-                                  onChange={this.handleChangeincentive}
-                                  value={!this.state.incentiveChange.has(item.site_id+' /// '+item.config_id) ? item.incentive : this.state.incentiveChange.get(item.site_id+' /// '+item.config_id) }
+                                  placeholder=""
+                                  onChange={this.handleChangeUnitPriceUSD}
+                                  value={!this.state.UnitPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive_usd : this.state.UnitPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
                                 />
                               </td>
-                              <td style={{width : '250px'}}>{item.net_price_incentive}</td>
+                              <td style={{width : '120px'}}>
+                                <Input
+                                  type="number"
+                                  name={item.site_id+' /// '+item.config_id}
+                                  className="BoQ-style-qty"
+                                  placeholder=""
+                                  onChange={this.handleChangeUnitPriceIDR}
+                                  value={!this.state.UnitPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive : this.state.UnitPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
+                                />
+                              </td>
+                              <td style={{width : '120px'}}>
+                                <Input
+                                  type="number"
+                                  name={item.site_id+' /// '+item.config_id}
+                                  className="BoQ-style-qty"
+                                  placeholder=""
+                                  onChange={this.handleChangeTotalPriceUSD}
+                                  value={!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
+                                />
+                              </td>
+                              <td style={{width : '120px'}}>
+                                <Input
+                                  type="number"
+                                  name={item.site_id+' /// '+item.config_id}
+                                  className="BoQ-style-qty"
+                                  placeholder=""
+                                  onChange={this.handleChangeTotalPriceIDR}
+                                  value={!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
+                                />
+                              </td>
                             </tr>
                           ))
                         }
@@ -1469,11 +1045,6 @@ class CommercialBoq extends Component {
                     </div>
 		               </React.Fragment>
                     )}
-
-                  {/* <Button className="btn-success" style={{'float' : 'right'}} onClick={this.saveSmartStockorPrice} color="success" disabled={this.state.boq_comm_API == null}>
-                    <i className="fa fa-save">&nbsp;&nbsp;</i>
-                    Save Smart Stock
-                  </Button> */}
                 </CardBody>
                 <CardFooter>
                   <Row>
