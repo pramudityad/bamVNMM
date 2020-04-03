@@ -518,7 +518,7 @@ class DetailCPOBoq extends Component {
         "boq_part": xlsRow[this.getIndex(dataXLS[0], 'boq_part')],
         "category": xlsRow[this.getIndex(dataXLS[0], 'category')],
         "source": xlsRow[this.getIndex(dataXLS[0], 'source')],
-        "coupa_catalogue_item": xlsRow[j][this.getIndex(dataXLS[0], 'coupa_catalogue_item')],
+        "coupa_catalogue_item": xlsRow[this.getIndex(dataXLS[0], 'coupa_catalogue_item')],
         "coupa_unit_price": xlsRow[this.getIndex(dataXLS[0], 'coupa_unit_price')],
         "coupa_total_price": xlsRow[this.getIndex(dataXLS[0], 'coupa_total_price')],
         "currency": xlsRow[this.getIndex(dataXLS[0], 'currency')],
@@ -526,19 +526,18 @@ class DetailCPOBoq extends Component {
         "coupa_network_id": xlsRow[this.getIndex(dataXLS[0], 'coupa_network_id')],
         "pr_number": xlsRow[this.getIndex(dataXLS[0], 'pr_number')],
         "as_number": xlsRow[this.getIndex(dataXLS[0], 'as_number')],
-        "pc_code_nro": xlsRow[this.getIndex(dataXLS[0], 'Pcode 2961-NRO %')],
-        "pc_code_pndt": xlsRow[this.getIndex(dataXLS[0], 'Pcode 6967-PNDT Design-Tuning')],
-        "pc_code_cos": xlsRow[this.getIndex(dataXLS[0], 'Pcode 6967-CoS %')],
-        "total_nro": xlsRow[this.getIndex(dataXLS[0], 'Pcode1 Total Value (2961-NRO)')],
-        "tota_pndt": xlsRow[this.getIndex(dataXLS[0], 'Pcode2 Total Value (6967-PNDT) Design-Tuning')],
-        "total_cos": xlsRow[this.getIndex(dataXLS[0], 'Pcode4 Total Value (6967-CoS)')],
-        "hw": xlsRow[this.getIndex(dataXLS[0], 'HW- 2460')],
-        "lcm": xlsRow[this.getIndex(dataXLS[0], 'LCM - 2110')],
-        "eab_hwac": xlsRow[this.getIndex(dataXLS[0], 'EAB HWAC - 2491')],
-        "pc_code_hw": xlsRow[this.getIndex(dataXLS[0], 'Pcode HW- 2460 Total Value')],
-        "pc_code_lcm": xlsRow[this.getIndex(dataXLS[0], 'Pcode LCM - 2110 Total Value')],
-        "pc_code_eab": xlsRow[this.getIndex(dataXLS[0], 'Pcode EAB HWAC - 2491 Total Value')]
-        
+        "pcode_2961_nro": xlsRow[this.getIndex(dataXLS[0], 'Pcode 2961-NRO %')],
+        "pcode_6967_pndt_design_tuning": xlsRow[this.getIndex(dataXLS[0], 'Pcode 6967-PNDT Design-Tuning')],
+        "pcode_6967_cos": xlsRow[this.getIndex(dataXLS[0], 'Pcode 6967-CoS %')],
+        "pcode_2961_nro_total_value": xlsRow[this.getIndex(dataXLS[0], 'Pcode1 Total Value (2961-NRO)')],
+        "pcode_6967_pndt_design_tuning_total_value": xlsRow[this.getIndex(dataXLS[0], 'Pcode2 Total Value (6967-PNDT) Design-Tuning')],
+        "pcode_6967_cos_total_value": xlsRow[this.getIndex(dataXLS[0], 'Pcode4 Total Value (6967-CoS)')],
+        "hw_2460": xlsRow[this.getIndex(dataXLS[0], 'HW- 2460')],
+        "lcm_2110": xlsRow[this.getIndex(dataXLS[0], 'LCM - 2110')],
+        "eab_hwac_2491": xlsRow[this.getIndex(dataXLS[0], 'EAB HWAC - 2491')],
+        "pcode_hw_2460_total_value": xlsRow[this.getIndex(dataXLS[0], 'Pcode HW- 2460 Total Value')],
+        "pcode_lcm_2110_total_value": xlsRow[this.getIndex(dataXLS[0], 'Pcode LCM - 2110 Total Value')],
+        "pcode_eab_hwac_2491_total_value": xlsRow[this.getIndex(dataXLS[0], 'Pcode EAB HWAC - 2491 Total Value')]
       }
       if(cpoIdx.coupa_unit_price !== undefined && cpoIdx.coupa_unit_price !== null ){
         cpoIdx["coupa_unit_price"] = parseFloat(cpoIdx.coupa_unit_price);
@@ -2055,7 +2054,7 @@ class DetailCPOBoq extends Component {
                             <td>{row.program}</td>
                             <td>{row.program_type}</td>
                             <td>{row.tower_id_plan}</td>
-                            <td>{row.tower_id_plan}</td>
+                            <td>{row.tower_id_actual}</td>
                             <td>{row.working_on}</td>
                             <td>{row.main_sow}</td>
                             <td>{row.combined_scope}</td>
@@ -2077,19 +2076,19 @@ class DetailCPOBoq extends Component {
                             <td>{row.coupa_requisition_title}</td>
                             <td>{row.coupa_network_id}</td>
                             <td>{row.pr_number}</td>
-                            <td>{row.pr_number}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
-                            <td>{}</td>
+                            <td>{row.as_number}</td>
+                            <td>{row.pcode_2961_nro}</td>
+                            <td>{row.pcode_6967_pndt_design_tuning}</td>
+                            <td>{row.pcode_6967_cos}</td>
+                            <td>{row.pcode_2961_nro_total_value}</td>
+                            <td>{row.pcode_6967_pndt_design_tuning_total_value}</td>
+                            <td>{row.pcode_6967_cos_total_value}</td>
+                            <td>{row.hw_2460}</td>
+                            <td>{row.lcm_2110}</td>
+                            <td>{row.eab_hwac_2491}</td>
+                            <td>{row.pcode_hw_2460_total_value}</td>
+                            <td>{row.pcode_lcm_2110_total_value}</td>
+                            <td>{row.pcode_eab_hwac_2491_total_value}</td>
                           </tr>
                         )}
                         </tbody>

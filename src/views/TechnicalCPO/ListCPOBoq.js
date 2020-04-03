@@ -95,7 +95,7 @@ class ListCPOBoq extends Component {
   }
 
   getCpoBoqList(){
-    this.getDataFromAPINODE('/cpoList').then(res => {
+    this.getDataFromAPINODE('/cpoList?srt=cpo_boq_id:-1').then(res => {
       if(res.data !== undefined){
         this.setState({list_cpo_boq : res.data.data});
       }
