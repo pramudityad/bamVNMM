@@ -235,7 +235,7 @@ class ConfigUpload extends React.Component {
           console.log(err);
         }
         else {
-          this.postDatatoAPINode('/packageConfig/checkPackageConfig', { "configData": rest.rows })
+          this.postDatatoAPINode('/packageConfig/checkPackageConfigXL', { "configData": rest.rows })
           .then(res => {
             if (res.data !== undefined) {
               this.setState({ check_config_package: res.data.configData, rowsXLS: rest.rows })
@@ -533,6 +533,7 @@ class ConfigUpload extends React.Component {
     const ws = wb.addWorksheet();
 
     const dataConfigSelected = this.state.config_selected;
+    console.log('conf selected', dataConfigSelected);
 
     let confArray = ["site_title", "site_id", "site_name", "Site Config", "Prioritization", "Condition"];
     let typeArray = ["", "", "", "NOTE", "NOTE", "NOTE"];
@@ -577,7 +578,7 @@ class ConfigUpload extends React.Component {
                         </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatConfig}>> Config Template</DropdownItem>
+                        {/* <DropdownItem onClick={this.exportFormatConfig}>> Config Template</DropdownItem> */}
                         <DropdownItem onClick={this.downloadAll}>> Download All Config</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
