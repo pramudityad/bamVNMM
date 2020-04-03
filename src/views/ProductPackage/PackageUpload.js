@@ -241,7 +241,7 @@ class PackageUpload extends React.Component {
 
   checkFormatPackage(dataXLSHeader) {
     // cek the import data is for Product Package or Not
-    if (this.getIndex(dataXLSHeader, 'PP / Material') !== -1 && this.getIndex(dataXLSHeader, 'package_id') !== -1 && this.getIndex(dataXLSHeader, 'package_name') !== -1 && this.getIndex(dataXLSHeader, 'product_type') !== -1 && this.getIndex(dataXLSHeader, 'physical_group') !== -1 & this.getIndex(dataXLSHeader, 'uom') !== -1 && this.getIndex(dataXLSHeader, 'pp_group_number') !== -1) {
+    if (this.getIndex(dataXLSHeader, 'PP / Material') !== -1 && this.getIndex(dataXLSHeader, 'bundle_id') !== -1 && this.getIndex(dataXLSHeader, 'bundle_name') !== -1 && this.getIndex(dataXLSHeader, 'product_type') !== -1 && this.getIndex(dataXLSHeader, 'physical_group') !== -1 & this.getIndex(dataXLSHeader, 'uom') !== -1 && this.getIndex(dataXLSHeader, 'pp_group_number') !== -1) {
       return true;
     } else {
       return false;
@@ -250,7 +250,7 @@ class PackageUpload extends React.Component {
 
   checkFormatMaterial(dataXLSHeader){
     // cek the import data is for Material or Not
-    if(this.getIndex(dataXLSHeader,'PP / Material') !== -1 && this.getIndex(dataXLSHeader,'package_id') !== -1 && this.getIndex(dataXLSHeader,'material_id') !== -1 && (this.getIndex(dataXLSHeader,'material_name') !== -1 || this.getIndex(dataXLSHeader,'quantity') !== -1 || this.getIndex(dataXLSHeader,'uom') !== -1)){
+    if(this.getIndex(dataXLSHeader,'PP / Material') !== -1 && this.getIndex(dataXLSHeader,'bundle_id') !== -1 && this.getIndex(dataXLSHeader,'material_id') !== -1 && (this.getIndex(dataXLSHeader,'material_name') !== -1 || this.getIndex(dataXLSHeader,'quantity') !== -1 || this.getIndex(dataXLSHeader,'uom') !== -1)){
       return true;
     }else{
       return false;
@@ -350,13 +350,13 @@ class PackageUpload extends React.Component {
     let ppSpace = [];
     if (onlyParent !== undefined && onlyParent.length !== 0) {
       for (let i = 0; i < onlyParent.length; i++) {
-        let pp_id = this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'package_id')]);
-        let pp_name = this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'package_name')]);
+        let pp_id = this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'bundle_id')]);
+        let pp_name = this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'bundle_name')]);
         if (pp_name === null || pp_name === undefined) { pp_name = pp_id }
         const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
         const pp = {
           "pp_id": pp_id,
-          "product_name": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'package_name')]),
+          "product_name": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'bundle_name')]),
           "product_type": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'product_type')]),
           "physical_group": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'physical_group')]),
           "uom": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'uom')]),
@@ -388,7 +388,7 @@ class PackageUpload extends React.Component {
     let materialList = [];
     let matErr = [];
     for (let i = 0; i < onlyMaterial.length; i++) {
-      let pp_id = this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'package_id')]);
+      let pp_id = this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'bundle_id')]);
       let mat_id = this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'material_id')]);
       let mat_name = this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'material_name')]);
       if (mat_name === null || mat_name === undefined) { mat_name = mat_id }
@@ -664,9 +664,9 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["PP / Material", "Bundle ID", "Bundle Name", "UOM", "Physical Group", "Product Type", "PP Group Number", "PP Group Name"]);
-    ws.addRow(["PP", "product key 1", "L1 Name 1", "pc", "Radio", "HW", "customer product number 1", "customer product name 1"]);
-    ws.addRow(["PP", "product key 2", "L2 Name 2", "pc", "Radio", "HW", "customer product number 2", "customer product name 2"]);
+    ws.addRow(["PP / Material", "bundle_id", "bundle_name", "uom", "physical_group", "product_type", "pp_group_number", "pp_group_name"]);
+    ws.addRow(["PP", "bundle key 1", "bundle Name 1", "pc", "Radio", "HW", "customer product number 1", "customer product name 1"]);
+    ws.addRow(["PP", "bundle key 2", "bundle Name 2", "pc", "Radio", "HW", "customer product number 2", "customer product name 2"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'PP Uploader Template.xlsx');
@@ -678,7 +678,7 @@ class PackageUpload extends React.Component {
 
     const dataPrint = this.state.packageSelected;
 
-    ws.addRow(["PP / Material", "material_id", "material_name", "quantity", "uom", "material_type", "package_id", "package_name"]);
+    ws.addRow(["PP / Material", "material_id", "material_name", "quantity", "uom", "material_type", "bundle_id", "bundle_name"]);
 
     for (let i = 0; i < dataPrint.length; i++) {
       ws.addRow(["Material", "child id", "child Name", "3", "pc", "active", dataPrint[i].pp_id, dataPrint[i].product_name])
@@ -696,12 +696,12 @@ class PackageUpload extends React.Component {
     console.log('pp selected', dataPrint);
 
     let confArray = ["2020_Config-1D", "Coverage", "Cov_2020_Config-4_0610", "2515914", "RBS:COV_2020_CONFIG-4DC", "Service", "Add 1x Radio 2219 B3+ 1xRadio 2217 B1 + Ant 45 degree_Radio2219ExDismantle"];
-    let typeArray = ["Config Name", "Program", "Config name + Program", "SAP Number", "SAP Description", "Category", "Config description"]
-    
+    let typeArray = ["config_name","program","config_id","sap_number","sap_description","config_type", "description"]
+
     // ws.addRow(["config_id", "sap_number", "pp_id", "qty", "price", "currency", "config_description", "config_type", "qty_commercial"]);
     typeArray = typeArray.concat(dataPrint.map(pp => pp.pp_id + " /// " + pp.product_name));
-    confArray = confArray.concat(dataPrint.map(pp => pp.price));
-    
+    confArray = confArray.concat(dataPrint.map(pp => 2));
+
     // for (let i = 0; i < dataPrint.length; i++) {
     //   ws.addRow(["CONFIG_TEST", "SAP_NUMBER", dataPrint[i].pp_id, 2, 2400, "USD", "conf_desc_example", "conf_type_example", 235]);
     // }
@@ -730,7 +730,7 @@ class PackageUpload extends React.Component {
                         </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatPackage}>> Product Package Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatPackage}>> Bundle Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfig} disabled={this.state.packageChecked.length === 0}>> Config Template</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
@@ -798,7 +798,6 @@ class PackageUpload extends React.Component {
                             <th>Bundle ID</th>
                             <th>Unit</th>
                             <th>Qty</th>
-                            <th>Price</th>
                             {/* <th>Product Package</th> */}
                             <th>Physical Group</th>
                             <th>Product / Material Type</th>
@@ -814,7 +813,6 @@ class PackageUpload extends React.Component {
                                 <td style={{ textAlign: 'left' }}>{pp.pp_id}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.uom}</td>
                                 <td style={{ textAlign: 'left' }}></td>
-                                <td style={{ textAlign: 'center' }}>{pp.price}</td>
                                 {/* <td style={{textAlign : 'left'}}>{pp.pp_group}</td> */}
                                 <td style={{ textAlign: 'center' }}>{pp.physical_group}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.product_type}</td>
@@ -832,7 +830,6 @@ class PackageUpload extends React.Component {
                                   <td style={{ textAlign: 'left' }}>{mat.material_id}</td>
                                   <td style={{ textAlign: 'center' }}>{mat.uom}</td>
                                   <td style={{ textAlign: 'center' }}>{mat.qty}</td>
-                                  <td style={{ textAlign: 'left' }}></td>
                                   {/* }<td style={{textAlign : 'left'}}></td> */}
                                   <td style={{ textAlign: 'left' }}></td>
                                   <td style={{ textAlign: 'center' }}>{mat.material_type}</td>

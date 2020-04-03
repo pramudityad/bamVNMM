@@ -291,10 +291,39 @@ class ConfigUpload extends React.Component {
     console.log(isConfig);
     if (isConfig === true) {
       const postConfig = await this.postDatatoAPINode('/packageConfig/saveConfigBulk', { "configData": this.state.check_config_package });
-      this.setState({ action_status: 'success' }, () => {
-        this.toggleLoading();
-      });
-      console.log(postConfig);
+      if(postConfig.data !== undefined){
+        this.setState({ action_status: 'success' }, () => {
+          this.toggleLoading();
+        });
+      }else{
+        if(postConfig.response !== undefined){
+          if(postConfig.response.data !== undefined){
+            if(postConfig.response.data.error !== undefined){
+              if(postConfig.response.data.error.message !== undefined){
+                this.setState({ action_status: 'failed', action_message: postConfig.response.data.error.message }, () => {
+                  this.toggleLoading();
+                });
+              }else{
+                this.setState({ action_status: 'failed', action_message: postConfig.response.data.error }, () => {
+                  this.toggleLoading();
+                });
+              }
+            }else{
+              this.setState({ action_status: 'failed'}, () => {
+                this.toggleLoading();
+              });
+            }
+          }else{
+            this.setState({ action_status: 'failed' }, () => {
+              this.toggleLoading();
+            });
+          }
+        }else{
+          this.setState({ action_status: 'failed' }, () => {
+              this.toggleLoading();
+          });
+        }
+      }
     } else {
       this.setState({ action_status: 'failed', action_message: 'There is something error' }, () => {
         this.toggleLoading();
@@ -651,7 +680,6 @@ class ConfigUpload extends React.Component {
                             <th>Qty</th>
                             {/* <th>Qty Comm</th>
                             <th>Price</th> */}
-                            <th></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -666,9 +694,6 @@ class ConfigUpload extends React.Component {
                                 <td style={{ textAlign: 'center' }}>{}</td>
                                 <td style={{ textAlign: 'center' }}>{}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_type}</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
                                 <td></td>
                                 <td>
                                   {/* }<Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
