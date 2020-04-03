@@ -552,9 +552,9 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["config_id", "sap_number", "pp_id", "qty", "price", "currency", "config_description", "config_type", "qty_commercial"]);
-    ws.addRow(["CONFIG_TEST01", "SAP_TEST01", "PPID01", 2, 2400, "USD", "conf_desc_example", "conf_type_example", 235]);
-    ws.addRow(["CONFIG_TEST01", "SAP_TEST01", "PPID02", 4, 1300, "USD", "conf_desc_example", "conf_type_example", 127]);
+    ws.addRow(["Config Name", "Program", "Config name + Program", "SAP Number", "SAP Description", "Category", "Config description", "dynamic_PP_ID", "dynamic_PP_ID"]);
+    ws.addRow(["2020_Config-1D", "Coverage", "Cov_2020_Config-4_0610", "2515914", "RBS:COV_2020_CONFIG-4DC", "Service", "Add 1x Radio 2219 B3+ 1xRadio 2217 B1 + Ant 45 degree_Radio2219ExDismantle", "dynamic_PP_ID", "dynamic_PP_ID"]);
+    ws.addRow(["2020_Config-5_0720", "Coverage", "Cov_2020_Config-5_0720", "1111111", "RBS:COV_2020_CONFIG-5B ", "Service", "Add 1x Radio 2219 B3+ 1xRadio 2217 B1 + Ant 90 degree_Radio2219", "dynamic_PP_ID", "dynamic_PP_ID"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'Config Uploader Template.xlsx');
@@ -640,13 +640,16 @@ class ConfigUpload extends React.Component {
                               {/* }<Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} /> */}
                             </th>
                             <th style={{ minWidth: '150px' }}>Config</th>
+                            <th>Config Name</th>
                             <th>SAP</th>
+                            <th>SAP Description</th>
+                            <th>Program</th>
                             <th>Product ID</th>
                             <th>Product Name</th>
                             {/* <th>Unit</th> */}
                             <th>Qty</th>
-                            <th>Qty Comm</th>
-                            <th>Price</th>
+                            {/* <th>Qty Comm</th>
+                            <th>Price</th> */}
                             <th></th>
                           </tr>
                         </thead>
@@ -657,7 +660,10 @@ class ConfigUpload extends React.Component {
                               <tr style={{ backgroundColor: '#d3d9e7', fontWeight : 700 }} className='fixbody' key={pp._id}>
                                 <td align="center"><Checkbox name={pp._id} checked={this.state.config_checked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_id}</td>
+                                <td style={{ textAlign: 'center' }}>{}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.sap_number}</td>
+                                <td style={{ textAlign: 'center' }}>{}</td>
+                                <td style={{ textAlign: 'center' }}>{}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_type}</td>
                                 <td></td>
                                 <td></td>
@@ -674,11 +680,14 @@ class ConfigUpload extends React.Component {
                                   <td style={{ textAlign: 'left' }}></td>
                                   <td style={{ textAlign: 'left' }}></td>
                                   <td style={{ textAlign: 'left' }}></td>
+                                  <td style={{ textAlign: 'left' }}></td>
+                                  <td style={{ textAlign: 'left' }}></td>
+                                  <td style={{ textAlign: 'left' }}></td>
                                   <td style={{ textAlign: 'center' }}>{pl.pp_id}</td>
                                   <td style={{ textAlign: 'center' }}>{pl.pp_group}</td>
                                   <td style={{ textAlign: 'center' }}>{pl.qty}</td>
-                                  <td style={{ textAlign: 'center' }}>{pl.qty_commercial}</td>
-                                  <td style={{ textAlign: 'center' }}>{pl.price}</td>
+                                  {/* <td style={{ textAlign: 'center' }}>{pl.qty_commercial}</td>
+                                  <td style={{ textAlign: 'center' }}>{pl.price}</td> */}
                                 </tr>
                               )}
                             </React.Fragment>

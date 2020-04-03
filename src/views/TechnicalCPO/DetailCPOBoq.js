@@ -500,19 +500,20 @@ class DetailCPOBoq extends Component {
         "prodef": xlsRow[this.getIndex(dataXLS[0], 'prodef')],
         "wbs": xlsRow[this.getIndex(dataXLS[0], 'wbs')],
         "project_code": xlsRow[this.getIndex(dataXLS[0], 'project_code')],
-        "program": xlsRow[this.getIndex(dataXLS[0], 'program')],
+        "program": xlsRow[this.getIndex(dataXLS[0], 'program_priority')],
         "program_type": xlsRow[this.getIndex(dataXLS[0], 'program_type')],
         "tower_id_plan": xlsRow[this.getIndex(dataXLS[0], 'tower_id_plan')],
+        "tower_id_actual": xlsRow[this.getIndex(dataXLS[0], 'tower_id_actual')],
         "working_on": xlsRow[this.getIndex(dataXLS[0], 'working_on')],
         "main_sow": xlsRow[this.getIndex(dataXLS[0], 'main_sow')],
         "combined_scope": xlsRow[this.getIndex(dataXLS[0], 'combined_scope')],
         "tower_count": xlsRow[this.getIndex(dataXLS[0], 'tower_count')],
-        "region": xlsRow[this.getIndex(dataXLS[0], 'region')],
-        "fas_id": xlsRow[this.getIndex(dataXLS[0], 'fas_id')],
+        // "region": xlsRow[this.getIndex(dataXLS[0], 'region')],
+        // "fas_id": xlsRow[this.getIndex(dataXLS[0], 'fas_id')],
         "part": xlsRow[this.getIndex(dataXLS[0], 'part')],
         "config": xlsRow[this.getIndex(dataXLS[0], 'config')],
-        "sap": xlsRow[this.getIndex(dataXLS[0], 'sap')],
-        "sap_description": xlsRow[this.getIndex(dataXLS[0], 'sap_description')],
+        // "sap": xlsRow[this.getIndex(dataXLS[0], 'sap')],
+        // "sap_description": xlsRow[this.getIndex(dataXLS[0], 'sap_description')],
         "qty": xlsRow[this.getIndex(dataXLS[0], 'qty')],
         "boq_part": xlsRow[this.getIndex(dataXLS[0], 'boq_part')],
         "category": xlsRow[this.getIndex(dataXLS[0], 'category')],
@@ -523,7 +524,21 @@ class DetailCPOBoq extends Component {
         "currency": xlsRow[this.getIndex(dataXLS[0], 'currency')],
         "coupa_requisition_title": xlsRow[this.getIndex(dataXLS[0], 'coupa_requisition_title')],
         "coupa_network_id": xlsRow[this.getIndex(dataXLS[0], 'coupa_network_id')],
-        "pr_number": xlsRow[this.getIndex(dataXLS[0], 'pr_number')]
+        "pr_number": xlsRow[this.getIndex(dataXLS[0], 'pr_number')],
+        "as_number": xlsRow[this.getIndex(dataXLS[0], 'as_number')],
+        "pc_code_nro": xlsRow[this.getIndex(dataXLS[0], 'Pcode 2961-NRO %')],
+        "pc_code_pndt": xlsRow[this.getIndex(dataXLS[0], 'Pcode 6967-PNDT Design-Tuning')],
+        "pc_code_cos": xlsRow[this.getIndex(dataXLS[0], 'Pcode 6967-CoS %')],
+        "total_nro": xlsRow[this.getIndex(dataXLS[0], 'Pcode1 Total Value (2961-NRO)')],
+        "tota_pndt": xlsRow[this.getIndex(dataXLS[0], 'Pcode2 Total Value (6967-PNDT) Design-Tuning')],
+        "total_cos": xlsRow[this.getIndex(dataXLS[0], 'Pcode4 Total Value (6967-CoS)')],
+        "hw": xlsRow[this.getIndex(dataXLS[0], 'HW- 2460')],
+        "lcm": xlsRow[this.getIndex(dataXLS[0], 'LCM - 2110')],
+        "eab_hwac": xlsRow[this.getIndex(dataXLS[0], 'EAB HWAC - 2491')],
+        "pc_code_hw": xlsRow[this.getIndex(dataXLS[0], 'Pcode HW- 2460 Total Value')],
+        "pc_code_lcm": xlsRow[this.getIndex(dataXLS[0], 'Pcode LCM - 2110 Total Value')],
+        "pc_code_eab": xlsRow[this.getIndex(dataXLS[0], 'Pcode EAB HWAC - 2491 Total Value')]
+        
       }
       if(cpoIdx.coupa_unit_price !== undefined && cpoIdx.coupa_unit_price !== null ){
         cpoIdx["coupa_unit_price"] = parseFloat(cpoIdx.coupa_unit_price);
@@ -1841,9 +1856,9 @@ class DetailCPOBoq extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const ppIdRow = ["prodef","wbs","project_code","program","program_type","tower_id_plan","working_on","main_sow","combined_scope","tower_count","region","fas_id","part","config","sap","sap_description","qty","boq_part","category","source","coupa_catalogue_item","coupa_unit_price","coupa_total_price", "currency", "coupa_requisition_title", "coupa_network_id", "pr_number"];
-
+    const ppIdRow = ["prodef","wbs","project_code","program_priority","program_type","tower_id_plan","tower_id_actual", "working_on","main_sow","combined_scope","tower_count","part","config","qty","boq_part","category","source","coupa_catalogue_item","coupa_unit_price","coupa_total_price", "currency", "coupa_requisition_title", "coupa_network_id", "pr_number", "as_number", "Pcode 2961-NRO %","Pcode 6967-PNDT Design-Tuning","Pcode 6967-CoS %","Pcode1 Total Value (2961-NRO)"," Pcode2 Total Value (6967-PNDT) Design-Tuning","Pcode4 Total Value (6967-CoS)","HW- 2460","LCM - 2110","EAB HWAC - 2491","Pcode HW- 2460 Total Value","Pcode LCM - 2110 Total Value","Pcode EAB HWAC - 2491 Total Value"];
     ws.addRow(ppIdRow);
+    ws.addRow(["SL/H313",	"SL/H313/B001 -R3",	"2020CUP", "P1",	"Capacity",	"JAW-JK-GGP-0614",	"JAW-JK-GGP-0614",	"Existing Tower",	"Improvement",	"Improvement L1800",	1	,"RAN Hardware",	"Cov_2020_Config-1D",	2	,"RAN",	"Service",	"New PO Coupa",	"3416315 |  INSTALL:CONFIG SERVICE 11_1105A  | YYYY:2019 | MM:12",	280000,	280000,	"IDR",	"EID-2020CUP_RAN_Service_ERICSSON_1_Central",	"2020CUP_RAN_3416315_ERICSSON_1_Central",	1490,	"AS#0223"	,"100%",	"0%",	"0%",	280000,	"", "", "0%",	"0%",	"0%",	"0.00",	"0.00",	"0.00"]);
 
     const MRFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MRFormat]), 'CPO BOQ Uploader Template.xlsx');
@@ -1976,14 +1991,42 @@ class DetailCPOBoq extends Component {
                             <th>PRODEF</th>
                             <th>WBS</th>
                             <th>Project Code</th>
-                            <th>Program</th>
+                            {/* <th>Program</th> */}
+                            <th>Program Priority</th>
                             <th>Program Type</th>
                             <th>Tower ID Plan</th>
+                            <th>Tower ID Actual</th>
                             <th>Working on</th>
                             <th>Main SOW</th>
                             <th>Combined Scope</th>
                             <th>Tower Count</th>
-                            <th>Region</th>
+                            <th>Part</th>
+                            <th>Config</th>
+                            <th>Qty</th>
+                            <th>BOQ Part</th>
+                            <th>Category</th>
+                            <th>Source</th>
+                            <th>COUPA Catalogue Item</th>
+                            <th>Coupa Unit Price</th>
+                            <th>Coupa Total Price</th>
+                            <th>Curr</th>
+                            <th>COUPA Requisition Title</th>
+                            <th>COUPA Network ID</th>
+                            <th>PR#</th>
+                            <th>AS Number</th>
+                            <th>Pcode 2961-NRO %</th>
+                            <th>Pcode 6967-PNDT Design-Tuning</th>
+                            <th>Pcode 6967-CoS %</th>
+                            <th>Pcode1 Total Value (2961-NRO)</th>
+                            <th>Pcode2 Total Value (6967-PNDT) Design-Tuning</th>
+                            <th>Pcode4 Total Value (6967-CoS)</th>
+                            <th>HW- 2460</th>
+                            <th>LCM - 2110</th>
+                            <th>EAB HWAC - 2491</th>
+                            <th>Pcode HW- 2460 Total Value</th>
+                            <th>Pcode LCM - 2110 Total Value</th>
+                            <th>Pcode EAB HWAC - 2491 Total Value</th>
+                            {/* <th>Region</th>
                             <th>FAS ID</th>
                             <th>Part</th>
                             <th>Config</th>
@@ -1999,7 +2042,8 @@ class DetailCPOBoq extends Component {
                             <th>Curr</th>
                             <th>COUPA Requisition Title</th>
                             <th>COUPA Network ID</th>
-                            <th>PR Number</th>
+                            <th>PR#</th>
+                            <th>AS Number</th> */}
                           </tr>
                         </thead>
                         <tbody>
@@ -2011,16 +2055,17 @@ class DetailCPOBoq extends Component {
                             <td>{row.program}</td>
                             <td>{row.program_type}</td>
                             <td>{row.tower_id_plan}</td>
+                            <td>{row.tower_id_plan}</td>
                             <td>{row.working_on}</td>
                             <td>{row.main_sow}</td>
                             <td>{row.combined_scope}</td>
                             <td>{row.tower_count}</td>
-                            <td>{row.region}</td>
-                            <td>{row.fas_id}</td>
+                            {/* <td>{row.region}</td>
+                            <td>{row.fas_id}</td> */}
                             <td>{row.part}</td>
                             <td>{row.config}</td>
-                            <td>{row.sap}</td>
-                            <td>{row.sap_description}</td>
+                            {/* <td>{row.sap}</td>
+                            <td>{row.sap_description}</td> */}
                             <td>{row.qty}</td>
                             <td>{row.boq_part}</td>
                             <td>{row.category}</td>
@@ -2032,6 +2077,19 @@ class DetailCPOBoq extends Component {
                             <td>{row.coupa_requisition_title}</td>
                             <td>{row.coupa_network_id}</td>
                             <td>{row.pr_number}</td>
+                            <td>{row.pr_number}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
+                            <td>{}</td>
                           </tr>
                         )}
                         </tbody>
