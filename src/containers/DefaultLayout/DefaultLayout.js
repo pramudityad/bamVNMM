@@ -51,14 +51,6 @@ class DefaultLayout extends Component {
 
   componentDidMount(){
     this.showMenuByRole();
-    // this.getDataLogin();
-    // // if(this.props.keycloak === undefined){
-    // //   console.log("logout");
-    // //   this.props.history.push('/');
-    // //   this.props.keycloak.logout();
-    // // }else{
-    // //   this.getDataLogin();
-    // // }
   }
 
   async postDatatoAPILogout(){
