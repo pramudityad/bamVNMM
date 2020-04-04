@@ -5,6 +5,7 @@ import axios from 'axios';
 import Keycloak from 'keycloak-js';
 import { connect } from 'react-redux';
 import ActionType from './redux/reducer/globalActionType';
+import SSOLogin from './containers/DefaultLayout/LoginSSO';
 
 const loading = () => <div className="animated fadeIn pt-3 text-center">Loading...</div>;
 
@@ -18,136 +19,24 @@ const Page404 = React.lazy(() => import('./views/Pages/Page404'));
 const Page500 = React.lazy(() => import('./views/Pages/Page500'));
 const LogError = React.lazy(() => import('./views/Pages/LogError'));
 
-const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
-
 class App extends Component {
 
   constructor(props) {
     super(props);
     this.state = {
-      key: null,
-      userInfo: null,
+      key: this.props.keycloak,
       authenticated: false,
-      dataLogin : null,
+      dataLogin : this.props.LoginData,
+      token : this.props.token,
     };
   }
 
-  async postDatatoAPILogin(url, data){
-    try {
-      let respond = await axios.post(API_URL_Node +url, data, {
-        headers : {
-          'Content-Type':'application/json',
-          'Authorization': 'Bearer '
-        },
-      })
-      if(respond.status >= 200 && respond.status < 300){
-        console.log("respond Post Data", respond);
-      }
-      return respond;
-    }catch (err) {
-      let respond = err;
-      console.log("respond Post Data", err);
-      return respond;
-    }
-  }
+  componentDidMount(){
 
-  async getDataLogin(keycloak){
-    console.log("get again");
-    const dataReq = {
-      "account_id" : "1",
-      "cas_id" : keycloak.sub,
-      "data" : {
-        "first_name" : keycloak.given_name,
-        "last_name" : keycloak.family_name,
-        "email" : keycloak.email,
-        "username" : keycloak.preferred_username
-      }
-    }
-    const getLogin = await this.postDatatoAPILogin('/loginUser', dataReq);
-    if(getLogin.data !== undefined){
-      localStorage.setItem('user_data_login', JSON.stringify(getLogin.data));
-      this.setState({dataLogin : getLogin.data});
-      this.props.saveDataUser({
-        "_id_user" : getLogin.data.validUser._id,
-        "email_user" : getLogin.data.validUser.email,
-        "roles_user" : getLogin.data.listRole,
-        "user_name" : getLogin.data.validUser.username,
-        "account_id" : "3",
-        "account_id" : "xl",
-        "token" : getLogin.data.token,
-        "sso_id" : keycloak.sub,
-        "name" : getLogin.data.validUser.first_name+" "+getLogin.data.validUser.last_name
-      });
-      return getLogin.data;
-    }else{
-      return undefined;
-    }
-  }
-
-  loginKeycloack(){
-    const keycloak = Keycloak('/keycloakBAMID.json');
-    keycloak.init({onLoad: 'login-required'}).then(authenticated => {
-      keycloak.loadUserInfo().then(userInfo => {
-        if(localStorage.getItem('user_data_login') === null){
-          this.getDataLogin(userInfo).then(resLogin => {
-            if(resLogin !== undefined){
-              localStorage.setItem('keycloack_data_login', JSON.stringify(keycloak));
-              localStorage.setItem('authenticated_data_login', authenticated);
-              this.setState({ key: keycloak, authenticated: authenticated });
-            }else{
-              this.setState({ key: keycloak, authenticated: authenticated }, () => {
-                return (<BrowserRouter><Redirect to={'/LoginError'} /></BrowserRouter>);
-              });
-
-              // this.setState({ key: keycloak, authenticated: authenticated });
-              // keycloak.logout();
-            }
-          });
-        }else{
-          this.getDatafromLocalStorage(keycloak, authenticated);
-        }
-      });
-    })
-  }
-
-  componentDidMount() {
-    this.loginKeycloack();
-  }
-
-  getDatafromLocalStorage(keycloak, authenticated){
-    const dataLogin = JSON.parse(localStorage.getItem('user_data_login'));
-    this.props.saveDataUser({
-      "_id_user" : dataLogin.validUser._id,
-      "email_user" : dataLogin.validUser.email,
-      "roles_user" : dataLogin.listRole,
-      "user_name" : dataLogin.validUser.username,
-      "account_id" : "3",
-      "account_id" : "xl",
-      "token" : dataLogin.token,
-      "sso_id" : keycloak.sub,
-      "name" : dataLogin.validUser.first_name+" "+dataLogin.validUser.last_name
-    });
-    this.setState({dataLogin : dataLogin});
-    this.setState({ key: keycloak, authenticated: authenticated }, () => {
-      if(dataLogin === null){
-        console.log("local");
-        return (<BrowserRouter><Redirect to={'/LoginError'} /></BrowserRouter>);
-      }
-    });
   }
 
   render() {
-    console.log("data Login key", this.state.key);
-    console.log("data Login auth", this.state.authenticated);
-    console.log("data Login", this.state.dataLogin);
-    // if(this.state.key !== null && this.state.authenticated && this.state.dataLogin === null ){
-    //   return (<BrowserRouter>
-    //     <React.Suspense fallback={loading()}>
-    //     <Route exact path="/LoginError" name="Login Error" render={props => <LogError {...props} keycloak={this.state.key}/>} />
-    //     <Redirect to={'/LoginError'} />
-    //     </React.Suspense>
-    //   </BrowserRouter>);
-    // }
+    console.log("LOGIN SUKSES", this.state.dataLogin);
     return (
       <BrowserRouter>
           <React.Suspense fallback={loading()}>
@@ -157,9 +46,12 @@ class App extends Component {
               <Route exact path="/404" name="Page 404" render={props => <Page404 {...props}/>} />
               <Route exact path="/500" name="Page 500" render={props => <Page500 {...props}/>} />
               <Route exact path="/LoginError" name="Login Error" render={props => <LogError {...props} keycloak={this.state.key}/>} />
-              {this.state.key !== null && this.state.authenticated === true && this.state.dataLogin !== null ? (
+              <Route path="/LoginSSO" name="Login SSO" render={props => <SSOLogin {...props}/>}/>
+              {this.props.token === undefined || this.state.key === undefined? (
+                <Route path="/" name="Login SSO" render={props => <SSOLogin {...props}/>}/>
+              ) : (
                 <Route path="/" name="Home" render={props => <DefaultLayout {...props} keycloak={this.state.key} dataLogin={this.state.dataLogin}/>} />
-              ) : (<div></div>)}
+              )}
             </Switch>
           </React.Suspense>
       </BrowserRouter>

@@ -27,6 +27,8 @@ const DefaultAside = React.lazy(() => import('./DefaultAside'));
 const DefaultFooter = React.lazy(() => import('./DefaultFooter'));
 const DefaultHeader = React.lazy(() => import('./DefaultHeader'));
 
+const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class DefaultLayout extends Component {
 
   constructor(props) {
@@ -39,10 +41,11 @@ class DefaultLayout extends Component {
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
-  signOut(e) {
+  async signOut(e) {
     e.preventDefault();
     localStorage.clear();
     this.props.history.push('/');
+    let logout = await this.postDatatoAPILogout();
     this.props.keycloak.logout();
   }
 
@@ -56,6 +59,25 @@ class DefaultLayout extends Component {
     // // }else{
     // //   this.getDataLogin();
     // // }
+  }
+
+  async postDatatoAPILogout(){
+    try {
+      let respond = await axios.post(API_URL_BAM+'/logoutUser', {}, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.props.dataLogin.token,
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Post Data", err);
+      return respond;
+    }
   }
 
   showMenuByRole(){

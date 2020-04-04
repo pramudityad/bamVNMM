@@ -399,6 +399,7 @@ class PackageUpload extends React.Component {
         "material_type": this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'material_type')]),
         "uom": this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'uom')]),
         "qty": this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'quantity')]),
+        "material_origin" : this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'material_origin')]),
         "po_number": ""
       }
       if (matIdx.material_id !== undefined && matIdx.material_id !== null) {
@@ -678,10 +679,10 @@ class PackageUpload extends React.Component {
 
     const dataPrint = this.state.packageSelected;
 
-    ws.addRow(["PP / Material", "material_id", "material_name", "quantity", "uom", "material_type", "bundle_id", "bundle_name"]);
+    ws.addRow(["PP / Material", "material_id", "material_name", "quantity", "uom", "material_type","material_origin", "bundle_id", "bundle_name"]);
 
     for (let i = 0; i < dataPrint.length; i++) {
-      ws.addRow(["Material", "child id", "child Name", "3", "pc", "active", dataPrint[i].pp_id, dataPrint[i].product_name])
+      ws.addRow(["Material", "child id", "child Name", "3", "pc", "active", "EAB", dataPrint[i].pp_id, dataPrint[i].product_name])
     }
 
     const MaterialFormat = await wb.xlsx.writeBuffer();
@@ -800,7 +801,7 @@ class PackageUpload extends React.Component {
                             <th>Qty</th>
                             {/* <th>Product Package</th> */}
                             <th>Physical Group</th>
-                            <th>Product / Material Type</th>
+                            <th>Product Type/ Material Origin</th>
                             <th></th>
                           </tr>
                         </thead>
@@ -832,7 +833,7 @@ class PackageUpload extends React.Component {
                                   <td style={{ textAlign: 'center' }}>{mat.qty}</td>
                                   {/* }<td style={{textAlign : 'left'}}></td> */}
                                   <td style={{ textAlign: 'left' }}></td>
-                                  <td style={{ textAlign: 'center' }}>{mat.material_type}</td>
+                                  <td style={{ textAlign: 'center' }}>{mat.material_origin}</td>
                                   <td></td>
                                 </tr>
                               )}

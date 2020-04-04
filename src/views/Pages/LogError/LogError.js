@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import { Button, Col, Container, Input, InputGroup, InputGroupAddon, InputGroupText, Row } from 'reactstrap';
+import SSOLogin from '../../../containers/DefaultLayout/LoginSSO';
+import { Redirect } from 'react-router-dom';
 
 class LogError extends Component {
 
@@ -12,6 +14,7 @@ class LogError extends Component {
     localStorage.clear();
     this.props.history.push('/');
     this.props.keycloak.logout();
+    // return (<Redirect to={prevUrl} />)
   }
 
   render() {
