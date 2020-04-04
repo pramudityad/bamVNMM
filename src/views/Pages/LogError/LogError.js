@@ -13,11 +13,13 @@ class LogError extends Component {
     e.preventDefault();
     localStorage.clear();
     this.props.history.push('/');
-    this.props.keycloak.logout();
-    // return (<Redirect to={prevUrl} />)
+    if(this.props.keycloak !== undefined){
+      this.props.keycloak.logout();
+    }
   }
 
   render() {
+    console.log("this.props.keycloak 11", this.props.keycloak);
     return (
       <div className="app flex-row align-items-center">
         <Container>

@@ -111,6 +111,7 @@ class SSOLogin extends Component {
       "sso_id" : keycloak.sub,
       "name" : dataLogin.validUser.first_name+" "+dataLogin.validUser.last_name
     });
+    console.log("dataLogin local", dataLogin);
     this.setState({dataLogin : dataLogin});
     this.setState({ key: keycloak, authenticated: authenticated }, () => {
       if(dataLogin === null){
@@ -120,14 +121,9 @@ class SSOLogin extends Component {
   }
 
   render() {
-    if((this.state.key !== null || this.state.key !== undefined)  && this.state.authenticatedLoginBAM === false){
-      console.log("authenticatedLoginBAM", this.state.key, this.state.authenticatedLoginBAM);
-      return <Redirect to="/LoginError" />
-      // this.setState({authenticatedLoginBAM : null});
-    }
     if(this.state.key !== null && this.state.key !== undefined){
       return(
-        <App token={this.state.token} LoginData={this.state.dataLogin} keycloak={this.state.key} authenticated={this.state.authenticated}/>
+        <App token={this.state.token} LoginData={this.state.dataLogin} keycloak={this.state.key} authenticatedBAM={this.state.authenticatedLoginBAM}/>
       )
     }
 

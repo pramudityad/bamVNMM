@@ -41,11 +41,11 @@ class DefaultLayout extends Component {
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
-  async signOut(e) {
+  signOut(e) {
     e.preventDefault();
     localStorage.clear();
     this.props.history.push('/');
-    let logout = await this.postDatatoAPILogout();
+    this.postDatatoAPILogout();
     this.props.keycloak.logout();
   }
 

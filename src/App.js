@@ -36,7 +36,7 @@ class App extends Component {
   }
 
   render() {
-    console.log("LOGIN SUKSES", this.state.dataLogin);
+    console.log("LOGIN SUKSES", this.props.authenticated);
     return (
       <BrowserRouter>
           <React.Suspense fallback={loading()}>
@@ -47,6 +47,9 @@ class App extends Component {
               <Route exact path="/500" name="Page 500" render={props => <Page500 {...props}/>} />
               <Route exact path="/LoginError" name="Login Error" render={props => <LogError {...props} keycloak={this.state.key}/>} />
               <Route path="/LoginSSO" name="Login SSO" render={props => <SSOLogin {...props}/>}/>
+              {this.props.authenticatedBAM === false && (
+                <Redirect from='/' to='/LoginError'/>
+              )}
               {this.props.token === undefined || this.state.key === undefined? (
                 <Route path="/" name="Login SSO" render={props => <SSOLogin {...props}/>}/>
               ) : (
