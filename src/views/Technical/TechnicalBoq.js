@@ -2062,7 +2062,7 @@ class TechnicalBoq extends Component {
     }
     const dataHeader = this.state.view_tech_header_table;
 
-    let ppIdRow = ["tower_id", "tower_name"];
+    let ppIdRow = ["Tower ID", "Tower Name"];
     let ppTypeRow = ["", "", ""];
 
     let ppIdRowheader = [];

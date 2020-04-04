@@ -91,6 +91,9 @@ const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabase'))
 const ListCPOBoq = React.lazy(() => import('./views/TechnicalCPO/ListCPOBoq'));
 const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'));
 
+const ListTSSRBoq = React.lazy(() => import('./views/Tssr/ListTSSRBoq'));
+const DetailTSSRBoq = React.lazy(() => import('./views/Tssr/TSSRBoq'));
+
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -196,6 +199,10 @@ const routes = [
   { path: '/list-cpo-boq', exact: true, name: 'List CPO BOQ', component: ListCPOBoq },
   { path: '/detail-cpo-boq/:id', exact: true, name: 'CPO BOQ Detail', component: DetailCPOBoq },
   { path: '/cpo-boq-creation', exact: true, name: 'CPO BOQ Creation', component: DetailCPOBoq },
+
+  { path: '/list-tssr-boq', exact: true, name: 'List TSSR BOQ', component: ListTSSRBoq },
+  { path: '/detail-tssr-boq/:id', exact: true, name: 'CPO TSSR Detail', component: DetailTSSRBoq },
+
 ];
 
 export default routes;
