@@ -701,7 +701,7 @@ class PackageUpload extends React.Component {
 
     // ws.addRow(["config_id", "sap_number", "pp_id", "qty", "price", "currency", "config_description", "config_type", "qty_commercial"]);
     typeArray = typeArray.concat(dataPrint.map(pp => pp.pp_id + " /// " + pp.product_name));
-    confArray = confArray.concat(dataPrint.map(pp => 2));
+    confArray = confArray.concat(dataPrint.map(pp => 0));
 
     // for (let i = 0; i < dataPrint.length; i++) {
     //   ws.addRow(["CONFIG_TEST", "SAP_NUMBER", dataPrint[i].pp_id, 2, 2400, "USD", "conf_desc_example", "conf_type_example", 235]);

@@ -598,8 +598,8 @@ class ConfigUpload extends React.Component {
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{ marginTop: '8px', position: 'absolute' }}>Config</span>
-                <div className="card-header-actions" style={{ display: 'inline-flex' }}>
+                <span>Config</span>
+                {/* <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
                       <DropdownToggle caret color="light">
@@ -607,7 +607,7 @@ class ConfigUpload extends React.Component {
                         </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        {/* <DropdownItem onClick={this.exportFormatConfig}>> Config Template</DropdownItem> */}
+                        <DropdownItem onClick={this.exportFormatConfig}>> Config Template</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>> Download All Config</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
@@ -619,7 +619,7 @@ class ConfigUpload extends React.Component {
                         </Button>
                     </div>
                   ) : ("")}
-                </div>
+                </div> */}
               </CardHeader>
               <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>
                 <Card style={{ margin: '10px 10px 5px 10px' }}>
@@ -734,12 +734,6 @@ class ConfigUpload extends React.Component {
                       itemClass="page-item"
                       linkClass="page-link"
                     />
-                  </Col>
-
-                  <Col>
-                    <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
-                      <Button color="warning" disabled={this.state.config_checked.length === 0} onClick={this.exportTechnicalFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp;Download Technical Format</Button>
-                    </div>
                   </Col>
                 </Row>
                 <Row>

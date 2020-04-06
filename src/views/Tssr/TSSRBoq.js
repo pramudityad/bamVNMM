@@ -347,7 +347,8 @@ class TSSRBoq extends Component {
       let configNotes = [];
       if(currValue === 3){
         tssrApproval["tssrNote"] = true;
-        tssrApproval["techBoqNote"] = this.state.tssr_comment;
+        tssrApproval["techBoqNote"] = {};
+        tssrApproval["techBoqNote"]["note_value"] = this.state.tssr_comment;
         for (const [key, value] of this.state.tssr_config_comment.entries()) {
           let configNoteIdx = {
             "_id": key,
@@ -454,7 +455,7 @@ class TSSRBoq extends Component {
                                   className="BoQ-style-qty"
                                   placeholder=""
                                   onChange={this.handleChangeCommentConfig}
-                                  value={!this.state.tssr_config_comment.has(conf._id) ? "" : this.state.tssr_config_comment.get(conf._id) }
+                                  value={this.state.tssr_config_comment.has(conf._id) === true ? this.state.tssr_config_comment.get(conf._id) : conf.tssr_notes === undefined ? "" : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].note : ""}
                                 />
                               </td>
                             </tr>
@@ -472,7 +473,7 @@ class TSSRBoq extends Component {
                         className="BoQ-style-qty"
                         placeholder=""
                         onChange={this.handleChangeCommentTSSR}
-                        value={!this.state.tssr_comment === null ? "" : this.state.tssr_comment }
+                        value={this.state.tssr_comment !== null ? this.state.tssr_comment : this.state.data_tech_boq === null ? "" : this.state.data_tech_boq.notes === undefined ? "" : this.state.data_tech_boq.notes.length !== 0 ? this.state.data_tech_boq.notes[this.state.data_tech_boq.notes.length-1].note_value : "" }
                       />
                     </FormGroup>
                   </div>

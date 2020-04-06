@@ -174,6 +174,7 @@ class TechnicalBoq extends Component {
       progress_data : 0,
       progress_count : 0,
       progress_failed : 0,
+      option_tssr_header_view : 'only_filled'
     };
     this.toggleLoading = this.toggleLoading.bind(this);
     this.selectProject = this.selectProject.bind(this);
@@ -202,6 +203,7 @@ class TechnicalBoq extends Component {
     this.exportFormatTechnicalHorizontal = this.exportFormatTechnicalHorizontal.bind(this);
     this.exportFormatTechnicalVertical = this.exportFormatTechnicalVertical.bind(this);
     this.approvalTechnical = this.approvalTechnical.bind(this);
+    this.handleChangeOptionView = this.handleChangeOptionView.bind(this);
     }
 
     numberToAlphabet(number){
@@ -800,13 +802,31 @@ class TechnicalBoq extends Component {
       }
     }else{
       if(postCheck.response !== undefined){
-        if(postCheck.response.error !== undefined){
-          this.setState({action_status : 'failed', action_message : postCheck.response.error});
+        if(postCheck.response.data !== undefined){
+          if(postCheck.response.data.error !== undefined){
+            if(postCheck.response.data.error.message !== undefined){
+              this.setState({ action_status: 'failed', action_message: postCheck.response.data.error.message }, () => {
+                this.toggleLoading();
+              });
+            }else{
+              this.setState({ action_status: 'failed', action_message: postCheck.response.data.error }, () => {
+                this.toggleLoading();
+              });
+            }
+          }else{
+            this.setState({ action_status: 'failed'}, () => {
+              this.toggleLoading();
+            });
+          }
         }else{
-          this.setState({action_status : 'failed'});
+          this.setState({ action_status: 'failed' }, () => {
+            this.toggleLoading();
+          });
         }
       }else{
-        this.setState({action_status : 'failed'});
+        this.setState({ action_status: 'failed' }, () => {
+            this.toggleLoading();
+        });
       }
     }
   }
@@ -1603,6 +1623,15 @@ class TechnicalBoq extends Component {
     });
   }
 
+  handleChangeOptionView(){
+    let value = 'only_filled';
+    if(this.state.option_tssr_header_view === 'only_filled'){
+      this.setState({option_tssr_header_view : 'all'});
+    }else{
+      this.setState({option_tssr_header_view : 'only_filled'});
+    }
+  }
+
   handleChangeShow = (e) => {
     let show = e.target.value;
     this.setState({ perPage : show}, () => {
@@ -2010,7 +2039,7 @@ class TechnicalBoq extends Component {
         for(let j = 0; j < header_config.config_group_header.length; j++ ){
           let dataConfigIdx = dataSites[i].siteItemConfigVersion.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
           if(dataConfigIdx !== undefined){
-            qtyConfig = qtyConfig.concat([dataConfigIdx.config_name, dataConfigIdx.qty]);
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, dataConfigIdx.qty]);
           }else{
             qtyConfig = qtyConfig.concat([null, null]);
           }
@@ -2019,7 +2048,7 @@ class TechnicalBoq extends Component {
         for(let j = 0; j < header_config.config_group_header.length; j++ ){
           let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
           if(dataConfigIdx !== undefined){
-            qtyConfig = qtyConfig.concat([dataConfigIdx.config_name, dataConfigIdx.qty]);
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, dataConfigIdx.qty]);
           }else{
             qtyConfig = qtyConfig.concat([null, null]);
           }
@@ -2060,34 +2089,39 @@ class TechnicalBoq extends Component {
     }else{
       dataSites = this.state.data_tech_boq_sites;
     }
-    const dataHeader = this.state.view_tech_header_table;
 
-    let ppIdRow = ["Tower ID", "Tower Name"];
-    let ppTypeRow = ["", "", ""];
+    const header_config = this.state.view_tech_all_header_table;
 
-    let ppIdRowheader = [];
+    let HeaderRow1 = ["General Info", "General Info", "General Info"];
+    let HeaderRow2 = ["TOWER ID","Program","SOW"];
 
-    const header_note = await this.headerTechBoqDataNote(dataSites);
-    // ppTypeRow = ppTypeRow.concat(dataHeader.type);
+    header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
+    header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
 
-    ppIdRow = ppIdRow.concat(header_note)
-    // ppTypeRow = ppTypeRow.concat(header_note.map(e => "NOTE"));
-
-    dataHeader.config_id.map((e,idx) => ppIdRowheader = ppIdRowheader.concat(["BOQ "+(idx+1), "BOQ DESC "+(idx+1),"QTY "+(idx+1)]));
-
-    ppIdRow = ppIdRow.concat(ppIdRowheader);
-    // ws.addRow(ppTypeRow);
-    ws.addRow(ppIdRow);
+    ws.addRow(HeaderRow1);
+    ws.addRow(HeaderRow2);
     for(let i = 0; i < dataSites.length ; i++){
       let qtyConfig = []
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-        header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
-        dataSites[i].siteItemConfigVersion.map(e => qtyConfig = qtyConfig.concat([e.config_id, e.description, e.qty]));
+        for(let j = 0; j < header_config.config_group_header.length; j++ ){
+          let dataConfigIdx = dataSites[i].siteItemConfigVersion.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+          if(dataConfigIdx !== undefined){
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, dataConfigIdx.qty]);
+          }else{
+            qtyConfig = qtyConfig.concat([null, null]);
+          }
+        }
       }else{
-        header_note.map(e => qtyConfig = qtyConfig.concat(dataSites[i].notes.find(z => z.note_name === e) !== undefined ? dataSites[i].notes.find(z => z.note_name === e).note_value: null));
-        dataSites[i].siteItemConfig.map(e => e.qty !== 0 ? qtyConfig = qtyConfig.concat([e.config_id, e.description, e.qty]) : "");
+        for(let j = 0; j < header_config.config_group_header.length; j++ ){
+          let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+          if(dataConfigIdx !== undefined){
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, dataConfigIdx.qty]);
+          }else{
+            qtyConfig = qtyConfig.concat([null, null]);
+          }
+        }
       }
-      ws.addRow([dataSites[i].site_id, dataSites[i].site_name].concat(qtyConfig));
+      ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow].concat(qtyConfig));
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
@@ -2200,11 +2234,11 @@ class TechnicalBoq extends Component {
                     </React.Fragment>
                   ) : (
                     <React.Fragment>
-                      <span style={{marginTop:'8px', position:'absolute'}}>Detail Technical BOQ</span>
+                      <span style={{marginTop:'3px', position:'absolute'}}>Detail Technical BOQ</span>
                       <div className="card-header-actions" style={{display:'inline-flex'}}>
                       <Col>
                         <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}}>
-                          <DropdownToggle caret color="secondary">
+                          <DropdownToggle caret color="secondary" size="sm">
                             <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download Technical File
                           </DropdownToggle>
                           <DropdownMenu>
@@ -2217,8 +2251,13 @@ class TechnicalBoq extends Component {
                           </DropdownMenu>
                         </Dropdown>
                       </Col>
+                        <div style={{marginRight : '10px'}}>
+                          <Button block color="info" onClick={this.handleChangeOptionView} size="sm" id="toggleCollapse1">
+                              Only Filled / All
+                          </Button>
+                        </div>
                         <div>
-                          <Button block color="primary" onClick={this.toggleUpload} id="toggleCollapse1">
+                          <Button block color="primary" onClick={this.toggleUpload} size="sm" id="toggleCollapse1">
                               <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Update
                           </Button>
                         </div>
@@ -2243,6 +2282,7 @@ class TechnicalBoq extends Component {
                         <Row>
                         <Col md="4">
                           <div>
+                          Project :
                             <Input name="project" type="select" onChange={this.selectProject} value={this.state.project_select}>
                                 <option value=""></option>
                                 {this.state.project_all.map( project =>
@@ -2423,9 +2463,16 @@ class TechnicalBoq extends Component {
                       </div> */}
 
                       {(this.state.version_selected !== null && this.state.data_tech_boq.version !== this.state.version_selected) ? (
-                        <TableTechnicalConfig dataTechBoqSites={this.state.data_tech_boq_sites_version} configHeader={this.state.view_tech_header_table} isVersion="rollback"/>
+                        <TableTechnicalConfig
+                          dataTechBoqSites={this.state.data_tech_boq_sites_version}
+                          configHeader={this.state.option_tssr_header_view === 'only_filled' ?  this.state.view_tech_header_table : this.state.view_tech_all_header_table}
+                          isVersion="rollback
+                        "/>
                       ): (
-                        <TableTechnicalConfig dataTechBoqSites={this.state.data_tech_boq_sites} configHeader={this.state.view_tech_header_table}/>
+                        <TableTechnicalConfig
+                          dataTechBoqSites={this.state.data_tech_boq_sites}
+                          configHeader={this.state.option_tssr_header_view === 'only_filled' ?  this.state.view_tech_header_table : this.state.view_tech_all_header_table}
+                        />
                       )}
 
                       {/*<Table hover bordered striped responsive size="sm">
@@ -2495,9 +2542,9 @@ class TechnicalBoq extends Component {
                     {this.state.data_tech_boq !== null && (
                     <Row>
                       <Col>
-                        {this.state.data_tech_boq.approval_status === "PRE APPROVAL" && (
+                        {(this.state.data_tech_boq.approval_status === "PRE APPROVAL" || this.state.data_tech_boq.approval_status === "REJECTED") && (
                           <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value="1" onClick={this.approvalTechnical} disabled={!this.state.API_Tech.approval_status === "PRE APPROVAL"}>
-                              {this.state.data_tech_boq.approval_status === "PRE APPROVAL" ? "Request Approve" : "Requested"}
+                              {this.state.data_tech_boq.approval_status === "PRE APPROVAL" || this.state.data_tech_boq.approval_status === "REJECTED" ? "Submit to TSSR" : "Requested"}
                           </Button>
                         )}
                       </Col>

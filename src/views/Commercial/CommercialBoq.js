@@ -13,6 +13,7 @@ import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
 import { connect } from 'react-redux';
 import jsonData from './jsonData.js';
+import debounce from 'lodash.debounce';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
@@ -120,6 +121,8 @@ class CommercialBoq extends Component {
       this.handleChangeTotalPriceIDR = this.handleChangeTotalPriceIDR.bind(this);
       this.handleChangeTotalPriceUSD = this.handleChangeTotalPriceUSD.bind(this);
       this.updateCommercial = this.updateCommercial.bind(this);
+      this.onChangeDebouncedTotalIDR = debounce(this.onChangeDebouncedTotalIDR, 500);
+      this.onChangeDebouncedTotalUSD = debounce(this.onChangeDebouncedTotalUSD, 500);
     }
 
     checkValueReturn(value1, value2){
@@ -360,25 +363,53 @@ class CommercialBoq extends Component {
     handleChangeUnitPriceIDR = (e) => {
       const name = e.target.name;
       let value = e.target.value;
-      this.setState(prevState => ({ UnitPriceIDRChange: prevState.UnitPriceIDRChange.set(name, value) }));
+      this.setState(prevState => ({ UnitPriceIDRChange: prevState.UnitPriceIDRChange.set(name, value) }), ()=> {
+        this.onChangeDebouncedTotalIDR(name, value);
+      });
     }
 
     handleChangeUnitPriceUSD = (e) => {
       const name = e.target.name;
       let value = e.target.value;
-      this.setState(prevState => ({ UnitPriceUSDChange: prevState.UnitPriceUSDChange.set(name, value) }));
+      this.setState(prevState => ({ UnitPriceUSDChange: prevState.UnitPriceUSDChange.set(name, value) }), () => {
+        this.onChangeDebouncedTotalUSD(name, value);
+      });
     }
 
-    handleChangeTotalPriceIDR = (e) => {
-      const name = e.target.name;
-      let value = e.target.value;
-      this.setState(prevState => ({ TotalPriceIDRChange: prevState.TotalPriceIDRChange.set(name, value) }));
+    onChangeDebouncedTotalIDR(name, value){
+      this.handleChangeTotalPriceIDR(name, value);
     }
 
-    handleChangeTotalPriceUSD = (e) => {
-      const name = e.target.name;
-      let value = e.target.value;
-      this.setState(prevState => ({ TotalPriceUSDChange: prevState.TotalPriceUSDChange.set(name, value) }));
+    onChangeDebouncedTotalUSD(name, value){
+      this.handleChangeTotalPriceUSD(name, value);
+    }
+
+    handleChangeTotalPriceIDR = (name, value) => {
+      // const name = e.target.name;
+      // let value = e.target.value;
+      if(this.state.version_selected !== null && this.state.data_comm_boq.version !== this.state.version_selected){
+        let findSite = this.state.data_comm_boq_items_version.find(e => e.site_id === name.split(" /// ")[0]);
+        let findConfig = findSite.itemsVersion.find(e => e.config_id === name.split(" /// ")[1]);
+        this.setState(prevState => ({ TotalPriceIDRChange: prevState.TotalPriceIDRChange.set(name, parseFloat(value) * findConfig.qty) }));
+      }else{
+        let findSite = this.state.data_comm_boq_items.find(e => e.site_id === name.split(" /// ")[0]);
+        let findConfig = findSite.items.find(e => e.config_id === name.split(" /// ")[1]);
+        this.setState(prevState => ({ TotalPriceIDRChange: prevState.TotalPriceIDRChange.set(name, parseFloat(value) * findConfig.qty) }));
+      }
+    }
+
+    handleChangeTotalPriceUSD = (name, value) => {
+      // const name = e.target.name;
+      // let value = e.target.value;
+      if(this.state.version_selected !== null && this.state.data_comm_boq.version !== this.state.version_selected){
+        let findSite = this.state.data_comm_boq_items_version.find(e => e.site_id === name.split(" /// ")[0]);
+        let findConfig = findSite.itemsVersion.find(e => e.config_id === name.split(" /// ")[1]);
+        this.setState(prevState => ({ TotalPriceUSDChange: prevState.TotalPriceUSDChange.set(name, parseFloat(value) * findConfig.qty) }));
+      }else{
+        let findSite = this.state.data_comm_boq_items.find(e => e.site_id === name.split(" /// ")[0]);
+        let findConfig = findSite.items.find(e => e.config_id === name.split(" /// ")[1]);
+        this.setState(prevState => ({ TotalPriceUSDChange: prevState.TotalPriceUSDChange.set(name, parseFloat(value) * findConfig.qty) }));
+      }
     }
 
     updateCommercial = async (e) => {
@@ -401,9 +432,7 @@ class CommercialBoq extends Component {
         if(siteIndex !== -1){
           const siteConfigIndex = dataComm.site[siteIndex].items.findIndex(e => e.config_id === configKey);
           if(siteConfigIndex !== -1){
-            console.log("idr unit", dataComm.site[siteIndex].site_id, dataComm.site[siteIndex].items[siteConfigIndex].config_id, parseFloat(value) );
             dataComm.site[siteIndex].items[siteConfigIndex]["net_price_incentive"] = parseFloat(value);
-            console.log("idr total", dataComm.site[siteIndex].items[siteConfigIndex]["net_price_incentive"] );
           }
         }
       }
@@ -414,43 +443,36 @@ class CommercialBoq extends Component {
         if(siteIndex !== -1){
           const siteConfigIndex = dataComm.site[siteIndex].items.findIndex(e => e.config_id === configKey);
           if(siteConfigIndex !== -1){
-            console.log("usd unit", dataComm.site[siteIndex].site_id, dataComm.site[siteIndex].items[siteConfigIndex].config_id, parseFloat(value) );
             dataComm.site[siteIndex].items[siteConfigIndex]["net_price_incentive_usd"] = parseFloat(value);
-            console.log("usd total", dataComm.site[siteIndex].items[siteConfigIndex]["net_price_incentive_usd"] );
           }
         }
       }
-      for (const [key, value] of total_price_idr_amount.entries()) {
-        const siteKey = key.split(" /// ")[0]
-        const configKey = key.split(" /// ")[1]
-        const siteIndex = dataComm.site.findIndex(e => e.site_id === siteKey);
-        if(siteIndex !== -1){
-          const siteConfigIndex = dataComm.site[siteIndex].items.findIndex(e => e.config_id === configKey);
-          if(siteConfigIndex !== -1){
-            console.log("idr total", dataComm.site[siteIndex].site_id, dataComm.site[siteIndex].items[siteConfigIndex].config_id, parseFloat(value) );
-            dataComm.site[siteIndex].items[siteConfigIndex]["total_price_incentive"] = parseFloat(value);
-            console.log("idr total", dataComm.site[siteIndex].items[siteConfigIndex]["total_price_incentive"] );
-          }
-        }
-      }
-      for (const [key, value] of total_price_usd_amount.entries()) {
-        const siteKey = key.split(" /// ")[0]
-        const configKey = key.split(" /// ")[1]
-        const siteIndex = dataComm.site.findIndex(e => e.site_id === siteKey);
-        if(siteIndex !== -1){
-          const siteConfigIndex = dataComm.site[siteIndex].items.findIndex(e => e.config_id === configKey);
-          if(siteConfigIndex !== -1){
-            console.log("usd total", dataComm.site[siteIndex].site_id, dataComm.site[siteIndex].items[siteConfigIndex].config_id, parseFloat(value) );
-            dataComm.site[siteIndex].items[siteConfigIndex]["total_price_incentive_usd"] = parseFloat(value);
-            console.log("usd total", dataComm.site[siteIndex].items[siteConfigIndex]["total_price_incentive_usd"] );
-          }
-        }
-      }
+      // for (const [key, value] of total_price_idr_amount.entries()) {
+      //   const siteKey = key.split(" /// ")[0]
+      //   const configKey = key.split(" /// ")[1]
+      //   const siteIndex = dataComm.site.findIndex(e => e.site_id === siteKey);
+      //   if(siteIndex !== -1){
+      //     const siteConfigIndex = dataComm.site[siteIndex].items.findIndex(e => e.config_id === configKey);
+      //     if(siteConfigIndex !== -1){
+      //       dataComm.site[siteIndex].items[siteConfigIndex]["total_price_incentive"] = parseFloat(value);
+      //     }
+      //   }
+      // }
+      // for (const [key, value] of total_price_usd_amount.entries()) {
+      //   const siteKey = key.split(" /// ")[0]
+      //   const configKey = key.split(" /// ")[1]
+      //   const siteIndex = dataComm.site.findIndex(e => e.site_id === siteKey);
+      //   if(siteIndex !== -1){
+      //     const siteConfigIndex = dataComm.site[siteIndex].items.findIndex(e => e.config_id === configKey);
+      //     if(siteConfigIndex !== -1){
+      //       dataComm.site[siteIndex].items[siteConfigIndex]["total_price_incentive_usd"] = parseFloat(value);
+      //     }
+      //   }
+      // }
       let updateCommBoq = {
         "version_check": revision,
         "data" : dataComm
       }
-      console.log("usd updateCommBoq", updateCommBoq );
       let updateComm = await this.patchDatatoAPINODE('/commBoq/updateCommercial/'+dataComm._id, updateCommBoq );
       if(updateComm.data !== undefined){
         this.setState({action_status : 'success'});
@@ -464,22 +486,25 @@ class CommercialBoq extends Component {
       const value = e.target.value;
       this.setState({version_selected : value}, () => {
         if(value !== this.state.data_comm_boq.version){
-          this.setState({incentiveChange : new Map()});
+          this.setState({UnitPriceIDRChange : new Map(), UnitPriceUSDChange : new Map(), TotalPriceIDRChange : new Map(), TotalPriceUSDChange : new Map()});
           this.getVersionCommBoqData(this.props.match.params.id, value);
         }else{
-          this.setState({incentiveChange : new Map()});
+          this.setState({UnitPriceIDRChange : new Map(), UnitPriceUSDChange : new Map(), TotalPriceIDRChange : new Map(), TotalPriceUSDChange : new Map()});
           this.getCommBoqData(this.props.match.params.id);
         }
       });
     }
 
     getVersionCommBoqData(_id_comm, ver){
+      this.toggleLoading();
       this.getDataFromAPINODE('/commBoq/'+_id_comm+'/ver/'+ver).then(res => {
         if(res.data !== undefined){
           const dataComm = res.data;
           this.setState({data_comm_boq_items_version : dataComm.data.siteVersion}, () => {
             this.getDataFormCommBoq(dataComm.data.siteVersion);
           });
+        }else{
+          this.toggleLoading();
         }
       })
     }
@@ -501,6 +526,7 @@ class CommercialBoq extends Component {
           TotalPriceUSDAmount.set(itemsSite[i].itemsVersion[j].site_id+' /// '+itemsSite[i].itemsVersion[j].config_id, TotalPriceUSDAmountIdx);
         }
       }
+      this.toggleLoading();
       this.setState({UnitPriceIDRChange : UnitPriceIDRAmount, UnitPriceUSDChange : UnitPriceUSDAmount, TotalPriceIDRChange : TotalPriceIDRAmount, TotalPriceUSDChange : TotalPriceUSDAmount})
     }
 
@@ -939,24 +965,26 @@ class CommercialBoq extends Component {
                                 />
                               </td>
                               <td style={{width : '120px'}}>
-                                <Input
+                                {/* }<Input
                                   type="number"
                                   name={item.site_id+' /// '+item.config_id}
                                   className="BoQ-style-qty"
                                   placeholder=""
                                   onChange={this.handleChangeTotalPriceUSD}
                                   value={!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
-                                />
+                                /> */}
+                                {!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id)}
                               </td>
                               <td style={{width : '120px'}}>
-                                <Input
+                                {/* }<Input
                                   type="number"
                                   name={item.site_id+' /// '+item.config_id}
                                   className="BoQ-style-qty"
                                   placeholder=""
                                   onChange={this.handleChangeTotalPriceIDR}
                                   value={!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
-                                />
+                                /> */}
+                                {!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id)}
                               </td>
                             </tr>
                           )) : this.state.data_comm_boq_items.map(site =>
@@ -990,24 +1018,26 @@ class CommercialBoq extends Component {
                                 />
                               </td>
                               <td style={{width : '120px'}}>
-                                <Input
+                                {/* }<Input
                                   type="number"
                                   name={item.site_id+' /// '+item.config_id}
                                   className="BoQ-style-qty"
                                   placeholder=""
                                   onChange={this.handleChangeTotalPriceUSD}
                                   value={!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
-                                />
+                                /> */}
+                                {!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd.toFixed(2) : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id).toFixed(2)}
                               </td>
                               <td style={{width : '120px'}}>
-                                <Input
+                                {/* }<Input
                                   type="number"
                                   name={item.site_id+' /// '+item.config_id}
                                   className="BoQ-style-qty"
                                   placeholder=""
                                   onChange={this.handleChangeTotalPriceIDR}
                                   value={!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
-                                />
+                                /> */}
+                                {!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive.toFixed(2) : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id).toFixed(2)}
                               </td>
                             </tr>
                           ))
