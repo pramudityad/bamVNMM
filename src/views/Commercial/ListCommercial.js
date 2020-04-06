@@ -354,7 +354,6 @@ class ListCommercial extends Component {
                       <th>Commercial BOQ Document</th>
                       <th>Project</th>
                       <th>Ver.</th>
-                      <th style={{'width' : '150px', textAlign : 'center'}}>Status</th>
                       <th style={{'width' : '300px', textAlign : 'center'}}>Action</th>
                   </tr>
                   <tr>
@@ -378,7 +377,7 @@ class ListCommercial extends Component {
                         </InputGroup>
                       </div>
                     </td>
-                    <td>
+                    {/* }<td>
                       <div className="controls">
                         <InputGroup className="input-prepend">
                           <InputGroupAddon addonType="prepend">
@@ -387,7 +386,7 @@ class ListCommercial extends Component {
                           <Input type="text" placeholder="Search" name={4} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[6]}/>
                         </InputGroup>
                       </div>
-                    </td>
+                    </td> */}
                     <td>
                     </td>
                     <td>
@@ -400,7 +399,7 @@ class ListCommercial extends Component {
                             <td style={{verticalAlign : 'middle'}}>{boq.no_comm_boq}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.project_name}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center", width : '100px'}}>{boq.version}</td>
-                            <td style={{verticalAlign : 'middle'}}>
+                            {/* }<td style={{verticalAlign : 'middle'}}>
                               {boq.approval_status === "PRE APPROVAL" || boq.approval_status === "R" ? (
                                 <span className="boq-tech-status-PA">{boq.approval_status}</span>
                               ) : boq.approval_status === "WA" ? (
@@ -408,7 +407,7 @@ class ListCommercial extends Component {
                               ) : (
                                 <span className="boq-tech-status-A">{boq.approval_status}</span>
                               )}
-                            </td>
+                            </td> */}
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
                               <Link to={'/detail-commercial/'+boq._id}>
                                 <Button className="btn-primary" size="sm" color="primary" style={{marginRight : '10px'}}>
