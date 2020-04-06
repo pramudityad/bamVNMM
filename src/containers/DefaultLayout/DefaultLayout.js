@@ -27,6 +27,8 @@ const DefaultAside = React.lazy(() => import('./DefaultAside'));
 const DefaultFooter = React.lazy(() => import('./DefaultFooter'));
 const DefaultHeader = React.lazy(() => import('./DefaultHeader'));
 
+const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class DefaultLayout extends Component {
 
   constructor(props) {
@@ -43,19 +45,31 @@ class DefaultLayout extends Component {
     e.preventDefault();
     localStorage.clear();
     this.props.history.push('/');
+    this.postDatatoAPILogout();
     this.props.keycloak.logout();
   }
 
   componentDidMount(){
     this.showMenuByRole();
-    // this.getDataLogin();
-    // // if(this.props.keycloak === undefined){
-    // //   console.log("logout");
-    // //   this.props.history.push('/');
-    // //   this.props.keycloak.logout();
-    // // }else{
-    // //   this.getDataLogin();
-    // // }
+  }
+
+  async postDatatoAPILogout(){
+    try {
+      let respond = await axios.post(API_URL_BAM+'/logoutUser', {}, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.props.dataLogin.token,
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Post Data", err);
+      return respond;
+    }
   }
 
   showMenuByRole(){

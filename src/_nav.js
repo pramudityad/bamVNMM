@@ -34,6 +34,11 @@ export default {
           url: '/list-cpo-boq',
           icon: 'icon-docs',
         },
+        {
+          name: 'TSSR BOQ',
+          url: '/list-tssr-boq',
+          icon: 'icon-docs',
+        },
         // {
         //   name: 'Ordering BOQ',
         //   url: '/list-ordering',
