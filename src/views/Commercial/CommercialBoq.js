@@ -582,13 +582,39 @@ class CommercialBoq extends Component {
           }
           else{
             console.log('rest.rows', rest.rows);
-            this.checkFormat(rest.rows);
             this.setState({
               rowsComm: rest.rows}, ()=> {
+                this.makeFormatintoMap(rest.rows);
             });
           }
         });
       }
+    }
+
+    makeFormatintoMap(rowsXLS){
+      let dataCommItem = this.state.data_comm_boq_items;
+      const dataHeader = rowsXLS[0];
+      let unitPriceIDR = new Map();
+      let unitPriceUSD = new Map();
+      let totalPriceIDR = new Map();
+      let totalPriceUSD = new Map();
+      for(let i = 1; i < rowsXLS.length; i++){
+        let config_id_upload = this.checkValue(rowsXLS[i][this.getIndex(dataHeader, 'config_id')]);
+        let tower_id_upload = this.checkValue(rowsXLS[i][this.getIndex(dataHeader, 'tower_id')]);
+        let unit_idr = this.checkValue(rowsXLS[i][this.getIndex(dataHeader, 'unit_price_idr')]);
+        let unit_usd = this.checkValue(rowsXLS[i][this.getIndex(dataHeader, 'unit_price_usd')]);
+        let dataTowerIdx = dataCommItem.find(e => e.site_id === tower_id_upload);
+        if(dataTowerIdx !== undefined){
+          let dataConfigIdx = dataTowerIdx.items.find(e => e.config_id === config_id_upload);
+          if(dataConfigIdx !== undefined){
+            unitPriceIDR.set(tower_id_upload+' /// '+config_id_upload, unit_idr);
+            totalPriceIDR.set(tower_id_upload+' /// '+config_id_upload, parseFloat(unit_idr) * dataConfigIdx.qty);
+            unitPriceUSD.set(tower_id_upload+' /// '+config_id_upload, unit_usd);
+            totalPriceUSD.set(tower_id_upload+' /// '+config_id_upload, parseFloat(unit_usd) * dataConfigIdx.qty);
+          }
+        }
+      }
+      this.setState({UnitPriceIDRChange : unitPriceIDR , UnitPriceUSDChange : unitPriceUSD, TotalPriceIDRChange : totalPriceIDR ,TotalPriceUSDChange : totalPriceUSD})
     }
 
     checkFormat(dataXLS){
@@ -601,28 +627,6 @@ class CommercialBoq extends Component {
       }else{
         this.setState({action_status : 'failed', action_message : 'Please Check your format data'})
       }
-    }
-
-    exportCommercialTemplate = async () => {
-      const wb = new Excel.Workbook()
-      const ws = wb.addWorksheet()
-
-      const dataComm=this.state.boq_comm_API;
-      const dataPrint=this.state.commercialData;
-      const dataGroup=this.state.groupingView
-
-      const headerPackage = ["package_key", "product_package", "unit", "quantity", "smart_stock", "qty_ericsson","unit_price", "currency","total_quantity", "total_price", "product_type"];
-      let dataforPrint = [];
-      const header = ws.addRow(headerPackage);
-      header.font = { bold: true }
-      for(let i = 0; i < dataPrint.length; i++){
-        const total_price = (dataPrint[i].qty_tech - (dataPrint[i].qty_ericsson + dataPrint[i].smart_stock)) * dataPrint[i].unit_price;
-        let dataIndex = [dataPrint[i].pp_id, dataPrint[i].package_name, dataPrint[i].unit, dataPrint[i].qty_tech, dataPrint[i].smart_stock, dataPrint[i].qty_ericsson, dataPrint[i].unit_price, dataPrint[i].currency, (dataPrint[i].qty_tech - (dataPrint[i].qty_ericsson + dataPrint[i].smart_stock)), total_price, dataPrint[i].product_type];
-        ws.addRow(dataIndex);
-        dataforPrint.push(dataIndex);
-      }
-      const comFormat = await wb.xlsx.writeBuffer()
-      saveAs(new Blob([comFormat]), 'Commercial BOQ '+dataComm.no_boq_comm+' Format.xlsx')
     }
 
     filterTechBoq = (inputValue) => {
@@ -669,9 +673,9 @@ class CommercialBoq extends Component {
       const wb = new Excel.Workbook();
       const ws = wb.addWorksheet();
 
-      const dataTech = this.state.data_comm_boq;
+      const dataComm = this.state.data_comm_boq;
       let dataSites = [];
-      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+      if(this.state.version_selected !== null && dataComm.version !== this.state.version_selected){
         dataSites = this.state.data_comm_boq_items_version;
       }else{
         dataSites = this.state.data_comm_boq_items;
@@ -682,7 +686,7 @@ class CommercialBoq extends Component {
       ws.addRow(ppIdRow);
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
-        if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        if(this.state.version_selected !== null && dataComm.version !== this.state.version_selected){
           for(let j = 0; j < dataSites[i].itemsVersion.length; j++ ){
             ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].sap_number, dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].description, dataSites[i].itemsVersion[j].net_price_incentive_usd, dataSites[i].itemsVersion[j].net_price_incentive, dataSites[i].itemsVersion[j].total_price_incentive_usd, dataSites[i].itemsVersion[j].total_price_incentive]);
           }
@@ -694,7 +698,38 @@ class CommercialBoq extends Component {
       }
 
       const MRFormat = await wb.xlsx.writeBuffer();
-      saveAs(new Blob([MRFormat]), 'Commercial BOQ '+dataTech.no_comm_boq+'.xlsx');
+      saveAs(new Blob([MRFormat]), 'Commercial BOQ '+dataComm.no_comm_boq+'.xlsx');
+    }
+
+    exportCommercialTemplate = async () => {
+      const wb = new Excel.Workbook()
+      const ws = wb.addWorksheet()
+
+      const dataComm = this.state.data_comm_boq;
+      let dataSites = [];
+      if(this.state.version_selected !== null && dataComm.version !== this.state.version_selected){
+        dataSites = this.state.data_comm_boq_items_version;
+      }else{
+        dataSites = this.state.data_comm_boq_items;
+      }
+
+      const headerPackage = ["tower_id", "program", "sow", "config_type", "config_id", "qty", "unit_price_usd","unit_price_idr"];
+
+      ws.addRow(headerPackage);
+      for(let i = 0; i < dataSites.length ; i++){
+        let qtyConfig = []
+        if(this.state.version_selected !== null && dataComm.version !== this.state.version_selected){
+          for(let j = 0; j < dataSites[i].itemsVersion.length; j++ ){
+            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].net_price_incentive_usd, dataSites[i].itemsVersion[j].net_price_incentive]);
+          }
+        }else{
+          for(let j = 0; j < dataSites[i].items.length; j++ ){
+            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].qty, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive]);
+          }
+        }
+      }
+      const comFormat = await wb.xlsx.writeBuffer()
+      saveAs(new Blob([comFormat]), 'Commercial BOQ '+dataComm.no_comm_boq+' Format.xlsx')
     }
 
     render() {
@@ -745,6 +780,7 @@ class CommercialBoq extends Component {
                         <DropdownMenu>
                           <DropdownItem header> Commercial File</DropdownItem>
                           <DropdownItem onClick={this.exportCommercial}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Commercial File</DropdownItem>
+                          <DropdownItem onClick={this.exportCommercialTemplate}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Commercial Template</DropdownItem>
                         </DropdownMenu>
                       </Dropdown>
                     </React.Fragment>
@@ -783,7 +819,7 @@ class CommercialBoq extends Component {
                         {/* Show import XLS */}
                         {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
                           <React.Fragment>
-                            {/* }<input type="file" onChange={this.fileHandlerCommercial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} /> */}
+                            <input type="file" onChange={this.fileHandlerCommercial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} />
                               <Button style={{'float' : 'right',margin : '8px'}} color="warning" onClick={this.updateCommercial} value="save">
                                 <i className="fa fa-paste">&nbsp;&nbsp;</i>
                                 Save

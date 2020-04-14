@@ -24,6 +24,9 @@ const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const Config_group_type_DEFAULT = ["HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "SERVICE", "SERVICE", "SERVICE", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME"]
+
+const Config_group_DEFAULT = ["Config Cabinet", "Config Add L9", "Config Add L10", "Config Add L18", "Config Add L21", "Config BB 5212 (Reuse)", "Config UPG BW 1800", "Swapped Module/BB", "Config UPG BW 2100", "Config Radio B0 MIMO 2T2R", "Config Kit Radio B1 MIMO 2T2R", "Config Radio B1 MIMO 2T2R", "Config Kit Radio B3 MIMO 2T2R", "Config Radio B3 MIMO 2T2R", "Config Radio B1 MIMO 4T4R", "Config Radio B3 MIMO 4T4R", "Config Radio B1 + B3 DUAL BAND 2T2R" ,"Config Radio B1 + B3 DUAL BAND 4T4R", "Config Multi Sector", "Config Antenna", "Config Service 2", "Config Service 3", "Config Service 4", "Material 1 Power", "Material 2 Power", "Material 3 Power", "Material 4 Power", "Material 5 Power", "Service 1 Power", "Service 2 Power", "Service 3 Power", "Material 1 CME", "Material 2 CME", "Material 3 CME", "Material 4 CME", "Material 5 CME", "Service 1 CME", "Service 2 CME", "Service 3 CME"];
 
 class ConfigUpload extends React.Component {
 
@@ -235,6 +238,7 @@ class ConfigUpload extends React.Component {
           console.log(err);
         }
         else {
+          console.log("rest.rows", JSON.stringify(rest.rows));
           this.postDatatoAPINode('/packageConfig/checkPackageConfigXL', { "configData": rest.rows })
           .then(res => {
             if (res.data !== undefined) {
@@ -561,20 +565,23 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
+    let HeaderRow1 = ["General Info", "General Info", "General Info"];
+    let HeaderRow2 = ["tower_id","program","sow"];
+
+    Config_group_type_DEFAULT.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
+    Config_group_DEFAULT.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
+
+    ws.addRow(HeaderRow1);
+    ws.addRow(HeaderRow2);
+
+    const ws2 = wb.addWorksheet();
+
+    ws2.addRow(["config_id", "config_name"]);
     const dataConfigSelected = this.state.config_selected;
-    console.log('conf selected', dataConfigSelected);
+    dataConfigSelected.map(e => ws2.addRow([e.config_id, e.config_name]));
 
-    let confArray = ["site_title", "site_id", "site_name", "Site Config", "Prioritization", "Condition"];
-    let typeArray = ["", "", "", "NOTE", "NOTE", "NOTE"];
-
-    typeArray = typeArray.concat(dataConfigSelected.map(e => "CONFIG"));
-    confArray = confArray.concat(dataConfigSelected.map(e => e.config_id));
-
-    ws.addRow(typeArray);
-    ws.addRow(confArray);
-
-    const techFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([techFormat]), 'Technical BOQ Format.xlsx');
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Template.xlsx');
   }
 
   // Config Template XLSX bulk upload
@@ -599,16 +606,15 @@ class ConfigUpload extends React.Component {
             <Card style={{}}>
               <CardHeader>
                 <span>Config</span>
-                {/* <div className="card-header-actions" style={{ display: 'inline-flex' }}>
+                <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
                       <DropdownToggle caret color="light">
                         Download Template
                         </DropdownToggle>
                       <DropdownMenu>
-                        <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatConfig}>> Config Template</DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>> Download All Config</DropdownItem>
+                        <DropdownItem header>File Template</DropdownItem>
+                        <DropdownItem onClick={this.exportTechnicalFormat}>> Technical BOQ Template</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -619,7 +625,7 @@ class ConfigUpload extends React.Component {
                         </Button>
                     </div>
                   ) : ("")}
-                </div> */}
+                </div>
               </CardHeader>
               <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>
                 <Card style={{ margin: '10px 10px 5px 10px' }}>
@@ -671,6 +677,7 @@ class ConfigUpload extends React.Component {
                             </th>
                             <th style={{ minWidth: '150px' }}>Config</th>
                             <th>Config Name</th>
+                            <th>Config Alias</th>
                             <th>SAP</th>
                             <th>SAP Description</th>
                             <th>Program</th>
@@ -689,6 +696,7 @@ class ConfigUpload extends React.Component {
                               <tr style={{ backgroundColor: '#d3d9e7', fontWeight : 700 }} className='fixbody' key={pp._id}>
                                 <td align="center"><Checkbox name={pp._id} checked={this.state.config_checked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_id}</td>
+                                <td style={{ textAlign: 'center' }}>{pp.config_name}</td>
                                 <td style={{ textAlign: 'center' }}>{}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.sap_number}</td>
                                 <td style={{ textAlign: 'center' }}>{}</td>

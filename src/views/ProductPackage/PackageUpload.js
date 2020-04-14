@@ -231,6 +231,7 @@ class PackageUpload extends React.Component {
           console.log(err);
         }
         else {
+          console.log("rest.rows", JSON.stringify(rest.rows));
           this.setState({
             rowsXLS: rest.rows
           });
@@ -734,6 +735,7 @@ class PackageUpload extends React.Component {
                         <DropdownItem onClick={this.exportFormatPackage}>> Bundle Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfig} disabled={this.state.packageChecked.length === 0}>> Config Template</DropdownItem>
+                        <DropdownItem onClick={this.exportTSSRFormat} disabled={this.state.packageChecked.length === 0}>> PS Tempalate</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>

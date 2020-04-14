@@ -2466,8 +2466,8 @@ class TechnicalBoq extends Component {
                         <TableTechnicalConfig
                           dataTechBoqSites={this.state.data_tech_boq_sites_version}
                           configHeader={this.state.option_tssr_header_view === 'only_filled' ?  this.state.view_tech_header_table : this.state.view_tech_all_header_table}
-                          isVersion="rollback
-                        "/>
+                          isVersion="rollback"
+                          />
                       ): (
                         <TableTechnicalConfig
                           dataTechBoqSites={this.state.data_tech_boq_sites}
@@ -2544,7 +2544,7 @@ class TechnicalBoq extends Component {
                       <Col>
                         {(this.state.data_tech_boq.approval_status === "PRE APPROVAL" || this.state.data_tech_boq.approval_status === "REJECTED") && (
                           <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value="1" onClick={this.approvalTechnical} disabled={!this.state.API_Tech.approval_status === "PRE APPROVAL"}>
-                              {this.state.data_tech_boq.approval_status === "PRE APPROVAL" || this.state.data_tech_boq.approval_status === "REJECTED" ? "Submit to TSSR" : "Requested"}
+                              {this.state.data_tech_boq.approval_status === "PRE APPROVAL" || this.state.data_tech_boq.approval_status === "REJECTED" ? "Submit to TSSR" : "Submitted"}
                           </Button>
                         )}
                       </Col>
