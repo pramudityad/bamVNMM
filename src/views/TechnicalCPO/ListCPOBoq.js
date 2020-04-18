@@ -95,7 +95,7 @@ class ListCPOBoq extends Component {
   }
 
   getCpoBoqList(){
-    this.getDataFromAPINODE('/cpoList?srt=cpo_boq_id:-1').then(res => {
+    this.getDataFromAPINODE('/cpoBoqList?lmt=10&pg=104').then(res => {
       if(res.data !== undefined){
         this.setState({list_cpo_boq : res.data.data});
       }
@@ -166,7 +166,7 @@ class ListCPOBoq extends Component {
 
   handlePageChange(pageNumber) {
     this.setState({activePage: pageNumber}, () => {
-      this.getListBOQ();
+      this.getCpoBoqList();
     });
   }
 
@@ -266,11 +266,11 @@ class ListCPOBoq extends Component {
               <tbody>
                     {this.state.list_cpo_boq.map((boq,i) =>
                         <tr key={boq._id}>
-                            <td style={{verticalAlign : 'middle'}}>{boq.po_number}</td>
+                            <td style={{verticalAlign : 'middle'}}>{boq.cpo_number}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.cpo_boq_id}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.creator[0].email}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              <Link to={'/detail-cpo-boq/'+boq.cpo_boq_id}>
+                              <Link to={'/detail-cpo-boq/'+boq.cpo_number}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                               </Link>
                               {/* <Link to={'/approval-technical/'+boq._id}>

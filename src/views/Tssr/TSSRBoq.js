@@ -12,6 +12,7 @@ import { AppSwitch } from '@coreui/react';
 import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
 import { connect } from 'react-redux';
+import Pagination from "react-js-pagination";
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
@@ -33,12 +34,15 @@ class TSSRBoq extends Component {
         tokenUser : this.props.dataLogin.token,
         data_tech_boq : null,
         data_tech_boq_sites : [],
+        data_tech_boq_sites_pagination : [],
         tssr_config_comment : new Map(),
-        tssr_config_suggest_qty : new Map(),
+        tssr_config_qty : new Map(),
         tssr_comment : null,
         modal_loading : false,
         action_status : null,
         action_message : null,
+
+        tssr_data_upload : null,
 
         data_comm_boq : null,
         data_comm_boq_version : null,
@@ -49,6 +53,9 @@ class TSSRBoq extends Component {
         data_tech_boq_selected : null,
         data_tech_boq_sites_selected : [],
         list_version : [],
+
+        activePage : 1,
+        perPage : 10,
 
         boq_comm_API : null,
         pp_all : [],
@@ -101,14 +108,21 @@ class TSSRBoq extends Component {
         TotalPriceUSDChange : new Map(),
         total_comm : {},
         boq_tech_select : {},
+        modal_alert : false,
       };
+      this.saveDataTSSR = this.saveDataTSSR.bind(this);
+      this.toggleAlert = this.toggleAlert.bind(this);
       this.exportFormatTSSRVertical = this.exportFormatTSSRVertical.bind(this);
+      this.exportFormatTSSRUpdate = this.exportFormatTSSRUpdate.bind(this);
       this.toggleLoading = this.toggleLoading.bind(this);
       this.toggleDropdown = this.toggleDropdown.bind(this);
       this.toggleUpload = this.toggleUpload.bind(this);
       this.handleChangeCommentConfig = this.handleChangeCommentConfig.bind(this);
       this.approvalTechnical = this.approvalTechnical.bind(this);
       this.handleChangeCommentTSSR = this.handleChangeCommentTSSR.bind(this);
+      this.handleChangeQtyTSSRConfig = this.handleChangeQtyTSSRConfig.bind(this);
+      this.handlePageChange = this.handlePageChange.bind(this);
+      this.openDRMinPDB = this.openDRMinPDB.bind(this);
     }
 
     checkValueReturn(value1, value2){
@@ -125,6 +139,12 @@ class TSSRBoq extends Component {
     toggleLoading(){
       this.setState(prevState => ({
         modal_loading: !prevState.modal_loading
+      }));
+    }
+
+    toggleAlert(e){
+      this.setState(prevState => ({
+        modal_alert: !prevState.modal_alert
       }));
     }
 
@@ -275,6 +295,48 @@ class TSSRBoq extends Component {
       }
     }
 
+    fileHandlerTSSR = (event) => {
+      let fileObj = event.target.files[0];
+      const date = new Date();
+      const DateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
+      if(fileObj !== undefined){
+        ExcelRenderer(fileObj, (err, rest) => {
+          if(err){
+            console.log(err);
+          }
+          else{
+            console.log('rest.rows', JSON.stringify(rest.rows));
+            this.setState({
+              rowsComm: rest.rows}, ()=> {
+                this.makeFormatintoMap(rest.rows);
+            });
+          }
+        });
+      }
+    }
+
+    makeFormatintoMap(rowsXLS){
+      let dataTechSites = this.state.data_tech_boq_sites;
+      const dataHeader = rowsXLS[0];
+      let notesTSSRConfig = new Map();
+      let qtyTSSTConfig = new Map();
+      for(let i = 1; i < rowsXLS.length; i++){
+        let config_id_upload = this.checkValue(rowsXLS[i][this.getIndex(dataHeader, 'config_id')]);
+        let tower_id_upload = this.checkValue(rowsXLS[i][this.getIndex(dataHeader, 'tower_id')]);
+        let dataTowerIdx = dataTechSites.find(e => e.site_id === tower_id_upload);
+        if(dataTowerIdx !== undefined){
+          let dataConfigIdx = dataTowerIdx.siteItemConfig.find(e => e.config_id === config_id_upload);
+          if(dataConfigIdx !== undefined){
+            let qtyIdx = this.checkValueReturn(rowsXLS[i][this.getIndex(dataHeader, 'qty_tssr')], 0);
+            let noteIdx = this.checkValue(rowsXLS[i][this.getIndex(dataHeader, 'note')]);
+            qtyTSSTConfig.set(dataConfigIdx._id, qtyIdx);
+            notesTSSRConfig.set(dataConfigIdx._id, noteIdx);
+          }
+        }
+      }
+      this.setState({tssr_config_comment : notesTSSRConfig , tssr_config_qty : qtyTSSTConfig})
+    }
+
     toggleEdit() {
       this.setState(prevState => ({
         modalEdit: !prevState.modalEdit
@@ -291,16 +353,42 @@ class TSSRBoq extends Component {
           const dataTech = res.data;
           this.setState({data_tech_boq : dataTech.data});
           if(res.data.data !== undefined){
-            this.setState({data_tech_boq_sites : dataTech.data.techBoqSite});
+            this.setState({data_tech_boq_sites : dataTech.data.techBoqSite}, () => {
+              this.dataViewPagination(this.state.data_tech_boq_sites);
+            });
           }
         }
       })
+    }
+
+    dataViewPagination(dataTechView){
+      let perPage = this.state.perPage;
+      let dataTechPage = [];
+      if(perPage !== dataTechView.length){
+        let pageNow = this.state.activePage-1;
+        dataTechPage = dataTechView.slice(pageNow * perPage, (pageNow+1)*perPage);
+      }else{
+        dataTechPage = dataTechView;
+      }
+      this.setState({data_tech_boq_sites_pagination : dataTechPage})
+    }
+
+    handlePageChange(pageNumber) {
+      this.setState({activePage: pageNumber}, () => {
+        this.dataViewPagination(this.state.data_tech_boq_sites);
+      });
     }
 
     handleChangeCommentConfig = (e) => {
       const name = e.target.name;
       let value = e.target.value;
       this.setState(prevState => ({ tssr_config_comment: prevState.tssr_config_comment.set(name, value) }));
+    }
+
+    handleChangeQtyTSSRConfig = (e) => {
+      const name = e.target.name;
+      let value = e.target.value;
+      this.setState(prevState => ({ tssr_config_qty: prevState.tssr_config_qty.set(name, value) }));
     }
 
     handleChangeCommentTSSR = (e) => {
@@ -322,13 +410,16 @@ class TSSRBoq extends Component {
       }
       const dataHeader = this.state.view_tech_header_table;
 
-      let ppIdRow = ["Tower ID", "Program", "SOW", "BOQ Configuration", "SAP NUmber", "Qty"];
+      let ppIdRow = ["Tower ID", "Program", "SOW", "BOQ Configuration", "SAP Number", "Qty Technical", "QTY TSSR", "Diff", "Note"];
 
       ws.addRow(ppIdRow);
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
-          ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty]);
+          let idx_config_comment = dataSites[i].siteItemConfig[j].tssr_notes === undefined ? "" : dataSites[i].siteItemConfig[j].tssr_notes.length !== 0 ? dataSites[i].siteItemConfig[j].tssr_notes[dataSites[i].siteItemConfig[j].tssr_notes.length-1].note : "";
+          let idx_config_qty = dataSites[i].siteItemConfig[j].tssr_notes === undefined ? 0 : dataSites[i].siteItemConfig[j].tssr_notes.length !== 0 ? dataSites[i].siteItemConfig[j].tssr_notes[dataSites[i].siteItemConfig[j].tssr_notes.length-1].suggested_qty : 0;
+          let diff = dataSites[i].siteItemConfig[j].qty - idx_config_qty
+          ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty, idx_config_qty, diff, idx_config_comment]);
         }
       }
 
@@ -336,7 +427,37 @@ class TSSRBoq extends Component {
       saveAs(new Blob([MRFormat]), 'TSSR BOQ Vertical.xlsx');
     }
 
+    exportFormatTSSRUpdate = async () =>{
+      const wb = new Excel.Workbook();
+      const ws = wb.addWorksheet();
+
+      const dataTech = this.state.data_tech_boq;
+      let dataSites = [];
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        dataSites = this.state.data_tech_boq_sites_version;
+      }else{
+        dataSites = this.state.data_tech_boq_sites;
+      }
+      const dataHeader = this.state.view_tech_header_table;
+
+      let ppIdRow = ["tower_id", "program", "sow", "config_id", "qty_tssr", "note"];
+
+      ws.addRow(ppIdRow);
+      for(let i = 0; i < dataSites.length ; i++){
+        let qtyConfig = []
+        for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
+          let idx_config_comment = dataSites[i].siteItemConfig[j].tssr_notes === undefined ? "" : dataSites[i].siteItemConfig[j].tssr_notes.length !== 0 ? dataSites[i].siteItemConfig[j].tssr_notes[dataSites[i].siteItemConfig[j].tssr_notes.length-1].note : "";
+          let idx_config_qty = dataSites[i].siteItemConfig[j].tssr_notes === undefined ? dataSites[i].siteItemConfig[j].qty : dataSites[i].siteItemConfig[j].tssr_notes.length !== 0 ? dataSites[i].siteItemConfig[j].tssr_notes[dataSites[i].siteItemConfig[j].tssr_notes.length-1].suggested_qty : dataSites[i].siteItemConfig[j].qty;
+          ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_id, idx_config_qty, idx_config_comment]);
+        }
+      }
+
+      const MRFormat = await wb.xlsx.writeBuffer();
+      saveAs(new Blob([MRFormat]), 'TSSR BOQ Update Format.xlsx');
+    }
+
     async approvalTechnical(e){
+      this.toggleLoading()
       let currValue = e.currentTarget.value;
       if(currValue !== undefined){
         currValue = parseInt(currValue);
@@ -345,35 +466,85 @@ class TSSRBoq extends Component {
         "operation":currValue
       }
       let configNotes = [];
-      if(currValue === 3){
+      let diffQty = [];
+      const data_tech = this.state.data_tech_boq_sites;
+      if(currValue === 5){
         tssrApproval["tssrNote"] = true;
         tssrApproval["techBoqNote"] = {};
-        tssrApproval["techBoqNote"]["note_value"] = this.state.tssr_comment;
-        for (const [key, value] of this.state.tssr_config_comment.entries()) {
-          let configNoteIdx = {
-            "_id": key,
-            "tssr_note" : value,
-            "suggested_qty": 0
+        tssrApproval["techBoqNote"]["note_value"] = this.state.tssr_comment !== null ? this.state.tssr_comment : this.state.data_tech_boq === null ? "-" : this.state.data_tech_boq.notes === undefined ? " " : this.state.data_tech_boq.notes.length !== 0 ? this.state.data_tech_boq.notes[this.state.data_tech_boq.notes.length-1].note_value : " ";
+        let config_comment = this.state.tssr_config_comment;
+        let config_qty = this.state.tssr_config_qty;
+        for(let i = 0; i < data_tech.length; i++){
+          const data_tech_site = data_tech[i];
+          for(let j = 0; j < data_tech_site.siteItemConfig.length ;j++ ){
+            let conf = data_tech_site.siteItemConfig[j];
+            let idx_config_comment = this.state.tssr_config_comment.has(conf._id) === true ? this.state.tssr_config_comment.get(conf._id) : conf.tssr_notes === undefined ? "" : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].note : "";
+            let idx_config_qty = config_qty.has(conf._id) === true ? config_qty.get(conf._id) : conf.tssr_notes === undefined ? data_tech_site.siteItemConfig[j].qty : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].suggested_qty : data_tech_site.siteItemConfig[j].qty;
+            let configNoteIdx = {
+              "_id": conf._id,
+              "tssr_note" : idx_config_comment,
+              "suggested_qty": idx_config_qty.length === 0 ? 0 : parseFloat(idx_config_qty)
+            }
+            if(data_tech_site.siteItemConfig[j].qty !== configNoteIdx.suggested_qty ){
+              diffQty.push("["+data_tech_site.siteItemConfig[j].site_id+"] => "+data_tech_site.siteItemConfig[j].config_id);
+            }
+            configNotes.push(configNoteIdx);
           }
-          configNotes.push(configNoteIdx);
         }
         tssrApproval["tssrItemConfigNotes"] = configNotes;
+        if(diffQty.length !== 0){
+          tssrApproval["isGap"] = true;
+        }
       }
-      console.log("tssrApproval", tssrApproval);
-      let patchData = await this.patchDatatoAPINODE('/techBoq/approval/'+this.state.data_tech_boq._id, tssrApproval)
+      this.toggleLoading();
+      // console.log("tssrApproval", JSON.stringify(tssrApproval));
+      this.setState({tssr_data_upload : tssrApproval}, () => {
+        if(diffQty.length !== 0){
+          this.toggleAlert();
+        }else{
+          this.saveDataTSSR();
+        }
+      });
+    }
+
+    async saveDataTSSR(){
+      this.toggleLoading();
+      if(this.state.modal_alert === true){
+        this.setState({modal_alert : false});
+      }
+      let patchData = await this.patchDatatoAPINODE('/techBoq/approval/'+this.state.data_tech_boq._id, this.state.tssr_data_upload)
       if(patchData.data !== undefined){
         this.setState({action_status : 'success'});
       }else{
         if(patchData.response !== undefined){
           if(patchData.response.data !== undefined){
-            this.setState({action_status : 'failed', action_message : patchData.response.data.error })
+            if(patchData.response.data.error !== undefined){
+              if(patchData.response.data.error.message !== undefined){
+                this.setState({ action_status: 'failed', action_message: patchData.response.data.error.message }, () => {
+                });
+              }else{
+                this.setState({ action_status: 'failed', action_message: patchData.response.data.error }, () => {
+                });
+              }
+            }else{
+              this.setState({ action_status: 'failed'}, () => {
+              });
+            }
           }else{
-            this.setState({action_status : 'failed'});
+            this.setState({ action_status: 'failed' }, () => {
+            });
           }
         }else{
-          this.setState({action_status : 'failed'});
+          this.setState({ action_status: 'failed' }, () => {
+          });
         }
       }
+      this.toggleLoading();
+    }
+
+    openDRMinPDB(){
+      window.open("https://dev.xl.pdb.e-dpm.com/login/", "_blank");
+      window.open("https://dev.xl.pdb.e-dpm.com/customerdeliverabledrmmenuxl/list/", "_blank")
     }
 
     render() {
@@ -387,19 +558,24 @@ class TSSRBoq extends Component {
                   <span style={{lineHeight :'2', fontSize : '17px'}}> TSSR BOQ </span>
                   {this.state.data_tech_boq !== null && (
                     <React.Fragment>
+                      <Button onClick={this.openDRMinPDB} style={{float : 'right'}} color="primary">
+                        Upload DRM
+                      </Button>
                       <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
                         <DropdownToggle caret color="secondary">
                           <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
                         </DropdownToggle>
                         <DropdownMenu>
-                          <DropdownItem header> Commercial File</DropdownItem>
+                          <DropdownItem header> TSSR File</DropdownItem>
                           <DropdownItem onClick={this.exportFormatTSSRVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Vertical</DropdownItem>
+                          <DropdownItem onClick={this.exportFormatTSSRUpdate}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Update Format</DropdownItem>
                         </DropdownMenu>
                       </Dropdown>
                     </React.Fragment>
                   )}
                 </CardHeader>
                 <CardBody className='card-UploadBoq'>
+                  <input type="file" onChange={this.fileHandlerTSSR.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} />
                   <Row>
                     <Col sm="12" md="12">
                     <table style={{width : '100%', marginBottom : '0px'}}>
@@ -416,6 +592,9 @@ class TSSRBoq extends Component {
                             </tr>
                             <tr style={{fontWeight : '390', fontSize : '10px', fontStyle:'oblique'}}>
                               <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Project : {this.state.data_tech_boq.project_name}</td>
+                            </tr>
+                            <tr style={{fontWeight : '390', fontSize : '10px', fontStyle:'oblique'}}>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Status : {this.state.data_tech_boq.tssr_approval_status}</td>
                             </tr>
                           </React.Fragment>
                         )}
@@ -434,12 +613,14 @@ class TSSRBoq extends Component {
                           <th>SOW</th>
                           <th>Config</th>
                           <th>SAP Number</th>
-                          <th>Qty</th>
+                          <th>Qty Technical</th>
+                          <th>Qty TSSR</th>
+                          <th>Diff</th>
                           <th>Note</th>
                         </tr>
                       </thead>
                       <tbody>
-                      {this.state.data_tech_boq_sites.map(site =>
+                      {this.state.data_tech_boq_sites_pagination.map(site =>
                         site.siteItemConfig.map(conf =>
                             <tr>
                               <td>{site.site_id}</td>
@@ -448,6 +629,17 @@ class TSSRBoq extends Component {
                               <td>{conf.config_id}</td>
                               <td>{conf.sap_number}</td>
                               <td>{conf.qty}</td>
+                              <td style={{width : '125px'}}>
+                                <Input
+                                  type="number"
+                                  name={conf._id}
+                                  className="BoQ-style-qty"
+                                  placeholder=""
+                                  onChange={this.handleChangeQtyTSSRConfig}
+                                  value={this.state.tssr_config_qty.has(conf._id) === true ? this.state.tssr_config_qty.get(conf._id) : conf.tssr_notes === undefined ? conf.qty : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].suggested_qty : conf.qty}
+                                />
+                              </td>
+                              <td>{conf.qty - (this.state.tssr_config_qty.has(conf._id) === true ? this.state.tssr_config_qty.get(conf._id) : conf.tssr_notes === undefined ? conf.qty : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].suggested_qty : conf.qty) }</td>
                               <td>
                                 <Input
                                   type="text"
@@ -464,6 +656,19 @@ class TSSRBoq extends Component {
                       </tbody>
                     </Table>
                   </div>
+                  <nav>
+                    <div>
+                      <Pagination
+                          activePage={this.state.activePage}
+                          itemsCountPerPage={this.state.perPage}
+                          totalItemsCount={this.state.data_tech_boq_sites.length}
+                          pageRangeDisplayed={5}
+                          onChange={this.handlePageChange}
+                          itemClass="page-item"
+                          linkClass="page-link"
+                      />
+                    </div>
+                  </nav>
                   <div>
                     <FormGroup>
                       <Label htmlFor="tssr_comment" style={{ fontSize : '12px', marginBottom : '0px'}}>TSSR Note :</Label>
@@ -479,13 +684,9 @@ class TSSRBoq extends Component {
                   </div>
                 </CardBody>
                 <CardFooter>
-                  {this.state.data_tech_boq !== null ?
-                  this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" ? (
-                    <div>
-                      <Button color="success" size="sm" value="2" onClick={this.approvalTechnical}>Approve</Button>
-                      <Button color="danger" size="sm" style={{marginLeft : '10px'}} value="3" onClick={this.approvalTechnical}>Reject</Button>
-                    </div>
-                  ) : <div></div> : <div></div>}
+                  <div>
+                    <Button color="primary" size="sm" style={{marginLeft : '10px'}} value="5" onClick={this.approvalTechnical}>Save</Button>
+                  </div>
                 </CardFooter>
               </Card>
             </Col>
@@ -509,6 +710,26 @@ class TSSRBoq extends Component {
             </ModalFooter>
           </Modal>
           {/* end Modal Loading */}
+
+          {/* Modal Delete */}
+          <Modal isOpen={this.state.modal_alert} toggle={this.toggleAlert} className={'modal-sm ' + this.props.className}>
+            <ModalBody>
+              <div style={{textAlign : 'center', margin : '15px 0 20px 0'}}>
+                <span style={{fontWeight : '500', fontSize : '15px'}}>There are some different Qty Config between TSSR and Techical </span>
+              </div>
+              <div style={{textAlign : 'center', margin : '15px 0 20px 0'}}>
+                <span style={{fontWeight : '500', fontSize : '12px'}}>Are sure to continue</span>
+              </div>
+              <div style={{textAlign : 'center'}}>
+                {this.state.submission_number_selected}
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button color="primary" onClick={this.saveDataTSSR}>Save with Gap</Button>
+              <Button color="secondary" onClick={this.toggleAlert}>Close</Button>
+            </ModalFooter>
+          </Modal>
+          {/* end Modal Delete */}
         </div>
       );
     }
