@@ -50,9 +50,11 @@ class TableTechnicalConfig extends React.Component{
       return ( <Fragment>
                   <td>{dataConfigIdx.config_id}</td>
                   <td>{dataConfigIdx.qty}</td>
+                  <td>{dataConfigIdx.qty_commercial}</td>
                 </Fragment>)
     }else{
       return ( <Fragment>
+                  <td></td>
                   <td></td>
                   <td></td>
                 </Fragment>)
@@ -77,6 +79,7 @@ class TableTechnicalConfig extends React.Component{
             <Fragment>
               <th>{type}</th>
               <th>{type}</th>
+              <th>{type}</th>
             </Fragment>
           )}
         </tr>
@@ -84,7 +87,8 @@ class TableTechnicalConfig extends React.Component{
           {this.props.configHeader.config_group_header.map(conf =>
             <Fragment>
               <th>{conf}</th>
-              <th>qty</th>
+              <th>Qty</th>
+              <th>Qty Comm</th>
             </Fragment>
           )}
         </tr>
@@ -156,7 +160,7 @@ class TechnicalBoq extends Component {
       version_now : null,
       version_selected : null,
       collapse: false,
-      dropdownOpen: new Array(1).fill(false),
+      dropdownOpen: new Array(2).fill(false),
       redirectSign : false,
       noteChange : new Array(8).fill(null),
       fieldNoteChange : new Array(8).fill(null),
@@ -174,8 +178,13 @@ class TechnicalBoq extends Component {
       progress_data : 0,
       progress_count : 0,
       progress_failed : 0,
-      option_tssr_header_view : 'only_filled'
+      option_tssr_header_view : 'only_filled',
+      update_qty_for : 'new',
+      update_type : 'revision',
+      modal_update_info : false,
+      loading_checking : null,
     };
+    this.toggleUpdateInfo = this.toggleUpdateInfo.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.selectProject = this.selectProject.bind(this);
     this.saveTechBoq = this.saveTechBoq.bind(this);
@@ -199,6 +208,7 @@ class TechnicalBoq extends Component {
     this.handleChangeVerComment = this.handleChangeVerComment.bind(this);
     this.saveProjecttoDB = this.saveProjecttoDB.bind(this);
     this.exportFormatTechnical = this.exportFormatTechnical.bind(this);
+    this.exportFormatTechnicalCommercial = this.exportFormatTechnicalCommercial.bind(this);
     this.exportFormatTechnicalNew = this.exportFormatTechnicalNew.bind(this);
     this.exportFormatTechnicalHorizontal = this.exportFormatTechnicalHorizontal.bind(this);
     this.exportFormatTechnicalVertical = this.exportFormatTechnicalVertical.bind(this);
@@ -216,7 +226,15 @@ class TechnicalBoq extends Component {
       }
     }
 
-    toggleUpload() {
+  toggleUpload(e) {
+    if(e !== undefined){
+      if(e.target !== undefined){
+        if(e.target.value !== undefined){
+          this.setState({update_qty_for : e.target.value});
+        }
+      }
+    }
+    console.log()
     this.setState({ collapse: !this.state.collapse });
   }
 
@@ -243,6 +261,14 @@ class TechnicalBoq extends Component {
 
   onExited() {
     this.setState({ status: 'Closed' });
+  }
+
+  toggleUpdateInfo(e){
+    const value = e.currentTarget.value;
+    this.setState({update_type : value});
+    this.setState(prevState => ({
+      modal_update_info: !prevState.modal_update_info
+    }));
   }
 
   async getDataFromAPINODE(url) {
@@ -484,7 +510,9 @@ class TechnicalBoq extends Component {
       let config_group_all = Config_group_DEFAULT.concat(config_group_non_default);
       let config_group_type_all = Config_group_type_DEFAULT.concat(config_group_type_non_default);
 
-      this.setState({view_tech_header_table : {"config_group_header" : config_group_avail_uniq, "config_group_type_header" : config_group_type_avail }, view_tech_all_header_table : {"config_group_header" : config_group_all, "config_group_type_header" : config_group_type_all } });
+      this.setState({view_tech_header_table : {"config_group_header" : config_group_avail_uniq, "config_group_type_header" : config_group_type_avail }, view_tech_all_header_table : {"config_group_header" : config_group_all, "config_group_type_header" : config_group_type_all } }, () => {
+        this.dataViewPagination(data_sites);
+      });
     }
   }
 
@@ -500,6 +528,9 @@ class TechnicalBoq extends Component {
     if(revisionType === "save"){
       revision = false;
     }
+    if(this.state.modal_update_info === true){
+      this.setState({modal_update_info : false});
+    }
     this.toggleLoading();
     const dataChecked = this.state.result_check_tech;
     const dataPatch = {
@@ -507,8 +538,9 @@ class TechnicalBoq extends Component {
       "sites_data" : dataChecked.tech_data,
       "configList" : dataChecked.configList
     }
-    console.log("dataPatch JSON", JSON.stringify(dataPatch));
-    console.log("dataPatch", dataPatch);
+    if(this.state.update_qty_for.toLowerCase() === 'commercial'){
+      dataPatch["updateQtyCommercial"] = true;
+    }
     let patchTech = await this.patchDatatoAPINODE('/techBoq/updateTechBoqData/'+this.state.data_tech_boq._id, dataPatch);
     if(patchTech.data !== undefined){
       this.setState({action_status : 'success'});
@@ -751,6 +783,7 @@ class TechnicalBoq extends Component {
 
 
   fileHandlerTechnical = (event) => {
+    this.setState({loading_checking : 'Checking'});
     this.setState({waiting_status : 'loading'});
     let fileObj = event.target.files[0];
     const date = new Date();
@@ -758,6 +791,7 @@ class TechnicalBoq extends Component {
     if(fileObj !== undefined){
       ExcelRenderer(fileObj, (err, rest) => {
         if(err){
+          this.setState({loading_checking : null});
           console.log(err);
         }
         else{
@@ -784,8 +818,18 @@ class TechnicalBoq extends Component {
   }
 
   async checkingFormatTech(rowsTech){
-    let postCheck = await this.postDatatoAPINODE('/techBoq/checkTechBoqDataXL', {"techBoqData" : rowsTech});
-    console.log("postCheck", JSON.stringify(postCheck));
+        this.toggleLoading();
+    let dataCheck = {
+      "techBoqData" : rowsTech
+    }
+    if(this.state.update_qty_for.toLowerCase() === 'commercial'){
+      dataCheck["updateQtyCommercial"] = true;
+    }
+    if(this.state.update_qty_for.toLowerCase() === 'delivery'){
+      dataCheck["updateQtyDelivery"] = true;
+    }
+
+    let postCheck = await this.postDatatoAPINODE('/techBoq/checkTechBoqDataXL', dataCheck);
     if(postCheck.data !== undefined){
       const dataCheck = postCheck.data;
       let siteNew = [];
@@ -797,8 +841,10 @@ class TechnicalBoq extends Component {
       }
       if(siteNew.length !== 0){
         this.setState({action_status : 'failed', action_message : '[ '+siteNew.join(', ')+' ] => Not available, please create this sites in PDB'});
+        this.toggleLoading();
       }else{
         this.setState({result_check_tech : dataCheck});
+        this.toggleLoading();
       }
     }else{
       if(postCheck.response !== undefined){
@@ -829,6 +875,7 @@ class TechnicalBoq extends Component {
         });
       }
     }
+    this.setState({loading_checking : null});
   }
 
   saveTechBoq = async () => {
@@ -1608,18 +1655,18 @@ class TechnicalBoq extends Component {
   dataViewPagination(dataTechView){
     let perPage = this.state.perPage;
     let dataTechPage = [];
-    if(perPage !== this.state.data_item.length){
+    if(perPage !== dataTechView.length){
       let pageNow = this.state.activePage-1;
       dataTechPage = dataTechView.slice(pageNow * perPage, (pageNow+1)*perPage);
     }else{
       dataTechPage = dataTechView;
     }
-    this.setState({data_item_pagination : dataTechPage})
+    this.setState({data_tech_boq_sites_pagination : dataTechPage})
   }
 
   handlePageChange(pageNumber) {
     this.setState({activePage: pageNumber}, () => {
-      this.dataViewPagination(this.state.data_item);
+      this.dataViewPagination(this.state.data_tech_boq_sites);
     });
   }
 
@@ -2061,6 +2108,56 @@ class TechnicalBoq extends Component {
     saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Uploader Template.xlsx');
   }
 
+  exportFormatTechnicalCommercial = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataTech = this.state.data_tech_boq;
+    let dataSites = [];
+    if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+      dataSites = this.state.data_tech_boq_sites_version;
+    }else{
+      dataSites = this.state.data_tech_boq_sites;
+    }
+
+    const header_config = this.state.view_tech_all_header_table;
+
+    let HeaderRow1 = ["General Info", "General Info", "General Info"];
+    let HeaderRow2 = ["tower_id","program","sow"];
+
+    header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
+    header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty_commercial"]));
+
+    ws.addRow(HeaderRow1);
+    ws.addRow(HeaderRow2);
+    for(let i = 0; i < dataSites.length ; i++){
+      let qtyConfig = []
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        for(let j = 0; j < header_config.config_group_header.length; j++ ){
+          let dataConfigIdx = dataSites[i].siteItemConfigVersion.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+          if(dataConfigIdx !== undefined){
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, dataConfigIdx.qty_commercial]);
+          }else{
+            qtyConfig = qtyConfig.concat([null, null]);
+          }
+        }
+      }else{
+        for(let j = 0; j < header_config.config_group_header.length; j++ ){
+          let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+          if(dataConfigIdx !== undefined){
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, dataConfigIdx.qty_commercial]);
+          }else{
+            qtyConfig = qtyConfig.concat([null, null]);
+          }
+        }
+      }
+      ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow].concat(qtyConfig));
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Uploader Commercial Template.xlsx');
+  }
+
   exportFormatTechnicalNew = async () =>{
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -2193,31 +2290,6 @@ class TechnicalBoq extends Component {
         }
       }
 
-    function PrintTechnical(props){
-        const api_data = props.dataApi;
-        const header_package = props.dataHeader;
-        const dataTech = props.Tech_info;
-        const name_project = props.Tech_info.project_name;
-        let arrayData = [];
-        let row1 = [];
-        if(api_data.length !== 0 && header_package.length !== 0 && header_package.type !== undefined){
-          row1 = ["", "",""].concat(header_package.type);
-          const dataHeaderFormat = header_package.IDPP.map( (e,i) => e+" /// "+header_package.name[i])
-          arrayData.push(["project", "site_id","site_name"].concat(dataHeaderFormat));
-          for(let i = 0; i < api_data.length ; i++){
-            arrayData.push(["", api_data[i].site_id, api_data[i].site_name].concat(api_data[i].list_qty_items));
-          }
-        }
-        const multiDataSet = [
-          {
-            columns: row1,
-            data: arrayData
-          }
-        ];
-        const filename = "Technical BOQ "+dataTech.no_boq_tech+"-"+props.versionAlpha+" Format";
-        return null;
-      }
-
       return (
         <div>
           <AlertProcess alertAct={this.state.action_status} messageAct={this.state.action_message}/>
@@ -2228,40 +2300,41 @@ class TechnicalBoq extends Component {
                   {this.state.data_item.length === 0 && this.state.API_Tech.no_boq_tech === undefined && this.props.match.params.id == undefined ? (
                     <React.Fragment>
                       <span>Create Technical BOQ</span>
-                      <span style={{float : 'right'}}>
-                        <Button size="sm" onClick={this.exportFormatTechnicalNew}>Download Technical Format</Button>
-                      </span>
                     </React.Fragment>
                   ) : (
                     <React.Fragment>
                       <span style={{marginTop:'3px', position:'absolute'}}>Detail Technical BOQ</span>
                       <div className="card-header-actions" style={{display:'inline-flex'}}>
-                      <Col>
-                        <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}}>
-                          <DropdownToggle caret color="secondary" size="sm">
-                            <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download Technical File
-                          </DropdownToggle>
-                          <DropdownMenu>
-                            <DropdownItem header> Technical File</DropdownItem>
-                            <DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Report</DropdownItem>
-                            <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Horizontal</DropdownItem>
-                            <DropdownItem onClick={this.exportFormatTechnicalVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Vertical</DropdownItem>
-
-                            <DropdownItem onClick={this.exportFormatTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Format</DropdownItem>
-                          </DropdownMenu>
-                        </Dropdown>
-                      </Col>
-                        <div style={{marginRight : '10px'}}>
-                          <Button block color="info" onClick={this.handleChangeOptionView} size="sm" id="toggleCollapse1">
-                              Only Filled / All
-                          </Button>
-                        </div>
-                        <div>
-                          <Button block color="primary" onClick={this.toggleUpload} size="sm" id="toggleCollapse1">
-                              <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Update
-                          </Button>
-                        </div>
-
+                        <Col>
+                          <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}}>
+                            <DropdownToggle caret color="secondary" size="sm">
+                              <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download Technical File
+                            </DropdownToggle>
+                            <DropdownMenu>
+                              <DropdownItem header> Technical File</DropdownItem>
+                              <DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Report</DropdownItem>
+                              <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Horizontal</DropdownItem>
+                              <DropdownItem onClick={this.exportFormatTechnicalVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Vertical</DropdownItem>
+                              <DropdownItem onClick={this.exportFormatTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Delivery Format</DropdownItem>
+                              <DropdownItem onClick={this.exportFormatTechnicalCommercial}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Commercial Format</DropdownItem>
+                            </DropdownMenu>
+                          </Dropdown>
+                        </Col>
+                        <Col>
+                          <Dropdown isOpen={this.state.dropdownOpen[1]} toggle={() => {this.toggleDropdown(1);}}>
+                            <DropdownToggle caret color="primary" size="sm">
+                              <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Update
+                            </DropdownToggle>
+                            <DropdownMenu>
+                              <DropdownItem onClick={this.toggleUpload} value="Delivery" id="toggleCollapse1">
+                                <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Qty Delivery
+                              </DropdownItem>
+                              <DropdownItem onClick={this.toggleUpload} value="Commercial" id="toggleCollapse1">
+                                <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Qty Commercial
+                              </DropdownItem>
+                            </DropdownMenu>
+                          </Dropdown>
+                        </Col>
                       </div>
 
                     </React.Fragment>
@@ -2278,7 +2351,6 @@ class TechnicalBoq extends Component {
                         <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveTechBoq} disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null }>
                           {this.state.rowsTech.length == 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
                         </Button>
-                        <div style={{marginLeft : '10px', fontSize : '10px', color : 'red'}}><span>Please download Technical format uploader in Material Menu or <Link to='/Material'>Click Here</Link></span></div>
                         <Row>
                         <Col md="4">
                           <div>
@@ -2300,24 +2372,47 @@ class TechnicalBoq extends Component {
                         <CardBody style={{padding: '5px'}}>
                           <Row>
                             <Col>
-                              <div>
+                              <div style={{display:'inline-flex'}}>
+                                <span style={{width : '115px'}}>
+                                  Qty {this.state.update_qty_for} :
+                                </span>
+                                <span>
                                   <Input type="file" onChange={this.fileHandlerTechnical.bind(this)} />
+                                </span>
                               </div>
                             </Col>
-                            <Col>
-                              <div>
-                                <React.Fragment>
-                                  <Button style={{'float' : 'right'}} color="warning" onClick={this.updateTechBoq} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
-                                  <i className="fa fa-paste">&nbsp;&nbsp;</i>
-                                    {this.state.rowsTech.length === 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
+                            {this.state.data_tech_boq.list_of_commercial.filter(e => e.comm_boq_status !== "OBSOLETE").length !== 0 ? (
+                              <Col>
+                                <div>
+                                  <React.Fragment>
+                                    <Button style={{'float' : 'right'}} color="warning" onClick={this.toggleUpdateInfo} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
+                                    <i className="fa fa-paste">&nbsp;&nbsp;</i>
+                                      {this.state.rowsTech.length === 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
+                                    </Button>
+                                  </React.Fragment>
+                                  <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.toggleUpdateInfo} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
+                                    <i className="fa fa-copy">&nbsp;&nbsp;</i>
+                                    {this.state.rowsTech.length === 0 ? 'Revision' : this.state.result_check_tech !== null ? 'Revision' : 'Loading..'}
                                   </Button>
-                                </React.Fragment>
-                                <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.updateTechBoq} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
-                                  <i className="fa fa-copy">&nbsp;&nbsp;</i>
-                                  {this.state.rowsTech.length === 0 ? 'Revision' : this.state.result_check_tech !== null ? 'Revision' : 'Loading..'}
-                                </Button>
-                              </div>
-                            </Col>
+                                </div>
+                              </Col>
+                            ):(
+                              <Col>
+                                <div>
+                                  <React.Fragment>
+                                    <Button style={{'float' : 'right'}} color="warning" onClick={this.updateTechBoq} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
+                                    <i className="fa fa-paste">&nbsp;&nbsp;</i>
+                                      {this.state.rowsTech.length === 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
+                                    </Button>
+                                  </React.Fragment>
+                                  <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.updateTechBoq} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
+                                    <i className="fa fa-copy">&nbsp;&nbsp;</i>
+                                    {this.state.rowsTech.length === 0 ? 'Revision' : this.state.result_check_tech !== null ? 'Revision' : 'Loading..'}
+                                  </Button>
+                                </div>
+                              </Col>
+                            )}
+
                           </Row>
                           {this.state.API_Tech.project_name === null ? (
                           <Row style={{marginTop : '10px'}}>
@@ -2470,7 +2565,7 @@ class TechnicalBoq extends Component {
                           />
                       ): (
                         <TableTechnicalConfig
-                          dataTechBoqSites={this.state.data_tech_boq_sites}
+                          dataTechBoqSites={this.state.data_tech_boq_sites_pagination}
                           configHeader={this.state.option_tssr_header_view === 'only_filled' ?  this.state.view_tech_header_table : this.state.view_tech_all_header_table}
                         />
                       )}
@@ -2521,19 +2616,20 @@ class TechnicalBoq extends Component {
                         )}
                       </Table>
                       {/*
+                      */}
                       <nav>
                         <div>
                           <Pagination
                               activePage={this.state.activePage}
                               itemsCountPerPage={this.state.perPage}
-                              totalItemsCount={this.state.data_item.length}
+                              totalItemsCount={this.state.data_tech_boq_sites.length}
                               pageRangeDisplayed={5}
                               onChange={this.handlePageChange}
                               itemClass="page-item"
                               linkClass="page-link"
                           />
                         </div>
-                      </nav>*/}
+                      </nav>
                       </React.Fragment>
                     )}
 
@@ -2542,11 +2638,9 @@ class TechnicalBoq extends Component {
                     {this.state.data_tech_boq !== null && (
                     <Row>
                       <Col>
-                        {(this.state.data_tech_boq.approval_status === "PRE APPROVAL" || this.state.data_tech_boq.approval_status === "REJECTED") && (
-                          <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value="1" onClick={this.approvalTechnical} disabled={!this.state.API_Tech.approval_status === "PRE APPROVAL"}>
-                              {this.state.data_tech_boq.approval_status === "PRE APPROVAL" || this.state.data_tech_boq.approval_status === "REJECTED" ? "Submit to TSSR" : "Submitted"}
-                          </Button>
-                        )}
+                        <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value="4" onClick={this.approvalTechnical} disabled={!this.state.API_Tech.approval_status === "PRE APPROVAL"}>
+                            {this.state.data_tech_boq.approval_status === "PRE APPROVAL" || this.state.data_tech_boq.approval_status === "REJECTED" ? "Submit to TSSR" : "Submitted"}
+                        </Button>
                       </Col>
                      </Row>
                     )}
@@ -2562,10 +2656,10 @@ class TechnicalBoq extends Component {
                 <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
               </div>
               <div style={{textAlign : 'center'}}>
-                Loading ...
+                {this.state.loading_checking !== null ? this.state.loading_checking : "Loading..."}
               </div>
               <div style={{textAlign : 'center'}}>
-                System is processing ...
+                System is {this.state.loading_checking !== null ? "checking your upload file" : "processing ..."} 
               </div>
               <div style={{textAlign : 'center'}}>
                 {this.state.progress_count} / {this.state.progress_data}
@@ -2576,6 +2670,26 @@ class TechnicalBoq extends Component {
             </ModalFooter>
           </Modal>
           {/* end Modal Loading */}
+
+          {/* Modal Delete */}
+          <Modal isOpen={this.state.modal_update_info} toggle={this.toggleUpdateInfo} className={'modal-sm ' + this.props.className}>
+            <ModalBody>
+              <div style={{textAlign : 'center', margin : '15px 0 20px 0'}}>
+                <span style={{fontWeight : '500', fontSize : '15px'}}>Update this Technical BOQ can delete Commercial BOQ related with this Technical BOQ </span>
+              </div>
+              <div style={{textAlign : 'center', margin : '15px 0 20px 0'}}>
+                <span style={{fontWeight : '500', fontSize : '15px'}}></span>
+              </div>
+              <div style={{textAlign : 'center'}}>
+                {this.state.submission_number_selected}
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button color="warning" onClick={this.updateTechBoq} value={this.state.update_type}>{this.state.update_type}</Button>
+              <Button color="secondary" onClick={this.toggleUpdateInfo}>Close</Button>
+            </ModalFooter>
+          </Modal>
+          {/* end Modal Delete */}
         </div>
       );
     }

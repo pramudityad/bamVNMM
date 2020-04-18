@@ -128,13 +128,6 @@ class ListTSSRBoq extends Component {
           <CardHeader>
             <React.Fragment>
               <span style={{marginTop:'8px'}}>TSSR BOQ List</span>
-              {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
-                <div className="card-header-actions" style={{marginRight:'5px'}}>
-                    <Link to='/new-technical'>
-                    <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
-                    </Link>
-                </div>
-                ) : ""}
             </React.Fragment>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
@@ -145,7 +138,7 @@ class ListTSSRBoq extends Component {
                     <th>Project</th>
                     <th>Creator</th>
                     <th>Ver.</th>
-                    <th style={{'width' : '150px', textAlign : 'center'}}>Status</th>
+                    <th style={{'width' : '150px', textAlign : 'center'}}>TSSR Status</th>
                     <th style={{'width' : '225px', textAlign : 'center'}}>Action</th>
                   </tr>
                   <tr>
@@ -201,15 +194,7 @@ class ListTSSRBoq extends Component {
                             <td style={{verticalAlign : 'middle'}}>{boq.project_name}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.creator[0].email}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.version}</td>
-                            <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              {boq.approval_status === "PRE APPROVAL" || boq.approval_status === "REJECTED" ? (
-                                <span className="boq-tech-status-PA">{boq.approval_status}</span>
-                              ) : boq.approval_status === "REQUEST FOR APPROVAL" ? (
-                                <span className="boq-tech-status-WA">{"Requested to TSSR"}</span>
-                              ) : (
-                                <span className="boq-tech-status-A">{boq.approval_status}</span>
-                              )}
-                            </td>
+                            <td style={{verticalAlign : 'middle', textAlign : "center"}}></td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
                               <Link to={'/detail-tssr-boq/'+boq._id}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>

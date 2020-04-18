@@ -71,10 +71,13 @@ const DetailTechnical = React.lazy(() => import('./views/Technical/TechnicalBoq'
 const ApprovalTechnical = React.lazy(() => import('./views/Technical/TechnicalBoqApproval'));
 
 const DSACreation = React.lazy(() => import('./views/DSA/DSACreation'));
+
 const ListCommercial = React.lazy(() => import('./views/Commercial/ListCommercial'));
 const DetailCommercial = React.lazy(() => import('./views/Commercial/CommercialBoq'));
 const ApprovalCommercial = React.lazy(() => import('./views/Commercial/CommercialBoqApproval'));
-const POAssign = React.lazy(() => import('./views/Commercial/POAssign'))
+const POAssign = React.lazy(() => import('./views/Commercial/POAssign'));
+const SubmissionCommBoq = React.lazy(() => import('./views/Commercial/SubmissionCommBoq'));
+
 const POCommercial = React.lazy(() => import('./views/Commercial/BoqCommPO'));
 const ListTssrMatrix = React.lazy(() => import('./views/TssrMatrix/ListTSSRBoq'));
 const DetailTssrMatrix = React.lazy(() => import('./views/TssrMatrix/UploadTSSRMatrix'));
@@ -86,7 +89,8 @@ const BulkApproval = React.lazy(() => import('./views/MR/ListBulkApproval'));
 const ListOrdering = React.lazy(() => import('./views/Ordering/ListOrdering'));
 const DetailOrdering = React.lazy(() => import('./views/Ordering/OrderingMaterial'));
 const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUpload'));
-const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabase'));
+const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabaseList'));
+const CPODatabaseDetail  = React.lazy(() => import('./views/CPODatabase/CPODatabaseDetail'));
 
 const ListCPOBoq = React.lazy(() => import('./views/TechnicalCPO/ListCPOBoq'));
 const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'));
@@ -177,6 +181,7 @@ const routes = [
   { path: '/commercial-creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
   { path: '/detail-commercial/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
   { path: '/po-assign-commercial/:id', exact: true, name: 'PO Assign Commercial BOQ', component: POAssign },
+  { path: '/submission-commercial/:id', exact: true, name: 'Submission Commercial BOQ', component: SubmissionCommBoq },
 
   { path: '/list-tssr-matix', exact: true, name: 'List TSSR Matrix BOQ', component: ListTssrMatrix },
   { path: '/tssr-matix-creation', exact: true, name: 'TSSR Matrix BOQ Creation', component: NewTssrMatrix },
@@ -195,6 +200,7 @@ const routes = [
   { path: '/config-manager', exact: true, name: 'Config Manager', component: ConfigManager },
 
   { path: '/cpo-database', exact: true, name: 'CPO Database', component: CPODatabase },
+  { path: '/detail-list-cpo-database/:id', exact: true, name: 'CPO Database', component: CPODatabaseDetail },
 
   { path: '/list-cpo-boq', exact: true, name: 'List CPO BOQ', component: ListCPOBoq },
   { path: '/detail-cpo-boq/:id', exact: true, name: 'CPO BOQ Detail', component: DetailCPOBoq },

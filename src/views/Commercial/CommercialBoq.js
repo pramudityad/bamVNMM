@@ -171,14 +171,15 @@ class CommercialBoq extends Component {
       this.setState({ status: 'Closed' });
     }
 
-    numberToAlphabet(number){
-      const num = Number(number)+1
-      if(num > 26){
-        let mod = (num%26 + 9).toString(36).toUpperCase();
-        return 'Z'+mod;
-      }else{
-        return (num + 9).toString(36).toUpperCase();
+    numToAlphabet(num){
+      var s = '', t;
+
+      while (num > 0) {
+        t = (num - 1) % 26;
+        s = String.fromCharCode(65 + t) + s;
+        num = (num - t)/26 | 0;
       }
+      return s || undefined;
     }
 
     showGroupToggle(){
@@ -555,7 +556,8 @@ class CommercialBoq extends Component {
 
     saveCommtoAPI = async () => {
       this.toggleLoading();
-      let dataCommNew = await this.prepareDataforSaveComm(this.state.data_tech_boq_selected);
+      // let dataCommNew = await this.prepareDataforSaveComm(this.state.data_tech_boq_selected);
+      let dataCommNew = this.state.data_tech_boq_selected;
       let postComm = await this.postDatatoAPINODE('/commBoq/createCommercial', {"data" : [dataCommNew]});
       if(postComm.data !== undefined){
         this.setState({action_status : 'success'}, () => {
@@ -581,7 +583,7 @@ class CommercialBoq extends Component {
             console.log(err);
           }
           else{
-            console.log('rest.rows', rest.rows);
+            console.log('rest.rows', JSON.stringify(rest.rows));
             this.setState({
               rowsComm: rest.rows}, ()=> {
                 this.makeFormatintoMap(rest.rows);
@@ -680,6 +682,83 @@ class CommercialBoq extends Component {
       }else{
         dataSites = this.state.data_comm_boq_items;
       }
+
+      const DatePrint = new Date();
+      const DatePrintOnly = DatePrint.getFullYear()+'-'+(DatePrint.getMonth()+1).toString().padStart(2, '0')+'-'+DatePrint.getDay().toString().padStart(2, '0');
+
+      const prepared = ws.mergeCells('A4:E4');
+      ws.getCell('A4').value = 'prepared';
+      ws.getCell('A4').alignment  = { vertical: 'top', horizontal: 'left' };
+      ws.getCell('A4').font  = { size: 8 };
+      ws.getCell('A4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+      const preparedEmail = ws.mergeCells('A5:E5');
+      ws.getCell('A5').value = this.state.userEmail;
+      ws.getCell('A5').alignment  = {horizontal: 'left' };
+      ws.getCell('A5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+      const DocumentNo = ws.mergeCells('F4:I4');
+      ws.getCell('F4').value = 'Document No.';
+      ws.getCell('F4').font  = { size: 8 };
+      ws.getCell('F4').alignment  = {vertical: 'top', horizontal: 'left' };
+      ws.getCell('F4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+      const DocumentNum = ws.mergeCells('F5:I5');
+      ws.getCell('F5').value = dataComm.no_comm_boq;
+      ws.getCell('F5').alignment  = {horizontal: 'left' };
+      ws.getCell('F5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+      const Approved = ws.mergeCells('A6:C7');
+      ws.getCell('A6').value = 'Approved';
+      ws.getCell('A6').font  = { size: 8 };
+      ws.getCell('A6').alignment  = {vertical: 'top', horizontal: 'left' };
+      ws.getCell('A6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}};
+
+      const Checked = ws.mergeCells('D6:E7');
+      ws.getCell('D6').value = 'Checked';
+      ws.getCell('D6').font  = { size: 8 };
+      ws.getCell('D6').alignment  = {vertical: 'top', horizontal: 'left' };
+      ws.getCell('D6').border = {top: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+      const dateDoc = ws.mergeCells('F6:G6');
+      ws.getCell('F6').value = 'Date';
+      ws.getCell('F6').font  = { size: 8 };
+      ws.getCell('F6').alignment  = {vertical: 'top', horizontal: 'left' };
+      ws.getCell('F6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+      const dateDocument = ws.mergeCells('F7:G7');
+      ws.getCell('F7').value = DatePrintOnly;
+      ws.getCell('F7').alignment  = {vertical: 'top', horizontal: 'left' };
+      ws.getCell('F7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+      const revDoc = ws.mergeCells('H6:I6');
+      ws.getCell('H6').value = 'Ver.';
+      ws.getCell('H6').font  = { size: 8 };
+      ws.getCell('H6').alignment  = {vertical: 'top', horizontal: 'left' };
+      ws.getCell('H6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+      const revDocNum = ws.mergeCells('H7:I7');
+      ws.getCell('H7').value = dataComm.version;
+      ws.getCell('H7').alignment  = {horizontal: 'left' };
+      ws.getCell('H7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+      ws.mergeCells('A9:I9');
+      ws.getCell('A9').value = 'Commercial BOQ';
+      ws.getCell('A9').font  = { size: 14, bold : true };
+      ws.getCell('A9').alignment  = {vertical: 'middle', horizontal: 'center' };
+      ws.getCell('A9').border = {bottom: {style:'double'} };
+
+      ws.addRow(["Project",dataComm.project_name,"","","","", "", "",""]);
+      ws.addRow(["Created On",dataComm.created_on,"","","","", "Updated On", dataComm.updated_on,""]);
+      ws.addRow(["Technical Ref",": "+dataComm.list_of_tech.length !== 0 ? dataComm.list_of_tech[0].no_tech_boq : "" ,"","","","", "", "",""]);
+      ws.mergeCells('B10:C10');
+      ws.mergeCells('B11:C11');
+      ws.mergeCells('B12:C12');
+      ws.mergeCells('H10:I10');
+      ws.mergeCells('H11:I11');
+      ws.mergeCells('H12:I12');
+
+      ws.addRow([""]);
 
       let ppIdRow = ["Tower ID", "Program", "SOW", "Category", "Config ID", "SAP", "Qty", "Description", "Unit Price after Incentive (USD)", "Unit Price after Incentive (IDR)", "Total Price after Incentive (USD)", "Total Price after Incentive (IDR)"];
 
@@ -894,7 +973,7 @@ class CommercialBoq extends Component {
                               </tbody>
                             </table>
                           </Col>
-                          <Col sm="6" md="6">
+                          {/* <Col sm="6" md="6">
                             <tbody style={{float : 'right', 'marginRight' : '100px'}}>
                               <tr style={{fontWeight : '425', fontSize : '15px'}}>
                                 <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>PO INFORMATION</td>
@@ -906,7 +985,7 @@ class CommercialBoq extends Component {
                                 </td>
                               </tr>
                             </tbody>
-                          </Col>
+                          </Col> */}
                         </Row>
                       </React.Fragment>
                     )}
@@ -914,46 +993,32 @@ class CommercialBoq extends Component {
                   <div class='divtable'>
                   {this.props.match.params.id === undefined ? (
                     <Table hover bordered responsive size="sm" width="100%">
-                        <thead class="table-commercial__header--fixed">
+                      <thead class="table-commercial__header--fixed">
                         <tr>
-                          <th></th>
                           <th>Tower ID</th>
                           <th>Tower Name</th>
                           <th>Config ID</th>
-                          <th>Qty</th>
+                          <th>Qty Deliver</th>
+                          <th>Qty Comm</th>
                         </tr>
                       </thead>
                       <tbody>
                       {this.state.data_tech_boq_sites_selected.map(site =>
                         site.siteItemConfig.map(conf =>
-                          conf.list_of_commercial === undefined ? conf.qty !== 0 && (
-                            <tr>
-                              <td>
-                                <Checkbox name={conf.no_tech_boq+" /// "+conf.site_id+" /// "+conf.config_id} checked={this.state.checkedCommItem.get(conf.no_tech_boq+" /// "+conf.site_id+" /// "+conf.config_id)} onChange={this.handleChangeChecklist}/>
-                              </td>
-                              <td>{site.site_id}</td>
-                              <td>{site.site_name}</td>
-                              <td>{conf.config_id}</td>
-                              <td>{conf.qty}</td>
-                            </tr>
-                          ) : (conf.qty-(conf.list_of_commercial.reduce((a,b)=>a+this.checkValuetoZero(b.qty),0))!==0) && (
-                            <tr>
-                              <td>
-                                <Checkbox name={conf.no_tech_boq+" /// "+conf.site_id+" /// "+conf.config_id} checked={this.state.checkedCommItem.get(conf.no_tech_boq+" /// "+conf.site_id+" /// "+conf.config_id)} onChange={this.handleChangeChecklist}/>
-                              </td>
-                              <td>{site.site_id}</td>
-                              <td>{site.site_name}</td>
-                              <td>{conf.config_id}</td>
-                              <td>{conf.qty}</td>
-                            </tr>
-                          )
+                          <tr>
+                            <td>{site.site_id}</td>
+                            <td>{site.site_name}</td>
+                            <td>{conf.config_id}</td>
+                            <td>{conf.qty}</td>
+                            <td>{conf.qty_commercial}</td>
+                          </tr>
                         )
                       )}
                       </tbody>
                     </Table>
                   ) : (
                     <Table hover bordered responsive size="sm" width="100%">
-                        <thead class="table-commercial__header--fixed">
+                      <thead class="table-commercial__header--fixed">
                         <tr>
                           <th>Tower ID</th>
                           <th>Program</th>
@@ -980,7 +1045,7 @@ class CommercialBoq extends Component {
                               <td>{item.config_id}</td>
                               <td>{item.sap_number}</td>
                               <td>{item.qty}</td>
-                              <td style={{width : '120px'}}>
+                              <td style={{width : '75px'}}>
                                 <Input
                                   type="number"
                                   name={item.site_id+' /// '+item.config_id}
@@ -990,7 +1055,7 @@ class CommercialBoq extends Component {
                                   value={!this.state.UnitPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive_usd : this.state.UnitPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
                                 />
                               </td>
-                              <td style={{width : '120px'}}>
+                              <td style={{width : '200px'}}>
                                 <Input
                                   type="number"
                                   name={item.site_id+' /// '+item.config_id}
@@ -1000,7 +1065,7 @@ class CommercialBoq extends Component {
                                   value={!this.state.UnitPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive : this.state.UnitPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
                                 />
                               </td>
-                              <td style={{width : '120px'}}>
+                              <td style={{width : '100px'}}>
                                 {/* }<Input
                                   type="number"
                                   name={item.site_id+' /// '+item.config_id}
@@ -1011,7 +1076,7 @@ class CommercialBoq extends Component {
                                 /> */}
                                 {!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id)}
                               </td>
-                              <td style={{width : '120px'}}>
+                              <td style={{width : '200px'}}>
                                 {/* }<Input
                                   type="number"
                                   name={item.site_id+' /// '+item.config_id}
