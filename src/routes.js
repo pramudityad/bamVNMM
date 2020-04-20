@@ -92,6 +92,9 @@ const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUp
 const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabaseList'));
 const CPODatabaseDetail  = React.lazy(() => import('./views/CPODatabase/CPODatabaseDetail'));
 
+const MaterialStatusWH  = React.lazy(() => import('./views/MR/MatStatWH'));
+const MaterialInboundPlan  = React.lazy(() => import('./views/MR/MatInboundPlan'));
+
 const ListCPOBoq = React.lazy(() => import('./views/TechnicalCPO/ListCPOBoq'));
 const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'));
 
@@ -154,6 +157,10 @@ const routes = [
   { path: '/bulk-mr-request', name: 'Bulk MR Request', component: BulkRequest },
   { path: '/bulk-mr-change-approval', name: 'Bulk MR Change Approval', component: BulkChangeApproval },
   { path: '/bulk-mr-approval', name: 'Bulk MR Approval', component: BulkApproval },
+
+  { path: '/material-status-wh', exact: true, name: 'Material Status in WH', component: MaterialStatusWH },
+  { path: '/material-inbound-plan', exact: true, name: 'Material Inbound Plan', component: MaterialInboundPlan },
+
   { path: '/ps-upload/:id', exact: true, name: 'MR List', component: PSUpload },
   { path: '/mr-progress/:id', exact: true, name: 'MR Progress', component: MRProgress },
   { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WarehouseDashboard },

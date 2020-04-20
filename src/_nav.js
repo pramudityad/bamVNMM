@@ -105,6 +105,16 @@ export default {
           name: 'Bulk MR Approval',
           url: '/bulk-mr-approval',
           icon: 'icon-check',
+        },
+        {
+          name: 'Material Status in WH',
+          url: '/material-status-wh',
+          icon: 'icon-basket-loaded',
+        },
+        {
+          name: 'Material Inbound Plan',
+          url: '/material-inbound-plan',
+          icon: 'icon-social-dropbox',
         }
       ]
     },
