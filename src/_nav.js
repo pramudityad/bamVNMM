@@ -107,8 +107,8 @@ export default {
           icon: 'icon-check',
         },
         {
-          name: 'Material Status in WH',
-          url: '/material-status-wh',
+          name: 'Material Stock',
+          url: '/material-stock',
           icon: 'icon-basket-loaded',
         },
         {

@@ -20,7 +20,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
 );
 
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const DefaultNotif = React.lazy(() => import('../DefaultView/DefaultNotif'));
 
 const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
 const usernameBAM = 'adminbamidsuper';
@@ -29,7 +29,7 @@ const passwordBAM = 'F760qbAg2sml';
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 
-class MaterialStatWH extends React.Component {
+class MaterialStock extends React.Component {
 
   constructor(props) {
     super(props);
@@ -398,7 +398,7 @@ class MaterialStatWH extends React.Component {
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{ marginTop: '8px', position: 'absolute' }}> Material Status </span>
+                <span style={{ marginTop: '8px', position: 'absolute' }}> Material Stock </span>
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
@@ -455,7 +455,7 @@ class MaterialStatWH extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: '10px' }}>
-                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Material List</span>
+                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Material Stock List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                         <input className="search-box-material" type="text" name='filter' placeholder="Search Material" onChange={this.handleChangeFilter} value={this.state.filter_name} />
                       </div>
@@ -468,21 +468,21 @@ class MaterialStatWH extends React.Component {
                       <table hover bordered responsive size="sm" width='100%'>
                         <thead style={{ backgroundColor: '#73818f' }} className='fixed'>
                           <tr align="center">
-                            <th style={{ minWidth: '150px' }}>Owner ID</th>
+                            <th style={{ minWidth: '150px' }}> ID</th>
                             <th>SKU</th>
                             <th>Description</th>
-                            <th>Qty In Hand</th>
-                            <th>Qty Allocated</th>
-                            <th>Quantity Planned for Inbound</th>
-                            <th>Planned Inbound Date</th>
-                            <th>Quantity In Transit</th>
+                            <th>Qty On Hand</th>
+                            <th></th>
+                            <th>Qty Allocated by CEVA</th>
+                            <th>Qty Allocated by DPM</th>
+                            {/* <th>Quantity In Transit</th>
                             <th>Quantity Under QC</th>
                             <th>Condition</th>
                             <th>Project ID</th>
                             <th>Aging</th>
                             <th>Qty AV</th>
                             <th>Notes</th>
-                            <th>Unit of Measures</th>
+                            <th>Unit of Measures</th> */}
                           </tr>
                         </thead>
                         <tbody>
@@ -592,4 +592,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(MaterialStatWH);
+export default connect(mapStateToProps)(MaterialStock);
