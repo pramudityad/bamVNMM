@@ -92,8 +92,11 @@ const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUp
 const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabaseList'));
 const CPODatabaseDetail  = React.lazy(() => import('./views/CPODatabase/CPODatabaseDetail'));
 
-const MaterialStock  = React.lazy(() => import('./views/MR/MatStock'));
-const MaterialInboundPlan  = React.lazy(() => import('./views/MR/MatInboundPlan'));
+const MaterialStock  = React.lazy(() => import('./views/MR/WHStock/MatStock'));
+const MaterialStockDetail  = React.lazy(() => import('./views/MR/WHStock/MatStockDet'));
+
+const MaterialInboundPlan  = React.lazy(() => import('./views/MR/WHInbound/MatInboundPlan'));
+const MaterialInboundPlanDetail  = React.lazy(() => import('./views/MR/WHInbound/MatInboundPlanDet'));
 
 const ListCPOBoq = React.lazy(() => import('./views/TechnicalCPO/ListCPOBoq'));
 const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'));
@@ -159,7 +162,10 @@ const routes = [
   { path: '/bulk-mr-approval', name: 'Bulk MR Approval', component: BulkApproval },
 
   { path: '/material-stock', exact: true, name: 'Material Stock', component: MaterialStock },
+  { path: '/material-stock-detail/:id', exact: true, name: 'Material Stock Detail', component: MaterialStockDetail },
+
   { path: '/material-inbound-plan', exact: true, name: 'Material Inbound Plan', component: MaterialInboundPlan },
+  { path: '/material-inbound-detail/:id', exact: true, name: 'Material Inbound Plan Detail', component: MaterialInboundPlanDetail },
 
   { path: '/ps-upload/:id', exact: true, name: 'MR List', component: PSUpload },
   { path: '/mr-progress/:id', exact: true, name: 'MR Progress', component: MRProgress },

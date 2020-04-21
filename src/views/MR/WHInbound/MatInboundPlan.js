@@ -13,14 +13,13 @@ import { connect } from 'react-redux';
 import { Redirect, Route, Switch, Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
-import './MatStyle.css';
-
+import '../MatStyle.css';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
 );
 
-const DefaultNotif = React.lazy(() => import('../DefaultView/DefaultNotif'));
+const DefaultNotif = React.lazy(() => import('../../DefaultView/DefaultNotif'));
 
 const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
 const usernameBAM = 'adminbamidsuper';
@@ -29,7 +28,7 @@ const passwordBAM = 'F760qbAg2sml';
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 
-class MaterialStock extends React.Component {
+class MatInboundPlan extends React.Component {
 
   constructor(props) {
     super(props);
@@ -48,7 +47,7 @@ class MaterialStock extends React.Component {
       cpo_array: [],
       action_status: null,
       action_message: null,
-      po_op_data: [],
+      all_data: [],
       data_PO: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
@@ -138,7 +137,7 @@ class MaterialStock extends React.Component {
 
 
   changeFilterName(value) {
-    this.getPODataList();
+    this.getWHInboundList();
   }
 
   handleChangeFilter = (e) => {
@@ -151,14 +150,16 @@ class MaterialStock extends React.Component {
     });
   }
 
-  getPODataList() {
-    this.getDatafromAPINODE('/cpodb/getCpoDb')
+  getWHInboundList() {
+    // let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    // this.getDatatoAPIEXEL('/po_op?max_results=' + this.state.perPage + '&page=' + this.state.activePage + '&where={' + po_number + '}')
+    this.getDatafromAPINODE('/whInboundPlan/getWhInboundPlan')
       .then(res => {
-        console.log('all cpoDB', res.data)
+        // console.log('all cpoDB', res.data)
         if (res.data !== undefined) {
-          this.setState({ po_op_data: res.data.data })
+          this.setState({ all_data: res.data.data })
         } else {
-          this.setState({ po_op_data: []});
+          this.setState({ all_data: []});
         }
       })
   }
@@ -200,22 +201,6 @@ class MaterialStock extends React.Component {
     }
   }
 
-  // check Package Config
-  // fileHandlerMaterial = (event) => {
-  //   // this.toggleLoading();
-  //   let fileObj = event.target.files[0];
-  //   if (fileObj !== undefined) {
-  //     ExcelRenderer(fileObj, (err, rest) => {
-  //       if (err) {
-  //         console.log(err);
-  //       }
-  //       else {
-  //         console.log('excel arr ', rest.rows)
-  //         this.setState({ rowsXLS: rest.rows })
-  //       }
-  //     });
-  //   }
-  // }
 
   fileHandlerMaterial = (input) => {
     const file = input.target.files[0];
@@ -260,13 +245,13 @@ class MaterialStock extends React.Component {
   }
 
   componentDidMount() {
-    // this.getPODataList();
-    document.title = 'Material Status | BAM';
+    this.getWHInboundList();
+    document.title = 'Material Inbound Plan | BAM';
   }
 
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
-      this.getPODataList();
+      this.getWHInboundList();
     });
   }
 
@@ -290,7 +275,7 @@ class MaterialStock extends React.Component {
     this.setState({ POForm: dataForm });
   }
 
-  async getCPOFormat(dataImport) {
+  async getMatInboundFormat(dataImport) {
     const dataHeader = dataImport[0];
     const onlyParent = dataImport.map(e => e).filter(e => (this.checkValuetoString(e[this.getIndex(dataHeader, 'po_number')])));
     let cpo_array = [];
@@ -327,9 +312,9 @@ class MaterialStock extends React.Component {
 
   saveCPOBulk = async () => {
     this.toggleLoading();
-    const cpobulkXLS = this.state.rowsXLS;
-    const cpoData = await this.getCPOFormat(cpobulkXLS);
-    const res = await this.postDatatoAPINODE('/cpodb/createCpoDb', { 'poData': cpobulkXLS });
+    const BulkXLSX = this.state.rowsXLS;
+    // const cpoData = await this.getMatInboundFormat(BulkXLSX);
+    const res = await this.postDatatoAPINODE('/whInboundPlan/createWhInboundPlan', { 'inboundPlanData': BulkXLSX });
     if (res.data !== undefined) {
       this.setState({ action_status: 'success' });
       this.toggleLoading();
@@ -378,15 +363,16 @@ class MaterialStock extends React.Component {
     return s || undefined;
   }
 
-  exportMatStatus = async () => {
+  exportMatInbound = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(['Owner ID',	'SKU',	'Description',	'Qty On Hand',	'Qty Allocated',	'Quantity Planned for Inbound',	'Planned Inbound Date',	'Quantity In Transit',	'Quantity Under QC',	'Condition',	'Project ID',	'Aging',	'Qty AV',	'Notes',	'Unit of Measures']);
-    ws.addRow(['DDP-XLCOM',	'20/BFM107205/808',	'EQUIPPED CABINET/Enclosure 6140;ASO',	1,	1, '','','','',					'AV',	'1105.XLDDPJ12020',	37,	0,	'4521340214-1105.XLDDPJ12020-568548276'	]);
+    ws.addRow(["owner_id","po_number","arrival_date","id_project_doc","sku"]);
+    ws.addRow(["DDP-XLCOM","PO0001","2020-04-17","5df99ce5face981b7ace8822","1"]);
+    ws.addRow(["XLCOM","PO0002","2020-04-17","5df99ce5face981b7ace8823","2"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), 'Material Status Template.xlsx');
+    saveAs(new Blob([PPFormat]), 'Material Inbound Template.xlsx');
   }
 
 
@@ -398,7 +384,7 @@ class MaterialStock extends React.Component {
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{ marginTop: '8px', position: 'absolute' }}> Material Stock </span>
+                <span style={{ marginTop: '8px', position: 'absolute' }}>Material Inbound Plan</span>
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
@@ -407,7 +393,7 @@ class MaterialStock extends React.Component {
                         </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportMatStatus}> Material Status Template</DropdownItem>
+                        <DropdownItem onClick={this.exportMatInbound}> Material Inbound Template</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -455,7 +441,7 @@ class MaterialStock extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: '10px' }}>
-                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Material Stock List</span>
+                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Material Inbound List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                         <input className="search-box-material" type="text" name='filter' placeholder="Search Material" onChange={this.handleChangeFilter} value={this.state.filter_name} />
                       </div>
@@ -468,39 +454,28 @@ class MaterialStock extends React.Component {
                       <table hover bordered responsive size="sm" width='100%'>
                         <thead style={{ backgroundColor: '#73818f' }} className='fixed'>
                           <tr align="center">
-                            <th style={{ minWidth: '150px' }}> ID</th>
+                            <th style={{ minWidth: '150px' }}> Owner ID</th>
+                            <th>PO Number</th>
                             <th>SKU</th>
-                            <th>Description</th>
-                            <th>Qty On Hand</th>
-                            <th></th>
-                            <th>Qty Allocated by CEVA</th>
-                            <th>Qty Allocated by DPM</th>
-                            {/* <th>Quantity In Transit</th>
-                            <th>Quantity Under QC</th>
-                            <th>Condition</th>
-                            <th>Project ID</th>
-                            <th>Aging</th>
-                            <th>Qty AV</th>
-                            <th>Notes</th>
-                            <th>Unit of Measures</th> */}
+                            <th>SKU Desc</th>
+                            <th>Qty</th>
+                            {/* <th></th> */}
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.po_op_data.map(po =>
-                            <React.Fragment key={po._id + "frag"}>
-                              <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={po._id}>
-                                <td style={{ textAlign: 'center' }}>{po.po_number}</td>
-                                <td style={{ textAlign: 'center' }}>{po.date}</td>
-                                <td style={{ textAlign: 'center' }}>{po.currency}</td>
-                                <td style={{ textAlign: 'center' }}>{po.payment_terms}</td>
-                                <td style={{ textAlign: 'center' }}>{po.shipping_terms}</td>
-                                <td style={{ textAlign: 'center' }}>{po.contract}</td>
-                                <td style={{ textAlign: 'center' }}>{po.contact}</td>
-                                <td style={{ textAlign: 'center' }}>
-                                  <Link to={'/detail-list-cpo-database/' + po._id}>
+                          {this.state.all_data.map(e =>
+                            <React.Fragment key={e._id + "frag"}>
+                              <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={e._id}>
+                                <td style={{ textAlign: 'center' }}>{e.owner_id}</td>
+                                <td style={{ textAlign: 'center' }}>{e.po_number}</td>
+                                <td style={{ textAlign: 'center' }}>{e.sku}</td>
+                                <td style={{ textAlign: 'center' }}>{e.sku_description}</td>
+                                <td style={{ textAlign: 'center' }}>{e.qty}</td>
+                                {/* <td style={{ textAlign: 'center' }}>
+                                  <Link to={'/detail-list-cpo-database/' + e._id}>
                                     <Button color="primary" size="sm" style={{ marginRight: '10px' }}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                                   </Link>
-                                </td>
+                                </td> */}
                               </tr>
                             </React.Fragment>
                           )}
@@ -528,7 +503,7 @@ class MaterialStock extends React.Component {
         </Row>
 
         {/* Modal New PO */}
-        <Modal isOpen={this.state.modalPOForm} toggle={this.togglePOForm} className="modal--form-po">
+        <Modal isOpen={this.state.modalPOForm} toggle={this.togglePOForm} className="modal--form-e">
           <ModalHeader>Form CPO</ModalHeader>
           <ModalBody>
             <Row>
@@ -592,4 +567,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(MaterialStock);
+export default connect(mapStateToProps)(MatInboundPlan);

@@ -13,13 +13,14 @@ import { connect } from 'react-redux';
 import { Redirect, Route, Switch, Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
-import './MatStyle.css';
+import '../MatStyle.css';
+
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
 );
 
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const DefaultNotif = React.lazy(() => import('../../DefaultView/DefaultNotif'));
 
 const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
 const usernameBAM = 'adminbamidsuper';
@@ -28,7 +29,7 @@ const passwordBAM = 'F760qbAg2sml';
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 
-class MatInboundPlan extends React.Component {
+class MaterialStock extends React.Component {
 
   constructor(props) {
     super(props);
@@ -44,10 +45,10 @@ class MatInboundPlan extends React.Component {
       activePage: 1,
       total_data_PO: 0,
       rowsXLS: [],
-      cpo_array: [],
+      data_array: [],
       action_status: null,
       action_message: null,
-      po_op_data: [],
+      all_data: [],
       data_PO: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
@@ -137,7 +138,7 @@ class MatInboundPlan extends React.Component {
 
 
   changeFilterName(value) {
-    this.getPODataList();
+    this.getWHStockList();
   }
 
   handleChangeFilter = (e) => {
@@ -150,16 +151,14 @@ class MatInboundPlan extends React.Component {
     });
   }
 
-  getPODataList() {
-    // let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
-    // this.getDatatoAPIEXEL('/po_op?max_results=' + this.state.perPage + '&page=' + this.state.activePage + '&where={' + po_number + '}')
-    this.getDatafromAPINODE('/cpodb/getCpoDb')
+  getWHStockList() {
+    this.getDatafromAPINODE('/whStock/getWhStock')
       .then(res => {
-        console.log('all cpoDB', res.data)
+        console.log('all data ', res.data)
         if (res.data !== undefined) {
-          this.setState({ po_op_data: res.data.data })
+          this.setState({ all_data: res.data.data })
         } else {
-          this.setState({ po_op_data: []});
+          this.setState({ all_data: []});
         }
       })
   }
@@ -200,23 +199,6 @@ class MatInboundPlan extends React.Component {
       return value2;
     }
   }
-
-  // check Package Config
-  // fileHandlerMaterial = (event) => {
-  //   // this.toggleLoading();
-  //   let fileObj = event.target.files[0];
-  //   if (fileObj !== undefined) {
-  //     ExcelRenderer(fileObj, (err, rest) => {
-  //       if (err) {
-  //         console.log(err);
-  //       }
-  //       else {
-  //         console.log('excel arr ', rest.rows)
-  //         this.setState({ rowsXLS: rest.rows })
-  //       }
-  //     });
-  //   }
-  // }
 
   fileHandlerMaterial = (input) => {
     const file = input.target.files[0];
@@ -261,13 +243,13 @@ class MatInboundPlan extends React.Component {
   }
 
   componentDidMount() {
-    // this.getPODataList();
-    document.title = 'Material Inbound Plan | BAM';
+    this.getWHStockList();
+    document.title = 'Material Stock | BAM';
   }
 
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
-      this.getPODataList();
+      this.getWHStockList();
     });
   }
 
@@ -291,34 +273,38 @@ class MatInboundPlan extends React.Component {
     this.setState({ POForm: dataForm });
   }
 
-  async getCPOFormat(dataImport) {
+  async getMatStockFormat(dataImport) {
     const dataHeader = dataImport[0];
-    const onlyParent = dataImport.map(e => e).filter(e => (this.checkValuetoString(e[this.getIndex(dataHeader, 'po_number')])));
-    let cpo_array = [];
+    const onlyParent = dataImport.map(e => e).filter(e => (this.checkValuetoString(e[this.getIndex(dataHeader, 'owner_id')])));
+    let data_array = [];
     if (onlyParent !== undefined && onlyParent.length !== 0) {
       for (let i = 1; i < onlyParent.length; i++) {
-        const cpo = {
+        const aa = {
+          "owner_id": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'owner_id')]),
           "po_number": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'po_number')]),
-          "date": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'date')]),
-          "currency": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'currency')]),
-          "payment_terms": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'payment_terms')]),
-          "shipping_terms": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'shipping_terms')]),
-          "contract": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'contract')]),
-          "contact": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'contact')]),
+          "arrival_date": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'arrival_date')]),
+          "id_project_doc": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'id_project_doc')]),
+          "sku": this.checkValue(onlyParent[i][this.getIndex(dataHeader, 'sku')]),
         }
-        if (cpo.po_number !== undefined && cpo.po_number !== null) {
-          cpo["po_number"] = cpo.po_number.toString();
+        if (aa.owner_id !== undefined && aa.owner_id !== null) {
+          aa["owner_id"] = aa.owner_id.toString();
         }
-        if (cpo.year !== undefined && cpo.year !== null) {
-          cpo["po_year"] = cpo.year.toString();
+        if (aa.po_number !== undefined && aa.po_number !== null) {
+          aa["po_number"] = aa.po_number.toString();
         }
-        if (cpo.currency !== undefined && cpo.currency !== null) {
-          cpo["currency"] = cpo.currency.toString();
+        if (aa.arrival_date !== undefined && aa.arrival_date !== null) {
+          aa["arrival_date"] = aa.arrival_date.toString();
         }
-        cpo_array.push(cpo);
+        if (aa.id_project_doc !== undefined && aa.id_project_doc !== null) {
+          aa["id_project_doc"] = aa.id_project_doc.toString();
+        }
+        if (aa.sku !== undefined && aa.sku !== null) {
+          aa["sku"] = aa.sku.toString();
+        }
+        data_array.push(aa);
       }
-      // console.log(JSON.stringify(cpo_array));
-      return cpo_array;
+      // console.log(JSON.stringify(data_array));
+      return data_array;
     } else {
       this.setState({ action_status: 'failed', action_message: 'Please check your format' }, () => {
         this.toggleLoading();
@@ -326,11 +312,12 @@ class MatInboundPlan extends React.Component {
     }
   }
 
-  saveCPOBulk = async () => {
+  saveMatStockWHBulk = async () => {
     this.toggleLoading();
-    const cpobulkXLS = this.state.rowsXLS;
-    const cpoData = await this.getCPOFormat(cpobulkXLS);
-    const res = await this.postDatatoAPINODE('/cpodb/createCpoDb', { 'poData': cpobulkXLS });
+    const BulkXLSX = this.state.rowsXLS;
+    // const BulkData = await this.getMatStockFormat(BulkXLSX);
+    const res = await this.postDatatoAPINODE('/whStock/createWhStock', { 'stockData': BulkXLSX });
+    // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
       this.setState({ action_status: 'success' });
       this.toggleLoading();
@@ -379,15 +366,17 @@ class MatInboundPlan extends React.Component {
     return s || undefined;
   }
 
-  exportMatInbound = async () => {
+  exportMatStatus = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(['Owner ID',	'PO Number',	'Planned Arrival Date',	'SKU (Material Code)',	'SKU Description (Material Description)',	'Quantity Available',	'Serial Number',	'Ageing',	'Project ID',	'Box Number',	'Condition',	'Notes']);
-    // ws.addRow(["PO0001","2020-02-21","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com"]);
+    ws.addRow(["owner_id","po_number","arrival_date","id_project_doc","sku"]);
+    ws.addRow(["DDP-XLCOM","PO0001","2020-04-17","5df99ce5face981b7ace8822","1"]);
+    ws.addRow(["XLCOM","PO0002","2020-04-17","5df99ce5face981b7ace8823","2"]);
+
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), 'Material Inbound Template.xlsx');
+    saveAs(new Blob([PPFormat]), 'Material Stock Template.xlsx');
   }
 
 
@@ -399,7 +388,7 @@ class MatInboundPlan extends React.Component {
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{ marginTop: '8px', position: 'absolute' }}>Material Inbound Plan</span>
+                <span style={{ marginTop: '8px', position: 'absolute' }}> Material Stock </span>
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
@@ -408,7 +397,7 @@ class MatInboundPlan extends React.Component {
                         </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportMatInbound}> Material Inbound Template</DropdownItem>
+                        <DropdownItem onClick={this.exportMatStatus}> Material Stock Template</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -447,7 +436,7 @@ class MatInboundPlan extends React.Component {
                     </div>
                   </CardBody>
                   <CardFooter>
-                    <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveCPOBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
+                    <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveMatStockWHBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
                     {/* <Button color="primary" style={{ float: 'right' }} onClick={this.togglePOForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button> */}
                   </CardFooter>
                 </Card>
@@ -456,7 +445,7 @@ class MatInboundPlan extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: '10px' }}>
-                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Material Inbound List</span>
+                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Material Stock List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                         <input className="search-box-material" type="text" name='filter' placeholder="Search Material" onChange={this.handleChangeFilter} value={this.state.filter_name} />
                       </div>
@@ -469,36 +458,28 @@ class MatInboundPlan extends React.Component {
                       <table hover bordered responsive size="sm" width='100%'>
                         <thead style={{ backgroundColor: '#73818f' }} className='fixed'>
                           <tr align="center">
-                            <th style={{ minWidth: '150px' }}>Owner ID</th>
+                            <th style={{ minWidth: '150px' }}> Owner ID</th>
                             <th>PO Number</th>
-                            <th>Planned Arrival Date</th>
-                            <th>SKU (Material Code)</th>
-                            <th>SKU Description (Material Description)</th>
-                            <th>Quantity Available</th>
-                            <th>Serial Number</th>
-                            <th>Aging</th>
-                            <th>Project ID</th>
-                            <th>Box Number</th>
-                            <th>Condition</th>
-                            <th>Notes</th>
+                            <th>SKU</th>
+                            <th>SKU Desc</th>
+                            <th>Qty</th>
+                            {/* <th></th> */}
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.po_op_data.map(po =>
-                            <React.Fragment key={po._id + "frag"}>
-                              <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={po._id}>
-                                <td style={{ textAlign: 'center' }}>{po.po_number}</td>
-                                <td style={{ textAlign: 'center' }}>{po.date}</td>
-                                <td style={{ textAlign: 'center' }}>{po.currency}</td>
-                                <td style={{ textAlign: 'center' }}>{po.payment_terms}</td>
-                                <td style={{ textAlign: 'center' }}>{po.shipping_terms}</td>
-                                <td style={{ textAlign: 'center' }}>{po.contract}</td>
-                                <td style={{ textAlign: 'center' }}>{po.contact}</td>
-                                <td style={{ textAlign: 'center' }}>
-                                  <Link to={'/detail-list-cpo-database/' + po._id}>
+                          {this.state.all_data.map(e =>
+                            <React.Fragment key={e._id + "frag"}>
+                              <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={e._id}>
+                                <td style={{ textAlign: 'center' }}>{e.owner_id}</td>
+                                <td style={{ textAlign: 'center' }}>{e.po_number}</td>
+                                <td style={{ textAlign: 'center' }}>{e.sku}</td>
+                                <td style={{ textAlign: 'center' }}>{e.sku_description}</td>
+                                <td style={{ textAlign: 'center' }}>{e.qty}</td>
+                                {/* <td style={{ textAlign: 'center' }}>
+                                  <Link to={'/detail-list-cpo-database/' + e._id}>
                                     <Button color="primary" size="sm" style={{ marginRight: '10px' }}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                                   </Link>
-                                </td>
+                                </td> */}
                               </tr>
                             </React.Fragment>
                           )}
@@ -526,7 +507,7 @@ class MatInboundPlan extends React.Component {
         </Row>
 
         {/* Modal New PO */}
-        <Modal isOpen={this.state.modalPOForm} toggle={this.togglePOForm} className="modal--form-po">
+        <Modal isOpen={this.state.modalPOForm} toggle={this.togglePOForm} className="modal--form-e">
           <ModalHeader>Form CPO</ModalHeader>
           <ModalBody>
             <Row>
@@ -590,4 +571,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(MatInboundPlan);
+export default connect(mapStateToProps)(MaterialStock);
