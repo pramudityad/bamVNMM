@@ -160,6 +160,13 @@ const routes = [
   { path: '/bulk-mr-request', name: 'Bulk MR Request', component: BulkRequest },
   { path: '/bulk-mr-change-approval', name: 'Bulk MR Change Approval', component: BulkChangeApproval },
   { path: '/bulk-mr-approval', name: 'Bulk MR Approval', component: BulkApproval },
+
+  { path: '/material-stock', exact: true, name: 'Material Stock', component: MaterialStock },
+  { path: '/material-stock-detail/:id', exact: true, name: 'Material Stock Detail', component: MaterialStockDetail },
+
+  { path: '/material-inbound-plan', exact: true, name: 'Material Inbound Plan', component: MaterialInboundPlan },
+  { path: '/material-inbound-detail/:id', exact: true, name: 'Material Inbound Plan Detail', component: MaterialInboundPlanDetail },
+
   { path: '/ps-upload/:id', exact: true, name: 'MR List', component: PSUpload },
   { path: '/mr-progress/:id', exact: true, name: 'MR Progress', component: MRProgress },
   { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WarehouseDashboard },
