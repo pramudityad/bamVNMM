@@ -12,7 +12,7 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 class LoadingProcess extends Component {
   constructor(props) {
@@ -190,60 +190,6 @@ class LoadingProcess extends Component {
       this.setState({action_status: 'failed', action_message: 'Sorry, there is something wrong, please try again!'});
       console.log('respond patch data', err);
       return respond;
-    }
-  }
-
-  async getDataFromAPINODE(url) {
-    try {
-      let respond = await axios.get(API_URL_NODE+url, {
-        headers : {
-          'Content-Type':'application/json',
-          'Authorization': 'Bearer '+this.state.tokenUser
-        },
-      });
-      if(respond.status >= 200 && respond.status < 300) {
-        console.log("respond data", respond);
-      }
-      return respond;
-    } catch(err) {
-      let respond = err;
-      console.log("respond data", err);
-      return respond;
-    }
-  }
-
-  async patchDatatoAPINODE(url, data){
-    try {
-      let respond = await axios.patch(API_URL_NODE +url, data, {
-        headers : {
-          'Content-Type':'application/json',
-          'Authorization': 'Bearer '+this.state.tokenUser
-        },
-      })
-      if(respond.status >= 200 && respond.status < 300){
-        console.log("respond Post Data", respond);
-      }
-      return respond;
-    }catch (err) {
-      let respond = err;
-      this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
-      console.log("respond Post Data", err);
-      return respond;
-    }
-  }
-
-  async proceedMilestone2(e) {
-    const _id = e.target.id;
-    let successUpdate = [];
-    let res = await this.patchDatatoAPINODE('/matreq/loadingProcess/'+_id);
-    if(res !== undefined) {
-      if(res.data !== undefined) {
-        successUpdate.push(res.data);
-      }
-    }
-    if(successUpdate.length !== 0){
-      this.setState({action_status : "success"});
-      setTimeout(function(){ window.location.reload(); }, 2000);
     }
   }
 

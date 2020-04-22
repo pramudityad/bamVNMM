@@ -203,9 +203,7 @@ class OrderReceived extends Component {
     if(res !== undefined) {
       if(res.data !== undefined) {
         this.setState({action_status : "success"});
-        this.getMRList();
-        // setTimeout(function(){this.setState({action_status : null, action_message : null}) }, 2000);
-        // setTimeout(function(){ window.location.reload(); }, 2000);
+        setTimeout(function(){ window.location.reload(); }, 2000);
       }else{
         if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
           if(res.response.data.error.message !== undefined){
