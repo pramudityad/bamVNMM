@@ -12,6 +12,8 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class LOMList extends Component {
   constructor(props) {
     super(props);
@@ -21,6 +23,7 @@ class LOMList extends Component {
       userId : this.props.dataLogin._id,
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
       mr_list : [],
       prevPage : 0,
       activePage : 1,
@@ -172,44 +175,51 @@ class LOMList extends Component {
     }
   }
 
+  async patchDatatoAPINODE(url, data){
+    try {
+      let respond = await axios.patch(API_URL_NODE +url, data, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+      console.log("respond Post Data", err);
+      return respond;
+    }
+  }
+
   async proceedMilestone(e) {
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
-    const dataMR = this.state.mr_list.find(e => e._id === _id);
-    let currStatus = [
-      {
-          "mr_status_name": "MATERIAL_REQUEST",
-          "mr_status_value": "APPROVED",
-          "mr_status_date": dateNow,
-          "mr_status_updater": this.state.userEmail,
-          "mr_status_updater_id": this.state.userId
-      }
-    ];
-    let currMilestones = [
-      {
-          "ms_name": "MS_ORDER_RECEIVED",
-          "ms_date": dateNow,
-          "ms_updater": this.state.userEmail,
-          "ms_updater_id": this.state.userId
-      }
-    ];
-    let successUpdate = [];
-    let updateMR = {};
-    updateMR['current_milestones'] = "MS_ORDER_RECEIVED";
-    updateMR['current_mr_status'] = "MR APPROVED";
-    updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
-    updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
-    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
+    let res = await this.patchDatatoAPINODE('/matreq/confirmLOM/'+_id, { "confirmation_value" : 1 });
     if(res !== undefined) {
       if(res.data !== undefined) {
-        successUpdate.push(res.data);
+        this.setState({action_status : "success"});
+        this.getMRList();
+        // setTimeout(function(){this.setState({action_status : null, action_message : null}) }, 2000);
+        // setTimeout(function(){ window.location.reload(); }, 2000);
+      }else{
+        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+          if(res.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
       }
-    }
-    if(successUpdate.length !== 0){
-      this.setState({action_status : "success"});
-      setTimeout(function(){ window.location.reload(); }, 2000);
+    }else{
+      this.setState({action_status : "failed"});
     }
   }
 
@@ -218,30 +228,27 @@ class LOMList extends Component {
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
-    const dataMR = this.state.mr_list.find(e => e._id === _id);
-    let currStatus = [
-      {
-          "mr_status_name": "MATERIAL_REQUEST",
-          "mr_status_value": "REJECTED",
-          "mr_status_date": dateNow,
-          "mr_status_updater": this.state.userEmail,
-          "mr_status_updater_id": this.state.userId
-      }
-    ];
-    let successUpdate = [];
-    let updateMR = {};
-    updateMR['current_milestones'] = null;
-    updateMR['current_mr_status'] = "MR CANCELED";
-    updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
-    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
+    let res = await this.patchDatatoAPINODE('/matreq/confirmLOM/'+_id, { "confirmation_value" : 2 });
+    // let resRtd = await this.patchDatatoAPINODE('/matreq/requestRTD/'+_id);
     if(res !== undefined) {
       if(res.data !== undefined) {
-        successUpdate.push(res.data);
+        this.setState({action_status : "success"});
+        this.getMRList();
+        // setTimeout(function(){this.setState({action_status : null, action_message : null}) }, 2000);
+        // setTimeout(function(){ window.location.reload(); }, 2000);
+      }else{
+        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+          if(res.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
       }
-    }
-    if(successUpdate.length !== 0){
-      this.setState({action_status : "success"});
-      setTimeout(function(){ window.location.reload(); }, 2000);
+    }else{
+      this.setState({action_status : "failed"});
     }
   }
 
@@ -324,7 +331,7 @@ class LOMList extends Component {
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
               </CardHeader>
               <CardBody>
-                <Table responsive striped bordered size="sm"> 
+                <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
                       <th rowSpan="2" style={{verticalAlign: "middle"}}>Action</th>
@@ -492,7 +499,7 @@ class LOMList extends Component {
                         <td colSpan="15">No Data Available</td>
                       </tr>
                     )}
-                    {this.state.mr_list.map((list, i) => 
+                    {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
                           <Button outline color="success" size="sm" className="btn-pill" style={{width: "150px", marginBottom: "4px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-check" style={{marginRight: "8px"}}></i>Send With LOM</Button>
@@ -516,7 +523,7 @@ class LOMList extends Component {
                     )}
                   </tbody>
                 </Table>
-                <Pagination 
+                <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
                   totalItemsCount={this.state.totalData.total}

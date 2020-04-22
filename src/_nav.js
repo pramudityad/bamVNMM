@@ -109,6 +109,22 @@ export default {
       ]
     },
     {
+      name: 'Warehouse',
+      icon: 'icon-list',
+      children: [
+        {
+          name: 'WH Stock',
+          url: '/material-stock',
+          icon: 'icon-list',
+        },
+        {
+          name: 'WH Inbound Plan',
+          url: '/material-inbound-plan',
+          icon: 'icon-list',
+        }
+      ]
+    },
+    {
       name: 'DSA List',
       url: '/dsa-list',
       icon: 'icon-list',

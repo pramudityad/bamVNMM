@@ -17,6 +17,8 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
@@ -26,10 +28,11 @@ class PSUpload extends Component {
     super(props);
 
     this.state = {
-        userRole : this.props.dataLogin.role,
-        userId : this.props.dataLogin._id,
-        userName : this.props.dataLogin.userName,
-        userEmail : this.props.dataLogin.email,
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
         data_mr : null,
         list_tssr : [],
         list_tssr_for_selection : [],
@@ -46,13 +49,48 @@ class PSUpload extends Component {
         redirectSign : false,
         action_status : null,
         action_message : null,
+        material_wh : [],
+        material_inbound : [],
     };
     this.handleChangeTSSR = this.handleChangeTSSR.bind(this);
     this.getQtyTssrPPNE = this.getQtyTssrPPNE.bind(this);
     this.getQtyTssrPPFE = this.getQtyTssrPPFE.bind(this);
-    this.saveMRtoAPI = this.saveMRtoAPI.bind(this);
+    // this.saveMRtoAPI = this.saveMRtoAPI.bind(this);
     this.editQtyNE = this.editQtyNE.bind(this);
     this.editQtyFE = this.editQtyFE.bind(this);
+    this.connectPlantSpectoTSSR = this.connectPlantSpectoTSSR.bind(this);
+    this.getDataWarehouse = this.getDataWarehouse.bind(this);
+    this.getDataInbound = this.getDataInbound.bind(this);
+  }
+
+  async getDataFromAPINODEWithParams(url) {
+    try {
+      let respond = await axios({
+        method : "get",
+        url : API_URL_NODE+url,
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+        params :{
+
+        }
+      })
+      // let respond = await axios.get(API_URL_NODE+url, {
+      //   headers : {
+      //     'Content-Type':'application/json',
+      //     'Authorization': 'Bearer '+this.state.tokenUser
+      //   },
+      // });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
   }
 
   async getDatafromAPIBMS(url){
@@ -135,8 +173,66 @@ class PSUpload extends Component {
     }
   }
 
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios.get(API_URL_NODE+url, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data node", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data node", err);
+      return respond;
+    }
+  }
+
+  async patchDatatoAPINODE(url, data){
+    try {
+      let respond = await axios.patch(API_URL_NODE +url, data, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+      console.log("respond Post Data", err);
+      return respond;
+    }
+  }
+
+  async postDatatoAPINODE(url, data) {
+    try {
+      let respond = await axios.post(API_URL_NODE+url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond post data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond post data", err.response);
+      return respond;
+    }
+  }
+
   getListTssrAll(){
-    this.getDatafromAPIBAM('/tssr_sorted_nonpage?projection={"project_name" : 1, "no_tssr_boq" : 1, "_id" : 1 }').then( res => {
+    this.getDatafromAPIBAM('/tssr_sorted_nonpage?projection={"project_name" : 1, "no_tssr_boq" : 1, "_id" : 1, "version" : 1 }').then( res => {
       if(res.data !== undefined){
         const items = res.data._items;
         this.setState({ list_tssr : items }, () => {
@@ -172,44 +268,108 @@ class PSUpload extends Component {
   }
 
   getDataTssr(_id_tssr){
-    this.getDatafromAPIBAM('/tssr_op/'+_id_tssr).then( resTssr => {
+    this.getDataFromAPINODE('/tssrdata/'+_id_tssr).then( resTssr => {
       if(resTssr.data !== undefined){
-        this.setState({ data_tssr : resTssr.data });
-        this.getDatafromAPIBAM('/tssr_sites_sorted_nonpage?where={"id_tssr_boq_doc" : "'+_id_tssr+'"}').then( resSites => {
-          if(resSites.data !== undefined){
-            this.getDatafromAPIBAM('/tssr_site_items_sorted_nonpage?where={"id_tssr_boq_doc" : "'+_id_tssr+'"}').then( resItem => {
-              if(resItem.data !== undefined){
-                const itemsTssr = resItem.data._items;
-                const itemUniq = [...new Set(itemsTssr.map(({ id_pp_doc}) => id_pp_doc))];
-                this.setState({ data_tssr_sites : resSites.data._items, data_tssr_sites_item : resItem.data._items }, () => {
-                  this.getPPandMaterial(itemUniq);
-                  this.prepareView();
-                });
-              }
-            })
-          }
-        })
+        this.setState({ data_tssr : resTssr.data.data });
+        this.prepareView(resTssr.data.data)
       }
     })
+    // this.getDatafromAPIBAM('/tssr_op/'+_id_tssr).then( resTssr => {
+    //   if(resTssr.data !== undefined){
+    //     this.setState({ data_tssr : resTssr.data });
+    //     this.getDatafromAPIBAM('/tssr_sites_sorted_nonpage?where={"id_tssr_boq_doc" : "'+_id_tssr+'"}').then( resSites => {
+    //       if(resSites.data !== undefined){
+    //         this.getDatafromAPIBAM('/tssr_site_items_sorted_nonpage?where={"id_tssr_boq_doc" : "'+_id_tssr+'"}').then( resItem => {
+    //           if(resItem.data !== undefined){
+    //             const itemsTssr = resItem.data._items;
+    //             const itemUniq = [...new Set(itemsTssr.map(({ id_pp_doc}) => id_pp_doc))];
+    //             this.setState({ data_tssr_sites : resSites.data._items, data_tssr_sites_item : resItem.data._items }, () => {
+    //               this.getPPandMaterial(itemUniq);
+    //               this.prepareView();
+    //             });
+    //           }
+    //         })
+    //       }
+    //     })
+    //   }
+    // })
   }
 
-  prepareView(){
-    let site_NE = this.state.data_tssr_sites.find(e => e.site_title === "NE");
-    let site_FE = this.state.data_tssr_sites.find(e => e.site_title === "FE");
-    console.log("site_NE", site_NE);
+  prepareView(dataTSSR){
+    const dataMR = this.state.data_mr;
+    let site_mr_NE = dataMR.site_info.find(e => e.site_title === "NE");
+    let site_mr_FE = dataMR.site_info.find(e => e.site_title === "FE");
+    let site_NE;
+    let site_FE;
+    if(site_mr_NE !== undefined){
+      site_NE = dataTSSR.siteList.find(e => e.site_info.site_id === site_mr_NE.site_id);
+      console.log("site_NE", site_NE);
+    }
+    if(site_mr_FE !== undefined){
+      site_FE = dataTSSR.siteList.find(e => e.site_info.site_id === site_mr_FE.site_id);
+      console.log("site_FE", site_FE);
+    }
     if(site_NE !== undefined){
-      site_NE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_NE._id);
-      this.setState({tssr_site_NE : site_NE});
-    }else{
-      this.setState({tssr_site_NE : null})
+      this.setState({tssr_site_NE : site_NE})
     }
     if(site_FE !== undefined){
-      site_FE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_FE._id);
-      this.setState({tssr_site_FE : site_FE});
-    }else{
-      this.setState({tssr_site_FE : null})
+      this.setState({tssr_site_FE : site_FE})
+    }
+    this.getDataWarehouse(dataTSSR.siteList[0].site_items);
+    this.getDataInbound(dataTSSR.siteList[0].site_items);
+  }
+
+  async getDataWarehouse(data_tssr) {
+    let listSku = [];
+    if(data_tssr !== null && data_tssr !== undefined) {
+      data_tssr.map(pp => pp.material_detail.map(material => listSku.push(material.material_id)));
+      listSku = [...new Set(listSku)];
+      let skuData = {
+        "sku" : listSku
+      }
+      const respondSKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', skuData);
+      if(respondSKU.data !== undefined && respondSKU.status >= 200 && respondSKU.status <= 300 ){
+        let array_sku = [];
+        respondSKU.data.data.map(sku => sku.map(sku2 => array_sku.push({"sku":sku2.sku, "qty_sku":sku2.qty_sku})));
+        this.setState({ material_wh : array_sku });
+      }
     }
   }
+
+  async getDataInbound(data_tssr) {
+    let listSku = [];
+    if(data_tssr !== null && data_tssr !== undefined) {
+      data_tssr.map(pp => pp.material_detail.map(material => listSku.push(material.material_id)));
+      listSku = [...new Set(listSku)];
+      let skuData = {
+        "sku" : listSku
+      }
+      const respondSKU = await this.postDatatoAPINODE('/whInboundPlan/getWhInboundPlanbySku', skuData);
+      if(respondSKU.data !== undefined && respondSKU.status >= 200 && respondSKU.status <= 300 ){
+        let array_sku = [];
+        respondSKU.data.data.map(sku => sku.map(sku2 => array_sku.push({"sku":sku2.sku, "qty_sku":sku2.qty_sku})));
+        this.setState({ material_inbound : array_sku });
+      }
+    }
+  }
+
+  // prepareView(){
+  //   let site_NE = this.state.data_tssr_sites.find(e => e.site_title === "NE");
+  //   let site_FE = this.state.data_tssr_sites.find(e => e.site_title === "FE");
+  //   console.log("site_NE", site_NE);
+  //   if(site_NE !== undefined){
+  //     site_NE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_NE._id);
+  //     this.setState({tssr_site_NE : site_NE});
+  //   }else{
+  //     this.setState({tssr_site_NE : null})
+  //   }
+  //   if(site_FE !== undefined){
+  //     site_FE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_FE._id);
+  //     this.setState({tssr_site_FE : site_FE});
+  //   }else{
+  //     this.setState({tssr_site_FE : null})
+  //   }
+  // }
 
   async getPSAllocated(){
     const data_tssr_id = this.state.id_tssr_selected;
@@ -300,245 +460,348 @@ class PSUpload extends Component {
     }
   }
 
-    async saveMRtoAPI(){
-      const dataMRParent = this.state.data_mr;
-      const dataTSSRParent = this.state.data_tssr;
-      const dataTSSRBOMNE = this.state.tssr_site_NE;
-      const dataTSSRBOMFE = this.state.tssr_site_FE;
-      const newDate = new Date();
-      const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-      let site_info = [];
-      let mr_data = {
-        "site_info" : [],
-        "mr_milestones" : [],
-        "current_mr_status" : "PLANTSPEC ASSIGNED",
-        "current_milestones" : "",
-        "created_by" : this.state.userId,
-        "updated_by" : this.state.userId
-      };
-      //Add Site Info
-      if(dataMRParent.site_info.length !== 0){
-        let dataSiteNE = dataMRParent.site_info.find(e => e.site_id === dataTSSRBOMNE.site_id);
-        if(dataSiteNE !== undefined){
-          dataSiteNE["id_tssr_boq_site_doc"] = dataTSSRBOMNE._id;
-          dataSiteNE["no_tssr_boq_site"] = dataTSSRBOMNE.no_tssr_boq_site;
-          dataSiteNE["tssr_version"] = dataTSSRBOMNE.version === undefined ? "0" : dataTSSRBOMNE.version;
-          mr_data["site_info"].push(dataSiteNE);
-        }else{
-          const dataNewSiteNE = {
-              "id_site_doc" : dataTSSRBOMNE.id_site_doc,
-              "site_id" : dataTSSRBOMNE.site_id,
-              "site_name" : dataTSSRBOMNE.site_name,
-              "site_title": "NE",
-              "id_tssr_boq_site_doc" : dataTSSRBOMNE._id,
-              "no_tssr_boq_site" : dataTSSRBOMNE.no_tssr_boq_site,
-              "tssr_version" : dataTSSRBOMNE.version === undefined ? "0" : dataTSSRBOMNE.version,
-          };
-          mr_data["site_info"].push(dataNewSiteNE);
-        };
-        //IF There is Site FE
-        if(this.state.tssr_site_FE !== null){
-          let dataSiteFE = dataMRParent.site_info.find(e => e.site_id === dataTSSRBOMFE.site_id);
-          if(dataSiteFE !== undefined){
-            dataSiteFE["id_tssr_boq_site_doc"] = dataTSSRBOMFE._id;
-            dataSiteFE["no_tssr_boq_site"] = dataTSSRBOMFE.no_tssr_boq_site;
-            dataSiteFE["tssr_version"] = dataTSSRBOMFE.version === undefined ? "0" : dataTSSRBOMFE.version;
-            mr_data["site_info"].push(dataSiteFE);
-          }else{
-            const dataNewSiteFE = {
-                "id_site_doc": dataTSSRBOMFE.id_site_doc,
-                "site_id": dataTSSRBOMFE.site_id,
-                "site_name" : dataTSSRBOMFE.site_name,
-                "site_title": "FE",
-                "id_tssr_boq_site_doc" : dataTSSRBOMFE._id,
-                "no_tssr_boq_site" : dataTSSRBOMFE.no_tssr_boq_site,
-                "tssr_version" : dataTSSRBOMFE.version === undefined ? "0" : dataTSSRBOMFE.version,
+    // async saveMRtoAPI(){
+    //   const dataMRParent = this.state.data_mr;
+    //   const dataTSSRParent = this.state.data_tssr;
+    //   const dataTSSRBOMNE = this.state.tssr_site_NE;
+    //   const dataTSSRBOMFE = this.state.tssr_site_FE;
+    //   const newDate = new Date();
+    //   const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    //   let site_info = [];
+    //   let mr_data = {
+    //     "site_info" : [],
+    //     "mr_milestones" : [],
+    //     "current_mr_status" : "PLANTSPEC ASSIGNED",
+    //     "current_milestones" : "",
+    //     "created_by" : this.state.userId,
+    //     "updated_by" : this.state.userId
+    //   };
+    //   //Add Site Info
+    //   if(dataMRParent.site_info.length !== 0){
+    //     let dataSiteNE = dataMRParent.site_info.find(e => e.site_id === dataTSSRBOMNE.site_id);
+    //     if(dataSiteNE !== undefined){
+    //       dataSiteNE["id_tssr_boq_site_doc"] = dataTSSRBOMNE._id;
+    //       dataSiteNE["no_tssr_boq_site"] = dataTSSRBOMNE.no_tssr_boq_site;
+    //       dataSiteNE["tssr_version"] = dataTSSRBOMNE.version === undefined ? "0" : dataTSSRBOMNE.version;
+    //       mr_data["site_info"].push(dataSiteNE);
+    //     }else{
+    //       const dataNewSiteNE = {
+    //           "id_site_doc" : dataTSSRBOMNE.id_site_doc,
+    //           "site_id" : dataTSSRBOMNE.site_id,
+    //           "site_name" : dataTSSRBOMNE.site_name,
+    //           "site_title": "NE",
+    //           "id_tssr_boq_site_doc" : dataTSSRBOMNE._id,
+    //           "no_tssr_boq_site" : dataTSSRBOMNE.no_tssr_boq_site,
+    //           "tssr_version" : dataTSSRBOMNE.version === undefined ? "0" : dataTSSRBOMNE.version,
+    //       };
+    //       mr_data["site_info"].push(dataNewSiteNE);
+    //     };
+    //     //IF There is Site FE
+    //     if(this.state.tssr_site_FE !== null){
+    //       let dataSiteFE = dataMRParent.site_info.find(e => e.site_id === dataTSSRBOMFE.site_id);
+    //       if(dataSiteFE !== undefined){
+    //         dataSiteFE["id_tssr_boq_site_doc"] = dataTSSRBOMFE._id;
+    //         dataSiteFE["no_tssr_boq_site"] = dataTSSRBOMFE.no_tssr_boq_site;
+    //         dataSiteFE["tssr_version"] = dataTSSRBOMFE.version === undefined ? "0" : dataTSSRBOMFE.version;
+    //         mr_data["site_info"].push(dataSiteFE);
+    //       }else{
+    //         const dataNewSiteFE = {
+    //             "id_site_doc": dataTSSRBOMFE.id_site_doc,
+    //             "site_id": dataTSSRBOMFE.site_id,
+    //             "site_name" : dataTSSRBOMFE.site_name,
+    //             "site_title": "FE",
+    //             "id_tssr_boq_site_doc" : dataTSSRBOMFE._id,
+    //             "no_tssr_boq_site" : dataTSSRBOMFE.no_tssr_boq_site,
+    //             "tssr_version" : dataTSSRBOMFE.version === undefined ? "0" : dataTSSRBOMFE.version,
+    //         }
+    //         mr_data["site_info"].push(dataNewSiteFE)
+    //       }
+    //     }
+    //   }
+    //   let currStatus = [
+    //     {
+    //         "mr_status_name": "PLANTSPEC",
+    //         "mr_status_value": "ASSIGNED",
+    //         "mr_status_date": dateNow,
+    //         "mr_status_updater": this.state.userEmail,
+    //         "mr_status_updater_id": this.state.userId
+    //     }
+    //   ];
+    //   mr_data["mr_status"] = dataMRParent.mr_status.concat(currStatus);
+    //   const respondSaveMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMRParent._id, mr_data, dataMRParent._etag);
+    //   if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
+    //     this.saveMrPPtoAPI(dataMRParent._id, dataMRParent.mr_id, respondSaveMR.data._etag);
+    //   }else{
+    //     this.setState({action_status : 'failed'});
+    //   }
+    // }
+
+  // async saveMrPPtoAPI(_id_mr, mr_id, _etag_mr){
+  //   const dataPPTssr = this.state.list_pp_material_tssr;
+  //   const dataTSSRBOMNE = this.state.tssr_site_NE;
+  //   const dataTSSRBOMFE = this.state.tssr_site_FE;
+  //   let ppMRsave = [];
+  //   //PP for NE
+  //   for(let i = 0; i < dataPPTssr.length; i++){
+  //     let dataTSSRBomItemIndex = dataTSSRBOMNE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
+  //     let ppSave = {
+  //       "id_mr_doc" : _id_mr,
+  //       "mr_id" : mr_id,
+  //       "id_pp_doc" : dataPPTssr[i]._id,
+  //       "pp_id" : dataPPTssr[i].pp_id,
+  //       "id_site_doc" : dataTSSRBOMNE.id_site_doc,
+  //       "site_id" : dataTSSRBOMNE.site_id,
+  //       "site_name" : dataTSSRBOMNE.site_name,
+  //       "product_name" : dataPPTssr[i].product_name,
+  //       "product_type" : dataPPTssr[i].product_type,
+  //       "physical_group" : dataPPTssr[i].physical_group,
+  //       "uom" : dataPPTssr[i].uom,
+  //       "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id)),
+  //       "qty_scan" : 0,
+  //       "id_po_doc" : null,
+  //       "po_number" : "demo PO 1",
+  //       "deleted" : 0,
+  //       "created_by" : this.state.userId,
+  //       "updated_by" : this.state.userId
+  //     }
+  //     ppMRsave.push(ppSave);
+  //   }
+  //   //PP for FE
+  //   if(this.state.tssr_site_FE !== null){
+  //     for(let i = 0; i < dataPPTssr.length; i++){
+  //       let dataTSSRBomItemIndex = dataTSSRBOMFE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
+  //       let ppSave = {
+  //         "id_mr_doc" : _id_mr,
+  //         "mr_id" : mr_id,
+  //         "id_pp_doc" : dataPPTssr[i]._id,
+  //         "pp_id" : dataPPTssr[i].pp_id,
+  //         "id_site_doc" : dataTSSRBOMFE.id_site_doc,
+  //         "site_id" : dataTSSRBOMFE.site_id,
+  //         "site_name" : dataTSSRBOMFE.site_name,
+  //         "product_name" : dataPPTssr[i].product_name,
+  //         "product_type" : dataPPTssr[i].product_type,
+  //         "physical_group" : dataPPTssr[i].physical_group,
+  //         "uom" : dataPPTssr[i].uom,
+  //         "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id)),
+  //         "qty_scan" : 0,
+  //         "id_po_doc" : null,
+  //         "po_number" : "demo PO 1",
+  //         "deleted" : 0,
+  //         "created_by" : this.state.userId,
+  //         "updated_by" : this.state.userId
+  //       }
+  //       ppMRsave.push(ppSave);
+  //     }
+  //   }
+  //   const respondSaveMRPP = await this.postDatatoAPIBAM('/mr_pp_op', ppMRsave);
+  //   if(respondSaveMRPP.data !== undefined && respondSaveMRPP.status >= 200 && respondSaveMRPP.status <= 300 ){
+  //     if(ppMRsave.length === 1){
+  //       ppMRsave[0]["id_mr_pp_doc"] = respondSaveMRPP.data;
+  //       this.saveMrMattoAPI(_id_mr, mr_id, _etag_mr, ppMRsave);
+  //     }else{
+  //       for(let i = 0; i < ppMRsave.length; i++){
+  //         ppMRsave[i]["id_mr_pp_doc"] = respondSaveMRPP.data._items[i];
+  //       }
+  //       this.saveMrMattoAPI(_id_mr, mr_id, _etag_mr, ppMRsave);
+  //     }
+  //   }else{
+  //     this.setState({action_status : 'failed'});
+  //     this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
+  //   }
+  // }
+
+  // async saveMrMattoAPI(_id_mr, mr_id, _etag_mr, list_data_post_pp_mr){
+  //   const dataPPTssr = this.state.list_pp_material_tssr;
+  //   const dataTSSRBOMNE = this.state.tssr_site_NE;
+  //   const dataTSSRBOMFE = this.state.tssr_site_FE;
+  //   const list_id_pp_mr = list_data_post_pp_mr.map(e => e._id);
+  //   let matMRsave = [];
+  //   //Material for NE
+  //   let indexNE = 0;
+  //   for(let i = 0; i < dataPPTssr.length; i++){
+  //     let dataTSSRBomItemIndex = dataTSSRBOMNE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
+  //     let getdataFromSavePPMR = list_data_post_pp_mr.find(e => e.id_pp_doc === dataPPTssr[i]._id && e.site_id === dataTSSRBOMNE.site_id);
+  //     for(let j = 0; j < dataPPTssr[i].list_of_material.length; j++){
+  //       const dataMatIndex = dataPPTssr[i].list_of_material[j];
+  //       let matSave = {
+  //         "id_mr_doc" : _id_mr,
+  //         "mr_id" : mr_id,
+  //         "id_mr_pp_doc" : getdataFromSavePPMR.id_mr_pp_doc._id,
+  //         "id_pp_doc" : dataPPTssr[i]._id,
+  //         "pp_id" : dataPPTssr[i].pp_id,
+  //         "id_site_doc" : dataTSSRBOMNE.id_site_doc,
+  //         "site_id" : dataTSSRBOMNE.site_id,
+  //         "site_name" : dataTSSRBOMNE.site_name,
+  //         "id_mc_doc" : dataMatIndex._id,
+  //         "material_id" : dataMatIndex.material_id,
+  //         "material_name" : dataMatIndex.material_name,
+  //         "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
+  //         "uom" : dataMatIndex.uom,
+  //         "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id))*dataMatIndex.qty,
+  //         "qty_scan" : 0,
+  //         "id_po_doc" : null,
+  //         "po_number" : "demo PO 1",
+  //         "serial_numbers": [],
+  //         "deleted" : 0,
+  //         "created_by" : this.state.userId,
+  //         "updated_by" : this.state.userId
+  //       }
+  //       matMRsave.push(matSave);
+  //     }
+  //     indexNE = i;
+  //   }
+  //   //Material for FE
+  //   if(this.state.tssr_site_FE !== null){
+  //     for(let i = 0; i < dataPPTssr.length; i++){
+  //       let dataTSSRBomItemIndex = dataTSSRBOMFE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
+  //       let getdataFromSavePPMR = list_data_post_pp_mr.find(e => e.id_pp_doc === dataPPTssr[i]._id && e.site_id === dataTSSRBOMFE.site_id);
+  //       for(let j = 0; j < dataPPTssr[i].list_of_material.length; j++){
+  //         const dataMatIndex = dataPPTssr[i].list_of_material[j];
+  //         let matSave = {
+  //           "id_mr_doc" : _id_mr,
+  //           "mr_id" : mr_id,
+  //           "id_mr_pp_doc" : getdataFromSavePPMR.id_mr_pp_doc._id,
+  //           "id_pp_doc" : dataPPTssr[i]._id,
+  //           "pp_id" : dataPPTssr[i].pp_id,
+  //           "id_site_doc" : dataTSSRBOMFE.id_site_doc,
+  //           "site_id" : dataTSSRBOMFE.site_id,
+  //           "site_name" : dataTSSRBOMFE.site_name,
+  //           "id_mc_doc" : dataMatIndex._id,
+  //           "material_id" : dataMatIndex.material_id,
+  //           "material_name" : dataMatIndex.material_name,
+  //           "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
+  //           "uom" : dataMatIndex.uom,
+  //           "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id))*dataMatIndex.qty,
+  //           "qty_scan" : 0,
+  //           "id_po_doc" : null,
+  //           "po_number" : "demo PO 1",
+  //           "serial_numbers": [],
+  //           "deleted" : 0,
+  //           "created_by" : this.state.userId,
+  //           "updated_by" : this.state.userId
+  //         }
+  //         matMRsave.push(matSave);
+  //       }
+  //     }
+  //   }
+  //   if(matMRsave.length !== 0){
+  //     const respondSaveMRMat = await this.postDatatoAPIBAM('/mr_md_op', matMRsave);
+  //     if(respondSaveMRMat.data !== undefined && respondSaveMRMat.status >= 200 && respondSaveMRMat.status <= 300 ){
+  //       this.setState({action_status : 'success'}, () => {
+  //         setTimeout(function(){ this.setState({ redirectSign : _id_mr}); }.bind(this), 3000);
+  //       });
+  //     }else{
+  //       this.setState({action_status : 'failed'});
+  //       // this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
+  //     }
+  //   }else{
+  //     this.setState({action_status : 'success'}, () => {
+  //       setTimeout(function(){ this.setState({ redirectSign : _id_mr}); }.bind(this), 3000);
+  //     });
+  //   }
+  // }
+
+  async connectPlantSpectoTSSR(){
+    const dataMRParent = this.state.data_mr;
+    const dataTSSRParent = this.state.data_tssr;
+    const dataTSSRBOMNE = this.state.tssr_site_NE;
+    const dataTSSRBOMFE = this.state.tssr_site_FE;
+    const dataTSSRItems = this.state.data_tssr_sites_item;
+    const dataPP = this.state.list_pp_material_tssr;
+    console.log("dataTSSRBOMNE", dataTSSRBOMNE);
+    console.log("dataTSSRParent", dataTSSRParent);
+    const dataTssrHeader = {
+      "id_tssr_doc": dataTSSRParent._id,
+      "tssr_id": dataTSSRParent.no_tssr_boq,
+      "tssr_version": dataTSSRParent.version,
+    }
+    const site_info_ne = {
+      "id_tssr_boq_site_doc": dataTSSRBOMNE.site_info.id_tssr_boq_doc,
+      "no_tssr_boq_site": dataTSSRBOMNE.site_info.no_tssr_boq_site,
+      "id_site_doc": null,
+      "site_id": dataTSSRBOMNE.site_info.site_id,
+      "site_name": dataTSSRBOMNE.site_info.site_name,
+      "tssr_version": dataTSSRBOMNE.site_info.version
+    }
+    let dataPPNE = [];
+    const dataTSSRItemsNE = dataTSSRBOMNE.site_items;
+    for(let i = 0; i < dataTSSRItemsNE.length; i++){
+      let itemIdx = Object.assign({}, dataTSSRItemsNE[i].product_packages);
+      if(itemIdx._etag !== undefined){
+        delete itemIdx._etag;
+      }
+      let dataMatPPIdx = [];
+      let dataPPIdx = dataTSSRItemsNE[i];
+      if(dataPPIdx !== undefined){
+        for(let j = 0; j < dataPPIdx.material_detail.length; j++){
+          let dataMatIdx = Object.assign({}, dataPPIdx.material_detail[j]);
+          dataMatIdx["__v"] = dataMatIdx.version;
+          // dataMatIdx["qty"] = itemIdx.qty * dataMatIdx.qty;
+          dataMatIdx["deleted"] = 0;
+          if(dataMatIdx._etag !== undefined){
+            delete dataMatIdx._etag;
+          }
+          dataMatPPIdx.push(dataMatIdx);
+        }
+      }
+      dataPPNE.push({"product_packages" : itemIdx, "material_detail" : dataMatPPIdx});
+    }
+    const dataNE = {
+      "site_info_ne" : site_info_ne,
+      "mr_ne_items" : dataPPNE,
+    }
+    const dataTSSRConnectMR = {
+      "tssr_info" : dataTssrHeader,
+      "mr_site_ne" : dataNE,
+    }
+    if(dataMRParent.sow_type === "TRM"){
+      const site_info_fe = {
+        "id_tssr_boq_site_doc": dataTSSRBOMFE.id_tssr_boq_doc,
+        "no_tssr_boq_site": dataTSSRBOMFE.no_tssr_boq_site,
+        "id_site_doc": null,
+        "site_id": dataTSSRBOMFE.site_id,
+        "site_name": dataTSSRBOMFE.site_name,
+        "tssr_version": dataTSSRBOMFE.version === undefined ? 0 : dataTSSRBOMFE.version
+      }
+      let dataPPFE = [];
+      const dataTSSRItemsFE = dataTSSRBOMFE.site_items;
+      for(let i = 0; i < dataTSSRItemsFE.length; i++){
+        let itemIdx = Object.assign({}, dataTSSRItemsFE[i].product_packages);
+        itemIdx["__v"] = itemIdx.version;
+        itemIdx["deleted"] = 0;
+        if(itemIdx._etag !== undefined){
+          delete itemIdx._etag;
+        }
+        let dataMatPPIdx = [];
+        let dataPPIdx = dataTSSRItemsFE[i];;
+        if(dataPPIdx !== undefined){
+          for(let j = 0; j < dataPPIdx.material_detail.length; j++){
+            let dataMatIdx = Object.assign({}, dataPPIdx.material_detail[i]);
+            dataMatIdx["__v"] = dataMatIdx.version;
+            dataMatIdx["deleted"] = 0;
+            if(dataMatIdx._etag !== undefined){
+              delete dataMatIdx._etag;
             }
-            mr_data["site_info"].push(dataNewSiteFE)
+            dataMatPPIdx.push(dataMatIdx);
           }
         }
+        dataPPNE.push({"product_packages" : itemIdx, "material_detail" : dataMatPPIdx});
       }
-      let currStatus = [
-        {
-            "mr_status_name": "PLANTSPEC",
-            "mr_status_value": "ASSIGNED",
-            "mr_status_date": dateNow,
-            "mr_status_updater": this.state.userEmail,
-            "mr_status_updater_id": this.state.userId
-        }
-      ];
-      mr_data["mr_status"] = dataMRParent.mr_status.concat(currStatus);
-      const respondSaveMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMRParent._id, mr_data, dataMRParent._etag);
-      if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
-        this.saveMrPPtoAPI(dataMRParent._id, dataMRParent.mr_id, respondSaveMR.data._etag);
+      const dataFE = {
+        "site_info_fe" : site_info_fe,
+        "mr_fe_items" : dataPPFE,
+      }
+      dataTSSRConnectMR["mr_site_fe"] = dataFE;
+    }
+    this.patchDatatoAPINODE('/matreq/updatePlantSpecByTssr/'+dataMRParent._id, dataTSSRConnectMR).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
       }else{
-        this.setState({action_status : 'failed'});
+        this.setState({ action_status : "failed" });
       }
-    }
-
-  async saveMrPPtoAPI(_id_mr, mr_id, _etag_mr){
-    const dataPPTssr = this.state.list_pp_material_tssr;
-    const dataTSSRBOMNE = this.state.tssr_site_NE;
-    const dataTSSRBOMFE = this.state.tssr_site_FE;
-    let ppMRsave = [];
-    //PP for NE
-    for(let i = 0; i < dataPPTssr.length; i++){
-      let dataTSSRBomItemIndex = dataTSSRBOMNE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-      let ppSave = {
-        "id_mr_doc" : _id_mr,
-        "mr_id" : mr_id,
-        "id_pp_doc" : dataPPTssr[i]._id,
-        "pp_id" : dataPPTssr[i].pp_id,
-        "id_site_doc" : dataTSSRBOMNE.id_site_doc,
-        "site_id" : dataTSSRBOMNE.site_id,
-        "site_name" : dataTSSRBOMNE.site_name,
-        "product_name" : dataPPTssr[i].product_name,
-        "product_type" : dataPPTssr[i].product_type,
-        "physical_group" : dataPPTssr[i].physical_group,
-        "uom" : dataPPTssr[i].uom,
-        "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id)),
-        "qty_scan" : 0,
-        "id_po_doc" : null,
-        "po_number" : "demo PO 1",
-        "deleted" : 0,
-        "created_by" : this.state.userId,
-        "updated_by" : this.state.userId
-      }
-      ppMRsave.push(ppSave);
-    }
-    //PP for FE
-    if(this.state.tssr_site_FE !== null){
-      for(let i = 0; i < dataPPTssr.length; i++){
-        let dataTSSRBomItemIndex = dataTSSRBOMFE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-        let ppSave = {
-          "id_mr_doc" : _id_mr,
-          "mr_id" : mr_id,
-          "id_pp_doc" : dataPPTssr[i]._id,
-          "pp_id" : dataPPTssr[i].pp_id,
-          "id_site_doc" : dataTSSRBOMFE.id_site_doc,
-          "site_id" : dataTSSRBOMFE.site_id,
-          "site_name" : dataTSSRBOMFE.site_name,
-          "product_name" : dataPPTssr[i].product_name,
-          "product_type" : dataPPTssr[i].product_type,
-          "physical_group" : dataPPTssr[i].physical_group,
-          "uom" : dataPPTssr[i].uom,
-          "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id)),
-          "qty_scan" : 0,
-          "id_po_doc" : null,
-          "po_number" : "demo PO 1",
-          "deleted" : 0,
-          "created_by" : this.state.userId,
-          "updated_by" : this.state.userId
-        }
-        ppMRsave.push(ppSave);
-      }
-    }
-    const respondSaveMRPP = await this.postDatatoAPIBAM('/mr_pp_op', ppMRsave);
-    if(respondSaveMRPP.data !== undefined && respondSaveMRPP.status >= 200 && respondSaveMRPP.status <= 300 ){
-      if(ppMRsave.length === 1){
-        ppMRsave[0]["id_mr_pp_doc"] = respondSaveMRPP.data;
-        this.saveMrMattoAPI(_id_mr, mr_id, _etag_mr, ppMRsave);
-      }else{
-        for(let i = 0; i < ppMRsave.length; i++){
-          ppMRsave[i]["id_mr_pp_doc"] = respondSaveMRPP.data._items[i];
-        }
-        this.saveMrMattoAPI(_id_mr, mr_id, _etag_mr, ppMRsave);
-      }
-    }else{
-      this.setState({action_status : 'failed'});
-      this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
-    }
-  }
-
-  async saveMrMattoAPI(_id_mr, mr_id, _etag_mr, list_data_post_pp_mr){
-    const dataPPTssr = this.state.list_pp_material_tssr;
-    const dataTSSRBOMNE = this.state.tssr_site_NE;
-    const dataTSSRBOMFE = this.state.tssr_site_FE;
-    const list_id_pp_mr = list_data_post_pp_mr.map(e => e._id);
-    let matMRsave = [];
-    //Material for NE
-    let indexNE = 0;
-    for(let i = 0; i < dataPPTssr.length; i++){
-      let dataTSSRBomItemIndex = dataTSSRBOMNE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-      let getdataFromSavePPMR = list_data_post_pp_mr.find(e => e.id_pp_doc === dataPPTssr[i]._id && e.site_id === dataTSSRBOMNE.site_id);
-      for(let j = 0; j < dataPPTssr[i].list_of_material.length; j++){
-        const dataMatIndex = dataPPTssr[i].list_of_material[j];
-        let matSave = {
-          "id_mr_doc" : _id_mr,
-          "mr_id" : mr_id,
-          "id_mr_pp_doc" : getdataFromSavePPMR.id_mr_pp_doc._id,
-          "id_pp_doc" : dataPPTssr[i]._id,
-          "pp_id" : dataPPTssr[i].pp_id,
-          "id_site_doc" : dataTSSRBOMNE.id_site_doc,
-          "site_id" : dataTSSRBOMNE.site_id,
-          "site_name" : dataTSSRBOMNE.site_name,
-          "id_mc_doc" : dataMatIndex._id,
-          "material_id" : dataMatIndex.material_id,
-          "material_name" : dataMatIndex.material_name,
-          "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
-          "uom" : dataMatIndex.uom,
-          "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id))*dataMatIndex.qty,
-          "qty_scan" : 0,
-          "id_po_doc" : null,
-          "po_number" : "demo PO 1",
-          "serial_numbers": [],
-          "deleted" : 0,
-          "created_by" : this.state.userId,
-          "updated_by" : this.state.userId
-        }
-        matMRsave.push(matSave);
-      }
-      indexNE = i;
-    }
-    //Material for FE
-    if(this.state.tssr_site_FE !== null){
-      for(let i = 0; i < dataPPTssr.length; i++){
-        let dataTSSRBomItemIndex = dataTSSRBOMFE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-        let getdataFromSavePPMR = list_data_post_pp_mr.find(e => e.id_pp_doc === dataPPTssr[i]._id && e.site_id === dataTSSRBOMFE.site_id);
-        for(let j = 0; j < dataPPTssr[i].list_of_material.length; j++){
-          const dataMatIndex = dataPPTssr[i].list_of_material[j];
-          let matSave = {
-            "id_mr_doc" : _id_mr,
-            "mr_id" : mr_id,
-            "id_mr_pp_doc" : getdataFromSavePPMR.id_mr_pp_doc._id,
-            "id_pp_doc" : dataPPTssr[i]._id,
-            "pp_id" : dataPPTssr[i].pp_id,
-            "id_site_doc" : dataTSSRBOMFE.id_site_doc,
-            "site_id" : dataTSSRBOMFE.site_id,
-            "site_name" : dataTSSRBOMFE.site_name,
-            "id_mc_doc" : dataMatIndex._id,
-            "material_id" : dataMatIndex.material_id,
-            "material_name" : dataMatIndex.material_name,
-            "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
-            "uom" : dataMatIndex.uom,
-            "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id))*dataMatIndex.qty,
-            "qty_scan" : 0,
-            "id_po_doc" : null,
-            "po_number" : "demo PO 1",
-            "serial_numbers": [],
-            "deleted" : 0,
-            "created_by" : this.state.userId,
-            "updated_by" : this.state.userId
-          }
-          matMRsave.push(matSave);
-        }
-      }
-    }
-    if(matMRsave.length !== 0){
-      const respondSaveMRMat = await this.postDatatoAPIBAM('/mr_md_op', matMRsave);
-      if(respondSaveMRMat.data !== undefined && respondSaveMRMat.status >= 200 && respondSaveMRMat.status <= 300 ){
-        this.setState({action_status : 'success'}, () => {
-          setTimeout(function(){ this.setState({ redirectSign : _id_mr}); }.bind(this), 3000);
-        });
-      }else{
-        this.setState({action_status : 'failed'});
-        // this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
-      }
-    }else{
-      this.setState({action_status : 'success'}, () => {
-        setTimeout(function(){ this.setState({ redirectSign : _id_mr}); }.bind(this), 3000);
-      });
-    }
+    })
+    // console.log("dataTSSRConnectMR JSON", JSON.stringify(dataTSSRConnectMR));
+    // console.log("dataTSSRConnectMR", dataTSSRConnectMR);
   }
 
   editQtyNE = (e) => {
@@ -562,6 +825,7 @@ class PSUpload extends Component {
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);
     }
+    let qty_wh = undefined, qty_inbound = undefined;
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -570,7 +834,7 @@ class PSUpload extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}} >Assign PS</span>
-            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.saveMRtoAPI}>Assign</Button>
+            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.connectPlantSpectoTSSR}>Assign</Button>
           </CardHeader>
           <CardBody>
             <table>
@@ -613,7 +877,7 @@ class PSUpload extends Component {
                     <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Project Name : {this.state.data_mr.project_name}</td>
                   </tr>
                   <tr>
-                    <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>SOW Tyoe : {this.state.data_mr.sow_type}</td>
+                    <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>SOW Type : {this.state.data_mr.sow_type}</td>
                   </tr>
                   </Fragment>
                 )}
@@ -639,12 +903,12 @@ class PSUpload extends Component {
                         <tr>
                           <td style={{width : '200px'}}>Site ID NE</td>
                           <td>:</td>
-                          <td>{this.state.tssr_site_NE.site_id}</td>
+                          <td>{this.state.tssr_site_NE.site_info.site_id}</td>
                         </tr>
                         <tr>
                           <td style={{width : '200px'}}>Site Name NE</td>
                           <td>:</td>
-                          <td>{this.state.tssr_site_NE.site_name}</td>
+                          <td>{this.state.tssr_site_NE.site_info.site_name}</td>
                         </tr>
                         </Fragment>
                       )}
@@ -659,12 +923,12 @@ class PSUpload extends Component {
                       <tr>
                         <td>Site ID FE</td>
                         <td>: &nbsp;</td>
-                        <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_id}</td>
+                        <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_info.site_id}</td>
                       </tr>
                       <tr>
                         <td>Site Name FE</td>
                         <td>:</td>
-                        <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_name}</td>
+                        <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_info.site_name}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -688,7 +952,8 @@ class PSUpload extends Component {
                       <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
                       <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
                       <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
-                      <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
+                      <th colSpan="3" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
+                      <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Availability</th>
                     </tr>
                     {this.state.data_mr !== null ?
                       this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
@@ -697,10 +962,52 @@ class PSUpload extends Component {
                           {this.state.tssr_site_FE !== null ? (
                             <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
                           ):(<Fragment></Fragment>)}
+                          <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>WH Stock</th>
+                          <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>WH Plan</th>
                         </tr>
                       ) : <Fragment></Fragment> : <Fragment></Fragment>}
                   </thead>
                   <tbody>
+                  {this.state.tssr_site_NE !== null ? (
+                    <Fragment>
+                      {this.state.tssr_site_NE.site_items !== null && this.state.tssr_site_NE.site_items !== null ? this.state.tssr_site_NE.site_items.map( pp =>
+                        <Fragment>
+                          <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                            <td style={{textAlign : 'left'}}>{pp.product_packages.pp_id}</td>
+                            <td>{pp.product_packages.product_name}</td>
+                            <td>{pp.product_packages.uom}</td>
+                            <td>{pp.product_packages.qty.toFixed(2)}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+
+                            {/* {this.state.tssr_site_FE !== null ? (
+                              <Fragment>
+                              <td>{this.getQtyTssrPPFE(pp.pp_id)}</td>
+                              <td>
+                                <Input style={{textAlign : 'center'}} onChange={this.editQtyFE} type="number" name={pp.pp_id} value={!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id)} />
+                              </td>
+                              </Fragment>
+                            ):(<Fragment></Fragment>)} */}
+                          </tr>
+                          {pp.material_detail.map(material =>
+                            <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                              <td style={{textAlign : 'right'}}>{material.material_id}</td>
+                              <td style={{textAlign : 'left'}}>{material.material_name}</td>
+                              <td>{material.uom}</td>
+                              <td align='center'>{(pp.product_packages.qty * material.qty).toFixed(2)}</td>
+                              <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
+                              <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
+                              <td align='center'>{pp.product_packages.qty*material.qty < qty_wh ? "OK":"NOK"}</td>
+                              {/* {this.state.tssr_site_FE !== null ? (
+                                <td align='center'>{(!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id))*material.qty}</td>
+                              ):(<Fragment></Fragment>)} */}
+                            </tr>
+                          ) }
+                        </Fragment>
+                      ): (<Fragment></Fragment>)}
+                    </Fragment>
+                  ): (<Fragment></Fragment>)}
                     {this.state.list_pp_material_tssr.map( pp =>
                       <Fragment>
                         <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">

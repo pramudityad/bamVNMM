@@ -12,6 +12,8 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
+const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class ReadyToDeliver extends Component {
   constructor(props) {
     super(props);
@@ -21,6 +23,7 @@ class ReadyToDeliver extends Component {
       userId : this.props.dataLogin._id,
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
       mr_list : [],
       prevPage : 0,
       activePage : 1,
@@ -60,6 +63,25 @@ class ReadyToDeliver extends Component {
     }
   }
 
+  async patchDatatoAPINODE(url, data) {
+    try {
+      let respond = await axios.patch(API_URL_Node+url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond Patch data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond Patch data", err.response);
+      return respond;
+    }
+  }
+
   getMRList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
@@ -77,7 +99,7 @@ class ReadyToDeliver extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_READY_TO_DELIVER", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_ORDER_PROCESSING"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_READY_TO_DELIVER", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
@@ -104,7 +126,7 @@ class ReadyToDeliver extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_READY_TO_DELIVER", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_ORDER_PROCESSING"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_READY_TO_DELIVER", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
       console.log("MR List All", res);
@@ -176,39 +198,25 @@ class ReadyToDeliver extends Component {
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
-    const dataMR = this.state.mr_list.find(e => e._id === _id);
-    let currStatus = [
-      {
-        "mr_status_name": "READY_TO_DELIVER",
-        "mr_status_value": "CONFIRMED",
-        "mr_status_date": dateNow,
-        "mr_status_updater": this.state.userEmail,
-        "mr_status_updater_id": this.state.userId
-      }
-    ];
-    let currMilestones = [
-      {
-          "ms_name": "MS_READY_TO_DELIVER",
-          "ms_date": dateNow,
-          "ms_updater": this.state.userEmail,
-          "ms_updater_id": this.state.userId
-      }
-    ];
-    let successUpdate = [];
-    let updateMR = {};
-    updateMR['current_milestones'] = "MS_READY_TO_DELIVER";
-    updateMR['current_mr_status'] = "READY TO DELIVER";
-    updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
-    updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
-    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
+    let res = await this.patchDatatoAPINODE('/matreq/confirmRTD/'+_id);
     if(res !== undefined) {
       if(res.data !== undefined) {
-        successUpdate.push(res.data);
+        this.setState({action_status : "success"});
+        this.getMRList();
+        // setTimeout(function(){this.setState({action_status : null, action_message : null}) }, 2000);
+      }else{
+        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+          if(res.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
       }
-    }
-    if(successUpdate.length !== 0){
-      this.setState({action_status : "success"});
-      setTimeout(function(){ window.location.reload(); }, 2000);
+    }else{
+      this.setState({action_status : "failed"});
     }
   }
 
@@ -461,7 +469,7 @@ class ReadyToDeliver extends Component {
                     )}
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
-                        <td><Button outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Proceed</Button></td>
+                        <td><Button outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Done</Button></td>
                         <td><Link to={'/mr-detail/'+list._id}>{list.mr_id}</Link></td>
                         <td>{list.implementation_id}</td>
                         <td>{list.project_name}</td>

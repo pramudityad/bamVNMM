@@ -14,6 +14,8 @@ const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const username_tsel = 'adminbamidsuper';
 const password_tsel = 'F760qbAg2sml';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash"/>
 );
@@ -23,6 +25,11 @@ class BulkNotifytoASP extends Component {
     super(props);
 
     this.state = {
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
       action_message : null,
       action_status : null,
       assignment_list : [],
@@ -78,6 +85,26 @@ class BulkNotifytoASP extends Component {
     }catch (err) {
       let respond = err;
       console.log("respond Patch data", err);
+      return respond;
+    }
+  }
+
+  async patchDatatoAPINODE(url, data){
+    try {
+      let respond = await axios.patch(API_URL_NODE +url, data, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+      console.log("respond Post Data", err);
       return respond;
     }
   }
@@ -149,32 +176,17 @@ class BulkNotifytoASP extends Component {
     let dataASGChecked = this.state.data_asg_checked;
     let sucPatch = [];
     for(let i = 0; i < dataASGChecked.length; i++){
-      let dataASG = dataASGChecked[i];
-      const notifyStatus = [
-        {
-          "status_name": "ASP_ASSIGNMENT",
-          "status_value": "NOTIFIED TO ASP",
-          "status_date": dateNow,
-          "status_updater": this.state.userId,
-          "status_updater_id": this.state.userId,
-          "status_note": ""
-        }
-      ]
-      let notifyASP = {};
-      notifyASP['Current_Status'] = "ASP ASSIGNMENT NOTIFIED TO ASP";
-      notifyASP['ASP_Assignment_Status'] = dataASG.ASP_Assignment_Status.concat(notifyStatus);
-      const patchData = await this.patchDatatoAPIBAM('/asp_assignment_op/'+dataASG._id, notifyASP, dataASG._etag);
-      if(patchData.data !== undefined){
-        sucPatch.push(patchData.data._id);
+      sucPatch.push(dataASGChecked[i]._id);
+    }
+    this.patchDatatoAPINODE('/aspAssignment/notifyManyAspAssignment', {"ids" : sucPatch}).then(res => {
+      if(res.data !== undefined){
+        this.setState({action_status : 'success'}, () => {
+          setTimeout(function(){ window.location.reload(); }, 2000);
+        });
+      }else{
+        this.setState({ action_status : "failed" });
       }
-    }
-    if(sucPatch.length === dataASGChecked.length){
-      this.setState({action_status : 'success'}, () => {
-        setTimeout(function(){ window.location.reload(); }, 3000);
-      });
-    }else{
-      this.setState({action_status : 'failed'});
-    }
+    })
   }
 
   componentDidMount() {

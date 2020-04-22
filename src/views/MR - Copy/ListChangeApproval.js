@@ -1,26 +1,39 @@
 import React, { Component } from 'react';
-import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import { Button, Card, CardBody, CardHeader, CardFooter, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
 import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
+import {connect} from 'react-redux';
+import ActionType from '../../redux/reducer/globalActionType';
 
-const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const username = 'bamidadmin@e-dpm.com';
-const password = 'F760qbAg2sml';
+const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
-class MaterialDispatch extends Component {
+const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
+const usernameBAM = 'bamidadmin@e-dpm.com';
+const passwordBAM = 'F760qbAg2sml';
+
+const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
+  <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash"/>
+);
+
+class ListChangeApproval extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      action_message : null,
+      action_status : null,
       mr_list : [],
       prevPage : 0,
       activePage : 1,
       totalData : 0,
       perPage : 10,
+      mr_checked : new Map(),
+      mr_checked_all : false,
+      data_mr_checked : [],
       filter_list : new Array(14).fill(""),
       mr_all : []
     }
@@ -30,15 +43,18 @@ class MaterialDispatch extends Component {
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
+    this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
+    this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
+    this.ApprovalBulk = this.ApprovalBulk.bind(this);
   }
 
   async getDataFromAPI(url) {
     try {
-      let respond = await axios.get(API_URL+url, {
+      let respond = await axios.get(API_URL_BAM+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
-          username: username,
-          password: password
+          username: usernameBAM,
+          password: passwordBAM
         }
       });
       if(respond.status >= 200 && respond.status < 300) {
@@ -48,6 +64,26 @@ class MaterialDispatch extends Component {
     } catch(err) {
       let respond = err;
       console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async patchDatatoAPIBAM(url, data, _etag){
+    try {
+      let respond = await axios.patch(API_URL_BAM +url, data, {
+        headers : {'Content-Type':'application/json', "If-Match" : _etag},
+        auth: {
+          username: usernameBAM,
+          password: passwordBAM
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Patch data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Patch data", err);
       return respond;
     }
   }
@@ -69,8 +105,8 @@ class MaterialDispatch extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "$or" : [{"current_milestones": "MS_DISPATCH"}, {"current_milestones": "MS_LOADING_PROCESS", "current_mr_status": "LOADING PROCESS FINISH"}]}';
-    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_MATERIAL_DISPATCH", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"current_mr_status" : "MR UPDATED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
       if(res.data !== undefined) {
@@ -96,8 +132,8 @@ class MaterialDispatch extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_DISPATCH", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_MATERIAL_DISPATCH", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"current_mr_status" : "MR UPDATED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
       console.log("MR List All", res);
       if(res.data !== undefined) {
@@ -136,13 +172,18 @@ class MaterialDispatch extends Component {
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Material Dispatch.xlsx');
+    saveAs(new Blob([allocexport]), 'MR List.xlsx');
   }
 
   componentDidMount() {
+    this.props.SidebarMinimizer(true);
     this.getMRList();
     this.getAllMR();
-    document.title = 'Material Dispatch | BAM';
+    document.title = 'MR PS Not Assigned | BAM';
+  }
+
+  componentWillUnmount(){
+    this.props.SidebarMinimizer(false);
   }
 
   handlePageChange(pageNumber) {
@@ -164,6 +205,105 @@ class MaterialDispatch extends Component {
     })
   }
 
+  handleChangeChecklist(e){
+    const item = e.target.name;
+    const isChecked = e.target.checked;
+    const mrList = this.state.mr_all;
+    let dataMRChecked = this.state.data_mr_checked;
+    if(isChecked === true){
+      const getMR = mrList.find(e => e._id === item);
+      dataMRChecked.push(getMR);
+    }else{
+      dataMRChecked = dataMRChecked.filter(function( e ) {
+        return e._id !== item;
+      });
+    }
+    this.setState({ data_mr_checked : dataMRChecked});
+    this.setState(prevState => ({ mr_checked: prevState.mr_checked.set(item, isChecked) }));
+  }
+
+  handleChangeChecklistAll(e){
+    const isChecked = e.target.checked;
+    const mrList = this.state.mr_all;
+    let dataMRChecked = this.state.data_mr_checked;
+    if(isChecked === true){
+      for(let i = 0; i < mrList.length; i++){
+        if(this.state.mr_checked.get(mrList[i]._id) !== true){
+          dataMRChecked.push(mrList[i]);
+        }
+        this.setState(prevState => ({ mr_checked: prevState.mr_checked.set(mrList[i]._id, true) }));
+      }
+      this.setState({ data_mr_checked : dataMRChecked, mr_checked_all : isChecked });
+    }else{
+      this.setState({mr_checked : new Map(), data_mr_checked : [] });
+      this.setState({mr_checked_all : isChecked });
+    }
+  }
+
+  async ApprovalBulk(){
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    let dataMRChecked = this.state.data_mr_checked;
+    let sucPatch = [];
+    for(let i = 0; i < dataMRChecked.length; i++){
+      let dataMR = dataMRChecked[i];
+      const statusAprv = [{
+        "mr_status_name": "MATERIAL_REQUEST",
+        "mr_status_value": "APPROVED",
+        "mr_status_date": dateNow,
+        "mr_status_updater": this.state.userEmail,
+        "mr_status_updater_id": this.state.userId,
+      }];
+      const statusRecent = dataMR.mr_status[dataMR.mr_status.findIndex(e => e.mr_status_value === "UPDATED" && e.mr_status_name === "MATERIAL_REQUEST")-1];
+      let aprvMR = {};
+      let firstStat = "";
+      let lastStat = "";
+      switch(statusRecent.mr_status_name) {
+        case "MATERIAL_REQUEST":
+          firstStat = "MR";
+          break;
+        case "LACK_OF_MATERIAL":
+          firstStat = "LACK OF MATERIAL";
+          break;
+        case "LOM_CONFIRMATION":
+          firstStat = "LOM CONFIRMED";
+          break;
+        default:
+          firstStat = statusRecent.mr_status_name;
+      }
+      switch(statusRecent.mr_status_value) {
+        case "YES":
+          lastStat = "";
+          break;
+        case "SEND WITH LOM":
+          lastStat = " (SEND WITH LOM)";
+          break;
+        case "LOM_CONFIRMATION":
+          lastStat = " (WAIT FOR COMPLETION)";
+          break;
+        default:
+          lastStat = " "+statusRecent.mr_status_value;
+      }
+      const statusNow = lastStat.length !== 0 ? firstStat + lastStat : firstStat;
+      aprvMR['current_mr_status'] = statusNow;
+      aprvMR['mr_status'] = dataMR.mr_status.concat(statusAprv);
+      aprvMR['mr_status'] = dataMR.mr_status.concat(statusRecent);
+      console.log("dataMR", dataMR);
+      console.log("aprvMR", aprvMR);
+      const patchData = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, aprvMR, dataMR._etag)
+      if(patchData.data !== undefined){
+        sucPatch.push(patchData.data._id);
+      }
+    }
+    if(sucPatch.length === dataMRChecked.length){
+      this.setState({action_status : 'success'}, () => {
+        setTimeout(function(){ window.location.reload(); }, 3000);
+      });
+    }else{
+      this.setState({action_status : 'failed'});
+    }
+  }
+
   onChangeDebounced(e) {
     this.getMRList();
     this.getAllMR();
@@ -173,7 +313,8 @@ class MaterialDispatch extends Component {
 
   render() {
     const downloadMR = {
-      float: 'right'
+      float: 'right',
+      marginRight: '10px'
     }
 
     const tableWidth = {
@@ -182,33 +323,34 @@ class MaterialDispatch extends Component {
 
     return (
       <div className="animated fadeIn">
+        <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
         <Row>
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
                 <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Material Dispatch
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> MR List
                 </span>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
+                <div style={{float : 'right', marginRight : '20px', display:'inline-flex', marginTop : '5px'}}>
+                  <Checkbox checked={this.state.mr_checked_all} onChange={this.handleChangeChecklistAll} style={{float : 'right', marginRight: "8px"}}/>
+                  <span style={{marginTop : '1px'}}>Select All</span>
+                </div>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2" style={{verticalAlign: "middle"}}>Action</th>
+                      <th rowSpan="2" style={{verticalAlign : "middle"}}></th>
                       <th>MR ID</th>
                       <th>Implementation ID</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
-                      <th>Site ID</th>
-                      <th>Site Name</th>
                       <th>Current Status</th>
-                      <th>Current Milestone</th>
                       <th>DSP</th>
                       <th>ASP</th>
                       <th>ETA</th>
                       <th>Created By</th>
-                      <th>Updated On</th>
                       <th>Created On</th>
                     </tr>
                     <tr>
@@ -258,37 +400,7 @@ class MaterialDispatch extends Component {
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText><i className="fa fa-search"></i></InputGroupText>
                             </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[4]} name={4} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[5]} name={5} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[6]} name={6} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[7]} name={7} size="sm"/>
+                            <Input type="text" placeholder="Search" disabled onChange={this.handleFilterList} value={this.state.filter_list[6]} name={6} size="sm"/>
                           </InputGroup>
                         </div>
                       </td>
@@ -338,16 +450,6 @@ class MaterialDispatch extends Component {
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText><i className="fa fa-search"></i></InputGroupText>
                             </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[12]} name={12} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
                             <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[13]} name={13} size="sm"/>
                           </InputGroup>
                         </div>
@@ -363,25 +465,17 @@ class MaterialDispatch extends Component {
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
-                          {list.current_mr_status === "LOADING PROCESS FINISH" ? (
-                            "Waiting Dispatch"
-                          ) : (
-                            "Finish"
-                          )}
+                          <Checkbox name={list._id} checked={this.state.mr_checked.get(list._id)} onChange={this.handleChangeChecklist}/>
                         </td>
-                        <td><Link to={'/mr-detail/'+list._id}>{list.mr_id}</Link></td>
+                        <td>{list.mr_id}</td>
                         <td>{list.implementation_id}</td>
                         <td>{list.project_name}</td>
                         <td>{list.cd_id}</td>
-                        <td>{list.site_info[0].site_id}</td>
-                        <td>{list.site_info[0].site_name}</td>
                         <td>{list.current_mr_status}</td>
-                        <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
-                        <td>{list.asp_company}</td>
+                        <td></td>
                         <td>{list.eta}</td>
                         <td></td>
-                        <td>{list.updated_on}</td>
                         <td>{list.created_on}</td>
                       </tr>
                     )}
@@ -397,6 +491,13 @@ class MaterialDispatch extends Component {
                   linkClass="page-link"
                 />
               </CardBody>
+              <CardFooter>
+                {this.state.data_mr_checked.length !== 0 && (
+                  <div>
+                    <Button color='success' style={{float : 'right'}} onClick={this.ApprovalBulk}>Approve Changes</Button>
+                  </div>
+                )}
+              </CardFooter>
             </Card>
           </Col>
         </Row>
@@ -405,4 +506,17 @@ class MaterialDispatch extends Component {
   }
 }
 
-export default MaterialDispatch;
+const mapStateToProps = (state) => {
+  return {
+    dataLogin : state.loginData,
+    SidebarMinimize : state.minimizeSidebar
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    SidebarMinimizer : (minimize) => dispatch({type : ActionType.MINIMIZE_SIDEBAR, minimize_sidebar : minimize }),
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ListChangeApproval);

@@ -110,7 +110,7 @@ class OrderProcessing extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_PROCESSING", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
@@ -204,7 +204,7 @@ class OrderProcessing extends Component {
     }
   }
 
-  async patchDatatoAPINode(url, data) {
+  async patchDatatoAPINODE(url, data) {
     try {
       let respond = await axios.patch(API_URL_Node+url, data, {
         headers: {
@@ -227,53 +227,26 @@ class OrderProcessing extends Component {
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
-    const _id = e.target.id;
-    const dataMR = this.state.mr_list.find(e => e._id === _id);
-    let currStatus = [
-      {
-          "mr_status_name": "ORDER_PROCESSING",
-          "mr_status_value": "FINISH",
-          "mr_status_date": dateNow,
-          "mr_status_updater": this.state.userEmail,
-          "mr_status_updater_id": this.state.userId
-      },
-      {
-        "mr_status_name": "READY_TO_DELIVER",
-        "mr_status_value": "CONFIRMED",
-        "mr_status_date": dateNow,
-        "mr_status_updater": this.state.userEmail,
-        "mr_status_updater_id": this.state.userId
-      }
-    ];
-    let currMilestones = [
-      {
-          "ms_name": "MS_ORDER_PROCESSING",
-          "ms_date": dateNow,
-          "ms_updater": this.state.userEmail,
-          "ms_updater_id": this.state.userId
-      },
-      {
-        "ms_name": "MS_READY_TO_DELIVER",
-        "ms_date": dateNow,
-        "ms_updater": this.state.userEmail,
-        "ms_updater_id": this.state.userId
-      }
-    ];
-    let successUpdate = [];
-    let updateMR = {};
-    updateMR['current_milestones'] = "MS_READY_TO_DELIVER";
-    updateMR['current_mr_status'] = "READY TO DELIVER";
-    updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
-    updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
-    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
+    const id_doc = e.currentTarget.id;
+    let res = await this.patchDatatoAPINODE('/matreq/finishOrderProcessing/'+id_doc, {"ps_completion_status":"COMPLETE"});
     if(res !== undefined) {
       if(res.data !== undefined) {
-        successUpdate.push(res.data);
+        this.setState({action_status : "success"}, () => {
+          setTimeout(function(){ window.location.reload(); }, 2000);
+        });
+      }else{
+        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+          if(res.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
       }
-    }
-    if(successUpdate.length !== 0){
-      this.setState({action_status : "success"});
-      setTimeout(function(){ window.location.reload(); }, 2000);
+    }else{
+      this.setState({ action_status: 'failed' });
     }
   }
 
@@ -286,36 +259,15 @@ class OrderProcessing extends Component {
     const _etag = e.target.value;
     const _id = e.target.id;
     const dataMR = this.state.mr_list.find(e => e._id === _id);
-    let currStatus = [
-      {
-        "mr_status_name": "LACK_OF_MATERIAL",
-        "mr_status_value": "YES",
-        "mr_status_date": dateNow,
-        "mr_status_updater": this.state.userEmail,
-        "mr_status_updater_id": this.state.userId
-      }
-    ];
-    let currMilestones = [
-      {
-        "ms_name": null,
-        "ms_date": dateNow,
-        "ms_updater": this.state.userEmail,
-        "ms_updater_id": this.state.userId
-      }
-    ];
-    let successUpdate = [];
-    let updateMR = {};
-    updateMR['current_milestones'] = null;
-    updateMR['current_mr_status'] = "LACK OF MATERIAL";
-    updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
-    updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
+
+    let successUpdate= [];
 
     let lomData = [];
     let updateLOM = {};
     for(let i = 0; i < this.state.data_material.packages.length; i++) {
       let materialData = [];
       for(let j = 0; j < this.state.data_material.packages[i].materials.length; j++) {
-        if(this.state.qty_ne.has(this.state.data_material.packages[i].materials[j].id_mc_doc) !== false || this.state.qty_fe.has(this.state.data_material.packages[i].materials[j].id_mc_doc) !== false) {
+        if(this.state.qty_ne.has(this.state.data_material.packages[i].materials[j]._id) !== false || this.state.qty_fe.has(this.state.data_material.packages[i].materials[j]._id) !== false) {
           let material = {
             "id_mr_doc": this.state.data_material.packages[i].materials[j].id_mr_doc,
             "id_mr_pp_doc": this.state.data_material.packages[i].materials[j].id_mr_pp_doc,
@@ -333,7 +285,7 @@ class OrderProcessing extends Component {
             "material_name": this.state.data_material.packages[i].materials[j].material_name,
             "material_type": this.state.data_material.packages[i].materials[j].material_type,
             "uom": this.state.data_material.packages[i].materials[j].uom,
-            "qty": this.state.data_material.packages[i].materials[j].site_id === this.state.site_NE.site_id ? this.state.qty_ne.get(this.state.data_material.packages[i].materials[j].id_mc_doc) : this.state.qty_fe.get(this.state.data_material.packages[i].materials[j].id_mc_doc),
+            "qty": this.state.data_material.packages[i].materials[j].site_id === this.state.site_NE.site_id ? this.state.qty_ne.get(this.state.data_material.packages[i].materials[j]._id) : this.state.qty_fe.get(this.state.data_material.packages[i].materials[j]._id),
             "qty_scan": this.state.data_material.packages[i].materials[j].qty_scan,
             "po_number": this.state.data_material.packages[i].materials[j].po_number,
             "serial_numbers": [],
@@ -343,6 +295,7 @@ class OrderProcessing extends Component {
             "updated_on": this.state.data_material.packages[i].materials[j].updated_on,
             "created_on": this.state.data_material.packages[i].materials[j].created_on
           }
+          console.log("material", material.material_id, material.qty);
           if(material.qty !== undefined) {
             if(material.qty !== 0 && material.qty !== "0") {
               materialData.push(material);
@@ -381,10 +334,7 @@ class OrderProcessing extends Component {
 
     updateLOM['lom_data'] = lomData;
     updateLOM['ps_completion_status'] = "NOT COMPLETE";
-    console.log('data LOM', JSON.stringify(updateLOM));
-
-    // let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
-    let resLOM = await this.patchDatatoAPINode('/matreq/finishOrderProcessing/'+_id, updateLOM);
+    let resLOM = await this.patchDatatoAPINODE('/matreq/finishOrderProcessing/'+_id, updateLOM);
     if(resLOM.data !== undefined) {
       successUpdate.push(resLOM.data);
     }
@@ -454,6 +404,7 @@ class OrderProcessing extends Component {
     const name = e.target.name;
     const value = e.target.value;
     this.setState(prevState => ({ qty_ne : prevState.qty_ne.set(name, value) }));
+    console.log("qty_ne" , this.state.qty_ne);
   }
 
   editQtyFE = (e) => {
@@ -758,9 +709,9 @@ class OrderProcessing extends Component {
                         <td style={{textAlign : 'right'}}>{mat.material_id}</td>
                         <td style={{textAlign : 'left'}}>{mat.material_name}</td>
                         <td>{mat.uom}</td>
-                        <td align='center'><Input onChange={this.editQtyNE} type="number" name={mat.id_mc_doc} style={{textAlign : 'center'}} min="0"/></td>
+                        <td align='center'><Input onChange={this.editQtyNE} type="number" name={mat._id} style={{textAlign : 'center'}} min="0"/></td>
                         {this.state.site_FE !== undefined && (
-                          <td align='center'><Input onChange={this.editQtyFE} type="number" name={mat.id_mc_doc} style={{textAlign : 'center'}} min="0"/></td>
+                          <td align='center'><Input onChange={this.editQtyFE} type="number" name={mat._id} style={{textAlign : 'center'}} min="0"/></td>
                         )}
 
                       </tr>
