@@ -43,7 +43,6 @@ class MatInboundPlan extends React.Component {
       prevPage: 1,
       activePage: 1,
       total_data_PO: 0,
-      pp_all: [],
       rowsXLS: [],
       cpo_array: [],
       action_status: null,
@@ -52,11 +51,9 @@ class MatInboundPlan extends React.Component {
       data_PO: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
-      modalMatStockForm: false,
+      modalPOForm: false,
       POForm: new Array(5).fill(null),
       collapse: false,
-      modalMatStockEdit: false,
-      MatStockForm: new Array(6).fill(null),
     }
     this.togglePOForm = this.togglePOForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -69,7 +66,6 @@ class MatInboundPlan extends React.Component {
     this.toggleEdit = this.toggleEdit.bind(this);
     this.saveNew = this.saveNew.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
-    this.downloadAll = this.downloadAll.bind(this);
   }
 
   toggle(i) {
@@ -267,8 +263,8 @@ class MatInboundPlan extends React.Component {
   }
 
   toggleEdit(e) {
-    const modalMatStockEdit = this.state.modalMatStockEdit;
-    if (modalMatStockEdit === false) {
+    const modalMatStockForm = this.state.modalMatStockForm;
+    if (modalMatStockForm === false) {
       const value = e.currentTarget.value;
       const aEdit = this.state.all_data.find(e => e.owner_id === value);
       let dataForm = this.state.POForm;
@@ -288,8 +284,16 @@ class MatInboundPlan extends React.Component {
 
   togglePOForm() {
     this.setState(prevState => ({
-      modalMatStockForm: !prevState.modalMatStockForm
+      modalPOForm: !prevState.modalPOForm
     }));
+  }
+
+  handleChangeForm(e) {
+    const value = e.target.value;
+    const index = e.target.name;
+    let dataForm = this.state.POForm;
+    dataForm[parseInt(index)] = value;
+    this.setState({ POForm: dataForm });
   }
 
   async getMatInboundFormat(dataImport) {
@@ -331,7 +335,7 @@ class MatInboundPlan extends React.Component {
     this.toggleLoading();
     const BulkXLSX = this.state.rowsXLS;
     // const cpoData = await this.getMatInboundFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE('/whInboundPlan/createWhInboundPlanTruncate', { 'inboundPlanData': BulkXLSX });
+    const res = await this.postDatatoAPINODE('/whInboundPlan/createWhInboundPlan', { 'inboundPlanData': BulkXLSX });
     if (res.data !== undefined) {
       this.setState({ action_status: 'success' });
       this.toggleLoading();
@@ -342,18 +346,10 @@ class MatInboundPlan extends React.Component {
     }
   }
 
-  handleChangeForm(e) {
-    const value = e.target.value;
-    const index = e.target.name;
-    let dataForm = this.state.MatStockForm;
-    dataForm[parseInt(index)] = value;
-    this.setState({ MatStockForm: dataForm });
-  }
-
   async saveUpdate() {
     let respondSaveEdit = undefined;
-    const dataPPEdit = this.state.MatStockForm;
-    const dataPP = this.state.all_data.find(e => e.owner_id === dataPPEdit[0]);
+    const dataPPEdit = this.state.PPForm;
+    const dataPP = this.state.all_data.find(e => e.pp_id === dataPPEdit[0]);
     let pp = {
       "owner_id": dataPPEdit[0],
       "po_number": dataPPEdit[1],
@@ -377,7 +373,7 @@ class MatInboundPlan extends React.Component {
     //     pp["pp_cust_number"] = pp.pp_id;
     //   }
     // }
-    let patchData = await this.patchDatatoAPINODE('/whInboundPlan/UpdateOneWhInboundPlanwithDelete/', { "data": [pp] });
+    let patchData = await this.patchDatatoAPINODE('/whInboundPlan/UpdateOneWhInboundPlan/', { "data": [pp] });
     if (patchData === undefined) { patchData = {}; patchData["data"] = undefined }
     if (patchData.data !== undefined) {
       this.setState({ action_status: 'success' }, () => {
@@ -395,7 +391,7 @@ class MatInboundPlan extends React.Component {
     this.toggleLoading();
     let poData = [];
     let respondSaveNew = undefined;
-    const dataPPEdit = this.state.MatStockForm;
+    const dataPPEdit = this.state.POForm;
     const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
     let pp = {
       "owner_id": dataPPEdit[0],
@@ -425,27 +421,6 @@ class MatInboundPlan extends React.Component {
       num = (num - t) / 26 | 0;
     }
     return s || undefined;
-  }
-
-  async downloadAll() {
-    const wb = new Excel.Workbook();
-    const ws = wb.addWorksheet();
-
-    const dataPP = this.state.pp_all;
-
-    let headerRow = ["owner_id","po_number","arrival_date","project_name","sku"]
-    ws.addRow(headerRow);
-
-    for (let i = 1; i < headerRow.length + 1; i++) {
-      ws.getCell(this.numToSSColumn(i) + '1').font = { size: 11, bold: true };
-    }
-
-    for (let i = 0; i < dataPP.length; i++) {
-      ws.addRow([dataPP[i].owner_id, dataPP[i].po_number, dataPP[i].arrival_date, dataPP[i].project_name, dataPP[i].sku])
-    }
-
-    const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Material Inbound Plan.xlsx');
   }
 
   exportMatInbound = async () => {
@@ -479,7 +454,6 @@ class MatInboundPlan extends React.Component {
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportMatInbound}> Material Inbound Template</DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>> Download All </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -519,7 +493,7 @@ class MatInboundPlan extends React.Component {
                   </CardBody>
                   <CardFooter>
                     <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveCPOBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
-                    <Button color="primary" style={{ float: 'right' }} onClick={this.togglePOForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>                    
+                    <Button color="primary" style={{ float: 'right' }} onClick={this.togglePOForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>
                   </CardFooter>
                 </Card>
               </Collapse>
@@ -529,7 +503,7 @@ class MatInboundPlan extends React.Component {
                     <div style={{ marginBottom: '10px' }}>
                       <span style={{ fontSize: '20px', fontWeight: '500' }}>Material Inbound List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
-                        <input className="search-box-material" type="text" name='filter' placeholder="Search Material" onChange={this.handleChangeFilter} value={this.state.filter_name} />
+                        <input className="search-box-material" type="text" name='filter' placeholder="Search SKU" onChange={this.handleChangeFilter} value={this.state.filter_name} />
                       </div>
                     </div>
                   </Col>
@@ -573,7 +547,7 @@ class MatInboundPlan extends React.Component {
                                 <td style={{ textAlign: 'center' }}>{e.condition}</td>
                                 <td style={{ textAlign: 'center' }}>{e.notes}</td>
                                 <td>
-                                  <Button size='sm' color="secondary" value={e.owner_id} onClick={this.toggleEdit} title='Edit'>
+                                  <Button size='sm' color="secondary" value={e._id} onClick={this.toggleEdit} title='Edit'>
                                     <i className="fa fa-pencil" aria-hidden="true"></i>
                                   </Button>
                                 </td>
@@ -609,7 +583,7 @@ class MatInboundPlan extends React.Component {
         </Row>
 
         {/* Modal New PO */}
-        <Modal isOpen={this.state.modalMatStockForm} toggle={this.togglePOForm} className="modal--form-e">
+        <Modal isOpen={this.state.modalPOForm} toggle={this.togglePOForm} className="modal--form-e">
           <ModalHeader>Form CPO</ModalHeader>
           <ModalBody>
             <Row>
@@ -633,7 +607,7 @@ class MatInboundPlan extends React.Component {
                 <FormGroup>
                   <Label htmlFor="sku" >SKU</Label>
                   <Input type="text" min="0" name="4" placeholder="" value={this.state.POForm[4]} onChange={this.handleChangeForm} />
-                </FormGroup>   
+                </FormGroup>
               </Col>
             </Row>
           </ModalBody>
@@ -668,7 +642,7 @@ class MatInboundPlan extends React.Component {
                 <FormGroup>
                   <Label htmlFor="sku" >SKU</Label>
                   <Input type="text" min="0" name="4" placeholder="" value={this.state.POForm[4]} onChange={this.handleChangeForm} />
-                </FormGroup>               
+                </FormGroup>
               </Col>
             </Row>
           </ModalBody>

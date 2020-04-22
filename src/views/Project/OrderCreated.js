@@ -12,6 +12,10 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
+const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+
 class OrderCreated extends Component {
   constructor(props) {
     super(props);
@@ -21,6 +25,7 @@ class OrderCreated extends Component {
       userId : this.props.dataLogin._id,
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
       mr_list : [],
       prevPage : 0,
       activePage : 1,
@@ -29,7 +34,7 @@ class OrderCreated extends Component {
       filter_list : new Array(14).fill(""),
       mr_all : [],
       action_status : null,
-      action_message : ""
+      action_message : null,
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -37,7 +42,7 @@ class OrderCreated extends Component {
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
-    this.proceedMilestone = this.proceedMilestone.bind(this);
+    this.ApproveMR = this.ApproveMR.bind(this);
     this.rejectMR = this.rejectMR.bind(this);
   }
 
@@ -61,6 +66,26 @@ class OrderCreated extends Component {
     }
   }
 
+  async patchDatatoAPINODE(url, data){
+    try {
+      let respond = await axios.patch(API_URL_NODE +url, data, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+      console.log("respond Post Data", err);
+      return respond;
+    }
+  }
+
   getMRList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
@@ -78,7 +103,7 @@ class OrderCreated extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+',"current_mr_status": "MR REQUESTED", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+',"current_mr_status": "MR REQUESTED"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": "MR REQUESTED", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPI('/mr_op?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
       console.log("MR List Sorted", res);
@@ -233,41 +258,66 @@ class OrderCreated extends Component {
     }
     if(successUpdate.length !== 0){
       this.setState({action_status : "success"});
-      setTimeout(function(){ window.location.reload(); }, 2000);
+      this.getMRList();
+      // setTimeout(function(){ window.location.reload(); }, 2000);
     }
   }
 
-  async rejectMR(e) {
-    const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-    const _etag = e.target.value;
-    const _id = e.target.id;
-    const dataMR = this.state.mr_list.find(e => e._id === _id);
-    let currStatus = [
-      {
-          "mr_status_name": "MATERIAL_REQUEST",
-          "mr_status_value": "REJECTED",
-          "mr_status_date": dateNow,
-          "mr_status_updater": this.state.userEmail,
-          "mr_status_updater_id": this.state.userId
+  ApproveMR(e){
+    const id_doc = e.currentTarget.id;
+    this.patchDatatoAPINODE('/matreq/approveMatreq/'+id_doc).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+        this.getMRList();
+      }else{
+        this.setState({ action_status : "failed" });
       }
-    ];
-    let successUpdate = [];
-    let updateMR = {};
-    updateMR['current_milestones'] = null;
-    updateMR['current_mr_status'] = "MR CANCELED";
-    updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
-    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
-    if(res !== undefined) {
-      if(res.data !== undefined) {
-        successUpdate.push(res.data);
-      }
-    }
-    if(successUpdate.length !== 0){
-      this.setState({action_status : "success"});
-      setTimeout(function(){ window.location.reload(); }, 2000);
-    }
+    })
   }
+
+  rejectMR(e){
+    const id_doc = e.currentTarget.id;
+    this.patchDatatoAPINODE('/matreq/rejectMatreq/'+id_doc).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+        this.getMRList();
+      }else{
+        this.setState({ action_status : "failed" });
+      }
+    })
+  }
+
+  // async rejectMR(e) {
+  //   const newDate = new Date();
+  //   const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+  //   const _etag = e.target.value;
+  //   const _id = e.target.id;
+  //   const dataMR = this.state.mr_list.find(e => e._id === _id);
+  //   let currStatus = [
+  //     {
+  //         "mr_status_name": "MATERIAL_REQUEST",
+  //         "mr_status_value": "REJECTED",
+  //         "mr_status_date": dateNow,
+  //         "mr_status_updater": this.state.userEmail,
+  //         "mr_status_updater_id": this.state.userId
+  //     }
+  //   ];
+  //   let successUpdate = [];
+  //   let updateMR = {};
+  //   updateMR['current_milestones'] = null;
+  //   updateMR['current_mr_status'] = "MR CANCELED";
+  //   updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
+  //   let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
+  //   if(res !== undefined) {
+  //     if(res.data !== undefined) {
+  //       successUpdate.push(res.data);
+  //     }
+  //   }
+  //   if(successUpdate.length !== 0){
+  //     this.setState({action_status : "success"});
+  //     setTimeout(function(){ window.location.reload(); }, 2000);
+  //   }
+  // }
 
   componentDidMount() {
     this.getMRList();
@@ -337,7 +387,7 @@ class OrderCreated extends Component {
 
     return (
       <div className="animated fadeIn">
-        <AlertProcess alertAct={this.state.action_status} messageAct={this.state.action_message}/>
+        <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -348,7 +398,7 @@ class OrderCreated extends Component {
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
               </CardHeader>
               <CardBody>
-                <Table responsive striped bordered size="sm"> 
+                <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
                       <th rowSpan="2" style={{verticalAlign: "middle"}}>Action</th>
@@ -516,10 +566,10 @@ class OrderCreated extends Component {
                         <td colSpan="15">No Data Available</td>
                       </tr>
                     )}
-                    {this.state.mr_list.map((list, i) => 
+                    {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
-                          <Button outline color="success" size="sm" className="btn-pill" style={{width: "90px", marginBottom: "4px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-check" style={{marginRight: "8px"}}></i>Approve</Button>
+                          <Button outline color="success" size="sm" className="btn-pill" style={{width: "90px", marginBottom: "4px"}} id={list._id} value={list._etag} onClick={this.ApproveMR}><i className="fa fa-check" style={{marginRight: "8px"}}></i>Approve</Button>
                           <Button outline color="danger" size="sm" className="btn-pill" style={{width: "90px"}} id={list._id} value={list._etag} onClick={this.rejectMR}><i className="fa fa-times" style={{marginRight: "8px"}}></i>Reject</Button>
                         </td>
                         <td><Link to={'/mr-detail/'+list._id}>{list.mr_id}</Link></td>
@@ -540,7 +590,7 @@ class OrderCreated extends Component {
                     )}
                   </tbody>
                 </Table>
-                <Pagination 
+                <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
                   totalItemsCount={this.state.totalData.total}

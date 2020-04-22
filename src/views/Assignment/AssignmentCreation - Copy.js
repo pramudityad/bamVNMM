@@ -5,17 +5,12 @@ import axios from 'axios';
 import { connect } from 'react-redux';
 import AsyncSelect from 'react-select/async';
 import { Redirect } from 'react-router-dom';
-import Select from 'react-select';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const username_tsel = 'adminbamidsuper';
 const password_tsel = 'F760qbAg2sml';
-
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
-const usernameXL = 'adminbamidsuper';
-const passwordXL = 'F760qbAg2sml';
 
 class AssignmentCreation extends Component {
   constructor(props) {
@@ -37,13 +32,6 @@ class AssignmentCreation extends Component {
       project_name : null,
       asp_list : [],
       create_assignment_form : new Array(69).fill(null),
-      list_tower : [],
-      list_project : [],
-      list_tower_selection : [],
-      list_project_selection : [],
-      tower_selected_id : null,
-      project_selected : null,
-      project_name_selected : null,
     }
 
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -54,8 +42,6 @@ class AssignmentCreation extends Component {
     this.handleChangeForm = this.handleChangeForm.bind(this);
     this.handleChangeFormAsyncSelect = this.handleChangeFormAsyncSelect.bind(this);
     this.postAssignment = this.postAssignment.bind(this);
-    this.handleChangeProjectXL = this.handleChangeProjectXL.bind(this);
-    this.handleChangeTowerXL = this.handleChangeTowerXL.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -74,26 +60,6 @@ class AssignmentCreation extends Component {
     } catch(err) {
       let respond = err;
       console.log("respond data", err);
-      return respond;
-    }
-  }
-
-  async getDatafromAPIXL(url){
-    try {
-      let respond = await axios.get(API_URL_XL +url, {
-        headers : {'Content-Type':'application/json'},
-        auth: {
-          username: usernameXL,
-          password: passwordXL
-        },
-      })
-      if(respond.status >= 200 && respond.status < 300){
-        console.log("respond Get Data", respond);
-      }
-      return respond;
-    }catch (err) {
-      let respond = err;
-      console.log("respond Get Data", err);
       return respond;
     }
   }
@@ -275,7 +241,7 @@ class AssignmentCreation extends Component {
   }
 
   loadOptionsASP() {
-    this.getDatafromAPIXL('/vendor_data_non_page').then(res => {
+    this.getDataFromAPI('/vendor_data_non_page').then(res => {
       console.log("ASP List", res);
       if(res.data !== undefined) {
         const items = res.data._items;
@@ -286,69 +252,7 @@ class AssignmentCreation extends Component {
 
   componentDidMount() {
     document.title = 'Assignment Creation | BAM';
-    this.getDataTower();
-    this.getDataProject();
     this.loadOptionsASP();
-  }
-
-  getDataTower(){
-    this.getDatafromAPIXL('/tower_site_sorted_non_page?projection={"tower_id" : 1}').then( resTower => {
-      if(resTower.data !== undefined){
-        this.setState({ list_tower : resTower.data._items }, () => {
-          this.filterDataTower("");
-        })
-      }
-    })
-  }
-
-  getDataProject(){
-    this.getDatafromAPIXL('/project_sorted_non_page').then( resProject => {
-      if(resProject.data !== undefined){
-        this.setState({ list_project : resProject.data._items }, () => {
-          this.filterDataProject("");
-        })
-      }
-    })
-  }
-
-  filterDataTower = (inputValue) => {
-    const list = [];
-    this.state.list_tower.map(i =>
-        list.push({'label' : i.tower_id, 'value' : i.tower_id})
-    )
-    this.setState({list_tower_selection : list})
-    if(inputValue.length === 0){
-      return list;
-    }else{
-      return this.state.list_tower_selection.filter(i =>
-        i.label.toLowerCase().includes(inputValue.toLowerCase())
-      );
-    }
-  };
-
-  filterDataProject = (inputValue) => {
-    const list = [];
-    this.state.list_project.map(i =>
-        list.push({'label' : i.Project, 'value' : i.Project})
-    )
-    this.setState({list_project_selection : list})
-    if(inputValue.length === 0){
-      return list;
-    }else{
-      return this.state.list_project_selection.filter(i =>
-        i.label.toLowerCase().includes(inputValue.toLowerCase())
-      );
-    }
-  };
-
-  handleChangeProjectXL(e){
-    this.setState({project_selected : e.value, project_name_selected : e.value })
-    return e;
-  }
-
-  handleChangeTowerXL(e){
-    this.setState({tower_selected_id : e.value});
-    return e
   }
 
   getAssignmentID(){
@@ -380,125 +284,115 @@ class AssignmentCreation extends Component {
 
   async postAssignment(){
     const dataForm = this.state.create_assignment_form;
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
 
+    let i = 17;
+    let j = 10;
+    let k = 59;
+    let all_ssow = [];
+    for(i; i <= 53; i = i+6) {
+      let ssow_list = {
+        "ssow_id" : dataForm[i],
+        "sow_type" : dataForm[j],
+        "ssow_description" : dataForm[i+2],
+        "ssow_activity_number" : dataForm[i+1],
+        "ssow_unit" : dataForm[i+3],
+        "ssow_qty" : dataForm[i+4],
+        "ssow_price" : dataForm[k],
+        "ssow_total_price" : dataForm[k]*dataForm[i+4],
+        "ssow_status" : [
+          {
+            "status" : dataForm[i+5],
+            "status_update_date" : dateNow,
+            "status_updater" : this.state.userEmail
+          }
+        ]
+      }
+      if(ssow_list.ssow_unit === null) {
+        ssow_list["ssow_unit"] = "act";
+      } else {
+        if(ssow_list.ssow_unit.length === 0) {
+          ssow_list["ssow_unit"] = "act";
+        }
+      }
+      if(dataForm[i] !== null) {
+        all_ssow.push(ssow_list);
+      }
+      k++;
+    }
+
+    const assignment_data = {
+      "Assignment_No" : "ASG"+this.getAssignmentID(),
+      "Account_Name" : "TSEL",
+      "CD_ID" : dataForm[0],
+      "id_cd_doc" : this.state.activity_selected,
+      "Project" : dataForm[1],
+      "Plant" : "",
+      "NW" : dataForm[11],
+      "NW_Activity" : dataForm[13],
+      "Requisitioner" : "",
+      "SOW_Type" : dataForm[10],
+      "Site_ID" : dataForm[2],
+      "Site_Name" : dataForm[3],
+      "Site_Longitude" : dataForm[5],
+      "Site_Latitude" : dataForm[4],
+      "Site_FE_ID" : dataForm[6],
+      "Site_FE_Name" : dataForm[7],
+      "Site_FE_Longitude" : dataForm[9],
+      "Site_FE_Latitude" : dataForm[8],
+      "Vendor_Code" : dataForm[66],
+      "Vendor_Code_Number" : dataForm[67],
+      "Vendor_Name" : dataForm[14],
+      "Vendor_Email" : dataForm[68],
+      "Payment_Terms" : dataForm[15],
+      "SH_ID" : dataForm[0],
+      "Assignment_Creation_Date" : dateNow,
+      "Value_Assignment" : (dataForm[59]*dataForm[21])+(dataForm[60]*dataForm[27])+(dataForm[61]*dataForm[33])+(dataForm[62]*dataForm[39])+(dataForm[63]*dataForm[45])+(dataForm[64]*dataForm[51])+(dataForm[65]*dataForm[57]),
+      "Requestor" : this.state.userEmail,
+      "Payment_Term_Ratio" : null,
+      "SSOW_List" : all_ssow,
+      "Current_Status" : "ASP ASSIGNMENT CREATED",
+      "ASP_Assignment_Status" : [
+        {
+          "status_name" : "ASP_ASSIGNMENT",
+          "status_value" : "CREATED",
+          "status_date" : dateNow,
+          "status_updater" : this.state.userEmail,
+          "status_updater_id" : this.state.userId
+        }
+      ],
+      "deleted" : 0,
+      "created_by" : this.state.userId,
+      "updated_by" : this.state.userId,
+      "created_on" : dateNow,
+      "updated_on" : dateNow
+    }
+
+    console.log('to be posted', JSON.stringify(assignment_data));
+    const respondSaveAssignment = await this.postDatatoAPI('/asp_assignment_op', assignment_data);
+    if(respondSaveAssignment.data !== undefined && respondSaveAssignment.status >= 200 && respondSaveAssignment.status <= 300 ) {
+      console.log("Assignment Successfully Created");
+      alert('New Assignment has been created!');
+      this.setState({ action_status : 'success', action_message : 'New Assignment has been created!' }, () => {
+        setTimeout(function(){ this.setState({ redirect_sign : respondSaveAssignment.data._id}); }.bind(this), 1000);
+      });
+    } else {
+      alert('New Assignment cannot be created, please try again!');
+      this.setState({ action_status : 'failed', action_message : 'New Assignment cannot be created, please try again!' });
+    }
   }
 
-  // async postAssignment(){
-  //   const dataForm = this.state.create_assignment_form;
-  //   const newDate = new Date();
-  //   const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-  //
-  //   let i = 17;
-  //   let j = 10;
-  //   let k = 59;
-  //   let all_ssow = [];
-  //   for(i; i <= 53; i = i+6) {
-  //     let ssow_list = {
-  //       "ssow_id" : dataForm[i],
-  //       "sow_type" : dataForm[j],
-  //       "ssow_description" : dataForm[i+2],
-  //       "ssow_activity_number" : dataForm[i+1],
-  //       "ssow_unit" : dataForm[i+3],
-  //       "ssow_qty" : dataForm[i+4],
-  //       "ssow_price" : dataForm[k],
-  //       "ssow_total_price" : dataForm[k]*dataForm[i+4],
-  //       "ssow_status" : [
-  //         {
-  //           "status" : dataForm[i+5],
-  //           "status_update_date" : dateNow,
-  //           "status_updater" : this.state.userEmail
-  //         }
-  //       ]
-  //     }
-  //     if(ssow_list.ssow_unit === null) {
-  //       ssow_list["ssow_unit"] = "act";
-  //     } else {
-  //       if(ssow_list.ssow_unit.length === 0) {
-  //         ssow_list["ssow_unit"] = "act";
-  //       }
-  //     }
-  //     if(dataForm[i] !== null) {
-  //       all_ssow.push(ssow_list);
-  //     }
-  //     k++;
-  //   }
-  //
-  //   const assignment_data = {
-  //     "Assignment_No" : "ASG"+this.getAssignmentID(),
-  //     "Account_Name" : "TSEL",
-  //     "CD_ID" : dataForm[0],
-  //     "id_cd_doc" : this.state.activity_selected,
-  //     "Project" : dataForm[1],
-  //     "Plant" : "",
-  //     "NW" : dataForm[11],
-  //     "NW_Activity" : dataForm[13],
-  //     "Requisitioner" : "",
-  //     "SOW_Type" : dataForm[10],
-  //     "Site_ID" : dataForm[2],
-  //     "Site_Name" : dataForm[3],
-  //     "Site_Longitude" : dataForm[5],
-  //     "Site_Latitude" : dataForm[4],
-  //     "Site_FE_ID" : dataForm[6],
-  //     "Site_FE_Name" : dataForm[7],
-  //     "Site_FE_Longitude" : dataForm[9],
-  //     "Site_FE_Latitude" : dataForm[8],
-  //     "Vendor_Code" : dataForm[66],
-  //     "Vendor_Code_Number" : dataForm[67],
-  //     "Vendor_Name" : dataForm[14],
-  //     "Vendor_Email" : dataForm[68],
-  //     "Payment_Terms" : dataForm[15],
-  //     "SH_ID" : dataForm[0],
-  //     "Assignment_Creation_Date" : dateNow,
-  //     "Value_Assignment" : (dataForm[59]*dataForm[21])+(dataForm[60]*dataForm[27])+(dataForm[61]*dataForm[33])+(dataForm[62]*dataForm[39])+(dataForm[63]*dataForm[45])+(dataForm[64]*dataForm[51])+(dataForm[65]*dataForm[57]),
-  //     "Requestor" : this.state.userEmail,
-  //     "Payment_Term_Ratio" : null,
-  //     "SSOW_List" : all_ssow,
-  //     "Current_Status" : "ASP ASSIGNMENT CREATED",
-  //     "ASP_Assignment_Status" : [
-  //       {
-  //         "status_name" : "ASP_ASSIGNMENT",
-  //         "status_value" : "CREATED",
-  //         "status_date" : dateNow,
-  //         "status_updater" : this.state.userEmail,
-  //         "status_updater_id" : this.state.userId
-  //       }
-  //     ],
-  //     "deleted" : 0,
-  //     "created_by" : this.state.userId,
-  //     "updated_by" : this.state.userId,
-  //     "created_on" : dateNow,
-  //     "updated_on" : dateNow
-  //   }
-  //
-  //   console.log('to be posted', JSON.stringify(assignment_data));
-  //   const respondSaveAssignment = await this.postDatatoAPI('/asp_assignment_op', assignment_data);
-  //   if(respondSaveAssignment.data !== undefined && respondSaveAssignment.status >= 200 && respondSaveAssignment.status <= 300 ) {
-  //     console.log("Assignment Successfully Created");
-  //     alert('New Assignment has been created!');
-  //     this.setState({ action_status : 'success', action_message : 'New Assignment has been created!' }, () => {
-  //       setTimeout(function(){ this.setState({ redirect_sign : respondSaveAssignment.data._id}); }.bind(this), 1000);
-  //     });
-  //   } else {
-  //     alert('New Assignment cannot be created, please try again!');
-  //     this.setState({ action_status : 'failed', action_message : 'New Assignment cannot be created, please try again!' });
-  //   }
-  // }
-
   async handleChangeForm(e) {
-    // const name = e.target.value;
-    const index = e.target.name;
-    const code = e.target.key;
-    // const value = e.target.value;
-    let dataForm = this.state.create_assignment_form;
     const value = e.target.value;
-    const indexSel = e.target.selectedIndex;
-    const name = e.target[indexSel].text;
+    const index = e.target.name;
+    let dataForm = this.state.create_assignment_form;
     dataForm[parseInt(index)] = value;
     if(index === "14") {
-      const getDataASP = await this.getDatafromAPIXL('/vendor_data_non_page?where={"Vendor_Code":"'+value+'"}');
+      const getDataASP = await this.getDataFromAPI('/vendor_data_non_page?where={"Name":"'+value+'"}');
       let dataForm = this.state.create_assignment_form;
-      dataForm[66] = name;
-      dataForm[67] = value;
+      dataForm[66] = getDataASP.data._items[0]._id;
+      dataForm[67] = getDataASP.data._items[0].Vendor_Code;
       dataForm[68] = getDataASP.data._items[0].Email;
     }
     this.setState({create_assignment_form : dataForm}, () => {
@@ -523,15 +417,16 @@ class AssignmentCreation extends Component {
               </CardHeader>
               <CardBody>
                 <Form>
-                  <h5>Tower ID</h5>
+                  <h5>ACTIVITY</h5>
                   <Row>
                     <Col md="6">
                       <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Tower ID</Label>
-                        <Select
+                        <Label>WP ID</Label>
+                        <AsyncSelect
                           cacheOptions
-                          options={this.state.list_tower_selection}
-                          onChange={this.handleChangeTowerXL}
+                          loadOptions={this.loadOptionsActivity}
+                          defaultOptions
+                          onChange={this.handleChangeActivity}
                         />
                       </FormGroup>
                     </Col>
@@ -541,15 +436,22 @@ class AssignmentCreation extends Component {
                     <Col md="6">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>Project Name</Label>
-                        <Select
-                          cacheOptions
-                          options={this.state.list_project_selection}
-                          onChange={this.handleChangeProjectXL}
-                        />
+                        <Input type="text" name="project_name" readOnly value={this.state.project_name !== null ? this.state.project_name : ""} />
+                      </FormGroup>
+                    </Col>
+                    <Col md="6" style={{display: "none"}}>
+                      <FormGroup style={{paddingLeft: "16px"}}>
+                        <Label>Project Group</Label>
+                        <Input type="select" name="project_group">
+                          <option>Select Project Group</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3">3</option>
+                        </Input>
                       </FormGroup>
                     </Col>
                   </Row>
-                  {/* }<Row style={{marginTop: "16px"}}>
+                  <Row style={{marginTop: "16px"}}>
                     <Col md="6">
                       <h5>SITE DETAILS NE</h5>
                     </Col>
@@ -615,7 +517,7 @@ class AssignmentCreation extends Component {
                         <Input type="text" name="act_code" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.CD_Info_Activity_Code : ""} />
                       </FormGroup>
                     </Col>
-                  </Row> */}
+                  </Row>
                   <h5 style={{marginTop: "16px"}}>PR/PO INFORMATION</h5>
                   <Row>
                     <Col md="6">
@@ -624,11 +526,11 @@ class AssignmentCreation extends Component {
                         <Input type="select" name="14" onChange={this.handleChangeForm}>
                           <option value="" disabled selected hidden>Select ASP</option>
                           {this.state.asp_list.map((list, i) =>
-                            <option value={list.Vendor_Code}>{list.Name}</option>
+                            <option value={list.Name} key={list._id}>{list.Name}</option>
                           )}
                         </Input>
                       </FormGroup>
-                      {/* }<FormGroup style={{paddingLeft: "16px", display: "none"}}>
+                      <FormGroup style={{paddingLeft: "16px", display: "none"}}>
                         <Label>MR ID</Label>
                         <Input type="select" name="mr_id">
                           <option value="" disabled selected hidden>Select MR ID</option>
@@ -650,7 +552,17 @@ class AssignmentCreation extends Component {
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>SSOW Type</Label>
                         <Input type="text" name="16" value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.CD_Info_SOW_Type : ""} readOnly />
-                      </FormGroup>*/}
+                          {/* <option value="" disabled selected hidden>Select SSOW Type</option>
+                          <option value="BSC">BSC</option>
+                          <option value="DWDM">DWDM</option>
+                          <option value="NDO">NDO</option>
+                          <option value="RBS">RBS</option>
+                          <option value="SACME">SACME</option>
+                          <option value="Survey">Survey</option>
+                          <option value="SV">SV</option>
+                          <option value="TRM">TRM</option> */}
+                        {/* </Input> */}
+                      </FormGroup>
                     </Col>
                   </Row>
                   <Row style={{display: "none"}}>
@@ -676,13 +588,33 @@ class AssignmentCreation extends Component {
                   <Row style={{display: "none"}}>
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
+                        <Label>PO</Label>
+                        <Input type="text" name="po" readOnly />
+                      </FormGroup>
+                    </Col>
+                    <Col md="4">
+                      <FormGroup style={{paddingLeft: "16px"}}>
+                        <Label>Created By</Label>
+                        <Input type="text" name="po_created_by" readOnly />
+                      </FormGroup>
+                    </Col>
+                    <Col md="4">
+                      <FormGroup style={{paddingLeft: "16px"}}>
+                        <Label>Created On</Label>
+                        <Input type="date" name="po_created_on" readOnly />
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  <Row style={{display: "none"}}>
+                    <Col md="4">
+                      <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>PO LINE ITEM</Label>
                         <Input type="text" name="po_line_item" readOnly />
                       </FormGroup>
                     </Col>
                   </Row>
-                  {/* }<h5 style={{marginTop: "16px"}}>SSOW {this.state.list_activity_selected !== null ? this.state.list_activity_selected.CD_Info_SOW_Type : ""}</h5>
-                  <Row style={{paddingLeft: "16px", paddingRight: "16px"}} style={{display: "none"}}>
+                  <h5 style={{marginTop: "16px"}}>SSOW {this.state.list_activity_selected !== null ? this.state.list_activity_selected.CD_Info_SOW_Type : ""}</h5>
+                  <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
                     <Col md="2" style={{margin:"0", padding:"4px"}}>
                       <FormGroup>
                         <Label>SSOW ID</Label>
@@ -1073,7 +1005,7 @@ class AssignmentCreation extends Component {
                         </Input>
                       </FormGroup>
                     </Col>
-                  </Row> */}
+                  </Row>
                   <h5 style={{marginTop: "16px", display: "none"}}>GR (PARTIAL)</h5>
                   <Row style={{display: "none"}}>
                     <Col md="4">

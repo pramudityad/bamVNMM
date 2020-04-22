@@ -222,6 +222,12 @@ const routes = [
   { path: '/list-tssr-boq', exact: true, name: 'List TSSR BOQ', component: ListTSSRBoq },
   { path: '/detail-tssr-boq/:id', exact: true, name: 'CPO TSSR Detail', component: DetailTSSRBoq },
 
+  { path: '/material-stock', exact: true, name: 'Material Stock', component: MaterialStock },
+  { path: '/material-stock-detail/:id', exact: true, name: 'Material Stock Detail', component: MaterialStockDetail },
+
+  { path: '/material-inbound-plan', exact: true, name: 'Material Inbound Plan', component: MaterialInboundPlan },
+  { path: '/material-inbound-detail/:id', exact: true, name: 'Material Inbound Plan Detail', component: MaterialInboundPlanDetail },
+
 ];
 
 export default routes;

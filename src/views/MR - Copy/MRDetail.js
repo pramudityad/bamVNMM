@@ -36,7 +36,6 @@ class MRDetail extends Component {
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
       tokenUser : this.props.dataLogin.token,
-      list_mr_item : [],
         data_mr : null,
         mr_site_NE : null,
         mr_site_FE : null,
@@ -142,25 +141,6 @@ class MRDetail extends Component {
     }
   }
 
-  async getDataFromAPINODE(url) {
-    try {
-      let respond = await axios.get(API_URL_NODE+url, {
-        headers : {
-          'Content-Type':'application/json',
-          'Authorization': 'Bearer '+this.state.tokenUser
-        },
-      });
-      if(respond.status >= 200 && respond.status < 300) {
-        console.log("respond data", respond);
-      }
-      return respond;
-    } catch(err) {
-      let respond = err;
-      console.log("respond data", err);
-      return respond;
-    }
-  }
-
   async patchDatatoAPINODE(url, data){
     try {
       let respond = await axios.patch(API_URL_NODE +url, data, {
@@ -193,63 +173,48 @@ class MRDetail extends Component {
   }
 
   getDataMR(_id_MR){
-    this.getDataFromAPINODE('/matreq/'+_id_MR).then(resMR => {
+    this.getDatafromAPIBAM('/mr_op/'+_id_MR).then(resMR => {
       if(resMR.data !== undefined){
-        this.setState({ data_mr : resMR.data }, () => {
-          this.setState({mr_pp : resMR.data.packages}, () => {
-            this.prepareView();
-          });
-        });
+        this.setState({ data_mr : resMR.data });
+        this.getDatafromAPIBAM('/mr_pp_sorted_nonpage?where={"id_mr_doc" : "'+_id_MR+'"}').then(resPP => {
+          if(resPP.data !== undefined){
+            this.getDatafromAPIBAM('/mr_md_sorted_nonpage?where={"id_mr_doc" : "'+_id_MR+'"}').then(resMD => {
+              if(resMD.data !== undefined){
+                this.setState({mr_pp : resPP.data._items, mr_md : resMD.data._items }, () => {
+                  this.prepareView();
+                });
+              }
+            })
+          }
+        })
       }
     })
   }
 
-  // getDataMR(_id_MR){
-  //   this.getDatafromAPIBAM('/mr_op/'+_id_MR).then(resMR => {
-  //     console.log("resMR.data", resMR.data);
-  //     if(resMR.data !== undefined){
-  //       this.setState({ data_mr : resMR.data });
-  //       this.getDatafromAPIBAM('/mr_pp_sorted_nonpage?where={"id_mr_doc" : "'+_id_MR+'"}').then(resPP => {
-  //         if(resPP.data !== undefined){
-  //           this.getDatafromAPIBAM('/mr_md_sorted_nonpage?where={"id_mr_doc" : "'+_id_MR+'"}').then(resMD => {
-  //             if(resMD.data !== undefined){
-                // this.setState({mr_pp : resPP.data._items, mr_md : resMD.data._items }, () => {
-                //   this.prepareView();
-                // });
-  //             }
-  //           })
-  //         }
-  //       })
-  //     }
-  //   })
-  // }
-
   prepareView(){
     const mr_data = this.state.data_mr;
     const data_pp = this.state.mr_pp;
-    let list_mr_id_item = [...new Set(data_pp.map(({ pp_id}) => pp_id))];
-    let list_mr_item = [];
+    const data_md = this.state.mr_md;
     let site_NE = undefined;
     let site_FE = undefined;
     const data_pp_uniq = [...new Set(data_pp.map(({ id_pp_doc}) => id_pp_doc))];
-    for(let i = 0; i < list_mr_id_item.length; i++){
-      let idxItem = data_pp.find(e => e.pp_id === list_mr_id_item[i]);
-      if(idxItem !== undefined){
-        list_mr_item.push(idxItem);
-      }
-    }
-    this.setState({list_mr_item : list_mr_item});
     if(mr_data.site_info.length !== 0){
       site_NE = mr_data.site_info.find( e => e.site_title === "NE");
       site_FE = mr_data.site_info.find( e => e.site_title === "FE");
     }
     if(site_NE !== undefined){
       let data_pp_NE = data_pp.filter(e => e.site_id === site_NE.site_id);
+      for(let i = 0; i < data_pp_NE.length; i++){
+        data_pp_NE[i]["mr_md"] = data_md.filter(e => e.id_mr_pp_doc === data_pp_NE[i]._id && e.site_id === site_NE.site_id);
+      }
       site_NE["mr_pp"] = data_pp_NE;
       this.setState({ mr_site_NE : site_NE });
     }
     if(site_FE !== undefined){
       let data_pp_FE = data_pp.filter(e => e.site_id === site_FE.site_id);
+      for(let i = 0; i < data_pp_FE.length; i++){
+        data_pp_FE[i]["mr_md"] = data_md.filter(e => e.id_mr_pp_doc === data_pp_FE[i]._id && e.site_id === site_FE.site_id);
+      }
       site_FE["mr_pp"] = data_pp_FE;
       this.setState({ mr_site_FE : site_FE });
     }
@@ -279,7 +244,7 @@ class MRDetail extends Component {
     const itemMRBom = this.state.mr_site_NE.mr_pp;
     const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
     if(getDataPPMR !== undefined){
-      const getDataMDMR = getDataPPMR.materials.find(e => e.material_id === mr_id);
+      const getDataMDMR = getDataPPMR.mr_md.find(e => e.material_id === mr_id);
       if(getDataMDMR !== undefined){
         return getDataMDMR.qty;
       }else{
@@ -294,7 +259,7 @@ class MRDetail extends Component {
     const itemMRBom = this.state.mr_site_FE.mr_pp;
     const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
     if(getDataPPMR !== undefined){
-      const getDataMDMR = getDataPPMR.materials.find(e => e.material_id === mr_id);
+      const getDataMDMR = getDataPPMR.mr_md.find(e => e.material_id === mr_id);
       if(getDataMDMR !== undefined){
         return getDataMDMR.qty;
       }else{
@@ -348,6 +313,9 @@ class MRDetail extends Component {
       >
           <h3 className="vertical-timeline-element-title">Order Created</h3>
           <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
         </VerticalTimelineElement>;
       case 'MS_ORDER_RECEIVED':
         return <VerticalTimelineElement
@@ -358,6 +326,9 @@ class MRDetail extends Component {
       >
           <h3 className="vertical-timeline-element-title">Order Received</h3>
           <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
         </VerticalTimelineElement>;
       case 'MS_ORDER_PROCESSING':
         return <VerticalTimelineElement
@@ -368,6 +339,9 @@ class MRDetail extends Component {
       >
           <h3 className="vertical-timeline-element-title">Order Processing</h3>
           <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
         </VerticalTimelineElement>;
       case 'MS_READY_TO_DELIVER':
         return <VerticalTimelineElement
@@ -388,6 +362,9 @@ class MRDetail extends Component {
       >
           <h3 className="vertical-timeline-element-title">Joint Check</h3>
           <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
         </VerticalTimelineElement>;
       case 'MS_LOADING_PROCESS':
         return <VerticalTimelineElement
@@ -398,6 +375,9 @@ class MRDetail extends Component {
       >
           <h3 className="vertical-timeline-element-title">Loading Process</h3>
           <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
         </VerticalTimelineElement>;
       default:
         return <VerticalTimelineElement
@@ -407,6 +387,9 @@ class MRDetail extends Component {
 
       >
           <h3 className="vertical-timeline-element-title">Data not available</h3>
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
+          </p>
         </VerticalTimelineElement>;
     }
   }
@@ -435,40 +418,9 @@ class MRDetail extends Component {
     })
   }
 
-  ApproveMR(){
-    let dataMR = this.state.data_mr;
-    this.patchDatatoAPINODE('/matreq/approveMatreq/'+dataMR._id).then(res => {
-      if(res.data !== undefined){
-        this.setState({ action_status : "success" });
-      }else{
-        this.setState({ action_status : "failed" });
-      }
-    })
-  }
-
   // ApproveMR(){
-  //   const newDate = new Date();
-  //   const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
   //   let dataMR = this.state.data_mr;
-  //   const statusAprv = [{
-  //     "mr_status_name": "MATERIAL_REQUEST",
-  //     "mr_status_value": "APPROVED",
-  //     "mr_status_date": dateNow,
-  //     "mr_status_updater": this.state.userEmail,
-  //     "mr_status_updater_id": this.state.userId,
-  //   }];
-  //   const msAprv = [{
-  //       "ms_name": "MS_ORDER_RECEIVED",
-  //       "ms_date": dateNow,
-  //       "ms_updater": this.state.userEmail,
-  //       "ms_updater_id": this.state.userId
-  //   }];
-  //   let aprvMR = {};
-  //   aprvMR['current_mr_status'] = "MR APPROVED";
-  //   aprvMR['current_milestones'] = "MS_ORDER_RECEIVED";
-  //   aprvMR['mr_status'] = dataMR.mr_status.concat(statusAprv);
-  //   aprvMR['mr_milestones'] = dataMR.mr_milestones.concat(msAprv);
-  //   this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, aprvMR, dataMR._etag).then(res => {
+  //   this.patchDatatoAPINODE('/matreq/approveMatreq/'+dataMR._id).then(res => {
   //     if(res.data !== undefined){
   //       this.setState({ action_status : "success" });
   //     }else{
@@ -476,6 +428,37 @@ class MRDetail extends Component {
   //     }
   //   })
   // }
+
+  ApproveMR(){
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    let dataMR = this.state.data_mr;
+    const statusAprv = [{
+      "mr_status_name": "MATERIAL_REQUEST",
+      "mr_status_value": "APPROVED",
+      "mr_status_date": dateNow,
+      "mr_status_updater": this.state.userEmail,
+      "mr_status_updater_id": this.state.userId,
+    }];
+    const msAprv = [{
+        "ms_name": "MS_ORDER_RECEIVED",
+        "ms_date": dateNow,
+        "ms_updater": this.state.userEmail,
+        "ms_updater_id": this.state.userId
+    }];
+    let aprvMR = {};
+    aprvMR['current_mr_status'] = "MR APPROVED";
+    aprvMR['current_milestones'] = "MS_ORDER_RECEIVED";
+    aprvMR['mr_status'] = dataMR.mr_status.concat(statusAprv);
+    aprvMR['mr_milestones'] = dataMR.mr_milestones.concat(msAprv);
+    this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, aprvMR, dataMR._etag).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+      }else{
+        this.setState({ action_status : "failed" });
+      }
+    })
+  }
 
 
   async updateDataMR(){
@@ -521,7 +504,7 @@ class MRDetail extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-info-circle" style={{marginRight: "8px"}}></i>MR Detail</span>
-            {/* }<Button style={{float : 'right'}} color="warning" onClick={this.changeEditable}>Editable</Button> */}
+            <Button style={{float : 'right'}} color="warning" onClick={this.changeEditable}>Editable</Button>
             {this.state.edit_detail !== false && (
               <Button style={{float : 'right', marginRight : '10px'}} color="success" onClick={this.updateDataMR}>Save</Button>
             )}
@@ -571,11 +554,7 @@ class MRDetail extends Component {
                         <tr>
                           <td style={{width : '175px'}}>CD ID</td>
                           <td>: </td>
-                          {this.state.data_mr.cust_del !== undefined ? (
-                            <td>{this.state.data_mr.cust_del.map(e => e.cd_id+", ")}</td>
-                          ) : (
-                            <td>{this.state.data_mr.cd_id}</td>
-                          )}
+                          <td>{this.state.data_mr.cd_id}</td>
                         </tr>
                         <tr>
                           <td style={{width : '200px'}}>Project</td>
@@ -602,11 +581,11 @@ class MRDetail extends Component {
                             )}
                           </td>
                         </tr>
-                        {/* }<tr>
+                        <tr>
                           <td style={{width : '200px'}}>Origin {this.state.data_mr.origin_warehouse.title}</td>
                           <td>: </td>
                           <td>{this.state.data_mr.origin_warehouse.value}</td>
-                        </tr> */}
+                        </tr>
                         <tr>
                           <td style={{width : '200px'}}>ETD</td>
                           <td>: </td>
@@ -773,11 +752,6 @@ class MRDetail extends Component {
                               <td>{this.state.mr_site_NE.site_name}</td>
                             </tr>
                           ) : ""}
-                          <tr>
-                            <td style={{width : '200px'}}>Total Box</td>
-                            <td>:</td>
-                            <td>{this.state.data_mr.total_boxes}</td>
-                          </tr>
                           </Fragment>
                         )}
                         </Fragment>
@@ -820,7 +794,7 @@ class MRDetail extends Component {
                       <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
                       <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
                     </tr>
-                    {this.state.data_mr !== null && this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
+                    {this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
                       <tr>
                         <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
                         {this.state.mr_site_FE !== null ? (
@@ -831,7 +805,7 @@ class MRDetail extends Component {
                   </thead>
                   <tbody>
                   {this.state.mr_site_NE !== null && (
-                    this.state.list_mr_item.map( pp =>
+                    this.state.mr_site_NE.mr_pp.map( pp =>
                       <Fragment>
                         <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
@@ -842,7 +816,7 @@ class MRDetail extends Component {
                             <td align='center'>{this.getQtyMRPPFE(pp.pp_id)}</td>
                           ):(<Fragment></Fragment>)}
                         </tr>
-                        {pp.materials.map(material =>
+                        {pp.mr_md.map(material =>
                           <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
                             <td style={{textAlign : 'right'}}>{material.material_id}</td>
                             <td style={{textAlign : 'left'}}>{material.material_name}</td>

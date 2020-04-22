@@ -44,26 +44,34 @@ class MaterialStock extends React.Component {
       prevPage: 1,
       activePage: 1,
       total_data_PO: 0,
+      pp_all: [],
       rowsXLS: [],
       data_array: [],
       action_status: null,
       action_message: null,
       all_data: [],
       data_PO: [],
+      packageSelected: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
-      modalPOForm: false,
-      POForm: new Array(5).fill(null),
+      modalMatStockForm: false,
+      modalMatStockEdit: false,
+      MatStockForm: new Array(6).fill(null),
       collapse: false,
+      danger: false,
     }
-    this.togglePOForm = this.togglePOForm.bind(this);
+    this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.changeFilterDebounce = debounce(this.changeFilterName, 500);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
-    this.saveNewPO = this.saveNewPO.bind(this);
+    this.toggleEdit = this.toggleEdit.bind(this);
+    this.saveNew = this.saveNew.bind(this);
+    this.saveUpdate = this.saveUpdate.bind(this);
+    this.toggleDanger = this.toggleDanger.bind(this);
+    this.downloadAll = this.downloadAll.bind(this);
   }
 
   toggle(i) {
@@ -77,6 +85,13 @@ class MaterialStock extends React.Component {
 
   toggleAddNew() {
     this.setState({ collapse: !this.state.collapse });
+  }
+
+  toggleDanger() {
+    // const aEdit = this.state.all_data.find(e => e.owner_id === value);   
+    this.setState({
+      danger: !this.state.danger,
+    });
   }
 
   async getDatafromAPINODE(url) {
@@ -126,12 +141,31 @@ class MaterialStock extends React.Component {
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond Post Data", respond);
+        console.log("respond patch Data", respond);
       }
       return respond;
     } catch (err) {
       let respond = err;
-      console.log("respond Post Data err", err);
+      console.log("respond patch Data err", err);
+      return respond;
+    }
+  }
+
+  async deleteDataFromAPINODE(url) {
+    try {
+      let respond = await axios.delete(API_URL_NODE + url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.state.tokenUser
+        },
+      })
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond delete Data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond delete Data err", err);
       return respond;
     }
   }
@@ -158,7 +192,7 @@ class MaterialStock extends React.Component {
         if (res.data !== undefined) {
           this.setState({ all_data: res.data.data })
         } else {
-          this.setState({ all_data: []});
+          this.setState({ all_data: [] });
         }
       })
   }
@@ -208,30 +242,30 @@ class MaterialStock extends React.Component {
     reader.onload = (e) => {
       /* Parse data */
       const bstr = e.target.result;
-      const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array', cellDates:true});
+      const wb = XLSX.read(bstr, { type: rABS ? 'binary' : 'array', cellDates: true });
       /* Get first worksheet */
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
       /* Convert array of arrays */
-      const data = XLSX.utils.sheet_to_json(ws, {header:1, devfal : null});
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1, devfal: null });
       /* Update state */
       this.ArrayEmptytoNull(data);
     };
-    if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
+    if (rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
   }
 
-  ArrayEmptytoNull(dataXLS){
+  ArrayEmptytoNull(dataXLS) {
     let newDataXLS = [];
-    for(let i = 0; i < dataXLS.length; i++){
+    for (let i = 0; i < dataXLS.length; i++) {
       let col = [];
-      for(let j = 0; j < dataXLS[0].length; j++){
-        if(typeof dataXLS[i][j] === "object"){
+      for (let j = 0; j < dataXLS[0].length; j++) {
+        if (typeof dataXLS[i][j] === "object") {
           let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
-          if(dataObject !== null){
+          if (dataObject !== null) {
             dataObject = dataObject.replace(/"/g, "");
           }
           col.push(dataObject);
-        }else{
+        } else {
           col.push(this.checkValue(dataXLS[i][j]));
         }
       }
@@ -247,6 +281,41 @@ class MaterialStock extends React.Component {
     document.title = 'Material Stock | BAM';
   }
 
+  handleChangeChecklist(e) {
+    const item = e.target.name;
+    const isChecked = e.target.checked;
+    const mrList = this.state.assignment_list;
+    let dataMRChecked = this.state.data_asg_checked;
+    if (isChecked === true) {
+      const getMR = mrList.find(e => e._id === item);
+      dataMRChecked.push(getMR);
+    } else {
+      dataMRChecked = dataMRChecked.filter(function (e) {
+        return e._id !== item;
+      });
+    }
+    this.setState({ data_asg_checked: dataMRChecked });
+    this.setState(prevState => ({ asg_checked: prevState.asg_checked.set(item, isChecked) }));
+  }
+
+  handleChangeChecklistAll(e) {
+    const isChecked = e.target.checked;
+    const mrList = this.state.assignment_all;
+    let dataMRChecked = this.state.data_asg_checked;
+    if (isChecked === true) {
+      for (let i = 0; i < mrList.length; i++) {
+        if (this.state.asg_checked.get(mrList[i]._id) !== true) {
+          dataMRChecked.push(mrList[i]);
+        }
+        this.setState(prevState => ({ asg_checked: prevState.asg_checked.set(mrList[i]._id, true) }));
+      }
+      this.setState({ data_asg_checked: dataMRChecked, asg_checked_all: isChecked });
+    } else {
+      this.setState({ asg_checked: new Map(), data_asg_checked: [] });
+      this.setState({ asg_checked_all: isChecked });
+    }
+  }
+
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
       this.getWHStockList();
@@ -259,19 +328,35 @@ class MaterialStock extends React.Component {
     }));
   }
 
-  togglePOForm() {
+  toggleEdit(e) {
+    const modalMatStockEdit = this.state.modalMatStockEdit;
+    if (modalMatStockEdit === false) {
+      const value = e.currentTarget.value;
+      // console.log('value ', value);
+      const aEdit = this.state.all_data.find(e => e.owner_id === value);
+      // console.log('aedit ', aEdit);
+      let dataForm = this.state.MatStockForm;
+      dataForm[0] = aEdit.owner_id;
+      dataForm[1] = aEdit.po_number;
+      dataForm[2] = aEdit.arrival_date;
+      dataForm[3] = aEdit.project_name;
+      dataForm[4] = aEdit.sku;
+      dataForm[5] = aEdit.qty;
+      this.setState({ MatStockForm: dataForm });
+    } else {
+      this.setState({ MatStockForm: new Array(6).fill(null) });
+    }
     this.setState(prevState => ({
-      modalPOForm: !prevState.modalPOForm
+      modalMatStockEdit: !prevState.modalMatStockEdit
     }));
   }
 
-  handleChangeForm(e) {
-    const value = e.target.value;
-    const index = e.target.name;
-    let dataForm = this.state.POForm;
-    dataForm[parseInt(index)] = value;
-    this.setState({ POForm: dataForm });
+  toggleMatStockForm() {
+    this.setState(prevState => ({
+      modalMatStockForm: !prevState.modalMatStockForm
+    }));
   }
+
 
   async getMatStockFormat(dataImport) {
     const dataHeader = dataImport[0];
@@ -316,7 +401,7 @@ class MaterialStock extends React.Component {
     this.toggleLoading();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE('/whStock/createWhStock', { 'stockData': BulkXLSX });
+    const res = await this.postDatatoAPINODE('/whStock/createWhStockTruncate', { 'stockData': BulkXLSX });
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
       this.setState({ action_status: 'success' });
@@ -328,23 +413,73 @@ class MaterialStock extends React.Component {
     }
   }
 
-  async saveNewPO() {
-    this.togglePOForm();
+  handleChangeForm(e) {
+    const value = e.target.value;
+    const index = e.target.name;
+    let dataForm = this.state.MatStockForm;
+    dataForm[parseInt(index)] = value;
+    this.setState({ MatStockForm: dataForm });
+  }
+
+  async saveUpdate() {
+    let respondSaveEdit = undefined;
+    const dataPPEdit = this.state.MatStockForm;
+    const dataPP = this.state.all_data.find(e => e.owner_id === dataPPEdit[0]);
+    let pp = {
+      "owner_id": dataPPEdit[0],
+      "po_number": dataPPEdit[1],
+      "arrival_date": dataPPEdit[2],
+      "project_name": dataPPEdit[3],
+      "sku": dataPPEdit[4],
+      "qty": dataPPEdit[5]
+    }
+    this.toggleLoading();
+    this.toggleEdit();
+    // if (pp.owner_id === undefined || pp.owner_id === null) {
+    //   pp["owner_id"] = pp.product_name;
+    // } else {
+    //   if (pp.pp_group.length === 0) {
+    //     pp["pp_group"] = pp.product_name;
+    //   }
+    // }
+    // if (pp.pp_cust_number === null || pp.pp_cust_number === undefined) {
+    //   pp["pp_cust_number"] = pp.pp_id;
+    // } else {
+    //   if (pp.pp_cust_number.length === 0) {
+    //     pp["pp_cust_number"] = pp.pp_id;
+    //   }
+    // }
+    let patchData = await this.patchDatatoAPINODE('/whStock/updateOneWhStockwithDelete/', { "data": [pp] });
+    console.log('url patch ', patchData);
+    if (patchData === undefined) { patchData = {}; patchData["data"] = undefined }
+    if (patchData.data !== undefined) {
+      this.setState({ action_status: 'success' }, () => {
+        this.toggleLoading();
+        setTimeout(function () { window.location.reload(); }, 2000);
+      });
+    } else {
+      this.toggleLoading();
+      this.setState({ action_status: 'failed' });
+    }
+  }
+
+  async saveNew() {
+    this.toggleMatStockForm();
     this.toggleLoading();
     let poData = [];
     let respondSaveNew = undefined;
-    const dataPPNew = this.state.POForm;
+    const dataPPEdit = this.state.MatStockForm;
     const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
-    const po_num = dataPPNew[0];
     let pp = {
-      "po_number": po_num.toString(),
-      "po_year": dataPPNew[1],
-      "currency": dataPPNew[2],
-      "value": dataPPNew[3],
-      "number_of_sites": dataPPNew[4]
+      "owner_id": dataPPEdit[0],
+      "po_number": dataPPEdit[1],
+      "arrival_date": dataPPEdit[2],
+      "project_name": dataPPEdit[3],
+      "sku": dataPPEdit[4],
+      "qty": dataPPEdit[5]
     }
     poData.push(pp);
-    let postData = await this.postDatatoAPIEXEL('/po_op', pp)
+    let postData = await this.postDatatoAPIEXEL('/whStock/createOneWhStockp', pp)
       .then(res => {
         if (res.data !== undefined) {
           this.toggleLoading();
@@ -366,13 +501,43 @@ class MaterialStock extends React.Component {
     return s || undefined;
   }
 
+  async downloadAll() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPP = this.state.pp_all;
+
+    let headerRow = ["owner_id","po_number","arrival_date","project_name","sku","qty"]
+    ws.addRow(headerRow);
+
+    for (let i = 1; i < headerRow.length + 1; i++) {
+      ws.getCell(this.numToSSColumn(i) + '1').font = { size: 11, bold: true };
+    }
+
+    for (let i = 0; i < dataPP.length; i++) {
+      ws.addRow([dataPP[i].owner_id, dataPP[i].po_number, dataPP[i].arrival_date, dataPP[i].project_name, dataPP[i].sku,  dataPP[i].qty])
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material Stock.xlsx');
+  }
+
+  DeleteData(r) {
+    const _idData = r.currentTarget.value;
+    const DelData = this.deleteDataFromAPINODE('/whStock/deleteWhStock/' + _idData)
+      .then(res => {
+        console.log('res delete ', res);
+      });
+  }
+
+
   exportMatStatus = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["owner_id","po_number","arrival_date","id_project_doc","sku"]);
-    ws.addRow(["DDP-XLCOM","PO0001","2020-04-17","5df99ce5face981b7ace8822","1"]);
-    ws.addRow(["XLCOM","PO0002","2020-04-17","5df99ce5face981b7ace8823","2"]);
+    ws.addRow(["owner_id","po_number","arrival_date","project_name","sku","qty"]);
+    ws.addRow(["XLCOM","PO0001","2020-04-17","XL BAM DEMO 2021","1",100]);
+    ws.addRow(["DPP-XLCOM","PO0001","2020-04-17","XL BAM DEMO 2021","1",100]);
 
 
     const PPFormat = await wb.xlsx.writeBuffer();
@@ -398,6 +563,7 @@ class MaterialStock extends React.Component {
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportMatStatus}> Material Stock Template</DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>> Download All </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -412,7 +578,7 @@ class MaterialStock extends React.Component {
                   </div>
                 </div>
                 {/* <div>
-                  <Button color="primary" style={{ float: 'right' }} onClick={this.togglePOForm}>
+                  <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}>
                     <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form
                   </Button>
                 </div> */}
@@ -437,7 +603,7 @@ class MaterialStock extends React.Component {
                   </CardBody>
                   <CardFooter>
                     <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveMatStockWHBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
-                    {/* <Button color="primary" style={{ float: 'right' }} onClick={this.togglePOForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button> */}
+                    <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>                    
                   </CardFooter>
                 </Card>
               </Collapse>
@@ -460,26 +626,47 @@ class MaterialStock extends React.Component {
                           <tr align="center">
                             <th style={{ minWidth: '150px' }}> Owner ID</th>
                             <th>PO Number</th>
+                            <th>Project Name</th>
+                            <th>Arrival Date</th>
                             <th>SKU</th>
                             <th>SKU Desc</th>
                             <th>Qty</th>
-                            {/* <th></th> */}
+                            <th>Aging</th>
+                            <th>Serial Number</th>
+                            <th>Box Number</th>
+                            <th>Condition</th>
+                            <th>Notes</th>
+                            <th></th>
+                            <th></th>
                           </tr>
                         </thead>
                         <tbody>
                           {this.state.all_data.map(e =>
                             <React.Fragment key={e._id + "frag"}>
                               <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={e._id}>
+                                {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
                                 <td style={{ textAlign: 'center' }}>{e.owner_id}</td>
                                 <td style={{ textAlign: 'center' }}>{e.po_number}</td>
+                                <td style={{ textAlign: 'center' }}>{e.project_name}</td>
+                                <td style={{ textAlign: 'center' }}>{e.arrival_date}</td>
                                 <td style={{ textAlign: 'center' }}>{e.sku}</td>
                                 <td style={{ textAlign: 'center' }}>{e.sku_description}</td>
                                 <td style={{ textAlign: 'center' }}>{e.qty}</td>
-                                {/* <td style={{ textAlign: 'center' }}>
-                                  <Link to={'/detail-list-cpo-database/' + e._id}>
-                                    <Button color="primary" size="sm" style={{ marginRight: '10px' }}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
-                                  </Link>
-                                </td> */}
+                                <td style={{ textAlign: 'center' }}>{e.ageing}</td>
+                                <td style={{ textAlign: 'center' }}>{e.serial_number}</td>
+                                <td style={{ textAlign: 'center' }}>{e.box_number}</td>
+                                <td style={{ textAlign: 'center' }}>{e.condition}</td>
+                                <td style={{ textAlign: 'center' }}>{e.notes}</td>
+                                <td>
+                                  <Button size='sm' color="secondary" value={e.owner_id} onClick={this.toggleEdit} title='Edit'>
+                                    <i className="fa fa-pencil" aria-hidden="true"></i>
+                                  </Button>
+                                </td>
+                                <td>
+                                  <Button size='sm' color="danger" value={e._id} onClick={r => this.DeleteData(r, "value")} title='Delete'>
+                                    <i className="fa fa-trash" aria-hidden="true"></i>
+                                  </Button>
+                                </td>
                               </tr>
                             </React.Fragment>
                           )}
@@ -507,39 +694,100 @@ class MaterialStock extends React.Component {
         </Row>
 
         {/* Modal New PO */}
-        <Modal isOpen={this.state.modalPOForm} toggle={this.togglePOForm} className="modal--form-e">
-          <ModalHeader>Form CPO</ModalHeader>
+        <Modal isOpen={this.state.modalMatStockForm} toggle={this.toggleMatStockForm} className="modal--form-e">
+          <ModalHeader>Form Material Stock</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="po_number">PO Number</Label>
-                  <Input type="text" name="0" placeholder="" value={this.state.POForm[0]} onChange={this.handleChangeForm} />
+                  <Label htmlFor="po_number">Owner ID</Label>
+                  <Input type="text" name="0" placeholder="" value={this.state.MatStockForm[0]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="po_year" >Year</Label>
-                  <Input type="text" name="1" placeholder="" value={this.state.POForm[1]} onChange={this.handleChangeForm} />
+                  <Label htmlFor="po_year" >PO Number</Label>
+                  <Input type="text" name="1" placeholder="" value={this.state.MatStockForm[1]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="currency" >Currency</Label>
-                  <Input type="text" name="2" placeholder="" value={this.state.POForm[2]} onChange={this.handleChangeForm} />
+                  <Label htmlFor="arrival_date" >Arrival Date</Label>
+                  <Input type="datetime-local" placeholder="" value={this.state.MatStockForm[2]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="value" >Price</Label>
-                  <Input type="number" min="0" name="3" placeholder="" value={this.state.POForm[3]} onChange={this.handleChangeForm} />
+                  <Label htmlFor="project_name" >Project Name</Label>
+                  <Input type="text" name="3" placeholder="" value={this.state.MatStockForm[3]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="number_of_sites" >Number of Sites</Label>
-                  <Input type="number" min="0" name="4" placeholder="" value={this.state.POForm[4]} onChange={this.handleChangeForm} />
+                  <Label htmlFor="sku" >SKU</Label>
+                  <Input type="text" min="0" name="4" placeholder="" value={this.state.MatStockForm[4]} onChange={this.handleChangeForm} />
                 </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="qty" >Qty</Label>
+                  <Input type="number" min="0" name="6" placeholder="" value={this.state.MatStockForm[5]} onChange={this.handleChangeForm} />
+                </FormGroup>                
               </Col>
             </Row>
           </ModalBody>
           <ModalFooter>
-            <Button color="success" onClick={this.saveNewPO}>Submit</Button>
+            <Button color="success" onClick={this.saveNew}>Submit</Button>
           </ModalFooter>
         </Modal>
         {/*  Modal New PO*/}
+
+        {/* Modal Edit PP */}
+        <Modal isOpen={this.state.modalMatStockEdit} toggle={this.toggleEdit} className="modal--form">
+          <ModalHeader>Form Update Material Stock</ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col sm="12">
+                <FormGroup>
+                  <Label htmlFor="po_number">Owner ID</Label>
+                  <Input type="text" name="0" placeholder="" value={this.state.MatStockForm[0]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="po_year" >PO Number</Label>
+                  <Input type="text" name="1" placeholder="" value={this.state.MatStockForm[1]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="arrival_date" >Arrival Date</Label>
+                  <Input type="datetime-local" placeholder="" value={this.state.MatStockForm[2]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="project_name" >Project Name</Label>
+                  <Input type="text" name="3" placeholder="" value={this.state.MatStockForm[3]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="sku" >SKU</Label>
+                  <Input type="text" min="0" name="4" placeholder="" value={this.state.MatStockForm[4]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="qty" >Qty</Label>
+                  <Input type="number" min="0" name="6" placeholder="" value={this.state.MatStockForm[5]} onChange={this.handleChangeForm} />
+                </FormGroup>                
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="success" onClick={this.saveUpdate}>Update</Button>
+          </ModalFooter>
+        </Modal>
+        {/*  Modal Edit PP*/}
+
+        {/* Modal confirmation delete */}
+        <Modal isOpen={this.state.danger} toggle={this.toggleDanger}
+          className={'modal-danger ' + this.props.className} itemId={this.state.activeItemId}
+          itemName={this.state.activeItemName}>
+          <ModalHeader toggle={this.toggleDanger}>Delete Material Stock Confirmation</ModalHeader>
+          {this.state.all_data.map(e =>
+            <ModalBody>
+             
+              Are you sure want to delete {e.owner_id} ?
+              
+            </ModalBody>
+            )}
+          <ModalFooter>
+            <Button color="danger" onClick={r => this.DeleteData(r, "value")}>Delete</Button>
+            <Button color="secondary" onClick={this.toggleDanger}>Cancel</Button>
+          </ModalFooter>
+        </Modal>
 
         {/* Modal Loading */}
         <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm modal--loading '}>

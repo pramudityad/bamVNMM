@@ -1,8 +1,10 @@
 import React, { Component, Fragment } from 'react';
-import { Card, CardHeader, CardBody, Row, Col, Button, Input, CardFooter } from 'reactstrap';
+import { Card, CardHeader, CardBody, Row, Col, Button, Input, CardFooter, Table } from 'reactstrap';
 import { Form, FormGroup, Label } from 'reactstrap';
 import axios from 'axios';
 import { connect } from 'react-redux';
+import Excel from 'exceljs';
+import { saveAs } from 'file-saver';
 import './assignment.css';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
@@ -11,7 +13,7 @@ const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const username_tsel = 'adminbamidsuper';
 const password_tsel = 'F760qbAg2sml';
 
-const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 class AssignmentDetail extends Component {
   constructor(props) {
@@ -33,6 +35,7 @@ class AssignmentDetail extends Component {
     this.acceptASG = this.acceptASG.bind(this);
     this.rescheduleASG = this.rescheduleASG.bind(this);
     this.revisionASG = this.revisionASG.bind(this);
+    this.exportFormatBulkAssignment = this.exportFormatBulkAssignment.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -55,9 +58,9 @@ class AssignmentDetail extends Component {
     }
   }
 
-  async getDataFromAPINode(url) {
+  async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_Node+url, {
+      let respond = await axios.get(API_URL_NODE+url, {
         headers: {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser
@@ -74,9 +77,9 @@ class AssignmentDetail extends Component {
     }
   }
 
-  async postDatatoAPINode(url, data) {
+  async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_Node+url, data, {
+      let respond = await axios.post(API_URL_NODE+url, data, {
         headers: {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser
@@ -117,9 +120,9 @@ class AssignmentDetail extends Component {
     }
   }
 
-  async patchDatatoAPINode(url, data){
+  async patchDatatoAPINODE(url, data){
     try {
-      let respond = await axios.patch(API_URL_Node +url, data, {
+      let respond = await axios.patch(API_URL_NODE +url, data, {
         headers: {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser
@@ -142,9 +145,9 @@ class AssignmentDetail extends Component {
   }
 
   getDataAssignment(_id_Assignment) {
-    this.getDataFromAPI('/asp_assignment_op/'+_id_Assignment).then(resAsg => {
+    this.getDataFromAPINODE('/aspAssignment/aspassign/'+_id_Assignment).then(resAsg => {
       if(resAsg.data !== undefined) {
-        this.setState({ data_assignment : resAsg.data });
+        this.setState({ data_assignment : resAsg.data.data });
       }
     })
   }
@@ -211,47 +214,30 @@ class AssignmentDetail extends Component {
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
-    let currStatus = [
-      {
-        "status_name": "ASP_ASSIGNMENT",
-        "status_value": "NOTIFIED TO ASP",
-        "status_date": dateNow,
-        "status_updater": this.state.userEmail,
-        "status_updater_id": this.state.userId
-      }
-    ];
-    let successUpdate = [];
-    let updateASG = {};
-    updateASG['Current_Status'] = "ASP ASSIGNMENT NOTIFIED TO ASP";
-    updateASG['ASP_Assignment_Status'] = this.state.data_assignment.ASP_Assignment_Status.concat(currStatus);
-    let res = await this.patchDataToAPI('/asp_assignment_op/'+_id, updateASG, _etag);
+    let res = await this.patchDatatoAPINODE('/aspAssignment/notifyAspAssignment/'+_id);
     if(res !== undefined) {
       if(res.data !== undefined) {
-        successUpdate.push(res.data);
+        this.setState({action_status : "success"})
+      }else{
+        this.setState({action_status : "failed"})
       }
-    }
-    if(successUpdate.length !== 0){
-      alert('Assignment has been notified to ASP!');
-      setTimeout(function(){ window.location.reload(); }, 2000);
-    } else {
-      alert('Sorry there is an error, please try again!');
+    }else{
+      this.setState({action_status : "failed"})
     }
   }
 
   async acceptASG(e) {
     let successUpdate = [];
     const _id = e.target.id;
-    let res = await this.patchDatatoAPINode('/aspAssignment/acceptAspAssignment/'+_id);
+    let res = await this.patchDatatoAPINODE('/aspAssignment/acceptAspAssignment/'+_id);
     if(res !== undefined) {
       if(res.data !== undefined) {
-        successUpdate.push(res.data);
+        this.setState({action_status : "success"})
+      }else{
+        this.setState({action_status : "failed"})
       }
-    }
-    if(successUpdate.length !== 0){
-      alert('Assignment has been accepted!');
-      setTimeout(function(){ window.location.reload(); }, 2000);
-    } else {
-      alert('Sorry there is an error, please try again!');
+    }else{
+      this.setState({action_status : "failed"})
     }
   }
 
@@ -260,30 +246,15 @@ class AssignmentDetail extends Component {
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
-    let currStatus = [
-      {
-        "status_name": "ASP_ASSIGNMENT",
-        "status_value": "NEED REVISION",
-        "status_date": dateNow,
-        "status_updater": this.state.userEmail,
-        "status_updater_id": this.state.userId
-      }
-    ];
-    let successUpdate = [];
-    let updateASG = {};
-    updateASG['Current_Status'] = "ASP ASSIGNMENT NEED REVISION";
-    updateASG['ASP_Assignment_Status'] = this.state.data_assignment.ASP_Assignment_Status.concat(currStatus);
-    let res = await this.patchDataToAPI('/asp_assignment_op/'+_id, updateASG, _etag);
+    let res = await this.patchDatatoAPINODE('/aspAssignment/reviseAspAssignment/'+_id, {"note" : " "});
     if(res !== undefined) {
       if(res.data !== undefined) {
-        successUpdate.push(res.data);
+        this.setState({action_status : "success"})
+      }else{
+        this.setState({action_status : "failed"})
       }
-    }
-    if(successUpdate.length !== 0){
-      alert('Assignment status has been changed to need revision!');
-      setTimeout(function(){ window.location.reload(); }, 2000);
-    } else {
-      alert('Sorry there is an error, please try again!');
+    }else{
+      this.setState({action_status : "failed"})
     }
   }
 
@@ -292,30 +263,15 @@ class AssignmentDetail extends Component {
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
-    let currStatus = [
-      {
-        "status_name": "ASP_ASSIGNMENT",
-        "status_value": "RE-SCHEDULE",
-        "status_date": dateNow,
-        "status_updater": this.state.userEmail,
-        "status_updater_id": this.state.userId
-      }
-    ];
-    let successUpdate = [];
-    let updateASG = {};
-    updateASG['Current_Status'] = "ASP ASSIGNMENT RE-SCHEDULE";
-    updateASG['ASP_Assignment_Status'] = this.state.data_assignment.ASP_Assignment_Status.concat(currStatus);
-    let res = await this.patchDataToAPI('/asp_assignment_op/'+_id, updateASG, _etag);
+    let res = await this.patchDatatoAPINODE('/aspAssignment/reScheduleAspAssignment/'+_id, {"note" : " "});
     if(res !== undefined) {
       if(res.data !== undefined) {
-        successUpdate.push(res.data);
+        this.setState({action_status : "success"})
+      }else{
+        this.setState({action_status : "failed"})
       }
-    }
-    if(successUpdate.length !== 0){
-      alert('Assignment status has been changed to reschedule!');
-      setTimeout(function(){ window.location.reload(); }, 2000);
-    } else {
-      alert('Sorry there is an error, please try again!');
+    }else{
+      this.setState({action_status : "failed"})
     }
   }
 
@@ -326,33 +282,53 @@ class AssignmentDetail extends Component {
       "Request_Type" : "New GR",
       "id_assignment_doc" : dataAssignment._id,
       "Assignment_No" : dataAssignment.Assignment_No,
-      "Account_Name" : "TSEL",
-      "ASP_Acceptance_Date" : null,
-      "id_cd_doc" : "5e16d4f204d37218d18ba956",
-      "CD_ID" : dataAssignment.CD_ID,
-      "id_project_doc" : "5e16cb7cd0ec1a27e0acded6",
+      "Account_Name" : dataAssignment.Account_Name,
+      "ASP_Acceptance_Date" : dataAssignment.ASP_Acceptance_Date,
+      "id_cd_doc" : null,
+      "CD_ID" : null,
+      "id_project_doc" : dataAssignment.id_project_doc,
       "Project" : dataAssignment.Project,
       "SOW_Type" : dataAssignment.SOW_Type,
       "BAST_No" : formBast.get("bast_no"),
       "Payment_Terms" : dataAssignment.Payment_Terms,
       "Payment_Terms_Ratio" : formBast.get("ratio"),
-      "PO_Qty" : null,
-      "PO_Number" : "4519514908",
-      "PO_Item" : null,
-      "Required_GR_Qty" : formBast.get("ratio"),
+      "PO_Qty" : 1,
+      "PO_Number" : dataAssignment.PO_Number,
+      "PO_Item" : dataAssignment.PO_Item,
+      "Required_GR_Qty" : 1,
       "Item_Status" : formBast.get("item_status")
     }
     let assignBast = {
-      "account_id" : "1",
+      "account_id" : null,
       "data" : [dataBast]
     };
-    const respondAssignBast = await this.patchDatatoAPINode('/aspAssignment/updateBastNumber/'+dataAssignment._id, assignBast);
+    console.log("assignBast", assignBast);
+    const respondAssignBast = await this.patchDatatoAPINODE('/aspAssignment/updateBastNumber/'+dataAssignment._id, assignBast);
     if(respondAssignBast.data !== undefined && respondAssignBast.status >= 200 && respondAssignBast.status <= 300 ){
       this.setState({action_status : 'success', action_message : 'BAST Number has been assign'});
     }else{
       console.log("respondAssignBast.response", respondAssignBast.response);
       this.setState({action_status : 'failed', action_message : respondAssignBast.response.data.error});
     }
+  }
+
+  exportFormatBulkAssignment = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const data_assingment = this.state.data_assignment;
+    let indexSSOW = 7;
+
+    let headerRow = ["id","project","sow_type","vendor_code","vendor_name","identifier","ssow_rbs_id_1","ssow_rbs_activity_number_1","ssow_rbs_unit_1","ssow_rbs_quantity_1","ssow_rbs_id_2","ssow_rbs_activity_number_2","ssow_rbs_unit_2","ssow_rbs_quantity_2","ssow_rbs_id_3","ssow_rbs_activity_number_3","ssow_rbs_unit_3","ssow_rbs_quantity_3","ssow_rbs_id_4","ssow_rbs_activity_number_4","ssow_rbs_unit_4","ssow_rbs_quantity_4","ssow_rbs_id_5","ssow_rbs_activity_number_5","ssow_rbs_unit_5","ssow_rbs_quantity_5","ssow_rbs_id_6","ssow_rbs_activity_number_6","ssow_rbs_unit_6","ssow_rbs_quantity_6","ssow_rbs_id_7","ssow_rbs_activity_number_7","ssow_rbs_unit_7","ssow_rbs_quantity_7"];
+
+    let dataASGPrint = [data_assingment.Assignment_No,data_assingment.Project,"RBS",data_assingment.Vendor_Code_Number,data_assingment.Vendor_Name,data_assingment.Site_ID];
+    data_assingment.SSOW_List.map(e => dataASGPrint.push(e.ssow_id, e.ssow_activity_number, e.ssow_unit, e.ssow_qty));
+
+    ws.addRow(headerRow);
+    ws.addRow(dataASGPrint);
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Assignment '+data_assingment.Assignment_No+' Template.xlsx');
   }
 
   render() {
@@ -368,7 +344,8 @@ class AssignmentDetail extends Component {
             {this.state.data_assignment !== null && (
             <Card>
               <CardHeader>
-                <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-info-circle" style={{marginRight: "8px"}}></i>Assignment Detail ({this.state.data_assignment.Assignment_No})</span>
+                <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-info-circle" style={{marginRight: "8px"}}></i>Assignment Detail ({this.state.data_assignment.Assignment_No})</span>\
+                <Button style={{marginRight : '8px', float : 'right'}} outline color="info" size="sm" onClick={this.exportFormatBulkAssignment} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Assignment Format</Button>
               </CardHeader>
               <CardBody>
                 <Form>
@@ -377,7 +354,13 @@ class AssignmentDetail extends Component {
                     <Col md="6">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>WP ID</Label>
-                        <Input type="text" readOnly value={this.state.data_assignment.CD_ID}></Input>
+                        <Input type="text" readOnly value={this.state.data_assignment.cust_del.map(e => e.cd_id+", ")}></Input>
+                      </FormGroup>
+                    </Col>
+                    <Col md="6">
+                      <FormGroup style={{paddingLeft: "16px"}}>
+                        <Label>Status</Label>
+                        <Input type="text" readOnly value={this.state.data_assignment.Current_Status}></Input>
                       </FormGroup>
                     </Col>
                   </Row>
@@ -387,17 +370,6 @@ class AssignmentDetail extends Component {
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>Project Name</Label>
                         <Input type="text" name="project_name" readOnly value={this.state.data_assignment.Project} />
-                      </FormGroup>
-                    </Col>
-                    <Col md="6" style={{display: "none"}}>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Project Group</Label>
-                        <Input type="select" name="project_group">
-                          <option>Select Project Group</option>
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                          <option value="3">3</option>
-                        </Input>
                       </FormGroup>
                     </Col>
                   </Row>
@@ -577,8 +549,48 @@ class AssignmentDetail extends Component {
                       <Button color='success' style={{float : 'right', marginRight : '20px', marginTop : '30px'}} onClick={this.saveBastNumber}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Assign</Button>
                     </Col>
                   </Row>
-                  <h5 style={{marginTop: "16px"}}>GR (PARTIAL)</h5>
+                  <h5 style={{marginTop: "16px"}}>GR</h5>
                   <Row>
+                    <Col md="4">
+                      <Table responsive striped bordered size="sm">
+                        <thead>
+                          <tr>
+                            <th>
+                              ASP BAST No.
+                            </th>
+                            {/*<th>
+                              GR Doc No (DP)
+                            </th>
+                            <th>
+                              GR Release Date (DP)
+                            </th>
+                            <th>
+                              On
+                            </th> */}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {this.state.data_assignment.BAST_No.map(bast =>
+                            <tr>
+                              <td>
+                                {bast}
+                              </td>
+                              {/* }<td>
+                                GR Doc No (DP)
+                              </td>
+                              <td>
+                                GR Release Date (DP)
+                              </td>
+                              <td>
+                                Date
+                              </td> */}
+                            </tr>
+                          )}
+                        </tbody>
+                      </Table>
+                    </Col>
+                  </Row>
+                  {/* }<Row>
                     <Col md="4">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>ASP BAST NO (DP)</Label>
@@ -698,7 +710,7 @@ class AssignmentDetail extends Component {
                         </Col>
                       </Row>
                     </Col>
-                  </Row>
+                  </Row> */}
                 </Form>
               </CardBody>
               <CardFooter>

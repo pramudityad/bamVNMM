@@ -23,6 +23,8 @@ const API_URL_PDB_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const usernameTselApi = 'adminbamidsuper';
 const passwordTselApi = 'F760qbAg2sml';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
@@ -65,6 +67,7 @@ class DetailTssr extends Component {
         userId : this.props.dataLogin._id,
         userName : this.props.dataLogin.userName,
         userEmail : this.props.dataLogin.email,
+        tokenUser : this.props.dataLogin.token,
         rowsXLS : [],
         data_tssr : null,
         tssr_site_FE : null,
@@ -92,6 +95,9 @@ class DetailTssr extends Component {
         waiting_status : null,
         action_status : null,
         action_message : null,
+        tssrData : [],
+        material_wh : [],
+        material_inbound : []
     };
     this.handleChangeProject = this.handleChangeProject.bind(this);
     this.handleChangeVersion = this.handleChangeVersion.bind(this);
@@ -103,128 +109,171 @@ class DetailTssr extends Component {
     this.referenceWithTechBoq = this.referenceWithTechBoq.bind(this);
   }
 
-    async getDatafromAPIBMS(url){
-      try {
-        let respond = await axios.get(API_URL_BMS_Phil +url, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Get Data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = err;
-        console.log("respond Get Data", err);
-        return respond;
+  async getDatafromAPIBMS(url){
+    try {
+      let respond = await axios.get(API_URL_BMS_Phil +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernamePhilApi,
+          password: passwordPhilApi
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
       }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
     }
+  }
 
-    async patchDatatoAPIBMS(url, data, _etag){
-      try {
-        let respond = await axios.patch(API_URL_BMS_Phil +url, data, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
-          },
-          headers : {
-            "If-Match" : _etag
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Patch data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = err;
-        console.log("respond Patch data", err);
-        return respond;
+  async patchDatatoAPIBMS(url, data, _etag){
+    try {
+      let respond = await axios.patch(API_URL_BMS_Phil +url, data, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernamePhilApi,
+          password: passwordPhilApi
+        },
+        headers : {
+          "If-Match" : _etag
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Patch data", respond);
       }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Patch data", err);
+      return respond;
     }
+  }
 
-    async getDatafromAPITSEL(url){
-      try {
-        let respond = await axios.get(API_URL_PDB_TSEL +url, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernameTselApi,
-            password: passwordTselApi
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Get Data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = err;
-        console.log("respond Get Data", err);
-        return respond;
+  async getDatafromAPITSEL(url){
+    try {
+      let respond = await axios.get(API_URL_PDB_TSEL +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameTselApi,
+          password: passwordTselApi
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
       }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
     }
+  }
 
-    async getDatafromAPIBAM(url){
-      try {
-        let respond = await axios.get(API_URL_BAM +url, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernameBAM,
-            password: passwordBAM
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Get Data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = err;
-        console.log("respond Get Data", err);
-        return respond;
+  async getDatafromAPIBAM(url){
+    try {
+      let respond = await axios.get(API_URL_BAM +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameBAM,
+          password: passwordBAM
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
       }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
     }
+  }
 
-    async postDatatoAPIBAM(url, data){
-      try {
-        let respond = await axios.post(API_URL_BAM +url, data, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernameBAM,
-            password: passwordBAM
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Post Data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = err;
-        console.log("respond Post Data", err);
-        return respond;
+  async postDatatoAPIBAM(url, data){
+    try {
+      let respond = await axios.post(API_URL_BAM +url, data, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameBAM,
+          password: passwordBAM
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
       }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Post Data", err);
+      return respond;
     }
+  }
 
-    async patchDatatoAPIBAM(url, data, _etag){
-      try {
-        let respond = await axios.patch(API_URL_BAM +url, data, {
-          headers : {'Content-Type':'application/json', "If-Match" : _etag},
-          auth: {
-            username: usernameBAM,
-            password: passwordBAM
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Patch data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = err;
-        console.log("respond Patch data", err.response);
-        return respond;
+  async patchDatatoAPIBAM(url, data, _etag){
+    try {
+      let respond = await axios.patch(API_URL_BAM +url, data, {
+        headers : {'Content-Type':'application/json', "If-Match" : _etag},
+        auth: {
+          username: usernameBAM,
+          password: passwordBAM
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Patch data", respond);
       }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Patch data", err.response);
+      return respond;
     }
+  }
+
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios({
+        method : "get",
+        url : API_URL_NODE+url,
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+        params :{
+
+        }
+      })
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async postDatatoAPINODE(url, data) {
+    try {
+      let respond = await axios.post(API_URL_NODE+url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond post data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond post data", err.response);
+      return respond;
+    }
+  }
 
   checkValue(props){
     //Swap undefined to null
@@ -505,44 +554,50 @@ class DetailTssr extends Component {
     return dataPP;
   }
 
-  getDataTssr(_id_tssr){
-    //Get Data TSSR Parent
-    this.getDatafromAPIBAM('/tssr_op/'+_id_tssr).then( resTssr => {
-      if(resTssr.data !== undefined){
-        this.setState({ data_tssr : resTssr.data, data_tssr_current : resTssr.data, version_current : resTssr.data.version });
-        if(resTssr.data.project_name === null || resTssr.data.project_name === "" ){
-          this.getDataProject();
-        }
-        //Get Data TSSR Sites
-        this.getDatafromAPIBAM('/tssr_sites_sorted_nonpage?where={"id_tssr_boq_doc" : "'+_id_tssr+'"}').then( resSites => {
-          if(resSites.data !== undefined){
-            //Get Data TSSR Items
-            this.getDatafromAPIBAM('/tssr_site_items_sorted_nonpage?where={"id_tssr_boq_doc" : "'+_id_tssr+'"}').then( resItem => {
-              if(resItem.data !== undefined){
-                const itemsTssr = resItem.data._items;
-                const itemUniq = [...new Set(itemsTssr.map(({ id_pp_doc}) => id_pp_doc))];
-                this.setState({ data_tssr_sites : resSites.data._items, data_tssr_sites_item : resItem.data._items, data_tssr_sites_current : resSites.data._items, data_tssr_sites_item_current : resItem.data._items  }, () => {
-                  //Get Data Technical Ref
-                  this.getDatafromAPIBMS('/boq_tech_sites_op?projection={"site_id" : 1, "no_boq_tech" : 1, "id_boq_tech_doc" : 1, "tssr_boq_id" : 1}&where={"tssr_boq_id" : "'+resTssr.data.no_tssr_boq+'"}').then( resRef => {
-                    if(resRef.data !== undefined){
-                      if(resRef.data._items.length !== 0){
-                        this.setState({ list_technical_ref : null, technical_ref_selected : resRef.data._items[0].no_boq_tech});
-                      }else{
-                        this.getListTechnicalForRef();
-                      }
-                    }else{
-                      this.getListTechnicalForRef();
-                    }
-                  })
-                  this.getPPandMaterial(itemUniq);
-                  this.prepareView();
-                });
-              }
-            })
-          }
+  getDataTssr(_id_tssr) {
+    this.getDataFromAPINODE('/tssrdata/'+_id_tssr).then( res => {
+      if(res.data !== undefined){
+        this.setState({ tssrData : res.data.data.siteList[0].site_items }, () => {
+          this.getDataWarehouse();
+          this.getDataInbound();
         })
+        console.log('tssrData', this.state.tssrData);
       }
     })
+  }
+
+  async getDataWarehouse() {
+    let listSku = [];
+    if(this.state.tssrData !== undefined) {
+      this.state.tssrData.map(pp => pp.material_detail.map(material => listSku.push(material.material_id)));
+      listSku = [...new Set(listSku)];
+      let skuData = {
+        "sku" : listSku
+      }
+      const respondSKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', skuData);
+      if(respondSKU.data !== undefined && respondSKU.status >= 200 && respondSKU.status <= 300 ){
+        let array_sku = [];
+        respondSKU.data.data.map(sku => sku.map(sku2 => array_sku.push({"sku":sku2.sku, "qty_sku":sku2.qty_sku})));
+        this.setState({ material_wh : array_sku });
+      }
+    }
+  }
+
+  async getDataInbound() {
+    let listSku = [];
+    if(this.state.tssrData !== undefined) {
+      this.state.tssrData.map(pp => pp.material_detail.map(material => listSku.push(material.material_id)));
+      listSku = [...new Set(listSku)];
+      let skuData = {
+        "sku" : listSku
+      }
+      const respondSKU = await this.postDatatoAPINODE('/whInboundPlan/getWhInboundPlanbySku', skuData);
+      if(respondSKU.data !== undefined && respondSKU.status >= 200 && respondSKU.status <= 300 ){
+        let array_sku = [];
+        respondSKU.data.data.map(sku => sku.map(sku2 => array_sku.push({"sku":sku2.sku, "qty_sku":sku2.qty_sku})));
+        this.setState({ material_inbound : array_sku });
+      }
+    }
   }
 
   async getPPandMaterial(array_id_package){
@@ -620,7 +675,7 @@ class DetailTssr extends Component {
 
   componentDidMount(){
     this.getDataTssr(this.props.match.params.id);
-    this.getVersionTssr(this.props.match.params.id);
+    // this.getVersionTssr(this.props.match.params.id);
   }
 
   preparingDataTSSR(){
@@ -1099,6 +1154,7 @@ class DetailTssr extends Component {
 
   render() {
     console.log("Excel Render revUpload", this.state.data_tssr_sites);
+    let qty_wh = undefined, qty_inbound = undefined;
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -1107,12 +1163,12 @@ class DetailTssr extends Component {
           <Card>
             <CardHeader>
               <span style={{lineHeight :'2', fontSize : '15px'}} >Detail Plant Spec</span>
-              <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download PS Format</Button>
+              <Button style={{marginRight : '8px', float : 'right', display: 'none'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download PS Format</Button>
             </CardHeader>
             <CardBody>
-            <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
-            <Button color="warning" onClick={this.prepareEdit} style={{float : 'right'}} >Edit</Button>
-            <Button color="success" onClick={this.prepareRevision} style={{float : 'right', marginRight : '8px'}} >Revision</Button>
+            <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden","display":"none"}}/>
+            <Button color="warning" onClick={this.prepareEdit} style={{float : 'right', display : 'none'}} >Edit</Button>
+            <Button color="success" onClick={this.prepareRevision} style={{float : 'right', marginRight : '8px', display : 'none'}} >Revision</Button>
             {this.state.data_tssr !== null ?
               this.state.data_tssr.project_name === "" || this.state.data_tssr.project_name === null ? (
                 <table style={{marginBottom : '20px'}}>
@@ -1158,91 +1214,91 @@ class DetailTssr extends Component {
               </table>
               <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
               <Fragment>
-              <Row>
-              {this.state.tssr_site_NE !== null && (
-              <Col style={{marginBottom : '20px'}}>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Technical Ref</td>
-                      <td>:</td>
-                      {this.state.list_technical_ref !== null ? (
-                        <Fragment>
-                          <td style={{paddingLeft:'10px', width : '200px'}}>
-                            <Select
-                              cacheOptions
-                              options={this.state.list_technical_ref_selection}
-                              onChange={this.handleChangeTechRef}
-                            />
-                          </td>
-                          <td style={{paddingLeft:'10px', width : '100px'}}>
-                            <Button size="sm" color="primary" style={{float: "right"}} sm disabled={this.state.technical_ref_selected === null} onClick={this.referenceWithTechBoq}>Submit</Button>
-                          </td>
-                        </Fragment>
-                      ) : (
-                        <td style={{paddingLeft:'10px', width : '200px'}}>
-                          {this.state.technical_ref_selected}
-                        </td>
-                      )}
-
-                    </tr>
-                  </tbody>
-                </table>
-              </Col>
-              )}
-              </Row>
-              <Row>
-              {this.state.tssr_site_NE !== null && (
-                <Fragment>
-                  <Col md="4">
-                  <table className="table-header">
+                <Row>
+                {this.state.tssr_site_NE !== null && (
+                <Col style={{marginBottom : '20px'}}>
+                  <table>
                     <tbody>
-                        <tr>
-                          <td>Site ID NE</td>
-                          <td>: &nbsp;</td>
-                          <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_id}</td>
-                        </tr>
-                        <tr>
-                          <td>Site Name NE</td>
-                          <td>:</td>
-                          <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_id}</td>
-                        </tr>
-                        <tr>
-                          <td>Version</td>
-                          <td>:</td>
-                          <td style={{paddingLeft:'10px'}}>
-                            <Input style={{marginTop : '10px'}} type="select" onChange={this.handleChangeVersion} value={this.state.version_selected === null ? this.state.version_current : this.state.version_selected}>
-                              <option value={this.state.data_tssr.version}>{this.state.data_tssr.version}</option>
-                              {this.state.list_version.map( ver =>
-                                <option value={ver.version}>{ver.version}</option>
-                              )}
-                            </Input>
+                      <tr>
+                        <td>Technical Ref</td>
+                        <td>:</td>
+                        {this.state.list_technical_ref !== null ? (
+                          <Fragment>
+                            <td style={{paddingLeft:'10px', width : '200px'}}>
+                              <Select
+                                cacheOptions
+                                options={this.state.list_technical_ref_selection}
+                                onChange={this.handleChangeTechRef}
+                              />
+                            </td>
+                            <td style={{paddingLeft:'10px', width : '100px'}}>
+                              <Button size="sm" color="primary" style={{float: "right"}} sm disabled={this.state.technical_ref_selected === null} onClick={this.referenceWithTechBoq}>Submit</Button>
+                            </td>
+                          </Fragment>
+                        ) : (
+                          <td style={{paddingLeft:'10px', width : '200px'}}>
+                            {this.state.technical_ref_selected}
                           </td>
-                        </tr>
+                        )}
+
+                      </tr>
                     </tbody>
                   </table>
-                  </Col>
-                  {this.state.tssr_site_FE !== null ? (
+                </Col>
+                )}
+                </Row>
+                <Row>
+                {this.state.tssr_site_NE !== null && (
+                  <Fragment>
                     <Col md="4">
                     <table className="table-header">
                       <tbody>
-                        <tr>
-                          <td>Site ID FE</td>
-                          <td>: &nbsp;</td>
-                          <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_id}</td>
-                        </tr>
-                        <tr>
-                          <td>Site Name FE</td>
-                          <td>:</td>
-                          <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_id}</td>
-                        </tr>
+                          <tr>
+                            <td>Site ID NE</td>
+                            <td>: &nbsp;</td>
+                            <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_id}</td>
+                          </tr>
+                          <tr>
+                            <td>Site Name NE</td>
+                            <td>:</td>
+                            <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_id}</td>
+                          </tr>
+                          <tr>
+                            <td>Version</td>
+                            <td>:</td>
+                            <td style={{paddingLeft:'10px'}}>
+                              <Input style={{marginTop : '10px'}} type="select" onChange={this.handleChangeVersion} value={this.state.version_selected === null ? this.state.version_current : this.state.version_selected}>
+                                <option value={this.state.data_tssr.version}>{this.state.data_tssr.version}</option>
+                                {this.state.list_version.map( ver =>
+                                  <option value={ver.version}>{ver.version}</option>
+                                )}
+                              </Input>
+                            </td>
+                          </tr>
                       </tbody>
                     </table>
                     </Col>
-                  ) : (<Fragment></Fragment>)}
-                </Fragment>
-              )}
-              </Row>
+                    {this.state.tssr_site_FE !== null ? (
+                      <Col md="4">
+                      <table className="table-header">
+                        <tbody>
+                          <tr>
+                            <td>Site ID FE</td>
+                            <td>: &nbsp;</td>
+                            <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_id}</td>
+                          </tr>
+                          <tr>
+                            <td>Site Name FE</td>
+                            <td>:</td>
+                            <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_id}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      </Col>
+                    ) : (<Fragment></Fragment>)}
+                  </Fragment>
+                )}
+                </Row>
                 <hr className="upload-line-ordering"></hr>
                 <div className='divtable2'>
                   <Table hover bordered striped responsive size="sm">
@@ -1251,39 +1307,41 @@ class DetailTssr extends Component {
                         <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
                         <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
-                        <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
+                        <th colSpan="3" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
+                        <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Availability</th>
                       </tr>
                       <tr>
-                        <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
-                        {this.state.data_tssr_sites[1] !== undefined ? (
-                          <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
-                        ):(<Fragment></Fragment>)}
+                        <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Qty PS</th>
+                        <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Material in Warehouse</th>
+                        <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Material Plan</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {this.state.list_pp_material_tssr.map( pp =>
-                        <Fragment>
-                          <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
-                            <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
-                            <td>{pp.name}</td>
-                            <td>{pp.uom}</td>
-                            <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)}</td>
-                            {this.state.tssr_site_FE !== null ? (
-                              <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)}</td>
-                            ):(<Fragment></Fragment>)}
-                          </tr>
-                          {pp.list_of_material.map(material =>
-                            <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
-                              <td style={{textAlign : 'right'}}>{material.material_id}</td>
-                              <td style={{textAlign : 'left'}}>{material.material_name}</td>
-                              <td>{material.uom}</td>
-                              <td align='center'>{this.getQtyTssrPPNE(pp.pp_id)*material.qty}</td>
-                              {this.state.tssr_site_FE !== null ? (
-                                <td align='center'>{this.getQtyTssrPPFE(pp.pp_id)*material.qty}</td>
-                              ):(<Fragment></Fragment>)}
+                      {Array.isArray(this.state.tssrData) && (
+                        this.state.tssrData.map(pp =>
+                          <Fragment>
+                            <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                              <td style={{textAlign : 'left'}}>{pp.product_packages.pp_id}</td>
+                              <td>{pp.product_packages.product_name}</td>
+                              <td>{pp.product_packages.uom}</td>
+                              <td align='center'>{pp.product_packages.qty.toFixed(2)}</td>
+                              <td align='center'></td>
+                              <td align='center'></td>
+                              <td align='center'></td>
                             </tr>
-                          )}
-                        </Fragment>
+                            {pp.material_detail.map(material =>
+                              <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                                <td style={{textAlign : 'right'}}>{material.material_id}</td>
+                                <td style={{textAlign : 'left'}}>{material.material_name}</td>
+                                <td>{material.uom}</td>
+                                <td align='center'>{(pp.product_packages.qty*material.qty).toFixed(2)}</td>
+                                <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
+                                <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
+                                <td align='center'>{pp.product_packages.qty*material.qty < qty_wh ? "OK":"NOK"}</td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        )
                       )}
                     </tbody>
                   </Table>

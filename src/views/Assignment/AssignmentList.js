@@ -12,11 +12,18 @@ const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const username_tsel = 'adminbamidsuper';
 const password_tsel = 'F760qbAg2sml';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class AssignmentList extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
       assignment_list : [],
       prevPage : 0,
       activePage : 1,
@@ -26,6 +33,25 @@ class AssignmentList extends Component {
     this.handlePageChange = this.handlePageChange.bind(this);
     this.getAssignmentList = this.getAssignmentList.bind(this);
     this.downloadASGList = this.downloadASGList.bind(this);
+  }
+
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios.get(API_URL_NODE+url, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
   }
 
   async getDataFromAPI(url) {
@@ -51,11 +77,10 @@ class AssignmentList extends Component {
   getAssignmentList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPI('/asp_assignment_sorted?&max_results='+maxPage+'&page='+page).then(res => {
+    this.getDataFromAPINODE('/aspAssignment/aspassign').then(res => {
       if(res.data !== undefined) {
-        const items = res.data._items;
-        const totalData = res.data._meta;
-        this.setState({assignment_list : items, totalData: totalData});
+        const items = res.data.data;
+        this.setState({assignment_list : items});
       }
     })
   }
@@ -125,14 +150,12 @@ class AssignmentList extends Component {
                       <th>Assignment ID</th>
                       <th>Account Name</th>
                       <th>Project Name</th>
-                      <th>SOW Type</th>
-                      <th>NW</th>
-                      <th>NW Activity</th>
+                      <th>Vendor Name Type</th>
                       <th>Terms of Payment</th>
-                      <th>Item Status</th>
+                      <th>Assignment Status</th>
                       <th>Work Status</th>
                     </tr>
-                    <tr>
+                    {/* }<tr>
                       <td>
                         <div className="controls" style={tableWidth}>
                           <InputGroup className="input-prepend">
@@ -203,27 +226,7 @@ class AssignmentList extends Component {
                           </InputGroup>
                         </div>
                       </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={7} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={8} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                    </tr>
+                    </tr> */}
                   </thead>
                   <tbody>
                     {this.state.assignment_list.length === 0 && (
@@ -241,11 +244,9 @@ class AssignmentList extends Component {
                         <td>{list.Assignment_No}</td>
                         <td>{list.Account_Name}</td>
                         <td>{list.Project}</td>
-                        <td>{list.SOW_Type}</td>
-                        <td>{list.NW}</td>
-                        <td>{list.NW_Activity}</td>
+                        <td>{list.Vendor_Name}</td>
                         <td>{list.Payment_Terms}</td>
-                        <td>{list.Item_Status}</td>
+                        <td>{list.Current_Status}</td>
                         <td>{list.Work_Status}</td>
                       </tr>
                     )}

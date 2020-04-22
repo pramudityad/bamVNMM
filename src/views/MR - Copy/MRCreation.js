@@ -37,10 +37,6 @@ class MRCreation extends Component {
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
       tokenUser : this.props.dataLogin.token,
-      list_tower : [],
-      list_project : [],
-      list_tower_selection : [],
-      list_project_selection : [],
         create_mr_form : new Array(9).fill(null),
         create_mr_name_form : new Array(9).fill(null),
         list_cd_id : [],
@@ -48,6 +44,7 @@ class MRCreation extends Component {
         data_cd_id_selected : null,
         project_selected : null,
         project_name_selected : null,
+        list_project : [],
         list_tssr : [],
         list_tssr_for_selection : [],
         id_tssr_selected : null,
@@ -66,8 +63,6 @@ class MRCreation extends Component {
     this.handleChangeProject = this.handleChangeProject.bind(this);
     this.handleChangeCD = this.handleChangeCD.bind(this);
     this.showHide = this.showHide.bind(this);
-    this.handleChangeProjectXL = this.handleChangeProjectXL.bind(this);
-    this.handleChangeTowerXL = this.handleChangeTowerXL.bind(this);
   }
 
   async postDatatoAPINODE(url, data){
@@ -184,13 +179,7 @@ class MRCreation extends Component {
     return numberTSSR;
   }
 
-  selectedDatetoFormat(date){
-    let dateSplit = date.split("-");
-    return dateSplit[0]+"-"+dateSplit[2]+"-"+dateSplit[1]
-  }
-
   async saveMRtoAPI(){
-    this.setState({action_status : null, action_message : null});
     const dataCD = this.state.data_cd_id_selected;
     const dataForm = this.state.create_mr_form;
     const dataFormName = this.state.create_mr_name_form;
@@ -198,178 +187,69 @@ class MRCreation extends Component {
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     let list_site = [];
-    //     "mr_type": dataForm[3],
-    //     "mr_delivery_type": dataForm[4],
-    let dataXLS = [
-      ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "dsp_company", "mr_comment_project", "sent_mr_request", "identifier"],
-      ["new", this.state.project_name_selected, this.selectMRType(dataForm[3]), this.selectDeliveryType(dataForm[4]), dataFormName[8], this.selectedDatetoFormat(dataForm[5]), this.selectedDatetoFormat(dataForm[6]), dataFormName[7], "", "", dataForm[1]]
-    ]
-    const respondCheckingMR = await this.postDatatoAPINODE('/matreq/matreqByActivity', {"data" : dataXLS});
-    if(respondCheckingMR.data !== undefined && respondCheckingMR.status >= 200 && respondCheckingMR.status <= 300 ) {
-      const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', {"data" : respondCheckingMR.data.data });
-      if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
-        this.setState({ action_status : 'success' });
-      } else{
-        if(respondSaveMR.response !== undefined && respondSaveMR.response.data !== undefined && respondSaveMR.response.data.error !== undefined){
-          if(respondSaveMR.response.data.error.message !== undefined){
-            this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error.message });
-          }else{
-            this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error });
-          }
-        }else{
-          this.setState({ action_status: 'failed' });
-        }
+    if(dataCD.Site_Info_SiteID_NE !== ""){
+      let site_ne = {
+          "site_id": dataCD.Site_Info_SiteID_NE,
+          "site_title": "NE",
+          "site_name" : dataCD.Site_Info_SiteName_NE,
+          "site_address" : dataCD.Site_Info_Address_NE,
+          "site_longitude" : parseFloat(dataCD.Site_Info_Longitude_NE),
+          "site_latitude" : parseFloat(dataCD.Site_Info_Latitude_NE)
       }
-    }else{
-      if(respondCheckingMR.response !== undefined && respondCheckingMR.response.data !== undefined && respondCheckingMR.response.data.error !== undefined){
-        if(respondCheckingMR.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error.message });
-        }else{
-          this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error });
-        }
-      }else{
-        this.setState({ action_status: 'failed' });
-      }
+      list_site.push(site_ne);
     }
-  }
+    if(dataCD.Site_Info_SiteID_FE !== ""){
+      let site_fe = {
+          "site_id": dataCD.Site_Info_SiteID_FE,
+          "site_title": "FE",
+          "site_name" : dataCD.Site_Info_SiteName_FE,
+          "site_address" : dataCD.Site_Info_Address_FE,
+          "site_longitude" : parseFloat(dataCD.Site_Info_Longitude_FE),
+          "site_latitude" : parseFloat(dataCD.Site_Info_Latitude_FE)
+      }
+      list_site.push(site_fe);
+    }
+    const origin_place = {
+      "title" : dataFormName[4].split(" to ", 2)[0],
+      "value" : dataFormName[8],
+      "address" : "",
+    };
+    let destination_place = undefined;
+    if(dataForm[3] === "Relocation" || dataForm[3] === "Return"){
+      destination_place = {
+        "title" : dataFormName[4].split(" to ", 2)[1],
+        "value" : dataFormName[9],
+        "address" : "",
+      };
+    }
 
-  // async saveMRtoAPI(){
-  //   const dataCD = this.state.data_cd_id_selected;
-  //   const dataForm = this.state.create_mr_form;
-  //   const dataFormName = this.state.create_mr_name_form;
-  //   const numberingMR = this.preparingDataMR();
-  //   const newDate = new Date();
-  //   const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-  //   let list_site = [];
-  //   if(dataCD.Site_Info_SiteID_NE !== ""){
-  //     let site_ne = {
-  //         "site_id": dataCD.Site_Info_SiteID_NE,
-  //         "site_title": "NE",
-  //         "site_name" : dataCD.Site_Info_SiteName_NE,
-  //         "site_address" : dataCD.Site_Info_Address_NE,
-  //         "site_longitude" : parseFloat(dataCD.Site_Info_Longitude_NE),
-  //         "site_latitude" : parseFloat(dataCD.Site_Info_Latitude_NE)
-  //     }
-  //     list_site.push(site_ne);
-  //   }
-  //   if(dataCD.Site_Info_SiteID_FE !== ""){
-  //     let site_fe = {
-  //         "site_id": dataCD.Site_Info_SiteID_FE,
-  //         "site_title": "FE",
-  //         "site_name" : dataCD.Site_Info_SiteName_FE,
-  //         "site_address" : dataCD.Site_Info_Address_FE,
-  //         "site_longitude" : parseFloat(dataCD.Site_Info_Longitude_FE),
-  //         "site_latitude" : parseFloat(dataCD.Site_Info_Latitude_FE)
-  //     }
-  //     list_site.push(site_fe);
-  //   }
-  //   const origin_place = {
-  //     "title" : dataFormName[4].split(" to ", 2)[0],
-  //     "value" : dataFormName[8],
-  //     "address" : "",
-  //   };
-  //   let destination_place = undefined;
-  //   if(dataForm[3] === "Relocation" || dataForm[3] === "Return"){
-  //     destination_place = {
-  //       "title" : dataFormName[4].split(" to ", 2)[1],
-  //       "value" : dataFormName[9],
-  //       "address" : "",
-  //     };
-  //   }
-  //
-  //   const mr_data = {
-  //     "operation": "New",
-  //     "id_cd_doc": this.state.cd_id_selected,
-  //     "cd_id": dataCD.WP_ID.toString(),
-  //     "id_project_doc": this.state.project_selected,
-  //     "project_name": this.state.project_name_selected,
-  //     "dsp_company": dataFormName[7],
-  //     "sow_type": dataCD.CD_Info_SOW_Type,
-  //     "mr_type": dataForm[3],
-  //     "mr_delivery_type": dataForm[4],
-  //     "site_info": list_site,
-  //     "tower_info": []
-  //   };
-  //   console.log("data new MR", mr_data);
-  //   // const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', mr_data);
-  //   // if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
-  //   //   this.setState({ action_status : 'success' }, () => {
-  //   //     setTimeout(function(){ this.setState({ redirectSign : respondSaveMR.data._id}); }.bind(this), 3000);
-  //   //   });
-  //   // } else{
-  //   //   this.setState({ action_status : 'failed' });
-  //   // }
-  // }
+    const mr_data = {
+      "operation": "New",
+      "id_cd_doc": this.state.cd_id_selected,
+      "cd_id": dataCD.WP_ID.toString(),
+      "id_project_doc": this.state.project_selected,
+      "project_name": this.state.project_name_selected,
+      "dsp_company": dataFormName[7],
+      "sow_type": dataCD.CD_Info_SOW_Type,
+      "mr_type": dataForm[3],
+      "mr_delivery_type": dataForm[4],
+      "site_info": list_site,
+      "tower_info": []
+    };
+    console.log("data new MR", mr_data);
+    // const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', mr_data);
+    // if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
+    //   this.setState({ action_status : 'success' }, () => {
+    //     setTimeout(function(){ this.setState({ redirectSign : respondSaveMR.data._id}); }.bind(this), 3000);
+    //   });
+    // } else{
+    //   this.setState({ action_status : 'failed' });
+    // }
+  }
 
   componentDidMount(){
-    // this.getDataCD();
-    this.getDataTower();
-    this.getDataProject();
+    this.getDataCD();
     document.title = "MR Creation | BAM"
-  }
-
-  getDataTower(){
-    this.getDatafromAPIXL('/tower_site_sorted_non_page?projection={"tower_id" : 1}').then( resTower => {
-      if(resTower.data !== undefined){
-        this.setState({ list_tower : resTower.data._items }, () => {
-          this.filterDataTower("");
-        })
-      }
-    })
-  }
-
-  getDataProject(){
-    this.getDatafromAPIXL('/project_sorted_non_page').then( resProject => {
-      if(resProject.data !== undefined){
-        this.setState({ list_project : resProject.data._items }, () => {
-          this.filterDataProject("");
-        })
-      }
-    })
-  }
-
-  filterDataTower = (inputValue) => {
-    const list = [];
-    this.state.list_tower.map(i =>
-        list.push({'label' : i.tower_id, 'value' : i.tower_id})
-    )
-    this.setState({list_tower_selection : list})
-    if(inputValue.length === 0){
-      return list;
-    }else{
-      return this.state.list_tower_selection.filter(i =>
-        i.label.toLowerCase().includes(inputValue.toLowerCase())
-      );
-    }
-  };
-
-  filterDataProject = (inputValue) => {
-    const list = [];
-    this.state.list_project.map(i =>
-        list.push({'label' : i.Project, 'value' : i.Project})
-    )
-    this.setState({list_project_selection : list})
-    if(inputValue.length === 0){
-      return list;
-    }else{
-      return this.state.list_project_selection.filter(i =>
-        i.label.toLowerCase().includes(inputValue.toLowerCase())
-      );
-    }
-  };
-
-  handleChangeProjectXL(e){
-    this.setState({project_selected : e.value, project_name_selected : e.value })
-    return e;
-  }
-
-  handleChangeTowerXL(e){
-    let dataForm = this.state.create_mr_form;
-    let dataFormName = this.state.create_mr_name_form;
-    dataForm[1] = e.value;
-    dataFormName[1] = e.label;
-    this.setState({create_mr_form : dataForm, create_mr_name_form : dataFormName });
-    return e
   }
 
   handleChangeProject(e){
@@ -399,27 +279,6 @@ class MRCreation extends Component {
     }
   }
 
-  selectMRType(TypeDel){
-    let delType = null;
-    switch(TypeDel) {
-      case "New":
-        delType = 1;
-        break;
-      case "Upgrade":
-        delType = 2;
-        break;
-      case "Relocation":
-        delType = 3;
-        break;
-      case "Return":
-        delType = 4;
-        break;
-      default:
-        delType = 1;
-    }
-    return delType
-  }
-
   selectDeliveryType(TypeDel){
     let delType = null;
     switch(TypeDel) {
@@ -442,7 +301,7 @@ class MRCreation extends Component {
   }
 
   render() {
-    console.log("list_cd_id", this.state.create_mr_form[6]);
+    console.log("list_cd_id", this.state.data_cd_id_selected);
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);
     }
@@ -483,7 +342,7 @@ class MRCreation extends Component {
                   </FormGroup>
                 </Col>
               </Row>
-              {/* }<Row form>
+              <Row form>
                 <Col md={6}>
                   <FormGroup>
                     <Label>CD ID</Label>
@@ -495,32 +354,8 @@ class MRCreation extends Component {
                     </Input>
                   </FormGroup>
                 </Col>
-              </Row> */}
-              <Row form>
-                <Col md={6}>
-                  <FormGroup>
-                    <Label>Tower ID</Label>
-                      <Select
-                        cacheOptions
-                        options={this.state.list_tower_selection}
-                        onChange={this.handleChangeTowerXL}
-                      />
-                  </FormGroup>
-                </Col>
               </Row>
               <Row form>
-                <Col md={6}>
-                  <FormGroup>
-                    <Label>Project</Label>
-                      <Select
-                        cacheOptions
-                        options={this.state.list_project_selection}
-                        onChange={this.handleChangeProjectXL}
-                      />
-                  </FormGroup>
-                </Col>
-              </Row>
-              {/* }<Row form>
                 <Col md={6}>
                   <FormGroup>
                     <Label>Project</Label>
@@ -549,7 +384,7 @@ class MRCreation extends Component {
                     <Input type="text" value={this.state.data_cd_id_selected !== null ? this.state.data_cd_id_selected.Site_Info_SiteID_FE : ""} disabled/>
                   </FormGroup>
                 </Col>
-              </Row>*/}
+              </Row>
               <Row form>
                 <Col md={6}>
                   <FormGroup>
