@@ -332,16 +332,14 @@ class MaterialStock extends React.Component {
     const modalMatStockEdit = this.state.modalMatStockEdit;
     if (modalMatStockEdit === false) {
       const value = e.currentTarget.value;
-      // console.log('value ', value);
       const aEdit = this.state.all_data.find(e => e.owner_id === value);
-      // console.log('aedit ', aEdit);
       let dataForm = this.state.MatStockForm;
-      dataForm[0] = aEdit.owner_id;
-      dataForm[1] = aEdit.po_number;
-      dataForm[2] = aEdit.arrival_date;
-      dataForm[3] = aEdit.project_name;
-      dataForm[4] = aEdit.sku;
-      dataForm[5] = aEdit.qty;
+      dataForm[0] = aEdit.sku_description;
+      dataForm[1] = aEdit.serial_number;
+      dataForm[2] = aEdit.project_name;
+      dataForm[3] = aEdit.box_number;
+      dataForm[4] = aEdit.condition;
+      dataForm[5] = aEdit.notes;
       this.setState({ MatStockForm: dataForm });
     } else {
       this.setState({ MatStockForm: new Array(6).fill(null) });
@@ -425,14 +423,21 @@ class MaterialStock extends React.Component {
     let respondSaveEdit = undefined;
     const dataPPEdit = this.state.MatStockForm;
     const dataPP = this.state.all_data.find(e => e.owner_id === dataPPEdit[0]);
+    const objData = this.state.all_data.find(e => e._id);
     let pp = {
-      "owner_id": dataPPEdit[0],
-      "po_number": dataPPEdit[1],
-      "arrival_date": dataPPEdit[2],
-      "project_name": dataPPEdit[3],
-      "sku": dataPPEdit[4],
-      "qty": dataPPEdit[5]
+      "sku_description": dataPPEdit[0],
+      "serial_number": dataPPEdit[1],
+      "project_name": dataPPEdit[2],
+      "box_number": dataPPEdit[3],
+      "condition": dataPPEdit[4],
+      "notes": dataPPEdit[5],
+      "id_project_doc": objData.id_project_doc,
+      "arrival_date" : objData.arrival_date,
+      "po_number" : objData.po_number,
+      "owner_id" : objData.owner_id,
+      "sku": objData.sku
     }
+    console.log('patch data ',pp)
     this.toggleLoading();
     this.toggleEdit();
     // if (pp.owner_id === undefined || pp.owner_id === null) {
@@ -449,8 +454,7 @@ class MaterialStock extends React.Component {
     //     pp["pp_cust_number"] = pp.pp_id;
     //   }
     // }
-    let patchData = await this.patchDatatoAPINODE('/whStock/updateOneWhStockwithDelete/', { "data": [pp] });
-    console.log('url patch ', patchData);
+    let patchData = await this.patchDatatoAPINODE('/whStock/updateOneWhStockwithDelete/'+objData._id, { "data": [pp] });
     if (patchData === undefined) { patchData = {}; patchData["data"] = undefined }
     if (patchData.data !== undefined) {
       this.setState({ action_status: 'success' }, () => {
@@ -469,18 +473,19 @@ class MaterialStock extends React.Component {
     let poData = [];
     let respondSaveNew = undefined;
     const dataPPEdit = this.state.MatStockForm;
-    const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
     let pp = {
       "owner_id": dataPPEdit[0],
       "po_number": dataPPEdit[1],
       "arrival_date": dataPPEdit[2],
       "project_name": dataPPEdit[3],
       "sku": dataPPEdit[4],
-      "qty": dataPPEdit[5]
+      "sku_description": dataPPEdit[5],
+      "qty": dataPPEdit[6]
     }
     poData.push(pp);
-    let postData = await this.postDatatoAPIEXEL('/whStock/createOneWhStockp', pp)
+    let postData = await this.postDatatoAPINODE('/whStock/createOneWhStockp', {"stockData": pp})
       .then(res => {
+        console.log('res save one ',res)
         if (res.data !== undefined) {
           this.toggleLoading();
         } else {
@@ -523,10 +528,18 @@ class MaterialStock extends React.Component {
   }
 
   DeleteData(r) {
+    this.toggleDanger();
     const _idData = r.currentTarget.value;
     const DelData = this.deleteDataFromAPINODE('/whStock/deleteWhStock/' + _idData)
       .then(res => {
-        console.log('res delete ', res);
+        if (res.data !== undefined) {
+          this.setState({ action_status: 'success' });
+          this.toggleLoading();
+        } else {
+          this.setState({ action_status: 'failed' }, () => {
+            this.toggleLoading();
+          });
+        }
       });
   }
 
@@ -535,9 +548,9 @@ class MaterialStock extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["owner_id","po_number","arrival_date","project_name","sku","qty"]);
-    ws.addRow(["XLCOM","PO0001","2020-04-17","XL BAM DEMO 2021","1",100]);
-    ws.addRow(["DPP-XLCOM","PO0001","2020-04-17","XL BAM DEMO 2021","1",100]);
+    ws.addRow(["owner_id","po_number","arrival_date","project_name","sku","sku_description","qty"]);
+    ws.addRow(["XLCOM","PO0001","2020-04-17","XL BAM DEMO 2021","1","test",100]);
+    ws.addRow(["DPP-XLCOM","PO0001","2020-04-17","XL BAM DEMO 2021","1","test",100]);
 
 
     const PPFormat = await wb.xlsx.writeBuffer();
@@ -624,7 +637,7 @@ class MaterialStock extends React.Component {
                       <table hover bordered responsive size="sm" width='100%'>
                         <thead style={{ backgroundColor: '#73818f' }} className='fixed'>
                           <tr align="center">
-                            <th style={{ minWidth: '150px' }}> Owner ID</th>
+                            <th> Owner ID</th>
                             <th>PO Number</th>
                             <th>Project Name</th>
                             <th>Arrival Date</th>
@@ -663,7 +676,7 @@ class MaterialStock extends React.Component {
                                   </Button>
                                 </td>
                                 <td>
-                                  <Button size='sm' color="danger" value={e._id} onClick={r => this.DeleteData(r, "value")} title='Delete'>
+                                  <Button size='sm' color="danger" value={e._id} onClick={this.toggleDanger} title='Delete'>
                                     <i className="fa fa-trash" aria-hidden="true"></i>
                                   </Button>
                                 </td>
@@ -700,11 +713,11 @@ class MaterialStock extends React.Component {
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="po_number">Owner ID</Label>
+                  <Label htmlFor="owner_id">Owner ID</Label>
                   <Input type="text" name="0" placeholder="" value={this.state.MatStockForm[0]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="po_year" >PO Number</Label>
+                  <Label htmlFor="po_number" >PO Number</Label>
                   <Input type="text" name="1" placeholder="" value={this.state.MatStockForm[1]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
@@ -717,11 +730,15 @@ class MaterialStock extends React.Component {
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="sku" >SKU</Label>
-                  <Input type="text" min="0" name="4" placeholder="" value={this.state.MatStockForm[4]} onChange={this.handleChangeForm} />
+                  <Input type="text" placeholder="" value={this.state.MatStockForm[4]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="sku_description" >SKU Description</Label>
+                  <Input type="text" placeholder="" value={this.state.MatStockForm[5]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="qty" >Qty</Label>
-                  <Input type="number" min="0" name="6" placeholder="" value={this.state.MatStockForm[5]} onChange={this.handleChangeForm} />
+                  <Input type="number" min="0" name="6" placeholder="" value={this.state.MatStockForm[6]} onChange={this.handleChangeForm} />
                 </FormGroup>                
               </Col>
             </Row>
@@ -739,27 +756,27 @@ class MaterialStock extends React.Component {
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="po_number">Owner ID</Label>
+                  <Label htmlFor="sku_description">SKU Description</Label>
                   <Input type="text" name="0" placeholder="" value={this.state.MatStockForm[0]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="po_year" >PO Number</Label>
+                  <Label htmlFor="serial_number" >Serial Number</Label>
                   <Input type="text" name="1" placeholder="" value={this.state.MatStockForm[1]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="arrival_date" >Arrival Date</Label>
+                  <Label htmlFor="project_name" >Project Name</Label>
                   <Input type="datetime-local" placeholder="" value={this.state.MatStockForm[2]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="project_name" >Project Name</Label>
+                  <Label htmlFor="box_number" >Box Number</Label>
                   <Input type="text" name="3" placeholder="" value={this.state.MatStockForm[3]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="sku" >SKU</Label>
+                  <Label htmlFor="condition" >Condition</Label>
                   <Input type="text" min="0" name="4" placeholder="" value={this.state.MatStockForm[4]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="qty" >Qty</Label>
+                  <Label htmlFor="notes" >Notes</Label>
                   <Input type="number" min="0" name="6" placeholder="" value={this.state.MatStockForm[5]} onChange={this.handleChangeForm} />
                 </FormGroup>                
               </Col>
@@ -773,16 +790,15 @@ class MaterialStock extends React.Component {
 
         {/* Modal confirmation delete */}
         <Modal isOpen={this.state.danger} toggle={this.toggleDanger}
-          className={'modal-danger ' + this.props.className} itemId={this.state.activeItemId}
-          itemName={this.state.activeItemName}>
+          className={'modal-danger ' + this.props.className}>
           <ModalHeader toggle={this.toggleDanger}>Delete Material Stock Confirmation</ModalHeader>
-          {this.state.all_data.map(e =>
+          {/* {this.state.all_data.map(e => */}
             <ModalBody>
              
-              Are you sure want to delete {e.owner_id} ?
+              Are you sure want to delete {this.props.owner_id} ?
               
             </ModalBody>
-            )}
+            {/* )} */}
           <ModalFooter>
             <Button color="danger" onClick={r => this.DeleteData(r, "value")}>Delete</Button>
             <Button color="secondary" onClick={this.toggleDanger}>Cancel</Button>

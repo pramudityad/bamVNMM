@@ -354,6 +354,7 @@ class MatInboundPlan extends React.Component {
     let respondSaveEdit = undefined;
     const dataPPEdit = this.state.MatStockForm;
     const dataPP = this.state.all_data.find(e => e.owner_id === dataPPEdit[0]);
+    const objData = this.state.all_data.find(e => e._id);
     let pp = {
       "owner_id": dataPPEdit[0],
       "po_number": dataPPEdit[1],
@@ -377,7 +378,7 @@ class MatInboundPlan extends React.Component {
     //     pp["pp_cust_number"] = pp.pp_id;
     //   }
     // }
-    let patchData = await this.patchDatatoAPINODE('/whInboundPlan/UpdateOneWhInboundPlanwithDelete/', { "data": [pp] });
+    let patchData = await this.patchDatatoAPINODE('/whInboundPlan/UpdateOneWhInboundPlanwithDelete/'+objData._id, { "data": [pp] });
     if (patchData === undefined) { patchData = {}; patchData["data"] = undefined }
     if (patchData.data !== undefined) {
       this.setState({ action_status: 'success' }, () => {
@@ -405,7 +406,7 @@ class MatInboundPlan extends React.Component {
       "sku": dataPPEdit[4]
     }
     poData.push(pp);
-    let postData = await this.postDatatoAPIEXEL('/whInboundPlan/createOneWhInboundPlan', pp)
+    let postData = await this.postDatatoAPINODE('/whInboundPlan/createOneWhInboundPlan', pp)
       .then(res => {
         if (res.data !== undefined) {
           this.toggleLoading();
@@ -452,9 +453,9 @@ class MatInboundPlan extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["owner_id","po_number","arrival_date","project_name","sku"]);
-    ws.addRow(["XL1","PO0001","2020-04-17","XL BAM DEMO 2020","MB-G7W92U9X65V-00"]);
-    ws.addRow(["XL2","PO0001","2020-04-17","XL BAM DEMO 2020","1/TSR 484 21/3000"]);
+    ws.addRow(["owner_id","po_number","arrival_date","project_name","sku","sku_description"]);
+    ws.addRow(["XL1","PO0001","2020-04-17","XL BAM DEMO 2020","MB-G7W92U9X65V-00","test"]);
+    ws.addRow(["XL2","PO0001","2020-04-17","XL BAM DEMO 2020","1/TSR 484 21/3000","test"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'Material Inbound Template.xlsx');
@@ -540,7 +541,7 @@ class MatInboundPlan extends React.Component {
                       <table hover bordered responsive size="sm" width='100%'>
                         <thead style={{ backgroundColor: '#73818f' }} className='fixed'>
                           <tr align="center">
-                          <th style={{ minWidth: '150px' }}> Owner ID</th>
+                            <th> Owner ID</th>
                             <th>PO Number</th>
                             <th>Project Name</th>
                             <th>Arrival Date</th>
