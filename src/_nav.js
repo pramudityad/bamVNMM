@@ -113,6 +113,11 @@ export default {
       icon: 'icon-list',
       children: [
         {
+          name: 'WH Management',
+          url: '/wh-management',
+          icon: 'icon-list',
+        },
+        {
           name: 'WH Stock',
           url: '/material-stock',
           icon: 'icon-list',
@@ -123,6 +128,11 @@ export default {
           icon: 'icon-list',
         }
       ]
+    },
+    {
+      name: 'Material Library',
+      url: '/mat-library',
+      icon: 'icon-list',
     },
     {
       name: 'DSA List',

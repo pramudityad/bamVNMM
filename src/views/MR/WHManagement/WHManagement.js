@@ -45,13 +45,9 @@ const Checkbox = ({
 
 const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
-const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
-const usernameBAM = "adminbamidsuper";
-const passwordBAM = "F760qbAg2sml";
-
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-class MaterialStock extends React.Component {
+class WHManagement extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -246,7 +242,7 @@ class MaterialStock extends React.Component {
   };
 
   getWHStockList() {
-    this.getDatafromAPINODE("/whStock/getWhStock").then((res) => {
+    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({ all_data: res.data.data });
@@ -344,7 +340,8 @@ class MaterialStock extends React.Component {
 
   componentDidMount() {
     this.getWHStockList();
-    document.title = "Material Stock | BAM";
+    // change this
+    document.title = "Warehouse Management | BAM";
   }
 
   handleChangeChecklist(e) {
@@ -453,10 +450,13 @@ class MaterialStock extends React.Component {
     this.toggleLoading();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
-      'stockData': BulkXLSX,
-    });
-    // console.log('res bulk ', res.error.message);
+    const res = await this.postDatatoAPINODE(
+      "/whManagement/createWarehouse",
+      {
+        'managementData': BulkXLSX,
+      }
+    );
+    console.log('res bulk ', res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -472,8 +472,8 @@ class MaterialStock extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     console.log('xlsx data', JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE("/whStock/createWhStockTruncate", {
-      'stockData': BulkXLSX,
+    const res = await this.postDatatoAPINODE("/whManagement/createWhManagementTruncate", {
+      'managementData': BulkXLSX,
     });
     console.log('res bulk ', res);
     if (res.data !== undefined) {
@@ -628,14 +628,14 @@ class MaterialStock extends React.Component {
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "Material Stock.xlsx");
+    saveAs(new Blob([allocexport]), "WH Management.xlsx");
   }
 
   DeleteData(r) {
     // this.toggleDanger();
     const _idData = r.currentTarget.value;
     const DelData = this.deleteDataFromAPINODE(
-      "/whStock/deleteWhStock/" + _idData
+      "/whManagement/deleteWarehouse/" + _idData
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
@@ -652,12 +652,12 @@ class MaterialStock extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["owner_id","po_number","arrival_date","project_name","sku","qty","wh_id","id_wh_doc"]);
-    ws.addRow(["5df99ce5face981b7ace8861","PO0001","2020-04-17","XL BAM DEMO 2021","1",100,"WH_1","5ea7bf5de3b6fe12ace40a30"]);
-    ws.addRow(["5df99ce5face981b7ace8861","PO0001","2020-04-17","XL BAM DEMO 2021","1",100,"WH_1","5ea7bf5de3b6fe12ace40a30"]);
+    ws.addRow(["wh_name", "wh_id", "wh_manager", "address", "owner"]);
+    ws.addRow(["whA", "WH_1", "A", "AB", "dadang1"]);
+    ws.addRow(["whB", "WH_1", "B", "BA", "nurjaman1"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), "Material Stock Template.xlsx");
+    saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
   };
 
   render() {
@@ -673,7 +673,7 @@ class MaterialStock extends React.Component {
               <CardHeader>
                 <span style={{ marginTop: "8px", position: "absolute" }}>
                   {" "}
-                  Material Stock{" "}
+                  WH Management{" "}
                 </span>
                 <div
                   className="card-header-actions"
@@ -693,7 +693,7 @@ class MaterialStock extends React.Component {
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportMatStatus}>
                           {" "}
-                          Material Stock Template
+                          WH Management Template
                         </DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>
                           > Download All{" "}
@@ -789,7 +789,7 @@ class MaterialStock extends React.Component {
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
                       <span style={{ fontSize: "20px", fontWeight: "500" }}>
-                        Material Stock List
+                        WH Management List
                       </span>
                       <div
                         style={{
@@ -819,20 +819,19 @@ class MaterialStock extends React.Component {
                           className="fixed"
                         >
                           <tr align="center">
-                            <th> Owner ID</th>
-                            <th> WH ID</th>
-                            <th>PO Number</th>
-                            <th>Project Name</th>
-                            <th>Arrival Date</th>
-                            <th>SKU</th>
-                            <th>SKU Desc</th>
+                            <th>Warehouse Name</th>
+                            <th>Warehouse ID</th>
+                            <th>WH Manager</th>
+                            <th>Address</th>
+                            <th>Owner</th>
+                            {/* <th>SKU Desc</th>
                             <th>Qty</th>
                             <th>Aging</th>
                             <th>Serial Number</th>
                             <th>Box Number</th>
                             <th>Condition</th>
-                            <th>Notes</th>
-                            {/* <th></th> */}
+                            <th>Notes</th> */}
+                            <th></th>
                             <th></th>
                           </tr>
                         </thead>
@@ -846,45 +845,24 @@ class MaterialStock extends React.Component {
                               >
                                 {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
                                 <td style={{ textAlign: "center" }}>
-                                  {e.owner_id}
+                                  {e.wh_name}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
                                   {e.wh_id}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
-                                  {e.po_number}
+                                  {e.wh_manager}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
-                                  {e.project_name}
+                                  {e.address}
                                 </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.arrival_date}
-                                </td>
-                                <td style={{ textAlign: "center" }}>{e.sku}</td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.sku_description}
-                                </td>
-                                <td style={{ textAlign: "center" }}>{e.qty}</td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.ageing}
-                                </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.serial_number}
-                                </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.box_number}
-                                </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.condition}
-                                </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.notes}
-                                </td>
-                                {/* <td>
+                                <td style={{ textAlign: "center" }}>{e.owner}</td>
+                                
+                                <td>
                                   <Button
                                     size="sm"
                                     color="secondary"
-                                    value={e.owner_id}
+                                    value={e.wh_id}
                                     onClick={this.toggleEdit}
                                     title="Edit"
                                   >
@@ -893,7 +871,7 @@ class MaterialStock extends React.Component {
                                       aria-hidden="true"
                                     ></i>
                                   </Button>
-                                </td> */}
+                                </td>
                                 <td>
                                   <Button
                                     size="sm"
@@ -940,7 +918,7 @@ class MaterialStock extends React.Component {
           toggle={this.toggleMatStockForm}
           className="modal--form-e"
         >
-          <ModalHeader>Form Material Stock</ModalHeader>
+          <ModalHeader>Form WH Management</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
@@ -1029,7 +1007,7 @@ class MaterialStock extends React.Component {
           toggle={this.toggleEdit}
           className="modal--form"
         >
-          <ModalHeader>Form Update Material Stock</ModalHeader>
+          <ModalHeader>Form Update WH Management</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
@@ -1112,7 +1090,7 @@ class MaterialStock extends React.Component {
           className={"modal-danger " + this.props.className}
         >
           <ModalHeader toggle={this.toggleDanger}>
-            Delete Material Stock Confirmation
+            Delete WH Management Confirmation
           </ModalHeader>
           <ModalBody>Are you sure want to delete ?</ModalBody>
           <ModalFooter>
@@ -1165,4 +1143,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(MaterialStock);
+export default connect(mapStateToProps)(WHManagement);

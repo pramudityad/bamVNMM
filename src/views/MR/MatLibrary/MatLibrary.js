@@ -45,13 +45,10 @@ const Checkbox = ({
 
 const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
-const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
-const usernameBAM = "adminbamidsuper";
-const passwordBAM = "F760qbAg2sml";
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-class MaterialStock extends React.Component {
+class MatLibrary extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -246,7 +243,7 @@ class MaterialStock extends React.Component {
   };
 
   getWHStockList() {
-    this.getDatafromAPINODE("/whStock/getWhStock").then((res) => {
+    this.getDatafromAPINODE("/variants/variants").then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({ all_data: res.data.data });
@@ -344,7 +341,7 @@ class MaterialStock extends React.Component {
 
   componentDidMount() {
     this.getWHStockList();
-    document.title = "Material Stock | BAM";
+    document.title = "Material Library | BAM";
   }
 
   handleChangeChecklist(e) {
@@ -453,8 +450,8 @@ class MaterialStock extends React.Component {
     this.toggleLoading();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
-      'stockData': BulkXLSX,
+    const res = await this.postDatatoAPINODE("/variants/createVariants", {
+      'materialData': BulkXLSX,
     });
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
@@ -471,9 +468,9 @@ class MaterialStock extends React.Component {
     this.toggleLoading();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    console.log('xlsx data', JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE("/whStock/createWhStockTruncate", {
-      'stockData': BulkXLSX,
+    // console.log('xlsx data', JSON.stringify(BulkXLSX));
+    const res = await this.postDatatoAPINODE("/variants/createVariantsTruncate", {
+      'materialData': BulkXLSX,
     });
     console.log('res bulk ', res);
     if (res.data !== undefined) {
@@ -628,14 +625,14 @@ class MaterialStock extends React.Component {
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "Material Stock.xlsx");
+    saveAs(new Blob([allocexport]), "Material Library.xlsx");
   }
 
   DeleteData(r) {
     // this.toggleDanger();
     const _idData = r.currentTarget.value;
     const DelData = this.deleteDataFromAPINODE(
-      "/whStock/deleteWhStock/" + _idData
+      "/variants/deleteVariants/" + _idData
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
@@ -652,12 +649,12 @@ class MaterialStock extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["owner_id","po_number","arrival_date","project_name","sku","qty","wh_id","id_wh_doc"]);
-    ws.addRow(["5df99ce5face981b7ace8861","PO0001","2020-04-17","XL BAM DEMO 2021","1",100,"WH_1","5ea7bf5de3b6fe12ace40a30"]);
-    ws.addRow(["5df99ce5face981b7ace8861","PO0001","2020-04-17","XL BAM DEMO 2021","1",100,"WH_1","5ea7bf5de3b6fe12ace40a30"]);
+    ws.addRow(["origin","material_name","material_id","description","category"]);
+    ws.addRow(["LCM","Mat A","EID-42020500040","Optic Cable 2F LC-LC SM, 20M for RRUS01 (RPM2533512/20)"," Optic"]);
+    ws.addRow(["LCM","Mat B","RL2LC-SM20000","Optic Cable 2F LC-LC SM, 20M for RRUS01 (RPM2533512/20)"," Optic"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), "Material Stock Template.xlsx");
+    saveAs(new Blob([PPFormat]), "Material Library Template.xlsx");
   };
 
   render() {
@@ -673,7 +670,7 @@ class MaterialStock extends React.Component {
               <CardHeader>
                 <span style={{ marginTop: "8px", position: "absolute" }}>
                   {" "}
-                  Material Stock{" "}
+                  Material Library{" "}
                 </span>
                 <div
                   className="card-header-actions"
@@ -693,7 +690,7 @@ class MaterialStock extends React.Component {
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportMatStatus}>
                           {" "}
-                          Material Stock Template
+                          Material Library Template
                         </DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>
                           > Download All{" "}
@@ -789,7 +786,7 @@ class MaterialStock extends React.Component {
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
                       <span style={{ fontSize: "20px", fontWeight: "500" }}>
-                        Material Stock List
+                        Material Library
                       </span>
                       <div
                         style={{
@@ -819,19 +816,11 @@ class MaterialStock extends React.Component {
                           className="fixed"
                         >
                           <tr align="center">
-                            <th> Owner ID</th>
-                            <th> WH ID</th>
-                            <th>PO Number</th>
-                            <th>Project Name</th>
-                            <th>Arrival Date</th>
-                            <th>SKU</th>
-                            <th>SKU Desc</th>
-                            <th>Qty</th>
-                            <th>Aging</th>
-                            <th>Serial Number</th>
-                            <th>Box Number</th>
-                            <th>Condition</th>
-                            <th>Notes</th>
+                            <th>Origin</th>
+                            <th>Material ID</th>
+                            <th>Material Name</th>
+                            <th>Description</th>
+                            <th>Category</th>
                             {/* <th></th> */}
                             <th></th>
                           </tr>
@@ -846,40 +835,19 @@ class MaterialStock extends React.Component {
                               >
                                 {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
                                 <td style={{ textAlign: "center" }}>
-                                  {e.owner_id}
+                                  {e.origin}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
-                                  {e.wh_id}
+                                  {e.material_id}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
-                                  {e.po_number}
+                                  {e.material_name}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
-                                  {e.project_name}
+                                  {e.description}
                                 </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.arrival_date}
-                                </td>
-                                <td style={{ textAlign: "center" }}>{e.sku}</td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.sku_description}
-                                </td>
-                                <td style={{ textAlign: "center" }}>{e.qty}</td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.ageing}
-                                </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.serial_number}
-                                </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.box_number}
-                                </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.condition}
-                                </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.notes}
-                                </td>
+                                <td style={{ textAlign: "center" }}>{e.category}</td>
+                                
                                 {/* <td>
                                   <Button
                                     size="sm"
@@ -940,7 +908,7 @@ class MaterialStock extends React.Component {
           toggle={this.toggleMatStockForm}
           className="modal--form-e"
         >
-          <ModalHeader>Form Material Stock</ModalHeader>
+          <ModalHeader>Form Material Library</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
@@ -1029,7 +997,7 @@ class MaterialStock extends React.Component {
           toggle={this.toggleEdit}
           className="modal--form"
         >
-          <ModalHeader>Form Update Material Stock</ModalHeader>
+          <ModalHeader>Form Update Material Library</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
@@ -1112,7 +1080,7 @@ class MaterialStock extends React.Component {
           className={"modal-danger " + this.props.className}
         >
           <ModalHeader toggle={this.toggleDanger}>
-            Delete Material Stock Confirmation
+            Delete Material Library Confirmation
           </ModalHeader>
           <ModalBody>Are you sure want to delete ?</ModalBody>
           <ModalFooter>
@@ -1165,4 +1133,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(MaterialStock);
+export default connect(mapStateToProps)(MatLibrary);
