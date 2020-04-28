@@ -92,6 +92,8 @@ const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUp
 const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabaseList'));
 const CPODatabaseDetail  = React.lazy(() => import('./views/CPODatabase/CPODatabaseDetail'));
 
+const ShipmentList = React.lazy(() => import('./views/ShipmentList/ShipmentList'));
+
 const MaterialStock  = React.lazy(() => import('./views/MR/WHStock/MatStock'));
 const MaterialStockDetail  = React.lazy(() => import('./views/MR/WHStock/MatStockDet'));
 
@@ -217,6 +219,8 @@ const routes = [
 
   { path: '/material-stock', exact: true, name: 'Material Stock', component: MaterialStock },
   { path: '/material-stock-detail/:id', exact: true, name: 'Material Stock Detail', component: MaterialStockDetail },
+
+  { path: '/shipment-list', exact: true, name: 'Shipment List', component: ShipmentList },
 
   { path: '/material-inbound-plan', exact: true, name: 'Material Inbound Plan', component: MaterialInboundPlan },
   { path: '/material-inbound-detail/:id', exact: true, name: 'Material Inbound Plan Detail', component: MaterialInboundPlanDetail },

@@ -1,7 +1,7 @@
 export default {
   items: [
     {
-      name: 'BOQ & Product',
+      name: 'Product',
       icon: 'icon-folder-alt',
       children: [
         {
@@ -13,7 +13,13 @@ export default {
           name: 'Config Manager',
           url: '/config-manager',
           icon: 'icon-doc',
-        },
+        }
+      ]
+    },
+    {
+      name: 'BOQ',
+      icon: 'icon-folder-alt',
+      children: [
         {
           name: 'Technical BOQ',
           url: '/list-technical',
@@ -178,6 +184,12 @@ export default {
           url: '/material-dispatch',
           icon: 'fa fa-truck-moving',
         },
+        {
+          name: 'Shipment',
+          url: '/shipment-list',
+          icon: 'fa fa-truck-moving',
+        },
+
       ]
     },
     {

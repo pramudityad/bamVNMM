@@ -18,7 +18,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
 );
 
-class LoadingProcess extends Component {
+class ShipmentDetail extends Component {
   constructor(props) {
     super(props);
 
@@ -713,4 +713,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(LoadingProcess);
+export default connect(mapStateToProps)(ShipmentDetail);

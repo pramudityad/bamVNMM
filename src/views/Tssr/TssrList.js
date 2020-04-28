@@ -13,11 +13,18 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class TssrList extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
       tssr_list : [],
       prevPage : 0,
       activePage : 1,
@@ -49,8 +56,28 @@ class TssrList extends Component {
     }
   }
 
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios.get(API_URL_NODE+url, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
   getTssrList(){
     const page = this.state.activePage;
+    // this.getDataFromAPINODE('//tssrall?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
     this.getDataFromAPIBAM('/tssr_sorted?'+'max_results='+this.state.perPage+'&page='+page).then(res => {
       if(res.data !== undefined){
         const totalData = res.data._meta;
@@ -83,24 +110,6 @@ class TssrList extends Component {
     this.setState({activePage: pageNumber}, () => {
       this.getTssrList();
     });
-  }
-
-  handleFilterList(e) {
-    const index = e.target.name;
-    let value = e.target.value;
-    if(value !== "" && value.length === 0) {
-      value = "";
-    }
-    let dataFilter = this.state.filter_list;
-    dataFilter[parseInt(index)] = value;
-    this.setState({filter_list : dataFilter, activePage: 1}, () => {
-      this.onChangeDebounced(e);
-    })
-  }
-
-  onChangeDebounced(e) {
-    this.getMRList();
-    this.getAllMR();
   }
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>

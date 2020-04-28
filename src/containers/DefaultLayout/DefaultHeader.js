@@ -4,6 +4,8 @@ import { Badge, UncontrolledDropdown, DropdownItem, DropdownMenu, DropdownToggle
 import PropTypes from 'prop-types';
 import './font-awesome-animation.min.css';
 import axios from 'axios';
+import {connect} from 'react-redux';
+import ActionType from '../../redux/reducer/globalActionType';
 
 import { AppAsideToggler, AppNavbarBrand, AppSidebarToggler } from '@coreui/react';
 import logo from '../../assets/img/ERI_horizontal_RGB.svg';
@@ -134,7 +136,7 @@ class DefaultHeader extends Component {
           </UncontrolledDropdown>
           <UncontrolledDropdown nav direction="down">
             <DropdownToggle nav>
-              <img src={'../../assets/img/avatars/6.jpg'} className="img-avatar" alt="admin@bootstrapmaster.com" />
+              {this.props.dataLogin.nameUser}
             </DropdownToggle>
             <DropdownMenu right>
               <DropdownItem header tag="div" className="text-center"><strong>Account</strong></DropdownItem>
@@ -163,4 +165,11 @@ class DefaultHeader extends Component {
 DefaultHeader.propTypes = propTypes;
 DefaultHeader.defaultProps = defaultProps;
 
-export default DefaultHeader;
+const mapStateToProps = (state) => {
+  return {
+    dataLogin : state.loginData,
+    SidebarMinimize : state.minimizeSidebar
+  }
+}
+
+export default connect(mapStateToProps)(DefaultHeader);

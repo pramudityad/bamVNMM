@@ -44,6 +44,7 @@ class AssignmentCreation extends Component {
       tower_selected_id : null,
       project_selected : null,
       project_name_selected : null,
+      preview_data_assignment : null,
     }
 
     this.handleFilterList = this.handleFilterList.bind(this);

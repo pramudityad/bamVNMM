@@ -75,7 +75,7 @@ class SSOLogin extends Component {
 
   loginKeycloack(){
     const keycloak = Keycloak('/keycloakBAMID.json');
-    keycloak.init({onLoad: 'login-required'}).then(authenticated => {
+    keycloak.init({onLoad: 'login-required',checkLoginIframe : false}).then(authenticated => {
       keycloak.loadUserInfo().then(userInfo => {
         if(localStorage.getItem('user_data_login') === null){
           this.getDataLogin(userInfo).then(resLogin => {

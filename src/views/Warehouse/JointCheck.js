@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import { Modal, ModalBody, ModalHeader, ModalFooter, FormGroup, Label} from 'reactstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
@@ -7,6 +8,7 @@ import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
+import './wh_css.css'
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -34,6 +36,9 @@ class JointCheck extends Component {
       action_status : null,
       action_message : "",
       qty_box :new Map(),
+      array_id_box : [],
+      modal_box_input : false,
+      id_mr_selected : null,
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -43,6 +48,16 @@ class JointCheck extends Component {
     this.getAllMR = this.getAllMR.bind(this);
     this.proceedMilestone = this.proceedMilestone.bind(this);
     this.handleChangeQtyBoxJC = this.handleChangeQtyBoxJC.bind(this);
+    this.handleChangeIdBox = this.handleChangeIdBox.bind(this);
+    this.toggleBoxInput = this.toggleBoxInput.bind(this);
+  }
+
+  toggleBoxInput(e){
+    const id_doc = e.currentTarget.id;
+    this.setState({id_mr_selected : id_doc});
+    this.setState(prevState => ({
+      modal_box_input: !prevState.modal_box_input
+    }));
   }
 
   async getDataFromAPI(url) {
@@ -140,7 +155,21 @@ class JointCheck extends Component {
   handleChangeQtyBoxJC = (e) => {
     const name = e.target.name;
     let value = e.target.value;
+    if(value !== null && value.length !== 0 && value !== 0){
+      this.setState({array_id_box : new Array(parseInt(value)).fill(null)});
+    }
     this.setState(prevState => ({ qty_box: prevState.qty_box.set(name, value) }));
+  }
+
+  handleChangeIdBox = (e) => {
+    const name = e.target.name;
+    let value = e.target.value;
+    let arrayId = this.state.array_id_box;
+    if(value !== null && value !== undefined){
+      value = value.toString();
+    }
+    arrayId[parseInt(name)] = value;
+    this.setState({array_id_box : arrayId});
   }
 
   getAllMR() {
@@ -271,11 +300,15 @@ class JointCheck extends Component {
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     const _etag = e.target.value;
     const id_doc = e.currentTarget.id;
-    let res = await this.patchDatatoAPINODE('/matreq/jointCheck/'+id_doc, {"boxes" : this.state.qty_box.get(id_doc)});
+    const dataBoxes = {
+      "boxes" : parseInt(this.state.qty_box.get(id_doc)),
+      "listBoxId" : this.state.array_id_box
+    }
+    let res = await this.patchDatatoAPINODE('/matreq/jointCheck/'+id_doc, dataBoxes);
     if(res !== undefined) {
       if(res.data !== undefined) {
         this.setState({action_status : "success"}, () => {
-          setTimeout(function(){ window.location.reload(); }, 2000);
+          // setTimeout(function(){ window.location.reload(); }, 2000);
         });
       }else{
         if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
@@ -377,7 +410,6 @@ class JointCheck extends Component {
                     <tr>
                       <th rowSpan="2" style={{verticalAlign: "middle"}}>Action</th>
                       <th>MR ID</th>
-                      <th style={{width : '75px'}}>Box</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
                       <th>Site ID</th>
@@ -402,7 +434,6 @@ class JointCheck extends Component {
                           </InputGroup>
                         </div>
                       </td>
-                      <td style={{width : '75px'}}></td>
                       <td>
                         <div className="controls" style={tableWidth}>
                           <InputGroup className="input-prepend">
@@ -533,19 +564,9 @@ class JointCheck extends Component {
                     )}
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
-                        <td><Button disabled={!this.state.qty_box.has(list._id)} outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Done</Button></td>
+                        {/* <td><Button disabled={!this.state.qty_box.has(list._id)} outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Done</Button></td> */}
+                        <td><Button color="primary" size="sm" className="btn-pill" style={{width: "80px"}} id={list._id} onClick={this.toggleBoxInput}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Done</Button></td>
                         <td><Link to={'/mr-detail/'+list._id}>{list.mr_id}</Link></td>
-                        <td style={{width : '75px'}}>
-                          <Input
-                            type="number"
-                            style={{width : '100px'}}
-                            name={list._id}
-                            className="BoQ-style-qty"
-                            placeholder=""
-                            onChange={this.handleChangeQtyBoxJC}
-                            value={this.state.qty_box.get(list._id)}
-                          />
-                        </td>
                         <td>{list.project_name}</td>
                         <td>{list.cd_id}</td>
                         <td>{list.site_info[0].site_id}</td>
@@ -575,6 +596,37 @@ class JointCheck extends Component {
             </Card>
           </Col>
         </Row>
+
+        {/* Modal Loading */}
+        <Modal isOpen={this.state.modal_box_input} toggle={this.toggleBoxInput} className={'modal-sm modal--box-input'}>
+          <ModalBody>
+            <Row>
+              <Col sm="12">
+                <FormGroup>
+                  <Label htmlFor="total_box">Total Box</Label>
+                  <Input
+                    type="number"
+                    name={this.state.id_mr_selected}
+                    className="BoQ-style-qty"
+                    placeholder=""
+                    onChange={this.handleChangeQtyBoxJC}
+                    value={this.state.qty_box.get(this.state.id_mr_selected)}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="box_id">Box ID</Label>
+                  {this.state.array_id_box.map((e, idx) =>
+                    <Input type="text" name={idx} onChange={this.handleChangeIdBox} value={this.state.array_id_box[idx]} style={{marginBottom : '5px'}}/>
+                  )}
+                </FormGroup>
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            <Button disabled={!this.state.qty_box.has(this.state.id_mr_selected)} outline color="primary" size="sm" style={{width: "80px"}} id={this.state.id_mr_selected} onClick={this.proceedMilestone}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Done</Button>
+          </ModalFooter>
+        </Modal>
+        {/* end Modal Loading */}
       </div>
     );
   }

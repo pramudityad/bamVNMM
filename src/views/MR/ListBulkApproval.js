@@ -15,6 +15,8 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash"/>
 );
@@ -84,6 +86,26 @@ class ListBulkApproval extends Component {
     }catch (err) {
       let respond = err;
       console.log("respond Patch data", err);
+      return respond;
+    }
+  }
+
+  async patchDatatoAPINODE(url, data){
+    try {
+      let respond = await axios.patch(API_URL_NODE +url, data, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+      console.log("respond Post Data", err);
       return respond;
     }
   }
@@ -240,6 +262,45 @@ class ListBulkApproval extends Component {
     }
   }
 
+  // async ApprovalBulk(){
+  //   const newDate = new Date();
+  //   const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+  //   let dataMRChecked = this.state.data_mr_checked;
+  //   let sucPatch = [];
+  //   for(let i = 0; i < dataMRChecked.length; i++){
+  //     let dataMR = dataMRChecked[i];
+  //     const statusAprv = [{
+  //       "mr_status_name": "MATERIAL_REQUEST",
+  //       "mr_status_value": "APPROVED",
+  //       "mr_status_date": dateNow,
+  //       "mr_status_updater": this.state.userEmail,
+  //       "mr_status_updater_id": this.state.userId,
+  //     }]
+  //     const msAprv = [{
+  //         "ms_name": "MS_ORDER_RECEIVED",
+  //         "ms_date": dateNow,
+  //         "ms_updater": this.state.userEmail,
+  //         "ms_updater_id": this.state.userId
+  //     }];
+  //     let aprvMR = {};
+  //     aprvMR['current_mr_status'] = "MR APPROVED";
+  //     aprvMR['current_milestones'] = "MS_ORDER_RECEIVED";
+  //     aprvMR['mr_status'] = dataMR.mr_status.concat(statusAprv);
+  //     aprvMR['mr_milestones'] = dataMR.mr_milestones.concat(msAprv);
+  //     const patchData = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, aprvMR, dataMR._etag)
+  //     if(patchData.data !== undefined){
+  //       sucPatch.push(patchData.data._id);
+  //     }
+  //   }
+  //   if(sucPatch.length === dataMRChecked.length){
+  //     this.setState({action_status : 'success'}, () => {
+  //       setTimeout(function(){ window.location.reload(); }, 3000);
+  //     });
+  //   }else{
+  //     this.setState({action_status : 'failed'});
+  //   }
+  // }
+
   async ApprovalBulk(){
     const newDate = new Date();
     const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
@@ -247,36 +308,17 @@ class ListBulkApproval extends Component {
     let sucPatch = [];
     for(let i = 0; i < dataMRChecked.length; i++){
       let dataMR = dataMRChecked[i];
-      const statusAprv = [{
-        "mr_status_name": "MATERIAL_REQUEST",
-        "mr_status_value": "APPROVED",
-        "mr_status_date": dateNow,
-        "mr_status_updater": this.state.userEmail,
-        "mr_status_updater_id": this.state.userId,
-      }]
-      const msAprv = [{
-          "ms_name": "MS_ORDER_RECEIVED",
-          "ms_date": dateNow,
-          "ms_updater": this.state.userEmail,
-          "ms_updater_id": this.state.userId
-      }];
-      let aprvMR = {};
-      aprvMR['current_mr_status'] = "MR APPROVED";
-      aprvMR['current_milestones'] = "MS_ORDER_RECEIVED";
-      aprvMR['mr_status'] = dataMR.mr_status.concat(statusAprv);
-      aprvMR['mr_milestones'] = dataMR.mr_milestones.concat(msAprv);
-      const patchData = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, aprvMR, dataMR._etag)
-      if(patchData.data !== undefined){
-        sucPatch.push(patchData.data._id);
+      sucPatch.push(dataMR._id);
+    }
+    this.patchDatatoAPINODE('/matreq/approveManyMatreq', {"ids" : sucPatch}).then(res => {
+      if(res.data !== undefined){
+        this.setState({action_status : 'success'}, () => {
+          setTimeout(function(){ window.location.reload(); }, 2000);
+        });
+      }else{
+        this.setState({ action_status : "failed" });
       }
-    }
-    if(sucPatch.length === dataMRChecked.length){
-      this.setState({action_status : 'success'}, () => {
-        setTimeout(function(){ window.location.reload(); }, 3000);
-      });
-    }else{
-      this.setState({action_status : 'failed'});
-    }
+    })
   }
 
   onChangeDebounced(e) {

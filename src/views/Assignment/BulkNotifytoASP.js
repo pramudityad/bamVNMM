@@ -89,6 +89,25 @@ class BulkNotifytoASP extends Component {
     }
   }
 
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios.get(API_URL_NODE+url, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
   async patchDatatoAPINODE(url, data){
     try {
       let respond = await axios.patch(API_URL_NODE +url, data, {
@@ -112,11 +131,11 @@ class BulkNotifytoASP extends Component {
   getAssignmentList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPI('/asp_assignment_sorted?max_results='+maxPage+'&page='+page+'&where={"Current_Status" : "ASP ASSIGNMENT CREATED"}').then(res => {
+    this.getDataFromAPINODE('/aspAssignment/aspassign').then(res => {
       console.log("Assignment List Sorted", res);
       if(res.data !== undefined) {
-        const items = res.data._items;
-        const totalData = res.data._meta;
+        const items = res.data.data;
+        const totalData = res.data.totalResults;
         this.setState({assignment_list : items, totalData: totalData});
       }
     })
@@ -364,7 +383,7 @@ class BulkNotifytoASP extends Component {
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData.total}
+                  totalItemsCount={this.state.totalData}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"

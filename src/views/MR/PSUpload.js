@@ -76,12 +76,6 @@ class PSUpload extends Component {
 
         }
       })
-      // let respond = await axios.get(API_URL_NODE+url, {
-      //   headers : {
-      //     'Content-Type':'application/json',
-      //     'Authorization': 'Bearer '+this.state.tokenUser
-      //   },
-      // });
       if(respond.status >= 200 && respond.status < 300) {
         console.log("respond data", respond);
       }
@@ -232,9 +226,10 @@ class PSUpload extends Component {
   }
 
   getListTssrAll(){
-    this.getDatafromAPIBAM('/tssr_sorted_nonpage?projection={"project_name" : 1, "no_tssr_boq" : 1, "_id" : 1, "version" : 1 }').then( res => {
+    this.getDataFromAPINODE('/tssrall').then( res => {
+    // this.getDatafromAPIBAM('/tssr_sorted_nonpage?projection={"project_name" : 1, "no_tssr_boq" : 1, "_id" : 1, "version" : 1 }').then( res => {
       if(res.data !== undefined){
-        const items = res.data._items;
+        const items = res.data;
         this.setState({ list_tssr : items }, () => {
           this.prepareSelectionTSSR(items);
         });
@@ -245,7 +240,10 @@ class PSUpload extends Component {
   prepareSelectionTSSR(list_tssr){
     //Make list tssr from API to format for "Select" from React-select
     const list_tssr_selection = [];
-    list_tssr.map(tssr =>
+    const list_tssr_filter = list_tssr.filter(i =>
+      i.no_tssr_boq.toLowerCase().includes(("TSSR").toLowerCase())
+    )
+    list_tssr_filter.map(tssr =>
         list_tssr_selection.push({'label' : tssr.no_tssr_boq, 'value' : tssr._id})
     )
     this.setState({ list_tssr_for_selection : list_tssr_selection});
@@ -253,8 +251,7 @@ class PSUpload extends Component {
 
   handleChangeTSSR = (newValue) => {
     const _id_tssr = newValue.value;
-    const data_tssr_selection = this.state.list_tssr.find(e => e._id === _id_tssr);
-    this.setState({id_tssr_selected : _id_tssr, data_tssr : data_tssr_selection }, () => {
+    this.setState({id_tssr_selected : _id_tssr, data_tssr : null,tssr_site_NE : null, tssr_site_FE : null }, () => {
       this.getDataTssr(_id_tssr);
     });
   }
@@ -274,25 +271,6 @@ class PSUpload extends Component {
         this.prepareView(resTssr.data.data)
       }
     })
-    // this.getDatafromAPIBAM('/tssr_op/'+_id_tssr).then( resTssr => {
-    //   if(resTssr.data !== undefined){
-    //     this.setState({ data_tssr : resTssr.data });
-    //     this.getDatafromAPIBAM('/tssr_sites_sorted_nonpage?where={"id_tssr_boq_doc" : "'+_id_tssr+'"}').then( resSites => {
-    //       if(resSites.data !== undefined){
-    //         this.getDatafromAPIBAM('/tssr_site_items_sorted_nonpage?where={"id_tssr_boq_doc" : "'+_id_tssr+'"}').then( resItem => {
-    //           if(resItem.data !== undefined){
-    //             const itemsTssr = resItem.data._items;
-    //             const itemUniq = [...new Set(itemsTssr.map(({ id_pp_doc}) => id_pp_doc))];
-    //             this.setState({ data_tssr_sites : resSites.data._items, data_tssr_sites_item : resItem.data._items }, () => {
-    //               this.getPPandMaterial(itemUniq);
-    //               this.prepareView();
-    //             });
-    //           }
-    //         })
-    //       }
-    //     })
-    //   }
-    // })
   }
 
   prepareView(dataTSSR){
@@ -352,24 +330,6 @@ class PSUpload extends Component {
       }
     }
   }
-
-  // prepareView(){
-  //   let site_NE = this.state.data_tssr_sites.find(e => e.site_title === "NE");
-  //   let site_FE = this.state.data_tssr_sites.find(e => e.site_title === "FE");
-  //   console.log("site_NE", site_NE);
-  //   if(site_NE !== undefined){
-  //     site_NE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_NE._id);
-  //     this.setState({tssr_site_NE : site_NE});
-  //   }else{
-  //     this.setState({tssr_site_NE : null})
-  //   }
-  //   if(site_FE !== undefined){
-  //     site_FE["list_of_site_items"] = this.state.data_tssr_sites_item.filter(e => e.id_tssr_boq_site_doc === site_FE._id);
-  //     this.setState({tssr_site_FE : site_FE});
-  //   }else{
-  //     this.setState({tssr_site_FE : null})
-  //   }
-  // }
 
   async getPSAllocated(){
     const data_tssr_id = this.state.id_tssr_selected;
@@ -822,6 +782,10 @@ class PSUpload extends Component {
   }
 
   render() {
+    console.log("this.state.data_tssr", this.state.data_tssr);
+    if(this.state.data_tssr !== null){
+      console.log("this.state.data_tssr stei list", this.state.data_tssr.siteList);
+    }
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);
     }
@@ -850,17 +814,6 @@ class PSUpload extends Component {
                     />
                   </td>
                 </tr>
-                {/*<tr>
-                  <td>CD ID</td>
-                  <td>:</td>
-                  <td style={{width : '300px'}}>
-                    <Select
-                      cacheOptions
-                      options={this.state.list_tssr_for_selection}
-                      onChange={this.handleChangeTSSR}
-                    />
-                  </td>
-                </tr> */}
               </tbody>
             </table>
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
@@ -879,6 +832,9 @@ class PSUpload extends Component {
                   <tr>
                     <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>SOW Type : {this.state.data_mr.sow_type}</td>
                   </tr>
+                  <tr>
+                    <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>MR Site NE : {this.state.data_mr.site_info[0].site_id}</td>
+                  </tr>
                   </Fragment>
                 )}
               </tbody>
@@ -886,7 +842,7 @@ class PSUpload extends Component {
             <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
             <Fragment>
             <Row>
-            {this.state.tssr_site_NE !== null && (
+            {this.state.data_tssr !== null && (
               <Fragment>
                 <Col md="4">
                 <table className="table-header">
@@ -901,14 +857,14 @@ class PSUpload extends Component {
                       ) : (
                         <Fragment>
                         <tr>
-                          <td style={{width : '200px'}}>Site ID NE</td>
+                          <td style={{width : '200px'}}>TSSR Site ID NE</td>
                           <td>:</td>
-                          <td>{this.state.tssr_site_NE.site_info.site_id}</td>
+                          <td>{this.state.data_tssr.siteList !== undefined ? this.state.data_tssr.siteList[0].site_info.site_id : ""}</td>
                         </tr>
                         <tr>
-                          <td style={{width : '200px'}}>Site Name NE</td>
+                          <td style={{width : '200px'}}>TSSR Site Name NE</td>
                           <td>:</td>
-                          <td>{this.state.tssr_site_NE.site_info.site_name}</td>
+                          <td>{this.state.data_tssr.siteList !== undefined ? this.state.data_tssr.siteList[0].site_info.site_name : ""}</td>
                         </tr>
                         </Fragment>
                       )}
@@ -980,15 +936,6 @@ class PSUpload extends Component {
                             <td></td>
                             <td></td>
                             <td></td>
-
-                            {/* {this.state.tssr_site_FE !== null ? (
-                              <Fragment>
-                              <td>{this.getQtyTssrPPFE(pp.pp_id)}</td>
-                              <td>
-                                <Input style={{textAlign : 'center'}} onChange={this.editQtyFE} type="number" name={pp.pp_id} value={!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id)} />
-                              </td>
-                              </Fragment>
-                            ):(<Fragment></Fragment>)} */}
                           </tr>
                           {pp.material_detail.map(material =>
                             <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
@@ -999,9 +946,6 @@ class PSUpload extends Component {
                               <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                               <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                               <td align='center'>{pp.product_packages.qty*material.qty < qty_wh ? "OK":"NOK"}</td>
-                              {/* {this.state.tssr_site_FE !== null ? (
-                                <td align='center'>{(!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id))*material.qty}</td>
-                              ):(<Fragment></Fragment>)} */}
                             </tr>
                           ) }
                         </Fragment>
@@ -1015,15 +959,9 @@ class PSUpload extends Component {
                           <td>{pp.product_name}</td>
                           <td>{pp.uom}</td>
                           <td>{this.getQtyTssrPPNE(pp.pp_id)}</td>
-                          {/*<td>
-                            <Input style={{textAlign : 'center'}} onChange={this.editQtyNE} type="number" name={pp.pp_id} value={!this.state.qty_ne.has(pp.pp_id) ? this.getQtyTssrPPNE(pp.pp_id) : this.state.qty_ne.get(pp.pp_id)} />
-                          </td> */}
                           {this.state.tssr_site_FE !== null ? (
                             <Fragment>
                             <td>{this.getQtyTssrPPFE(pp.pp_id)}</td>
-                            {/*<td>
-                              <Input style={{textAlign : 'center'}} onChange={this.editQtyFE} type="number" name={pp.pp_id} value={!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id)} />
-                            </td>*/}
                             </Fragment>
                           ):(<Fragment></Fragment>)}
                         </tr>

@@ -8,7 +8,8 @@ import { saveAs } from 'file-saver';
 import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
-import jsonTech from './tssr_ps_new_json'
+import AsyncSelect from 'react-select/async';
+import debounce from 'lodash.debounce';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -79,6 +80,7 @@ class TssrBOM extends Component {
       list_site_tech_boq_selected : null,
       list_project : [],
       list_site : [],
+      list_site_selection : [],
       dataTech : [],
       change_qty_ps : new Map(),
     };
@@ -86,6 +88,7 @@ class TssrBOM extends Component {
     this.handleChangeProject = this.handleChangeProject.bind(this);
     this.handleChangeSiteTSSR = this.handleChangeSiteTSSR.bind(this);
     this.handleChangeQtyPS = this.handleChangeQtyPS.bind(this);
+    this.loadOptions = this.loadOptions.bind(this);
   }
 
   async getDataFromAPINODEWithParams(url) {
@@ -181,12 +184,12 @@ class TssrBOM extends Component {
         },
       })
       if(respond.status >= 200 && respond.status < 300) {
-        console.log("respond Patch data", respond);
+        console.log("respond Patch data Node", respond);
       }
       return respond;
     } catch (err) {
       let respond = err;
-      console.log("respond Patch data", err.response);
+      console.log("respond Patch data Node", err.response);
       return respond;
     }
   }
@@ -200,12 +203,12 @@ class TssrBOM extends Component {
         },
       });
       if(respond.status >= 200 && respond.status < 300) {
-        console.log("respond data node", respond);
+        console.log("respond data Node", respond);
       }
       return respond;
     } catch(err) {
       let respond = err;
-      console.log("respond data node", err);
+      console.log("respond data Node", err);
       return respond;
     }
   }
@@ -340,9 +343,8 @@ class TssrBOM extends Component {
   }
 
   handleChangeSiteTSSR(e) {
-    const value = e.target.value;
-    const index = e.target.selectedIndex;
-    const text = e.target[index].text;
+    const value = e.value;
+    const text = e.label;
     const list_site_idx = this.state.list_site.find(e => e._id === value);
     this.setState({list_site_selected : value, list_site_tech_boq_selected : list_site_idx.id_tech_boq_doc}, () => {
       this.getDataTech();
@@ -607,12 +609,33 @@ class TssrBOM extends Component {
     this.setState(prevState => ({ change_qty_ps: prevState.change_qty_ps.set(name, value) }));
   }
 
-  render() {
-    if(this.state.redirectSign !== false){
-      return (<Redirect to={'/ps-bom/'+this.state.redirectSign} />);
+  filterSiteTSSR = (inputValue) => {
+    const list = [];
+    let list_site_api = this.state.list_site.filter(i =>
+      i.site_id.toLowerCase().includes(inputValue.toLowerCase()) || i.no_tech_boq.toLowerCase().includes(inputValue.toLowerCase())
+    )
+    list_site_api.map(site =>
+        list.push({'value' : site._id, 'label' : site.site_id +" ("+site.no_tech_boq+")"})
+    )
+    this.setState({list_site_selection : list});
+    return this.state.list_site_selection.filter(i =>
+      i.label.toLowerCase().includes(inputValue.toLowerCase())
+    );
+  };
+
+  loadOptions = (inputValue, callback) => {
+    // this.filterSiteTSSR(inputValue)
+    if(inputValue !== null && inputValue.length > 2){
+      setTimeout(() => {
+        callback(this.filterSiteTSSR(inputValue));
+      }, 1000);
     }
-    console.log("Excel Render", this.state.rowsXLS);
-    console.log('datatech', this.state.dataTech);
+  };
+
+  render() {
+    // if(this.state.redirectSign !== false){
+    //   return (<Redirect to={'/ps-bom/'+this.state.redirectSign} />);
+    // }
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -649,12 +672,13 @@ class TssrBOM extends Component {
                     :
                   </td>
                   <td>
-                    <Input style={{marginTop : '10px'}} name="project" type="select" onChange={this.handleChangeSiteTSSR} value={this.state.list_site_selected}>
-                      <option value={null} selected disabled hidden></option>
-                      {this.state.list_site.map( site =>
-                        <option value={site._id}>{site.site_id +" ("+site.no_tech_boq+")"}</option>
-                      )}
-                    </Input>
+                    <AsyncSelect
+                      cacheOptions
+                      loadOptions={debounce(this.loadOptions, 500)}
+                      defaultOptions
+                      onChange={this.handleChangeSiteTSSR}
+                      isDisabled={this.state.list_site.length === 0}
+                    />
                   </td>
                 </tr>
               </tbody>

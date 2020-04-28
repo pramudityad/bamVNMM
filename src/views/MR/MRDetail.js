@@ -9,6 +9,8 @@ import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timel
 import 'react-vertical-timeline-component/style.min.css';
 import { withScriptjs } from "react-google-maps";
 import GMap from './MapComponent';
+import Excel from 'exceljs';
+import { saveAs } from 'file-saver';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -49,6 +51,8 @@ class MRDetail extends Component {
         edit_detail : false,
         action_status : null,
         action_message : null,
+        material_wh : [],
+        material_inbound : [],
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
@@ -161,6 +165,25 @@ class MRDetail extends Component {
     }
   }
 
+  async postDatatoAPINODE(url, data) {
+    try {
+      let respond = await axios.post(API_URL_NODE+url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond post data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond post data", err.response);
+      return respond;
+    }
+  }
+
   async patchDatatoAPINODE(url, data){
     try {
       let respond = await axios.patch(API_URL_NODE +url, data, {
@@ -195,13 +218,51 @@ class MRDetail extends Component {
   getDataMR(_id_MR){
     this.getDataFromAPINODE('/matreq/'+_id_MR).then(resMR => {
       if(resMR.data !== undefined){
-        this.setState({ data_mr : resMR.data }, () => {
-          this.setState({mr_pp : resMR.data.packages}, () => {
+        this.setState({ data_mr :  resMR.data}, () => {
+          this.setState({mr_pp : resMR.data.packages.filter(e => e.qty !== 0)}, () => {
+            if(resMR.data.current_milestones === "MS_JOINT_CHECK"){
+              this.getDataWarehouse(resMR.data.packages);
+              this.getDataInbound(resMR.data.packages)
+            }
             this.prepareView();
           });
         });
       }
     })
+  }
+
+  async getDataWarehouse(data_ps) {
+    let listSku = [];
+    if(data_ps !== null && data_ps !== undefined) {
+      data_ps.map(pp => pp.materials.map(material => listSku.push(material.material_id)));
+      listSku = [...new Set(listSku)];
+      let skuData = {
+        "sku" : listSku
+      }
+      const respondSKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', skuData);
+      if(respondSKU.data !== undefined && respondSKU.status >= 200 && respondSKU.status <= 300 ){
+        let array_sku = [];
+        respondSKU.data.data.map(sku => sku.map(sku2 => array_sku.push({"sku":sku2.sku, "qty_sku":sku2.qty_sku})));
+        this.setState({ material_wh : array_sku });
+      }
+    }
+  }
+
+  async getDataInbound(data_ps) {
+    let listSku = [];
+    if(data_ps !== null && data_ps !== undefined) {
+      data_ps.map(pp => pp.materials.map(material => listSku.push(material.material_id)));
+      listSku = [...new Set(listSku)];
+      let skuData = {
+        "sku" : listSku
+      }
+      const respondSKU = await this.postDatatoAPINODE('/whInboundPlan/getWhInboundPlanbySku', skuData);
+      if(respondSKU.data !== undefined && respondSKU.status >= 200 && respondSKU.status <= 300 ){
+        let array_sku = [];
+        respondSKU.data.data.map(sku => sku.map(sku2 => array_sku.push({"sku":sku2.sku, "qty_sku":sku2.qty_sku})));
+        this.setState({ material_inbound : array_sku });
+      }
+    }
   }
 
   // getDataMR(_id_MR){
@@ -446,38 +507,6 @@ class MRDetail extends Component {
     })
   }
 
-  // ApproveMR(){
-  //   const newDate = new Date();
-  //   const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-  //   let dataMR = this.state.data_mr;
-  //   const statusAprv = [{
-  //     "mr_status_name": "MATERIAL_REQUEST",
-  //     "mr_status_value": "APPROVED",
-  //     "mr_status_date": dateNow,
-  //     "mr_status_updater": this.state.userEmail,
-  //     "mr_status_updater_id": this.state.userId,
-  //   }];
-  //   const msAprv = [{
-  //       "ms_name": "MS_ORDER_RECEIVED",
-  //       "ms_date": dateNow,
-  //       "ms_updater": this.state.userEmail,
-  //       "ms_updater_id": this.state.userId
-  //   }];
-  //   let aprvMR = {};
-  //   aprvMR['current_mr_status'] = "MR APPROVED";
-  //   aprvMR['current_milestones'] = "MS_ORDER_RECEIVED";
-  //   aprvMR['mr_status'] = dataMR.mr_status.concat(statusAprv);
-  //   aprvMR['mr_milestones'] = dataMR.mr_milestones.concat(msAprv);
-  //   this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, aprvMR, dataMR._etag).then(res => {
-  //     if(res.data !== undefined){
-  //       this.setState({ action_status : "success" });
-  //     }else{
-  //       this.setState({ action_status : "failed" });
-  //     }
-  //   })
-  // }
-
-
   async updateDataMR(){
     const dataForm = this.state.update_mr_name_form;
     const dataMR = this.state.data_mr;
@@ -505,6 +534,27 @@ class MRDetail extends Component {
     }
   }
 
+  async downloadMaterialMRUpload() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataMR = this.state.data_mr;
+
+    let headerRow = ["bundle_id", "bundle_name", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "unit", "qty", "stock_warehouse", "inbound_warehouse", "availability"];
+    ws.addRow(headerRow);
+    //
+    // for(let i = 1; i < headerRow.length+1; i++){
+    //   ws.getCell(this.numToSSColumn(i)+'1').font  = { size: 11, bold : true };
+    // }
+    //
+    // for(let i = 0; i < allMR.length; i++){
+    //   ws.addRow([allMR[i].mr_id, allMR[i].implementation_id, allMR[i].project_name, allMR[i].cd_id, "", "", allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, "", allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
+    // }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material MR '+dataMR.mr_id+' uploader.xlsx');
+  }
+
   render() {
     const background = {
       backgroundColor: '#e3e3e3',
@@ -513,6 +563,7 @@ class MRDetail extends Component {
     const MapLoader = withScriptjs(GMap);
 
     console.log("tabs_submenu", this.state.tabs_submenu);
+    let qty_wh = undefined, qty_inbound = undefined;
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -778,6 +829,12 @@ class MRDetail extends Component {
                             <td>:</td>
                             <td>{this.state.data_mr.total_boxes}</td>
                           </tr>
+                          <tr>
+                            <td style={{width : '200px'}}>Box ID</td>
+                            <td>:</td>
+                            <td>{this.state.data_mr.list_of_box_id !== undefined ? this.state.data_mr.list_of_box_id.map(e => e+", ") : ""}</td>
+                          </tr>
+
                           </Fragment>
                         )}
                         </Fragment>
@@ -813,23 +870,70 @@ class MRDetail extends Component {
               <hr className="upload-line-ordering"></hr>
               <div className='divtable2'>
                 <Table hover bordered striped responsive size="sm">
-                  <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
+                  <thead style={{backgroundColor : '#0B486B', color : 'white'}} className="table-mr__header--fixed">
                     <tr>
                       <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
                       <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
                       <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
                       <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
+                      {this.state.data_mr !== null && this.state.data_mr.current_milestones === "MS_JOINT_CHECK" ? (
+                        <Fragment>
+                          <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Material in Warehouse</th>
+                          <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Material Plan</th>
+                          <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Availability</th>
+                        </Fragment>
+                      ) : (<Fragment></Fragment>)}
                     </tr>
                     {this.state.data_mr !== null && this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
                       <tr>
-                        <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
+                        <th className="fixedhead" colSpan={this.state.mr_site_FE !== null ? 1 : 2} style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
                         {this.state.mr_site_FE !== null ? (
                           <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
                         ):(<Fragment></Fragment>)}
                       </tr>
                     ) : ""}
                   </thead>
-                  <tbody>
+                  {this.state.data_mr !== null && this.state.data_mr.current_milestones === "MS_JOINT_CHECK" ? (
+                    <tbody>
+                    {this.state.mr_site_NE !== null && (
+                      this.state.list_mr_item.map( pp =>
+                        <Fragment>
+                          <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                            <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
+                            <td>{pp.product_name}</td>
+                            <td>{pp.unit}</td>
+                            <td align='center' colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{this.getQtyMRPPNE(pp.pp_id).toFixed(2)}</td>
+                            {this.state.mr_site_FE !== null ? (
+                              <td align='center'>{this.getQtyMRPPFE(pp.pp_id)}</td>
+                            ):(<Fragment></Fragment>)}
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                          </tr>
+                          {pp.materials.map(material =>
+                            <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                              <td style={{textAlign : 'right'}}>{material.material_id}</td>
+                              <td style={{textAlign : 'left'}}>{material.material_name}</td>
+                              <td>{material.material_unit}</td>
+                              <td align='center' colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{this.getQtyMRMDNE(pp.pp_id, material.material_id).toFixed(2)}</td>
+                              {this.state.mr_site_FE !== null ? (
+                                <td align='center'>{this.getQtyMRMDFE(pp.pp_id, material.material_id)}</td>
+                              ):(<Fragment></Fragment>)}
+                              <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
+                              <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
+                              <td align='center'>{(this.getQtyMRPPNE(pp.pp_id)*this.getQtyMRMDNE(pp.pp_id, material.material_id)) < qty_wh ? "OK":"NOK"}</td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      )
+                    )}
+                    {this.state.data_mr === null ?
+                      (<tr><td colSpan="5">Loading...</td></tr>)
+                      : this.state.data_mr.current_mr_status === "NOT ASSIGNED" && (
+                        <tr><td colSpan="5">PS not Assigned</td></tr>
+                      )}
+                    </tbody>
+                  ) : (<tbody>
                   {this.state.mr_site_NE !== null && (
                     this.state.list_mr_item.map( pp =>
                       <Fragment>
@@ -861,7 +965,7 @@ class MRDetail extends Component {
                     : this.state.data_mr.current_mr_status === "NOT ASSIGNED" && (
                       <tr><td colSpan="5">PS not Assigned</td></tr>
                     )}
-                  </tbody>
+                  </tbody>)}
                 </Table>
               </div>
             </Fragment>
