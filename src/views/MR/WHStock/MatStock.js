@@ -71,6 +71,7 @@ class MaterialStock extends React.Component {
       action_status: null,
       action_message: null,
       all_data: [],
+      wh_data: [],
       data_PO: [],
       packageSelected: [],
       modal_loading: false,
@@ -78,6 +79,7 @@ class MaterialStock extends React.Component {
       modalMatStockForm: false,
       modalMatStockEdit: false,
       MatStockForm: new Array(6).fill(null),
+      warehouse_selected: null,
       collapse: false,
       danger: false,
       activeItemName: "",
@@ -95,6 +97,7 @@ class MaterialStock extends React.Component {
     this.saveUpdate = this.saveUpdate.bind(this);
     this.toggleDanger = this.toggleDanger.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
+    this.getWHStockList = this.getWHStockList.bind(this);
   }
 
   toggle(i) {
@@ -245,13 +248,45 @@ class MaterialStock extends React.Component {
     });
   };
 
-  getWHStockList() {
-    this.getDatafromAPINODE("/whStock/getWhStock").then((res) => {
+  getWHStockList(e) {
+    this.toggleLoading();
+    let get_wh_id = e.target.value;
+    // console.log("wh_id", get_wh_id);
+    let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
+    this.getDatafromAPINODE(
+      "/whStock/getWhStock?q=" +
+        getbyWH +
+        "&lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
+    ).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
-        this.setState({ all_data: res.data.data });
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+        });
+        this.toggleLoading();
       } else {
-        this.setState({ all_data: [] });
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
+        this.toggleLoading();
+      }
+    });
+  }
+
+  getWHManagement() {
+    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
+      // console.log("all data ", res.data);
+      if (res.data !== undefined) {
+        this.setState({ wh_data: res.data.data });
+      } else {
+        this.setState({ wh_data: [] });
       }
     });
   }
@@ -343,7 +378,8 @@ class MaterialStock extends React.Component {
   }
 
   componentDidMount() {
-    this.getWHStockList();
+    // this.getWHStockList();
+    this.getWHManagement();
     document.title = "Material Stock | BAM";
   }
 
@@ -454,7 +490,7 @@ class MaterialStock extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
-      'stockData': BulkXLSX,
+      stockData: BulkXLSX,
     });
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
@@ -471,11 +507,11 @@ class MaterialStock extends React.Component {
     this.toggleLoading();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    console.log('xlsx data', JSON.stringify(BulkXLSX));
+    console.log("xlsx data", JSON.stringify(BulkXLSX));
     const res = await this.postDatatoAPINODE("/whStock/createWhStockTruncate", {
-      'stockData': BulkXLSX,
+      stockData: BulkXLSX,
     });
-    console.log('res bulk ', res);
+    console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -598,8 +634,8 @@ class MaterialStock extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE('/whStock/getWhStock');
-    if(getAll_nonpage.data !== undefined){
+    let getAll_nonpage = await this.getDatafromAPINODE("/whStock/getWhStock");
+    if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
 
@@ -619,18 +655,31 @@ class MaterialStock extends React.Component {
       "Serial Number",
       "Box Number",
       "Condition",
-      "Notes"
+      "Notes",
     ];
     ws.addRow(headerRow);
 
-    for (let i = 1; i < headerRow.length + 1; i++) {      
-      ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };      
+    for (let i = 1; i < headerRow.length + 1; i++) {
+      ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };
     }
-
 
     for (let i = 0; i < download_all.length; i++) {
       let list = download_all[i];
-      ws.addRow([list.owner_id, list.wh_id, list.po_number, list.project_name, list.sku,list.sku_description,list.arrival_date, list.qty,list.ageing,list.serial_number,list.box_number,list.condition,list.notes]);
+      ws.addRow([
+        list.owner_id,
+        list.wh_id,
+        list.po_number,
+        list.project_name,
+        list.sku,
+        list.sku_description,
+        list.arrival_date,
+        list.qty,
+        list.ageing,
+        list.serial_number,
+        list.box_number,
+        list.condition,
+        list.notes,
+      ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -658,9 +707,36 @@ class MaterialStock extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["owner_id","po_number","arrival_date","project_name","sku","qty","wh_id","id_wh_doc"]);
-    ws.addRow(["5df99ce5face981b7ace8861","PO0001","2020-04-17","XL BAM DEMO 2021","1",100,"WH_1","5ea7bf5de3b6fe12ace40a30"]);
-    ws.addRow(["5df99ce5face981b7ace8861","PO0001","2020-04-17","XL BAM DEMO 2021","1",100,"WH_1","5ea7bf5de3b6fe12ace40a30"]);
+    ws.addRow([
+      "owner_id",
+      "po_number",
+      "arrival_date",
+      "project_name",
+      "sku",
+      "qty",
+      "wh_id",
+      "id_wh_doc",
+    ]);
+    ws.addRow([
+      "5df99ce5face981b7ace8861",
+      "PO0001",
+      "2020-04-17",
+      "XL BAM DEMO 2021",
+      "1",
+      100,
+      "WH_1",
+      "5ea7bf5de3b6fe12ace40a30",
+    ]);
+    ws.addRow([
+      "5df99ce5face981b7ace8861",
+      "PO0001",
+      "2020-04-17",
+      "XL BAM DEMO 2021",
+      "1",
+      100,
+      "WH_1",
+      "5ea7bf5de3b6fe12ace40a30",
+    ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "Material Stock Template.xlsx");
@@ -804,14 +880,20 @@ class MaterialStock extends React.Component {
                           display: "inline-flex",
                         }}
                       >
-                        <input
-                          className="search-box-material"
-                          type="text"
-                          name="filter"
-                          placeholder="Search Material"
-                          onChange={this.handleChangeFilter}
-                          value={this.state.filter_name}
-                        />
+                        <FormGroup>
+                          <Label for="exampleSelect">Select Warehouse</Label>
+                          <Input
+                            type="select"
+                            name="select"
+                            onChange={this.getWHStockList}
+                          >
+                            {this.state.wh_data.map((opt) => (
+                              <option value={opt.wh_id}>
+                                {opt.wh_name} - {opt.wh_id}
+                              </option>
+                            ))}
+                          </Input>
+                        </FormGroup>
                       </div>
                     </div>
                   </Col>
@@ -905,7 +987,14 @@ class MaterialStock extends React.Component {
                                     size="sm"
                                     color="danger"
                                     value={e._id}
-                                    onClick={(r) => { if (window.confirm('Are you sure you wish to delete this item?')) this.DeleteData(r, "value")}}
+                                    onClick={(r) => {
+                                      if (
+                                        window.confirm(
+                                          "Are you sure you wish to delete this item?"
+                                        )
+                                      )
+                                        this.DeleteData(r, "value");
+                                    }}
                                     title="Delete"
                                   >
                                     <i
