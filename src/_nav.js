@@ -13,6 +13,11 @@ export default {
           name: 'Config Manager',
           url: '/config-manager',
           icon: 'icon-doc',
+        },
+        {
+          name: 'Material Library',
+          url: '/mat-library',
+          icon: 'icon-list',
         }
       ]
     },
@@ -118,6 +123,11 @@ export default {
       name: 'Warehouse',
       icon: 'icon-list',
       children: [
+        {
+          name: 'WH Management',
+          url: '/wh-management',
+          icon: 'icon-list',
+        },
         {
           name: 'WH Stock',
           url: '/material-stock',

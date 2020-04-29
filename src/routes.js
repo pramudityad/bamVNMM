@@ -94,11 +94,10 @@ const CPODatabaseDetail  = React.lazy(() => import('./views/CPODatabase/CPODatab
 
 const ShipmentList = React.lazy(() => import('./views/ShipmentList/ShipmentList'));
 
+const WHManagement  = React.lazy(() => import('./views/MR/WHManagement/WHManagement'));
 const MaterialStock  = React.lazy(() => import('./views/MR/WHStock/MatStock'));
-const MaterialStockDetail  = React.lazy(() => import('./views/MR/WHStock/MatStockDet'));
-
 const MaterialInboundPlan  = React.lazy(() => import('./views/MR/WHInbound/MatInboundPlan'));
-const MaterialInboundPlanDetail  = React.lazy(() => import('./views/MR/WHInbound/MatInboundPlanDet'));
+const MatLibrary  = React.lazy(() => import('./views/MR/MatLibrary/MatLibrary'));
 
 const ListCPOBoq = React.lazy(() => import('./views/TechnicalCPO/ListCPOBoq'));
 const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'));
@@ -217,14 +216,12 @@ const routes = [
   { path: '/list-tssr-boq', exact: true, name: 'List TSSR BOQ', component: ListTSSRBoq },
   { path: '/detail-tssr-boq/:id', exact: true, name: 'CPO TSSR Detail', component: DetailTSSRBoq },
 
-  { path: '/material-stock', exact: true, name: 'Material Stock', component: MaterialStock },
-  { path: '/material-stock-detail/:id', exact: true, name: 'Material Stock Detail', component: MaterialStockDetail },
-
   { path: '/shipment-list', exact: true, name: 'Shipment List', component: ShipmentList },
 
+  { path: '/material-stock', exact: true, name: 'Material Stock', component: MaterialStock },
   { path: '/material-inbound-plan', exact: true, name: 'Material Inbound Plan', component: MaterialInboundPlan },
-  { path: '/material-inbound-detail/:id', exact: true, name: 'Material Inbound Plan Detail', component: MaterialInboundPlanDetail },
-
+  { path: '/wh-management', exact: true, name: 'Warehouse Management', component: WHManagement },
+  { path: '/mat-library', exact: true, name: 'Material Library', component: MatLibrary },
 ];
 
 export default routes;
