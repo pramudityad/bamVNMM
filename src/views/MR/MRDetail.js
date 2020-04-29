@@ -68,6 +68,7 @@ class MRDetail extends Component {
     this.updateDataMR = this.updateDataMR.bind(this);
     this.downloadMaterialMRUpload = this.downloadMaterialMRUpload.bind(this);
     this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
+    this.downloadMaterialMRReport = this.downloadMaterialMRReport.bind(this);
   }
 
   checkValue(props){
@@ -558,33 +559,97 @@ class MRDetail extends Component {
   async downloadMaterialMRUpload() {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
 
     const dataMR = this.state.data_mr;
     const dataItemMR = this.state.list_mr_item;
     const stockWH = this.state.material_wh;
     const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    // const getMaterialVariant = await this.getDataFromAPINODE('/variants/variants');
+    // if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
+    //   dataMaterialVariant = getMaterialVariant.data.data;
+    // }
+    //
+    // ws2.addRow(["Origin","Material ID","Material Name","Description", "Category"]);
+    // for(let j = 0; j < dataMaterialVariant.length; j++){
+    //   ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category]);
+    // }
 
     let headerRow = ["bundle_id", "bundle_name", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "unit", "qty", "stock_warehouse", "inbound_warehouse", "availability"];
     ws.addRow(headerRow);
-
+    let list_material_id = [];
     for(let i = 0; i < dataItemMR.length; i++){
       for(let j = 0; j < dataItemMR[i].materials.length; j++){
         let dataMatIdx = dataItemMR[i].materials[j];
+        list_material_id.push(dataMatIdx.material_id);
         let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
-        let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id)
+        let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
         qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
         ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id), qty_wh, qty_inbound, (this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id)) < qty_wh ? "OK":"NOK"]);
       }
     }
 
+    let listMatId = [...new Set(list_material_id)];
+    let matIdData = {
+      "list_material_id" : listMatId
+    }
+
+    console.log("matIdData", JSON.stringify(matIdData));
+
+    const getMaterialVariant = await this.postDatatoAPINODE('/variants/materialId', matIdData);
+    if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
+      dataMaterialVariant = getMaterialVariant.data.data;
+    }
+
+    ws2.addRow(["Origin","Material ID","Material Name","Description", "Category"]);
+    for(let j = 0; j < dataMaterialVariant.length; j++){
+      ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category]);
+    }
+
     const allocexport = await wb.xlsx.writeBuffer();
     saveAs(new Blob([allocexport]), 'Material MR '+dataMR.mr_id+' uploader.xlsx');
+  }
+
+  async downloadMaterialMRReport() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataMR = this.state.data_mr;
+    const dataItemMR = this.state.list_mr_item;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    ws.addRow(["MR ID", dataMR.mr_id]);
+    ws.addRow(["Project", dataMR.project_name]);
+    ws.addRow(["Site", this.state.mr_site_NE.site_id]);
+
+    let headerRow = ["Bundle ID", "Bundle Name", "Material ID", "Material Name", "Unit", "Qty"];
+    ws.addRow(headerRow);
+    for(let i = 0; i < dataItemMR.length; i++){
+      ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name]);
+      for(let j = 0; j < dataItemMR[i].materials.length; j++){
+        let dataMatIdx = dataItemMR[i].materials[j];
+        let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
+        let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
+        qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
+        qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
+        ws.addRow([null, null, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id), qty_wh, qty_inbound, (this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id)) < qty_wh ? "OK":"NOK"]);
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material MR PS '+dataMR.mr_id+' Report.xlsx');
   }
 
   async saveUpdateMaterial(){
     const dataXLS = this.state.rowsXLS;
     const dataMR = this.state.data_mr;
+    console.log("dataXLS variant", dataXLS);
     const respondSaveMaterialMR = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataMR._id, {"data" : dataXLS});
     if(respondSaveMaterialMR.data !== undefined && respondSaveMaterialMR.status >= 200 && respondSaveMaterialMR.status <= 300 ) {
       this.setState({ action_status : 'success' });
@@ -600,7 +665,6 @@ class MRDetail extends Component {
 
     const MapLoader = withScriptjs(GMap);
 
-    console.log("tabs_submenu", this.state.tabs_submenu);
     let qty_wh = undefined, qty_inbound = undefined;
     return (
       <div>
@@ -890,6 +954,9 @@ class MRDetail extends Component {
                             <Button size="sm" color="secondary" style={{float : 'right'}} onClick={this.downloadMaterialMRUpload}>
                               Download Format
                             </Button>
+                            <Button size="sm" color="secondary" style={{float : 'right', marginRight : '10px'}} onClick={this.downloadMaterialMRReport}>
+                              Download MR PS
+                            </Button>
                           </td>
                         </tr>
                         {this.state.mr_site_FE !== null && this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
@@ -908,14 +975,17 @@ class MRDetail extends Component {
                         ) : (
                           <Fragment>
                             <tr>
-                              <td>&nbsp;</td>
+                              <td style={{fontSize : '12px'}}>&nbsp;</td>
+                            </tr>
+                            <tr>
+                              <td style={{fontSize : '12px'}}>Change to Material Variant : </td>
                             </tr>
                           </Fragment>
                         )}
                         <tr>
                           <td style={{width : '550px'}}>
                             <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"visiblity":"hidden"}}/>
-                            <Button size="sm" color="secondary" style={{float : 'right'}} onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
+                            <Button size="sm" color="success" style={{float : 'right'}} onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
                               Save
                             </Button>
                           </td>
@@ -998,7 +1068,7 @@ class MRDetail extends Component {
                       <Fragment>
                         <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
-                          <td>{pp.name}</td>
+                          <td>{pp.product_name}</td>
                           <td>{pp.unit}</td>
                           <td align='center'>{this.getQtyMRPPNE(pp.pp_id)}</td>
                           {this.state.mr_site_FE !== null ? (

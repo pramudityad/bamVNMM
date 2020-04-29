@@ -52,6 +52,7 @@ class AssignmentDetail extends Component {
     this.handleChangeSSOWListReactSelect = this.handleChangeSSOWListReactSelect.bind(this);
     this.handleChangeSSOWList = this.handleChangeSSOWList.bind(this);
     this.handleChangeCanEdit = this.handleChangeCanEdit.bind(this);
+    this.updateSSOWList = this.updateSSOWList.bind(this);
   }
 
   async getDataFromAPIXL(url) {
@@ -352,6 +353,34 @@ class AssignmentDetail extends Component {
     console.log("index plus field", dataSSOW.SSOW_List[parseInt(idx)])
   }
 
+  async updateSSOWList(){
+    const data_assingment = this.state.data_assignment;
+    let headerRow = ["id","project","sow_type","vendor_code","vendor_name","identifier"];
+
+    let dataASGRow = [data_assingment.Assignment_No,data_assingment.Project,"RBS",data_assingment.Vendor_Code_Number,data_assingment.Vendor_Name,data_assingment.Site_ID];
+    data_assingment.SSOW_List.map((e, idx) => headerRow.push("ssow_rbs_id_"+(idx+1).toString(),"ssow_rbs_activity_number_"+(idx+1).toString(),"ssow_rbs_unit_"+(idx+1).toString(),"ssow_rbs_quantity_"+(idx+1).toString()));
+    data_assingment.SSOW_List.map(e => dataASGRow.push(e.ssow_id, e.ssow_activity_number, e.ssow_unit, e.ssow_qty));
+
+    let dataXLS = [headerRow,dataASGRow];
+    console.log("dataXLS", dataXLS);
+    const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', {"data" : dataXLS});
+    if(respondCheckingASG.data !== undefined && respondCheckingASG.status >= 200 && respondCheckingASG.status <= 300 ) {
+      let dataChecking = respondCheckingASG.data.data;
+      if(dataChecking.operation === "INVALID"){
+        this.setState({ action_status : 'failed', action_message : dataChecking.activity_status });
+      }else{
+        const respondSaveASG = await this.postDatatoAPINODE('/aspAssignment/createAspAssign', {"data" : dataChecking});
+        if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
+          this.setState({ action_status : 'success' });
+        } else{
+          this.setState({ action_status : 'failed' });
+        }
+      }
+    } else{
+      this.setState({ action_status : 'failed' });
+    }
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -549,7 +578,7 @@ class AssignmentDetail extends Component {
                             <Label>SSOW ID</Label>
                             <AsyncSelect
                               cacheOptions
-                              loadOptions={debounce(this.loadOptionsSSOWID, 500)}
+                              loadOptions={debounce(this.loadOptionsSSOWID, 1000)}
                               defaultOptions
                               defaultInputValue={ssow.ssow_id}
                               isDisabled={!this.state.can_edit_ssow}
@@ -563,7 +592,7 @@ class AssignmentDetail extends Component {
                             <Label>Activity Number</Label>
                             <AsyncSelect
                               cacheOptions
-                              loadOptions={debounce(this.loadOptionsActivityNumber, 500)}
+                              loadOptions={debounce(this.loadOptionsActivityNumber, 1000)}
                               defaultOptions
                               defaultInputValue={ssow.ssow_activity_number}
                               isDisabled={!this.state.can_edit_ssow}
@@ -605,6 +634,15 @@ class AssignmentDetail extends Component {
                       </Row>
                       </Fragment>
                     ) : (<Fragment></Fragment>) }
+                      {this.state.can_edit_ssow === true && (
+                        <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
+                          <Col md="12">
+                            <Button color="primary" size="sm" style={{float : 'right'}} onClick={this.updateSSOWList}>
+                              Update
+                            </Button>
+                          </Col>
+                        </Row>
+                      )}
                     </Fragment>
                   )}
                   <h5 style={{marginTop: "16px"}}>ASSIGN BAST</h5>
