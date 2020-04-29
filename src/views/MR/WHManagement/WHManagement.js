@@ -72,8 +72,8 @@ class WHManagement extends React.Component {
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
       modalMatStockForm: false,
-      modalMatStockEdit: false,
-      MatStockForm: new Array(6).fill(null),
+      modalEdit: false,
+      DataForm: new Array(6).fill(null),
       collapse: false,
       danger: false,
       activeItemName: "",
@@ -125,23 +125,22 @@ class WHManagement extends React.Component {
   }
 
   toggleEdit(e) {
-    const modalMatStockEdit = this.state.modalMatStockEdit;
-    if (modalMatStockEdit === false) {
+    const modalEdit = this.state.modalEdit;
+    if (modalEdit === false) {
       const value = e.currentTarget.value;
-      const aEdit = this.state.all_data.find((e) => e.owner_id === value);
-      let dataForm = this.state.MatStockForm;
-      dataForm[0] = aEdit.sku_description;
-      dataForm[1] = aEdit.serial_number;
-      dataForm[2] = aEdit.project_name;
-      dataForm[3] = aEdit.box_number;
-      dataForm[4] = aEdit.condition;
-      dataForm[5] = aEdit.notes;
-      this.setState({ MatStockForm: dataForm });
+      const aEdit = this.state.all_data.find((e) => e._id === value);
+      let dataForm = this.state.DataForm;
+      dataForm[0] = aEdit.wh_name;
+      dataForm[1] = aEdit.wh_id;
+      dataForm[2] = aEdit.wh_manager;
+      dataForm[3] = aEdit.address;
+      dataForm[4] = aEdit.owner;
+      this.setState({ DataForm: dataForm });
     } else {
-      this.setState({ MatStockForm: new Array(6).fill(null) });
+      this.setState({ DataForm: new Array(6).fill(null) });
     }
     this.setState((prevState) => ({
-      modalMatStockEdit: !prevState.modalMatStockEdit,
+      modalEdit: !prevState.modalEdit,
     }));
   }
 
@@ -489,32 +488,25 @@ class WHManagement extends React.Component {
   handleChangeForm(e) {
     const value = e.target.value;
     const index = e.target.name;
-    let dataForm = this.state.MatStockForm;
+    let dataForm = this.state.DataForm;
     dataForm[parseInt(index)] = value;
-    this.setState({ MatStockForm: dataForm });
+    this.setState({ DataForm: dataForm });
   }
 
   async saveUpdate() {
     let respondSaveEdit = undefined;
-    const dataPPEdit = this.state.MatStockForm;
+    const dataPPEdit = this.state.DataForm;
     const dataPP = this.state.all_data.find(
       (e) => e.owner_id === dataPPEdit[0]
     );
     const objData = this.state.all_data.find((e) => e._id);
     let pp = {
-      sku_description: dataPPEdit[0],
-      serial_number: dataPPEdit[1],
-      project_name: dataPPEdit[2],
-      box_number: dataPPEdit[3],
-      condition: dataPPEdit[4],
-      notes: dataPPEdit[5],
-      id_project_doc: objData.id_project_doc,
-      arrival_date: objData.arrival_date,
-      po_number: objData.po_number,
-      owner_id: objData.owner_id,
-      sku: objData.sku,
+      'wh_name': dataPPEdit[0],
+      'wh_id': dataPPEdit[1],
+      'wh_manager': dataPPEdit[2],
+      'address': dataPPEdit[3],
+      'owner': dataPPEdit[4],
     };
-    console.log("patch data ", pp);
     this.toggleLoading();
     this.toggleEdit();
     // if (pp.owner_id === undefined || pp.owner_id === null) {
@@ -532,9 +524,10 @@ class WHManagement extends React.Component {
     //   }
     // }
     let patchData = await this.patchDatatoAPINODE(
-      "/whStock/updateOneWhStockwithDelete/" + objData._id,
-      { data: [pp] }
+      "/whManagement/UpdateOneWarehouse/" + objData._id,
+      { 'data': pp }
     );
+    console.log("patch data ", pp);
     if (patchData === undefined) {
       patchData = {};
       patchData["data"] = undefined;
@@ -557,7 +550,7 @@ class WHManagement extends React.Component {
     this.toggleLoading();
     let poData = [];
     let respondSaveNew = undefined;
-    const dataPPEdit = this.state.MatStockForm;
+    const dataPPEdit = this.state.DataForm;
     let pp = {
       owner_id: dataPPEdit[0],
       po_number: dataPPEdit[1],
@@ -769,7 +762,7 @@ class WHManagement extends React.Component {
                       &nbsp;SAVE{" "}
                     </Button>
                     &nbsp;&nbsp;&nbsp;
-                    <Button
+                    {/* <Button
                       color="warning"
                       disabled={this.state.rowsXLS.length === 0}
                       onClick={this.saveTruncateBulk}
@@ -779,7 +772,7 @@ class WHManagement extends React.Component {
                         {" "}
                       </i>{" "}
                       &nbsp;SAVE2{" "}
-                    </Button>
+                    </Button> */}
                     {/* <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>                     */}
                   </CardFooter>
                 </Card>
@@ -862,7 +855,7 @@ class WHManagement extends React.Component {
                                   <Button
                                     size="sm"
                                     color="secondary"
-                                    value={e.wh_id}
+                                    value={e._id}
                                     onClick={this.toggleEdit}
                                     title="Edit"
                                   >
@@ -911,7 +904,7 @@ class WHManagement extends React.Component {
             </Card>
           </Col>
         </Row>
-
+{/* dont need */}
         {/* Modal New PO */}
         <Modal
           isOpen={this.state.modalMatStockForm}
@@ -928,7 +921,7 @@ class WHManagement extends React.Component {
                     type="text"
                     name="0"
                     placeholder=""
-                    value={this.state.MatStockForm[0]}
+                    value={this.state.DataForm[0]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
@@ -938,7 +931,7 @@ class WHManagement extends React.Component {
                     type="text"
                     name="1"
                     placeholder=""
-                    value={this.state.MatStockForm[1]}
+                    value={this.state.DataForm[1]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
@@ -947,7 +940,7 @@ class WHManagement extends React.Component {
                   <Input
                     type="datetime-local"
                     placeholder=""
-                    value={this.state.MatStockForm[2]}
+                    value={this.state.DataForm[2]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
@@ -957,7 +950,7 @@ class WHManagement extends React.Component {
                     type="text"
                     name="3"
                     placeholder=""
-                    value={this.state.MatStockForm[3]}
+                    value={this.state.DataForm[3]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
@@ -966,7 +959,7 @@ class WHManagement extends React.Component {
                   <Input
                     type="text"
                     placeholder=""
-                    value={this.state.MatStockForm[4]}
+                    value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
@@ -975,7 +968,7 @@ class WHManagement extends React.Component {
                   <Input
                     type="text"
                     placeholder=""
-                    value={this.state.MatStockForm[5]}
+                    value={this.state.DataForm[5]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
@@ -986,7 +979,7 @@ class WHManagement extends React.Component {
                     min="0"
                     name="6"
                     placeholder=""
-                    value={this.state.MatStockForm[6]}
+                    value={this.state.DataForm[6]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
@@ -1003,7 +996,7 @@ class WHManagement extends React.Component {
 
         {/* Modal Edit PP */}
         <Modal
-          isOpen={this.state.modalMatStockEdit}
+          isOpen={this.state.modalEdit}
           toggle={this.toggleEdit}
           className="modal--form"
         >
@@ -1012,63 +1005,53 @@ class WHManagement extends React.Component {
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="sku_description">SKU Description</Label>
+                  <Label htmlFor="wh_name">Warehouse Name</Label>
                   <Input
                     type="text"
                     name="0"
                     placeholder=""
-                    value={this.state.MatStockForm[0]}
+                    value={this.state.DataForm[0]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="serial_number">Serial Number</Label>
+                  <Label htmlFor="wh_id">Warehouse ID	</Label>
                   <Input
                     type="text"
                     name="1"
                     placeholder=""
-                    value={this.state.MatStockForm[1]}
+                    value={this.state.DataForm[1]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="project_name">Project Name</Label>
+                  <Label htmlFor="wh_manager">WH Manager</Label>
                   <Input
-                    type="datetime-local"
+                    type="text"
+                    name="2"
                     placeholder=""
-                    value={this.state.MatStockForm[2]}
+                    value={this.state.DataForm[2]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="box_number">Box Number</Label>
+                  <Label htmlFor="address">Address</Label>
                   <Input
                     type="text"
                     name="3"
                     placeholder=""
-                    value={this.state.MatStockForm[3]}
+                    value={this.state.DataForm[3]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="condition">Condition</Label>
+                  <Label htmlFor="owner">Owner</Label>
                   <Input
                     type="text"
                     min="0"
                     name="4"
                     placeholder=""
-                    value={this.state.MatStockForm[4]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    name="6"
-                    placeholder=""
-                    value={this.state.MatStockForm[5]}
+                    value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>

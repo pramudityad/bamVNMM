@@ -535,36 +535,44 @@ class MatInboundPlan extends React.Component {
   }
 
   async downloadAll() {
+    let download_all = [];
+    let getAll_nonpage = await this.getDatafromAPINODE('/whInboundPlan/getWhInboundPlan');
+    if(getAll_nonpage.data !== undefined){
+      download_all = getAll_nonpage.data.data;
+    }
+
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataPP = this.state.pp_all;
-
     let headerRow = [
-      "owner_id",
-      "po_number",
-      "arrival_date",
-      "project_name",
-      "sku",
+      "Owner ID",
+      "WH ID",
+      "PO Number",
+      "Project Name",
+      "Arrival Date",
+      "SKU",
+      "SKU Desc",
+      "Qty",
+      "Aging",
+      "Serial Number",
+      "Box Number",
+      "Condition",
+      "Notes"
     ];
     ws.addRow(headerRow);
 
-    for (let i = 1; i < headerRow.length + 1; i++) {
-      ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };
+    for (let i = 1; i < headerRow.length + 1; i++) {      
+      ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };      
     }
 
-    for (let i = 0; i < dataPP.length; i++) {
-      ws.addRow([
-        dataPP[i].owner_id,
-        dataPP[i].po_number,
-        dataPP[i].arrival_date,
-        dataPP[i].project_name,
-        dataPP[i].sku,
-      ]);
+
+    for (let i = 0; i < download_all.length; i++) {
+      let list = download_all[i];
+      ws.addRow([list.owner_id, list.wh_id, list.po_number, list.project_name, list.sku,list.sku_description,list.arrival_date, list.qty,list.ageing,list.serial_number,list.box_number,list.condition,list.notes]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "Material Inbound Plan.xlsx");
+    saveAs(new Blob([allocexport]), "All Material Inbound.xlsx");
   }
 
   DeleteData(r) {

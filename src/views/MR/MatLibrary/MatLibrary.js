@@ -594,38 +594,36 @@ class MatLibrary extends React.Component {
   }
 
   async downloadAll() {
+    let download_all = [];
+    let getAll_nonpage = await this.getDatafromAPINODE('/variants/variants');
+    if(getAll_nonpage.data !== undefined){
+      download_all = getAll_nonpage.data.data;
+    }
+
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataPP = this.state.pp_all;
-
     let headerRow = [
-      "owner_id",
-      "po_number",
-      "arrival_date",
-      "project_name",
-      "sku",
-      "qty",
+      "Origin",
+      "Material ID",
+      "Material Name",
+      "Description",
+      "Category"
     ];
     ws.addRow(headerRow);
 
-    for (let i = 1; i < headerRow.length + 1; i++) {
-      ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };
+    for (let i = 1; i < headerRow.length + 1; i++) {      
+      ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };      
     }
 
-    for (let i = 0; i < dataPP.length; i++) {
-      ws.addRow([
-        dataPP[i].owner_id,
-        dataPP[i].po_number,
-        dataPP[i].arrival_date,
-        dataPP[i].project_name,
-        dataPP[i].sku,
-        dataPP[i].qty,
-      ]);
+
+    for (let i = 0; i < download_all.length; i++) {
+      let list = download_all[i];
+      ws.addRow([list.origin, list.material_id, list.material_name, list.description, list.category]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "Material Library.xlsx");
+    saveAs(new Blob([allocexport]), "All Material Library.xlsx");
   }
 
   DeleteData(r) {
