@@ -542,6 +542,7 @@ class AssignmentDetail extends Component {
                       </div>
                     </Row>
                     {this.state.data_assignment.SSOW_List !== undefined ? this.state.data_assignment.SSOW_List.map((ssow, idx) =>
+                      <Fragment>
                       <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
                         <Col md="2" style={{margin:"0", padding:"4px"}}>
                           <FormGroup>
@@ -602,6 +603,7 @@ class AssignmentDetail extends Component {
                           </FormGroup>
                         </Col>
                       </Row>
+                      </Fragment>
                     ) : (<Fragment></Fragment>) }
                     </Fragment>
                   )}

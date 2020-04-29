@@ -67,6 +67,16 @@ class MRDetail extends Component {
     this.handleChangeFormMRUpdate = this.handleChangeFormMRUpdate.bind(this);
     this.updateDataMR = this.updateDataMR.bind(this);
     this.downloadMaterialMRUpload = this.downloadMaterialMRUpload.bind(this);
+    this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
+  }
+
+  checkValue(props){
+    //Swap undefined to null
+    if( typeof props === 'undefined' ) {
+      return null;
+    }else{
+      return props;
+    }
   }
 
   async getDatafromAPIBMS(url){
@@ -572,6 +582,17 @@ class MRDetail extends Component {
     saveAs(new Blob([allocexport]), 'Material MR '+dataMR.mr_id+' uploader.xlsx');
   }
 
+  async saveUpdateMaterial(){
+    const dataXLS = this.state.rowsXLS;
+    const dataMR = this.state.data_mr;
+    const respondSaveMaterialMR = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataMR._id, {"data" : dataXLS});
+    if(respondSaveMaterialMR.data !== undefined && respondSaveMaterialMR.status >= 200 && respondSaveMaterialMR.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      this.setState({ action_status : 'failed' });
+    }
+  }
+
   render() {
     const background = {
       backgroundColor: '#e3e3e3',
@@ -894,7 +915,7 @@ class MRDetail extends Component {
                         <tr>
                           <td style={{width : '550px'}}>
                             <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"visiblity":"hidden"}}/>
-                            <Button size="sm" color="secondary" style={{float : 'right'}} onClick={this.downloadMaterialMRUpload} disabled={this.state.rowsXLS.length === 0}>
+                            <Button size="sm" color="secondary" style={{float : 'right'}} onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
                               Save
                             </Button>
                           </td>
