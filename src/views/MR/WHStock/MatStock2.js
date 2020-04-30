@@ -61,7 +61,6 @@ class MaterialStock extends React.Component {
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
       filter_name: null,
-      search: null,
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -96,7 +95,7 @@ class MaterialStock extends React.Component {
     this.toggleEdit = this.toggleEdit.bind(this);
     this.saveNew = this.saveNew.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
-    this.toggleDelete = this.toggleDelete.bind(this);
+    this.toggleDanger = this.toggleDanger.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.getWHStockList = this.getWHStockList.bind(this);
   }
@@ -114,10 +113,15 @@ class MaterialStock extends React.Component {
     this.setState({ collapse: !this.state.collapse });
   }
 
-  toggleDelete(e) {
-    const modalDelete = this.state.danger;
+  toggleDanger(e) {
+    const value = e.currentTarget.value;
+    const aEdit = this.state.all_data.find((e) => e.owner_id === value);
+    const Dataid = aEdit.owner_id;
+    const Datapo = aEdit.po_number;
     this.setState({
       danger: !this.state.danger,
+      // activeItemId: e._id,
+      // activeItemName: e.owner_id,
     });
   }
 
@@ -526,11 +530,6 @@ class MaterialStock extends React.Component {
     this.setState({ MatStockForm: dataForm });
   }
 
-  SearchFilter = (e) => {
-    let keyword = e.target.value;
-    this.setState({ search: keyword });
-  };
-
   async saveUpdate() {
     let respondSaveEdit = undefined;
     const dataPPEdit = this.state.MatStockForm;
@@ -687,19 +686,18 @@ class MaterialStock extends React.Component {
     saveAs(new Blob([allocexport]), "All Material Stock.xlsx");
   }
 
-  DeleteData = async () => {
-    const objData = this.state.all_data.find((e) => e._id);
-    this.toggleLoading();
-    this.toggleDelete();
+  DeleteData(r) {
+    // this.toggleDanger();
+    const _idData = r.currentTarget.value;
     const DelData = this.deleteDataFromAPINODE(
-      "/whStock/deleteWhStock/" + objData._id
+      "/whStock/deleteWhStock/" + _idData
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
-        this.toggleLoading();
+        // this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
-          this.toggleLoading();
+          // this.toggleLoading();
         });
       }
     });
@@ -872,51 +870,32 @@ class MaterialStock extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                      <span
-                        style={{
-                          fontSize: "20px",
-                          fontWeight: "500",
-                          position: "absolute",
-                        }}
-                      >
+                      <span style={{ fontSize: "20px", fontWeight: "500", position: "absolute" }}>
                         Material Stock List
                       </span>
                       <div
                         style={{
                           float: "left",
                           marginTop: "25px",
-                          // display: "inline-flex",
+                          display: "inline-flex",
                         }}
                       >
-                        <FormGroup row>
-                          <Label for="exampleSelect" sm={10}>
-                            Select Warehouse
-                          </Label>
-                          <Col sm={10}>
-                            <Input
-                              id="exampleSelect"
-                              type="select"
-                              name="select"
-                              onChange={this.getWHStockList}
-                              // placeholder="Select Warehouse"
-                            >
-                              {this.state.wh_data.map((opt) => (
-                                <option value={opt.wh_id}>
-                                  {opt.wh_name} - {opt.wh_id}
-                                </option>
-                              ))}
-                            </Input>
-                          </Col>
+                        <FormGroup>
+                          <Label for="exampleSelect">Select Warehouse</Label>
+                          <Input
+                            type="select"
+                            name="select"
+                            onChange={this.getWHStockList}
+                          >
+                            {this.state.wh_data.map((opt) => (
+                              <option value={opt.wh_id}>
+                                {opt.wh_name} - {opt.wh_id}
+                              </option>
+                            ))}
+                          </Input>
                         </FormGroup>
                       </div>
                     </div>
-                    <input
-                      className="search-box-material"
-                      type="text"
-                      name="filter"
-                      placeholder="Search"
-                      onChange={(e) => this.SearchFilter(e)}
-                    />
                   </Col>
                 </Row>
                 <Row>
@@ -941,99 +920,92 @@ class MaterialStock extends React.Component {
                             <th>Box Number</th>
                             <th>Condition</th>
                             <th>Notes</th>
+                            {/* <th></th> */}
                             <th></th>
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.all_data
-                            .filter((e) => {
-                              if (this.state.search === null) {
-                                return e;
-                              } else if (
-                                e.owner_id
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.po_number
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.project_name
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) 
-                                //   ||
-                                // e.serial_number
-                                //   .toLowerCase()
-                                //   .includes(this.state.search.toLowerCase()) ||
-                                // e.box_number
-                                //   .toLowerCase()
-                                //   .includes(this.state.search.toLowerCase())
-                              ) {
-                                return e;
-                              }
-                            })
-                            .map((e) => (
-                              <React.Fragment key={e._id + "frag"}>
-                                <tr
-                                  style={{ backgroundColor: "#d3d9e7" }}
-                                  className="fixbody"
-                                  key={e._id}
-                                >
-                                  {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.owner_id}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.wh_id}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.po_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.project_name}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.arrival_date}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku_description}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.qty}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.ageing}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.serial_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.box_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.condition}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.notes}
-                                  </td>
-                                  <td>
-                                    <Button
-                                      size="sm"
-                                      color="danger"
-                                      value={e._id}
-                                      onClick={this.toggleDelete}
-                                      title="Delete"
-                                    >
-                                      <i
-                                        className="fa fa-trash"
-                                        aria-hidden="true"
-                                      ></i>
-                                    </Button>
-                                  </td>
-                                </tr>
-                              </React.Fragment>
-                            ))}
+                          {this.state.all_data.map((e) => (
+                            <React.Fragment key={e._id + "frag"}>
+                              <tr
+                                style={{ backgroundColor: "#d3d9e7" }}
+                                className="fixbody"
+                                key={e._id}
+                              >
+                                {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
+                                <td style={{ textAlign: "center" }}>
+                                  {e.owner_id}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.wh_id}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.po_number}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.project_name}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.arrival_date}
+                                </td>
+                                <td style={{ textAlign: "center" }}>{e.sku}</td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.sku_description}
+                                </td>
+                                <td style={{ textAlign: "center" }}>{e.qty}</td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.ageing}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.serial_number}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.box_number}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.condition}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.notes}
+                                </td>
+                                {/* <td>
+                                  <Button
+                                    size="sm"
+                                    color="secondary"
+                                    value={e.owner_id}
+                                    onClick={this.toggleEdit}
+                                    title="Edit"
+                                  >
+                                    <i
+                                      className="fa fa-pencil"
+                                      aria-hidden="true"
+                                    ></i>
+                                  </Button>
+                                </td> */}
+                                <td>
+                                  <Button
+                                    size="sm"
+                                    color="danger"
+                                    value={e._id}
+                                    onClick={(r) => {
+                                      if (
+                                        window.confirm(
+                                          "Are you sure you wish to delete this item?"
+                                        )
+                                      )
+                                        this.DeleteData(r, "value");
+                                    }}
+                                    title="Delete"
+                                  >
+                                    <i
+                                      className="fa fa-trash"
+                                      aria-hidden="true"
+                                    ></i>
+                                  </Button>
+                                </td>
+                              </tr>
+                            </React.Fragment>
+                          ))}
                         </tbody>
                       </table>
                     </div>
@@ -1057,6 +1029,94 @@ class MaterialStock extends React.Component {
           </Col>
         </Row>
 
+        {/* Modal New PO */}
+        <Modal
+          isOpen={this.state.modalMatStockForm}
+          toggle={this.toggleMatStockForm}
+          className="modal--form-e"
+        >
+          <ModalHeader>Form Material Stock</ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col sm="12">
+                <FormGroup>
+                  <Label htmlFor="owner_id">Owner ID</Label>
+                  <Input
+                    type="text"
+                    name="0"
+                    placeholder=""
+                    value={this.state.MatStockForm[0]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="po_number">PO Number</Label>
+                  <Input
+                    type="text"
+                    name="1"
+                    placeholder=""
+                    value={this.state.MatStockForm[1]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="arrival_date">Arrival Date</Label>
+                  <Input
+                    type="datetime-local"
+                    placeholder=""
+                    value={this.state.MatStockForm[2]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="project_name">Project Name</Label>
+                  <Input
+                    type="text"
+                    name="3"
+                    placeholder=""
+                    value={this.state.MatStockForm[3]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="sku">SKU</Label>
+                  <Input
+                    type="text"
+                    placeholder=""
+                    value={this.state.MatStockForm[4]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="sku_description">SKU Description</Label>
+                  <Input
+                    type="text"
+                    placeholder=""
+                    value={this.state.MatStockForm[5]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="qty">Qty</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    name="6"
+                    placeholder=""
+                    value={this.state.MatStockForm[6]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="success" onClick={this.saveNew}>
+              Submit
+            </Button>
+          </ModalFooter>
+        </Modal>
+        {/*  Modal New PO*/}
 
         {/* Modal Edit PP */}
         <Modal
@@ -1143,21 +1203,22 @@ class MaterialStock extends React.Component {
         {/* Modal confirmation delete */}
         <Modal
           isOpen={this.state.danger}
-          toggle={this.toggleDelete}
+          toggle={this.toggleDanger}
           className={"modal-danger " + this.props.className}
         >
-          <ModalHeader toggle={this.toggleDelete}>
+          <ModalHeader toggle={this.toggleDanger}>
             Delete Material Stock Confirmation
           </ModalHeader>
           <ModalBody>Are you sure want to delete ?</ModalBody>
           <ModalFooter>
             <Button
               color="danger"
-              onClick={this.DeleteData}
+              // value={e._id}
+              onClick={(r) => this.DeleteData(r, "value")}
             >
               Delete
             </Button>
-            <Button color="secondary" onClick={this.toggleDelete}>
+            <Button color="secondary" onClick={this.toggleDanger}>
               Cancel
             </Button>
           </ModalFooter>

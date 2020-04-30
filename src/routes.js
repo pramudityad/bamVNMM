@@ -92,7 +92,7 @@ const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUp
 const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabaseList'));
 const CPODatabaseDetail  = React.lazy(() => import('./views/CPODatabase/CPODatabaseDetail'));
 
-const WHManagement  = React.lazy(() => import('./views/MR/WHManagement/WHManagement'));
+const WHManagement  = React.lazy(() => import('./views/MR/WHManagement/WHManagement2'));
 const MaterialStock  = React.lazy(() => import('./views/MR/WHStock/MatStock'));
 const MaterialInboundPlan  = React.lazy(() => import('./views/MR/WHInbound/MatInboundPlan'));
 const MatLibrary  = React.lazy(() => import('./views/MR/MatLibrary/MatLibrary'));
