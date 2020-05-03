@@ -1,7 +1,7 @@
 export default {
   items: [
     {
-      name: 'BOQ & Product',
+      name: 'Product',
       icon: 'icon-folder-alt',
       children: [
         {
@@ -14,6 +14,17 @@ export default {
           url: '/config-manager',
           icon: 'icon-doc',
         },
+        {
+          name: 'Material Library',
+          url: '/mat-library',
+          icon: 'icon-list',
+        }
+      ]
+    },
+    {
+      name: 'BOQ',
+      icon: 'icon-folder-alt',
+      children: [
         {
           name: 'Technical BOQ',
           url: '/list-technical',
@@ -63,6 +74,16 @@ export default {
         {
           name: 'Assignment List',
           url: '/assignment-list',
+          icon: 'icon-list',
+        },
+        {
+          name: 'Assignment NA List',
+          url: '/assignment-list-approval',
+          icon: 'icon-list',
+        },
+        {
+          name: 'Assignment List (ASP)',
+          url: '/assignment-list-asp',
           icon: 'icon-list',
         },
         {
@@ -130,11 +151,6 @@ export default {
       ]
     },
     {
-      name: 'Material Library',
-      url: '/mat-library',
-      icon: 'icon-list',
-    },
-    {
       name: 'DSA List',
       url: '/dsa-list',
       icon: 'icon-list',
@@ -188,6 +204,12 @@ export default {
           url: '/material-dispatch',
           icon: 'fa fa-truck-moving',
         },
+        {
+          name: 'Shipment',
+          url: '/shipment-list',
+          icon: 'fa fa-truck-moving',
+        },
+
       ]
     },
     {

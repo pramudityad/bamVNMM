@@ -254,7 +254,6 @@ class MatLibrary extends React.Component {
 
   getWHStockList() {
     this.getDatafromAPINODE("/variants/variants?lmt=" + this.state.perPage + '&pg=' + this.state.activePage).then((res) => {
-      console.log("all data ", res.data.data);
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
