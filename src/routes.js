@@ -98,7 +98,9 @@ const CPODatabaseDetail  = React.lazy(() => import('./views/CPODatabase/CPODatab
 
 const ShipmentList = React.lazy(() => import('./views/ShipmentList/ShipmentList'));
 
-const WHManagement  = React.lazy(() => import('./views/MR/WHManagement/WHManagement'));
+// const WHManagement  = React.lazy(() => import('./views/MR/WHManagement/WHManagement'));
+
+const WHManagement  = React.lazy(() => import('./views/MR/WHManagement/WHManagement2'));
 const MaterialStock  = React.lazy(() => import('./views/MR/WHStock/MatStock'));
 const MaterialInboundPlan  = React.lazy(() => import('./views/MR/WHInbound/MatInboundPlan'));
 const MatLibrary  = React.lazy(() => import('./views/MR/MatLibrary/MatLibrary'));
@@ -197,7 +199,7 @@ const routes = [
   { path: '/assignment-detail-asp/:id', exact: true, name: 'Assignment Detail (ASP)', component: AssignmentDetailASP },
   { path: '/assignment-list-asp', exact: true, name: 'Assignment List (ASP)', component: AssignmentListASP },
   { path: '/assignment-list-approval', exact: true, name: 'Assignment Need Assignment List ', component: AssignmentListApproval },
-  
+
   { path: '/list-tssr-matix', exact: true, name: 'List TSSR Matrix BOQ', component: ListTssrMatrix },
   { path: '/tssr-matix-creation', exact: true, name: 'TSSR Matrix BOQ Creation', component: NewTssrMatrix },
   { path: '/detail-tssr-matix/:id', exact: true, name: 'Detail TSSR Matrix BOQ', component: DetailTssrMatrix },

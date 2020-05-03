@@ -45,13 +45,13 @@ const Checkbox = ({
 
 const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
-const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
-const usernameBAM = "adminbamidsuper";
-const passwordBAM = "F760qbAg2sml";
-
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-class MaterialStock extends React.Component {
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
+
+class WHManagement extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -60,7 +60,6 @@ class MaterialStock extends React.Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      filter_name: null,
       search: null,
       perPage: 10,
       prevPage: 1,
@@ -72,15 +71,14 @@ class MaterialStock extends React.Component {
       action_status: null,
       action_message: null,
       all_data: [],
-      wh_data: [],
+      asp_data: [],
       data_PO: [],
       packageSelected: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
       modalMatStockForm: false,
-      modalMatStockEdit: false,
-      MatStockForm: new Array(6).fill(null),
-      warehouse_selected: null,
+      modalEdit: false,
+      DataForm: new Array(6).fill(null),
       collapse: false,
       danger: false,
       activeItemName: "",
@@ -99,7 +97,6 @@ class MaterialStock extends React.Component {
     this.saveUpdate = this.saveUpdate.bind(this);
     this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
-    this.getWHStockList = this.getWHStockList.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
   }
 
@@ -109,12 +106,6 @@ class MaterialStock extends React.Component {
     });
     this.setState({
       dropdownOpen: newArray,
-    });
-  }
-
-  togglecreateModal() {
-    this.setState({
-      createModal: !this.state.createModal,
     });
   }
 
@@ -136,23 +127,23 @@ class MaterialStock extends React.Component {
   }
 
   toggleEdit(e) {
-    const modalMatStockEdit = this.state.modalMatStockEdit;
-    if (modalMatStockEdit === false) {
+    this.getASPList();
+    const modalEdit = this.state.modalEdit;
+    if (modalEdit === false) {
       const value = e.currentTarget.value;
-      const aEdit = this.state.all_data.find((e) => e.owner_id === value);
-      let dataForm = this.state.MatStockForm;
-      dataForm[0] = aEdit.sku_description;
-      dataForm[1] = aEdit.serial_number;
-      dataForm[2] = aEdit.project_name;
-      dataForm[3] = aEdit.box_number;
-      dataForm[4] = aEdit.condition;
-      dataForm[5] = aEdit.notes;
-      this.setState({ MatStockForm: dataForm });
+      const aEdit = this.state.all_data.find((e) => e._id === value);
+      let dataForm = this.state.DataForm;
+      dataForm[0] = aEdit.wh_name;
+      dataForm[1] = aEdit.wh_id;
+      dataForm[2] = aEdit.wh_manager;
+      dataForm[3] = aEdit.address;
+      dataForm[4] = aEdit.owner;
+      this.setState({ DataForm: dataForm });
     } else {
-      this.setState({ MatStockForm: new Array(6).fill(null) });
+      this.setState({ DataForm: new Array(6).fill(null) });
     }
     this.setState((prevState) => ({
-      modalMatStockEdit: !prevState.modalMatStockEdit,
+      modalEdit: !prevState.modalEdit,
     }));
   }
 
@@ -160,6 +151,26 @@ class MaterialStock extends React.Component {
     this.setState((prevState) => ({
       modalMatStockForm: !prevState.modalMatStockForm,
     }));
+  }
+
+  async getDatafromAPIEXEL(url) {
+    try {
+      let respond = await axios.get(API_URL_XL + url, {
+        headers: { 'Content-Type': 'application/json' },
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        },
+      })
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
+    }
   }
 
   async getDatafromAPINODE(url) {
@@ -242,6 +253,13 @@ class MaterialStock extends React.Component {
     this.getWHStockList();
   }
 
+  togglecreateModal() {
+    this.setState({
+      createModal: !this.state.createModal,
+    });
+  }
+
+
   handleChangeFilter = (e) => {
     let value = e.target.value;
     if (value.length === 0) {
@@ -252,47 +270,38 @@ class MaterialStock extends React.Component {
     });
   };
 
-  getWHStockList(e) {
-    this.toggleLoading();
-    let get_wh_id = e.target.value;
-    // console.log("wh_id", get_wh_id);
-    let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
-    this.getDatafromAPINODE(
-      "/whStock/getWhStock?q=" +
-      getbyWH +
-      "&lmt=" +
-      this.state.perPage +
-      "&pg=" +
-      this.state.activePage
-    ).then((res) => {
-      // console.log("all data ", res.data);
+  SearchFilter = (e) => {
+    let keyword = e.target.value;
+    this.setState({ search: keyword });
+  };
+
+  getWHStockList() {
+    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
+      console.log("all data ", res.data);
       if (res.data !== undefined) {
-        this.setState({
-          all_data: res.data.data,
-          prevPage: this.state.activePage,
-          total_dataParent: res.data.totalResults,
-        });
-        this.toggleLoading();
+        this.setState({ all_data: res.data.data });
       } else {
-        this.setState({
-          all_data: [],
-          total_dataParent: 0,
-          prevPage: this.state.activePage,
-        });
-        this.toggleLoading();
+        this.setState({ all_data: [] });
       }
     });
   }
 
-  getWHManagement() {
-    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
-      // console.log("all data ", res.data);
-      if (res.data !== undefined) {
-        this.setState({ wh_data: res.data.data });
-      } else {
-        this.setState({ wh_data: [] });
-      }
-    });
+
+  getASPList() {
+    switch (this.props.dataLogin.account_id) {
+      case "xl":
+        this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
+          // console.log("asp data ", res.data);
+          if (res.data !== undefined) {
+            this.setState({ asp_data: res.data._items });
+          } else {
+            this.setState({ asp_data: [] });
+          }
+        });
+        break;
+      default:
+        break;
+    }
   }
 
   isSameValue(element, value) {
@@ -382,9 +391,10 @@ class MaterialStock extends React.Component {
   }
 
   componentDidMount() {
-    // this.getWHStockList();
-    this.getWHManagement();
-    document.title = "Material Stock | BAM";
+    console.log("here ur dataLogin", this.props.dataLogin);
+    this.getWHStockList();
+    // change this
+    document.title = "Warehouse Management | BAM";
   }
 
   handleChangeChecklist(e) {
@@ -494,10 +504,13 @@ class MaterialStock extends React.Component {
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
-      stockData: BulkXLSX,
-    });
-    // console.log('res bulk ', res.error.message);
+    const res = await this.postDatatoAPINODE(
+      "/whManagement/createWarehouse",
+      {
+        'managementData': BulkXLSX,
+      }
+    );
+    console.log('res bulk ', res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -513,11 +526,11 @@ class MaterialStock extends React.Component {
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    console.log("xlsx data", JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE("/whStock/createWhStockTruncate", {
-      stockData: BulkXLSX,
+    console.log('xlsx data', JSON.stringify(BulkXLSX));
+    const res = await this.postDatatoAPINODE("/whManagement/createWhManagementTruncate", {
+      'managementData': BulkXLSX,
     });
-    console.log("res bulk ", res);
+    console.log('res bulk ', res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -531,43 +544,33 @@ class MaterialStock extends React.Component {
   handleChangeForm(e) {
     const value = e.target.value;
     const index = e.target.name;
-    let dataForm = this.state.MatStockForm;
+    console.log('value ', value, index);
+    let dataForm = this.state.DataForm;
     dataForm[parseInt(index)] = value;
-    this.setState({ MatStockForm: dataForm });
+    this.setState({ DataForm: dataForm });
   }
-
-  SearchFilter = (e) => {
-    let keyword = e.target.value;
-    this.setState({ search: keyword });
-  };
 
   async saveUpdate() {
     let respondSaveEdit = undefined;
-    const dataPPEdit = this.state.MatStockForm;
+    const dataPPEdit = this.state.DataForm;
     const dataPP = this.state.all_data.find(
       (e) => e.owner_id === dataPPEdit[0]
     );
     const objData = this.state.all_data.find((e) => e._id);
     let pp = {
-      sku_description: dataPPEdit[0],
-      serial_number: dataPPEdit[1],
-      project_name: dataPPEdit[2],
-      box_number: dataPPEdit[3],
-      condition: dataPPEdit[4],
-      notes: dataPPEdit[5],
-      id_project_doc: objData.id_project_doc,
-      arrival_date: objData.arrival_date,
-      po_number: objData.po_number,
-      owner_id: objData.owner_id,
-      sku: objData.sku,
+      'wh_name': dataPPEdit[0],
+      'wh_id': dataPPEdit[1],
+      'wh_manager': dataPPEdit[2],
+      'address': dataPPEdit[3],
+      'owner': dataPPEdit[4],
     };
-    console.log("patch data ", pp);
     this.toggleLoading();
     this.toggleEdit();
     let patchData = await this.patchDatatoAPINODE(
-      "/whStock/updateOneWhStockwithDelete/" + objData._id,
-      { data: [pp] }
+      "/whManagement/UpdateOneWarehouse/" + objData._id,
+      { 'data': pp }
     );
+    console.log("patch data ", pp);
     if (patchData === undefined) {
       patchData = {};
       patchData["data"] = undefined;
@@ -590,7 +593,7 @@ class MaterialStock extends React.Component {
     this.toggleLoading();
     let poData = [];
     let respondSaveNew = undefined;
-    const dataPPEdit = this.state.MatStockForm;
+    const dataPPEdit = this.state.DataForm;
     let pp = {
       owner_id: dataPPEdit[0],
       po_number: dataPPEdit[1],
@@ -640,19 +643,11 @@ class MaterialStock extends React.Component {
     const ws = wb.addWorksheet();
 
     let headerRow = [
-      "Owner ID",
-      "WH ID",
-      "PO Number",
-      "Project Name",
-      "Arrival Date",
-      "SKU",
-      "SKU Desc",
-      "Qty",
-      "Aging",
-      "Serial Number",
-      "Box Number",
-      "Condition",
-      "Notes",
+      "Warehouse Name",
+      "Warehouse ID",
+      "WH Manager",
+      "Address",
+      "Owner",
     ];
     ws.addRow(headerRow);
 
@@ -663,24 +658,16 @@ class MaterialStock extends React.Component {
     for (let i = 0; i < download_all.length; i++) {
       let list = download_all[i];
       ws.addRow([
-        list.owner_id,
+        list.wh_name,
         list.wh_id,
-        list.po_number,
-        list.project_name,
-        list.sku,
-        list.sku_description,
-        list.arrival_date,
-        list.qty,
-        list.ageing,
-        list.serial_number,
-        list.box_number,
-        list.condition,
-        list.notes,
+        list.wh_manager,
+        list.address,
+        list.owner,
       ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All Material Stock.xlsx");
+    saveAs(new Blob([allocexport]), "All Warehouse.xlsx");
   }
 
   DeleteData = async () => {
@@ -688,7 +675,7 @@ class MaterialStock extends React.Component {
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/whStock/deleteWhStock/" + objData._id
+      "/whManagement/deleteWarehouse/" + objData._id
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
@@ -701,43 +688,17 @@ class MaterialStock extends React.Component {
     });
   }
 
+
   exportMatStatus = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow([
-      "owner_id",
-      "po_number",
-      "arrival_date",
-      "project_name",
-      "sku",
-      "qty",
-      "wh_id",
-      "id_wh_doc",
-    ]);
-    ws.addRow([
-      "5df99ce5face981b7ace8861",
-      "PO0001",
-      "2020-04-17",
-      "XL BAM DEMO 2021",
-      "1",
-      100,
-      "WH_1",
-      "5ea7bf5de3b6fe12ace40a30",
-    ]);
-    ws.addRow([
-      "5df99ce5face981b7ace8861",
-      "PO0001",
-      "2020-04-17",
-      "XL BAM DEMO 2021",
-      "1",
-      100,
-      "WH_1",
-      "5ea7bf5de3b6fe12ace40a30",
-    ]);
+    ws.addRow(["wh_name", "wh_id", "wh_manager", "address", "owner"]);
+    ws.addRow(["whA", "WH_1", "A", "AB", "dadang1"]);
+    ws.addRow(["whB", "WH_1", "B", "BA", "nurjaman1"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), "Material Stock Template.xlsx");
+    saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
   };
 
   render() {
@@ -753,7 +714,7 @@ class MaterialStock extends React.Component {
               <CardHeader>
                 <span style={{ marginTop: "8px", position: "absolute" }}>
                   {" "}
-                  Material Stock{" "}
+                  WH Management{" "}
                 </span>
                 <div
                   className="card-header-actions"
@@ -773,7 +734,7 @@ class MaterialStock extends React.Component {
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportMatStatus}>
                           {" "}
-                          Material Stock Template
+                          WH Management Template
                         </DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>
                           > Download All{" "}
@@ -782,7 +743,6 @@ class MaterialStock extends React.Component {
                     </Dropdown>
                   </div> */}
                   <div>
-                    {/* Open modal for create new */}
                     {this.state.userRole.includes("Flow-PublicInternal") !==
                       true ? (
                         <div>
@@ -803,7 +763,7 @@ class MaterialStock extends React.Component {
                         ""
                       )}
                   </div>
-                   &nbsp;&nbsp;&nbsp;
+                  &nbsp;&nbsp;&nbsp;
                   <div>
                     <Button onClick={this.downloadAll} block color="ghost-warning"><i className="fa fa-download" aria-hidden="true">
                       {" "}
@@ -857,7 +817,7 @@ class MaterialStock extends React.Component {
                       &nbsp;SAVE{" "}
                     </Button>
                     &nbsp;&nbsp;&nbsp;
-                    <Button
+                    {/* <Button
                       color="warning"
                       disabled={this.state.rowsXLS.length === 0}
                       onClick={this.saveTruncateBulk}
@@ -867,7 +827,7 @@ class MaterialStock extends React.Component {
                         {" "}
                       </i>{" "}
                       &nbsp;SAVE2{" "}
-                    </Button>
+                    </Button> */}
                     {/* <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>                     */}
                   </CardFooter>
                 </Card>
@@ -876,44 +836,16 @@ class MaterialStock extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                      {/* <span
-                        style={{
-                          fontSize: "20px",
-                          fontWeight: "500",
-                          position: "absolute",
-                        }}
-                      >
-                        Material Stock List
+                      {/* <span style={{ fontSize: "20px", fontWeight: "500" }}>
+                        WH Management List
                       </span> */}
                       <div
                         style={{
                           float: "left",
-                          // marginTop: "25px",
-                          // display: "inline-flex",
+                          margin: "5px",
+                          display: "inline-flex",
                         }}
                       >
-                        <FormGroup row>
-                          <Col xs="6" md="3">
-                            <Label for="exampleSelect">
-                              Select Warehouse
-                          </Label>
-                          </Col>
-                          <Col xs="12" md="9">
-                            <Input
-                              id="exampleSelect"
-                              type="select"
-                              name="select"
-                              onChange={this.getWHStockList}
-                            // placeholder="Select Warehouse"
-                            >
-                              {this.state.wh_data.map((opt) => (
-                                <option value={opt.wh_id}>
-                                  {opt.wh_name} - {opt.wh_id}
-                                </option>
-                              ))}
-                            </Input>
-                          </Col>
-                        </FormGroup>
                       </div>
                     </div>
                     <input
@@ -928,25 +860,18 @@ class MaterialStock extends React.Component {
                 <Row>
                   <Col>
                     <div className="divtable">
-                      <Table responsive size="sm" >
+                      <Table responsive size="sm">
                         <thead
                           style={{ backgroundColor: "#73818f" }}
                           className="fixed"
                         >
                           <tr align="center">
-                            <th> Owner ID</th>
-                            <th> WH ID</th>
-                            <th>PO Number</th>
-                            <th>Project Name</th>
-                            <th>Arrival Date</th>
-                            <th>SKU</th>
-                            <th>SKU Desc</th>
-                            <th>Qty</th>
-                            <th>Aging</th>
-                            <th>Serial Number</th>
-                            <th>Box Number</th>
-                            <th>Condition</th>
-                            <th>Notes</th>
+                            <th>Warehouse Name</th>
+                            <th>Warehouse ID</th>
+                            <th>WH Manager</th>
+                            <th>Address</th>
+                            <th>Owner</th>
+                            <th></th>
                             <th></th>
                           </tr>
                         </thead>
@@ -956,22 +881,21 @@ class MaterialStock extends React.Component {
                               if (this.state.search === null) {
                                 return e;
                               } else if (
-                                e.owner_id
+                                e.wh_name
                                   .toLowerCase()
                                   .includes(this.state.search.toLowerCase()) ||
-                                e.po_number
+                                e.wh_id
                                   .toLowerCase()
                                   .includes(this.state.search.toLowerCase()) ||
-                                e.project_name
+                                e.wh_manager
+                                  .toLowerCase()
+                                  .includes(this.state.search.toLowerCase()) ||
+                                e.address
+                                  .toLowerCase()
+                                  .includes(this.state.search.toLowerCase()) ||
+                                e.owner
                                   .toLowerCase()
                                   .includes(this.state.search.toLowerCase())
-                                //   ||
-                                // e.serial_number
-                                //   .toLowerCase()
-                                //   .includes(this.state.search.toLowerCase()) ||
-                                // e.box_number
-                                //   .toLowerCase()
-                                //   .includes(this.state.search.toLowerCase())
                               ) {
                                 return e;
                               }
@@ -984,43 +908,29 @@ class MaterialStock extends React.Component {
                                   key={e._id}
                                 >
                                   <td style={{ textAlign: "center" }}>
-                                    {e.owner_id}
+                                    {e.wh_name}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.wh_id}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
-                                    {e.po_number}
+                                    {e.wh_manager}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
-                                    {e.project_name}
+                                    {e.address}
                                   </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.arrival_date}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku_description}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.qty}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.ageing}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.serial_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.box_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.condition}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.notes}
+                                  <td style={{ textAlign: "center" }}>{e.owner}</td>
+
+                                  <td>
+                                    <Button
+                                      size="sm"
+                                      color="secondary"
+                                      value={e._id}
+                                      onClick={this.toggleEdit}
+                                      title="Edit"
+                                    >
+                                      <i className="icon-pencil icons"></i>
+                                    </Button>
                                   </td>
                                   <td>
                                     <Button
@@ -1061,78 +971,162 @@ class MaterialStock extends React.Component {
             </Card>
           </Col>
         </Row>
-
-
-        {/* Modal Edit PP */}
+        {/* dont need */}
+        {/* Modal New PO */}
         <Modal
-          isOpen={this.state.modalMatStockEdit}
-          toggle={this.toggleEdit}
-          className="modal--form"
+          isOpen={this.state.modalMatStockForm}
+          toggle={this.toggleMatStockForm}
+          className="modal--form-e"
         >
-          <ModalHeader>Form Update Material Stock</ModalHeader>
+          <ModalHeader>Form WH Management</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="sku_description">SKU Description</Label>
+                  <Label htmlFor="owner_id">Owner ID</Label>
                   <Input
                     type="text"
                     name="0"
                     placeholder=""
-                    value={this.state.MatStockForm[0]}
+                    value={this.state.DataForm[0]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="serial_number">Serial Number</Label>
+                  <Label htmlFor="po_number">PO Number</Label>
                   <Input
                     type="text"
                     name="1"
                     placeholder=""
-                    value={this.state.MatStockForm[1]}
+                    value={this.state.DataForm[1]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="arrival_date">Arrival Date</Label>
+                  <Input
+                    type="datetime-local"
+                    placeholder=""
+                    value={this.state.DataForm[2]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="project_name">Project Name</Label>
                   <Input
-                    type="datetime-local"
-                    placeholder=""
-                    value={this.state.MatStockForm[2]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="box_number">Box Number</Label>
-                  <Input
                     type="text"
                     name="3"
                     placeholder=""
-                    value={this.state.MatStockForm[3]}
+                    value={this.state.DataForm[3]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="condition">Condition</Label>
+                  <Label htmlFor="sku">SKU</Label>
                   <Input
                     type="text"
-                    min="0"
-                    name="4"
                     placeholder=""
-                    value={this.state.MatStockForm[4]}
+                    value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="notes">Notes</Label>
+                  <Label htmlFor="sku_description">SKU Description</Label>
+                  <Input
+                    type="text"
+                    placeholder=""
+                    value={this.state.DataForm[5]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="qty">Qty</Label>
                   <Input
                     type="number"
                     min="0"
                     name="6"
                     placeholder=""
-                    value={this.state.MatStockForm[5]}
+                    value={this.state.DataForm[6]}
                     onChange={this.handleChangeForm}
                   />
+                </FormGroup>
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="success" onClick={this.saveNew}>
+              Submit
+            </Button>
+          </ModalFooter>
+        </Modal>
+        {/*  Modal New PO*/}
+
+        {/* Modal Edit PP */}
+        <Modal
+          isOpen={this.state.modalEdit}
+          toggle={this.toggleEdit}
+          className="modal--form"
+        >
+          <ModalHeader>Form Update WH Management</ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col sm="12">
+                <FormGroup>
+                  <Label htmlFor="wh_name">Warehouse Name</Label>
+                  <Input
+                    type="text"
+                    name="0"
+                    placeholder=""
+                    value={this.state.DataForm[0]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="wh_id">Warehouse ID	</Label>
+                  <Input
+                    type="text"
+                    name="1"
+                    placeholder=""
+                    value={this.state.DataForm[1]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="wh_manager">WH Manager</Label>
+                  <Input
+                    type="text"
+                    name="2"
+                    placeholder=""
+                    value={this.state.DataForm[2]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    type="text"
+                    name="3"
+                    placeholder=""
+                    value={this.state.DataForm[3]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="owner">Owner</Label>
+                  <Input
+                    type="select"
+                    name="4"
+                    placeholder=""
+                    value={this.state.DataForm[4]}
+                    onChange={this.handleChangeForm}
+                  >
+                    {this.state.asp_data.map((asp) => (
+                      <option value={asp.Name}>
+                        {asp.Name}
+                      </option>
+                    ))}
+                    <option value="Internal">Internal</option>
+                  </Input>
                 </FormGroup>
               </Col>
             </Row>
@@ -1147,7 +1141,7 @@ class MaterialStock extends React.Component {
 
         {/* Modal create New */}
         <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-          <ModalHeader toggle={this.togglecreateModal}>Create New Stock</ModalHeader>
+          <ModalHeader toggle={this.togglecreateModal}>Create New WareHouse</ModalHeader>
           <ModalBody>
             <CardBody>
               <div>
@@ -1235,4 +1229,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(MaterialStock);
+export default connect(mapStateToProps)(WHManagement);
