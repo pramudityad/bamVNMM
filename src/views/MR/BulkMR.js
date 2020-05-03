@@ -532,7 +532,7 @@ class BulkMR extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(    [
+    ws.addRow([
       "id",
       "project_name",
       "mr_type",
@@ -545,6 +545,8 @@ class BulkMR extends Component {
       "sent_mr_request",
       "identifier"
     ]);
+
+    ws.addRow(["new", "XL BAM DEMO 2020",	"1",	"1",	"JKT1",	"2020-19-04",	"2020-21-04",	"PT BMS Delivery", null, null, "JAW-JT-BBS-0001"]);
 
     const MRFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MRFormat]), 'MR Uploader Template.xlsx');

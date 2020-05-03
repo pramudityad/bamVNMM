@@ -14,7 +14,7 @@ const password_tsel = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class AssignmentList extends Component {
+class AssignmentListASP extends Component {
   constructor(props) {
     super(props);
 
@@ -139,9 +139,6 @@ class AssignmentList extends Component {
                 <span style={{lineHeight :'2'}}>
                   <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Assignment List
                 </span>
-                <Link to={'/assignment-creation'}><Button color="success" style={{float : 'right'}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create Assignment</Button></Link>
-                <Link to={'/bulk-assignment-creation'}><Button color="success" style={{float : 'right', marginRight: "8px"}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create Assignment Bulk</Button></Link>
-                <Button style={downloadAssignment} outline color="success" onClick={this.downloadASGList} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment List</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -238,7 +235,7 @@ class AssignmentList extends Component {
                     {this.state.assignment_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
-                          <Link to={'/assignment-detail/'+list._id}>
+                          <Link to={'/assignment-detail-asp/'+list._id}>
                             <Button style={{width: "90px"}} outline color="info" size="sm">Detail</Button>
                           </Link>
                         </td>
@@ -256,7 +253,7 @@ class AssignmentList extends Component {
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData}
+                  totalItemsCount={this.state.totalData.total}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"
@@ -278,4 +275,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(AssignmentList);
+export default connect(mapStateToProps)(AssignmentListASP);

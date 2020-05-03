@@ -873,28 +873,24 @@ class MaterialStock extends React.Component {
                       <span style={{ fontSize: "20px", fontWeight: "500" }}>
                         Material Stock List
                       </span>
-                      <div
-                        style={{
-                          float: "right",
-                          margin: "5px",
-                          display: "inline-flex",
-                        }}
+                    </div>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <div style={{display : 'inline-flex', marginBottom :'15px'}}>
+                      <span style={{lineHeight : '2', width : '225px', fontSize : '15px', fontWeight : '700'}}>Select Warehouse : </span>
+                      <Input
+                        type="select"
+                        name="select"
+                        onChange={this.getWHStockList}
                       >
-                        <FormGroup>
-                          <Label for="exampleSelect">Select Warehouse</Label>
-                          <Input
-                            type="select"
-                            name="select"
-                            onChange={this.getWHStockList}
-                          >
-                            {this.state.wh_data.map((opt) => (
-                              <option value={opt.wh_id}>
-                                {opt.wh_name} - {opt.wh_id}
-                              </option>
-                            ))}
-                          </Input>
-                        </FormGroup>
-                      </div>
+                        {this.state.wh_data.map((opt) => (
+                          <option value={opt.wh_id}>
+                            {opt.wh_name} - {opt.wh_id}
+                          </option>
+                        ))}
+                      </Input>
                     </div>
                   </Col>
                 </Row>

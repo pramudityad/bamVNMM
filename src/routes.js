@@ -57,6 +57,7 @@ const MaterialDispatch = React.lazy(() => import('./views/Warehouse/MaterialDisp
 const ProjectDashboard = React.lazy(() => import('./views/Project/ProjectDashboard'));
 const OrderCreated = React.lazy(() => import('./views/Project/OrderCreated'));
 const LOMList = React.lazy(() => import('./views/MR/LOMList'));
+
 const AssignmentCreation = React.lazy(() => import('./views/Assignment/AssignmentCreation'));
 const AssignmentList = React.lazy(() => import('./views/Assignment/AssignmentList'));
 const BulkAssignment = React.lazy(() => import('./views/Assignment/BulkAssignment'));
@@ -65,6 +66,9 @@ const AssignmentEdit = React.lazy(() => import('./views/Assignment/AssignmentEdi
 const AssignBast = React.lazy(() => import('./views/Assignment/AssignBast'));
 const BulkRequest = React.lazy(() => import('./views/MR/BulkRequest'));
 const BulkNotifytoASP = React.lazy(() => import('./views/Assignment/BulkNotifytoASP'));
+const AssignmentListASP = React.lazy(() => import('./views/Assignment/AssignmentListASP'));
+const AssignmentDetailASP = React.lazy(() => import('./views/Assignment/AssignmentDetailASP'));
+const AssignmentListApproval = React.lazy(() => import('./views/Assignment/AssignmentListApproval'));
 
 const ListTechnical = React.lazy(() => import('./views/Technical/ListTechnical'));
 const DetailTechnical = React.lazy(() => import('./views/Technical/TechnicalBoq'));
@@ -190,6 +194,10 @@ const routes = [
   { path: '/po-assign-commercial/:id', exact: true, name: 'PO Assign Commercial BOQ', component: POAssign },
   { path: '/submission-commercial/:id', exact: true, name: 'Submission Commercial BOQ', component: SubmissionCommBoq },
 
+  { path: '/assignment-detail-asp/:id', exact: true, name: 'Assignment Detail (ASP)', component: AssignmentDetailASP },
+  { path: '/assignment-list-asp', exact: true, name: 'Assignment List (ASP)', component: AssignmentListASP },
+  { path: '/assignment-list-approval', exact: true, name: 'Assignment Need Assignment List ', component: AssignmentListApproval },
+  
   { path: '/list-tssr-matix', exact: true, name: 'List TSSR Matrix BOQ', component: ListTssrMatrix },
   { path: '/tssr-matix-creation', exact: true, name: 'TSSR Matrix BOQ Creation', component: NewTssrMatrix },
   { path: '/detail-tssr-matix/:id', exact: true, name: 'Detail TSSR Matrix BOQ', component: DetailTssrMatrix },

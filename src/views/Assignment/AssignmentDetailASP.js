@@ -15,7 +15,7 @@ const password_tsel = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class AssignmentDetail extends Component {
+class AssignmentDetailASP extends Component {
   constructor(props) {
     super(props);
 
@@ -199,7 +199,7 @@ class AssignmentDetail extends Component {
             <Col md="2" style={{margin:"0", padding:"4px"}}>
               <FormGroup>
                 <Label>Status</Label>
-                <Input type="text" name="22" value={this.state.data_assignment.SSOW_List[i].ssow_status[0].status} readOnly />
+                <Input type="text" name="22" value={this.state.data_assignment.SSOW_List[i].ssow_status[(this.state.data_assignment.SSOW_List[i].ssow_status.length-1)].status} readOnly />
               </FormGroup>
             </Col>
           </Row>
@@ -344,8 +344,7 @@ class AssignmentDetail extends Component {
             {this.state.data_assignment !== null && (
             <Card>
               <CardHeader>
-                <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-info-circle" style={{marginRight: "8px"}}></i>Assignment Detail ({this.state.data_assignment.Assignment_No})</span>\
-                <Button style={{marginRight : '8px', float : 'right'}} outline color="info" size="sm" onClick={this.exportFormatBulkAssignment} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Assignment Format</Button>
+                <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-info-circle" style={{marginRight: "8px"}}></i>Assignment Detail ({this.state.data_assignment.Assignment_No})</span>
               </CardHeader>
               <CardBody>
                 <Form>
@@ -512,41 +511,44 @@ class AssignmentDetail extends Component {
                     </Col>
                   </Row>
                   <h5 style={{marginTop: "16px"}}>SSOW {this.state.data_assignment.SOW_Type}</h5>
-                  {this.loopSSOW()}
-                  <h5 style={{marginTop: "16px"}}>ASSIGN BAST</h5>
                   <Row>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>BAST NO</Label>
-                        <Input type="text" name="bast_no" onChange={this.handleBastAssign} value={!this.state.bast_assign_form.has("bast_no") ? null : this.state.bast_assign_form.get("bast_no")} />
-                      </FormGroup>
-                    </Col>
-                    <Col md="2">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Payment Ratio</Label>
-                        <Input type="select" name="ratio" onChange={this.handleBastAssign} value={!this.state.bast_assign_form.has("ratio") ? null : this.state.bast_assign_form.get("ratio")}>
-                          <option value="" disabled selected hidden>Select Ratio</option>
-                          <option value={0.3}>30%</option>
-                          <option value={0.4}>40%</option>
-                          <option value={0.5}>50%</option>
-                          <option value={0.6}>60%</option>
-                          <option value={0.7}>70%</option>
-                          <option value={1.0}>100%</option>
-                        </Input>
-                      </FormGroup>
-                    </Col>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>GR Status</Label>
-                        <Input type="select" name="item_status" onChange={this.handleBastAssign} value={!this.state.bast_assign_form.has("item_status") ? null : this.state.bast_assign_form.get("item_status")}>
-                          <option value="" disabled selected hidden></option>
-                          <option value="Submit">Submit</option>
-                          <option value="Submit and Urgent">Submit and Urgent</option>
-                        </Input>
-                      </FormGroup>
-                    </Col>
-                    <Col md="2">
-                      <Button color='success' style={{float : 'right', marginRight : '20px', marginTop : '30px'}} onClick={this.saveBastNumber}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Assign</Button>
+                    <Col md="12">
+                      <Table striped size="sm" className="assignment-list__table--center-non-border">
+                        <thead>
+                          <tr>
+                            <th>
+                              SSOW ID
+                            </th>
+                            <th>
+                              Activity Number
+                            </th>
+                            <th>
+                              Description
+                            </th>
+                            <th>
+                              Unit
+                            </th>
+                            <th>
+                              Qty
+                            </th>
+                            <th>
+                              Status
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(this.state.data_assignment.SSOW_List !== undefined) && this.state.data_assignment.SSOW_List.map(ssow =>
+                            <tr key={ssow.ssow_id+ssow.ssow_activity_number}>
+                              <td>{ssow.ssow_id}</td>
+                              <td>{ssow.ssow_activity_number}</td>
+                              <td style={{textAlign : 'left'}}>{ssow.ssow_description}</td>
+                              <td>{ssow.ssow_unit}</td>
+                              <td>{ssow.ssow_qty}</td>
+                              <td>{ssow.ssow_status[(ssow.ssow_status.length-1)].status}</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </Table>
                     </Col>
                   </Row>
                   <h5 style={{marginTop: "16px"}}>GR</h5>
@@ -558,15 +560,6 @@ class AssignmentDetail extends Component {
                             <th>
                               ASP BAST No.
                             </th>
-                            {/*<th>
-                              GR Doc No (DP)
-                            </th>
-                            <th>
-                              GR Release Date (DP)
-                            </th>
-                            <th>
-                              On
-                            </th> */}
                           </tr>
                         </thead>
                         <tbody>
@@ -575,148 +568,15 @@ class AssignmentDetail extends Component {
                               <td>
                                 {bast}
                               </td>
-                              {/* }<td>
-                                GR Doc No (DP)
-                              </td>
-                              <td>
-                                GR Release Date (DP)
-                              </td>
-                              <td>
-                                Date
-                              </td> */}
                             </tr>
                           )}
                         </tbody>
                       </Table>
                     </Col>
                   </Row>
-                  {/* }<Row>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>ASP BAST NO (DP)</Label>
-                        <Input type="text" name="partial_asp_bast_no" readOnly />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>GR Doc No (DP)</Label>
-                        <Input type="text" name="partial_gr_doc_no" readOnly />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>GR Release Date (DP)</Label>
-                        <Input type="date" name="partial_gr_release_date" readOnly />
-                      </FormGroup>
-                    </Col>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>On</Label>
-                        <Input type="date" name="partial_asp_bast_no_on" readOnly />
-                      </FormGroup>
-                    </Col>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>By</Label>
-                        <Input type="text" name="partial_asp_bast_no_by" readOnly />
-                      </FormGroup>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col md="4">
-                      <FormGroup check inline style={{paddingLeft: "16px", verticalAlign: "center"}}>
-                        <Input className="form-check-input" type="checkbox" name="partial_request_revision_check" readOnly />
-                        <Label className="form-check-label" check>Request Revision</Label>
-                      </FormGroup>
-                      <Row>
-                        <Col md="6">
-                          <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>On</Label>
-                            <Input type="date" name="partial_request_revision_on" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="6">
-                          <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>By</Label>
-                            <Input type="text" name="partial_request_revision_by" readOnly />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                    </Col>
-                  </Row>
-                  <h5 style={{marginTop: "16px"}}>GR (FINAL)</h5>
-                  <Row>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>ASP BAST NO</Label>
-                        <Input type="text" name="final_asp_bast_no" readOnly />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>GR Doc No</Label>
-                        <Input type="text" name="final_gr_doc_no" readOnly />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>GR Release Date</Label>
-                        <Input type="date" name="final_gr_release_date" readOnly />
-                      </FormGroup>
-                    </Col>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>On</Label>
-                        <Input type="date" name="final_asp_bast_no_on" readOnly />
-                      </FormGroup>
-                    </Col>
-                    <Col md="4">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>By</Label>
-                        <Input type="text" name="final_asp_bast_no_by" readOnly />
-                      </FormGroup>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col md="4">
-                      <FormGroup check inline style={{paddingLeft: "16px", verticalAlign: "center"}}>
-                        <Input className="form-check-input" type="checkbox" name="final_request_revision_check"/>
-                        <Label className="form-check-label" check>Request Revision</Label>
-                      </FormGroup>
-                      <Row>
-                        <Col md="6">
-                          <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>On</Label>
-                            <Input type="date" name="final_request_revision_on" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="6">
-                          <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>By</Label>
-                            <Input type="text" name="final_request_revision_by" readOnly />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                    </Col>
-                    <Col md="4">
-                      <FormGroup check inline style={{paddingLeft: "16px", verticalAlign: "center"}}>
-                        <Input className="form-check-input" type="checkbox" name="final_revision_done_check" readOnly />
-                        <Label className="form-check-label" check>Revision Done</Label>
-                      </FormGroup>
-                      <Row>
-                        <Col md="6">
-                          <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>On</Label>
-                            <Input type="date" name="final_revision_done_on" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="6">
-                          <FormGroup style={{paddingLeft: "16px"}}>
-                            <Label>By</Label>
-                            <Input type="text" name="final_revision_done_by" readOnly />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                    </Col>
-                  </Row> */}
                 </Form>
               </CardBody>
               <CardFooter>
-                {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT CREATED" || this.state.data_assignment.Current_Status === "ASP ASSIGNMENT NEED REVISION" || this.state.data_assignment.Current_Status === "ASP ASSIGNMENT RE-SCHEDULE") && (
-                  <Button color="primary" style={{float: "right"}} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.notifyASP}><i className="fa fa-bell" style={{marginRight: "8px"}}></i> Notify ASP</Button>
-                )}
                 {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT NOTIFIED TO ASP") && (
                 <Fragment>
                   <Button color="danger" style={{float: "right"}} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.rescheduleASG}><i className="fa fa-calendar-alt" style={{marginRight: "8px"}}></i> Reschedule</Button>
@@ -741,4 +601,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(AssignmentDetail);
+export default connect(mapStateToProps)(AssignmentDetailASP);

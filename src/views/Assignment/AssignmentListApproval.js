@@ -14,7 +14,7 @@ const password_tsel = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class AssignmentList extends Component {
+class AssignmentListApproval extends Component {
   constructor(props) {
     super(props);
 
@@ -77,7 +77,7 @@ class AssignmentList extends Component {
   getAssignmentList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPINODE('/aspAssignment/aspassign?lmt='+maxPage+'&pg='+page).then(res => {
+    this.getDataFromAPINODE('/aspAssignment/aspassign?q={"Current_Status" : "REQUEST PM APPROVAL"}&lmt='+maxPage+'&pg='+page).then(res => {
       if(res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
@@ -88,7 +88,7 @@ class AssignmentList extends Component {
 
   componentDidMount() {
     this.getAssignmentList();
-    document.title = 'Assignment List | BAM';
+    document.title = 'Assignment List NA | BAM';
   }
 
   handlePageChange(pageNumber) {
@@ -137,11 +137,8 @@ class AssignmentList extends Component {
             <Card>
               <CardHeader>
                 <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Assignment List
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Assignment List Need Approval
                 </span>
-                <Link to={'/assignment-creation'}><Button color="success" style={{float : 'right'}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create Assignment</Button></Link>
-                <Link to={'/bulk-assignment-creation'}><Button color="success" style={{float : 'right', marginRight: "8px"}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create Assignment Bulk</Button></Link>
-                <Button style={downloadAssignment} outline color="success" onClick={this.downloadASGList} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment List</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -238,7 +235,7 @@ class AssignmentList extends Component {
                     {this.state.assignment_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
-                          <Link to={'/assignment-detail/'+list._id}>
+                          <Link to={'/assignment-detail-asp/'+list._id}>
                             <Button style={{width: "90px"}} outline color="info" size="sm">Detail</Button>
                           </Link>
                         </td>
@@ -278,4 +275,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(AssignmentList);
+export default connect(mapStateToProps)(AssignmentListApproval);

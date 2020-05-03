@@ -77,6 +77,16 @@ export default {
           icon: 'icon-list',
         },
         {
+          name: 'Assignment NA List',
+          url: '/assignment-list-approval',
+          icon: 'icon-list',
+        },
+        {
+          name: 'Assignment List (ASP)',
+          url: '/assignment-list-asp',
+          icon: 'icon-list',
+        },
+        {
           name: 'Assignment Bulk Notify',
           url: '/bulk-assignment-notify',
           icon: 'icon-list',
