@@ -279,9 +279,11 @@ class WHManagement extends React.Component {
     this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
       console.log("all data ", res.data);
       if (res.data !== undefined) {
-        this.setState({ all_data: res.data.data });
+        this.setState({ all_data: res.data.data, prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults, });
       } else {
-        this.setState({ all_data: [] });
+        this.setState({ all_data: [], total_dataParent: 0,
+          prevPage: this.state.activePage, });
       }
     });
   }
@@ -503,6 +505,7 @@ class WHManagement extends React.Component {
     this.toggleLoading();
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
+    console.log("xlsx data", JSON.stringify(BulkXLSX));
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     const res = await this.postDatatoAPINODE(
       "/whManagement/createWarehouse",
@@ -959,7 +962,7 @@ class WHManagement extends React.Component {
                     <Pagination
                       activePage={this.state.activePage}
                       itemsCountPerPage={this.state.perPage}
-                      totalItemsCount={this.state.total_data_PO}
+                      totalItemsCount={this.state.total_dataParent}
                       pageRangeDisplayed={5}
                       onChange={this.handlePageChange}
                       itemClass="page-item"
