@@ -20,6 +20,10 @@ const passwordXL = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
+const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
+  <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
+);
+
 class AssignmentCreation extends Component {
   constructor(props) {
     super(props);
@@ -41,7 +45,8 @@ class AssignmentCreation extends Component {
       project_name : null,
       asp_list : [],
       create_assignment_form : new Array(69).fill(null),
-      creation_ssow_form : new Array(7).fill({}),
+      // creation_ssow_form : new Array(1).fill({}),
+      creation_ssow_form : [],
       list_tower : [],
       list_project : [],
       list_tower_selection : [],
@@ -52,15 +57,16 @@ class AssignmentCreation extends Component {
       preview_data_assignment : null,
       assignment_ssow_upload : null,
       can_edit_ssow : false,
+      identifier_by : "cd_id",
     }
 
     this.handleFilterList = this.handleFilterList.bind(this);
     this.loadOptionsActivity = this.loadOptionsActivity.bind(this);
     this.loadOptionsSSOWID = this.loadOptionsSSOWID.bind(this);
+    this.loadOptionsTowerID = this.loadOptionsTowerID.bind(this);
     this.loadOptionsActivityNumber = this.loadOptionsActivityNumber.bind(this);
     this.handleChangeActivity = this.handleChangeActivity.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
-    this.handleChangeFormAsyncSelect = this.handleChangeFormAsyncSelect.bind(this);
     this.postAssignment = this.postAssignment.bind(this);
     this.handleChangeProjectXL = this.handleChangeProjectXL.bind(this);
     this.handleChangeTowerXL = this.handleChangeTowerXL.bind(this);
@@ -68,6 +74,11 @@ class AssignmentCreation extends Component {
     this.saveDataASG = this.saveDataASG.bind(this);
     this.handleChangeSSOWListReactSelect = this.handleChangeSSOWListReactSelect.bind(this);
     this.handleChangeSSOWList = this.handleChangeSSOWList.bind(this);
+    this.handleChangeCanEditSSOW = this.handleChangeCanEditSSOW.bind(this);
+    this.deleteSSOW = this.deleteSSOW.bind(this);
+    this.addSSOW = this.addSSOW.bind(this);
+    this.handleChangeIdentifierBy = this.handleChangeIdentifierBy.bind(this);
+    this.loadOptionsCDID = this.loadOptionsCDID.bind(this);
 
   }
 
@@ -91,7 +102,8 @@ class AssignmentCreation extends Component {
     }
   }
 
-  async getDatafromAPIXL(url){
+  async getDataFromAPIEXEL(url){
+    console.log("url", url);
     try {
       let respond = await axios.get(API_URL_XL +url, {
         headers : {'Content-Type':'application/json'},
@@ -164,104 +176,9 @@ class AssignmentCreation extends Component {
     dataForm[11] = dataActivity.CD_Info_Network_Number;
     dataForm[12] = dataActivity.CD_Info_WBS;
     dataForm[13] = dataActivity.CD_Info_Activity_Code;
-    this.setState({create_assignment_form : dataForm}, () => {
-      console.log("Assignment Form", this.state.create_assignment_form);
-    });
+    this.setState({create_assignment_form : dataForm});
     return newValue;
   };
-
-  handleChangeFormAsyncSelect = async (newValue, e) => {
-    let dataForm = this.state.create_assignment_form;
-    dataForm[parseInt(e.name)] = newValue.value;
-    this.setState({create_assignment_form : dataForm}, () => {
-      console.log("Assignment Form", this.state.create_assignment_form);
-    });
-    if(e.name === "17") {
-      const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[19] = getDescription.data._items[0].description;
-      this.setState({create_assignment_form : dataForm}, () => {
-        console.log("Assignment Form", this.state.create_assignment_form);
-      });
-    } else if(e.name === "23") {
-      const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[25] = getDescription.data._items[0].description;
-      this.setState({create_assignment_form : dataForm}, () => {
-        console.log("Assignment Form", this.state.create_assignment_form);
-      });
-    } else if(e.name === "29") {
-      const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[31] = getDescription.data._items[0].description;
-      this.setState({create_assignment_form : dataForm}, () => {
-        console.log("Assignment Form", this.state.create_assignment_form);
-      });
-    } else if(e.name === "35") {
-      const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[37] = getDescription.data._items[0].description;
-      this.setState({create_assignment_form : dataForm}, () => {
-        console.log("Assignment Form", this.state.create_assignment_form);
-      });
-    } else if(e.name === "41") {
-      const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[43] = getDescription.data._items[0].description;
-      this.setState({create_assignment_form : dataForm}, () => {
-        console.log("Assignment Form", this.state.create_assignment_form);
-      });
-    } else if(e.name === "47") {
-      const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[49] = getDescription.data._items[0].description;
-      this.setState({create_assignment_form : dataForm}, () => {
-        console.log("Assignment Form", this.state.create_assignment_form);
-      });
-    } else if(e.name === "53") {
-      const getDescription = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[55] = getDescription.data._items[0].description;
-      this.setState({create_assignment_form : dataForm}, () => {
-        console.log("Assignment Form", this.state.create_assignment_form);
-      });
-    } else if(e.name === "18") {
-      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[20] = getPriceUnit.data._items[0].ssow_type;
-      dataForm[59] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    } else if(e.name === "24") {
-      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[26] = getPriceUnit.data._items[0].ssow_type !== null ? getPriceUnit.data._items[0].ssow_type : "act";
-      dataForm[60] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    } else if(e.name === "30") {
-      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[32] = getPriceUnit.data._items[0].ssow_type;
-      dataForm[61] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    } else if(e.name === "36") {
-      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[38] = getPriceUnit.data._items[0].ssow_type;
-      dataForm[62] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    } else if(e.name === "42") {
-      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[44] = getPriceUnit.data._items[0].ssow_type;
-      dataForm[63] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    } else if(e.name === "48") {
-      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[50] = getPriceUnit.data._items[0].ssow_type;
-      dataForm[64] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    } else if(e.name === "54") {
-      const getPriceUnit = await this.getDataFromAPI('/ssow_activity_number_op?where={"activity_number":"'+newValue.value+'"}');
-      let dataForm = this.state.create_assignment_form;
-      dataForm[56] = getPriceUnit.data._items[0].ssow_type;
-      dataForm[65] = getPriceUnit.data._items[0].price !== null ? getPriceUnit.data._items[0].price : "0.0";
-    }
-  }
 
   async loadOptionsActivity(inputValue) {
     if(!inputValue) {
@@ -279,37 +196,8 @@ class AssignmentCreation extends Component {
     }
   }
 
-  async loadOptionsSSOWID(inputValue) {
-    if(!inputValue) {
-      return [];
-    } else {
-      let ssow_id_list = [];
-      // const getSSOWID = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
-      const getSSOWID = await this.getDataFromAPI('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
-      if(getSSOWID !== undefined && getSSOWID.data !== undefined) {
-        getSSOWID.data._items.map(ssow =>
-          ssow_id_list.push({'label' : ssow.ssow_id !== undefined ? ssow.ssow_id : null, 'value' : ssow.ssow_id}))
-      }
-      return ssow_id_list;
-    }
-  }
-
-  async loadOptionsActivityNumber(inputValue) {
-    if(!inputValue) {
-      return [];
-    } else {
-      let act_number_list = [];
-      const getActNumber = await this.getDataFromAPI('/ssow_activity_number_sorted_nonpage?where={"activity_number":{"$regex":"'+inputValue+'", "$options":"i"}}');
-      if(getActNumber !== undefined && getActNumber.data !== undefined) {
-        getActNumber.data._items.map(act_number =>
-          act_number_list.push({'label' : act_number.activity_number !== undefined ? act_number.activity_number : null, 'value' : act_number.activity_number}))
-      }
-      return act_number_list;
-    }
-  }
-
   loadOptionsASP() {
-    this.getDatafromAPIXL('/vendor_data_non_page').then(res => {
+    this.getDataFromAPIEXEL('/vendor_data_non_page').then(res => {
       console.log("ASP List", res);
       if(res.data !== undefined) {
         const items = res.data._items;
@@ -320,13 +208,13 @@ class AssignmentCreation extends Component {
 
   componentDidMount() {
     document.title = 'Assignment Creation | BAM';
-    this.getDataTower();
+    // this.getDataTower();
     this.getDataProject();
     this.loadOptionsASP();
   }
 
   getDataTower(){
-    this.getDatafromAPIXL('/tower_site_sorted_non_page?projection={"tower_id" : 1}').then( resTower => {
+    this.getDataFromAPIEXEL('/tower_site_sorted_non_page?projection={"tower_id" : 1}').then( resTower => {
       if(resTower.data !== undefined){
         this.setState({ list_tower : resTower.data._items }, () => {
           this.filterDataTower("");
@@ -336,7 +224,7 @@ class AssignmentCreation extends Component {
   }
 
   getDataProject(){
-    this.getDatafromAPIXL('/project_sorted_non_page').then( resProject => {
+    this.getDataFromAPIEXEL('/project_sorted_non_page').then( resProject => {
       if(resProject.data !== undefined){
         this.setState({ list_project : resProject.data._items }, () => {
           this.filterDataProject("");
@@ -347,20 +235,37 @@ class AssignmentCreation extends Component {
 
   async previewData(){
     const dataXLS = [
-      ["id","project","sow_type","vendor_code","vendor_name","identifier","ssow_rbs_id_1","ssow_rbs_activity_number_1","ssow_rbs_unit_1","ssow_rbs_quantity_1","ssow_rbs_id_2","ssow_rbs_activity_number_2","ssow_rbs_unit_2","ssow_rbs_quantity_2","ssow_rbs_id_3","ssow_rbs_activity_number_3","ssow_rbs_unit_3","ssow_rbs_quantity_3","ssow_rbs_id_4","ssow_rbs_activity_number_4","ssow_rbs_unit_4","ssow_rbs_quantity_4","ssow_rbs_id_5","ssow_rbs_activity_number_5","ssow_rbs_unit_5","ssow_rbs_quantity_5","ssow_rbs_id_6","ssow_rbs_activity_number_6","ssow_rbs_unit_6","ssow_rbs_quantity_6","ssow_rbs_id_7","ssow_rbs_activity_number_7","ssow_rbs_unit_7","ssow_rbs_quantity_7"],
-      ["new", this.state.project_name_selected, this.state.create_assignment_form[16], this.state.create_assignment_form[67], this.state.create_assignment_form[66], this.state.tower_selected_id]
+      ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier", "ssow_rbs_id_1","ssow_rbs_activity_number_1","ssow_rbs_unit_1","ssow_rbs_quantity_1","ssow_rbs_id_2","ssow_rbs_activity_number_2","ssow_rbs_unit_2","ssow_rbs_quantity_2","ssow_rbs_id_3","ssow_rbs_activity_number_3","ssow_rbs_unit_3","ssow_rbs_quantity_3","ssow_rbs_id_4","ssow_rbs_activity_number_4","ssow_rbs_unit_4","ssow_rbs_quantity_4","ssow_rbs_id_5","ssow_rbs_activity_number_5","ssow_rbs_unit_5","ssow_rbs_quantity_5","ssow_rbs_id_6","ssow_rbs_activity_number_6","ssow_rbs_unit_6","ssow_rbs_quantity_6","ssow_rbs_id_7","ssow_rbs_activity_number_7","ssow_rbs_unit_7","ssow_rbs_quantity_7"],
+      ["new", this.state.project_name_selected, this.state.create_assignment_form[16], this.state.identifier_by, this.state.create_assignment_form[67], this.state.create_assignment_form[66],  this.state.create_assignment_form[15], this.state.tower_selected_id]
     ];
-    const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', {"data" : dataXLS});
+    const dataXLSASG = {
+      "includeSsow" : this.state.can_edit_ssow === true ? true : false,
+      "data" : dataXLS
+    }
+    const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', dataXLSASG);
     if(respondCheckingASG.data !== undefined && respondCheckingASG.status >= 200 && respondCheckingASG.status <= 300 ) {
       let dataChecking = respondCheckingASG.data.data[0];
       if(dataChecking.operation === "INVALID"){
         this.setState({ action_status : 'failed', action_message : dataChecking.activity_status });
       }else{
-        this.setState({assignment_ssow_upload : dataChecking});
+        this.setState({assignment_ssow_upload : dataChecking, creation_ssow_form : []}, () => {
+          if(dataChecking.SSOW_List !== undefined && dataChecking.SSOW_List.length !== 0){
+            this.setState({creation_ssow_form : dataChecking.SSOW_List})
+          }else{
+            this.setState({creation_ssow_form : [{}]})
+          }
+        });
       }
-
     } else{
-      this.setState({ action_status : 'failed' });
+      if(respondCheckingASG.response !== undefined && respondCheckingASG.response.data !== undefined && respondCheckingASG.response.data.error !== undefined){
+        if(respondCheckingASG.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: respondCheckingASG.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: respondCheckingASG.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
     }
   }
 
@@ -368,39 +273,49 @@ class AssignmentCreation extends Component {
     this.setState(prevState => ({ can_edit_ssow : !prevState.can_edit_ssow }));
   }
 
-  handleChangeSSOWList(e){
-
-  }
-
-  handleChangeSSOWListReactSelect = async (newValue, e) =>{
-    let dataSSOW = this.state.assignment_ssow_upload;
-    let idxField = e.name.split(" /// ")
-    let idx = idxField[0];
-    let field = idxField[1];
-    dataSSOW.SSOW_List[parseInt(idx)][field] = newValue.value;
-    console.log("index plus field", parseInt(idx) , field);
-  }
-
   async saveDataASG(){
-    const dataXLS = [
-      ["id","project","sow_type","vendor_code","vendor_name","identifier","ssow_rbs_id_1","ssow_rbs_activity_number_1","ssow_rbs_unit_1","ssow_rbs_quantity_1","ssow_rbs_id_2","ssow_rbs_activity_number_2","ssow_rbs_unit_2","ssow_rbs_quantity_2","ssow_rbs_id_3","ssow_rbs_activity_number_3","ssow_rbs_unit_3","ssow_rbs_quantity_3","ssow_rbs_id_4","ssow_rbs_activity_number_4","ssow_rbs_unit_4","ssow_rbs_quantity_4","ssow_rbs_id_5","ssow_rbs_activity_number_5","ssow_rbs_unit_5","ssow_rbs_quantity_5","ssow_rbs_id_6","ssow_rbs_activity_number_6","ssow_rbs_unit_6","ssow_rbs_quantity_6","ssow_rbs_id_7","ssow_rbs_activity_number_7","ssow_rbs_unit_7","ssow_rbs_quantity_7"],
-      ["new", this.state.project_name_selected, this.state.create_assignment_form[16], this.state.create_assignment_form[67], this.state.create_assignment_form[66], this.state.tower_selected_id]
+    let dataXLS = [
+      ["id","project","sow_type", "created_based", "vendor_code","vendor_name", "payment_terms","identifier"],
+      ["new", this.state.project_name_selected, this.state.create_assignment_form[16], this.state.identifier_by, this.state.create_assignment_form[67], this.state.create_assignment_form[66], this.state.create_assignment_form[15], this.state.tower_selected_id]
     ];
-    const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', {"data" : dataXLS});
+    const listSSOW = this.state.creation_ssow_form;
+    listSSOW.map((e,idx) => dataXLS[0].push("ssow_"+(e.sow_type.toLowerCase())+"_id_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_activity_number_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_unit_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_quantity_"+(idx+1).toString() ));
+    listSSOW.map(e => dataXLS[1].push(e.ssow_id, e.ssow_activity_number, e.ssow_unit, e.ssow_qty));
+    const dataXLSASG = {
+      "includeSsow" : this.state.can_edit_ssow === true ? true : false,
+      "data" : dataXLS
+    }
+    const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', dataXLSASG);
     if(respondCheckingASG.data !== undefined && respondCheckingASG.status >= 200 && respondCheckingASG.status <= 300 ) {
-      let dataChecking = respondCheckingASG.data.data[0];
-      if(dataChecking.operation === "INVALID"){
-        this.setState({ action_status : 'failed', action_message : dataChecking.activity_status });
+      let dataChecking = respondCheckingASG.data.data;
+      if(dataChecking[0].operation === "INVALID"){
+        this.setState({ action_status : 'failed', action_message : dataChecking[0].activity_status });
       }else{
-        const respondSaveASG = await this.postDatatoAPINODE('/aspAssignment/createAspAssign', {"data" : dataChecking});
+        const respondSaveASG = await this.postDatatoAPINODE('/aspAssignment/createAspAssign', {"includeSsow" : this.state.can_edit_ssow === true ? true : false, "data" : dataChecking});
         if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
           this.setState({ action_status : 'success' });
         } else{
-          this.setState({ action_status : 'failed' });
+          if(respondSaveASG.response !== undefined && respondSaveASG.response.data !== undefined && respondSaveASG.response.data.error !== undefined){
+            if(respondSaveASG.response.data.error.message !== undefined){
+              this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveASG.response.data.error.message) });
+            }else{
+              this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error });
+            }
+          }else{
+            this.setState({ action_status: 'failed' });
+          }
         }
       }
     } else{
-      this.setState({ action_status : 'failed' });
+      if(respondCheckingASG.response !== undefined && respondCheckingASG.response.data !== undefined && respondCheckingASG.response.data.error !== undefined){
+        if(respondCheckingASG.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: respondCheckingASG.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: respondCheckingASG.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
     }
   }
 
@@ -476,107 +391,6 @@ class AssignmentCreation extends Component {
 
   }
 
-  // async postAssignment(){
-  //   const dataForm = this.state.create_assignment_form;
-  //   const newDate = new Date();
-  //   const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-  //
-  //   let i = 17;
-  //   let j = 10;
-  //   let k = 59;
-  //   let all_ssow = [];
-  //   for(i; i <= 53; i = i+6) {
-  //     let ssow_list = {
-  //       "ssow_id" : dataForm[i],
-  //       "sow_type" : dataForm[j],
-  //       "ssow_description" : dataForm[i+2],
-  //       "ssow_activity_number" : dataForm[i+1],
-  //       "ssow_unit" : dataForm[i+3],
-  //       "ssow_qty" : dataForm[i+4],
-  //       "ssow_price" : dataForm[k],
-  //       "ssow_total_price" : dataForm[k]*dataForm[i+4],
-  //       "ssow_status" : [
-  //         {
-  //           "status" : dataForm[i+5],
-  //           "status_update_date" : dateNow,
-  //           "status_updater" : this.state.userEmail
-  //         }
-  //       ]
-  //     }
-  //     if(ssow_list.ssow_unit === null) {
-  //       ssow_list["ssow_unit"] = "act";
-  //     } else {
-  //       if(ssow_list.ssow_unit.length === 0) {
-  //         ssow_list["ssow_unit"] = "act";
-  //       }
-  //     }
-  //     if(dataForm[i] !== null) {
-  //       all_ssow.push(ssow_list);
-  //     }
-  //     k++;
-  //   }
-  //
-  //   const assignment_data = {
-  //     "Assignment_No" : "ASG"+this.getAssignmentID(),
-  //     "Account_Name" : "TSEL",
-  //     "CD_ID" : dataForm[0],
-  //     "id_cd_doc" : this.state.activity_selected,
-  //     "Project" : dataForm[1],
-  //     "Plant" : "",
-  //     "NW" : dataForm[11],
-  //     "NW_Activity" : dataForm[13],
-  //     "Requisitioner" : "",
-  //     "SOW_Type" : dataForm[10],
-  //     "Site_ID" : dataForm[2],
-  //     "Site_Name" : dataForm[3],
-  //     "Site_Longitude" : dataForm[5],
-  //     "Site_Latitude" : dataForm[4],
-  //     "Site_FE_ID" : dataForm[6],
-  //     "Site_FE_Name" : dataForm[7],
-  //     "Site_FE_Longitude" : dataForm[9],
-  //     "Site_FE_Latitude" : dataForm[8],
-  //     "Vendor_Code" : dataForm[66],
-  //     "Vendor_Code_Number" : dataForm[67],
-  //     "Vendor_Name" : dataForm[14],
-  //     "Vendor_Email" : dataForm[68],
-  //     "Payment_Terms" : dataForm[15],
-  //     "SH_ID" : dataForm[0],
-  //     "Assignment_Creation_Date" : dateNow,
-  //     "Value_Assignment" : (dataForm[59]*dataForm[21])+(dataForm[60]*dataForm[27])+(dataForm[61]*dataForm[33])+(dataForm[62]*dataForm[39])+(dataForm[63]*dataForm[45])+(dataForm[64]*dataForm[51])+(dataForm[65]*dataForm[57]),
-  //     "Requestor" : this.state.userEmail,
-  //     "Payment_Term_Ratio" : null,
-  //     "SSOW_List" : all_ssow,
-  //     "Current_Status" : "ASP ASSIGNMENT CREATED",
-  //     "ASP_Assignment_Status" : [
-  //       {
-  //         "status_name" : "ASP_ASSIGNMENT",
-  //         "status_value" : "CREATED",
-  //         "status_date" : dateNow,
-  //         "status_updater" : this.state.userEmail,
-  //         "status_updater_id" : this.state.userId
-  //       }
-  //     ],
-  //     "deleted" : 0,
-  //     "created_by" : this.state.userId,
-  //     "updated_by" : this.state.userId,
-  //     "created_on" : dateNow,
-  //     "updated_on" : dateNow
-  //   }
-  //
-  //   console.log('to be posted', JSON.stringify(assignment_data));
-  //   const respondSaveAssignment = await this.postDatatoAPI('/asp_assignment_op', assignment_data);
-  //   if(respondSaveAssignment.data !== undefined && respondSaveAssignment.status >= 200 && respondSaveAssignment.status <= 300 ) {
-  //     console.log("Assignment Successfully Created");
-  //     alert('New Assignment has been created!');
-  //     this.setState({ action_status : 'success', action_message : 'New Assignment has been created!' }, () => {
-  //       setTimeout(function(){ this.setState({ redirect_sign : respondSaveAssignment.data._id}); }.bind(this), 1000);
-  //     });
-  //   } else {
-  //     alert('New Assignment cannot be created, please try again!');
-  //     this.setState({ action_status : 'failed', action_message : 'New Assignment cannot be created, please try again!' });
-  //   }
-  // }
-
   async handleChangeForm(e) {
     // const name = e.target.value;
     const index = e.target.name;
@@ -599,12 +413,125 @@ class AssignmentCreation extends Component {
     });
   }
 
+  async loadOptionsTowerID(inputValue) {
+    if(!inputValue || inputValue.length < 3 ) {
+      return [];
+    } else {
+      let tower_id_list = [];
+      // const getSSOWID = await this.getDataFromAPIEXEL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
+      const getTowerID = await this.getDataFromAPIEXEL('/tower_site_sorted_non_page?where={"tower_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      if(getTowerID !== undefined && getTowerID.data !== undefined) {
+        getTowerID.data._items.map(tower =>
+          tower_id_list.push({'label' : tower.tower_id, 'value' : tower.tower_id}))
+      }
+      return tower_id_list;
+    }
+  }
+
+  async loadOptionsCDID(inputValue) {
+    if(!inputValue) {
+      return [];
+    } else {
+      let wp_id_list = [];
+      // const getSSOWID = await this.getDataFromAPIEXEL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
+      const getWPID = await this.getDataFromAPIEXEL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      if(getWPID !== undefined && getWPID.data !== undefined) {
+        getWPID.data._items.map(wp =>
+          wp_id_list.push({'value' : wp.WP_ID , 'label' : wp.WP_ID +" ( "+wp.WP_Name+" )"}))
+      }
+      return wp_id_list;
+    }
+  }
+
+  async loadOptionsSSOWID(inputValue) {
+    if(!inputValue || inputValue.length < 2 ) {
+      return [];
+    } else {
+      let ssow_id_list = [];
+      // const getSSOWID = await this.getDataFromAPIEXEL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
+      const getSSOWID = await this.getDataFromAPIEXEL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      if(getSSOWID !== undefined && getSSOWID.data !== undefined) {
+        getSSOWID.data._items.map(ssow =>
+          ssow_id_list.push({'label' :  "("+ssow.sow_type+") "+ssow.ssow_id, 'value' : ssow.ssow_id, 'sow_type' : ssow.sow_type, 'ssow_unit' : ssow.ssow_type, 'description' : ssow.description}))
+      }
+      return ssow_id_list;
+    }
+  }
+
+  async loadOptionsActivityNumber(inputValue) {
+    if(!inputValue || inputValue.length < 2) {
+      return [];
+    } else {
+      let act_number_list = [];
+      const getActNumber = await this.getDataFromAPIEXEL('/ssow_activity_number_sorted_nonpage?where={"activity_number":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      if(getActNumber !== undefined && getActNumber.data !== undefined) {
+        getActNumber.data._items.map(act_number =>
+          act_number_list.push({'label' : act_number.activity_number !== undefined ? act_number.activity_number : null, 'value' : act_number.activity_number}))
+      }
+      return act_number_list;
+    }
+  }
+
+  handleChangeCanEditSSOW(){
+    this.setState(prevState => ({
+      can_edit_ssow: !prevState.can_edit_ssow
+    }));
+  }
+
+  handleChangeSSOWList(e){
+    let dataSSOW = this.state.creation_ssow_form;
+    let idxField = e.target.name.split(" /// ");
+    let value = e.target.value;
+    let idx = idxField[0];
+    let field = idxField[1];
+    dataSSOW[parseInt(idx)][field] = value;
+    this.setState({creation_ssow_form : dataSSOW})
+  }
+
+  handleChangeSSOWListReactSelect = async (newValue, e) =>{
+    let dataSSOW = this.state.creation_ssow_form;
+    let idxField = e.name.split(" /// ")
+    let idx = idxField[0];
+    let field = idxField[1];
+    if(field === "ssow_id"){
+      dataSSOW[parseInt(idx)]['sow_type'] = newValue.sow_type;
+      dataSSOW[parseInt(idx)]['ssow_description'] = newValue.description;
+      dataSSOW[parseInt(idx)]['ssow_unit'] = newValue.ssow_unit;
+    }
+    dataSSOW[parseInt(idx)][field] = newValue.value;
+    this.setState({creation_ssow_form : dataSSOW});
+  }
+
+  deleteSSOW(e){
+    let index = e.currentTarget.value;
+    let dataSSOW = this.state.creation_ssow_form;
+    const dataSSOWDel = [];
+    if(index !== undefined){
+      dataSSOW.splice(parseInt(index), 1);
+      this.setState({creation_ssow_form : []}, () => {
+        this.setState({creation_ssow_form : dataSSOW});
+      });
+    }
+  }
+
+  addSSOW(){
+    let dataSSOW = this.state.creation_ssow_form;
+    dataSSOW.push({});
+    this.setState({creation_ssow_form : dataSSOW});
+  }
+
+  handleChangeIdentifierBy(e){
+    const value = e.target.value;
+    this.setState({identifier_by : value});
+  }
+
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
     if(this.state.redirect_sign !== false) {
       return (<Redirect to={'/assignment-list/'} />);
     }
+    console.log("creation_ssow_form", this.state.creation_ssow_form);
     return (
       <div className="animated fadeIn">
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -620,12 +547,32 @@ class AssignmentCreation extends Component {
                   <Row>
                     <Col md="6">
                       <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Tower ID</Label>
-                        <Select
+                        <Label>
+                          <select type="select" onChange={this.handleChangeIdentifierBy} value={this.state.identifier_by}>
+                            <option value="cd_id">CD ID</option>
+                            <option value="tower_id">Tower ID</option>
+                          </select>
+                        </Label>
+                        {this.state.identifier_by === "tower_id" ? (
+                          <AsyncSelect
+                            cacheOptions
+                            loadOptions={this.loadOptionsTowerID}
+                            defaultOptions
+                            onChange={this.handleChangeTowerXL}
+                          />
+                        ) : (
+                          <AsyncSelect
+                            cacheOptions
+                            loadOptions={this.loadOptionsCDID}
+                            defaultOptions
+                            onChange={this.handleChangeTowerXL}
+                          />
+                        )}
+                        {/* }<Select
                           cacheOptions
                           options={this.state.list_tower_selection}
                           onChange={this.handleChangeTowerXL}
-                        />
+                        /> */}
                       </FormGroup>
                     </Col>
                     {/*<Col md="6">
@@ -646,7 +593,6 @@ class AssignmentCreation extends Component {
                         <Input type="select" name="16" onChange={this.handleChangeForm}>
                           <option value="" disabled selected hidden>Select SOW</option>
                           <option value="RBS">RBS</option>
-                          <option value="TRM">TRM</option>
                         </Input>
                       </FormGroup>
                     </Col>
@@ -741,119 +687,127 @@ class AssignmentCreation extends Component {
                           )}
                         </Input>
                       </FormGroup>
-                      {/* }<FormGroup style={{paddingLeft: "16px", display: "none"}}>
-                        <Label>MR ID</Label>
-                        <Input type="select" name="mr_id">
-                          <option value="" disabled selected hidden>Select MR ID</option>
-                        </Input>
-                      </FormGroup>
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>TOP</Label>
-                        <Input type="select" name="15" onChange={this.handleChangeForm}>
-                          <option value="" disabled selected hidden>Select TOP</option>
-                          <option value="100%">100%</option>
-                          <option value="30%-70%">30%-70%</option>
-                          <option value="40%-60%">40%-60%</option>
-                          <option value="50%-50%">50%-50%</option>
-                          <option value="60%-40%">60%-40%</option>
-                          <option value="70%-30%">70%-30%</option>
-                          <option value="80%-20%">80%-20%</option>
+                        <Input type="select" name="15" onChange={this.handleChangeForm} value={this.state.create_assignment_form[15] === null ? "" : this.state.create_assignment_form[15]}>
+                          <option value="" disabled hidden>Select TOP</option>
+                          <option value="2080">20% - 80%</option>
+                          <option value="3070">30% - 70%</option>
+                          <option value="4060">40% - 60%</option>
+                          <option value="5050">50% - 50%</option>
+                          <option value="100">100% - 0%</option>
+                          <option value="8020">80% - 20%</option>
+                          <option value="7030">70% - 30%</option>
+                          <option value="6040">60% - 40%</option>
                         </Input>
                       </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>SSOW Type</Label>
-                        <Input type="text" name="16" value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.CD_Info_SOW_Type : ""} readOnly />
-                      </FormGroup>*/}
                     </Col>
                   </Row>
-                  <Row style={{display: "none"}}>
-                    <Col md="4">
+                  {(this.state.assignment_ssow_upload !== null && this.state.assignment_ssow_upload !== undefined && this.state.identifier_by === "Tower ID") && (
+                  <Row>
+                    <Col md="6">
                       <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>PO LINE ITEM</Label>
-                        <Input type="text" name="po_line_item" readOnly />
+                        <Label>CD ID</Label>
+                        <Input type="text" name="po_line_item" value={this.state.assignment_ssow_upload.cust_del !== undefined ? this.state.assignment_ssow_upload.cust_del.map(e => e.cd_id+ "; ") : ""} readOnly />
                       </FormGroup>
                     </Col>
                   </Row>
-                  {(this.state.assignment_ssow_upload !== null && this.state.assignment_ssow_upload !== undefined) && (
-                    <Fragment>
-                    <Row>
-                      <Col md="6">
-                        <FormGroup style={{paddingLeft: "16px"}}>
-                          <Label>CD ID</Label>
-                          <Input type="text" name="po_line_item" value={this.state.assignment_ssow_upload.cust_del !== undefined ? this.state.assignment_ssow_upload.cust_del.map(e => e.cd_id+ "; ") : ""} readOnly />
+                  )}
+                  <span>Please click check button for checking the form before save it and for checking availibilty of default SSOW</span>
+                  <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
+                    <Col md="6">
+                      <div style={{marginBottom : '10px'}}>
+                        <Button color="primary" size="sm" onClick={this.previewData}><i className="fa fa-eye" style={{marginRight: "8px"}} size="sm"></i> Check</Button>
+                      </div>
+                    </Col>
+                  </Row>
+                  <h5 style={{marginTop: "16px"}}>SSOW List</h5>
+                  <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
+                    <div style={{marginBottom : '10px'}}>
+                      <Checkbox name="editable" checked={this.state.can_edit_ssow} onChange={this.handleChangeCanEditSSOW} />
+                      <span>Editable</span>
+                    </div>
+                  </Row>
+                  {this.state.creation_ssow_form.map((ssow, idx) =>
+                    <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
+                      <Col md="2" style={{margin:"0", padding:"4px"}}>
+                        <FormGroup>
+                          <Label>SSOW ID</Label>
+                          <AsyncSelect
+                            cacheOptions
+                            loadOptions={this.loadOptionsSSOWID}
+                            defaultOptions
+                            defaultInputValue={ssow.ssow_id}
+                            isDisabled={!this.state.can_edit_ssow}
+                            onChange={this.handleChangeSSOWListReactSelect}
+                            name={idx + " /// ssow_id"}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md="2" style={{margin:"0", padding:"4px"}}>
+                        <FormGroup>
+                          <Label>Activity Number</Label>
+                          <AsyncSelect
+                            cacheOptions
+                            loadOptions={this.loadOptionsActivityNumber}
+                            defaultOptions
+                            defaultInputValue={ssow.ssow_activity_number}
+                            isDisabled={!this.state.can_edit_ssow}
+                            onChange={this.handleChangeSSOWListReactSelect}
+                            name={idx + " /// ssow_activity_number"}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md="5" style={{margin:"0", padding:"4px"}}>
+                        <FormGroup>
+                          <Label>Description</Label>
+                          <Input type="textarea" name={idx + " /// ssow_description"} rows="1" value={ssow.ssow_description} readOnly />
+                        </FormGroup>
+                      </Col>
+                      <Col md="1" style={{margin:"0", padding:"4px"}}>
+                        <FormGroup>
+                          <Label>SSOW Type</Label>
+                          <Input type="text" name={idx + " /// sow_type"} value={ssow.sow_type} onChange={this.handleChangeSSOWList} readOnly/>
+                        </FormGroup>
+                      </Col>
+                      <Col md="1" style={{margin:"0", padding:"4px"}}>
+                        <FormGroup>
+                          <Label>Unit</Label>
+                          <Input type="text" name={idx + " /// ssow_unit"} value={ssow.ssow_unit} onChange={this.handleChangeSSOWList} disabled={!this.state.can_edit_ssow} />
+                        </FormGroup>
+                      </Col>
+                      <Col md="1" style={{margin:"0", padding:"4px"}}>
+                        <FormGroup>
+                          <Label>Quantity</Label>
+                          <div style={{display: "flex"}}>
+                            <Input type="number" name={idx + " /// ssow_qty"} onChange={this.handleChangeSSOWList} value={ssow.ssow_qty} disabled={!this.state.can_edit_ssow}/>
+                            {this.state.can_edit_ssow === true && (
+                            <Button value={idx} onClick={this.deleteSSOW} color="danger" size="sm" style={{marginLeft: "5px"}}>
+                              <i className="fa fa-trash"></i>
+                            </Button>
+                            )}
+                          </div>
                         </FormGroup>
                       </Col>
                     </Row>
-                    <h5 style={{marginTop: "16px"}}>SSOW List</h5>
-                    {this.state.assignment_ssow_upload.SSOW_List !== undefined ? this.state.assignment_ssow_upload.SSOW_List.map((ssow, idx) =>
-                      <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
-                        <Col md="2" style={{margin:"0", padding:"4px"}}>
-                          <FormGroup>
-                            <Label>SSOW ID</Label>
-                            <AsyncSelect
-                              cacheOptions
-                              loadOptions={debounce(this.loadOptionsSSOWID, 500)}
-                              defaultOptions
-                              defaultInputValue={ssow.ssow_id}
-                              isDisabled={!this.state.can_edit_ssow}
-                              onChange={this.handleChangeSSOWListReactSelect}
-                              name={idx + " /// ssow_id"}
-                            />
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{margin:"0", padding:"4px"}}>
-                          <FormGroup>
-                            <Label>Activity Number</Label>
-                            <AsyncSelect
-                              cacheOptions
-                              loadOptions={debounce(this.loadOptionsActivityNumber, 500)}
-                              defaultOptions
-                              defaultInputValue={ssow.ssow_activity_number}
-                              isDisabled={!this.state.can_edit_ssow}
-                              onChange={this.handleChangeSSOWListReactSelect}
-                              name={idx + " /// ssow_activity_number"}
-                            />
-                          </FormGroup>
-                        </Col>
-                        <Col md="4" style={{margin:"0", padding:"4px"}}>
-                          <FormGroup>
-                            <Label>Description</Label>
-                            <Input type="textarea" name={idx + " /// ssow_description"} rows="1" value={ssow.ssow_description} disabled={!this.state.can_edit_ssow} />
-                          </FormGroup>
-                        </Col>
-                        <Col md="1" style={{margin:"0", padding:"4px"}}>
-                          <FormGroup>
-                            <Label>Unit</Label>
-                            <Input type="text" name={idx + " /// ssow_unit"} value={ssow.ssow_unit} disabled={!this.state.can_edit_ssow} />
-                          </FormGroup>
-                        </Col>
-                        <Col md="1" style={{margin:"0", padding:"4px"}}>
-                          <FormGroup>
-                            <Label>Quantity</Label>
-                            <Input type="number" name={idx + " /// ssow_qty"} onChange={this.handleChangeForm} value={ssow.ssow_qty} disabled={!this.state.can_edit_ssow}/>
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{margin:"0", padding:"4px"}}>
-                          <FormGroup>
-                            <Label>Status</Label>
-                            <Input type="select" name={idx + " /// ssow_current_status"} onChange={this.handleChangeForm} value={ssow.ssow_current_status} disabled={!this.state.can_edit_ssow}>
-                              <option value="" disabled selected hidden>Select Status</option>
-                              <option value="SSOW CANCELLED">Cancelled</option>
-                              <option value="SSOW CLOSE">Close</option>
-                              <option value="SSOW OPEN">Open</option>
-                              <option value="SSOW PARTIAL CLOSE">Partial Close</option>
-                            </Input>
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                    ) : (<Fragment></Fragment>) }
-                    </Fragment>
+                  )}
+                  {this.state.can_edit_ssow && (
+                    <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
+                      <div style={{display : 'flex'}}>
+                        {(this.state.can_edit_ssow === true) && (
+                          <Button color="primary" size="sm" onClick={this.addSSOW}>
+                            <i className="fa fa-plus">&nbsp;</i> SSOW
+                          </Button>
+                        )}
+                      </div>
+                    </Row>
                   )}
                 </Form>
+                <span style={{color : 'red'}}>Editable SSOW Need Approval from the authorized on the Assignment has been created</span>
               </CardBody>
               <CardFooter>
                 <Button type="submit" color="success" style={{float: "right"}} onClick={this.saveDataASG}><i className="fa fa-plus" style={{marginRight: "8px"}}></i> Save</Button>
-                <Button type="submit" color="primary" style={{float: "right"}} onClick={this.previewData}><i className="fa fa-eye" style={{marginRight: "8px"}}></i> Preview</Button>              </CardFooter>
+              </CardFooter>
             </Card>
           </Col>
         </Row>

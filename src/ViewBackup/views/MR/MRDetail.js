@@ -29,6 +29,8 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
+const status_can_edit_material = ["PLANTSPEC NOT ASSIGNED", "PLANTSPEC ASSIGNED", "PLANTSPEC UPDATED", "MR REQUESTED", "MR CANCELED", "MR APPROVED", "MR REJECTED", "MR UPDATED", "ORDER PROCESSING START"]
+
 class MRDetail extends Component {
   constructor(props) {
     super(props);
@@ -262,7 +264,7 @@ class MRDetail extends Component {
       if(resMR.data !== undefined){
         this.setState({ data_mr :  resMR.data}, () => {
           this.setState({mr_pp : resMR.data.packages.filter(e => e.qty !== 0)}, () => {
-            if(resMR.data.current_milestones === "MS_JOINT_CHECK"){
+            if(status_can_edit_material.includes(resMR.data.current_mr_status)){
               this.getDataWarehouse(resMR.data.packages);
               this.getDataInbound(resMR.data.packages)
             }
@@ -556,6 +558,14 @@ class MRDetail extends Component {
     }
   }
 
+  CompareArrayObject(arr, prop) {
+    return arr.sort(function (a, b) {
+        var nameA = a[prop].toLowerCase(),
+            nameB = b[prop].toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
+  }
+
   async downloadMaterialMRUpload() {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -588,7 +598,7 @@ class MRDetail extends Component {
         let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
         qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
-        ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id), qty_wh, qty_inbound, (this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id)) < qty_wh ? "OK":"NOK"]);
+        ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id), qty_wh, qty_inbound, (this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id)) < qty_wh ? "OK":"NOK"]);
       }
     }
 
@@ -597,12 +607,14 @@ class MRDetail extends Component {
       "list_material_id" : listMatId
     }
 
-    console.log("matIdData", JSON.stringify(matIdData));
-
     const getMaterialVariant = await this.postDatatoAPINODE('/variants/materialId', matIdData);
     if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
       dataMaterialVariant = getMaterialVariant.data.data;
     }
+
+    dataMaterialVariant = this.CompareArrayObject(dataMaterialVariant, "description");
+
+    // dataMaterialVariant.sort(function(a, b){return a.description.toLowerCase() - b.description.toLowerCase()});
 
     ws2.addRow(["Origin","Material ID","Material Name","Description", "Category"]);
     for(let j = 0; j < dataMaterialVariant.length; j++){
@@ -638,7 +650,7 @@ class MRDetail extends Component {
         let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
         qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
-        ws.addRow([null, null, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id), qty_wh, qty_inbound, (this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id)) < qty_wh ? "OK":"NOK"]);
+        ws.addRow([null, null, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id), qty_wh, qty_inbound, (this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id)) < qty_wh ? "OK":"NOK"]);
       }
     }
 
@@ -649,13 +661,7 @@ class MRDetail extends Component {
   async saveUpdateMaterial(){
     const dataXLS = this.state.rowsXLS;
     const dataMR = this.state.data_mr;
-    console.log("dataXLS variant", dataXLS);
-    const respondSaveMaterialMR = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataMR._id, {"data" : dataXLS});
-    if(respondSaveMaterialMR.data !== undefined && respondSaveMaterialMR.status >= 200 && respondSaveMaterialMR.status <= 300 ) {
-      this.setState({ action_status : 'success' });
-    } else{
-      this.setState({ action_status : 'failed' });
-    }
+    console.log("dataXLS variant", JSON.stringify({"data" : dataXLS}));
   }
 
   render() {
@@ -977,19 +983,22 @@ class MRDetail extends Component {
                             <tr>
                               <td style={{fontSize : '12px'}}>&nbsp;</td>
                             </tr>
+                            {status_can_edit_material.includes(this.state.data_mr.current_mr_status) && (
                             <tr>
                               <td style={{fontSize : '12px'}}>Change to Material Variant : </td>
-                            </tr>
+                            </tr>)}
                           </Fragment>
                         )}
-                        <tr>
-                          <td style={{width : '550px'}}>
-                            <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"visiblity":"hidden"}}/>
-                            <Button size="sm" color="success" style={{float : 'right'}} onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
-                              Save
-                            </Button>
-                          </td>
-                        </tr>
+                        {status_can_edit_material.includes(this.state.data_mr.current_mr_status) && (
+                          <tr>
+                            <td style={{width : '550px'}}>
+                              <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"visiblity":"hidden"}}/>
+                              <Button size="sm" color="success" style={{float : 'right'}} onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
+                                Save
+                              </Button>
+                            </td>
+                          </tr>
+                        )}
                         </Fragment>
                       )}
                     </tbody>

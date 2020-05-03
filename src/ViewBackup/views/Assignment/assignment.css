@@ -3,3 +3,11 @@
   position: fixed;
   top: 75px;
 }
+
+.assignment-list__table--center-non-border th{
+  text-align: center
+}
+
+.assignment-list__table--center-non-border td{
+  text-align: center
+}

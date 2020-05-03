@@ -342,6 +342,53 @@ class PackageUpload extends React.Component {
     }
   }
 
+  saveProductPackageOneShot = async () => {
+    this.toggleLoading();
+    const productPackageXLS = this.state.rowsXLS;
+    let isPackage = true;
+    if (isPackage === true) {
+      const postPackage = await this.postDatatoAPINODE('/productpackage/packageWithMaterial', { "data": productPackageXLS })
+        .then(res => {
+          if (res.data !== undefined) {
+            this.setState({ action_status : 'success' });
+            this.toggleLoading();
+          } else {
+            if(res.response !== undefined){
+              if(res.response.data !== undefined){
+                if(res.response.data.error !== undefined){
+                  if(res.response.data.error.message !== undefined){
+                    this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
+                      this.toggleLoading();
+                    });
+                  }else{
+                    this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
+                      this.toggleLoading();
+                    });
+                  }
+                }else{
+                  this.setState({ action_status: 'failed'}, () => {
+                    this.toggleLoading();
+                  });
+                }
+              }else{
+                this.setState({ action_status: 'failed'}, () => {
+                  this.toggleLoading();
+                });
+              }
+            }else{
+              this.setState({ action_status: 'failed'}, () => {
+                this.toggleLoading();
+              });
+            }
+          }
+        })
+    }else{
+      this.setState({ action_status: 'failed', action_message: 'Please check your format' }, () => {
+        this.toggleLoading();
+      });
+    }
+  }
+
   async getPackageFormat(dataImport) {
     const dataHeader = dataImport[0];
     const onlyParent = dataImport.map(e => e).filter(e => (this.checkValuetoString(e[this.getIndex(dataHeader, 'PP / Material')])).toLowerCase() === "pp");
@@ -681,7 +728,7 @@ class PackageUpload extends React.Component {
     const dataPrint = this.state.packageSelected;
 
     ws.addRow(["PP / Material", "material_id", "material_name", "quantity", "uom", "material_type","material_origin", "bundle_id", "bundle_name"]);
-    
+
     for (let i = 0; i < dataPrint.length; i++) {
       if(dataPrint[i].materials !== undefined){
         if(dataPrint[i].materials.length !== 0){
@@ -725,6 +772,20 @@ class PackageUpload extends React.Component {
     saveAs(new Blob([MaterialFormat]), 'Config Uploader Template.xlsx');
   }
 
+  async exportFormatBundleMaterial(){
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    ws.addRow(["pp_id", "product_name", "product_type", "physical_group", "package_unit", "pp_group", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
+    ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "MDID002", "Material 2", "active_material", "EAB", "pc", 1]);
+    ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "MDID003", "Material 3", "active_material", "EAB", "meter", 100.5]);
+    ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "MDID006", "Material 6", "active_material", "EAB", "pc", 100]);
+    ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "MDID007", "Material 7", "active_material", "EAB", "pc", 4]);
+
+    const BundleMaterial = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([BundleMaterial]), 'Bundle Material Uploader Template.xlsx');
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -744,6 +805,7 @@ class PackageUpload extends React.Component {
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatPackage}>> Bundle Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatBundleMaterial}>> Bundle Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfig} disabled={this.state.packageChecked.length === 0}>> Config Template</DropdownItem>
                         <DropdownItem onClick={this.exportTSSRFormat} disabled={this.state.packageChecked.length === 0}>> PS Tempalate</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
@@ -777,7 +839,8 @@ class PackageUpload extends React.Component {
                     </div>
                   </CardBody>
                   <CardFooter>
-                    <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
+                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage} style={{marginRight : '10px'}}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
+                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackageOneShot}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE One Shot</Button>
                     <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>
                   </CardFooter>
                 </Card>

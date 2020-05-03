@@ -131,12 +131,11 @@ class BulkNotifytoASP extends Component {
   getAssignmentList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPINODE('/aspAssignment/aspassign').then(res => {
-      console.log("Assignment List Sorted", res);
+    this.getDataFromAPINODE('/aspAssignment/aspassign?q={"$or":[{"Current_Status" : "ASP ASSIGNMENT CREATED"}, {"Current_Status" : "PM APPROVE"}]}&lmt='+maxPage+'&pg='+page).then(res => {
       if(res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
-        this.setState({assignment_list : items, totalData: totalData});
+        this.setState({assignment_list : items, totalData : totalData});
       }
     })
   }
@@ -144,11 +143,10 @@ class BulkNotifytoASP extends Component {
   getAssignmentListAll() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPI('/asp_assignment_sorted_non_page?where={"Current_Status" : "ASP ASSIGNMENT CREATED"}').then(res => {
-      console.log("Assignment List Sorted All", res);
+    this.getDataFromAPINODE('/aspAssignment/aspassign?q={ "$or" :[{"Current_Status" : "ASP ASSIGNMENT CREATED"}, {"Current_Status" : "PM APPROVE"}]}').then(res => {
       if(res.data !== undefined) {
-        const items = res.data._items;
-        const totalData = res.data._meta;
+        const items = res.data.data;
+        const totalData = res.data.totalResults;
         this.setState({assignment_all : items});
       }
     })

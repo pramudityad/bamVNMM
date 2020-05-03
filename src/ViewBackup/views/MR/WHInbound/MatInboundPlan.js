@@ -72,6 +72,7 @@ class MatInboundPlan extends React.Component {
       action_message: null,
       all_data: [],
       data_PO: [],
+      wh_data: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
       modalMatStockForm: false,
@@ -92,6 +93,7 @@ class MatInboundPlan extends React.Component {
     this.saveNew = this.saveNew.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
+    this.getWHInboundList = this.getWHInboundList.bind(this);
   }
 
   toggle(i) {
@@ -183,6 +185,12 @@ class MatInboundPlan extends React.Component {
     }
   }
 
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
+  }
+
   changeFilterName(value) {
     this.getWHInboundList();
   }
@@ -197,13 +205,44 @@ class MatInboundPlan extends React.Component {
     });
   };
 
-  getWHInboundList() {
-    this.getDatafromAPINODE("/whInboundPlan/getWhInboundPlan").then((res) => {
+  getWHInboundList(e) {
+    this.toggleLoading();
+    let get_wh_id = e.target.value;
+    let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
+    this.getDatafromAPINODE(
+      "/whInboundPlan/getWhInboundPlan?=" +
+        getbyWH +
+        "&lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
+    ).then((res) => {
       // console.log('all cpoDB', res.data)
       if (res.data !== undefined) {
-        this.setState({ all_data: res.data.data });
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+        });
+        this.toggleLoading();
       } else {
-        this.setState({ all_data: [] });
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
+        this.toggleLoading();
+      }
+    });
+  }
+
+  getWHManagement() {
+    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
+      // console.log("all data ", res.data);
+      if (res.data !== undefined) {
+        this.setState({ wh_data: res.data.data });
+      } else {
+        this.setState({ wh_data: [] });
       }
     });
   }
@@ -295,7 +334,8 @@ class MatInboundPlan extends React.Component {
   }
 
   componentDidMount() {
-    this.getWHInboundList();
+    // this.getWHInboundList();
+    this.getWHManagement();
     document.title = "Material Inbound Plan | BAM";
   }
 
@@ -303,12 +343,6 @@ class MatInboundPlan extends React.Component {
     this.setState({ activePage: pageNumber }, () => {
       this.getWHInboundList();
     });
-  }
-
-  toggleLoading() {
-    this.setState((prevState) => ({
-      modal_loading: !prevState.modal_loading,
-    }));
   }
 
   toggleEdit(e) {
@@ -399,7 +433,7 @@ class MatInboundPlan extends React.Component {
     // const cpoData = await this.getMatInboundFormat(BulkXLSX);
     const res = await this.postDatatoAPINODE(
       "/whInboundPlan/createWhInboundPlan",
-      { 'inboundPlanData': BulkXLSX }
+      { inboundPlanData: BulkXLSX }
     );
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
@@ -415,11 +449,14 @@ class MatInboundPlan extends React.Component {
     this.toggleLoading();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    console.log('xlsx data', JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE("/whInboundPlan/createWhInboundPlanTruncate", {
-      'inboundPlanData': BulkXLSX,
-    });
-    console.log('res bulk ', res);
+    console.log("xlsx data", JSON.stringify(BulkXLSX));
+    const res = await this.postDatatoAPINODE(
+      "/whInboundPlan/createWhInboundPlanTruncate",
+      {
+        inboundPlanData: BulkXLSX,
+      }
+    );
+    console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -536,8 +573,10 @@ class MatInboundPlan extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE('/whInboundPlan/getWhInboundPlan');
-    if(getAll_nonpage.data !== undefined){
+    let getAll_nonpage = await this.getDatafromAPINODE(
+      "/whInboundPlan/getWhInboundPlan"
+    );
+    if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
 
@@ -557,18 +596,31 @@ class MatInboundPlan extends React.Component {
       "Serial Number",
       "Box Number",
       "Condition",
-      "Notes"
+      "Notes",
     ];
     ws.addRow(headerRow);
 
-    for (let i = 1; i < headerRow.length + 1; i++) {      
-      ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };      
+    for (let i = 1; i < headerRow.length + 1; i++) {
+      ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };
     }
-
 
     for (let i = 0; i < download_all.length; i++) {
       let list = download_all[i];
-      ws.addRow([list.owner_id, list.wh_id, list.po_number, list.project_name, list.sku,list.sku_description,list.arrival_date, list.qty,list.ageing,list.serial_number,list.box_number,list.condition,list.notes]);
+      ws.addRow([
+        list.owner_id,
+        list.wh_id,
+        list.po_number,
+        list.project_name,
+        list.sku,
+        list.sku_description,
+        list.arrival_date,
+        list.qty,
+        list.ageing,
+        list.serial_number,
+        list.box_number,
+        list.condition,
+        list.notes,
+      ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -596,9 +648,33 @@ class MatInboundPlan extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["owner_id","po_number","arrival_date","project_name","sku","wh_id","id_wh_doc"]);
-    ws.addRow(["5df99ce5face981b7ace8856","PO0001","2020-04-17","XL BAM DEMO 2021","1","WH_1","5ea7bf5de3b6fe12ace40a30"]);
-    ws.addRow(["5df99ce5face981b7ace8857","PO0001","2020-04-17","XL BAM DEMO 2021","1","WH_1","5ea7bf5de3b6fe12ace40a30"]);
+    ws.addRow([
+      "owner_id",
+      "po_number",
+      "arrival_date",
+      "project_name",
+      "sku",
+      "wh_id",
+      "id_wh_doc",
+    ]);
+    ws.addRow([
+      "5df99ce5face981b7ace8856",
+      "PO0001",
+      "2020-04-17",
+      "XL BAM DEMO 2021",
+      "1",
+      "WH_1",
+      "5ea7bf5de3b6fe12ace40a30",
+    ]);
+    ws.addRow([
+      "5df99ce5face981b7ace8857",
+      "PO0001",
+      "2020-04-17",
+      "XL BAM DEMO 2021",
+      "1",
+      "WH_1",
+      "5ea7bf5de3b6fe12ace40a30",
+    ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "Material Inbound Template.xlsx");
@@ -734,22 +810,24 @@ class MatInboundPlan extends React.Component {
                       <span style={{ fontSize: "20px", fontWeight: "500" }}>
                         Material Inbound List
                       </span>
-                      <div
-                        style={{
-                          float: "right",
-                          margin: "5px",
-                          display: "inline-flex",
-                        }}
+                    </div>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <div style={{display : 'inline-flex', marginBottom :'15px'}}>
+                      <span style={{lineHeight : '2', width : '225px', fontSize : '15px', fontWeight : '700'}}>Select Warehouse : </span>
+                      <Input
+                        type="select"
+                        name="select"
+                        onChange={this.getWHInboundList}
                       >
-                        <input
-                          className="search-box-material"
-                          type="text"
-                          name="filter"
-                          placeholder="Search Material"
-                          onChange={this.handleChangeFilter}
-                          value={this.state.filter_name}
-                        />
-                      </div>
+                        {this.state.wh_data.map((opt) => (
+                          <option value={opt.wh_id}>
+                            {opt.wh_name} - {opt.wh_id}
+                          </option>
+                        ))}
+                      </Input>
                     </div>
                   </Col>
                 </Row>
@@ -763,6 +841,7 @@ class MatInboundPlan extends React.Component {
                         >
                           <tr align="center">
                             <th> Owner ID</th>
+                            <th> WH ID</th>
                             <th>PO Number</th>
                             <th>Project Name</th>
                             <th>Arrival Date</th>
@@ -788,6 +867,9 @@ class MatInboundPlan extends React.Component {
                               >
                                 <td style={{ textAlign: "center" }}>
                                   {e.owner_id}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.wh_id}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
                                   {e.po_number}
@@ -837,7 +919,14 @@ class MatInboundPlan extends React.Component {
                                     size="sm"
                                     color="danger"
                                     value={e._id}
-                                    onClick={(r) => { if (window.confirm('Are you sure you wish to delete this item?')) this.DeleteData(r, "value")}}
+                                    onClick={(r) => {
+                                      if (
+                                        window.confirm(
+                                          "Are you sure you wish to delete this item?"
+                                        )
+                                      )
+                                        this.DeleteData(r, "value");
+                                    }}
                                     title="Delete"
                                   >
                                     <i

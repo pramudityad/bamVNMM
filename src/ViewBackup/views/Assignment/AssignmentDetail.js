@@ -15,10 +15,6 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
-const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
-const username_tsel = 'adminbamidsuper';
-const password_tsel = 'F760qbAg2sml';
-
 const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
 const usernameXL = 'adminbamidsuper';
 const passwordXL = 'F760qbAg2sml';
@@ -40,19 +36,30 @@ class AssignmentDetail extends Component {
       action_message : null,
       bast_assign_form : new Map(),
       can_edit_ssow : false,
+      can_edit_asp : false,
+      asp_list : [],
+      asp_selected : {},
     }
     this.notifyASP = this.notifyASP.bind(this);
     this.saveBastNumber = this.saveBastNumber.bind(this);
     this.acceptASG = this.acceptASG.bind(this);
     this.rescheduleASG = this.rescheduleASG.bind(this);
     this.revisionASG = this.revisionASG.bind(this);
+    this.approveASGbyPM = this.approveASGbyPM.bind(this);
     this.exportFormatBulkAssignment = this.exportFormatBulkAssignment.bind(this);
     this.loadOptionsSSOWID = this.loadOptionsSSOWID.bind(this);
     this.loadOptionsActivityNumber = this.loadOptionsActivityNumber.bind(this);
     this.handleChangeSSOWListReactSelect = this.handleChangeSSOWListReactSelect.bind(this);
     this.handleChangeSSOWList = this.handleChangeSSOWList.bind(this);
-    this.handleChangeCanEdit = this.handleChangeCanEdit.bind(this);
+    this.handleChangeCanEditSSOW = this.handleChangeCanEditSSOW.bind(this);
+    this.handleChangeCanEditASP = this.handleChangeCanEditASP.bind(this);
     this.updateSSOWList = this.updateSSOWList.bind(this);
+    this.handleChangeASP = this.handleChangeASP.bind(this);
+    this.handleChangeTOP = this.handleChangeTOP.bind(this);
+    this.getASPList = this.getASPList.bind(this);
+    this.deleteSSOW = this.deleteSSOW.bind(this);
+    this.addSSOW = this.addSSOW.bind(this);
+    this.convertTOP = this.convertTOP.bind(this);
   }
 
   async getDataFromAPIXL(url) {
@@ -60,8 +67,28 @@ class AssignmentDetail extends Component {
       let respond = await axios.get(API_URL_XL+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
-          username: username_tsel,
-          password: password_tsel
+          username: usernameXL,
+          password: passwordXL
+        }
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async getDataFromAPIEXEL(url) {
+    try {
+      let respond = await axios.get(API_URL_XL+url, {
+        headers: {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
         }
       });
       if(respond.status >= 200 && respond.status < 300) {
@@ -121,8 +148,8 @@ class AssignmentDetail extends Component {
           'If-Match': _etag
         },
         auth: {
-          username: username_tsel,
-          password: password_tsel
+          username: usernameXL,
+          password: passwordXL
         }
       })
       if(respond.status >= 200 && respond.status < 300) {
@@ -285,9 +312,11 @@ class AssignmentDetail extends Component {
     const data_assingment = this.state.data_assignment;
     let indexSSOW = 7;
 
-    let headerRow = ["id","project","sow_type","vendor_code","vendor_name","identifier","ssow_rbs_id_1","ssow_rbs_activity_number_1","ssow_rbs_unit_1","ssow_rbs_quantity_1","ssow_rbs_id_2","ssow_rbs_activity_number_2","ssow_rbs_unit_2","ssow_rbs_quantity_2","ssow_rbs_id_3","ssow_rbs_activity_number_3","ssow_rbs_unit_3","ssow_rbs_quantity_3","ssow_rbs_id_4","ssow_rbs_activity_number_4","ssow_rbs_unit_4","ssow_rbs_quantity_4","ssow_rbs_id_5","ssow_rbs_activity_number_5","ssow_rbs_unit_5","ssow_rbs_quantity_5","ssow_rbs_id_6","ssow_rbs_activity_number_6","ssow_rbs_unit_6","ssow_rbs_quantity_6","ssow_rbs_id_7","ssow_rbs_activity_number_7","ssow_rbs_unit_7","ssow_rbs_quantity_7"];
+    let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
 
-    let dataASGPrint = [data_assingment.Assignment_No,data_assingment.Project,"RBS",data_assingment.Vendor_Code_Number,data_assingment.Vendor_Name,data_assingment.Site_ID];
+    data_assingment.SSOW_List.map((e,idx) => headerRow.push("ssow_"+(e.sow_type.toLowerCase())+"_id_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_activity_number_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_unit_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_quantity_"+(idx+1).toString() ));
+
+    let dataASGPrint = [data_assingment.Assignment_No,data_assingment.Project,data_assingment.SOW_Type,"cd_id",data_assingment.Vendor_Code_Number,data_assingment.Vendor_Name,this.convertTOP(data_assingment.Payment_Terms),data_assingment.Site_ID];
     data_assingment.SSOW_List.map(e => dataASGPrint.push(e.ssow_id, e.ssow_activity_number, e.ssow_unit, e.ssow_qty));
 
     ws.addRow(headerRow);
@@ -298,7 +327,7 @@ class AssignmentDetail extends Component {
   }
 
   async loadOptionsSSOWID(inputValue) {
-    if(!inputValue) {
+    if(!inputValue || inputValue.length < 2 ) {
       return [];
     } else {
       let ssow_id_list = [];
@@ -306,14 +335,14 @@ class AssignmentDetail extends Component {
       const getSSOWID = await this.getDataFromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
       if(getSSOWID !== undefined && getSSOWID.data !== undefined) {
         getSSOWID.data._items.map(ssow =>
-          ssow_id_list.push({'label' : ssow.ssow_id !== undefined ? ssow.ssow_id : null, 'value' : ssow.ssow_id}))
+          ssow_id_list.push({'label' : ssow.ssow_id !== undefined ? ssow.ssow_id : null, 'value' : ssow.ssow_id, 'sow_type' : ssow.sow_type, 'ssow_unit' : ssow.ssow_type, 'description' : ssow.description}))
       }
       return ssow_id_list;
     }
   }
 
   async loadOptionsActivityNumber(inputValue) {
-    if(!inputValue) {
+    if(!inputValue || inputValue.length < 2) {
       return [];
     } else {
       let act_number_list = [];
@@ -326,10 +355,70 @@ class AssignmentDetail extends Component {
     }
   }
 
-  handleChangeCanEdit(){
+  handleChangeCanEditSSOW(){
     this.setState(prevState => ({
       can_edit_ssow: !prevState.can_edit_ssow
     }));
+  }
+
+  handleChangeCanEditASP(){
+    this.getASPList();
+    this.setState(prevState => ({
+      can_edit_asp: !prevState.can_edit_asp
+    }));
+  }
+
+  handleChangeASP(e){
+    const value = e.target.value;
+    const asp_name = this.state.asp_list.find(e => e.Vendor_Code === value);
+    let asp_selected = this.state.data_assignment;
+    if(asp_name !== undefined){
+      asp_selected["Vendor_Code"] = asp_name._id
+      asp_selected["Vendor_Code_Number"] = asp_name.Vendor_Code
+      asp_selected["Vendor_Email"] = asp_name.Email
+      asp_selected["Vendor_Name"] = asp_name.Name
+    }
+    this.setState({data_assignment : asp_selected});
+  }
+
+  handleChangeTOP(e){
+    const value = e.target.value;
+    let dataASG = this.state.data_assignment;
+    if(value !== undefined){
+      dataASG["Payment_Terms"] = value;
+    }
+    this.setState({data_assignment : dataASG});
+  }
+
+  convertTOP(e){
+    if(e === "20%-80%"){
+      return 2080
+    }else if(e === "30%-70%"){
+      return 3070
+    }else if(e === "40%-60%"){
+      return 4060
+    }else if(e === "50%-50%"){
+      return 5050
+    }else if(e === "100%"){
+      return 100
+    }else if(e === "80%-20%"){
+      return 8020
+    }else if(e === "70%-30%"){
+      return 7030
+    }else if(e === "60%-40%"){
+      return 6040
+    }else{
+      return e;
+    }
+  }
+
+  getASPList() {
+    this.getDataFromAPIEXEL('/vendor_data_non_page').then(res => {
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({asp_list : items});
+      }
+    })
   }
 
   handleChangeSSOWList(e){
@@ -340,7 +429,6 @@ class AssignmentDetail extends Component {
     let field = idxField[1];
     dataSSOW.SSOW_List[parseInt(idx)][field] = value;
     this.setState({data_assignment : dataSSOW})
-    console.log("index plus field", dataSSOW.SSOW_List[parseInt(idx)])
   }
 
   handleChangeSSOWListReactSelect = async (newValue, e) =>{
@@ -348,26 +436,35 @@ class AssignmentDetail extends Component {
     let idxField = e.name.split(" /// ")
     let idx = idxField[0];
     let field = idxField[1];
+    if(field === "ssow_id"){
+      dataSSOW.SSOW_List[parseInt(idx)]['sow_type'] = newValue.sow_type;
+      dataSSOW.SSOW_List[parseInt(idx)]['ssow_description'] = newValue.description;
+      dataSSOW.SSOW_List[parseInt(idx)]['ssow_unit'] = newValue.ssow_unit;
+    }
     dataSSOW.SSOW_List[parseInt(idx)][field] = newValue.value;
-    this.setState({data_assignment : dataSSOW})
-    console.log("index plus field", dataSSOW.SSOW_List[parseInt(idx)])
+    this.setState({data_assignment : dataSSOW});
   }
 
   async updateSSOWList(){
     const data_assingment = this.state.data_assignment;
-    let headerRow = ["id","project","sow_type","vendor_code","vendor_name","identifier"];
 
-    let dataASGRow = [data_assingment.Assignment_No,data_assingment.Project,"RBS",data_assingment.Vendor_Code_Number,data_assingment.Vendor_Name,data_assingment.Site_ID];
-    data_assingment.SSOW_List.map((e, idx) => headerRow.push("ssow_rbs_id_"+(idx+1).toString(),"ssow_rbs_activity_number_"+(idx+1).toString(),"ssow_rbs_unit_"+(idx+1).toString(),"ssow_rbs_quantity_"+(idx+1).toString()));
+    let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
+
+    let dataASGRow = [data_assingment.Assignment_No,data_assingment.Project,"RBS", "tower_id",data_assingment.Vendor_Code_Number,data_assingment.Vendor_Name,this.convertTOP(data_assingment.Payment_Terms),data_assingment.Site_ID];
+    data_assingment.SSOW_List.map((e,idx) => headerRow.push("ssow_"+(e.sow_type.toLowerCase())+"_id_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_activity_number_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_unit_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_quantity_"+(idx+1).toString() ));
     data_assingment.SSOW_List.map(e => dataASGRow.push(e.ssow_id, e.ssow_activity_number, e.ssow_unit, e.ssow_qty));
 
     let dataXLS = [headerRow,dataASGRow];
     console.log("dataXLS", dataXLS);
-    const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', {"data" : dataXLS});
+    const dataXLSASG = {
+      "includeSsow" : true,
+      "data" : dataXLS
+    }
+    const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', dataXLSASG);
     if(respondCheckingASG.data !== undefined && respondCheckingASG.status >= 200 && respondCheckingASG.status <= 300 ) {
       let dataChecking = respondCheckingASG.data.data;
-      if(dataChecking.operation === "INVALID"){
-        this.setState({ action_status : 'failed', action_message : dataChecking.activity_status });
+      if(dataChecking[0].operation === "INVALID"){
+        this.setState({ action_status : 'failed', action_message : dataChecking[0].activity_status });
       }else{
         const respondSaveASG = await this.postDatatoAPINODE('/aspAssignment/createAspAssign', {"data" : dataChecking});
         if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
@@ -378,6 +475,36 @@ class AssignmentDetail extends Component {
       }
     } else{
       this.setState({ action_status : 'failed' });
+    }
+  }
+
+  deleteSSOW(e){
+    let index = e.target.value;
+    let dataSSOW = this.state.data_assignment;
+    dataSSOW.SSOW_List.splice(parseInt(index), 1);
+    this.setState({data_assignment : dataSSOW});
+  }
+
+  addSSOW(){
+    let dataSSOW = this.state.data_assignment;
+    dataSSOW.SSOW_List.push({});
+    this.setState({data_assignment : dataSSOW});
+  }
+
+  async approveASGbyPM(e){
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    const _etag = e.target.value;
+    const _id = e.target.id;
+    let res = await this.patchDatatoAPINODE('/aspAssignment/pmApproval/'+_id);
+    if(res !== undefined) {
+      if(res.data !== undefined) {
+        this.setState({action_status : "success"})
+      }else{
+        this.setState({action_status : "failed"})
+      }
+    }else{
+      this.setState({action_status : "failed"})
     }
   }
 
@@ -492,20 +619,43 @@ class AssignmentDetail extends Component {
                   </Row>
                   <h5 style={{marginTop: "16px"}}>PR/PO INFORMATION</h5>
                   <Row>
+                    <div style={{paddingLeft: "25px"}}>
+                      <Checkbox name="editable" checked={this.state.can_edit_asp} onChange={this.handleChangeCanEditASP} />
+                      <span>Editable</span>
+                    </div>
+                  </Row>
+                  <Row>
                     <Col md="6">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>ASP</Label>
-                        <Input type="text" name="asp" readOnly value={this.state.data_assignment.Vendor_Name} />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px", display: "none"}}>
-                        <Label>MR ID</Label>
-                        <Input type="select" name="mr_id">
-                          <option value="" disabled selected hidden>Select MR ID</option>
-                        </Input>
+                        {this.state.can_edit_asp ? (
+                          <Input type="select" name="14" onChange={this.handleChangeASP} value={this.state.data_assignment.Vendor_Code_Number}>
+                            <option value="" disabled hidden>Select ASP</option>
+                            {this.state.asp_list.map((list, i) =>
+                              <option value={list.Vendor_Code}>{list.Name}</option>
+                            )}
+                          </Input>
+                        ) : (
+                          <Input type="text" name="asp" readOnly value={this.state.data_assignment.Vendor_Name} />
+                        )}
                       </FormGroup>
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>TOP</Label>
-                        <Input type="text" name="top" readOnly value={this.state.data_assignment.Payment_Terms} />
+                        {this.state.can_edit_asp ? (
+                          <Input type="select" name="14" onChange={this.handleChangeTOP} value={this.convertTOP(this.state.data_assignment.Payment_Terms)}>
+                            <option value="" disabled hidden>Select TOP</option>
+                            <option value="2080">20% - 80%</option>
+                            <option value="3070">30% - 70%</option>
+                            <option value="4060">40% - 60%</option>
+                            <option value="5050">50% - 50%</option>
+                            <option value="100">100% - 0%</option>
+                            <option value="8020">80% - 20%</option>
+                            <option value="7030">70% - 30%</option>
+                            <option value="6040">60% - 40%</option>
+                          </Input>
+                        ) : (
+                          <Input type="text" name="top" readOnly value={this.state.data_assignment.Payment_Terms} />
+                        )}
                       </FormGroup>
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>SSOW Type</Label>
@@ -565,83 +715,130 @@ class AssignmentDetail extends Component {
                     <Fragment>
                     <h5 style={{marginTop: "16px"}}>SSOW List</h5>
                     <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
-                      <div>
-                        <Checkbox name="editable" checked={this.state.can_edit_ssow} onChange={this.handleChangeCanEdit} />
+                      <div style={{marginBottom : '10px'}}>
+                        <Checkbox name="editable" checked={this.state.can_edit_ssow} onChange={this.handleChangeCanEditSSOW} />
                         <span>Editable</span>
                       </div>
                     </Row>
-                    {this.state.data_assignment.SSOW_List !== undefined ? this.state.data_assignment.SSOW_List.map((ssow, idx) =>
+                    {this.state.can_edit_ssow ? (
                       <Fragment>
-                      <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
-                        <Col md="2" style={{margin:"0", padding:"4px"}}>
-                          <FormGroup>
-                            <Label>SSOW ID</Label>
-                            <AsyncSelect
-                              cacheOptions
-                              loadOptions={debounce(this.loadOptionsSSOWID, 1000)}
-                              defaultOptions
-                              defaultInputValue={ssow.ssow_id}
-                              isDisabled={!this.state.can_edit_ssow}
-                              onChange={this.handleChangeSSOWListReactSelect}
-                              name={idx + " /// ssow_id"}
-                            />
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{margin:"0", padding:"4px"}}>
-                          <FormGroup>
-                            <Label>Activity Number</Label>
-                            <AsyncSelect
-                              cacheOptions
-                              loadOptions={debounce(this.loadOptionsActivityNumber, 1000)}
-                              defaultOptions
-                              defaultInputValue={ssow.ssow_activity_number}
-                              isDisabled={!this.state.can_edit_ssow}
-                              onChange={this.handleChangeSSOWListReactSelect}
-                              name={idx + " /// ssow_activity_number"}
-                            />
-                          </FormGroup>
-                        </Col>
-                        <Col md="4" style={{margin:"0", padding:"4px"}}>
-                          <FormGroup>
-                            <Label>Description</Label>
-                            <Input type="textarea" name={idx + " /// ssow_description"} rows="1" value={ssow.ssow_description} readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="1" style={{margin:"0", padding:"4px"}}>
-                          <FormGroup>
-                            <Label>Unit</Label>
-                            <Input type="text" name={idx + " /// ssow_unit"} value={ssow.ssow_unit} disabled={!this.state.can_edit_ssow} onChange={this.handleChangeSSOWList}/>
-                          </FormGroup>
-                        </Col>
-                        <Col md="1" style={{margin:"0", padding:"4px"}}>
-                          <FormGroup>
-                            <Label>Quantity</Label>
-                            <Input type="number" name={idx + " /// ssow_qty"} onChange={this.handleChangeForm} value={ssow.ssow_qty} disabled={!this.state.can_edit_ssow} onChange={this.handleChangeSSOWList}/>
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{margin:"0", padding:"4px"}}>
-                          <FormGroup>
-                            <Label>Status</Label>
-                            <Input type="select" name={idx + " /// ssow_current_status"} onChange={this.handleChangeForm} value={ssow.ssow_current_status} readOnly>
-                              <option value="" disabled selected hidden>Select Status</option>
-                              <option value="SSOW CANCELLED">Cancelled</option>
-                              <option value="SSOW CLOSE">Close</option>
-                              <option value="SSOW OPEN">Open</option>
-                              <option value="SSOW PARTIAL CLOSE">Partial Close</option>
-                            </Input>
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                      </Fragment>
-                    ) : (<Fragment></Fragment>) }
-                      {this.state.can_edit_ssow === true && (
+                      {this.state.data_assignment.SSOW_List !== undefined && this.state.data_assignment.SSOW_List.map((ssow, idx) =>
                         <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
-                          <Col md="12">
-                            <Button color="primary" size="sm" style={{float : 'right'}} onClick={this.updateSSOWList}>
-                              Update
-                            </Button>
+                          <Col md="2" style={{margin:"0", padding:"4px"}}>
+                            <FormGroup>
+                              <Label>SSOW ID</Label>
+                              <AsyncSelect
+                                cacheOptions
+                                loadOptions={this.loadOptionsSSOWID}
+                                defaultOptions
+                                defaultInputValue={ssow.ssow_id}
+                                isDisabled={!this.state.can_edit_ssow}
+                                onChange={this.handleChangeSSOWListReactSelect}
+                                name={idx + " /// ssow_id"}
+                              />
+                            </FormGroup>
+                          </Col>
+                          <Col md="2" style={{margin:"0", padding:"4px"}}>
+                            <FormGroup>
+                              <Label>Activity Number</Label>
+                              <AsyncSelect
+                                cacheOptions
+                                loadOptions={this.loadOptionsActivityNumber}
+                                defaultOptions
+                                defaultInputValue={ssow.ssow_activity_number}
+                                isDisabled={!this.state.can_edit_ssow}
+                                onChange={this.handleChangeSSOWListReactSelect}
+                                name={idx + " /// ssow_activity_number"}
+                              />
+                            </FormGroup>
+                          </Col>
+                          <Col md="4" style={{margin:"0", padding:"4px"}}>
+                            <FormGroup>
+                              <Label>Description</Label>
+                              <Input type="textarea" name={idx + " /// ssow_description"} rows="1" value={ssow.ssow_description} readOnly />
+                            </FormGroup>
+                          </Col>
+                          <Col md="1" style={{margin:"0", padding:"4px"}}>
+                            <FormGroup>
+                              <Label>SSOW Type</Label>
+                              <Input type="text" name={idx + " /// sow_type"} value={ssow.sow_type} onChange={this.handleChangeSSOWList} readOnly/>
+                            </FormGroup>
+                          </Col>
+                          <Col md="1" style={{margin:"0", padding:"4px"}}>
+                            <FormGroup>
+                              <Label>Unit</Label>
+                              <Input type="text" name={idx + " /// ssow_unit"} value={ssow.ssow_unit} disabled={!this.state.can_edit_ssow} onChange={this.handleChangeSSOWList}/>
+                            </FormGroup>
+                          </Col>
+                          <Col md="1" style={{margin:"0", padding:"4px"}}>
+                            <FormGroup>
+                              <Label>Quantity</Label>
+                              <Input type="number" name={idx + " /// ssow_qty"} value={ssow.ssow_qty} disabled={!this.state.can_edit_ssow} onChange={this.handleChangeSSOWList}/>
+                            </FormGroup>
+                          </Col>
+                          <Col md="1" style={{margin:"0", padding:"4px"}}>
+                            <FormGroup>
+                              <Label>Status</Label>
+                              <div style={{display: "flex"}}>
+                                <Input type="select" name={idx + " /// ssow_current_status"} onChange={this.handleChangeForm} value={ssow.ssow_status!== undefined ? ssow.ssow_status[(ssow.ssow_status.length-1)].status : ""} readOnly>
+                                  <option value="" disabled>Select Status</option>
+                                  <option value="CANCELLED">Cancelled</option>
+                                  <option value="CLOSE">Close</option>
+                                  <option value="OPEN">Open</option>
+                                  <option value="PARTIAL CLOSE">Partial Close</option>
+                                </Input>
+                                {this.state.can_edit_ssow === true && (
+                                <Button value={idx} onClick={this.deleteSSOW} color="danger" size="sm" style={{marginLeft: "5px"}}>
+                                  <i className="fa fa-trash"></i>
+                                </Button>
+                                )}
+                              </div>
+                            </FormGroup>
                           </Col>
                         </Row>
+                      )}
+                      </Fragment>
+                    ) : (
+                      <Row>
+                        <Col md="12">
+                          <Table striped size="sm" className="assignment-list__table--center-non-border">
+                            <thead>
+                              <tr>
+                                <th>SSOW ID</th><th>Activity Number</th><th style={{width : '400px'}}>Description</th><th>SSOW Type</th><th>Unit</th><th>Qty</th><th>Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(this.state.data_assignment.SSOW_List !== undefined) && this.state.data_assignment.SSOW_List.map(ssow =>
+                                <tr key={ssow.ssow_id+ssow.ssow_activity_number}>
+                                  <td>{ssow.ssow_id}</td>
+                                  <td>{ssow.ssow_activity_number}</td>
+                                  <td style={{textAlign : 'left'}}>{ssow.ssow_description}</td>
+                                  <td>{ssow.sow_type}</td>
+                                  <td>{ssow.ssow_unit}</td>
+                                  <td>{ssow.ssow_qty}</td>
+                                  <td>{ssow.ssow_status[(ssow.ssow_status.length-1)].status}</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </Table>
+                        </Col>
+                      </Row>
+                    )}
+                      {(this.state.can_edit_ssow === true || this.state.can_edit_asp === true) && (
+                        <Fragment>
+                          <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
+                            <div style={{display : 'flex'}}>
+                              {(this.state.can_edit_ssow === true) && (
+                                <Button color="primary" size="sm" onClick={this.addSSOW}>
+                                  <i className="fa fa-plus">&nbsp;</i> SSOW
+                                </Button>
+                              )}
+                              <Button color="success" size="sm" style={{position : 'relative', left : '350px'}} onClick={this.updateSSOWList}>
+                                <i className="fa fa-save">&nbsp;</i>Update
+                              </Button>
+                            </div>
+                          </Row>
+                        </Fragment>
                       )}
                     </Fragment>
                   )}
@@ -707,7 +904,10 @@ class AssignmentDetail extends Component {
                 </Form>
               </CardBody>
               <CardFooter>
-                {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT CREATED" || this.state.data_assignment.Current_Status === "ASP ASSIGNMENT NEED REVISION" || this.state.data_assignment.Current_Status === "ASP ASSIGNMENT RE-SCHEDULE") && (
+                {(this.state.data_assignment.Current_Status === "REQUEST PM APPROVAL") && (
+                  <Button color="success" style={{float: "right"}} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.approveASGbyPM}>Approve</Button>
+                )}
+                {(this.state.data_assignment.Current_Status === "PM APPROVE" || this.state.data_assignment.Current_Status === "ASP ASSIGNMENT NEED REVISION" || this.state.data_assignment.Current_Status === "ASP ASSIGNMENT RE-SCHEDULE") && (
                   <Button color="primary" style={{float: "right"}} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.notifyASP}><i className="fa fa-bell" style={{marginRight: "8px"}}></i> Notify ASP</Button>
                 )}
                 {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT NOTIFIED TO ASP") && (
