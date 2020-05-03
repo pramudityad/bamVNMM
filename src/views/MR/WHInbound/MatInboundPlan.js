@@ -851,7 +851,7 @@ class MatInboundPlan extends React.Component {
                               id="exampleSelect"
                               type="select"
                               name="select"
-                              onChange={this.getWHStockList}
+                              onChange={this.getWHInboundList}
                             // placeholder="Select Warehouse"
                             >
                               {this.state.wh_data.map((opt) => (
