@@ -713,7 +713,6 @@ class MaterialStock extends React.Component {
       "sku",
       "qty",
       "wh_id",
-      "id_wh_doc",
     ]);
     ws.addRow([
       "5df99ce5face981b7ace8861",
@@ -723,7 +722,6 @@ class MaterialStock extends React.Component {
       "1",
       100,
       "WH_1",
-      "5ea7bf5de3b6fe12ace40a30",
     ]);
     ws.addRow([
       "5df99ce5face981b7ace8861",
@@ -733,7 +731,6 @@ class MaterialStock extends React.Component {
       "1",
       100,
       "WH_1",
-      "5ea7bf5de3b6fe12ace40a30",
     ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
@@ -1049,7 +1046,7 @@ class MaterialStock extends React.Component {
                     <Pagination
                       activePage={this.state.activePage}
                       itemsCountPerPage={this.state.perPage}
-                      totalItemsCount={this.state.total_data_PO}
+                      totalItemsCount={this.state.total_dataParent}
                       pageRangeDisplayed={5}
                       onChange={this.handlePageChange}
                       itemClass="page-item"

@@ -232,7 +232,7 @@ class MatInboundPlan extends React.Component {
     let get_wh_id = e.target.value;
     let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
     this.getDatafromAPINODE(
-      "/whInboundPlan/getWhInboundPlan?=" +
+      "/whInboundPlan/getWhInboundPlan?q=" +
       getbyWH +
       "&lmt=" +
       this.state.perPage +
@@ -666,7 +666,6 @@ class MatInboundPlan extends React.Component {
       "project_name",
       "sku",
       "wh_id",
-      "id_wh_doc",
     ]);
     ws.addRow([
       "5df99ce5face981b7ace8856",
@@ -675,7 +674,6 @@ class MatInboundPlan extends React.Component {
       "XL BAM DEMO 2021",
       "1",
       "WH_1",
-      "5ea7bf5de3b6fe12ace40a30",
     ]);
     ws.addRow([
       "5df99ce5face981b7ace8857",
@@ -684,7 +682,6 @@ class MatInboundPlan extends React.Component {
       "XL BAM DEMO 2021",
       "1",
       "WH_1",
-      "5ea7bf5de3b6fe12ace40a30",
     ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
@@ -994,7 +991,7 @@ class MatInboundPlan extends React.Component {
                     <Pagination
                       activePage={this.state.activePage}
                       itemsCountPerPage={this.state.perPage}
-                      totalItemsCount={this.state.total_data_PO}
+                      totalItemsCount={this.state.total_dataParent}
                       pageRangeDisplayed={5}
                       onChange={this.handlePageChange}
                       itemClass="page-item"
