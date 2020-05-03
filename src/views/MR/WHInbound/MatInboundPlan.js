@@ -70,6 +70,7 @@ class MatInboundPlan extends React.Component {
       cpo_array: [],
       action_status: null,
       action_message: null,
+      danger: false,
       all_data: [],
       data_PO: [],
       wh_data: [],
@@ -94,6 +95,7 @@ class MatInboundPlan extends React.Component {
     this.saveUpdate = this.saveUpdate.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.getWHInboundList = this.getWHInboundList.bind(this);
+    this.toggleDelete = this.toggleDelete.bind(this);
   }
 
   toggle(i) {
@@ -189,6 +191,13 @@ class MatInboundPlan extends React.Component {
     this.setState((prevState) => ({
       modal_loading: !prevState.modal_loading,
     }));
+  }
+
+  toggleDelete(e) {
+    const modalDelete = this.state.danger;
+    this.setState({
+      danger: !this.state.danger,
+    });
   }
 
   changeFilterName(value) {
@@ -449,14 +458,14 @@ class MatInboundPlan extends React.Component {
     this.toggleLoading();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    console.log("xlsx data", JSON.stringify(BulkXLSX));
+    // console.log("xlsx data", JSON.stringify(BulkXLSX));
     const res = await this.postDatatoAPINODE(
       "/whInboundPlan/createWhInboundPlanTruncate",
       {
         inboundPlanData: BulkXLSX,
       }
     );
-    console.log("res bulk ", res);
+    // console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -491,20 +500,6 @@ class MatInboundPlan extends React.Component {
     };
     this.toggleLoading();
     this.toggleEdit();
-    // if (pp.owner_id === undefined || pp.owner_id === null) {
-    //   pp["owner_id"] = pp.product_name;
-    // } else {
-    //   if (pp.pp_group.length === 0) {
-    //     pp["pp_group"] = pp.product_name;
-    //   }
-    // }
-    // if (pp.pp_cust_number === null || pp.pp_cust_number === undefined) {
-    //   pp["pp_cust_number"] = pp.pp_id;
-    // } else {
-    //   if (pp.pp_cust_number.length === 0) {
-    //     pp["pp_cust_number"] = pp.pp_id;
-    //   }
-    // }
     let patchData = await this.patchDatatoAPINODE(
       "/whInboundPlan/UpdateOneWhInboundPlanwithDelete/" + objData._id,
       { data: [pp] }
@@ -627,18 +622,19 @@ class MatInboundPlan extends React.Component {
     saveAs(new Blob([allocexport]), "All Material Inbound.xlsx");
   }
 
-  DeleteData(r) {
-    // this.toggleDanger();
-    const _idData = r.currentTarget.value;
+  DeleteData = async () => {
+    const objData = this.state.all_data.find((e) => e._id);
+    this.toggleLoading();
+    this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/whInboundPlan/deleteWhInboundPlan/" + _idData
+      "/whInboundPlan/deleteWhInboundPlan/" + objData._id
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
-        // this.toggleLoading();
+        this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
-          // this.toggleLoading();
+          this.toggleLoading();
         });
       }
     });
@@ -807,14 +803,18 @@ class MatInboundPlan extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                      <span style={{ fontSize: "20px", fontWeight: "500" }}>
+                      <span style={{
+                          fontSize: "20px",
+                          fontWeight: "500",
+                          position: "absolute",
+                        }}>
                         Material Inbound List
                       </span>
                       <div
-                        style={{
-                          float: "right",
-                          margin: "5px",
-                          display: "inline-flex",
+                         style={{
+                          float: "left",
+                          marginTop: "25px",
+                          // display: "inline-flex",
                         }}
                       >
                         <FormGroup>
@@ -903,34 +903,13 @@ class MatInboundPlan extends React.Component {
                                 </td>
                                 <td style={{ textAlign: "center" }}>
                                   {e.notes}
-                                </td>
-                                {/* <td>
-                                  <Button
-                                    size="sm"
-                                    color="secondary"
-                                    value={e.owner_id}
-                                    onClick={this.toggleEdit}
-                                    title="Edit"
-                                  >
-                                    <i
-                                      className="fa fa-pencil"
-                                      aria-hidden="true"
-                                    ></i>
-                                  </Button>
-                                </td> */}
+                                </td>    
                                 <td>
                                   <Button
                                     size="sm"
                                     color="danger"
                                     value={e._id}
-                                    onClick={(r) => {
-                                      if (
-                                        window.confirm(
-                                          "Are you sure you wish to delete this item?"
-                                        )
-                                      )
-                                        this.DeleteData(r, "value");
-                                    }}
+                                    onClick={this.toggleDelete}
                                     title="Delete"
                                   >
                                     <i
@@ -964,6 +943,29 @@ class MatInboundPlan extends React.Component {
             </Card>
           </Col>
         </Row>
+
+        {/* Modal confirmation delete */}
+        <Modal
+          isOpen={this.state.danger}
+          toggle={this.toggleDelete}
+          className={"modal-danger " + this.props.className}
+        >
+          <ModalHeader toggle={this.toggleDelete}>
+            Delete Material Stock Confirmation
+          </ModalHeader>
+          <ModalBody>Are you sure want to delete ?</ModalBody>
+          <ModalFooter>
+            <Button
+              color="danger"
+              onClick={this.DeleteData}
+            >
+              Delete
+            </Button>
+            <Button color="secondary" onClick={this.toggleDelete}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </Modal>
 
         {/* Modal New PO */}
         <Modal

@@ -94,7 +94,7 @@ class WHManagement extends React.Component {
     this.toggleEdit = this.toggleEdit.bind(this);
     this.saveNew = this.saveNew.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
-    this.toggleDanger = this.toggleDanger.bind(this);
+    this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
   }
 
@@ -111,15 +111,10 @@ class WHManagement extends React.Component {
     this.setState({ collapse: !this.state.collapse });
   }
 
-  toggleDanger(e) {
-    const value = e.currentTarget.value;
-    const aEdit = this.state.all_data.find((e) => e.owner_id === value);
-    const Dataid = aEdit.owner_id;
-    const Datapo = aEdit.po_number;
+  toggleDelete(e) {
+    const modalDelete = this.state.danger;
     this.setState({
       danger: !this.state.danger,
-      // activeItemId: e._id,
-      // activeItemName: e.owner_id,
     });
   }
 
@@ -670,22 +665,24 @@ class WHManagement extends React.Component {
     saveAs(new Blob([allocexport]), "WH Management.xlsx");
   }
 
-  DeleteData(r) {
-    // this.toggleDanger();
-    const _idData = r.currentTarget.value;
+  DeleteData = async () => {
+    const objData = this.state.all_data.find((e) => e._id);
+    this.toggleLoading();
+    this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/whManagement/deleteWarehouse/" + _idData
+      "/whManagement/deleteWarehouse/" + objData._id
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
-        // this.toggleLoading();
+        this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
-          // this.toggleLoading();
+          this.toggleLoading();
         });
       }
     });
   }
+
 
   exportMatStatus = async () => {
     const wb = new Excel.Workbook();
@@ -908,7 +905,7 @@ class WHManagement extends React.Component {
                                     size="sm"
                                     color="danger"
                                     value={e._id}
-                                    onClick={(r) => { if (window.confirm('Are you sure you wish to delete this item?')) this.DeleteData(r, "value")}}
+                                    onClick={this.toggleDelete}
                                     title="Delete"
                                   >
                                     <i
@@ -1110,25 +1107,24 @@ class WHManagement extends React.Component {
         </Modal>
         {/*  Modal Edit PP*/}
 
-        {/* Modal confirmation delete */}
-        <Modal
+                {/* Modal confirmation delete */}
+                <Modal
           isOpen={this.state.danger}
-          toggle={this.toggleDanger}
+          toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
         >
-          <ModalHeader toggle={this.toggleDanger}>
-            Delete WH Management Confirmation
+          <ModalHeader toggle={this.toggleDelete}>
+            Delete Material Stock Confirmation
           </ModalHeader>
           <ModalBody>Are you sure want to delete ?</ModalBody>
           <ModalFooter>
             <Button
               color="danger"
-              // value={e._id}
-              onClick={(r) => this.DeleteData(r, "value")}
+              onClick={this.DeleteData}
             >
               Delete
             </Button>
-            <Button color="secondary" onClick={this.toggleDanger}>
+            <Button color="secondary" onClick={this.toggleDelete}>
               Cancel
             </Button>
           </ModalFooter>

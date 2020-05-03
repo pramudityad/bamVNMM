@@ -33,15 +33,15 @@ const Checkbox = ({
   onChange,
   value,
 }) => (
-  <input
-    type={type}
-    name={name}
-    checked={checked}
-    onChange={onChange}
-    value={value}
-    className="checkmark-dash"
-  />
-);
+    <input
+      type={type}
+      name={name}
+      checked={checked}
+      onChange={onChange}
+      value={value}
+      className="checkmark-dash"
+    />
+  );
 
 const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
@@ -251,11 +251,11 @@ class MaterialStock extends React.Component {
     let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
     this.getDatafromAPINODE(
       "/whStock/getWhStock?q=" +
-        getbyWH +
-        "&lmt=" +
-        this.state.perPage +
-        "&pg=" +
-        this.state.activePage
+      getbyWH +
+      "&lmt=" +
+      this.state.perPage +
+      "&pg=" +
+      this.state.activePage
     ).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
@@ -554,20 +554,6 @@ class MaterialStock extends React.Component {
     console.log("patch data ", pp);
     this.toggleLoading();
     this.toggleEdit();
-    // if (pp.owner_id === undefined || pp.owner_id === null) {
-    //   pp["owner_id"] = pp.product_name;
-    // } else {
-    //   if (pp.pp_group.length === 0) {
-    //     pp["pp_group"] = pp.product_name;
-    //   }
-    // }
-    // if (pp.pp_cust_number === null || pp.pp_cust_number === undefined) {
-    //   pp["pp_cust_number"] = pp.pp_id;
-    // } else {
-    //   if (pp.pp_cust_number.length === 0) {
-    //     pp["pp_cust_number"] = pp.pp_id;
-    //   }
-    // }
     let patchData = await this.patchDatatoAPINODE(
       "/whStock/updateOneWhStockwithDelete/" + objData._id,
       { data: [pp] }
@@ -787,24 +773,24 @@ class MaterialStock extends React.Component {
                   </div>
                   <div>
                     {this.state.userRole.includes("Flow-PublicInternal") !==
-                    true ? (
-                      <div>
-                        <Button
-                          block
-                          color="success"
-                          onClick={this.toggleAddNew}
-                          id="toggleCollapse1"
-                        >
-                          <i className="fa fa-plus-square" aria-hidden="true">
-                            {" "}
+                      true ? (
+                        <div>
+                          <Button
+                            block
+                            color="success"
+                            onClick={this.toggleAddNew}
+                            id="toggleCollapse1"
+                          >
+                            <i className="fa fa-plus-square" aria-hidden="true">
+                              {" "}
                             &nbsp;{" "}
-                          </i>{" "}
+                            </i>{" "}
                           New
                         </Button>
-                      </div>
-                    ) : (
-                      ""
-                    )}
+                        </div>
+                      ) : (
+                        ""
+                      )}
                   </div>
                 </div>
                 {/* <div>
@@ -898,7 +884,7 @@ class MaterialStock extends React.Component {
                               type="select"
                               name="select"
                               onChange={this.getWHStockList}
-                              // placeholder="Select Warehouse"
+                            // placeholder="Select Warehouse"
                             >
                               {this.state.wh_data.map((opt) => (
                                 <option value={opt.wh_id}>
@@ -958,7 +944,7 @@ class MaterialStock extends React.Component {
                                   .includes(this.state.search.toLowerCase()) ||
                                 e.project_name
                                   .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) 
+                                  .includes(this.state.search.toLowerCase())
                                 //   ||
                                 // e.serial_number
                                 //   .toLowerCase()
