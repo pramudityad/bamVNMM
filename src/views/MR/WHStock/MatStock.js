@@ -85,6 +85,7 @@ class MaterialStock extends React.Component {
       danger: false,
       activeItemName: "",
       activeItemId: null,
+      createModal: false,
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -99,6 +100,7 @@ class MaterialStock extends React.Component {
     this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.getWHStockList = this.getWHStockList.bind(this);
+    this.togglecreateModal = this.togglecreateModal.bind(this);
   }
 
   toggle(i) {
@@ -107,6 +109,12 @@ class MaterialStock extends React.Component {
     });
     this.setState({
       dropdownOpen: newArray,
+    });
+  }
+
+  togglecreateModal() {
+    this.setState({
+      createModal: !this.state.createModal,
     });
   }
 
@@ -483,6 +491,7 @@ class MaterialStock extends React.Component {
 
   saveMatStockWHBulk = async () => {
     this.toggleLoading();
+    this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
@@ -501,6 +510,7 @@ class MaterialStock extends React.Component {
 
   saveTruncateBulk = async () => {
     this.toggleLoading();
+    this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     console.log("xlsx data", JSON.stringify(BulkXLSX));
@@ -749,7 +759,7 @@ class MaterialStock extends React.Component {
                   className="card-header-actions"
                   style={{ display: "inline-flex" }}
                 >
-                  <div style={{ marginRight: "10px" }}>
+                  {/* <div style={{ marginRight: "10px" }}>
                     <Dropdown
                       isOpen={this.state.dropdownOpen[0]}
                       toggle={() => {
@@ -770,16 +780,17 @@ class MaterialStock extends React.Component {
                         </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
-                  </div>
+                  </div> */}
                   <div>
+                    {/* Open modal for create new */}
                     {this.state.userRole.includes("Flow-PublicInternal") !==
                       true ? (
                         <div>
                           <Button
                             block
                             color="success"
-                            onClick={this.toggleAddNew}
-                            id="toggleCollapse1"
+                            onClick={this.togglecreateModal}
+                          // id="toggleCollapse1"
                           >
                             <i className="fa fa-plus-square" aria-hidden="true">
                               {" "}
@@ -791,6 +802,13 @@ class MaterialStock extends React.Component {
                       ) : (
                         ""
                       )}
+                  </div>
+                   &nbsp;&nbsp;&nbsp;
+                  <div>
+                    <Button onClick={this.downloadAll} block color="ghost-warning"><i className="fa fa-download" aria-hidden="true">
+                      {" "}
+                            &nbsp;{" "}
+                    </i>{" "}Export</Button>
                   </div>
                 </div>
                 {/* <div>
@@ -858,7 +876,7 @@ class MaterialStock extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                      <span
+                      {/* <span
                         style={{
                           fontSize: "20px",
                           fontWeight: "500",
@@ -866,19 +884,21 @@ class MaterialStock extends React.Component {
                         }}
                       >
                         Material Stock List
-                      </span>
+                      </span> */}
                       <div
                         style={{
                           float: "left",
-                          marginTop: "25px",
+                          // marginTop: "25px",
                           // display: "inline-flex",
                         }}
                       >
                         <FormGroup row>
-                          <Label for="exampleSelect" sm={10}>
-                            Select Warehouse
+                          <Col xs="6" md="3">
+                            <Label for="exampleSelect">
+                              Select Warehouse
                           </Label>
-                          <Col sm={10}>
+                          </Col>
+                          <Col xs="12" md="9">
                             <Input
                               id="exampleSelect"
                               type="select"
@@ -908,7 +928,7 @@ class MaterialStock extends React.Component {
                 <Row>
                   <Col>
                     <div className="divtable">
-                      <table hover bordered responsive size="sm" width="100%">
+                      <Table responsive size="sm" >
                         <thead
                           style={{ backgroundColor: "#73818f" }}
                           className="fixed"
@@ -963,7 +983,6 @@ class MaterialStock extends React.Component {
                                   className="fixbody"
                                   key={e._id}
                                 >
-                                  {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
                                   <td style={{ textAlign: "center" }}>
                                     {e.owner_id}
                                   </td>
@@ -1021,7 +1040,7 @@ class MaterialStock extends React.Component {
                               </React.Fragment>
                             ))}
                         </tbody>
-                      </table>
+                      </Table>
                     </div>
                   </Col>
                 </Row>
@@ -1125,6 +1144,37 @@ class MaterialStock extends React.Component {
           </ModalFooter>
         </Modal>
         {/*  Modal Edit PP*/}
+
+        {/* Modal create New */}
+        <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
+          <ModalHeader toggle={this.togglecreateModal}>Create New Stock</ModalHeader>
+          <ModalBody>
+            <CardBody>
+              <div>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Upload File</td>
+                      <td>:</td>
+                      <td>
+                        <input
+                          type="file"
+                          onChange={this.fileHandlerMaterial.bind(this)}
+                          style={{ padding: "10px", visiblity: "hidden" }}
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardBody>
+          </ModalBody>
+          <ModalFooter>
+            <Button block color="link" className="btn-pill" onClick={this.exportMatStatus}>Download Template</Button>{' '}
+            <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveMatStockWHBulk}>Save</Button>{' '}
+            <Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button>
+          </ModalFooter>
+        </Modal>
 
         {/* Modal confirmation delete */}
         <Modal
