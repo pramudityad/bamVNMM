@@ -290,8 +290,8 @@ class WHManagement extends React.Component {
 
 
   getASPList() {
-    switch (this.props.dataLogin.account_id) {
-      case "xl":
+    // switch (this.props.dataLogin.account_id) {
+    //   case "xl":
         this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
           // console.log("asp data ", res.data);
           if (res.data !== undefined) {
@@ -300,10 +300,10 @@ class WHManagement extends React.Component {
             this.setState({ asp_data: [] });
           }
         });
-        break;
-      default:
-        break;
-    }
+    //     break;
+    //   default:
+    //     break;
+    // }
   }
 
   isSameValue(element, value) {
@@ -699,7 +699,7 @@ class WHManagement extends React.Component {
     ws.addRow(["wh_name", "wh_id", "wh_manager", "address", "owner"]);
     ws.addRow(["wh_domain", "WH_1", "A", "address wh", "2000175941tes"]);
     ws.addRow(["wh_domain", "WH_1", "B", "address wh", "2000175941tes"]);
-    
+
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
   };
