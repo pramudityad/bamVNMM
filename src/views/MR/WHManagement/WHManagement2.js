@@ -697,9 +697,9 @@ class WHManagement extends React.Component {
     const ws = wb.addWorksheet();
 
     ws.addRow(["wh_name", "wh_id", "wh_manager", "address", "owner"]);
-    ws.addRow(["whA", "WH_1", "A", "AB", "dadang1"]);
-    ws.addRow(["whB", "WH_1", "B", "BA", "nurjaman1"]);
-
+    ws.addRow(["wh_domain", "WH_1", "A", "address wh", "2000175941tes"]);
+    ws.addRow(["wh_domain", "WH_1", "B", "address wh", "2000175941tes"]);
+    
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
   };
