@@ -65,6 +65,7 @@ class MatInboundPlan extends React.Component {
       prevPage: 1,
       activePage: 1,
       total_data_PO: 0,
+      selected_wh: null,
       pp_all: [],
       rowsXLS: [],
       cpo_array: [],
@@ -245,6 +246,39 @@ class MatInboundPlan extends React.Component {
           all_data: res.data.data,
           prevPage: this.state.activePage,
           total_dataParent: res.data.totalResults,
+          selected_wh : get_wh_id
+        });
+        this.toggleLoading();
+      } else {
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
+        this.toggleLoading();
+      }
+    });
+  }
+
+  getWHInboundListNext() {
+    this.toggleLoading();
+    let get_wh_id = this.state.selected_wh;
+    let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
+    this.getDatafromAPINODE(
+      "/whInboundPlan/getWhInboundPlan?q=" +
+      getbyWH +
+      "&lmt=" +
+      this.state.perPage +
+      "&pg=" +
+      this.state.activePage
+    ).then((res) => {
+      // console.log('all data based on ', get_wh_id, res.data)
+      if (res.data !== undefined) {
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+          selected_wh : get_wh_id
         });
         this.toggleLoading();
       } else {
@@ -363,7 +397,7 @@ class MatInboundPlan extends React.Component {
 
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
-      this.getWHInboundList();
+      this.getWHInboundListNext();
     });
   }
 

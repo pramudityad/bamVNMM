@@ -65,6 +65,7 @@ class MaterialStock extends React.Component {
       perPage: 10,
       prevPage: 1,
       activePage: 1,
+      selected_wh: null,
       total_data_PO: 0,
       pp_all: [],
       rowsXLS: [],
@@ -256,7 +257,7 @@ class MaterialStock extends React.Component {
     this.toggleLoading();
     let get_wh_id = e.target.value;
     // console.log("wh_id", get_wh_id);
-    let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
+    let getbyWH = '{"wh_id":"' + get_wh_id + '"}'; 
     this.getDatafromAPINODE(
       "/whStock/getWhStock?q=" +
       getbyWH +
@@ -271,6 +272,39 @@ class MaterialStock extends React.Component {
           all_data: res.data.data,
           prevPage: this.state.activePage,
           total_dataParent: res.data.totalResults,
+          selected_wh : get_wh_id
+        });
+        this.toggleLoading();
+      } else {
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
+        this.toggleLoading();
+      }
+    });
+  }
+
+  getWHStockListNext() {
+    this.toggleLoading();
+    let get_wh_id = this.state.selected_wh;
+    let getbyWH = '{"wh_id":"' + get_wh_id + '"}'; 
+    this.getDatafromAPINODE(
+      "/whStock/getWhStock?q=" +
+      getbyWH +
+      "&lmt=" +
+      this.state.perPage +
+      "&pg=" +
+      this.state.activePage
+    ).then((res) => {
+      // console.log("all data ", res.data);
+      if (res.data !== undefined) {
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+          selected_wh : get_wh_id
         });
         this.toggleLoading();
       } else {
@@ -431,7 +465,7 @@ class MaterialStock extends React.Component {
 
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
-      this.getWHStockList();
+      this.getWHStockListNext();
     });
   }
 
