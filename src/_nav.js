@@ -134,20 +134,15 @@ export default {
       icon: 'icon-list',
       children: [
         {
+          name: 'WH Dashboard',
+          url: '/wh-dashboard2',
+          icon: 'icon-speedometer',
+        },
+        {
           name: 'WH Management',
           url: '/wh-management',
           icon: 'icon-list',
         },
-        {
-          name: 'WH Stock',
-          url: '/material-stock',
-          icon: 'icon-list',
-        },
-        {
-          name: 'WH Inbound Plan',
-          url: '/material-inbound-plan',
-          icon: 'icon-list',
-        }
       ]
     },
     {

@@ -1,4 +1,5 @@
 import React from 'react';
+// import WHDashboard from './views/Warehouse/WHDashboard';
 
 const Breadcrumbs = React.lazy(() => import('./views/Base/Breadcrumbs'));
 const Cards = React.lazy(() => import('./views/Base/Cards'));
@@ -98,12 +99,13 @@ const CPODatabaseDetail  = React.lazy(() => import('./views/CPODatabase/CPODatab
 
 const ShipmentList = React.lazy(() => import('./views/ShipmentList/ShipmentList'));
 
-// const WHManagement  = React.lazy(() => import('./views/MR/WHManagement/WHManagement'));
+const WHManagement  = React.lazy(() => import('./views/MR/WHManagement/WHManagement'));
 
-const WHManagement  = React.lazy(() => import('./views/MR/WHManagement/WHManagement2'));
-const MaterialStock  = React.lazy(() => import('./views/MR/WHStock/MatStock'));
-const MaterialInboundPlan  = React.lazy(() => import('./views/MR/WHInbound/MatInboundPlan'));
+const MaterialStock  = React.lazy(() => import('./views/MR/WHStock/MatStock2'));
+const MaterialInboundPlan  = React.lazy(() => import('./views/MR/WHInbound/MatInboundPlan2'));
 const MatLibrary  = React.lazy(() => import('./views/MR/MatLibrary/MatLibrary'));
+
+const WHDashboard = React.lazy(() => import('./views/Warehouse/WHDashboard'));
 
 const ListCPOBoq = React.lazy(() => import('./views/TechnicalCPO/ListCPOBoq'));
 const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'));
@@ -232,6 +234,8 @@ const routes = [
   { path: '/material-inbound-plan', exact: true, name: 'Material Inbound Plan', component: MaterialInboundPlan },
   { path: '/wh-management', exact: true, name: 'Warehouse Management', component: WHManagement },
   { path: '/mat-library', exact: true, name: 'Material Library', component: MatLibrary },
+
+  { path: '/wh-dashboard2', exact: true, name: 'Warehouse Dashboard', component: WHDashboard },
 ];
 
 export default routes;
