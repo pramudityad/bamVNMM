@@ -9,6 +9,10 @@ import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timel
 import 'react-vertical-timeline-component/style.min.css';
 import { withScriptjs } from "react-google-maps";
 import GMap from './MapComponent';
+import Excel from 'exceljs';
+import { saveAs } from 'file-saver';
+import {ExcelRenderer} from 'react-excel-renderer';
+import './MatStyle.css';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -24,15 +28,22 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
+const status_can_edit_material = ["PLANTSPEC NOT ASSIGNED", "PLANTSPEC ASSIGNED", "PLANTSPEC UPDATED", "MR REQUESTED", "MR CANCELED", "MR APPROVED", "MR REJECTED", "MR UPDATED", "ORDER PROCESSING START"]
+
 class MRDetail extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-        userRole : this.props.dataLogin.role,
-        userId : this.props.dataLogin._id,
-        userName : this.props.dataLogin.userName,
-        userEmail : this.props.dataLogin.email,
+      userRole : this.props.dataLogin.role,
+      userId : this.props.dataLogin._id,
+      userName : this.props.dataLogin.userName,
+      userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
+      list_mr_item : [],
+      rowsXLS : [],
         data_mr : null,
         mr_site_NE : null,
         mr_site_FE : null,
@@ -45,15 +56,31 @@ class MRDetail extends Component {
         edit_detail : false,
         action_status : null,
         action_message : null,
+        material_wh : [],
+        material_inbound : [],
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
+    this.getQtyMRMDNE = this.getQtyMRMDNE.bind(this);
+    this.getQtyMRMDFE = this.getQtyMRMDFE.bind(this);
     this.changeTabsSubmenu = this.changeTabsSubmenu.bind(this);
     this.requestForApproval = this.requestForApproval.bind(this);
     this.ApproveMR = this.ApproveMR.bind(this);
     this.changeEditable = this.changeEditable.bind(this);
     this.handleChangeFormMRUpdate = this.handleChangeFormMRUpdate.bind(this);
     this.updateDataMR = this.updateDataMR.bind(this);
+    this.downloadMaterialMRUpload = this.downloadMaterialMRUpload.bind(this);
+    this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
+    this.downloadMaterialMRReport = this.downloadMaterialMRReport.bind(this);
+  }
+
+  checkValue(props){
+    //Swap undefined to null
+    if( typeof props === 'undefined' ) {
+      return null;
+    }else{
+      return props;
+    }
   }
 
   async getDatafromAPIBMS(url){
@@ -136,6 +163,64 @@ class MRDetail extends Component {
     }
   }
 
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios.get(API_URL_NODE+url, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async postDatatoAPINODE(url, data) {
+    try {
+      let respond = await axios.post(API_URL_NODE+url, data, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond post data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond post data", err.response);
+      return respond;
+    }
+  }
+
+  async patchDatatoAPINODE(url, data){
+    try {
+      let respond = await axios.patch(API_URL_NODE +url, data, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+      console.log("respond Post Data", err);
+      return respond;
+    }
+  }
+
   checkValueReturn(value1, value2){
     // if value undefined return Value2
     if( typeof value1 !== 'undefined' && value1 !== null) {
@@ -147,49 +232,110 @@ class MRDetail extends Component {
     }
   }
 
+  fileHandlerMaterial = (event) => {
+    let fileObj = event.target.files[0];
+    if(fileObj !== undefined){
+      ExcelRenderer(fileObj, (err, rest) => {
+        if(err){
+          console.log(err);
+        }
+        else{
+          this.ArrayEmptytoNull(rest.rows);
+        }
+      });
+    }
+  }
+
+  ArrayEmptytoNull(dataXLS){
+    let newDataXLS = [];
+    for(let i = 0; i < dataXLS.length; i++){
+      let col = [];
+      for(let j = 0; j < dataXLS[0].length; j++){
+        col.push(this.checkValue(dataXLS[i][j]));
+      }
+      newDataXLS.push(col);
+    }
+    this.setState({
+      rowsXLS: newDataXLS
+    });
+  }
+
   getDataMR(_id_MR){
-    this.getDatafromAPIBAM('/mr_op/'+_id_MR).then(resMR => {
+    this.getDataFromAPINODE('/matreq/'+_id_MR).then(resMR => {
       if(resMR.data !== undefined){
-        this.setState({ data_mr : resMR.data });
-        this.getDatafromAPIBAM('/mr_pp_sorted_nonpage?where={"id_mr_doc" : "'+_id_MR+'"}').then(resPP => {
-          if(resPP.data !== undefined){
-            this.getDatafromAPIBAM('/mr_md_sorted_nonpage?where={"id_mr_doc" : "'+_id_MR+'"}').then(resMD => {
-              if(resMD.data !== undefined){
-                this.setState({mr_pp : resPP.data._items, mr_md : resMD.data._items }, () => {
-                  this.prepareView();
-                });
-              }
-            })
-          }
-        })
+        this.setState({ data_mr :  resMR.data}, () => {
+          this.setState({mr_pp : resMR.data.packages.filter(e => e.qty !== 0)}, () => {
+            if(status_can_edit_material.includes(resMR.data.current_mr_status)){
+              this.getDataWarehouse(resMR.data.packages);
+              this.getDataInbound(resMR.data.packages)
+            }
+            this.prepareView();
+          });
+        });
       }
     })
+  }
+
+  async getDataWarehouse(data_ps) {
+    let listSku = [];
+    if(data_ps !== null && data_ps !== undefined) {
+      data_ps.map(pp => pp.materials.map(material => listSku.push(material.material_id)));
+      listSku = [...new Set(listSku)];
+      let skuData = {
+        "sku" : listSku
+      }
+      const respondSKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', skuData);
+      if(respondSKU.data !== undefined && respondSKU.status >= 200 && respondSKU.status <= 300 ){
+        let array_sku = [];
+        respondSKU.data.data.map(sku => sku.map(sku2 => array_sku.push({"sku":sku2.sku, "qty_sku":sku2.qty_sku})));
+        this.setState({ material_wh : array_sku });
+      }
+    }
+  }
+
+  async getDataInbound(data_ps) {
+    let listSku = [];
+    if(data_ps !== null && data_ps !== undefined) {
+      data_ps.map(pp => pp.materials.map(material => listSku.push(material.material_id)));
+      listSku = [...new Set(listSku)];
+      let skuData = {
+        "sku" : listSku
+      }
+      const respondSKU = await this.postDatatoAPINODE('/whInboundPlan/getWhInboundPlanbySku', skuData);
+      if(respondSKU.data !== undefined && respondSKU.status >= 200 && respondSKU.status <= 300 ){
+        let array_sku = [];
+        respondSKU.data.data.map(sku => sku.map(sku2 => array_sku.push({"sku":sku2.sku, "qty_sku":sku2.qty_sku})));
+        this.setState({ material_inbound : array_sku });
+      }
+    }
   }
 
   prepareView(){
     const mr_data = this.state.data_mr;
     const data_pp = this.state.mr_pp;
-    const data_md = this.state.mr_md;
+    let list_mr_id_item = [...new Set(data_pp.map(({ pp_id}) => pp_id))];
+    let list_mr_item = [];
     let site_NE = undefined;
     let site_FE = undefined;
     const data_pp_uniq = [...new Set(data_pp.map(({ id_pp_doc}) => id_pp_doc))];
+    for(let i = 0; i < list_mr_id_item.length; i++){
+      let idxItem = data_pp.find(e => e.pp_id === list_mr_id_item[i]);
+      if(idxItem !== undefined){
+        list_mr_item.push(idxItem);
+      }
+    }
+    this.setState({list_mr_item : list_mr_item});
     if(mr_data.site_info.length !== 0){
       site_NE = mr_data.site_info.find( e => e.site_title === "NE");
       site_FE = mr_data.site_info.find( e => e.site_title === "FE");
     }
     if(site_NE !== undefined){
       let data_pp_NE = data_pp.filter(e => e.site_id === site_NE.site_id);
-      for(let i = 0; i < data_pp_NE.length; i++){
-        data_pp_NE[i]["mr_md"] = data_md.filter(e => e.id_mr_pp_doc === data_pp_NE[i]._id && e.site_id === site_NE.site_id);
-      }
       site_NE["mr_pp"] = data_pp_NE;
       this.setState({ mr_site_NE : site_NE });
     }
     if(site_FE !== undefined){
       let data_pp_FE = data_pp.filter(e => e.site_id === site_FE.site_id);
-      for(let i = 0; i < data_pp_FE.length; i++){
-        data_pp_FE[i]["mr_md"] = data_md.filter(e => e.id_mr_pp_doc === data_pp_FE[i]._id && e.site_id === site_FE.site_id);
-      }
       site_FE["mr_pp"] = data_pp_FE;
       this.setState({ mr_site_FE : site_FE });
     }
@@ -210,6 +356,36 @@ class MRDetail extends Component {
     const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
     if(getDataPPMR !== undefined){
       return getDataPPMR.qty;
+    }else{
+      return 0;
+    }
+  }
+
+  getQtyMRMDNE(pp_id, mr_id){
+    const itemMRBom = this.state.mr_site_NE.mr_pp;
+    const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
+    if(getDataPPMR !== undefined){
+      const getDataMDMR = getDataPPMR.materials.find(e => e.material_id === mr_id);
+      if(getDataMDMR !== undefined){
+        return getDataMDMR.qty;
+      }else{
+        return 0;
+      }
+    }else{
+      return 0;
+    }
+  }
+
+  getQtyMRMDFE(pp_id, mr_id){
+    const itemMRBom = this.state.mr_site_FE.mr_pp;
+    const getDataPPMR = itemMRBom.find(e => e.pp_id === pp_id);
+    if(getDataPPMR !== undefined){
+      const getDataMDMR = getDataPPMR.materials.find(e => e.material_id === mr_id);
+      if(getDataMDMR !== undefined){
+        return getDataMDMR.qty;
+      }else{
+        return 0;
+      }
     }else{
       return 0;
     }
@@ -245,98 +421,19 @@ class MRDetail extends Component {
     });
   }
 
-  milestoneStat(ms_name, ms_date, ms_updater, index)
+  milestoneStat(ms_name, ms_status, ms_date, ms_updater, index)
   {
-    switch ( ms_name )
-    {
-      case 'MS_ORDER_CREATED':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+    return (
+      <VerticalTimelineElement
+        className="vertical-timeline-element--work"
+        date={ms_date}
+        iconStyle={{background: 'rgb(33, 150, 243)', color: '#fff' }}
 
-      >
-          <h3 className="vertical-timeline-element-title">Order Created</h3>
-          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-          </p>
-        </VerticalTimelineElement>;
-      case 'MS_ORDER_RECEIVED':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Order Received</h3>
-          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-          </p>
-        </VerticalTimelineElement>;
-      case 'MS_ORDER_PROCESSING':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Order Processing</h3>
-          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-          </p>
-        </VerticalTimelineElement>;
-      case 'MS_READY_TO_DELIVER':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(227, 30, 16)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Ready to Deliver</h3>
-          <h4 className="vertical-timeline-element-subtitle">confirmed by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      case 'MS_JOINT_CHECK':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Joint Check</h3>
-          <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-          </p>
-        </VerticalTimelineElement>;
-      case 'MS_LOADING_PROCESS':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Loading Process</h3>
-          <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-          </p>
-        </VerticalTimelineElement>;
-      default:
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date=""
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Data not available</h3>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce viverra ut mauris.
-          </p>
-        </VerticalTimelineElement>;
-    }
+        >
+        <h3 className="vertical-timeline-element-title">{ms_name + " " +ms_status}</h3>
+        <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
+      </VerticalTimelineElement>
+    )
   }
 
   componentDidMount(){
@@ -353,20 +450,8 @@ class MRDetail extends Component {
   // }
 
   requestForApproval(){
-    const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     let dataMR = this.state.data_mr;
-    const requestAprv = [{
-      "mr_status_name": "MATERIAL_REQUEST",
-      "mr_status_value": "REQUESTED",
-      "mr_status_date": dateNow,
-      "mr_status_updater": this.state.userEmail,
-      "mr_status_updater_id": this.state.userId,
-    }]
-    let reqMR = {};
-    reqMR['current_mr_status'] = "MR REQUESTED";
-    reqMR['mr_status'] = dataMR.mr_status.concat(requestAprv);
-    this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, reqMR, dataMR._etag).then(res => {
+    this.patchDatatoAPINODE('/matreq/requestMatreq/'+dataMR._id).then(res => {
       if(res.data !== undefined){
         this.setState({ action_status : "success" });
       }else{
@@ -376,28 +461,8 @@ class MRDetail extends Component {
   }
 
   ApproveMR(){
-    const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
     let dataMR = this.state.data_mr;
-    const statusAprv = [{
-      "mr_status_name": "MATERIAL_REQUEST",
-      "mr_status_value": "APPROVED",
-      "mr_status_date": dateNow,
-      "mr_status_updater": this.state.userEmail,
-      "mr_status_updater_id": this.state.userId,
-    }];
-    const msAprv = [{
-        "ms_name": "MS_ORDER_RECEIVED",
-        "ms_date": dateNow,
-        "ms_updater": this.state.userEmail,
-        "ms_updater_id": this.state.userId
-    }];
-    let aprvMR = {};
-    aprvMR['current_mr_status'] = "MR APPROVED";
-    aprvMR['current_milestones'] = "MS_ORDER_RECEIVED";
-    aprvMR['mr_status'] = dataMR.mr_status.concat(statusAprv);
-    aprvMR['mr_milestones'] = dataMR.mr_milestones.concat(msAprv);
-    this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, aprvMR, dataMR._etag).then(res => {
+    this.patchDatatoAPINODE('/matreq/approveMatreq/'+dataMR._id).then(res => {
       if(res.data !== undefined){
         this.setState({ action_status : "success" });
       }else{
@@ -422,7 +487,7 @@ class MRDetail extends Component {
     patchData["eta"] = dataForm[3] !== null ? dataForm[3]+" 23:59:59" : dataMR.eta;
     patchData["requested_eta"] = dataForm[3] !== null ? dataForm[3]+" 23:59:59" : dataMR.requested_eta;
     patchData["etd"] = dataForm[2] !== null ? dataForm[2]+" 23:59:59" : dataMR.etd;
-    patchData["dsp_company"] = dataForm[1] !== null ? dataForm[1]+" 23:59:59" : dataMR.dsp_company;
+    patchData["dsp_company"] = dataForm[1] !== null ? dataForm[1] : dataMR.dsp_company;
     patchData["current_mr_status"] = "MR UPDATED";
     patchData["mr_status"] = dataMR.mr_status.concat(dataStatus);
     const respondPatchMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, patchData, dataMR._etag);
@@ -433,6 +498,125 @@ class MRDetail extends Component {
     }
   }
 
+  CompareArrayObject(arr, prop) {
+    return arr.sort(function (a, b) {
+        var nameA = a[prop].toLowerCase(),
+            nameB = b[prop].toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
+  }
+
+  async downloadMaterialMRUpload() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataMR = this.state.data_mr;
+    const dataItemMR = this.state.list_mr_item;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    // const getMaterialVariant = await this.getDataFromAPINODE('/variants/variants');
+    // if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
+    //   dataMaterialVariant = getMaterialVariant.data.data;
+    // }
+    //
+    // ws2.addRow(["Origin","Material ID","Material Name","Description", "Category"]);
+    // for(let j = 0; j < dataMaterialVariant.length; j++){
+    //   ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category]);
+    // }
+
+    let headerRow = ["bundle_id", "bundle_name", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "unit", "qty", "stock_warehouse", "inbound_warehouse", "availability"];
+    ws.addRow(headerRow);
+    let list_material_id = [];
+    for(let i = 0; i < dataItemMR.length; i++){
+      for(let j = 0; j < dataItemMR[i].materials.length; j++){
+        let dataMatIdx = dataItemMR[i].materials[j];
+        list_material_id.push(dataMatIdx.material_id);
+        let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
+        let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
+        qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
+        qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
+        ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id), qty_wh, qty_inbound, (this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id)) < qty_wh ? "OK":"NOK"]);
+      }
+    }
+
+    let listMatId = [...new Set(list_material_id)];
+    let matIdData = {
+      "list_material_id" : listMatId
+    }
+
+    const getMaterialVariant = await this.postDatatoAPINODE('/variants/materialId', matIdData);
+    if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
+      dataMaterialVariant = getMaterialVariant.data.data;
+    }
+
+    dataMaterialVariant = this.CompareArrayObject(dataMaterialVariant, "description");
+
+    // dataMaterialVariant.sort(function(a, b){return a.description.toLowerCase() - b.description.toLowerCase()});
+
+    ws2.addRow(["Origin","Material ID","Material Name","Description", "Category"]);
+    for(let j = 0; j < dataMaterialVariant.length; j++){
+      ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category]);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material MR '+dataMR.mr_id+' uploader.xlsx');
+  }
+
+  async downloadMaterialMRReport() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataMR = this.state.data_mr;
+    const dataItemMR = this.state.list_mr_item;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    ws.addRow(["MR ID", dataMR.mr_id]);
+    ws.addRow(["Project", dataMR.project_name]);
+    ws.addRow(["Site", this.state.mr_site_NE.site_id]);
+
+    let headerRow = ["Bundle ID", "Bundle Name", "Material ID", "Material Name", "Unit", "Qty"];
+    ws.addRow(headerRow);
+    for(let i = 0; i < dataItemMR.length; i++){
+      ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name]);
+      for(let j = 0; j < dataItemMR[i].materials.length; j++){
+        let dataMatIdx = dataItemMR[i].materials[j];
+        let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
+        let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
+        qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
+        qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
+        ws.addRow([null, null, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id), qty_wh, qty_inbound, (this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id)) < qty_wh ? "OK":"NOK"]);
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material MR PS '+dataMR.mr_id+' Report.xlsx');
+  }
+
+  async saveUpdateMaterial(){
+    const dataXLS = this.state.rowsXLS;
+    const dataMR = this.state.data_mr;
+    let patchDataMat = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataMR._id, {"data" : dataXLS});
+    if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
+      this.setState({ action_status : 'success'});
+    } else{
+      if(patchDataMat.response !== undefined && patchDataMat.response.data !== undefined && patchDataMat.response.data.error !== undefined){
+        if(patchDataMat.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
   render() {
     const background = {
       backgroundColor: '#e3e3e3',
@@ -440,7 +624,7 @@ class MRDetail extends Component {
 
     const MapLoader = withScriptjs(GMap);
 
-    console.log("tabs_submenu", this.state.tabs_submenu);
+    let qty_wh = undefined, qty_inbound = undefined;
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -449,7 +633,7 @@ class MRDetail extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-info-circle" style={{marginRight: "8px"}}></i>MR Detail</span>
-            <Button style={{float : 'right'}} color="warning" onClick={this.changeEditable}>Editable</Button>
+            {/* }<Button style={{float : 'right'}} color="warning" onClick={this.changeEditable}>Editable</Button> */}
             {this.state.edit_detail !== false && (
               <Button style={{float : 'right', marginRight : '10px'}} color="success" onClick={this.updateDataMR}>Save</Button>
             )}
@@ -488,174 +672,169 @@ class MRDetail extends Component {
                 )}
               </tbody>
             </table>
-            <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
+            <hr style={{borderStyle : 'double', borderWidth: '0px 0px 4px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
             {this.state.tabs_submenu[0] === true && (
-              <Row>
-                <Col md="6">
-                  <table style={{marginBottom : '10px', fontSize : '15px'}}>
-                    <tbody>
-                      {this.state.data_mr !== null && (
-                        <Fragment>
-                        <tr>
-                          <td style={{width : '175px'}}>CD ID</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.cd_id}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>Project</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.project_name}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>MR Delivery Type</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.mr_delivery_type}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>DSP Company</td>
-                          <td>: </td>
-                          <td>
-                            {this.state.edit_detail === false ? this.state.data_mr.dsp_company : (
-                              <Input type="select" name="1" value={this.state.update_mr_form[1] === null ? this.state.data_mr.dsp_company : this.state.update_mr_form[1] } onChange={this.handleChangeFormMRUpdate}>
-                                <option value="" disabled selected hidden>Select DSP Company</option>
-                                <option value="PT BMS Delivery">PT BMS Delivery</option>
-                                <option value="PT MITT Delivery">PT MITT Delivery</option>
-                                <option value="PT IXT Delivery">PT IXT Delivery</option>
-                                <option value="PT ARA Delivery">PT ARA Delivery</option>
-                              </Input>
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>Origin {this.state.data_mr.origin_warehouse.title}</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.origin_warehouse.value}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>ETD</td>
-                          <td>: </td>
-                          <td>
-                            {this.state.edit_detail === false ? this.state.data_mr.etd : (
-                              <Input
-                                type="date"
-                                name="2"
-                                value={this.state.update_mr_form[2] === null ? this.state.data_mr.etd : this.state.update_mr_form[2]} onChange={this.handleChangeFormMRUpdate}
-                              />
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>ASP Company</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.asp_company}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>Current Status</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.current_mr_status}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>Current Milestone</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.current_milestones}</td>
-                        </tr>
-                        {this.state.mr_site_NE !== null && (
-                          <Fragment>
-                          <tr>
-                            <td style={{width : '200px'}}>Site ID NE</td>
-                            <td>: &nbsp;</td>
-                            <td>{this.state.mr_site_NE.site_id}</td>
-                          </tr>
-                          <tr>
-                            <td style={{width : '200px'}}>Site Name NE</td>
-                            <td>:</td>
-                            <td>{this.state.mr_site_NE.site_name}</td>
-                          </tr>
-                          </Fragment>
-                        )}
-                        </Fragment>
-                      )}
-                    </tbody>
-                  </table>
-                </Col>
-                <Col md="6">
-                  <table style={{marginBottom : '0px', fontSize : '15px'}}>
-                    <tbody>
-                      {this.state.data_mr !== null && (
-                        <Fragment>
-                        <tr>
-                          <td style={{width : '175px'}}>SOW Type</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.sow_type}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>&nbsp;</td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '175px'}}>MR Type</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.mr_type}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>&nbsp;</td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>&nbsp;</td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>ETA</td>
-                          <td>: </td>
-                          <td>
-                            {this.state.edit_detail === false ? this.state.data_mr.eta : (
-                              <Input
-                                type="date"
-                                name="3"
-                                value={this.state.update_mr_form[3] === null ? this.state.data_mr.eta : this.state.update_mr_form[3]} onChange={this.handleChangeFormMRUpdate}
-                              />
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>&nbsp;</td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>&nbsp;</td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>&nbsp;</td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                        {this.state.mr_site_FE !== null && (
-                          <Fragment>
-                          <tr>
-                            <td style={{width : '200px'}}>Site ID FE</td>
-                            <td>: &nbsp;</td>
-                            <td>{this.state.mr_site_FE.site_id}</td>
-                          </tr>
-                          <tr>
-                            <td style={{width : '200px'}}>Site Name FE</td>
-                            <td>:</td>
-                            <td>{this.state.mr_site_FE.site_name}</td>
-                          </tr>
-                          </Fragment>
-                        )}
-                        </Fragment>
-                      )}
-                    </tbody>
-                  </table>
-                </Col>
-              </Row>
+              <Fragment>
+              {this.state.data_mr !== null && (
+              <Fragment>
+                <div className="mr-detail__body--flex">
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>CD ID</span>
+                    </div>
+                    <div>
+                      <ul className="mr-detail__ul--cd-id">
+
+                      {this.state.data_mr.cust_del !== undefined ?
+                        this.state.data_mr.cust_del.map(e =>
+                          <li>{e.cd_id}</li>
+                        ) : (
+                          <li>{this.state.data_mr.cd_id}</li>
+                        )
+                      }
+                      </ul>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>SOW Type</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.sow_type}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>Current Milestone</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.current_milestones}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>Current Status</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.current_mr_status}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mr-detail__body--flex">
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>MR Type</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.mr_type}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>MR Delivery Type</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.mr_delivery_type}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mr-detail__body--flex">
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>DSP Company</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.dsp_company}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>Origin</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.origin.title + " " +this.state.data_mr.origin.value}
+                    </div>
+                  </div>
+                </div>
+
+                <hr className="mr-detail__line"/>
+
+                <div className="mr-detail__body--flex">
+                {this.state.mr_site_NE !== null && (
+                  <Fragment>
+                    <div className="mr-detail__flex-body--25">
+                      <div className="mr-detail__body--header-detail">
+                        <span>Site ID NE</span>
+                      </div>
+                      <div>
+                        {this.state.mr_site_NE.site_id}
+                      </div>
+                    </div>
+                    <div className="mr-detail__flex-body--25">
+                      <div className="mr-detail__body--header-detail">
+                        <span>Site Name NE</span>
+                      </div>
+                      <div>
+                        {this.state.mr_site_NE.site_name}
+                      </div>
+                    </div>
+                  </Fragment>
+                )}
+                {this.state.mr_site_NE !== null && (
+                  <Fragment>
+                    <div className="mr-detail__flex-body--25">
+                      <div className="mr-detail__body--header-detail">
+                        <span>Site ID FE</span>
+                      </div>
+                      <div>
+                        {this.state.mr_site_NE.site_id}
+                      </div>
+                    </div>
+                    <div className="mr-detail__flex-body--25">
+                      <div className="mr-detail__body--header-detail">
+                        <span>Site Name FE</span>
+                      </div>
+                      <div>
+                        {this.state.mr_site_NE.site_name}
+                      </div>
+                    </div>
+                  </Fragment>
+                )}
+                </div>
+
+                <hr className="mr-detail__line"/>
+
+                <div className="mr-detail__body--flex">
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>DSP Company</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.dsp_company}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>ETD</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.etd}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>ETA</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.eta}
+                    </div>
+                  </div>
+                </div>
+              </Fragment>
+              )}
+            </Fragment>
             ) }
             {this.state.tabs_submenu[1] === true && (
             <Fragment>
@@ -668,14 +847,34 @@ class MRDetail extends Component {
                         {this.state.mr_site_NE !== null && (
                           <Fragment>
                           <tr>
-                            <td style={{width : '200px'}}>Site ID NE</td>
+                            {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
+                              <td style={{width : '150px'}}>Destination {this.state.data_mr.destination.title}</td>
+                            ) : (
+                              <td style={{width : '150px'}}>Site ID NE</td>
+                            )}
                             <td>: &nbsp;</td>
-                            <td>{this.state.mr_site_NE.site_id}</td>
+                            {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
+                              <td style={{width : '150px'}}>{this.state.data_mr.destination.value}</td>
+                            ) : (
+                              <td>{this.state.mr_site_NE.site_id}</td>
+                            )}
+                          </tr>
+                          {this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
+                            <tr>
+                              <td style={{width : '150px'}}>Site Name NE</td>
+                              <td>:</td>
+                              <td>{this.state.mr_site_NE.site_name}</td>
+                            </tr>
+                          ) : ""}
+                          <tr>
+                            <td style={{width : '150px'}}>Total Box</td>
+                            <td>:</td>
+                            <td>{this.state.data_mr.total_boxes}</td>
                           </tr>
                           <tr>
-                            <td style={{width : '200px'}}>Site Name NE</td>
+                            <td style={{width : '150px'}}>Box ID</td>
                             <td>:</td>
-                            <td>{this.state.mr_site_NE.site_name}</td>
+                            <td>{this.state.data_mr.list_of_box_id !== undefined ? this.state.data_mr.list_of_box_id.map(e => e+", ") : ""}</td>
                           </tr>
                           </Fragment>
                         )}
@@ -689,7 +888,17 @@ class MRDetail extends Component {
                     <tbody>
                       {this.state.data_mr !== null && (
                         <Fragment>
-                        {this.state.mr_site_FE !== null && (
+                        <tr>
+                          <td style={{width : '550px'}}>
+                            <Button size="sm" color="secondary" style={{float : 'right'}} onClick={this.downloadMaterialMRUpload}>
+                              Download Format
+                            </Button>
+                            <Button size="sm" color="secondary" style={{float : 'right', marginRight : '10px'}} onClick={this.downloadMaterialMRReport}>
+                              Download MR PS
+                            </Button>
+                          </td>
+                        </tr>
+                        {this.state.mr_site_FE !== null && this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
                           <Fragment>
                           <tr>
                             <td style={{width : '200px'}}>Site ID FE</td>
@@ -702,6 +911,26 @@ class MRDetail extends Component {
                             <td>{this.state.mr_site_FE.site_name}</td>
                           </tr>
                           </Fragment>
+                        ) : (
+                          <Fragment>
+                            <tr>
+                              <td style={{fontSize : '12px'}}>&nbsp;</td>
+                            </tr>
+                            {status_can_edit_material.includes(this.state.data_mr.current_mr_status) && (
+                            <tr>
+                              <td style={{fontSize : '12px'}}>Change to Material Variant : </td>
+                            </tr>)}
+                          </Fragment>
+                        )}
+                        {status_can_edit_material.includes(this.state.data_mr.current_mr_status) && (
+                          <tr>
+                            <td style={{width : '550px'}}>
+                              <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"visiblity":"hidden"}}/>
+                              <Button size="sm" color="success" style={{float : 'right'}} onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
+                                Save
+                              </Button>
+                            </td>
+                          </tr>
                         )}
                         </Fragment>
                       )}
@@ -712,41 +941,90 @@ class MRDetail extends Component {
               <hr className="upload-line-ordering"></hr>
               <div className='divtable2'>
                 <Table hover bordered striped responsive size="sm">
-                  <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
+                  <thead style={{backgroundColor : '#0B486B', color : 'white'}} className="table-mr__header--fixed">
                     <tr>
-                      <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
+                      <th rowSpan="2" className="fixedhead" style={{width : '250px', verticalAlign : 'middle'}}>PP / Material Code</th>
                       <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
                       <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
                       <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
+                      {this.state.data_mr !== null && status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
+                        <Fragment>
+                          <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Material in Warehouse</th>
+                          <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Material Plan</th>
+                          <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Availability</th>
+                        </Fragment>
+                      ) : (<Fragment></Fragment>)}
                     </tr>
-                    <tr>
-                      <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
-                      {this.state.mr_site_FE !== null ? (
-                        <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
-                      ):(<Fragment></Fragment>)}
-                    </tr>
+                    {this.state.data_mr !== null && this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
+                      <tr>
+                        <th className="fixedhead" colSpan={this.state.mr_site_FE !== null ? 1 : 2} style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
+                        {this.state.mr_site_FE !== null ? (
+                          <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
+                        ):(<Fragment></Fragment>)}
+                      </tr>
+                    ) : ""}
                   </thead>
-                  <tbody>
+                  {this.state.data_mr !== null && status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
+                    <tbody>
+                    {this.state.mr_site_NE !== null && (
+                      this.state.list_mr_item.map( pp =>
+                        <Fragment>
+                          <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                            <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
+                            <td>{pp.product_name}</td>
+                            <td>{pp.unit}</td>
+                            <td align='center' colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{this.getQtyMRPPNE(pp.pp_id).toFixed(2)}</td>
+                            {this.state.mr_site_FE !== null ? (
+                              <td align='center'>{this.getQtyMRPPFE(pp.pp_id)}</td>
+                            ):(<Fragment></Fragment>)}
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                          </tr>
+                          {pp.materials.map(material =>
+                            <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                              <td style={{textAlign : 'right'}}>{material.material_id}</td>
+                              <td style={{textAlign : 'left'}}>{material.material_name}</td>
+                              <td>{material.material_unit}</td>
+                              <td align='center' colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{this.getQtyMRMDNE(pp.pp_id, material.material_id).toFixed(2)}</td>
+                              {this.state.mr_site_FE !== null ? (
+                                <td align='center'>{this.getQtyMRMDFE(pp.pp_id, material.material_id)}</td>
+                              ):(<Fragment></Fragment>)}
+                              <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
+                              <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
+                              <td align='center'>{(this.getQtyMRMDNE(pp.pp_id, material.material_id)) < qty_wh ? "OK":"NOK"}</td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      )
+                    )}
+                    {this.state.data_mr === null ?
+                      (<tr><td colSpan="5">Loading...</td></tr>)
+                      : this.state.data_mr.current_mr_status === "NOT ASSIGNED" && (
+                        <tr><td colSpan="5">PS not Assigned</td></tr>
+                      )}
+                    </tbody>
+                  ) : (<tbody>
                   {this.state.mr_site_NE !== null && (
-                    this.state.mr_site_NE.mr_pp.map( pp =>
+                    this.state.list_mr_item.map( pp =>
                       <Fragment>
                         <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
-                          <td>{pp.name}</td>
+                          <td>{pp.product_name}</td>
                           <td>{pp.unit}</td>
                           <td align='center'>{this.getQtyMRPPNE(pp.pp_id)}</td>
                           {this.state.mr_site_FE !== null ? (
                             <td align='center'>{this.getQtyMRPPFE(pp.pp_id)}</td>
                           ):(<Fragment></Fragment>)}
                         </tr>
-                        {pp.mr_md.map(material =>
+                        {pp.materials.map(material =>
                           <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
                             <td style={{textAlign : 'right'}}>{material.material_id}</td>
                             <td style={{textAlign : 'left'}}>{material.material_name}</td>
                             <td>{material.material_unit}</td>
-                            <td align='center'>{this.getQtyMRPPNE(pp.pp_id)*material.qty}</td>
+                            <td align='center'>{this.getQtyMRMDNE(pp.pp_id, material.material_id)}</td>
                             {this.state.mr_site_FE !== null ? (
-                              <td align='center'>{this.getQtyMRPPFE(pp.pp_id)*material.qty}</td>
+                              <td align='center'>{this.getQtyMRMDFE(pp.pp_id, material.material_id)}</td>
                             ):(<Fragment></Fragment>)}
                           </tr>
                         )}
@@ -758,7 +1036,7 @@ class MRDetail extends Component {
                     : this.state.data_mr.current_mr_status === "NOT ASSIGNED" && (
                       <tr><td colSpan="5">PS not Assigned</td></tr>
                     )}
-                  </tbody>
+                  </tbody>)}
                 </Table>
               </div>
             </Fragment>
@@ -766,6 +1044,26 @@ class MRDetail extends Component {
           {this.state.tabs_submenu[2] === true && (
             <Fragment>
               <div className="animated fadeIn">
+              {this.state.data_mr !== null && (
+                <Row>
+                  <Col md="6">
+                    <table style={{marginBottom : '10px'}}>
+                      <tbody>
+                        <tr>
+                          <td style={{width : '150px'}}>Current Milestone</td>
+                          <td> : </td>
+                          <td>{this.state.data_mr.current_milestones}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '150px'}}>Current Status</td>
+                          <td> : </td>
+                          <td>{this.state.data_mr.current_mr_status}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </Col>
+                </Row>
+                )}
                 <Row>
                   <Col xs="12" lg="12">
                     <Card>
@@ -779,8 +1077,8 @@ class MRDetail extends Component {
                       >
                         <VerticalTimeline>
                           {this.state.data_mr !== null &&
-                            this.state.data_mr.mr_milestones.map((ms, i) => {
-                              return this.milestoneStat(ms.ms_name, ms.ms_date, ms.ms_updater, i)
+                            this.state.data_mr.mr_status.filter(e => e.mr_status_name !== "IMPLEMENTATION").map((ms, i) => {
+                              return this.milestoneStat(ms.mr_status_name, ms.mr_status_value, ms.mr_status_date, ms.mr_status_updater, i )
                             })
                           }
                         </VerticalTimeline>

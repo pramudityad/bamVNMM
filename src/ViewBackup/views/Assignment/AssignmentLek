@@ -1,0 +1,109 @@
+if(this.state.uploadan_type === "With SSOW"){
+  let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
+  if(sow_type === "RBSTRM"){
+    for(let idx = 1; idx <= indexSSOW; idx++){
+      headerRow.push("ssow_rbs_id_"+idx.toString(), "ssow_rbs_activity_number_"+idx.toString(), "ssow_rbs_unit_"+idx.toString(), "ssow_rbs_quantity_"+idx.toString() );
+    }
+    for(let idx = 1; idx <= indexSSOW; idx++){
+      headerRow.push("ssow_trm_id_"+idx.toString(), "ssow_trm_activity_number_"+idx.toString(), "ssow_trm_unit_"+idx.toString(), "ssow_trm_quantity_"+idx.toString() );
+    }
+    ws.addRow(headerRow);
+    ws.addRow(["new","XL BAM DEMO 2020","RBSTRM", "tower_id", 2000054443,"PT SINERGI AITIKOM","3070","JAW-JT-BBS-0001","1.1.1","3022264",null,1,"1.1.4","3022960",null,2,null,null,null,null,null,null,null,null,null,null,null,null,"1.1.1.T", "3022917", "Site", 2, null,null,null,null]);
+    ws.addRow(["new","XL BAM DEMO 2020","RBSTRM", "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930","1.1.1.N","3022917","pc",3,"1.1.4.N","3022962",null,2,null,null,null,null,null,null,null,null,null,null,null,null,"1.1.1.T", "3022917", "Site", 2, null,null,null,null]);
+  }else{
+    for(let idx = 1; idx <= indexSSOW; idx++){
+      headerRow.push("ssow_"+(sow_type.toLowerCase())+"_id_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_activity_number_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_unit_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_quantity_"+idx.toString() );
+    }
+    ws.addRow(headerRow);
+    ws.addRow(["new","XL BAM DEMO 2020",sow_type, "tower_id", 2000054443,"PT SINERGI AITIKOM","3070","JAW-JT-BBS-0001","1.1.1","3022264",null,1,"1.1.4","3022960",null,2,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]);
+    ws.addRow(["new","XL BAM DEMO 2020",sow_type, "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930","1.1.1.N","3022917","pc",3,"1.1.4.N","3022962",null,2,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]);
+  }
+}else{
+  let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
+  if(sow_type === "RBSTRM"){
+    ws.addRow(["new","XL BAM DEMO 2020","RBSTRM", "tower_id", 2000054443,"PT SINERGI AITIKOM","3070","JAW-JT-BBS-0001"]);
+    ws.addRow(["new","XL BAM DEMO 2020","RBSTRM", "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930"]);
+  }else{
+    for(let idx = 1; idx <= indexSSOW; idx++){
+      headerRow.push("ssow_"+(sow_type.toLowerCase())+"_id_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_activity_number_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_unit_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_quantity_"+idx.toString() );
+    }
+    ws.addRow(headerRow);
+    ws.addRow(["new","XL BAM DEMO 2020",sow_type, "tower_id", 2000054443,"PT SINERGI AITIKOM"]);
+    ws.addRow(["new","XL BAM DEMO 2020",sow_type, "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930"]);
+  }
+}
+
+milestoneStat(ms_name, ms_date, ms_updater, index)
+{
+  switch ( ms_name )
+  {
+    case 'MS_ORDER_CREATED':
+      return <VerticalTimelineElement
+        className="vertical-timeline-element--work"
+        date={ms_date}
+        iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+
+    >
+        <h3 className="vertical-timeline-element-title">Order Created</h3>
+        <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
+      </VerticalTimelineElement>;
+    case 'MS_ORDER_RECEIVED':
+      return <VerticalTimelineElement
+        className="vertical-timeline-element--work"
+        date={ms_date}
+        iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+
+    >
+        <h3 className="vertical-timeline-element-title">Order Received</h3>
+        <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
+      </VerticalTimelineElement>;
+    case 'MS_ORDER_PROCESSING':
+      return <VerticalTimelineElement
+        className="vertical-timeline-element--work"
+        date={ms_date}
+        iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+
+    >
+        <h3 className="vertical-timeline-element-title">Order Processing</h3>
+        <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
+      </VerticalTimelineElement>;
+    case 'MS_READY_TO_DELIVER':
+      return <VerticalTimelineElement
+        className="vertical-timeline-element--work"
+        date={ms_date}
+        iconStyle={{ background: 'rgb(227, 30, 16)', color: '#fff' }}
+
+    >
+        <h3 className="vertical-timeline-element-title">Ready to Deliver</h3>
+        <h4 className="vertical-timeline-element-subtitle">confirmed by <b>{ms_updater}</b></h4>
+      </VerticalTimelineElement>;
+    case 'MS_JOINT_CHECK':
+      return <VerticalTimelineElement
+        className="vertical-timeline-element--work"
+        date={ms_date}
+        iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+
+    >
+        <h3 className="vertical-timeline-element-title">Joint Check</h3>
+        <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
+      </VerticalTimelineElement>;
+    case 'MS_LOADING_PROCESS':
+      return <VerticalTimelineElement
+        className="vertical-timeline-element--work"
+        date={ms_date}
+        iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+
+    >
+        <h3 className="vertical-timeline-element-title">Loading Process</h3>
+        <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
+      </VerticalTimelineElement>;
+    default:
+      return <VerticalTimelineElement
+        className="vertical-timeline-element--work"
+        date=""
+        iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+        >
+        <h3 className="vertical-timeline-element-title">Data not available</h3>
+      </VerticalTimelineElement>;
+  }
+}

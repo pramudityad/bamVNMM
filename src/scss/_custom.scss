@@ -153,6 +153,104 @@ body {
     }
 }
 
+// breadcrumb XL
+.breadcrumb--xl .breadcrumb{
+  background-color: #1976D2;
+}
 
+.breadcrumb--xl .breadcrumb a {
+  color: #FFF;
+}
+
+.breadcrumb--xl .breadcrumb-item + .breadcrumb-item::before {
+    display: inline-block;
+    padding-right: 0.5rem;
+    color: #FFF;
+    content: "/";
+}
+
+.breadcrumb--xl .breadcrumb-item.active {
+    color: #FFF;
+}
+
+// breadcrumb Telkom
+.breadcrumb--tsel .breadcrumb{
+  background-color: #ef5350;
+}
+
+.breadcrumb--tsel .breadcrumb a {
+  color: #FFF;
+}
+
+.breadcrumb--tsel .breadcrumb-item + .breadcrumb-item::before {
+    display: inline-block;
+    padding-right: 0.5rem;
+    color: #FFF;
+    content: "/";
+}
+
+.breadcrumb--tsel .breadcrumb-item.active {
+    color: #FFF;
+}
+
+// breadcrumb indosat
+.breadcrumb--indosat .breadcrumb{
+  background-color: #fcd401;
+}
+
+.breadcrumb--indosat .breadcrumb a {
+  color: #424242;
+}
+
+.breadcrumb--indosat .breadcrumb-item + .breadcrumb-item::before {
+    display: inline-block;
+    padding-right: 0.5rem;
+    color: #424242;
+    content: "/";
+}
+
+.breadcrumb--indosat .breadcrumb-item.active {
+    color: #424242;
+}
+
+//Card
+.card {
+  border-radius: 0px;
+}
+
+.card-header:first-child {
+    border-radius: 0 0 0 0;
+}
+
+//Table Stripped
+.table-striped tbody tr:nth-of-type(2n+1) {
+    background-color: rgba(207,216,220 ,0.4);
+}
+
+//AppFooter
+.app-footer {
+    background-color: rgba(38, 50, 56, 0.8);
+    color: white;
+}
+
+.app-footer a {
+    // color: rgb(207, 216, 220);
+    color: rgba(236,239,241 ,1);
+    text-decoration: none;
+    background-color: transparent;
+}
+
+.app-footer a:hover {
+    color: rgb(144, 164, 174);
+    text-decoration: underline;
+}
+
+.sidebar .sidebar-minimizer:hover {
+    background-color: rgba(55, 71, 79, 0.8);
+}
+
+.sidebar .sidebar-minimizer {
+    background-color: rgb(38, 50, 56);
+}
 
 // loader End

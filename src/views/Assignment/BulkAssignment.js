@@ -11,21 +11,19 @@ import { Link, Redirect } from 'react-router-dom';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
-const API_URL_BMS_Phil = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
 
 const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
-const API_URL_PDB_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
-const usernameTselApi = 'adminbamidsuper';
-const passwordTselApi = 'F760qbAg2sml';
-
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
+
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 if(Array.prototype.equals)
     console.warn("Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code.");
@@ -65,79 +63,43 @@ class BulkAssignment extends Component {
         userId : this.props.dataLogin._id,
         userName : this.props.dataLogin.userName,
         userEmail : this.props.dataLogin.email,
+        tokenUser : this.props.dataLogin.token,
         assignment_ssow_upload : [],
         list_data_activity : [],
-        sow_type_selected : null,
+        sow_type_selected : "RBS",
         rowsXLS : [],
         waiting_status : null,
         action_status : null,
         action_message : null,
         redirectSign : false,
+        asp_list : [],
+        uploadan_type : "With SSOW",
     };
     this.saveDataAssignmentBulk = this.saveDataAssignmentBulk.bind(this);
     this.exportFormatBulkAssignment = this.exportFormatBulkAssignment.bind(this);
     this.handleChangeSOWType = this.handleChangeSOWType.bind(this);
+    this.handleChangeUploadType = this.handleChangeUploadType.bind(this);
   }
 
-    async getDatafromAPITSEL(url){
-      try {
-        let respond = await axios.get(API_URL_PDB_TSEL +url, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernameTselApi,
-            password: passwordTselApi
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Get Data", respond);
+  async getDataFromAPIEXEL(url) {
+    try {
+      let respond = await axios.get(API_URL_XL+url, {
+        headers: {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
         }
-        return respond;
-      }catch (err) {
-        let respond = err;
-        console.log("respond Get Data", err);
-        return respond;
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
       }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
     }
-
-    async postDatatoAPITSEL(url, data){
-      try {
-        let respond = await axios.post(API_URL_PDB_TSEL +url, data, {
-          headers : {'Content-Type':'application/json'},
-          auth: {
-            username: usernameTselApi,
-            password: passwordTselApi
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Post Data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = err;
-        console.log("respond Post Data", err);
-        return respond;
-      }
-    }
-
-    async patchDatatoAPITSEL(url, data, _etag){
-      try {
-        let respond = await axios.patch(API_URL_PDB_TSEL +url, data, {
-          headers : {'Content-Type':'application/json', "If-Match" : _etag},
-          auth: {
-            username: usernameTselApi,
-            password: passwordTselApi
-          },
-        })
-        if(respond.status >= 200 && respond.status < 300){
-          console.log("respond Patch data", respond);
-        }
-        return respond;
-      }catch (err) {
-        let respond = err;
-        console.log("respond Patch data", err);
-        return respond;
-      }
-    }
+  }
 
     async getDatafromAPIBAM(url){
       try {
@@ -199,6 +161,26 @@ class BulkAssignment extends Component {
       }
     }
 
+    async postDatatoAPINODE(url, data){
+      try {
+        let respond = await axios.post(API_URL_NODE +url, data, {
+          headers : {
+            'Content-Type':'application/json',
+            'Authorization': 'Bearer '+this.state.tokenUser
+          },
+        })
+        if(respond.status >= 200 && respond.status < 300){
+          console.log("respond Post Data", respond);
+        }
+        return respond;
+      }catch (err) {
+        let respond = err;
+        this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+        console.log("respond Post Data", err);
+        return respond;
+      }
+    }
+
   checkValue(props){
     //Swap undefined to null
     if( typeof props === 'undefined' ) {
@@ -236,7 +218,7 @@ class BulkAssignment extends Component {
     return data.findIndex(e => this.isSameValue(e,value));
   }
 
-  fileHandlerMaterial = (event) => {
+  fileHandlerAssignment = (event) => {
     let fileObj = event.target.files[0];
     if(fileObj !== undefined){
       ExcelRenderer(fileObj, (err, rest) => {
@@ -267,142 +249,49 @@ class BulkAssignment extends Component {
     this.setState({
       rowsXLS: newDataXLS
     });
-    this.formatDataASP(newDataXLS);
+    this.checkingDataAssignment(newDataXLS);
   }
 
-  formatDataASP = async(dataXLS) => {
-    let action_message = [];
-    let action_status = null;
-    let actionStatus = null;
-    let actionMessage = "";
-    //Make Date
-    const date = new Date();
-    const dateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-    //Check Format Static
-    const staticHeader = ["id", "project", "sow_type", "vendor_code", "vendor_name"];
-    const staticHeaderXLS = dataXLS[0].filter((e,n) => n < 5);
-    if(staticHeaderXLS.equals(staticHeader) !== true){
-      action_status = "failed";
-      this.setState({action_status : "failed", action_message : action_message + "Please check your format uploader"});
+  componentDidMount(){
+    this.getASPList();
+  }
+
+  getASPList() {
+    this.getDataFromAPIEXEL('/vendor_data_non_page').then(res => {
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({asp_list : items});
+      }
+    })
+  }
+
+  async checkingDataAssignment(dataXLS){
+    this.setState({waiting_status : true});
+    let wp_invalid = [];
+    const dataXLSASG = {
+      "includeSsow" : this.state.uploadan_type === "With SSOW" ? true : false,
+      "data" : dataXLS
     }
-    if(action_status !== "failed"){
-      // check can't null
-      let errorRequired = [];
-      const array_sow_type = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'sow_type')]) ).filter( (e,n) => n>0);
-      const array_vendor_code = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'vendor_code')]) ).filter( (e,n) => n>0);
-      const array_activity_id = dataXLS.map( e => this.checkValue(e[this.getIndex(dataXLS[0],'activity_id')]) ).filter( (e,n) => n>0);
-      if(array_sow_type.some( e => e === null)){
-        errorRequired.push("SOW Type");
+    const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', dataXLSASG);
+    if(respondCheckingASG.data !== undefined && respondCheckingASG.status >= 200 && respondCheckingASG.status <= 300 ) {
+      let dataChecking = respondCheckingASG.data.data;
+      this.setState({assignment_ssow_upload : dataChecking});
+      if(dataChecking.filter(e => e.operation === "INVALID").length !== 0){
+        this.setState({ action_status : 'failed', action_message : 'Please check INVALID row in preview' });
       }
-      if(array_vendor_code.some( e => e === null)){
-        errorRequired.push("Vendor Code");
-      }
-      if(array_activity_id.some( e => e === null)){
-        errorRequired.push("Activity ID");
-      }
-      // Get Activity ID from API;
-      let array_act_id_uniq = [...new Set(array_activity_id)];
-      // const getActivityID = await this.getAllActivityID(array_act_id_uniq);
-      const getActivityID = await this.getAllDataApiPaginationTSEL(array_act_id_uniq, 'WP_ID', '/custdel_sorted_non_page');
-      if(getActivityID.length !== 0){
-        this.setState({list_data_activity : getActivityID});
-      }
-      //Make Data (SSOW) to format
-      let err_ssow_id = [];
-      let err_ssow_no = [];
-      let err_ssow_row = [];
-      let err_ssow_act_no = [];
-      let dataAssignment = [];
-      for(let i = 1 ; i < dataXLS.length; i++){
-        const sow_type = this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'sow_type')]);
-        let ssow_data = [];
-        let len_ssow = 7;
-        if(sow_type.toLowerCase() === "sacme"){
-          len_ssow = 25;
+    } else{
+      if(respondCheckingASG.response !== undefined && respondCheckingASG.response.data !== undefined && respondCheckingASG.response.data.error !== undefined){
+        if(respondCheckingASG.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: respondCheckingASG.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: respondCheckingASG.response.data.error });
         }
-        for(let j = 1; j <= len_ssow; j++ ){
-          const data_ssow = {
-            "ssow_id" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'ssow_'+sow_type.toLowerCase()+'_id_'+j.toString())]),
-            "ssow_activity_number" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'ssow_'+sow_type.toLowerCase()+'_activity_number_'+j.toString())]),
-            "sow_type" : sow_type,
-            "ssow_description" : "tes",
-            "ssow_unit" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'ssow_'+sow_type.toLowerCase()+'_unit_'+j.toString())]),
-            "ssow_qty" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'ssow_'+sow_type.toLowerCase()+'_quantity_'+j.toString())]),
-            "ssow_status" : [
-              {
-                "status" : "Open",
-                "status_update_date" : dateNow,
-                "status_updater" : this.state.userEmail,
-                "status_updater" : this.state.userId,
-              }
-            ]
-          }
-          if(data_ssow.ssow_id !== null){
-            data_ssow["ssow_id"] = data_ssow.ssow_id.toString();
-          }
-          if(data_ssow.ssow_unit !== null){
-            data_ssow["ssow_unit"] = data_ssow.ssow_unit.toString();
-          }
-          if(data_ssow.ssow_activity_number !== null){
-            data_ssow["ssow_activity_number"] = data_ssow.ssow_activity_number.toString();
-          }
-          // 5010
-          if(data_ssow.ssow_id !== null && data_ssow.ssow_activity_number !== null){
-            ssow_data.push(data_ssow);
-          }
-          //Check not null of SSOW ID and SSOW Activity Number
-          if((data_ssow.ssow_id === null && data_ssow.ssow_activity_number !== null) || (data_ssow.ssow_id !== null && data_ssow.ssow_activity_number === null) ){
-            err_ssow_row.push(i);
-            err_ssow_no.push(j.toString() + " in Row "+i.toString());
-          }
-        }
-        let current_status = [
-          {
-            "status_name": "ASP_ASSIGNMENT",
-            "status_value": "CREATED",
-            "status_date": dateNow,
-            "status_updater": this.state.userId,
-            "status_updater_id": this.state.userId,
-            "status_note": ""
-          }
-        ];
-        const dataAssginment = {
-          "Assignment_No": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'id')]),
-          "CD_ID": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'activity_id')]).toString(),
-          "SH_ID": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'activity_id')]).toString(),
-          "Vendor_Code_Number": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'vendor_code')]),
-          "SOW_Type": this.checkValue(dataXLS[i][this.getIndex(dataXLS[0],'sow_type')]),
-          "SSOW_List" : ssow_data,
-          "ASP_Assignment_Status" : current_status,
-          "Current_Status" : "ASP ASSIGNMENT CREATED",
-          "Assignment_Creation_Date" : dateNow,
-          "created_by" : this.state.userId,
-          "updated_by" : this.state.userId
-        }
-        if(dataAssginment.Vendor_Code_Number !== null){
-          dataAssginment["Vendor_Code_Number"] = dataAssginment.Vendor_Code_Number.toString();
-        }
-        dataAssignment.push(dataAssginment);
-      }
-      if(errorRequired.length !== 0){
-        actionStatus = 'failed';
-        let twoSentence = actionMessage.length !== 0 ? " and " : "";
-        actionMessage = errorRequired.join(", ")+" Cannot Null"+twoSentence+actionMessage;
-      }
-      if(err_ssow_row.length !== 0){
-        actionStatus = 'failed';
-        let twoSentence = actionMessage.length !== 0 ? " and " : "";
-        actionMessage = actionMessage+twoSentence+"SSOW ID or Activity Number Can't null, Please Check SSOW Number : "+err_ssow_no.join(", ");
-      }
-      console.log("dataAssignment", dataAssignment);
-      if(actionStatus === 'failed'){
-        this.setState({ action_status : 'failed', action_message : actionMessage});
       }else{
-        this.setState({assignment_ssow_upload : dataAssignment});
+        this.setState({ action_status: 'failed' });
       }
     }
+    this.setState({waiting_status : false});
   }
-
 
   async getAllActivityID(array_activity_id){
     let dataAct = [];
@@ -425,48 +314,6 @@ class BulkAssignment extends Component {
     return dataAct;
   }
 
-  async getAllDataApiPaginationTSEL(array_value, field, endpoint){
-    let dataValue = [];
-    let arrayDataValue = array_value;
-    let getNumberPage = Math.ceil(arrayDataValue.length / 25);
-    for(let i = 0 ; i < getNumberPage; i++){
-      let DataPaginationValue = arrayDataValue.slice(i * 25, (i+1)*25);
-      let arrayIdValue = '"'+DataPaginationValue.join('","')+'"';
-      arrayIdValue = arrayIdValue.replace("%BF", "");
-      arrayIdValue = arrayIdValue.replace("%BB", "");
-      arrayIdValue = arrayIdValue.replace("%EF", "");
-      let where_id_value = '?where={"'+field+'" : {"$in" : ['+arrayIdValue+']}}';
-      let resValue = await this.getDatafromAPITSEL(endpoint+where_id_value);
-      if(resValue !== undefined){
-        if(resValue.data !== undefined){
-          dataValue = dataValue.concat(resValue.data._items);
-        }
-      }
-    }
-    return dataValue;
-  }
-
-  async getAllDataApiPaginationAssignment(array_value){
-    let dataValue = [];
-    let arrayDataValue = array_value;
-    let getNumberPage = Math.ceil(arrayDataValue.length / 25);
-    for(let i = 0 ; i < getNumberPage; i++){
-      let DataPaginationValue = arrayDataValue.slice(i * 25, (i+1)*25);
-      let arrayIdValue = '"'+DataPaginationValue.join('","')+'"';
-      arrayIdValue = arrayIdValue.replace("%BF", "");
-      arrayIdValue = arrayIdValue.replace("%BB", "");
-      arrayIdValue = arrayIdValue.replace("%EF", "");
-      let where_id_value = '?where={"Assignment_No" : {"$in" : ['+arrayIdValue+']}}&projection={"Assignment_No" : 1, "SSOW_List" : 1, "_etag" : 1}';
-      let resValue = await this.getDatafromAPITSEL('/asp_assignment_op'+where_id_value);
-      if(resValue !== undefined){
-        if(resValue.data !== undefined){
-          dataValue = dataValue.concat(resValue.data._items);
-        }
-      }
-    }
-    return dataValue;
-  }
-
   preparingDataAssignment(id){
     const dateNow = new Date();
     const dataRandom = ((Math.floor(Math.random() * 100)+id).toString()).padStart(4, '0');
@@ -475,210 +322,21 @@ class BulkAssignment extends Component {
   }
 
   async saveDataAssignmentBulk(){
-    let bulkAssignment = [];
-    let errVendor = [];
-    let errActId = [];
-    let errSSOW = [];
-    let errActNo = [];
-    let errProject = [];
-    let dataBulkASGSuc = [];
-    let dataPatchASGSuc = [];
-    let dataPatchASGError = [];
-    let actionStatus = null;
-    let actionMessage = "";
-    const uploadSSOW = this.state.assignment_ssow_upload;
-    const dataActivity = this.state.list_data_activity;
-    const getAllSSOW = uploadSSOW.map(value => value.SSOW_List.map(child => child)).reduce((l, n) => l.concat(n), []);
-    const getUniqProject = [...new Set(dataActivity.map(({ CD_Info_Project }) => CD_Info_Project))];
-    const getUniqSSOWId = [...new Set(getAllSSOW.map(({ ssow_id }) => ssow_id))]; //get all ssow id from uploader (unique)
-    const getUniqActNo = [...new Set(getAllSSOW.map(({ ssow_activity_number }) => ssow_activity_number))]; //get all activity number from uploader (unique)
-    const getUniqVendorCode = [...new Set(uploadSSOW.map(({ Vendor_Code_Number }) => Vendor_Code_Number))];
-    let getUniqAssignmentCode = [...new Set(uploadSSOW.map(({ Assignment_No }) => Assignment_No))];
-    getUniqAssignmentCode = getUniqAssignmentCode.filter(e => e !== null);
-    const dataAssignmentCode = await this.getAllDataApiPaginationAssignment(getUniqAssignmentCode);
-    const dataVendorAPI = await this.getAllDataApiPaginationTSEL(getUniqVendorCode, 'Vendor_Code', '/vendor_data_non_page');
-    const dataSSOWAPI = await this.getAllDataApiPaginationTSEL(getUniqSSOWId, 'ssow_id', '/ssow_sorted_nonpage');
-    const dataSSOWActNoAPI = await this.getAllDataApiPaginationTSEL(getUniqActNo, 'activity_number', '/ssow_activity_number_sorted_nonpage');
-    const dataProjectAPI = await this.getAllDataApiPaginationTSEL(getUniqProject, '_id', '/project_sorted_non_page');
-    if(dataVendorAPI.length !== undefined && dataSSOWAPI.length !== undefined && dataSSOWActNoAPI.length !== undefined && dataProjectAPI.length !== undefined ){
-      for(let i = 0; i < uploadSSOW.length; i++){
-        let assignmentData = Object.assign(uploadSSOW[i], {});
-        let assignmentCode = dataAssignmentCode.find(e => e.Assignment_No === uploadSSOW[i].Assignment_No);
-        const getVendor = dataVendorAPI.find(e => e.Vendor_Code === assignmentData.Vendor_Code_Number);
-        const getActId = dataActivity.find(e => e.WP_ID === assignmentData.CD_ID);
-        if(getVendor !== undefined && getActId !== undefined){
-          if(assignmentCode === undefined){
-            const getProject = dataProjectAPI.find(e => e._id === getActId.CD_Info_Project);
-            if(getProject !== undefined){
-              assignmentData["Assignment_No"] = "ASG"+this.preparingDataAssignment(i);
-              assignmentData["Account_Name"] = "TSEL";
-              assignmentData["Project"] = getProject.Project;
-              assignmentData["Plant"] = "";
-              assignmentData["id_cd_doc"] = getActId._id;
-              assignmentData["NW"] = getActId.CD_Info_Network_Number;
-              assignmentData["NW_Activity"] = getActId.CD_Info_Activity_Code;
-              assignmentData["Requisitioner"] = "";
-              assignmentData["SOW_Type"] = getActId.CD_Info_SOW_Type;
-              assignmentData["Site_ID"] = getActId.Site_Info_SiteID_NE;
-              assignmentData["Site_Name"] = getActId.Site_Info_SiteName_NE;
-              assignmentData["Site_Longitude"] = getActId.Site_Info_Longitude_NE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Longitude_NE);
-              assignmentData["Site_Latitude"] = getActId.Site_Info_Latitude_NE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Latitude_NE);
-              assignmentData["Site_FE_ID"] = getActId.Site_Info_SiteID_FE;
-              assignmentData["Site_FE_Name"] = getActId.Site_Info_SiteName_FE;
-              assignmentData["Site_FE_Longitude"] = getActId.Site_Info_Longitude_FE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Longitude_FE);
-              assignmentData["Site_FE_Latitude"] = getActId.Site_Info_Latitude_FE.length === 0 ? 0.0 : parseFloat(getActId.Site_Info_Latitude_FE);
-              assignmentData["Vendor_Code"] = getVendor._id;
-              assignmentData["Vendor_Code_Number"] = getVendor.Vendor_Code;
-              assignmentData["Vendor_Name"] = getVendor.Name;
-              assignmentData["Vendor_Email"] = getVendor.Email;
-              assignmentData["Payment_Terms"] = null;
-              assignmentData["Requestor"] = this.state.userEmail;
-              assignmentData["Payment_Term_Ratio"] = null;
-              let list_ssow = [];
-              let total_val_asg = 0;
-              for(let j = 0; j < assignmentData.SSOW_List.length; j++ ){
-                let ssowData = Object.assign(assignmentData.SSOW_List[j], {});
-                const getSSOW = dataSSOWAPI.find(e => e.ssow_id === ssowData.ssow_id && e.sow_type === ssowData.sow_type);
-                const getActNo = dataSSOWActNoAPI.find(e => e.activity_number === ssowData.ssow_activity_number);
-                if(getSSOW !== undefined && getActNo !== undefined ){
-                  ssowData["ssow_description"] = getSSOW.description;
-                  ssowData["ssow_unit"] = assignmentData.SSOW_List[j].ssow_unit === null ? getActNo.ssow_type : assignmentData.SSOW_List[j].ssow_unit;;
-                  ssowData["ssow_price"] = getActNo.price === null ? 0 : getActNo.price;
-                  ssowData["ssow_total_price"] = ssowData.ssow_price * ssowData.ssow_qty;
-                  total_val_asg = total_val_asg + ssowData.ssow_total_price;
-                  if(ssowData.ssow_unit === null){
-                    ssowData["ssow_unit"] = "act";
-                  }else{
-                    if(ssowData.ssow_unit.length === 0){
-                      ssowData["ssow_unit"] = "act";
-                    }
-                  }
-                  list_ssow.push(ssowData);
-                }else{
-                  if(getSSOW === undefined){
-                    errSSOW.push(ssowData.ssow_id);
-                  }
-                  if(getActNo === undefined){
-                    errActNo.push(ssowData.ssow_activity_number);
-                  }
-                }
-              }
-              assignmentData["Value_Assignment"] = total_val_asg;
-              assignmentData["SSOW_List"] = list_ssow;
-              bulkAssignment.push(assignmentData);
-            }else{
-              if(getProject === undefined){
-                errProject.push(assignmentData.CD_ID);
-              }
-            }
-          }else{
-            //PATCH DATA EXISTING
-            let assignmentPatch = {};
-            let list_ssow = [];
-            let total_val_asg = 0;
-            for(let j = 0; j < assignmentData.SSOW_List.length; j++ ){
-              let ssowData = Object.assign(assignmentData.SSOW_List[j], {});
-              const getSSOW = dataSSOWAPI.find(e => e.ssow_id === ssowData.ssow_id && e.sow_type === ssowData.sow_type);
-              const getActNo = dataSSOWActNoAPI.find(e => e.activity_number === ssowData.ssow_activity_number);
-              if(getSSOW !== undefined && getActNo !== undefined ){
-                ssowData["ssow_description"] = getSSOW.description;
-                ssowData["ssow_unit"] = assignmentData.SSOW_List[j].ssow_unit === null ? getActNo.ssow_type : assignmentData.SSOW_List[j].ssow_unit;
-                ssowData["ssow_price"] = getActNo.price === null ? 0 : getActNo.price;
-                ssowData["ssow_total_price"] = ssowData.ssow_price * ssowData.ssow_qty;
-                total_val_asg = total_val_asg + ssowData.ssow_total_price;
-                if(ssowData.ssow_unit === null){
-                  ssowData["ssow_unit"] = "act";
-                }else{
-                  if(ssowData.ssow_unit.length === 0){
-                    ssowData["ssow_unit"] = "act";
-                  }
-                }
-                list_ssow.push(ssowData);
-              }else{
-                if(getSSOW === undefined){
-                  errSSOW.push(ssowData.ssow_id);
-                }
-                if(getActNo === undefined){
-                  errActNo.push(ssowData.ssow_activity_number);
-                }
-              }
-            }
-            assignmentPatch["Value_Assignment"] = total_val_asg;
-            assignmentPatch["SSOW_List"] = list_ssow;
-            console.log("assignmentCode patch", assignmentCode);
-            const respondPatchASG = await this.patchDatatoAPITSEL('/asp_assignment_op/'+assignmentCode._id, assignmentPatch, assignmentCode._etag);
-            if(respondPatchASG.data !== undefined && respondPatchASG.status >= 200 && respondPatchASG.status <= 300 ){
-              dataPatchASGSuc.push(respondPatchASG.data._id);
-            }else{
-              dataPatchASGError.push(assignmentCode.Assignment_No);
-            }
-          }
-        }else{
-          if(getActId === undefined){
-            errActId.push(assignmentData.CD_ID);
-          }
-          if(getVendor === undefined){
-            errVendor.push(assignmentData.Vendor_Code_Number);
-          }
-        }
-      }
-      errVendor = [...new Set(errVendor)];
-      errActId = [...new Set(errActId)];
-      errSSOW = [...new Set(errSSOW)];
-      errActNo = [...new Set(errActNo)];
-      errProject = [...new Set(errProject)];
-      if(errActId.length !== 0){
-        actionStatus = 'failed';
-        let twoSentence = actionMessage.length !== 0 ? " and " : "";
-        actionMessage = "Activity ID : "+errActId.join(", ")+" not exist"+twoSentence+actionMessage;
-      }
-      if(errVendor.length !== 0){
-        actionStatus = 'failed';
-        let twoSentence = actionMessage.length !== 0 ? " and " : "";
-        actionMessage = actionMessage+twoSentence+"Vendor Code : "+errVendor.join(", ")+" not exist";
-      }
-      if(errSSOW.length !== 0){
-        actionStatus = 'failed';
-        let twoSentence = actionMessage.length !== 0 ? " and " : "";
-        actionMessage = actionMessage+twoSentence+"SSOW Id : "+errSSOW.join(", ")+" not exist";
-      }
-      if(errActNo.length !== 0){
-        actionStatus = 'failed';
-        let twoSentence = actionMessage.length !== 0 ? " and " : "";
-        actionMessage = actionMessage+twoSentence+"SSOW Activity Number : "+errActNo.join(", ")+" not exist";
-      }
-      if(errProject.length !== 0){
-        actionStatus = 'failed';
-        let twoSentence = actionMessage.length !== 0 ? " and " : "";
-        actionMessage = actionMessage+twoSentence+"Activity ID : "+errProject.join(", ")+" haven't project";
-      }
-      console.log("bulkAssignment", bulkAssignment);
-      if(actionStatus !== 'failed'){
-        const postAssignment = await this.postDatatoAPITSEL('/asp_assignment_op', bulkAssignment);
-        if(postAssignment.data !== undefined){
-          if(bulkAssignment.length > 1){
-            dataBulkASGSuc = dataBulkASGSuc.concat(postAssignment.data._items.map(e => e._id))
-          }else{
-            dataBulkASGSuc.push(postAssignment.data._id)
-          }
-        }
-        if(uploadSSOW.length === (dataBulkASGSuc.length + dataPatchASGSuc.length) ){
-          this.setState({ action_status : 'success', action_message : 'Created New : '+dataBulkASGSuc.length+' data, Update Data : '+dataPatchASGSuc.length+' data' }, () => {
-            // setTimeout(function(){ this.setState({ redirectSign : true}); }.bind(this), 4000);
-          });
-        }else{
-          this.setState({action_status : 'failed'});
-        }
-      }else{
-        this.setState({action_status : actionStatus, action_message : actionMessage});
-      }
-
+    const dataChecking = this.state.assignment_ssow_upload;
+    const dataCheckingASG = {
+      "includeSsow" : this.state.uploadan_type === "With SSOW" ? true : false,
+      "data" : dataChecking
+    }
+    const respondSaveASG = await this.postDatatoAPINODE('/aspAssignment/createAspAssign', dataCheckingASG);
+    if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      this.setState({ action_status : 'failed' });
     }
   }
 
   handleChangeSOWType(e){
     const value = e.target.value;
-    console.log("Excel Render e", e);
     this.setState({sow_type_selected : value});
   }
 
@@ -691,20 +349,43 @@ class BulkAssignment extends Component {
     if(sow_type === "SACME"){
       indexSSOW = 25;
     }
-
-    let headerRow = ["id", "project", "sow_type", "vendor_code", "vendor_name", "activity_id"];
-
-    for(let i = 1; i <= indexSSOW; i++){
-      headerRow.push("ssow_"+sow_type.toLowerCase()+"_id_"+i.toString());
-      headerRow.push("ssow_"+sow_type.toLowerCase()+"_activity_number_"+i.toString());
-      headerRow.push("ssow_"+sow_type.toLowerCase()+"_unit_"+i.toString());
+    if(sow_type === "RBSTRM"){
+      indexSSOW = 5;
+    }
+    let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
+    if(this.state.uploadan_type === "With SSOW"){
+      let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
+      if(sow_type === "RBSTRM"){
+        for(let idx = 1; idx <= indexSSOW; idx++){
+          headerRow.push("ssow_rbs_id_"+idx.toString(), "ssow_rbs_activity_number_"+idx.toString(), "ssow_rbs_unit_"+idx.toString(), "ssow_rbs_quantity_"+idx.toString() );
+        }
+        for(let idx = 1; idx <= indexSSOW; idx++){
+          headerRow.push("ssow_trm_id_"+idx.toString(), "ssow_trm_activity_number_"+idx.toString(), "ssow_trm_unit_"+idx.toString(), "ssow_trm_quantity_"+idx.toString() );
+        }
+        ws.addRow(headerRow);
+        ws.addRow(["new","XL BAM DEMO 2020","RBSTRM", "tower_id", 2000054443,"PT SINERGI AITIKOM","3070","JAW-JT-BBS-0001","1.1.1","3022264",null,1,"1.1.4","3022960",null,2,null,null,null,null,null,null,null,null,null,null,null,null,"1.1.1.T", "3022917", "Site", 2, null,null,null,null]);
+        ws.addRow(["new","XL BAM DEMO 2020","RBSTRM", "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930","1.1.1.N","3022917","pc",3,"1.1.4.N","3022962",null,2,null,null,null,null,null,null,null,null,null,null,null,null,"1.1.1.T", "3022917", "Site", 2, null,null,null,null]);
+      }else{
+        for(let idx = 1; idx <= indexSSOW; idx++){
+          headerRow.push("ssow_"+(sow_type.toLowerCase())+"_id_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_activity_number_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_unit_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_quantity_"+idx.toString() );
+        }
+        ws.addRow(headerRow);
+        ws.addRow(["new","XL BAM DEMO 2020",sow_type, "tower_id", 2000054443,"PT SINERGI AITIKOM","3070","JAW-JT-BBS-0001","1.1.1","3022264",null,1,"1.1.4","3022960",null,2,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]);
+        ws.addRow(["new","XL BAM DEMO 2020",sow_type, "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930","1.1.1.N","3022917","pc",3,"1.1.4.N","3022962",null,2,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]);
+      }
+    }else{
+      ws.addRow(headerRow);
+      ws.addRow(["new","XL BAM DEMO 2020",sow_type, "tower_id", 2000054443,"PT SINERGI AITIKOM","3070","JAW-JT-BBS-0001"]);
+      ws.addRow(["new","XL BAM DEMO 2020",sow_type, "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930"]);
     }
 
-    ws.addRow(headerRow);
-    ws.addRow(["","",sow_type]);
-
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'MR Uploader Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'Assignment '+this.state.uploadan_type+' Uploader Template.xlsx');
+  }
+
+  handleChangeUploadType(e){
+    const value = e.target.value;
+    this.setState({uploadan_type : value});
   }
 
   render() {
@@ -719,8 +400,12 @@ class BulkAssignment extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}} >ASP Assignment Bulk </span>
+            <select type="select" onChange={this.handleChangeUploadType} value={this.state.uploadan_type} disabled={this.state.rowsXLS.length !== 0}>
+              <option value="With SSOW">With SSOW</option>
+              <option value="Without SSOW">Without SSOW</option>
+            </select>
             <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkAssignment} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment Format</Button>
-            <select type="select" onChange={this.handleChangeSOWType} value={this.state.sow_type_selected} style={{marginRight : '8px', marginTop :'3px', float : 'right', width : '100px'}}>
+            {/* }<select type="select" onChange={this.handleChangeSOWType} value={this.state.sow_type_selected} style={{marginRight : '8px', marginTop :'3px', float : 'right', width : '100px'}}>
               <option value="" disabled selected hidden>SOW Type</option>
               <option value="NDO">NDO</option>
               <option value="RBS">RBS</option>
@@ -730,15 +415,26 @@ class BulkAssignment extends Component {
               <option value="Survey">Survey</option>
               <option value="BSC">BSC</option>
               <option value="RNC">RNC</option>
+            </select> */}
+            <select type="select" onChange={this.handleChangeSOWType} value={this.state.sow_type_selected} style={{marginRight : '8px', marginTop :'3px', float : 'right', width : '100px'}}>
+              <option value={null} disabled hidden>SOW Type</option>
+              <option value="RBS">RBS</option>
+              <option value="TRM">TRM</option>
+              <option value="RBSTRM">RBS - TRM</option>
             </select>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
-            <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
-            <Button color="success" onClick={this.saveDataAssignmentBulk} style={{float : 'right'}} >Save</Button>
+            <input type="file" onChange={this.fileHandlerAssignment.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
+            <Button color="success" onClick={this.saveDataAssignmentBulk} style={{float : 'right'}} disabled={this.state.waiting_status || this.state.rowsXLS.length === 0}>
+              {this.state.waiting_status === true ? "loading.." : "Save"}
+            </Button>
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>
-                  <td colSpan="4" style={{textAlign : 'center'}}>BULK ASP ASSIGNMENT PREVIEW</td>
+                  <td colSpan="4" style={{textAlign : 'center'}}>BULK ASP ASSIGNMENT PREVIEW  {this.state.uploadan_type}</td>
+                </tr>
+                <tr>
+                  <td colSpan="4" style={{textAlign : 'center', fontSize : '15px', color : 'red'}}>{this.state.uploadan_type === "With SSOW" ? "It will need approval from authoried": "SSOW List get from default mapping of SSOW to CD ID" }</td>
                 </tr>
               </tbody>
             </table>
@@ -746,8 +442,28 @@ class BulkAssignment extends Component {
             <Table hover bordered responsive size="sm">
               <tbody>
               {this.state.rowsXLS.length !== 0 ? (
-                this.state.rowsXLS.map( row =>
+                this.state.rowsXLS.map( (row, i) =>
                   <tr>
+                    {(this.state.assignment_ssow_upload.length !== 0 && i === 0) && (
+                      <Fragment>
+                        <td>
+                          Operation
+                        </td>
+                        <td>
+                          Status
+                        </td>
+                      </Fragment>
+                    )}
+                    {this.state.assignment_ssow_upload[(i-1)] !== undefined && (
+                      <Fragment>
+                        <td>
+                          {this.state.assignment_ssow_upload[(i-1)].operation}
+                        </td>
+                        <td>
+                          {this.state.assignment_ssow_upload[(i-1)].activity_status}
+                        </td>
+                      </Fragment>
+                    )}
                     {row.map( col =>
                       <td>{col}</td>
                     )}
@@ -756,6 +472,97 @@ class BulkAssignment extends Component {
               ) : ""}
             </tbody>
           </Table>
+          <div style={{display : 'inline-flex', marginTop : '20px', width : '100%'}}>
+              <Table hover bordered responsive size="sm" style={{width : '100%'}}>
+                <thead>
+                  <tr style={{backgroundColor : "rgb(11, 72, 107)", color: "white"}}>
+                    <td colSpan="2">ASP Vendor</td>
+                  </tr>
+                  <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {this.state.asp_list.map(e =>
+                    <tr>
+                      <td>{e.Vendor_Code}</td>
+                      <td>{e.Name}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+              <Table hover bordered responsive size="sm" style={{width : '100%', marginLeft : '10px'}}>
+                <thead>
+                  <tr style={{backgroundColor : "rgb(11, 72, 107)", color: "white"}}>
+                    <td colSpan="2">TOP</td>
+                  </tr>
+                  <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>2080</td>
+                    <td>20%-80%</td>
+                  </tr>
+                    <tr>
+                    <td>3070</td>
+                    <td>30%-70%</td>
+                  </tr>
+                  <tr>
+                    <td>4060</td>
+                    <td>40%-60%</td>
+                  </tr>
+                  <tr>
+                    <td>5050</td>
+                    <td>50%-50%</td>
+                  </tr>
+                  <tr>
+                    <td>100</td>
+                    <td>100%-0%</td>
+                  </tr>
+                  <tr>
+                    <td>8020</td>
+                    <td>80%-20%</td>
+                  </tr>
+                  <tr>
+                    <td>7030</td>
+                    <td>70%-30%</td>
+                  </tr>
+                  <tr>
+                    <td>6040</td>
+                    <td>60%-40%</td>
+                  </tr>
+                </tbody>
+              </Table>
+              <Table hover bordered responsive size="sm" style={{width : "90%", marginLeft : '10px'}}>
+                <thead>
+                  <tr style={{backgroundColor : "rgb(11, 72, 107)", color: "white"}}>
+                    <td colSpan="2">SOW Type</td>
+                  </tr>
+                  <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>RBS</td>
+                    <td>RBS</td>
+                  </tr>
+                    <tr>
+                    <td>TRM</td>
+                    <td>TRM</td>
+                  </tr>
+                  <tr>
+                    <td>RBSTRM</td>
+                    <td>RBSTRM</td>
+                  </tr>
+                </tbody>
+              </Table>
+          </div>
           </CardBody>
         </Card>
         </Col>

@@ -27,11 +27,14 @@ const DefaultAside = React.lazy(() => import('./DefaultAside'));
 const DefaultFooter = React.lazy(() => import('./DefaultFooter'));
 const DefaultHeader = React.lazy(() => import('./DefaultHeader'));
 
+const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class DefaultLayout extends Component {
 
   constructor(props) {
     super(props);
     this.state = {
+      navMenu : navigation,
       minimize : this.props.SidebarMinimize,
     }
   }
@@ -40,19 +43,37 @@ class DefaultLayout extends Component {
 
   signOut(e) {
     e.preventDefault();
+    localStorage.clear();
     this.props.history.push('/');
+    this.postDatatoAPILogout();
     this.props.keycloak.logout();
   }
 
   componentDidMount(){
-    // this.getDataLogin();
-    // // if(this.props.keycloak === undefined){
-    // //   console.log("logout");
-    // //   this.props.history.push('/');
-    // //   this.props.keycloak.logout();
-    // // }else{
-    // //   this.getDataLogin();
-    // // }
+    this.showMenuByRole();
+  }
+
+  async postDatatoAPILogout(){
+    try {
+      let respond = await axios.post(API_URL_BAM+'/logoutUser', {}, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.props.dataLogin.token,
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Post Data", err);
+      return respond;
+    }
+  }
+
+  showMenuByRole(){
+    console.log("showMenuByRole", navigation);
   }
 
   componentDidUpdate(){
@@ -71,13 +92,12 @@ class DefaultLayout extends Component {
           </Suspense>
         </AppHeader>
         <div className="app-body">
-          {console.log("console.log(this.state.minimize);", this.state.minimize)}
           {this.state.minimize !== true ? (
             <AppSidebar fixed display="lg" minimized={false}>
               <AppSidebarHeader />
               <AppSidebarForm />
               <Suspense>
-              <AppSidebarNav navConfig={navigation} {...this.props} router={router}/>
+              <AppSidebarNav navConfig={this.state.navMenu} {...this.props} router={router}/>
               </Suspense>
               <AppSidebarFooter />
               <AppSidebarMinimizer />
@@ -94,7 +114,7 @@ class DefaultLayout extends Component {
             </AppSidebar>
           )}
           <main className="main">
-            <AppBreadcrumb appRoutes={routes} router={router}/>
+            <AppBreadcrumb appRoutes={routes} router={router} className="breadcrumb--xl"/>
             <Container fluid>
               <Suspense fallback={this.loading()}>
                 <Switch>
@@ -110,7 +130,7 @@ class DefaultLayout extends Component {
                         )} />
                     ) : (null);
                   })}
-                  <Redirect from="/" to="/wh-dashboard" />
+                  <Redirect from="/" to="/dashboard" />
                 </Switch>
               </Suspense>
             </Container>

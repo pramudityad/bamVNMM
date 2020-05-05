@@ -1,4 +1,5 @@
 import React from 'react';
+// import WHDashboard from './views/Warehouse/WHDashboard';
 
 const Breadcrumbs = React.lazy(() => import('./views/Base/Breadcrumbs'));
 const Cards = React.lazy(() => import('./views/Base/Cards'));
@@ -57,26 +58,61 @@ const MaterialDispatch = React.lazy(() => import('./views/Warehouse/MaterialDisp
 const ProjectDashboard = React.lazy(() => import('./views/Project/ProjectDashboard'));
 const OrderCreated = React.lazy(() => import('./views/Project/OrderCreated'));
 const LOMList = React.lazy(() => import('./views/MR/LOMList'));
+
 const AssignmentCreation = React.lazy(() => import('./views/Assignment/AssignmentCreation'));
 const AssignmentList = React.lazy(() => import('./views/Assignment/AssignmentList'));
 const BulkAssignment = React.lazy(() => import('./views/Assignment/BulkAssignment'));
 const AssignmentDetail = React.lazy(() => import('./views/Assignment/AssignmentDetail'));
+const AssignmentEdit = React.lazy(() => import('./views/Assignment/AssignmentEdit'));
 const AssignBast = React.lazy(() => import('./views/Assignment/AssignBast'));
 const BulkRequest = React.lazy(() => import('./views/MR/BulkRequest'));
 const BulkNotifytoASP = React.lazy(() => import('./views/Assignment/BulkNotifytoASP'));
+const AssignmentListASP = React.lazy(() => import('./views/Assignment/AssignmentListASP'));
+const AssignmentDetailASP = React.lazy(() => import('./views/Assignment/AssignmentDetailASP'));
+const AssignmentListApproval = React.lazy(() => import('./views/Assignment/AssignmentListApproval'));
+
 const ListTechnical = React.lazy(() => import('./views/Technical/ListTechnical'));
 const DetailTechnical = React.lazy(() => import('./views/Technical/TechnicalBoq'));
 const ApprovalTechnical = React.lazy(() => import('./views/Technical/TechnicalBoqApproval'));
+
 const DSACreation = React.lazy(() => import('./views/DSA/DSACreation'));
+
 const ListCommercial = React.lazy(() => import('./views/Commercial/ListCommercial'));
 const DetailCommercial = React.lazy(() => import('./views/Commercial/CommercialBoq'));
 const ApprovalCommercial = React.lazy(() => import('./views/Commercial/CommercialBoqApproval'));
+const POAssign = React.lazy(() => import('./views/Commercial/POAssign'));
+const SubmissionCommBoq = React.lazy(() => import('./views/Commercial/SubmissionCommBoq'));
+
+const POCommercial = React.lazy(() => import('./views/Commercial/BoqCommPO'));
+const ListTssrMatrix = React.lazy(() => import('./views/TssrMatrix/ListTSSRBoq'));
+const DetailTssrMatrix = React.lazy(() => import('./views/TssrMatrix/UploadTSSRMatrix'));
+const NewTssrMatrix = React.lazy(() => import('./views/TssrMatrix/TSSRbyTech'));
 const DSAList = React.lazy(() => import('./views/DSA/DSAList'));
 const DSADetail = React.lazy(() => import('./views/DSA/DSADetail'));
 const BulkChangeApproval = React.lazy(() => import('./views/MR/ListChangeApproval'));
 const BulkApproval = React.lazy(() => import('./views/MR/ListBulkApproval'));
 const ListOrdering = React.lazy(() => import('./views/Ordering/ListOrdering'));
 const DetailOrdering = React.lazy(() => import('./views/Ordering/OrderingMaterial'));
+const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUpload'));
+const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabaseList'));
+const CPODatabaseDetail  = React.lazy(() => import('./views/CPODatabase/CPODatabaseDetail'));
+
+const ShipmentList = React.lazy(() => import('./views/ShipmentList/ShipmentList'));
+
+const WHManagement  = React.lazy(() => import('./views/MR/WHManagement/WHManagement'));
+
+const MaterialStock  = React.lazy(() => import('./views/MR/WHStock/MatStock2'));
+const MaterialInboundPlan  = React.lazy(() => import('./views/MR/WHInbound/MatInboundPlan2'));
+const MatLibrary  = React.lazy(() => import('./views/MR/MatLibrary/MatLibrary'));
+
+const WHDashboard = React.lazy(() => import('./views/Warehouse/WHDashboard'));
+const WHDashboard3 = React.lazy(() => import('./views/Warehouse/WHDashboardext'));
+
+const ListCPOBoq = React.lazy(() => import('./views/TechnicalCPO/ListCPOBoq'));
+const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'));
+
+const ListTSSRBoq = React.lazy(() => import('./views/Tssr/ListTSSRBoq'));
+const DetailTSSRBoq = React.lazy(() => import('./views/Tssr/TSSRBoq'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -150,20 +186,58 @@ const routes = [
   { path: '/assignment-list', exact: true, name: 'Assignment List', component: AssignmentList },
   { path: '/bulk-assignment-creation', exact: true, name: 'Bulk Assignment Creation', component: BulkAssignment },
   { path: '/assignment-detail/:id', exact: true, name: 'Assignment Detail', component: AssignmentDetail },
+  { path: '/assignment-edit/:id', exact: true, name: 'Assignment Edit', component: AssignmentEdit },
   { path: '/bulk-assignment-notify', exact: true, name: 'Bulk Assignment Notify to ASP', component: BulkNotifytoASP },
   { path: '/list-technical', exact: true, name: 'List Technical BOQ', component: ListTechnical },
   { path: '/detail-technical/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
-  { path: '/approval-technical/:id', exact: true, name: 'Approval for Technical BOQ', component: ApprovalTechnical },
+  { path: '/approval-technical/:id', exact: true, name: 'Approval Technical BOQ', component: ApprovalTechnical },
+  { path: '/new-technical', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
   { path: '/dsa-creation', exact: true, name: 'DSA Creation', component: DSACreation },
   { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
+  { path: '/commercial-creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
   { path: '/detail-commercial/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
+  { path: '/po-assign-commercial/:id', exact: true, name: 'PO Assign Commercial BOQ', component: POAssign },
+  { path: '/submission-commercial/:id', exact: true, name: 'Submission Commercial BOQ', component: SubmissionCommBoq },
+
+  { path: '/assignment-detail-asp/:id', exact: true, name: 'Assignment Detail (ASP)', component: AssignmentDetailASP },
+  { path: '/assignment-list-asp', exact: true, name: 'Assignment List (ASP)', component: AssignmentListASP },
+  { path: '/assignment-list-approval', exact: true, name: 'Assignment Need Assignment List ', component: AssignmentListApproval },
+
+  { path: '/list-tssr-matix', exact: true, name: 'List TSSR Matrix BOQ', component: ListTssrMatrix },
+  { path: '/tssr-matix-creation', exact: true, name: 'TSSR Matrix BOQ Creation', component: NewTssrMatrix },
+  { path: '/detail-tssr-matix/:id', exact: true, name: 'Detail TSSR Matrix BOQ', component: DetailTssrMatrix },
   { path: '/approval-commercial/:id', exact: true, name: 'Approval for Commercial BOQ', component: ApprovalCommercial },
+  { path: '/po-commercial/:id', exact: true, name: 'PO for Commercial BOQ', component: POCommercial },
+  { path: '/list-ordering', exact: true, name: 'List Commercial BOQ', component: ListOrdering },
+  { path: '/new-ordering', name: 'New Ordering Material', component: DetailOrdering},
+  { path: '/detail-ordering/:id', exact: true, name: 'List Commercial BOQ', component: DetailOrdering },
   { path: '/assign-bast/:id', exact: true, name: 'Assign Bast', component: AssignBast },
   { path: '/dsa-list', exact: true, name: 'DSA List', component: DSAList },
   { path: '/dsa-detail/:id', exact: true, name: 'DSA Detail', component: DSADetail },
   { path: '/ordering-list', exact: true, name: 'Ordering List', component: ListOrdering },
   { path: '/ordering-detail/:id', exact: true, name: 'Ordering Detail', component: DetailOrdering },
 
+  { path: '/config-manager', exact: true, name: 'Config Manager', component: ConfigManager },
+
+  { path: '/cpo-database', exact: true, name: 'CPO Database', component: CPODatabase },
+  { path: '/detail-list-cpo-database/:id', exact: true, name: 'CPO Database', component: CPODatabaseDetail },
+
+  { path: '/list-cpo-boq', exact: true, name: 'List CPO BOQ', component: ListCPOBoq },
+  { path: '/detail-cpo-boq/:id', exact: true, name: 'CPO BOQ Detail', component: DetailCPOBoq },
+  { path: '/cpo-boq-creation', exact: true, name: 'CPO BOQ Creation', component: DetailCPOBoq },
+
+  { path: '/list-tssr-boq', exact: true, name: 'List TSSR BOQ', component: ListTSSRBoq },
+  { path: '/detail-tssr-boq/:id', exact: true, name: 'CPO TSSR Detail', component: DetailTSSRBoq },
+
+  { path: '/shipment-list', exact: true, name: 'Shipment List', component: ShipmentList },
+
+  { path: '/material-stock2/:slug', exact: true, name: 'Material Stock', component: MaterialStock },
+  { path: '/material-inbound-plan2/:slug', exact: true, name: 'Material Inbound Plan', component: MaterialInboundPlan },
+  { path: '/wh-management', exact: true, name: 'Warehouse Management', component: WHManagement },
+  { path: '/mat-library', exact: true, name: 'Material Library', component: MatLibrary },
+
+  { path: '/wh-dashboard2', exact: true, name: 'Warehouse Dashboard', component: WHDashboard },
+  { path: '/wh-dashboard3', exact: true, name: 'Warehouse Dashboard', component: WHDashboard3 },
 ];
 
 export default routes;
