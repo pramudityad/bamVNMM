@@ -51,7 +51,7 @@ const passwordBAM = "F760qbAg2sml";
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-class MaterialStock extends React.Component {
+class MatInboundPlan extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -60,35 +60,31 @@ class MaterialStock extends React.Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      filter_name: null,
       search: null,
       perPage: 10,
       prevPage: 1,
       activePage: 1,
-      selected_wh: null,
       total_data_PO: 0,
+      selected_wh: null,
       pp_all: [],
       rowsXLS: [],
-      data_array: [],
+      cpo_array: [],
       action_status: null,
       action_message: null,
+      danger: false,
       all_data: [],
-      wh_data: [],
       data_PO: [],
-      packageSelected: [],
+      wh_data: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
       modalMatStockForm: false,
+      POForm: new Array(5).fill(null),
+      collapse: false,
       modalMatStockEdit: false,
       MatStockForm: new Array(6).fill(null),
-      warehouse_selected: null,
-      collapse: false,
-      danger: false,
-      activeItemName: "",
-      activeItemId: null,
       createModal: false,
     };
-    this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
+    this.togglePOForm = this.togglePOForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.changeFilterDebounce = debounce(this.changeFilterName, 500);
@@ -98,9 +94,8 @@ class MaterialStock extends React.Component {
     this.toggleEdit = this.toggleEdit.bind(this);
     this.saveNew = this.saveNew.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
-    this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
-    this.getWHStockList = this.getWHStockList.bind(this);
+    this.toggleDelete = this.toggleDelete.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
   }
 
@@ -113,54 +108,14 @@ class MaterialStock extends React.Component {
     });
   }
 
-  togglecreateModal() {
-    this.setState({
-      createModal: !this.state.createModal,
-    });
-  }
-
   toggleAddNew() {
     this.setState({ collapse: !this.state.collapse });
   }
 
-  toggleDelete(e) {
-    const modalDelete = this.state.danger;
+  togglecreateModal() {
     this.setState({
-      danger: !this.state.danger,
+      createModal: !this.state.createModal,
     });
-  }
-
-  toggleLoading() {
-    this.setState((prevState) => ({
-      modal_loading: !prevState.modal_loading,
-    }));
-  }
-
-  toggleEdit(e) {
-    const modalMatStockEdit = this.state.modalMatStockEdit;
-    if (modalMatStockEdit === false) {
-      const value = e.currentTarget.value;
-      const aEdit = this.state.all_data.find((e) => e.owner_id === value);
-      let dataForm = this.state.MatStockForm;
-      dataForm[0] = aEdit.sku_description;
-      dataForm[1] = aEdit.serial_number;
-      dataForm[2] = aEdit.project_name;
-      dataForm[3] = aEdit.box_number;
-      dataForm[4] = aEdit.condition;
-      dataForm[5] = aEdit.notes;
-      this.setState({ MatStockForm: dataForm });
-    } else {
-      this.setState({ MatStockForm: new Array(6).fill(null) });
-    }
-    this.setState((prevState) => ({
-      modalMatStockEdit: !prevState.modalMatStockEdit,
-    }));
-  }
-
-  toggleMatStockForm() {
-    this.setState((prevState) => ({
-      modalMatStockForm: !prevState.modalMatStockForm,
-    }));
   }
 
   async getDatafromAPINODE(url) {
@@ -201,25 +156,6 @@ class MaterialStock extends React.Component {
     }
   }
 
-  async patchDatatoAPINODE(url, data) {
-    try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond patch Data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      console.log("respond patch Data err", err);
-      return respond;
-    }
-  }
-
   async deleteDataFromAPINODE(url) {
     try {
       let respond = await axios.delete(API_URL_NODE + url, {
@@ -239,9 +175,46 @@ class MaterialStock extends React.Component {
     }
   }
 
-  changeFilterName(value) {
-    this.getWHStockList();
+  async patchDatatoAPINODE(url, data) {
+    try {
+      let respond = await axios.patch(API_URL_NODE + url, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + this.state.tokenUser,
+        },
+      });
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond Post Data err", err);
+      return respond;
+    }
   }
+
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
+  }
+
+  toggleDelete(e) {
+    const modalDelete = this.state.danger;
+    this.setState({
+      danger: !this.state.danger,
+    });
+  }
+
+  changeFilterName(value) {
+    this.getWHInboundList();
+  }
+
+  SearchFilter = (e) => {
+    let keyword = e.target.value;
+    this.setState({ search: keyword });
+  };
 
   handleChangeFilter = (e) => {
     let value = e.target.value;
@@ -253,20 +226,19 @@ class MaterialStock extends React.Component {
     });
   };
 
-  getWHStockList(e) {
+  getWHInboundListNext() {
     this.toggleLoading();
-    let get_wh_id = e.target.value;
-    // console.log("wh_id", get_wh_id);
-    let getbyWH = '{"wh_id":"' + get_wh_id + '"}'; 
+    let get_wh_id = (new URLSearchParams(window.location.search)).get("wh_id");
+    let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
     this.getDatafromAPINODE(
-      "/whStock/getWhStock?q=" +
+      "/whInboundPlan/getWhInboundPlan?q=" +
       getbyWH +
       "&lmt=" +
       this.state.perPage +
       "&pg=" +
       this.state.activePage
     ).then((res) => {
-      // console.log("all data ", res.data);
+      // console.log('all data based on ', get_wh_id, res.data)
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -286,40 +258,9 @@ class MaterialStock extends React.Component {
     });
   }
 
-  getWHStockListNext() {
-    this.toggleLoading();
-    let get_wh_id = this.state.selected_wh;
-    let getbyWH = '{"wh_id":"' + get_wh_id + '"}'; 
-    this.getDatafromAPINODE(
-      "/whStock/getWhStock?q=" +
-      getbyWH +
-      "&lmt=" +
-      this.state.perPage +
-      "&pg=" +
-      this.state.activePage
-    ).then((res) => {
-      // console.log("all data ", res.data);
-      if (res.data !== undefined) {
-        this.setState({
-          all_data: res.data.data,
-          prevPage: this.state.activePage,
-          total_dataParent: res.data.totalResults,
-          selected_wh : get_wh_id
-        });
-        this.toggleLoading();
-      } else {
-        this.setState({
-          all_data: [],
-          total_dataParent: 0,
-          prevPage: this.state.activePage,
-        });
-        this.toggleLoading();
-      }
-    });
-  }
-
-  getWHManagement() {
-    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
+  getWHManagementID() {
+    let _id = new URLSearchParams(window.location.search).get("_id");
+    this.getDatafromAPINODE("/whManagement/warehouse/" + _id).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({ wh_data: res.data.data });
@@ -373,7 +314,7 @@ class MaterialStock extends React.Component {
     const file = input.target.files[0];
     const reader = new FileReader();
     const rABS = !!reader.readAsBinaryString;
-    // console.log("rABS");
+    console.log("rABS");
     reader.onload = (e) => {
       /* Parse data */
       const bstr = e.target.result;
@@ -416,103 +357,89 @@ class MaterialStock extends React.Component {
   }
 
   componentDidMount() {
-    // this.getWHStockList();
-    this.getWHManagement();
-    document.title = "Material Stock | BAM";
-  }
-
-  handleChangeChecklist(e) {
-    const item = e.target.name;
-    const isChecked = e.target.checked;
-    const mrList = this.state.assignment_list;
-    let dataMRChecked = this.state.data_asg_checked;
-    if (isChecked === true) {
-      const getMR = mrList.find((e) => e._id === item);
-      dataMRChecked.push(getMR);
-    } else {
-      dataMRChecked = dataMRChecked.filter(function (e) {
-        return e._id !== item;
-      });
-    }
-    this.setState({ data_asg_checked: dataMRChecked });
-    this.setState((prevState) => ({
-      asg_checked: prevState.asg_checked.set(item, isChecked),
-    }));
-  }
-
-  handleChangeChecklistAll(e) {
-    const isChecked = e.target.checked;
-    const mrList = this.state.assignment_all;
-    let dataMRChecked = this.state.data_asg_checked;
-    if (isChecked === true) {
-      for (let i = 0; i < mrList.length; i++) {
-        if (this.state.asg_checked.get(mrList[i]._id) !== true) {
-          dataMRChecked.push(mrList[i]);
-        }
-        this.setState((prevState) => ({
-          asg_checked: prevState.asg_checked.set(mrList[i]._id, true),
-        }));
-      }
-      this.setState({
-        data_asg_checked: dataMRChecked,
-        asg_checked_all: isChecked,
-      });
-    } else {
-      this.setState({ asg_checked: new Map(), data_asg_checked: [] });
-      this.setState({ asg_checked_all: isChecked });
-    }
+    this.getWHInboundListNext();
+    this.getWHManagementID();
+    document.title = "Material Inbound Plan | BAM";
   }
 
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
-      this.getWHStockListNext();
+      this.getWHInboundListNext();
     });
   }
 
-  async getMatStockFormat(dataImport) {
+  toggleEdit(e) {
+    const modalMatStockEdit = this.state.modalMatStockEdit;
+    if (modalMatStockEdit === false) {
+      const value = e.currentTarget.value;
+      const aEdit = this.state.all_data.find((e) => e.owner_id === value);
+      let dataForm = this.state.POForm;
+      dataForm[0] = aEdit.owner_id;
+      dataForm[1] = aEdit.po_number;
+      dataForm[2] = aEdit.arrival_date;
+      dataForm[3] = aEdit.project_name;
+      dataForm[4] = aEdit.sku;
+      this.setState({ POForm: dataForm });
+    } else {
+      this.setState({ POForm: new Array(6).fill(null) });
+    }
+    this.setState((prevState) => ({
+      modalMatStockEdit: !prevState.modalMatStockEdit,
+    }));
+  }
+
+  togglePOForm() {
+    this.setState((prevState) => ({
+      modalMatStockForm: !prevState.modalMatStockForm,
+    }));
+  }
+
+  async getMatInboundFormat(dataImport) {
     const dataHeader = dataImport[0];
     const onlyParent = dataImport
       .map((e) => e)
       .filter((e) =>
-        this.checkValuetoString(e[this.getIndex(dataHeader, "owner_id")])
+        this.checkValuetoString(e[this.getIndex(dataHeader, "po_number")])
       );
-    let data_array = [];
+    let cpo_array = [];
     if (onlyParent !== undefined && onlyParent.length !== 0) {
       for (let i = 1; i < onlyParent.length; i++) {
-        const aa = {
-          owner_id: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "owner_id")]
-          ),
+        const cpo = {
           po_number: this.checkValue(
             onlyParent[i][this.getIndex(dataHeader, "po_number")]
           ),
-          arrival_date: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "arrival_date")]
+          date: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "date")]
           ),
-          id_project_doc: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "id_project_doc")]
+          currency: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "currency")]
           ),
-          sku: this.checkValue(onlyParent[i][this.getIndex(dataHeader, "sku")]),
+          payment_terms: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "payment_terms")]
+          ),
+          shipping_terms: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "shipping_terms")]
+          ),
+          contract: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "contract")]
+          ),
+          contact: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "contact")]
+          ),
         };
-        if (aa.owner_id !== undefined && aa.owner_id !== null) {
-          aa["owner_id"] = aa.owner_id.toString();
+        if (cpo.po_number !== undefined && cpo.po_number !== null) {
+          cpo["po_number"] = cpo.po_number.toString();
         }
-        if (aa.po_number !== undefined && aa.po_number !== null) {
-          aa["po_number"] = aa.po_number.toString();
+        if (cpo.year !== undefined && cpo.year !== null) {
+          cpo["po_year"] = cpo.year.toString();
         }
-        if (aa.arrival_date !== undefined && aa.arrival_date !== null) {
-          aa["arrival_date"] = aa.arrival_date.toString();
+        if (cpo.currency !== undefined && cpo.currency !== null) {
+          cpo["currency"] = cpo.currency.toString();
         }
-        if (aa.id_project_doc !== undefined && aa.id_project_doc !== null) {
-          aa["id_project_doc"] = aa.id_project_doc.toString();
-        }
-        if (aa.sku !== undefined && aa.sku !== null) {
-          aa["sku"] = aa.sku.toString();
-        }
-        data_array.push(aa);
+        cpo_array.push(cpo);
       }
-      // console.log(JSON.stringify(data_array));
-      return data_array;
+      // console.log(JSON.stringify(cpo_array));
+      return cpo_array;
     } else {
       this.setState(
         { action_status: "failed", action_message: "Please check your format" },
@@ -523,15 +450,15 @@ class MaterialStock extends React.Component {
     }
   }
 
-  saveMatStockWHBulk = async () => {
+  saveCPOBulk = async () => {
     this.toggleLoading();
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
-    // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
-      stockData: BulkXLSX,
-    });
-    // console.log('res bulk ', res.error.message);
+    // const cpoData = await this.getMatInboundFormat(BulkXLSX);
+    const res = await this.postDatatoAPINODE(
+      "/whInboundPlan/createWhInboundPlan",
+      { inboundPlanData: BulkXLSX }
+    );
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -547,11 +474,14 @@ class MaterialStock extends React.Component {
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    console.log("xlsx data", JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE("/whStock/createWhStockTruncate", {
-      stockData: BulkXLSX,
-    });
-    console.log("res bulk ", res);
+    // console.log("xlsx data", JSON.stringify(BulkXLSX));
+    const res = await this.postDatatoAPINODE(
+      "/whInboundPlan/createWhInboundPlanTruncate",
+      {
+        inboundPlanData: BulkXLSX,
+      }
+    );
+    // console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -570,11 +500,6 @@ class MaterialStock extends React.Component {
     this.setState({ MatStockForm: dataForm });
   }
 
-  SearchFilter = (e) => {
-    let keyword = e.target.value;
-    this.setState({ search: keyword });
-  };
-
   async saveUpdate() {
     let respondSaveEdit = undefined;
     const dataPPEdit = this.state.MatStockForm;
@@ -583,23 +508,16 @@ class MaterialStock extends React.Component {
     );
     const objData = this.state.all_data.find((e) => e._id);
     let pp = {
-      sku_description: dataPPEdit[0],
-      serial_number: dataPPEdit[1],
-      project_name: dataPPEdit[2],
-      box_number: dataPPEdit[3],
-      condition: dataPPEdit[4],
-      notes: dataPPEdit[5],
-      id_project_doc: objData.id_project_doc,
-      arrival_date: objData.arrival_date,
-      po_number: objData.po_number,
-      owner_id: objData.owner_id,
-      sku: objData.sku,
+      owner_id: dataPPEdit[0],
+      po_number: dataPPEdit[1],
+      arrival_date: dataPPEdit[2],
+      project_name: dataPPEdit[3],
+      sku: dataPPEdit[4],
     };
-    console.log("patch data ", pp);
     this.toggleLoading();
     this.toggleEdit();
     let patchData = await this.patchDatatoAPINODE(
-      "/whStock/updateOneWhStockwithDelete/" + objData._id,
+      "/whInboundPlan/UpdateOneWhInboundPlanwithDelete/" + objData._id,
       { data: [pp] }
     );
     if (patchData === undefined) {
@@ -625,20 +543,21 @@ class MaterialStock extends React.Component {
     let poData = [];
     let respondSaveNew = undefined;
     const dataPPEdit = this.state.MatStockForm;
+    const ppcountID = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(6, "0");
     let pp = {
       owner_id: dataPPEdit[0],
       po_number: dataPPEdit[1],
       arrival_date: dataPPEdit[2],
       project_name: dataPPEdit[3],
       sku: dataPPEdit[4],
-      sku_description: dataPPEdit[5],
-      qty: dataPPEdit[6],
     };
     poData.push(pp);
-    let postData = await this.postDatatoAPINODE("/whStock/createOneWhStockp", {
-      stockData: pp,
-    }).then((res) => {
-      console.log("res save one ", res);
+    let postData = await this.postDatatoAPINODE(
+      "/whInboundPlan/createOneWhInboundPlan",
+      pp
+    ).then((res) => {
       if (res.data !== undefined) {
         this.toggleLoading();
       } else {
@@ -665,7 +584,9 @@ class MaterialStock extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE("/whStock/getWhStock");
+    let getAll_nonpage = await this.getDatafromAPINODE(
+      "/whInboundPlan/getWhInboundPlan"
+    );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -714,7 +635,7 @@ class MaterialStock extends React.Component {
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All Material Stock.xlsx");
+    saveAs(new Blob([allocexport]), "All Material Inbound.xlsx");
   }
 
   DeleteData = async () => {
@@ -722,7 +643,7 @@ class MaterialStock extends React.Component {
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/whStock/deleteWhStock/" + objData._id
+      "/whInboundPlan/deleteWhInboundPlan/" + objData._id
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
@@ -735,7 +656,7 @@ class MaterialStock extends React.Component {
     });
   }
 
-  exportMatStatus = async () => {
+  exportMatInbound = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
@@ -745,30 +666,27 @@ class MaterialStock extends React.Component {
       "arrival_date",
       "project_name",
       "sku",
-      "qty",
       "wh_id",
     ]);
     ws.addRow([
-      "5df99ce5face981b7ace8861",
+      "5df99ce5face981b7ace8856",
       "PO0001",
       "2020-04-17",
       "XL BAM DEMO 2021",
       "1",
-      100,
       "WH_1",
     ]);
     ws.addRow([
-      "5df99ce5face981b7ace8861",
+      "5df99ce5face981b7ace8857",
       "PO0001",
       "2020-04-17",
       "XL BAM DEMO 2021",
       "1",
-      100,
       "WH_1",
     ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), "Material Stock Template.xlsx");
+    saveAs(new Blob([PPFormat]), "Material Inbound Template.xlsx");
   };
 
   render() {
@@ -783,35 +701,13 @@ class MaterialStock extends React.Component {
             <Card style={{}}>
               <CardHeader>
                 <span style={{ marginTop: "8px", position: "absolute" }}>
-                  {" "}
-                  Material Stock{" "}
+                  Material Inbound Plan {this.state.wh_data.wh_id} -{" "}
+                  {this.state.wh_data.wh_name}{" "} {" "}
                 </span>
                 <div
                   className="card-header-actions"
                   style={{ display: "inline-flex" }}
                 >
-                  {/* <div style={{ marginRight: "10px" }}>
-                    <Dropdown
-                      isOpen={this.state.dropdownOpen[0]}
-                      toggle={() => {
-                        this.toggle(0);
-                      }}
-                    >
-                      <DropdownToggle caret color="light">
-                        Download Template
-                      </DropdownToggle>
-                      <DropdownMenu>
-                        <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportMatStatus}>
-                          {" "}
-                          Material Stock Template
-                        </DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>
-                          > Download All{" "}
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
-                  </div> */}
                   <div>
                     {/* Open modal for create new */}
                     {this.state.userRole.includes("Flow-PublicInternal") !==
@@ -834,7 +730,22 @@ class MaterialStock extends React.Component {
                         ""
                       )}
                   </div>
-                   &nbsp;&nbsp;&nbsp;
+                  &nbsp;&nbsp;&nbsp;
+                  <div>
+                    <Button
+                      block
+                      color="info"
+                      onClick={this.toggleAddNew}
+                      id="toggleCollapse1"
+                    >
+                      <i className="icon-info" aria-hidden="true">
+                        {" "}
+                        &nbsp;{" "}
+                      </i>{" "}
+                      Info
+                    </Button>
+                  </div>
+                  &nbsp;&nbsp;&nbsp;
                   <div>
                     <Button onClick={this.downloadAll} block color="ghost-warning"><i className="fa fa-download" aria-hidden="true">
                       {" "}
@@ -842,11 +753,6 @@ class MaterialStock extends React.Component {
                     </i>{" "}Export</Button>
                   </div>
                 </div>
-                {/* <div>
-                  <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}>
-                    <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form
-                  </Button>
-                </div> */}
               </CardHeader>
               <Collapse
                 isOpen={this.state.collapse}
@@ -861,91 +767,30 @@ class MaterialStock extends React.Component {
                       <table>
                         <tbody>
                           <tr>
-                            <td>Upload File</td>
+                          <td>WH Manager</td>
                             <td>:</td>
-                            <td>
-                              <input
-                                type="file"
-                                onChange={this.fileHandlerMaterial.bind(this)}
-                                style={{ padding: "10px", visiblity: "hidden" }}
-                              />
-                            </td>
+                            <td>{this.state.wh_data.wh_manager}</td>
+                          </tr>
+                          <tr>
+                            <td>WH Address</td>
+                            <td>:</td>
+                            <td>{this.state.wh_data.address}</td>
+                          </tr>
+                          <tr>
+                            <td>WH Owner</td>
+                            <td>:</td>
+                            <td>{this.state.wh_data.owner}</td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
                   </CardBody>
-                  <CardFooter>
-                    <Button
-                      color="success"
-                      disabled={this.state.rowsXLS.length === 0}
-                      onClick={this.saveMatStockWHBulk}
-                    >
-                      {" "}
-                      <i className="fa fa-save" aria-hidden="true">
-                        {" "}
-                      </i>{" "}
-                      &nbsp;SAVE{" "}
-                    </Button>
-                    &nbsp;&nbsp;&nbsp;
-                    <Button
-                      color="warning"
-                      disabled={this.state.rowsXLS.length === 0}
-                      onClick={this.saveTruncateBulk}
-                    >
-                      {" "}
-                      <i className="fa fa-save" aria-hidden="true">
-                        {" "}
-                      </i>{" "}
-                      &nbsp;SAVE2{" "}
-                    </Button>
-                    {/* <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>                     */}
-                  </CardFooter>
                 </Card>
               </Collapse>
               <CardBody>
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                      {/* <span
-                        style={{
-                          fontSize: "20px",
-                          fontWeight: "500",
-                          position: "absolute",
-                        }}
-                      >
-                        Material Stock List
-                      </span> */}
-                      <div
-                        style={{
-                          float: "left",
-                          // marginTop: "25px",
-                          // display: "inline-flex",
-                        }}
-                      >
-                        <FormGroup row>
-                          <Col xs="6" md="3">
-                            <Label for="exampleSelect">
-                              Select Warehouse
-                          </Label>
-                          </Col>
-                          <Col xs="12" md="9">
-                            <Input
-                              id="exampleSelect"
-                              type="select"
-                              name="select"
-                              onChange={this.getWHStockList}
-                            // placeholder="Select Warehouse"
-                            >
-                              {this.state.wh_data.map((opt) => (
-                                <option value={opt.wh_id}>
-                                  {opt.wh_name} - {opt.wh_id}
-                                </option>
-                              ))}
-                            </Input>
-                          </Col>
-                        </FormGroup>
-                      </div>
                     </div>
                     <input
                       className="search-box-material"
@@ -959,7 +804,7 @@ class MaterialStock extends React.Component {
                 <Row>
                   <Col>
                     <div className="divtable">
-                      <Table responsive size="sm" >
+                      <Table responsive size="sm">
                         <thead
                           style={{ backgroundColor: "#73818f" }}
                           className="fixed"
@@ -978,6 +823,7 @@ class MaterialStock extends React.Component {
                             <th>Box Number</th>
                             <th>Condition</th>
                             <th>Notes</th>
+                            {/* <th></th> */}
                             <th></th>
                           </tr>
                         </thead>
@@ -1029,15 +875,11 @@ class MaterialStock extends React.Component {
                                   <td style={{ textAlign: "center" }}>
                                     {e.arrival_date}
                                   </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku}
-                                  </td>
+                                  <td style={{ textAlign: "center" }}>{e.sku}</td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.sku_description}
                                   </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.qty}
-                                  </td>
+                                  <td style={{ textAlign: "center" }}>{e.qty}</td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.ageing}
                                   </td>
@@ -1093,88 +935,28 @@ class MaterialStock extends React.Component {
           </Col>
         </Row>
 
-
-        {/* Modal Edit PP */}
+        {/* Modal confirmation delete */}
         <Modal
-          isOpen={this.state.modalMatStockEdit}
-          toggle={this.toggleEdit}
-          className="modal--form"
+          isOpen={this.state.danger}
+          toggle={this.toggleDelete}
+          className={"modal-danger " + this.props.className}
         >
-          <ModalHeader>Form Update Material Stock</ModalHeader>
-          <ModalBody>
-            <Row>
-              <Col sm="12">
-                <FormGroup>
-                  <Label htmlFor="sku_description">SKU Description</Label>
-                  <Input
-                    type="text"
-                    name="0"
-                    placeholder=""
-                    value={this.state.MatStockForm[0]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="serial_number">Serial Number</Label>
-                  <Input
-                    type="text"
-                    name="1"
-                    placeholder=""
-                    value={this.state.MatStockForm[1]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="project_name">Project Name</Label>
-                  <Input
-                    type="datetime-local"
-                    placeholder=""
-                    value={this.state.MatStockForm[2]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="box_number">Box Number</Label>
-                  <Input
-                    type="text"
-                    name="3"
-                    placeholder=""
-                    value={this.state.MatStockForm[3]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="condition">Condition</Label>
-                  <Input
-                    type="text"
-                    min="0"
-                    name="4"
-                    placeholder=""
-                    value={this.state.MatStockForm[4]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    name="6"
-                    placeholder=""
-                    value={this.state.MatStockForm[5]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-              </Col>
-            </Row>
-          </ModalBody>
+          <ModalHeader toggle={this.toggleDelete}>
+            Delete Material Stock Confirmation
+          </ModalHeader>
+          <ModalBody>Are you sure want to delete ?</ModalBody>
           <ModalFooter>
-            <Button color="success" onClick={this.saveUpdate}>
-              Update
+            <Button
+              color="danger"
+              onClick={this.DeleteData}
+            >
+              Delete
+            </Button>
+            <Button color="secondary" onClick={this.toggleDelete}>
+              Cancel
             </Button>
           </ModalFooter>
         </Modal>
-        {/*  Modal Edit PP*/}
 
         {/* Modal create New */}
         <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
@@ -1201,34 +983,153 @@ class MaterialStock extends React.Component {
             </CardBody>
           </ModalBody>
           <ModalFooter>
-            <Button block color="link" className="btn-pill" onClick={this.exportMatStatus}>Download Template</Button>{' '}
-            <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveMatStockWHBulk}>Save</Button>{' '}
+            <Button block color="link" className="btn-pill" onClick={this.exportMatInbound}>Download Template</Button>{' '}
+            <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveCPOBulk}>Save</Button>{' '}
             <Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button>
           </ModalFooter>
         </Modal>
 
-        {/* Modal confirmation delete */}
+        {/* Modal New PO */}
         <Modal
-          isOpen={this.state.danger}
-          toggle={this.toggleDelete}
-          className={"modal-danger " + this.props.className}
+          isOpen={this.state.modalMatStockForm}
+          toggle={this.togglePOForm}
+          className="modal--form-e"
         >
-          <ModalHeader toggle={this.toggleDelete}>
-            Delete Material Stock Confirmation
-          </ModalHeader>
-          <ModalBody>Are you sure want to delete ?</ModalBody>
+          <ModalHeader>Form CPO</ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col sm="12">
+                <FormGroup>
+                  <Label htmlFor="po_number">Owner ID</Label>
+                  <Input
+                    type="text"
+                    name="0"
+                    placeholder=""
+                    value={this.state.POForm[0]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="po_year">PO Number</Label>
+                  <Input
+                    type="text"
+                    name="1"
+                    placeholder=""
+                    value={this.state.POForm[1]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="arrival_date">Arrival Date</Label>
+                  <Input
+                    type="datetime-local"
+                    placeholder=""
+                    value={this.state.POForm[2]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="project_name">Project Name</Label>
+                  <Input
+                    type="text"
+                    name="3"
+                    placeholder=""
+                    value={this.state.POForm[3]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="sku">SKU</Label>
+                  <Input
+                    type="text"
+                    min="0"
+                    name="4"
+                    placeholder=""
+                    value={this.state.POForm[4]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+          </ModalBody>
           <ModalFooter>
-            <Button
-              color="danger"
-              onClick={this.DeleteData}
-            >
-              Delete
-            </Button>
-            <Button color="secondary" onClick={this.toggleDelete}>
-              Cancel
+            <Button color="success" onClick={this.saveNew}>
+              Submit
             </Button>
           </ModalFooter>
         </Modal>
+        {/*  Modal New PO*/}
+
+        {/* Modal Edit PP */}
+        <Modal
+          isOpen={this.state.modalMatStockEdit}
+          toggle={this.toggleEdit}
+          className="modal--form"
+        >
+          <ModalHeader>Form Update Product Package</ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col sm="12">
+                <FormGroup>
+                  <Label htmlFor="po_number">Owner ID</Label>
+                  <Input
+                    type="text"
+                    name="0"
+                    placeholder=""
+                    value={this.state.POForm[0]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="po_year">PO Number</Label>
+                  <Input
+                    type="text"
+                    name="1"
+                    placeholder=""
+                    value={this.state.POForm[1]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="arrival_date">Arrival Date</Label>
+                  <Input
+                    type="datetime-local"
+                    placeholder=""
+                    value={this.state.POForm[2]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="project_name">Project Name</Label>
+                  <Input
+                    type="text"
+                    name="3"
+                    placeholder=""
+                    value={this.state.POForm[3]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="sku">SKU</Label>
+                  <Input
+                    type="text"
+                    min="0"
+                    name="4"
+                    placeholder=""
+                    value={this.state.POForm[4]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="success" onClick={this.saveUpdate}>
+              Update
+            </Button>
+          </ModalFooter>
+        </Modal>
+        {/*  Modal Edit PP*/}
 
         {/* Modal Loading */}
         <Modal
@@ -1266,4 +1167,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(MaterialStock);
+export default connect(mapStateToProps)(MatInboundPlan);

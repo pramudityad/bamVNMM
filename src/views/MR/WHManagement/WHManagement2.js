@@ -33,23 +33,19 @@ const Checkbox = ({
   onChange,
   value,
 }) => (
-    <input
-      type={type}
-      name={name}
-      checked={checked}
-      onChange={onChange}
-      value={value}
-      className="checkmark-dash"
-    />
-  );
+  <input
+    type={type}
+    name={name}
+    checked={checked}
+    onChange={onChange}
+    value={value}
+    className="checkmark-dash"
+  />
+);
 
 const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
-
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
-const usernameXL = 'adminbamidsuper';
-const passwordXL = 'F760qbAg2sml';
 
 class WHManagement extends React.Component {
   constructor(props) {
@@ -60,7 +56,7 @@ class WHManagement extends React.Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      search: null,
+      filter_name: null,
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -71,7 +67,6 @@ class WHManagement extends React.Component {
       action_status: null,
       action_message: null,
       all_data: [],
-      asp_data: [],
       data_PO: [],
       packageSelected: [],
       modal_loading: false,
@@ -83,7 +78,6 @@ class WHManagement extends React.Component {
       danger: false,
       activeItemName: "",
       activeItemId: null,
-      createModal: false,
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -95,9 +89,8 @@ class WHManagement extends React.Component {
     this.toggleEdit = this.toggleEdit.bind(this);
     this.saveNew = this.saveNew.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
-    this.toggleDelete = this.toggleDelete.bind(this);
+    this.toggleDanger = this.toggleDanger.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
-    this.togglecreateModal = this.togglecreateModal.bind(this);
   }
 
   toggle(i) {
@@ -113,10 +106,15 @@ class WHManagement extends React.Component {
     this.setState({ collapse: !this.state.collapse });
   }
 
-  toggleDelete(e) {
-    const modalDelete = this.state.danger;
+  toggleDanger(e) {
+    const value = e.currentTarget.value;
+    const aEdit = this.state.all_data.find((e) => e.owner_id === value);
+    const Dataid = aEdit.owner_id;
+    const Datapo = aEdit.po_number;
     this.setState({
       danger: !this.state.danger,
+      // activeItemId: e._id,
+      // activeItemName: e.owner_id,
     });
   }
 
@@ -127,7 +125,6 @@ class WHManagement extends React.Component {
   }
 
   toggleEdit(e) {
-    this.getASPList();
     const modalEdit = this.state.modalEdit;
     if (modalEdit === false) {
       const value = e.currentTarget.value;
@@ -151,26 +148,6 @@ class WHManagement extends React.Component {
     this.setState((prevState) => ({
       modalMatStockForm: !prevState.modalMatStockForm,
     }));
-  }
-
-  async getDatafromAPIEXEL(url) {
-    try {
-      let respond = await axios.get(API_URL_XL + url, {
-        headers: { 'Content-Type': 'application/json' },
-        auth: {
-          username: usernameXL,
-          password: passwordXL
-        },
-      })
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond Get Data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      console.log("respond Get Data", err);
-      return respond;
-    }
   }
 
   async getDatafromAPINODE(url) {
@@ -253,13 +230,6 @@ class WHManagement extends React.Component {
     this.getWHStockList();
   }
 
-  togglecreateModal() {
-    this.setState({
-      createModal: !this.state.createModal,
-    });
-  }
-
-
   handleChangeFilter = (e) => {
     let value = e.target.value;
     if (value.length === 0) {
@@ -270,49 +240,13 @@ class WHManagement extends React.Component {
     });
   };
 
-  SearchFilter = (e) => {
-    let keyword = e.target.value;
-    this.setState({ search: keyword });
-  };
-
   getWHStockList() {
     this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
-      console.log("all data ", res.data);
+      // console.log("all data ", res.data);
       if (res.data !== undefined) {
-        this.setState({ all_data: res.data.data, prevPage: this.state.activePage,
-          total_dataParent: res.data.totalResults, });
+        this.setState({ all_data: res.data.data });
       } else {
-        this.setState({ all_data: [], total_dataParent: 0,
-          prevPage: this.state.activePage, });
-      }
-    });
-  }
-
-
-  // getASPList() {
-  //   switch (this.props.dataLogin.account_id) {
-  //     case "2":
-  //       this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
-  //         // console.log("asp data ", res.data);
-  //         if (res.data !== undefined) {
-  //           this.setState({ asp_data: res.data._items });
-  //         } else {
-  //           this.setState({ asp_data: [] });
-  //         }
-  //       });
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  // }
-
-  getASPList() {
-    this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
-      // console.log("asp data ", res.data);
-      if (res.data !== undefined) {
-        this.setState({ asp_data: res.data._items });
-      } else {
-        this.setState({ asp_data: [] });
+        this.setState({ all_data: [] });
       }
     });
   }
@@ -404,7 +338,6 @@ class WHManagement extends React.Component {
   }
 
   componentDidMount() {
-    console.log("here ur dataLogin", this.props.dataLogin);
     this.getWHStockList();
     // change this
     document.title = "Warehouse Management | BAM";
@@ -514,9 +447,7 @@ class WHManagement extends React.Component {
 
   saveMatStockWHBulk = async () => {
     this.toggleLoading();
-    this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
-    console.log("xlsx data", JSON.stringify(BulkXLSX));
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     const res = await this.postDatatoAPINODE(
       "/whManagement/createWarehouse",
@@ -537,7 +468,6 @@ class WHManagement extends React.Component {
 
   saveTruncateBulk = async () => {
     this.toggleLoading();
-    this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     console.log('xlsx data', JSON.stringify(BulkXLSX));
@@ -558,7 +488,6 @@ class WHManagement extends React.Component {
   handleChangeForm(e) {
     const value = e.target.value;
     const index = e.target.name;
-    console.log('value ', value, index);
     let dataForm = this.state.DataForm;
     dataForm[parseInt(index)] = value;
     this.setState({ DataForm: dataForm });
@@ -580,6 +509,20 @@ class WHManagement extends React.Component {
     };
     this.toggleLoading();
     this.toggleEdit();
+    // if (pp.owner_id === undefined || pp.owner_id === null) {
+    //   pp["owner_id"] = pp.product_name;
+    // } else {
+    //   if (pp.pp_group.length === 0) {
+    //     pp["pp_group"] = pp.product_name;
+    //   }
+    // }
+    // if (pp.pp_cust_number === null || pp.pp_cust_number === undefined) {
+    //   pp["pp_cust_number"] = pp.pp_id;
+    // } else {
+    //   if (pp.pp_cust_number.length === 0) {
+    //     pp["pp_cust_number"] = pp.pp_id;
+    //   }
+    // }
     let patchData = await this.patchDatatoAPINODE(
       "/whManagement/UpdateOneWarehouse/" + objData._id,
       { 'data': pp }
@@ -647,21 +590,18 @@ class WHManagement extends React.Component {
   }
 
   async downloadAll() {
-    let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE("/whStock/getWhStock");
-    if (getAll_nonpage.data !== undefined) {
-      download_all = getAll_nonpage.data.data;
-    }
-
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
+    const dataPP = this.state.pp_all;
+
     let headerRow = [
-      "Warehouse Name",
-      "Warehouse ID",
-      "WH Manager",
-      "Address",
-      "Owner",
+      "owner_id",
+      "po_number",
+      "arrival_date",
+      "project_name",
+      "sku",
+      "qty",
     ];
     ws.addRow(headerRow);
 
@@ -669,47 +609,45 @@ class WHManagement extends React.Component {
       ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };
     }
 
-    for (let i = 0; i < download_all.length; i++) {
-      let list = download_all[i];
+    for (let i = 0; i < dataPP.length; i++) {
       ws.addRow([
-        list.wh_name,
-        list.wh_id,
-        list.wh_manager,
-        list.address,
-        list.owner,
+        dataPP[i].owner_id,
+        dataPP[i].po_number,
+        dataPP[i].arrival_date,
+        dataPP[i].project_name,
+        dataPP[i].sku,
+        dataPP[i].qty,
       ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All Warehouse.xlsx");
+    saveAs(new Blob([allocexport]), "WH Management.xlsx");
   }
 
-  DeleteData = async () => {
-    const objData = this.state.all_data.find((e) => e._id);
-    this.toggleLoading();
-    this.toggleDelete();
+  DeleteData(r) {
+    // this.toggleDanger();
+    const _idData = r.currentTarget.value;
     const DelData = this.deleteDataFromAPINODE(
-      "/whManagement/deleteWarehouse/" + objData._id
+      "/whManagement/deleteWarehouse/" + _idData
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
-        this.toggleLoading();
+        // this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
-          this.toggleLoading();
+          // this.toggleLoading();
         });
       }
     });
   }
-
 
   exportMatStatus = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
     ws.addRow(["wh_name", "wh_id", "wh_manager", "address", "owner"]);
-    ws.addRow(["whA", "WH_1", "A", "AB", "dadang1"]);
-    ws.addRow(["whB", "WH_1", "B", "BA", "nurjaman1"]);
+    ws.addRow(["wh_domain", "WH_1", "A", "address wh", "2000175941tes"]);
+    ws.addRow(["wh_domain", "WH_1", "B", "address wh", "2000175941tes"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
@@ -734,7 +672,7 @@ class WHManagement extends React.Component {
                   className="card-header-actions"
                   style={{ display: "inline-flex" }}
                 >
-                  {/* <div style={{ marginRight: "10px" }}>
+                  <div style={{ marginRight: "10px" }}>
                     <Dropdown
                       isOpen={this.state.dropdownOpen[0]}
                       toggle={() => {
@@ -755,34 +693,27 @@ class WHManagement extends React.Component {
                         </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
-                  </div> */}
+                  </div>
                   <div>
                     {this.state.userRole.includes("Flow-PublicInternal") !==
-                      true ? (
-                        <div>
-                          <Button
-                            block
-                            color="success"
-                            onClick={this.togglecreateModal}
-                          // id="toggleCollapse1"
-                          >
-                            <i className="fa fa-plus-square" aria-hidden="true">
-                              {" "}
+                    true ? (
+                      <div>
+                        <Button
+                          block
+                          color="success"
+                          onClick={this.toggleAddNew}
+                          id="toggleCollapse1"
+                        >
+                          <i className="fa fa-plus-square" aria-hidden="true">
+                            {" "}
                             &nbsp;{" "}
-                            </i>{" "}
+                          </i>{" "}
                           New
                         </Button>
-                        </div>
-                      ) : (
-                        ""
-                      )}
-                  </div>
-                  &nbsp;&nbsp;&nbsp;
-                  <div>
-                    <Button onClick={this.downloadAll} block color="ghost-warning"><i className="fa fa-download" aria-hidden="true">
-                      {" "}
-                            &nbsp;{" "}
-                    </i>{" "}Export</Button>
+                      </div>
+                    ) : (
+                      ""
+                    )}
                   </div>
                 </div>
                 {/* <div>
@@ -850,31 +781,32 @@ class WHManagement extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                      {/* <span style={{ fontSize: "20px", fontWeight: "500" }}>
+                      <span style={{ fontSize: "20px", fontWeight: "500" }}>
                         WH Management List
-                      </span> */}
+                      </span>
                       <div
                         style={{
-                          float: "left",
+                          float: "right",
                           margin: "5px",
                           display: "inline-flex",
                         }}
                       >
+                        <input
+                          className="search-box-material"
+                          type="text"
+                          name="filter"
+                          placeholder="Search Material"
+                          onChange={this.handleChangeFilter}
+                          value={this.state.filter_name}
+                        />
                       </div>
                     </div>
-                    <input
-                      className="search-box-material"
-                      type="text"
-                      name="filter"
-                      placeholder="Search"
-                      onChange={(e) => this.SearchFilter(e)}
-                    />
                   </Col>
                 </Row>
                 <Row>
                   <Col>
                     <div className="divtable">
-                      <Table responsive size="sm">
+                      <table hover bordered responsive size="sm" width="100%">
                         <thead
                           style={{ backgroundColor: "#73818f" }}
                           className="fixed"
@@ -885,86 +817,73 @@ class WHManagement extends React.Component {
                             <th>WH Manager</th>
                             <th>Address</th>
                             <th>Owner</th>
+                            {/* <th>SKU Desc</th>
+                            <th>Qty</th>
+                            <th>Aging</th>
+                            <th>Serial Number</th>
+                            <th>Box Number</th>
+                            <th>Condition</th>
+                            <th>Notes</th> */}
                             <th></th>
                             <th></th>
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.all_data
-                            .filter((e) => {
-                              if (this.state.search === null) {
-                                return e;
-                              } else if (
-                                e.wh_name
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.wh_id
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.wh_manager
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.address
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.owner
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase())
-                              ) {
-                                return e;
-                              }
-                            })
-                            .map((e) => (
-                              <React.Fragment key={e._id + "frag"}>
-                                <tr
-                                  style={{ backgroundColor: "#d3d9e7" }}
-                                  className="fixbody"
-                                  key={e._id}
-                                >
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.wh_name}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.wh_id}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.wh_manager}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.address}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>{e.owner}</td>
+                          {this.state.all_data.map((e) => (
+                            <React.Fragment key={e._id + "frag"}>
+                              <tr
+                                style={{ backgroundColor: "#d3d9e7" }}
+                                className="fixbody"
+                                key={e._id}
+                              >
+                                {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
+                                <td style={{ textAlign: "center" }}>
+                                  {e.wh_name}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.wh_id}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.wh_manager}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.address}
+                                </td>
+                                <td style={{ textAlign: "center" }}>{e.owner}</td>
 
-                                  <td>
-                                    <Button
-                                      size="sm"
-                                      color="secondary"
-                                      value={e._id}
-                                      onClick={this.toggleEdit}
-                                      title="Edit"
-                                    >
-                                      <i className="icon-pencil icons"></i>
-                                    </Button>
-                                  </td>
-                                  <td>
-                                    <Button
-                                      size="sm"
-                                      color="danger"
-                                      value={e._id}
-                                      onClick={this.toggleDelete}
-                                      title="Delete"
-                                    >
-                                      <i
-                                        className="fa fa-trash"
-                                        aria-hidden="true"
-                                      ></i>
-                                    </Button>
-                                  </td>
-                                </tr>
-                              </React.Fragment>
-                            ))}
+                                <td>
+                                  <Button
+                                    size="sm"
+                                    color="secondary"
+                                    value={e._id}
+                                    onClick={this.toggleEdit}
+                                    title="Edit"
+                                  >
+                                    <i
+                                      className="fa fa-pencil"
+                                      aria-hidden="true"
+                                    ></i>
+                                  </Button>
+                                </td>
+                                <td>
+                                  <Button
+                                    size="sm"
+                                    color="danger"
+                                    value={e._id}
+                                    onClick={(r) => { if (window.confirm('Are you sure you wish to delete this item?')) this.DeleteData(r, "value")}}
+                                    title="Delete"
+                                  >
+                                    <i
+                                      className="fa fa-trash"
+                                      aria-hidden="true"
+                                    ></i>
+                                  </Button>
+                                </td>
+                              </tr>
+                            </React.Fragment>
+                          ))}
                         </tbody>
-                      </Table>
+                      </table>
                     </div>
                   </Col>
                 </Row>
@@ -973,7 +892,7 @@ class WHManagement extends React.Component {
                     <Pagination
                       activePage={this.state.activePage}
                       itemsCountPerPage={this.state.perPage}
-                      totalItemsCount={this.state.total_dataParent}
+                      totalItemsCount={this.state.total_data_PO}
                       pageRangeDisplayed={5}
                       onChange={this.handlePageChange}
                       itemClass="page-item"
@@ -985,7 +904,7 @@ class WHManagement extends React.Component {
             </Card>
           </Col>
         </Row>
-        {/* dont need */}
+{/* dont need */}
         {/* Modal New PO */}
         <Modal
           isOpen={this.state.modalMatStockForm}
@@ -1128,19 +1047,13 @@ class WHManagement extends React.Component {
                 <FormGroup>
                   <Label htmlFor="owner">Owner</Label>
                   <Input
-                    type="select"
+                    type="text"
+                    min="0"
                     name="4"
                     placeholder=""
                     value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
-                  >
-                    {this.state.asp_data.map((asp) => (
-                      <option value={asp.Name}>
-                        {asp.Name}
-                      </option>
-                    ))}
-                    <option value="Internal">Internal</option>
-                  </Input>
+                  />
                 </FormGroup>
               </Col>
             </Row>
@@ -1153,55 +1066,25 @@ class WHManagement extends React.Component {
         </Modal>
         {/*  Modal Edit PP*/}
 
-        {/* Modal create New */}
-        <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-          <ModalHeader toggle={this.togglecreateModal}>Create New WareHouse</ModalHeader>
-          <ModalBody>
-            <CardBody>
-              <div>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Upload File</td>
-                      <td>:</td>
-                      <td>
-                        <input
-                          type="file"
-                          onChange={this.fileHandlerMaterial.bind(this)}
-                          style={{ padding: "10px", visiblity: "hidden" }}
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </CardBody>
-          </ModalBody>
-          <ModalFooter>
-            <Button block color="link" className="btn-pill" onClick={this.exportMatStatus}>Download Template</Button>{' '}
-            <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveMatStockWHBulk}>Save</Button>{' '}
-            <Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button>
-          </ModalFooter>
-        </Modal>
-
         {/* Modal confirmation delete */}
         <Modal
           isOpen={this.state.danger}
-          toggle={this.toggleDelete}
+          toggle={this.toggleDanger}
           className={"modal-danger " + this.props.className}
         >
-          <ModalHeader toggle={this.toggleDelete}>
-            Delete Material Stock Confirmation
+          <ModalHeader toggle={this.toggleDanger}>
+            Delete WH Management Confirmation
           </ModalHeader>
           <ModalBody>Are you sure want to delete ?</ModalBody>
           <ModalFooter>
             <Button
               color="danger"
-              onClick={this.DeleteData}
+              // value={e._id}
+              onClick={(r) => this.DeleteData(r, "value")}
             >
               Delete
             </Button>
-            <Button color="secondary" onClick={this.toggleDelete}>
+            <Button color="secondary" onClick={this.toggleDanger}>
               Cancel
             </Button>
           </ModalFooter>

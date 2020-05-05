@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table, FormGroup, Label } from 'reactstrap';
+import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table, FormGroup, Label, Modal, ModalBody, ModalFooter } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
@@ -41,6 +41,7 @@ class LoadingProcess extends Component {
       mr_data_selected : [],
       shipment_detail : {},
       validation_form : {},
+      modal_loading : false,
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -53,7 +54,7 @@ class LoadingProcess extends Component {
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
     this.handleChangeShipmentDetail = this.handleChangeShipmentDetail.bind(this);
     this.handleCheckingForm = this.handleCheckingForm.bind(this);
-
+    this.toggleLoading = this.toggleLoading.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -112,6 +113,12 @@ class LoadingProcess extends Component {
       console.log("respond Patch data", err.response);
       return respond;
     }
+  }
+
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
   }
 
   getMRList() {
@@ -272,6 +279,7 @@ class LoadingProcess extends Component {
   }
 
   async proceedShipment() {
+    this.toggleLoading();
     const inputanDetailShipment = this.state.shipment_detail;
     const dataMRSelected = this.state.mr_data_selected;
     let list_mr_shipment = [];
@@ -309,6 +317,7 @@ class LoadingProcess extends Component {
     }else{
       this.setState({ action_status: 'failed' });
     }
+    this.toggleLoading();
   }
 
   componentDidMount() {
@@ -765,6 +774,29 @@ class LoadingProcess extends Component {
             </Card>
           </Col>
         </Row>
+
+        {/* Modal Loading */}
+        <Modal
+          isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm modal--loading "}
+        >
+          <ModalBody>
+            <div style={{ textAlign: "center" }}>
+              <div className="lds-ring">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            </div>
+            <div style={{ textAlign: "center" }}>Loading ...</div>
+            <div style={{ textAlign: "center" }}>System is processing ...</div>
+          </ModalBody>
+          <ModalFooter>
+          </ModalFooter>
+        </Modal>
+        {/* end Modal Loading */}
       </div>
     );
   }
