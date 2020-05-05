@@ -97,11 +97,11 @@ export default {
       name: 'Material Request',
       icon: 'icon-note',
       children: [
-        {
-          name: 'WH Dashboard',
-          url: '/wh-dashboard',
-          icon: 'icon-speedometer',
-        },
+        // {
+        //   name: 'WH Dashboard',
+        //   url: '/wh-dashboard',
+        //   icon: 'icon-speedometer',
+        // },
         {
           name: 'MR List',
           url: '/mr-list',
@@ -134,8 +134,13 @@ export default {
       icon: 'icon-list',
       children: [
         {
-          name: 'WH Dashboard',
+          name: 'WH Dashboard EID',
           url: '/wh-dashboard2',
+          icon: 'icon-speedometer',
+        },
+        {
+          name: 'WH Dashboard ASP/DSP',
+          url: '/wh-dashboard3',
           icon: 'icon-speedometer',
         },
         {
@@ -143,6 +148,16 @@ export default {
           url: '/wh-management',
           icon: 'icon-list',
         },
+        // {
+        //   name: 'WH Stock',
+        //   url: '/material-stock',
+        //   icon: 'icon-list',
+        // },
+        // {
+        //   name: 'WH Inbound Plan',
+        //   url: '/material-inbound-plan',
+        //   icon: 'icon-list',
+        // }
       ]
     },
     {

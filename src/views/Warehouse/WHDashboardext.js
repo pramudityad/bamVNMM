@@ -265,11 +265,10 @@ class WarehouseDashboard extends Component {
                 <Col xs="12" sm="6" md="4">
                   <Card>
                     <CardHeader>
-                      <a href="wh-dashboard">
-                        <h5>{e.wh_name}</h5>
-                        <h6>{e.wh_id}</h6>
+                      <a href="#">
+                        {e.wh_name} - {e.wh_id}
                       </a>
-                      {/* <div className="card-header-actions">
+                      <div className="card-header-actions">
                         <a
                           className="card-header-action btn btn-minimize"
                           data-target="#collapseExample"
@@ -277,7 +276,7 @@ class WarehouseDashboard extends Component {
                         >
                           <i className="icon-arrow-up"></i>
                         </a>
-                      </div> */}
+                      </div>
                     </CardHeader>
                     <Collapse isOpen={this.state.collapse} id="collapseExample">
                       <CardBody>
@@ -303,7 +302,7 @@ class WarehouseDashboard extends Component {
                                   e.wh_name,
                               }}
                             >
-                              <Button block color="primary" size="sm" className="btn-pill">
+                              <Button block color="primary" size="sm">
                                 Stock
                               </Button>
                             </Link>
@@ -321,20 +320,20 @@ class WarehouseDashboard extends Component {
                                   e.wh_name,
                               }}
                             >
-                              <Button block color="secondary" size="sm" className="btn-pill">
+                              <Button block color="secondary" size="sm">
                                 Inbound
                               </Button>
                             </Link>
                           </Col>
 
                           <Col col="2" xl className="mb-3 mb-xl-0">
-                            <Button block color="success" size="sm" className="btn-pill">
+                            <Button block color="success" size="sm">
                               GR
                             </Button>
                           </Col>
 
                           <Col col="2" xl className="mb-3 mb-xl-0">
-                            <Button block color="warning" size="sm" className="btn-pill">
+                            <Button block color="warning" size="sm">
                               GI
                             </Button>
                           </Col>

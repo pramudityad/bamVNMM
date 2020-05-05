@@ -21,8 +21,9 @@ import Select from "react-select";
 import { saveAs } from "file-saver";
 import Excel from "exceljs";
 import { connect } from "react-redux";
-import { Redirect, Route, Switch, Link } from "react-router-dom";
+import { Redirect, Route, Switch, Link, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
+import queryString from "query-string";
 
 import "../MatStyle.css";
 
@@ -259,7 +260,7 @@ class MaterialStock2 extends React.Component {
 
   getWHStockListNext() {
     this.toggleLoading();
-    let get_wh_id = this.props.location.state.wh_id;
+    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
     // console.log("wh id ", get_wh_id);
     let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
     this.getDatafromAPINODE(
@@ -290,8 +291,9 @@ class MaterialStock2 extends React.Component {
     });
   }
 
-  getWHManagement() {
-    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
+  getWHManagementID() {
+    let _id = new URLSearchParams(window.location.search).get("_id");
+    this.getDatafromAPINODE("/whManagement/warehouse/" + _id).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({ wh_data: res.data.data });
@@ -389,7 +391,7 @@ class MaterialStock2 extends React.Component {
 
   componentDidMount() {
     this.getWHStockListNext();
-    // this.getWHManagement();
+    this.getWHManagementID();
     document.title = "Material Stock | BAM";
   }
 
@@ -756,8 +758,8 @@ class MaterialStock2 extends React.Component {
               <CardHeader>
                 <span style={{ marginTop: "8px", position: "absolute" }}>
                   {" "}
-                  Material Stock {this.props.location.state.wh_id} -{" "}
-                  {this.props.location.state.wh_name}{" "}
+                  Material Stock {this.state.wh_data.wh_id} -{" "}
+                  {this.state.wh_data.wh_name}{" "}
                 </span>
                 <div
                   className="card-header-actions"
@@ -831,17 +833,17 @@ class MaterialStock2 extends React.Component {
                           <tr>
                             <td>WH Manager</td>
                             <td>:</td>
-                            <td>{this.props.location.state.wh_manager}</td>
+                            <td>{this.state.wh_data.wh_manager}</td>
                           </tr>
                           <tr>
                             <td>WH Address</td>
                             <td>:</td>
-                            <td>{this.props.location.state.wh_address}</td>
+                            <td>{this.state.wh_data.address}</td>
                           </tr>
                           <tr>
                             <td>WH Owner</td>
                             <td>:</td>
-                            <td>{this.props.location.state.wh_owner}</td>
+                            <td>{this.state.wh_data.owner}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -852,8 +854,7 @@ class MaterialStock2 extends React.Component {
               <CardBody>
                 <Row>
                   <Col>
-                    <div style={{ marginBottom: "10px" }}>
-                    </div>
+                    <div style={{ marginBottom: "10px" }}></div>
                     <input
                       className="search-box-material"
                       type="text"

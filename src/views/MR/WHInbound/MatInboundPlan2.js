@@ -228,7 +228,7 @@ class MatInboundPlan extends React.Component {
 
   getWHInboundListNext() {
     this.toggleLoading();
-    let get_wh_id = this.props.location.state.wh_id;
+    let get_wh_id = (new URLSearchParams(window.location.search)).get("wh_id");
     let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
     this.getDatafromAPINODE(
       "/whInboundPlan/getWhInboundPlan?q=" +
@@ -258,8 +258,9 @@ class MatInboundPlan extends React.Component {
     });
   }
 
-  getWHManagement() {
-    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
+  getWHManagementID() {
+    let _id = new URLSearchParams(window.location.search).get("_id");
+    this.getDatafromAPINODE("/whManagement/warehouse/" + _id).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({ wh_data: res.data.data });
@@ -357,7 +358,7 @@ class MatInboundPlan extends React.Component {
 
   componentDidMount() {
     this.getWHInboundListNext();
-    // this.getWHManagement();
+    this.getWHManagementID();
     document.title = "Material Inbound Plan | BAM";
   }
 
@@ -700,7 +701,8 @@ class MatInboundPlan extends React.Component {
             <Card style={{}}>
               <CardHeader>
                 <span style={{ marginTop: "8px", position: "absolute" }}>
-                  Material Inbound Plan {this.props.location.state.wh_id} - {this.props.location.state.wh_name} {" "}
+                  Material Inbound Plan {this.state.wh_data.wh_id} -{" "}
+                  {this.state.wh_data.wh_name}{" "} {" "}
                 </span>
                 <div
                   className="card-header-actions"
@@ -767,17 +769,17 @@ class MatInboundPlan extends React.Component {
                           <tr>
                           <td>WH Manager</td>
                             <td>:</td>
-                            <td>{this.props.location.state.wh_manager}</td>
+                            <td>{this.state.wh_data.wh_manager}</td>
                           </tr>
                           <tr>
                             <td>WH Address</td>
                             <td>:</td>
-                            <td>{this.props.location.state.wh_address}</td>
+                            <td>{this.state.wh_data.address}</td>
                           </tr>
                           <tr>
                             <td>WH Owner</td>
                             <td>:</td>
-                            <td>{this.props.location.state.wh_owner}</td>
+                            <td>{this.state.wh_data.owner}</td>
                           </tr>
                         </tbody>
                       </table>
