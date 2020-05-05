@@ -87,3 +87,47 @@ Table thead th:first-child {
   left: 0;
   z-index: 1;
 }
+
+.mr-detail__body--flex {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.mr-detail__body--flex > div{
+  width: 23%;
+  margin: 0px 10px 25px 10px;
+}
+
+.mr-detail__body--flex .mr-detail__body--header-detail{
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.mr-detail__body--flex > .mr-detail__flex-body--25{
+  width: 23%;
+  margin: 0px 10px 25px 10px;
+}
+
+.mr-detail__body--flex .mr-detail__body--header-detail > span{
+  padding-bottom: 1.5px;
+  border-bottom: 1px solid;
+  border-bottom-color: rgba(100,181,246 ,1);
+}
+
+.mr-detail__line {
+  margin: 0 0 20px 0;
+  border-top: 1px solid rgb(59, 134, 134);
+}
+
+ul.mr-detail__ul--cd-id li {
+  display: inline;
+  padding-left: 0px;
+  margin-right: 10px;
+}
+
+ul.mr-detail__ul--cd-id {
+  padding-left: 0px !important;
+  margin-bottom: 0px !important;
+}

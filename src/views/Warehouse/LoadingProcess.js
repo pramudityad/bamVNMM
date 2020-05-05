@@ -40,6 +40,7 @@ class LoadingProcess extends Component {
       mr_checked : new Map(),
       mr_data_selected : [],
       shipment_detail : {},
+      validation_form : {},
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -51,6 +52,8 @@ class LoadingProcess extends Component {
     this.proceedShipment = this.proceedShipment.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
     this.handleChangeShipmentDetail = this.handleChangeShipmentDetail.bind(this);
+    this.handleCheckingForm = this.handleCheckingForm.bind(this);
+
   }
 
   async getDataFromAPI(url) {
@@ -249,10 +252,26 @@ class LoadingProcess extends Component {
     }
   }
 
-  async proceedShipment(e) {
-    const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-    const id_doc = e.currentTarget.id;
+  handleCheckingForm(){
+    const inputanDetailShipment = this.state.shipment_detail;
+    let dataValidate = {};
+    let form_id = ["shipment_number", "transporter", "driver_name", "driver_phone_number", "truck_number", "truck_type"];
+    let checkerror = [];
+    for(let i = 0; i < form_id.length; i++){
+      if(inputanDetailShipment[form_id[i]] === undefined || inputanDetailShipment[form_id[i]] === null){
+        dataValidate[form_id[i]] = false;
+        checkerror.push(false);
+      }
+    }
+    if(checkerror.length !== 0){
+      this.setState({validation_form : dataValidate});
+    }else{
+      this.setState({validation_form : dataValidate});
+      this.proceedShipment();
+    }
+  }
+
+  async proceedShipment() {
     const inputanDetailShipment = this.state.shipment_detail;
     const dataMRSelected = this.state.mr_data_selected;
     let list_mr_shipment = [];
@@ -330,7 +349,6 @@ class LoadingProcess extends Component {
       value = value.toString();
     }
     dataShipment[name.toString()] = value;
-    console.log("dataShipment", dataShipment);
     this.setState({shipment_detail : dataShipment});
   }
 
@@ -348,7 +366,6 @@ class LoadingProcess extends Component {
       });
     }
     this.setState({ mr_data_selected: MRSelected });
-    console.log("MRSelected", MRSelected);
     this.setState(prevState => ({ mr_checked: prevState.mr_checked.set(item, isChecked) }));
   }
 
@@ -396,7 +413,7 @@ class LoadingProcess extends Component {
             <Card>
               <CardHeader>
                 Shipment Detail
-                <Button onClick={this.proceedShipment} size="sm" style={{float : 'right'}} color="success">
+                <Button onClick={this.handleCheckingForm} size="sm" style={{float : 'right'}} color="success" disabled={this.state.mr_data_selected.length === 0}>
                   <i class="fa fa-plus" aria-hidden="true">&nbsp;</i> Ship
                 </Button>
               </CardHeader>
@@ -405,52 +422,98 @@ class LoadingProcess extends Component {
                   <Col xs="6" lg="6" md="6">
                     <FormGroup row size="sm">
                       <Col md="2">
-                        <Label htmlFor="shipment_number" >Shipment Number</Label>
+                        <Label htmlFor="shipment_number" >Shipment Number*</Label>
                       </Col>
                       <Col md="8">
+                        <div style={{display : 'flex', "align-items": "baseline"}}>
                         <Input type="text" name="0" placeholder="" name="shipment_number" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.shipment_number}/>
+                        {this.state.validation_form.truck_number === false && (
+                          <i class="fa fa-exclamation-triangle" aria-hidden="true" style={{color : "rgba(255,61,0 ,1)", paddingLeft : '10px'}}></i>
+                        )}
+                        </div>
                       </Col>
                     </FormGroup>
                     <FormGroup row>
                       <Col md="2">
-                        <Label htmlFor="transporter" >Transporter</Label>
+                        <Label htmlFor="transporter" >Transporter*</Label>
                       </Col>
                       <Col md="8">
+                        <div style={{display : 'flex', "align-items": "baseline"}}>
                         <Input type="text" name="1" placeholder="" name="transporter" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.transporter}/>
+                        {this.state.validation_form.truck_number === false && (
+                          <i class="fa fa-exclamation-triangle" aria-hidden="true" style={{color : "rgba(255,61,0 ,1)", paddingLeft : '10px'}}></i>
+                        )}
+                        </div>
                       </Col>
                     </FormGroup>
                     <FormGroup row>
                       <Col md="2">
-                        <Label htmlFor="truck_type" >Truck Type</Label>
+                        <Label htmlFor="truck_type" >Truck Type*</Label>
                       </Col>
                       <Col md="8">
+                        <div style={{display : 'flex', "align-items": "baseline"}}>
                         <Input type="text" name="3" placeholder="" name="truck_type" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.truck_type}/>
+                        {this.state.validation_form.truck_number === false && (
+                          <i class="fa fa-exclamation-triangle" aria-hidden="true" style={{color : "rgba(255,61,0 ,1)", paddingLeft : '10px'}}></i>
+                        )}
+                        </div>
+                      </Col>
+                    </FormGroup>
+                    <FormGroup row>
+                      <Col md="2">
+                        <Label htmlFor="truck_type" >Destination Address</Label>
+                      </Col>
+                      <Col md="8">
+                        <Input type="text" name="3" placeholder="" name="destination_address" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.destination_address}/>
                       </Col>
                     </FormGroup>
                   </Col>
                   <Col xs="6" lg="6" md="6">
                     <FormGroup row>
                       <Col md="2">
-                        <Label htmlFor="truck_number" >Truck No</Label>
+                        <Label htmlFor="truck_number" >Truck No*</Label>
                       </Col>
                       <Col md="8">
-                        <Input type="text" name="2" placeholder="" name="truck_number" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.truck_number}/>
+                        <div style={{display : 'flex', "align-items": "baseline"}}>
+                          <Input type="text" name="2" placeholder="" name="truck_number" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.truck_number}/>
+                          {this.state.validation_form.truck_number === false && (
+                            <i class="fa fa-exclamation-triangle" aria-hidden="true" style={{color : "rgba(255,61,0 ,1)", paddingLeft : '10px'}}></i>
+                          )}
+                        </div>
                       </Col>
                     </FormGroup>
                     <FormGroup row>
                       <Col md="2">
-                        <Label htmlFor="driver_name" >Driver Name</Label>
+                        <Label htmlFor="driver_name" >Driver Name*</Label>
                       </Col>
                       <Col md="8">
+                        <div style={{display : 'flex', "align-items": "baseline"}}>
                         <Input type="text" name="4" placeholder="" name="driver_name" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.driver_name}/>
+                        {this.state.validation_form.truck_number === false && (
+                          <i class="fa fa-exclamation-triangle" aria-hidden="true" style={{color : "rgba(255,61,0 ,1)", paddingLeft : '10px'}}></i>
+                        )}
+                        </div>
                       </Col>
                     </FormGroup>
                     <FormGroup row>
                       <Col md="2">
-                        <Label htmlFor="driver_phone_number" >Driver Phone</Label>
+                        <Label htmlFor="driver_phone_number" >Driver Phone*</Label>
                       </Col>
                       <Col md="8">
+                        <div style={{display : 'flex', "align-items": "baseline"}}>
                         <Input type="text" name="5" placeholder="" name="driver_phone_number" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.driver_phone_number}/>
+                        {this.state.validation_form.truck_number === false && (
+                          <i class="fa fa-exclamation-triangle" aria-hidden="true" style={{color : "rgba(255,61,0 ,1)", paddingLeft : '10px'}}></i>
+                        )}
+                        </div>
+                      </Col>
+                    </FormGroup>
+                    <FormGroup row>
+                      <Col md="2">
+                        <Label htmlFor="driver_phone_number" >Note</Label>
+                      </Col>
+                      <Col md="8">
+                        <Input type="text" name="5" placeholder="" name="shipment_note" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.shipment_note}/>
                       </Col>
                     </FormGroup>
                   </Col>

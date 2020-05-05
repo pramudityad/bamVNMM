@@ -289,21 +289,32 @@ class WHManagement extends React.Component {
   }
 
 
+  // getASPList() {
+  //   switch (this.props.dataLogin.account_id) {
+  //     case "2":
+  //       this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
+  //         // console.log("asp data ", res.data);
+  //         if (res.data !== undefined) {
+  //           this.setState({ asp_data: res.data._items });
+  //         } else {
+  //           this.setState({ asp_data: [] });
+  //         }
+  //       });
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }
+
   getASPList() {
-    switch (this.props.dataLogin.account_id) {
-      case "xl":
-        this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
-          // console.log("asp data ", res.data);
-          if (res.data !== undefined) {
-            this.setState({ asp_data: res.data._items });
-          } else {
-            this.setState({ asp_data: [] });
-          }
-        });
-        break;
-      default:
-        break;
-    }
+    this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
+      // console.log("asp data ", res.data);
+      if (res.data !== undefined) {
+        this.setState({ asp_data: res.data._items });
+      } else {
+        this.setState({ asp_data: [] });
+      }
+    });
   }
 
   isSameValue(element, value) {

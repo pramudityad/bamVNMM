@@ -839,8 +839,8 @@ class PackageUpload extends React.Component {
                     </div>
                   </CardBody>
                   <CardFooter>
-                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage} style={{marginRight : '10px'}}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
-                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackageOneShot}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE One Shot</Button>
+                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackageOneShot}  style={{marginRight : '10px'}}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE</Button>
+                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage}> <i className="fa fa-refresh" aria-hidden="true"> </i> &nbsp;Update </Button>
                     <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>
                   </CardFooter>
                 </Card>

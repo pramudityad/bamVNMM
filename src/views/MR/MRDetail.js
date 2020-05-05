@@ -12,6 +12,7 @@ import GMap from './MapComponent';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import {ExcelRenderer} from 'react-excel-renderer';
+import './MatStyle.css';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -420,80 +421,19 @@ class MRDetail extends Component {
     });
   }
 
-  milestoneStat(ms_name, ms_date, ms_updater, index)
+  milestoneStat(ms_name, ms_status, ms_date, ms_updater, index)
   {
-    switch ( ms_name )
-    {
-      case 'MS_ORDER_CREATED':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+    return (
+      <VerticalTimelineElement
+        className="vertical-timeline-element--work"
+        date={ms_date}
+        iconStyle={{background: 'rgb(33, 150, 243)', color: '#fff' }}
 
-      >
-          <h3 className="vertical-timeline-element-title">Order Created</h3>
-          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      case 'MS_ORDER_RECEIVED':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Order Received</h3>
-          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      case 'MS_ORDER_PROCESSING':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Order Processing</h3>
-          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      case 'MS_READY_TO_DELIVER':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(227, 30, 16)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Ready to Deliver</h3>
-          <h4 className="vertical-timeline-element-subtitle">confirmed by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      case 'MS_JOINT_CHECK':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Joint Check</h3>
-          <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      case 'MS_LOADING_PROCESS':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Loading Process</h3>
-          <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      default:
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date=""
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Data not available</h3>
-        </VerticalTimelineElement>;
-    }
+        >
+        <h3 className="vertical-timeline-element-title">{ms_name + " " +ms_status}</h3>
+        <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
+      </VerticalTimelineElement>
+    )
   }
 
   componentDidMount(){
@@ -661,7 +601,20 @@ class MRDetail extends Component {
   async saveUpdateMaterial(){
     const dataXLS = this.state.rowsXLS;
     const dataMR = this.state.data_mr;
-    console.log("dataXLS variant", JSON.stringify({"data" : dataXLS}));
+    let patchDataMat = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataMR._id, {"data" : dataXLS});
+    if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
+      this.setState({ action_status : 'success'});
+    } else{
+      if(patchDataMat.response !== undefined && patchDataMat.response.data !== undefined && patchDataMat.response.data.error !== undefined){
+        if(patchDataMat.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
   }
 
   render() {
@@ -719,188 +672,169 @@ class MRDetail extends Component {
                 )}
               </tbody>
             </table>
-            <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
+            <hr style={{borderStyle : 'double', borderWidth: '0px 0px 4px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
             {this.state.tabs_submenu[0] === true && (
-              <Row>
-                <Col md="6">
-                  <table style={{marginBottom : '10px', fontSize : '15px'}}>
-                    <tbody>
-                      {this.state.data_mr !== null && (
-                        <Fragment>
-                        <tr>
-                          <td style={{width : '175px'}}>CD ID</td>
-                          <td>: </td>
-                          {this.state.data_mr.cust_del !== undefined ? (
-                            <td>{this.state.data_mr.cust_del.map(e => e.cd_id+", ")}</td>
-                          ) : (
-                            <td>{this.state.data_mr.cd_id}</td>
-                          )}
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>Project</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.project_name}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>MR Delivery Type</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.mr_delivery_type}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>DSP Company</td>
-                          <td>: </td>
-                          <td>
-                            {this.state.edit_detail === false ? this.state.data_mr.dsp_company : (
-                              <Input type="select" name="1" value={this.state.update_mr_form[1] === null ? this.state.data_mr.dsp_company : this.state.update_mr_form[1] } onChange={this.handleChangeFormMRUpdate}>
-                                <option value="" disabled selected hidden>Select DSP Company</option>
-                                <option value="PT BMS Delivery">PT BMS Delivery</option>
-                                <option value="PT MITT Delivery">PT MITT Delivery</option>
-                                <option value="PT IXT Delivery">PT IXT Delivery</option>
-                                <option value="PT ARA Delivery">PT ARA Delivery</option>
-                              </Input>
-                            )}
-                          </td>
-                        </tr>
-                        {/* }<tr>
-                          <td style={{width : '200px'}}>Origin {this.state.data_mr.origin_warehouse.title}</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.origin_warehouse.value}</td>
-                        </tr> */}
-                        <tr>
-                          <td style={{width : '200px'}}>ETD</td>
-                          <td>: </td>
-                          <td>
-                            {this.state.edit_detail === false ? this.state.data_mr.etd : (
-                              <Input
-                                type="date"
-                                name="2"
-                                value={this.state.update_mr_form[2] === null ? this.state.data_mr.etd : this.state.update_mr_form[2]} onChange={this.handleChangeFormMRUpdate}
-                              />
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>ASP Company</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.asp_company}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>Current Status</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.current_mr_status}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>Current Milestone</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.current_milestones}</td>
-                        </tr>
-                        {this.state.mr_site_NE !== null && (
-                          <Fragment>
-                          <tr>
-                            {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
-                              <td style={{width : '200px'}}>Destination {this.state.data_mr.destination.title}</td>
-                            ) : (
-                              <td style={{width : '200px'}}>Site ID NE</td>
-                            )}
-                            <td>: &nbsp;</td>
-                            {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
-                              <td style={{width : '200px'}}>{this.state.data_mr.destination.value}</td>
-                            ) : (
-                              <td>{this.state.mr_site_NE.site_id}</td>
-                            )}
-                          </tr>
-                          {this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
-                            <tr>
-                              <td style={{width : '200px'}}>Site Name NE</td>
-                              <td>:</td>
-                              <td>{this.state.mr_site_NE.site_name}</td>
-                            </tr>
-                          ) : ""}
-                          </Fragment>
-                        )}
-                        </Fragment>
-                      )}
-                    </tbody>
-                  </table>
-                </Col>
-                <Col md="6">
-                  <table style={{marginBottom : '0px', fontSize : '15px'}}>
-                    <tbody>
-                      {this.state.data_mr !== null && (
-                        <Fragment>
-                        <tr>
-                          <td style={{width : '175px'}}>SOW Type</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.sow_type}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>&nbsp;</td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '175px'}}>MR Type</td>
-                          <td>: </td>
-                          <td>{this.state.data_mr.mr_type}</td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>&nbsp;</td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>&nbsp;</td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>ETA</td>
-                          <td>: </td>
-                          <td>
-                            {this.state.edit_detail === false ? this.state.data_mr.eta : (
-                              <Input
-                                type="date"
-                                name="3"
-                                value={this.state.update_mr_form[3] === null ? this.state.data_mr.eta : this.state.update_mr_form[3]} onChange={this.handleChangeFormMRUpdate}
-                              />
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>&nbsp;</td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>&nbsp;</td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                        <tr>
-                          <td style={{width : '200px'}}>&nbsp;</td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                        {this.state.mr_site_FE !== null && this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
-                          <Fragment>
-                          <tr>
-                            <td style={{width : '200px'}}>Site ID FE</td>
-                            <td>: &nbsp;</td>
-                            <td>{this.state.mr_site_FE.site_id}</td>
-                          </tr>
-                          <tr>
-                            <td style={{width : '200px'}}>Site Name FE</td>
-                            <td>:</td>
-                            <td>{this.state.mr_site_FE.site_name}</td>
-                          </tr>
-                          </Fragment>
-                        ) : ("")}
-                        </Fragment>
-                      )}
-                    </tbody>
-                  </table>
-                </Col>
-              </Row>
+              <Fragment>
+              {this.state.data_mr !== null && (
+              <Fragment>
+                <div className="mr-detail__body--flex">
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>CD ID</span>
+                    </div>
+                    <div>
+                      <ul className="mr-detail__ul--cd-id">
+
+                      {this.state.data_mr.cust_del !== undefined ?
+                        this.state.data_mr.cust_del.map(e =>
+                          <li>{e.cd_id}</li>
+                        ) : (
+                          <li>{this.state.data_mr.cd_id}</li>
+                        )
+                      }
+                      </ul>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>SOW Type</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.sow_type}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>Current Milestone</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.current_milestones}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>Current Status</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.current_mr_status}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mr-detail__body--flex">
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>MR Type</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.mr_type}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>MR Delivery Type</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.mr_delivery_type}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mr-detail__body--flex">
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>DSP Company</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.dsp_company}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>Origin</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.origin.title + " " +this.state.data_mr.origin.value}
+                    </div>
+                  </div>
+                </div>
+
+                <hr className="mr-detail__line"/>
+
+                <div className="mr-detail__body--flex">
+                {this.state.mr_site_NE !== null && (
+                  <Fragment>
+                    <div className="mr-detail__flex-body--25">
+                      <div className="mr-detail__body--header-detail">
+                        <span>Site ID NE</span>
+                      </div>
+                      <div>
+                        {this.state.mr_site_NE.site_id}
+                      </div>
+                    </div>
+                    <div className="mr-detail__flex-body--25">
+                      <div className="mr-detail__body--header-detail">
+                        <span>Site Name NE</span>
+                      </div>
+                      <div>
+                        {this.state.mr_site_NE.site_name}
+                      </div>
+                    </div>
+                  </Fragment>
+                )}
+                {this.state.mr_site_NE !== null && (
+                  <Fragment>
+                    <div className="mr-detail__flex-body--25">
+                      <div className="mr-detail__body--header-detail">
+                        <span>Site ID FE</span>
+                      </div>
+                      <div>
+                        {this.state.mr_site_NE.site_id}
+                      </div>
+                    </div>
+                    <div className="mr-detail__flex-body--25">
+                      <div className="mr-detail__body--header-detail">
+                        <span>Site Name FE</span>
+                      </div>
+                      <div>
+                        {this.state.mr_site_NE.site_name}
+                      </div>
+                    </div>
+                  </Fragment>
+                )}
+                </div>
+
+                <hr className="mr-detail__line"/>
+
+                <div className="mr-detail__body--flex">
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>DSP Company</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.dsp_company}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>ETD</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.etd}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>ETA</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.eta}
+                    </div>
+                  </div>
+                </div>
+              </Fragment>
+              )}
+            </Fragment>
             ) }
             {this.state.tabs_submenu[1] === true && (
             <Fragment>
@@ -914,35 +848,34 @@ class MRDetail extends Component {
                           <Fragment>
                           <tr>
                             {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
-                              <td style={{width : '200px'}}>Destination {this.state.data_mr.destination.title}</td>
+                              <td style={{width : '150px'}}>Destination {this.state.data_mr.destination.title}</td>
                             ) : (
-                              <td style={{width : '200px'}}>Site ID NE</td>
+                              <td style={{width : '150px'}}>Site ID NE</td>
                             )}
                             <td>: &nbsp;</td>
                             {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
-                              <td style={{width : '200px'}}>{this.state.data_mr.destination.value}</td>
+                              <td style={{width : '150px'}}>{this.state.data_mr.destination.value}</td>
                             ) : (
                               <td>{this.state.mr_site_NE.site_id}</td>
                             )}
                           </tr>
                           {this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
                             <tr>
-                              <td style={{width : '200px'}}>Site Name NE</td>
+                              <td style={{width : '150px'}}>Site Name NE</td>
                               <td>:</td>
                               <td>{this.state.mr_site_NE.site_name}</td>
                             </tr>
                           ) : ""}
                           <tr>
-                            <td style={{width : '200px'}}>Total Box</td>
+                            <td style={{width : '150px'}}>Total Box</td>
                             <td>:</td>
                             <td>{this.state.data_mr.total_boxes}</td>
                           </tr>
                           <tr>
-                            <td style={{width : '200px'}}>Box ID</td>
+                            <td style={{width : '150px'}}>Box ID</td>
                             <td>:</td>
                             <td>{this.state.data_mr.list_of_box_id !== undefined ? this.state.data_mr.list_of_box_id.map(e => e+", ") : ""}</td>
                           </tr>
-
                           </Fragment>
                         )}
                         </Fragment>
@@ -1010,11 +943,11 @@ class MRDetail extends Component {
                 <Table hover bordered striped responsive size="sm">
                   <thead style={{backgroundColor : '#0B486B', color : 'white'}} className="table-mr__header--fixed">
                     <tr>
-                      <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
+                      <th rowSpan="2" className="fixedhead" style={{width : '250px', verticalAlign : 'middle'}}>PP / Material Code</th>
                       <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
                       <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
                       <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
-                      {this.state.data_mr !== null && this.state.data_mr.current_milestones === "MS_JOINT_CHECK" ? (
+                      {this.state.data_mr !== null && status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
                         <Fragment>
                           <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Material in Warehouse</th>
                           <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Material Plan</th>
@@ -1031,7 +964,7 @@ class MRDetail extends Component {
                       </tr>
                     ) : ""}
                   </thead>
-                  {this.state.data_mr !== null && this.state.data_mr.current_milestones === "MS_JOINT_CHECK" ? (
+                  {this.state.data_mr !== null && status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
                     <tbody>
                     {this.state.mr_site_NE !== null && (
                       this.state.list_mr_item.map( pp =>
@@ -1111,6 +1044,26 @@ class MRDetail extends Component {
           {this.state.tabs_submenu[2] === true && (
             <Fragment>
               <div className="animated fadeIn">
+              {this.state.data_mr !== null && (
+                <Row>
+                  <Col md="6">
+                    <table style={{marginBottom : '10px'}}>
+                      <tbody>
+                        <tr>
+                          <td style={{width : '150px'}}>Current Milestone</td>
+                          <td> : </td>
+                          <td>{this.state.data_mr.current_milestones}</td>
+                        </tr>
+                        <tr>
+                          <td style={{width : '150px'}}>Current Status</td>
+                          <td> : </td>
+                          <td>{this.state.data_mr.current_mr_status}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </Col>
+                </Row>
+                )}
                 <Row>
                   <Col xs="12" lg="12">
                     <Card>
@@ -1124,8 +1077,8 @@ class MRDetail extends Component {
                       >
                         <VerticalTimeline>
                           {this.state.data_mr !== null &&
-                            this.state.data_mr.mr_milestones.map((ms, i) => {
-                              return this.milestoneStat(ms.ms_name, ms.ms_date, ms.ms_updater, i)
+                            this.state.data_mr.mr_status.filter(e => e.mr_status_name !== "IMPLEMENTATION").map((ms, i) => {
+                              return this.milestoneStat(ms.mr_status_name, ms.mr_status_value, ms.mr_status_date, ms.mr_status_updater, i )
                             })
                           }
                         </VerticalTimeline>
