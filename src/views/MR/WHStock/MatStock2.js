@@ -107,6 +107,7 @@ class MaterialStock2 extends React.Component {
     this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
+    this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
   }
 
   toggle(i) {
@@ -121,6 +122,12 @@ class MaterialStock2 extends React.Component {
   togglecreateModal() {
     this.setState({
       createModal: !this.state.createModal,
+    });
+  }
+
+  resettogglecreateModal() {
+    this.setState({
+      rowsXLS: [],
     });
   }
 
@@ -414,6 +421,21 @@ class MaterialStock2 extends React.Component {
     }));
   }
 
+  convertDateFormat(jsondate){
+    let date = new Date(jsondate);
+    let year = date.getFullYear();
+    let month = date.getMonth()+1;
+    let dt = date.getDate();
+
+    if (dt < 10) {
+      dt = '0' + dt;
+    }
+    if (month < 10) {
+      month = '0' + month;
+    }
+    return year+'-' + month + '-'+dt;
+  }
+
   handleChangeChecklistAll(e) {
     const isChecked = e.target.checked;
     const mrList = this.state.assignment_all;
@@ -507,10 +529,10 @@ class MaterialStock2 extends React.Component {
     });
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
-      this.setState({ action_status: "success" });
+      this.setState({ action_status: "success", rowsXLS: null });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed" }, () => {
+      this.setState({ action_status: "failed", rowsXLS: null }, () => {
         this.toggleLoading();
       });
     }
@@ -527,10 +549,10 @@ class MaterialStock2 extends React.Component {
     });
     console.log("res bulk ", res);
     if (res.data !== undefined) {
-      this.setState({ action_status: "success" });
+      this.setState({ action_status: "success", rowsXLS: null });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed" }, () => {
+      this.setState({ action_status: "failed", rowsXLS: null }, () => {
         this.toggleLoading();
       });
     }
@@ -721,24 +743,27 @@ class MaterialStock2 extends React.Component {
       "sku",
       "qty",
       "wh_id",
+      "transaction_type",
     ]);
     ws.addRow([
-      "5df99ce5face981b7ace8861",
+      "Jabo",
       "PO0001",
       "2020-04-17",
       "XL BAM DEMO 2021",
       "1",
       100,
       "WH_1",
+      "Inbound",
     ]);
     ws.addRow([
-      "5df99ce5face981b7ace8861",
+      "CJ",
       "PO0001",
       "2020-04-17",
       "XL BAM DEMO 2021",
       "1",
       100,
       "WH_1",
+      "Outbond",
     ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
@@ -873,8 +898,8 @@ class MaterialStock2 extends React.Component {
                           className="fixed"
                         >
                           <tr align="center">
-                            <th> Owner ID</th>
-                            <th> WH ID</th>
+                            <th>Owner ID</th>
+                            <th>WH ID</th>
                             <th>PO Number</th>
                             <th>Project Name</th>
                             <th>Arrival Date</th>
@@ -886,6 +911,7 @@ class MaterialStock2 extends React.Component {
                             <th>Box Number</th>
                             <th>Condition</th>
                             <th>Notes</th>
+                            <th>Transaction Type</th>
                             <th></th>
                           </tr>
                         </thead>
@@ -935,7 +961,7 @@ class MaterialStock2 extends React.Component {
                                     {e.project_name}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
-                                    {e.arrival_date}
+                                    {this.convertDateFormat(e.arrival_date)}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.sku}
@@ -960,6 +986,9 @@ class MaterialStock2 extends React.Component {
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.notes}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.transaction_type}
                                   </td>
                                   <td>
                                     <Button
@@ -1088,6 +1117,7 @@ class MaterialStock2 extends React.Component {
           isOpen={this.state.createModal}
           toggle={this.togglecreateModal}
           className={this.props.className}
+          onClosed={this.resettogglecreateModal}
         >
           <ModalHeader toggle={this.togglecreateModal}>
             Create New Stock
@@ -1119,6 +1149,7 @@ class MaterialStock2 extends React.Component {
               color="link"
               className="btn-pill"
               onClick={this.exportMatStatus}
+              size="sm"
             >
               Download Template
             </Button>{" "}
@@ -1128,6 +1159,7 @@ class MaterialStock2 extends React.Component {
               className="btn-pill"
               disabled={this.state.rowsXLS.length === 0}
               onClick={this.saveMatStockWHBulk}
+              size="sm"
             >
               Save
             </Button>{" "}
@@ -1137,6 +1169,7 @@ class MaterialStock2 extends React.Component {
               className="btn-pill"
               disabled={this.state.rowsXLS.length === 0}
               onClick={this.saveTruncateBulk}
+              size="sm"
             >
               Truncate
             </Button>

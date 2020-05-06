@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
 import { Col, Row } from 'reactstrap';
 import Widget from './Widget';
-import './wh_css.css';
+import "../wh_css.css";
 import { connect } from 'react-redux';
 import axios from 'axios';
+
+const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
+
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -12,7 +15,7 @@ const password = 'F760qbAg2sml';
 const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 // /bamidapi/updateBastNumber/
 
-class WarehouseDashboard extends Component {
+class WHDashboardextDet extends Component {
   constructor(props) {
     super(props);
 
@@ -47,7 +50,8 @@ class WarehouseDashboard extends Component {
       joint_check: 0,
       loading_process: 0,
       material_dispatch: 0,
-      material_on_hold: 0
+      material_on_hold: 0,
+      wh_data: [],
     }
 
     this.updateHover1 = this.updateHover1.bind(this);
@@ -127,6 +131,18 @@ class WarehouseDashboard extends Component {
     document.title = 'Warehouse Dashboard | BAM';
   }
 
+  getWHManagementID() {
+    let _id = new URLSearchParams(window.location.search).get("_id");
+    this.getDatafromAPINODE("/whManagement/warehouse/" + _id).then((res) => {
+      // console.log("all data ", res.data);
+      if (res.data !== undefined) {
+        this.setState({ wh_data: res.data.data });
+      } else {
+        this.setState({ wh_data: [] });
+      }
+    });
+  }
+
   async getDataFromAPI(url) {
     try {
       let respond = await axios.get(API_URL+url, {
@@ -167,7 +183,8 @@ class WarehouseDashboard extends Component {
   }
 
   getOrderCreated() {
-    this.getDataFromAPI('/mr_op?where={"current_mr_status":"MR REQUESTED"}').then(res => {
+    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
+    this.getDataFromAPI('/mr_op?where={"current_mr_status":"MR REQUESTED", "origin.value" : "'+ get_wh_id +'"}').then(res => {
       console.log("Order Created", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -177,7 +194,8 @@ class WarehouseDashboard extends Component {
   }
 
   getOrderReceived() {
-    this.getDataFromAPI('/mr_op?where={"current_mr_status": "MR APPROVED", "current_milestones":"MS_ORDER_RECEIVED"}').then(res => {
+    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
+    this.getDataFromAPI('/mr_op?where={"current_mr_status": "MR APPROVED", "current_milestones":"MS_ORDER_RECEIVED", "origin.value" : "'+ get_wh_id +'"}').then(res => {
       console.log("Order Received", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -187,7 +205,8 @@ class WarehouseDashboard extends Component {
   }
 
   getOrderProcessing() {
-    this.getDataFromAPI('/mr_op?where={"current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED"}').then(res => {
+    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
+    this.getDataFromAPI('/mr_op?where={"current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED", "origin.value" : "'+ get_wh_id +'"}').then(res => {
       console.log("Order Processing", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -197,7 +216,8 @@ class WarehouseDashboard extends Component {
   }
 
   getReadyToDeliver() {
-    this.getDataFromAPI('/mr_op?where={"$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_READY_TO_DELIVER"}').then(res => {
+    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
+    this.getDataFromAPI('/mr_op?where={"$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_READY_TO_DELIVER"}, "origin.value" : "'+ get_wh_id +'"').then(res => {
       console.log("Ready To Deliver", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -207,7 +227,8 @@ class WarehouseDashboard extends Component {
   }
 
   getJointCheck() {
-    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_READY_TO_DELIVER"}').then(res => {
+    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
+    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_READY_TO_DELIVER", "origin.value" : "'+ get_wh_id +'"}').then(res => {
       console.log("Joint Check", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -217,7 +238,8 @@ class WarehouseDashboard extends Component {
   }
 
   getLoadingProcess() {
-    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_JOINT_CHECK"}').then(res => {
+    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
+    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_JOINT_CHECK", "origin.value" : "'+ get_wh_id +'"}').then(res => {
       console.log("Loading Process", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -227,7 +249,8 @@ class WarehouseDashboard extends Component {
   }
 
   getMaterialDispatch() {
-    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_DISPATCH"}').then(res => {
+    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
+    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_DISPATCH", "origin.value" : "'+ get_wh_id +'"}').then(res => {
       console.log("Material Dispatch", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -237,7 +260,8 @@ class WarehouseDashboard extends Component {
   }
 
   getMaterialOnHold() {
-    this.getDataFromAPI('/mr_op?where={"current_mr_status":"LACK OF MATERIAL"}').then(res => {
+    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
+    this.getDataFromAPI('/mr_op?where={"current_mr_status":"LACK OF MATERIAL", "origin.value" : "'+ get_wh_id +'"}').then(res => {
       console.log("Material On Hold", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -313,4 +337,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(WarehouseDashboard);
+export default connect(mapStateToProps)(WHDashboardextDet);
