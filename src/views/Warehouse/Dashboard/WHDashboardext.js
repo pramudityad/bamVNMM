@@ -9,12 +9,13 @@ import {
   Collapse,
   Button,
 } from "reactstrap";
-import { InputGroup, InputGroupAddon, InputGroupText} from "reactstrap";
+import { InputGroup, InputGroupAddon, InputGroupText } from "reactstrap";
 import { Link } from "react-router-dom";
 import Widget from "./Widget";
 import "../wh_css.css";
 import { connect } from "react-redux";
 import axios from "axios";
+import Loading from '../../components/Loading'
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
@@ -42,6 +43,7 @@ class WarehouseDashboardExt extends Component {
       wh_manager: null,
       wh_address: null,
       wh_owner: null,
+      modal_loading: false,
     };
     this.toggle = this.toggle.bind(this);
     this.toggleFade = this.toggleFade.bind(this);
@@ -55,6 +57,12 @@ class WarehouseDashboardExt extends Component {
     this.setState((prevState) => {
       return { fadeIn: !prevState };
     });
+  }
+
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
   }
 
   SearchFilter = (e) => {
@@ -184,6 +192,7 @@ class WarehouseDashboardExt extends Component {
   }
 
   getWHStockList() {
+    this.toggleLoading();
     this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
       console.log("all data ", res.data);
       if (res.data !== undefined) {
@@ -192,19 +201,18 @@ class WarehouseDashboardExt extends Component {
           prevPage: this.state.activePage,
           total_dataParent: res.data.totalResults,
         });
+        this.toggleLoading();
       } else {
         this.setState({
           all_data: [],
           total_dataParent: 0,
           prevPage: this.state.activePage,
         });
+        this.toggleLoading();
       }
     });
   }
 
-  loading = () => (
-    <div className="animated fadeIn pt-1 text-center">Loading...</div>
-  );
 
   render() {
     return (
@@ -265,22 +273,22 @@ class WarehouseDashboardExt extends Component {
                 <Col xs="12" sm="6" md="4">
                   <Card>
                     <CardHeader>
-                    <Link
-                              to={{
-                                pathname:
-                                  "/wh-dashboard-ext/?_id=" +
-                                  e._id +
-                                  "&wh_id=" +
-                                  e.wh_id +
-                                  "&wh_name=" +
-                                  e.wh_name,
-                              }}
-                            >
-                      {/* <a href="wh-dashboard-eid"> */}
+                      <Link
+                        to={{
+                          pathname:
+                            "/wh-dashboard-ext/?_id=" +
+                            e._id +
+                            "&wh_id=" +
+                            e.wh_id +
+                            "&wh_name=" +
+                            e.wh_name,
+                        }}
+                      >
+                        {/* <a href="wh-dashboard-eid"> */}
                         <h6>
                           {e.wh_name} {e.wh_id}
                         </h6>
-                      {/* </a> */}
+                        {/* </a> */}
                       </Link>
                       {/* <div className="card-header-actions">
                         <a
@@ -384,6 +392,10 @@ class WarehouseDashboardExt extends Component {
               </React.Fragment>
             ))}
         </Row>
+        <Loading isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm modal--loading "}>
+        </Loading>
       </div>
     );
   }

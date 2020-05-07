@@ -4,6 +4,7 @@ import Widget from './Widget';
 import './wh_css.css';
 import { connect } from 'react-redux';
 import axios from 'axios';
+import Loading from '../../components/Loading'
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -49,7 +50,8 @@ class MRDashboardGlob extends Component {
       joint_check: 0,
       loading_process: 0,
       material_dispatch: 0,
-      material_on_hold: 0
+      material_on_hold: 0,
+      modal_loading: false,
     }
 
     this.updateHover1 = this.updateHover1.bind(this);
@@ -61,6 +63,12 @@ class MRDashboardGlob extends Component {
     this.getLoadingProcess = this.getLoadingProcess.bind(this);
     this.getMaterialDispatch = this.getMaterialDispatch.bind(this);
     this.getMaterialOnHold = this.getMaterialOnHold.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
   }
 
   updateHover1(hover) {
@@ -248,12 +256,16 @@ class MRDashboardGlob extends Component {
     })
   }
 
-  loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
+  // loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
     return (
       <div className="animated fadeIn">
         <Row>
+        <Loading isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm modal--loading "}>
+        </Loading>
           <Col xs="12" sm="6" lg="4">
             <a href="order-received" onMouseEnter={() => this.updateHover1("")} onMouseLeave={() => this.updateHover1("inverse")}>
               <Widget color="primary" variant={this.state.variant1} header={this.state.order_received} mainText="Order Received" smallText="The initial status of the MR after being approved by the supply team and ready to be processed by the warehouse." imageSource={this.state.img_1}/>

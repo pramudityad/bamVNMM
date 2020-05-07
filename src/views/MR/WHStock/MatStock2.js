@@ -24,6 +24,7 @@ import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import queryString from "query-string";
+import ModalCreateNew from '../../components/ModalCreateNew'
 
 import "../MatStyle.css";
 
@@ -529,10 +530,10 @@ class MaterialStock2 extends React.Component {
     });
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
-      this.setState({ action_status: "success", rowsXLS: null });
+      this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed", rowsXLS: null }, () => {
+      this.setState({ action_status: "failed" }, () => {
         this.toggleLoading();
       });
     }
@@ -1113,7 +1114,64 @@ class MaterialStock2 extends React.Component {
         {/*  Modal Edit PP*/}
 
         {/* Modal create New */}
-        <Modal
+        <ModalCreateNew
+        isOpen={this.state.createModal}
+        toggle={this.togglecreateModal}
+        className={this.props.className}
+        onClosed={this.resettogglecreateModal}
+        title='Create Material Stock'
+        >
+              <div>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Upload File</td>
+                      <td>:</td>
+                      <td>
+                        <input
+                          type="file"
+                          onChange={this.fileHandlerMaterial.bind(this)}
+                          style={{ padding: "10px", visiblity: "hidden" }}
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <ModalFooter>
+              <Button
+              block
+              color="link"
+              className="btn-pill"
+              onClick={this.exportMatStatus}
+              size="sm"
+            >
+              Download Template
+            </Button>{" "}
+            <Button
+              block
+              color="success"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveMatStockWHBulk}
+              size="sm"
+            >
+              Save
+            </Button>{" "}
+            <Button
+              block
+              color="secondary"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveTruncateBulk}
+              size="sm"
+            >
+              Truncate
+            </Button>            
+          </ModalFooter>
+        </ModalCreateNew>
+
+        {/* <Modal
           isOpen={this.state.createModal}
           toggle={this.togglecreateModal}
           className={this.props.className}
@@ -1174,7 +1232,7 @@ class MaterialStock2 extends React.Component {
               Truncate
             </Button>
           </ModalFooter>
-        </Modal>
+        </Modal> */}
 
         {/* Modal confirmation delete */}
         <Modal

@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import "../wh_css.css";
 import { connect } from "react-redux";
 import axios from "axios";
+import Loading from '../../components/Loading'
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
@@ -213,9 +214,9 @@ class WarehouseDashboard extends Component {
     });
   }
 
-  loading = () => (
-    <div className="animated fadeIn pt-1 text-center">Loading...</div>
-  );
+  // loading = () => (
+  //   <div className="animated fadeIn pt-1 text-center">Loading...</div>
+  // );
 
   render() {
     return (
@@ -396,29 +397,10 @@ class WarehouseDashboard extends Component {
             ))}
         </Row>
         {/* Modal Loading */}
-        <Modal
-          isOpen={this.state.modal_loading}
+        <Loading isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
-          className={"modal-sm modal--loading "}
-        >
-          <ModalBody>
-            <div style={{ textAlign: "center" }}>
-              <div className="lds-ring">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-              </div>
-            </div>
-            <div style={{ textAlign: "center" }}>Loading ...</div>
-            <div style={{ textAlign: "center" }}>System is processing ...</div>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="secondary" onClick={this.toggleLoading}>
-              Close
-            </Button>
-          </ModalFooter>
-        </Modal>
+          className={"modal-sm modal--loading "}>
+        </Loading>
         {/* end Modal Loading */}
       </div>
     );
