@@ -261,8 +261,8 @@ const routes = [
 
   { path: '/drm-detail', exact: true, name: 'DRM Detail', component: DRMDetail },
 
-  { path: '/gr', exact: true, name: 'GR', component: GR },
-  { path: '/gi', exact: true, name: 'GI', component: GI },
+  { path: '/wh-gr-ext', exact: true, name: 'GR External Detail', component: GR },
+  { path: '/wh-gi-ext', exact: true, name: 'GI External Detail', component: GI },
 ];
 
 export default routes;

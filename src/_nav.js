@@ -163,16 +163,16 @@ export default {
         //   url: '/material-inbound-plan',
         //   icon: 'icon-list',
         // }
-        {
-          name: 'GR',
-          url: '/gr',
-          icon: 'icon-list',
-        },
-        {
-          name: 'GI',
-          url: '/gi',
-          icon: 'icon-list',
-        },
+        // {
+        //   name: 'GR',
+        //   url: '/gr',
+        //   icon: 'icon-list',
+        // },
+        // {
+        //   name: 'GI',
+        //   url: '/gi',
+        //   icon: 'icon-list',
+        // },
       ]
     },
     {

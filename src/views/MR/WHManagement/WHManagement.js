@@ -516,7 +516,7 @@ class WHManagement extends React.Component {
     this.toggleLoading();
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
-    // console.log("xlsx data", JSON.stringify(BulkXLSX));
+    console.log("xlsx data", JSON.stringify(BulkXLSX));
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     const res = await this.postDatatoAPINODE("/whManagement/createWarehouse", {
       managementData: BulkXLSX,
@@ -804,53 +804,6 @@ class WHManagement extends React.Component {
                 onExiting={this.onExiting}
                 onExited={this.onExited}
               >
-                <Card style={{ margin: "10px 10px 5px 10px" }}>
-                  <CardBody>
-                    <div>
-                      <table>
-                        <tbody>
-                          <tr>
-                            <td>Upload File</td>
-                            <td>:</td>
-                            <td>
-                              <input
-                                type="file"
-                                onChange={this.fileHandlerMaterial.bind(this)}
-                                style={{ padding: "10px", visiblity: "hidden" }}
-                              />
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardBody>
-                  <CardFooter>
-                    <Button
-                      color="success"
-                      disabled={this.state.rowsXLS.length === 0}
-                      onClick={this.saveMatStockWHBulk}
-                    >
-                      {" "}
-                      <i className="fa fa-save" aria-hidden="true">
-                        {" "}
-                      </i>{" "}
-                      &nbsp;SAVE{" "}
-                    </Button>
-                    &nbsp;&nbsp;&nbsp;
-                    {/* <Button
-                      color="warning"
-                      disabled={this.state.rowsXLS.length === 0}
-                      onClick={this.saveTruncateBulk}
-                    >
-                      {" "}
-                      <i className="fa fa-save" aria-hidden="true">
-                        {" "}
-                      </i>{" "}
-                      &nbsp;SAVE2{" "}
-                    </Button> */}
-                    {/* <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>                     */}
-                  </CardFooter>
-                </Card>
               </Collapse>
               <CardBody>
                 <Row>
