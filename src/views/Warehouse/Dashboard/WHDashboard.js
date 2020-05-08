@@ -194,8 +194,7 @@ class WarehouseDashboard extends Component {
 
   getWHStockList() {
     this.toggleLoading();
-    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
-      console.log("all data ", res.data);
+    this.getDatafromAPINODE('/whManagement/warehouse?q={"wh_type":{"$regex" : "internal", "$options" : "i"}}').then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -280,8 +279,9 @@ class WarehouseDashboard extends Component {
                       <Link
                         to={{
                           pathname:
-                            "/wh-dashboard-eid/"+e.wh_id
-                          }}
+                            "/wh-dashboard-eid/" +
+                            e.wh_id
+                        }}
                       >
                         {/* <a href="wh-dashboard-eid"> */}
                         <h6>
@@ -306,7 +306,7 @@ class WarehouseDashboard extends Component {
                         </p>{" "}
                         <p>{e.wh_manager}</p>
                         <p>
-                          <strong>WH Addres</strong>
+                          <strong>WH Address</strong>
                         </p>{" "}
                         <p>{e.address}</p>
                         <p>
@@ -345,12 +345,16 @@ class WarehouseDashboard extends Component {
                                 size="sm"
                                 className="btn-pill"
                               >
-                                Inbound
+                                Plan
                               </Button>
                             </Link>
                           </Col>
 
-                          {/* <Col col="2" xl className="mb-3 mb-xl-0">
+                          <Col col="2" xl className="mb-3 mb-xl-0">
+                          <Link
+                              to={{
+                                pathname:"/wh-gr-eid/" +e.wh_id,
+                              }}>
                             <Button
                               block
                               color="success"
@@ -359,9 +363,14 @@ class WarehouseDashboard extends Component {
                             >
                               GR
                             </Button>
+                            </Link>
                           </Col>
 
                           <Col col="2" xl className="mb-3 mb-xl-0">
+                          <Link
+                              to={{
+                                pathname:"/wh-gi-eid/" +e.wh_id,
+                              }}>
                             <Button
                               block
                               color="warning"
@@ -370,7 +379,8 @@ class WarehouseDashboard extends Component {
                             >
                               GI
                             </Button>
-                          </Col> */}
+                            </Link>
+                          </Col>
                         </Row>
                       </CardFooter>
                     </Collapse>

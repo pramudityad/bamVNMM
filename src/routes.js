@@ -1,4 +1,5 @@
 import React from 'react';
+import GRInternal from './views/MR/GR/GRInternal';
 // import WHDashboard from './views/Warehouse/WHDashboard';
 
 const Breadcrumbs = React.lazy(() => import('./views/Base/Breadcrumbs'));
@@ -109,6 +110,9 @@ const MatLibrary  = React.lazy(() => import('./views/MR/MatLibrary/MatLibrary'))
 const WHDashboard = React.lazy(() => import('./views/Warehouse/Dashboard/WHDashboard'));
 const WHDashboardDet = React.lazy(() => import('./views/Warehouse/Dashboard/WHDashboardDet'));
 
+const GRInternalDet = React.lazy(() => import('./views/MR/GR/GRInternal'));
+const GIInternalDet = React.lazy(() => import('./views/MR/GI/GIInternal'));
+
 const WHDashboardExt = React.lazy(() => import('./views/Warehouse/Dashboard/WHDashboardext'));
 const WHDashboardExtDet = React.lazy(() => import('./views/Warehouse/Dashboard/WHDashboardextDet'));
 
@@ -119,6 +123,9 @@ const ListTSSRBoq = React.lazy(() => import('./views/Tssr/ListTSSRBoq'));
 const DetailTSSRBoq = React.lazy(() => import('./views/Tssr/TSSRBoq'));
 
 const DRMDetail = React.lazy(() => import('./views/DRM/DRMDetail'));
+
+const GR  = React.lazy(() => import('./views/Warehouse/GR'));
+const GI  = React.lazy(() => import('./views/Warehouse/GI'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -246,18 +253,22 @@ const routes = [
 
   { path: '/wh-dashboard-eid', exact: true, name: 'Warehouse Dashboard Internal', component: WHDashboard },
   { path: '/wh-dashboard-eid/:slug', exact: true, name: 'Warehouse Internal Detail', component: WHDashboardDet },
+  { path: '/wh-gr-eid/:slug', exact: true, name: 'GR Internal Detail', component: GRInternalDet },
+  { path: '/wh-gi-eid/:slug', exact: true, name: 'GI Internal Detail', component: GIInternalDet },
 
   { path: '/wh-dashboard-ext', exact: true, name: 'Warehouse Dashboard External', component: WHDashboardExt },
   { path: '/wh-dashboard-ext/:slug', exact: true, name: 'Warehouse External Detail', component: WHDashboardExtDet },
 
   { path: '/drm-detail', exact: true, name: 'DRM Detail', component: DRMDetail },
-
+  
   { path: '/order-received-per-wh/:whid', name: 'Order Received', component: OrderReceived },
   { path: '/order-processing-per-wh/:whid', exact: true, name: 'Order Processing', component: OrderProcessing },
   { path: '/ready-to-deliver-per-wh/:whid', exact: true, name: 'Ready To Deliver', component: ReadyToDeliver },
   { path: '/joint-check-per-wh/:whid', exact: true, name: 'Joint Check', component: JointCheck },
   { path: '/loading-process-per-wh/:whid', exact: true, name: 'Loading Process', component: LoadingProcess },
   { path: '/material-dispatch-per-wh/:whid', exact: true, name: 'Material Dispatch', component: MaterialDispatch },
+  { path: '/wh-gr-ext', exact: true, name: 'GR External Detail', component: GR },
+  { path: '/wh-gi-ext', exact: true, name: 'GI External Detail', component: GI },
 ];
 
 export default routes;

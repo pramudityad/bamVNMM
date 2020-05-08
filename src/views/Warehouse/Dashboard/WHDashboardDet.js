@@ -180,9 +180,8 @@ class WHDashboardDet extends Component {
     }
   }
 
-  getOrderCreated() {
-    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    this.getDataFromAPI('/mr_op?where={"current_mr_status":"MR REQUESTED", "origin.value" : "'+ get_wh_id +'"}').then(res => {
+  getOrderCreated() {    
+    this.getDataFromAPI('/mr_op?where={"current_mr_status":"MR REQUESTED", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
       console.log("Order Created", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -191,9 +190,8 @@ class WHDashboardDet extends Component {
     })
   }
 
-  getOrderReceived() {
-    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    this.getDataFromAPI('/mr_op?where={"current_mr_status": "MR APPROVED", "current_milestones":"MS_ORDER_RECEIVED", "origin.value" : "'+ get_wh_id +'"}').then(res => {
+  getOrderReceived() {    
+    this.getDataFromAPI('/mr_op?where={"current_mr_status": "MR APPROVED", "current_milestones":"MS_ORDER_RECEIVED", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
       console.log("Order Received", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -202,9 +200,8 @@ class WHDashboardDet extends Component {
     })
   }
 
-  getOrderProcessing() {
-    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    this.getDataFromAPI('/mr_op?where={"current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED", "origin.value" : "'+ get_wh_id +'"}').then(res => {
+  getOrderProcessing() {    
+    this.getDataFromAPI('/mr_op?where={"current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
       console.log("Order Processing", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -213,9 +210,8 @@ class WHDashboardDet extends Component {
     })
   }
 
-  getReadyToDeliver() {
-    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    this.getDataFromAPI('/mr_op?where={"$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_READY_TO_DELIVER"}, "origin.value" : "'+ get_wh_id +'"').then(res => {
+  getReadyToDeliver() {    
+    this.getDataFromAPI('/mr_op?where={"$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_READY_TO_DELIVER"}, "origin.value" : "'+ this.props.match.params.slug +'"').then(res => {
       console.log("Ready To Deliver", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -224,9 +220,8 @@ class WHDashboardDet extends Component {
     })
   }
 
-  getJointCheck() {
-    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_READY_TO_DELIVER", "origin.value" : "'+ get_wh_id +'"}').then(res => {
+  getJointCheck() {    
+    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_READY_TO_DELIVER", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
       console.log("Joint Check", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -235,9 +230,8 @@ class WHDashboardDet extends Component {
     })
   }
 
-  getLoadingProcess() {
-    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_JOINT_CHECK", "origin.value" : "'+ get_wh_id +'"}').then(res => {
+  getLoadingProcess() {    
+    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_JOINT_CHECK", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
       console.log("Loading Process", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -246,9 +240,8 @@ class WHDashboardDet extends Component {
     })
   }
 
-  getMaterialDispatch() {
-    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_DISPATCH", "origin.value" : "'+ get_wh_id +'"}').then(res => {
+  getMaterialDispatch() {    
+    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_DISPATCH", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
       console.log("Material Dispatch", res);
       if(res.data !== undefined) {
         const items = res.data._meta;
@@ -257,9 +250,8 @@ class WHDashboardDet extends Component {
     })
   }
 
-  getMaterialOnHold() {
-    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    this.getDataFromAPI('/mr_op?where={"current_mr_status":"LACK OF MATERIAL", "origin.value" : "'+ get_wh_id +'"}').then(res => {
+  getMaterialOnHold() {    
+    this.getDataFromAPI('/mr_op?where={"current_mr_status":"LACK OF MATERIAL", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
       console.log("Material On Hold", res);
       if(res.data !== undefined) {
         const items = res.data._meta;

@@ -282,7 +282,7 @@ class WHManagement extends React.Component {
   };
 
   getWHStockList() {
-    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
+    this.getDatafromAPINODE("/whManagement/warehouse?q=&lmt=" +this.state.perPage +"&pg=" +this.state.activePage).then((res) => {
       console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({
@@ -404,7 +404,7 @@ class WHManagement extends React.Component {
   }
 
   componentDidMount() {
-    console.log("here ur dataLogin", this.props.dataLogin);
+    // console.log("here ur dataLogin", this.props.dataLogin);
     this.getWHStockList();
     // change this
     document.title = "Warehouse Management | BAM";
@@ -521,7 +521,7 @@ class WHManagement extends React.Component {
     const res = await this.postDatatoAPINODE("/whManagement/createWarehouse", {
       managementData: BulkXLSX,
     });
-    console.log("res bulk ", res);
+    console.log("res bulk ", res.data);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -706,9 +706,9 @@ class WHManagement extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["wh_name", "wh_id", "wh_manager", "address", "owner"]);
-    ws.addRow(["wh_domain", "WH_1", "A", "address wh", "2000175941tes"]);
-    ws.addRow(["wh_domain", "WH_1", "B", "address wh", "2000175941tes"]);
+    ws.addRow(["wh_name", "wh_id", "wh_manager", "address", "owner", "wh_type"]);
+    ws.addRow(["wh_domain", "WH_1", "A", "address wh", "2000175941tes", "asp"]);
+    ws.addRow(["wh_domain", "WH_1", "B", "address wh", "2000175941tes", "dsp"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
@@ -804,53 +804,6 @@ class WHManagement extends React.Component {
                 onExiting={this.onExiting}
                 onExited={this.onExited}
               >
-                <Card style={{ margin: "10px 10px 5px 10px" }}>
-                  <CardBody>
-                    <div>
-                      <table>
-                        <tbody>
-                          <tr>
-                            <td>Upload File</td>
-                            <td>:</td>
-                            <td>
-                              <input
-                                type="file"
-                                onChange={this.fileHandlerMaterial.bind(this)}
-                                style={{ padding: "10px", visiblity: "hidden" }}
-                              />
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardBody>
-                  <CardFooter>
-                    <Button
-                      color="success"
-                      disabled={this.state.rowsXLS.length === 0}
-                      onClick={this.saveMatStockWHBulk}
-                    >
-                      {" "}
-                      <i className="fa fa-save" aria-hidden="true">
-                        {" "}
-                      </i>{" "}
-                      &nbsp;SAVE{" "}
-                    </Button>
-                    &nbsp;&nbsp;&nbsp;
-                    {/* <Button
-                      color="warning"
-                      disabled={this.state.rowsXLS.length === 0}
-                      onClick={this.saveTruncateBulk}
-                    >
-                      {" "}
-                      <i className="fa fa-save" aria-hidden="true">
-                        {" "}
-                      </i>{" "}
-                      &nbsp;SAVE2{" "}
-                    </Button> */}
-                    {/* <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>                     */}
-                  </CardFooter>
-                </Card>
               </Collapse>
               <CardBody>
                 <Row>
@@ -890,6 +843,7 @@ class WHManagement extends React.Component {
                             <th>WH Manager</th>
                             <th>Address</th>
                             <th>Owner</th>
+                            <th>Owner Type</th>
                             <th></th>
                             <th></th>
                           </tr>
@@ -940,6 +894,9 @@ class WHManagement extends React.Component {
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.owner}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.wh_type}
                                   </td>
 
                                   <td>
@@ -1207,7 +1164,7 @@ class WHManagement extends React.Component {
             >
               Save
             </Button>{" "}
-            <Button
+            {/* <Button
               block
               color="secondary"
               className="btn-pill"
@@ -1215,7 +1172,7 @@ class WHManagement extends React.Component {
               onClick={this.saveTruncateBulk}
             >
               Truncate
-            </Button>
+            </Button> */}
           </ModalFooter>
         </Modal>
 
