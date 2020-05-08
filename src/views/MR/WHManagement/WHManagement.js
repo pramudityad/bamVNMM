@@ -282,6 +282,7 @@ class WHManagement extends React.Component {
   };
 
   getWHStockList() {
+    this.toggleLoading();
     this.getDatafromAPINODE("/whManagement/warehouse?q=&lmt=" +this.state.perPage +"&pg=" +this.state.activePage).then((res) => {
       console.log("all data ", res.data);
       if (res.data !== undefined) {
@@ -290,12 +291,14 @@ class WHManagement extends React.Component {
           prevPage: this.state.activePage,
           total_dataParent: res.data.totalResults,
         });
+        this.toggleLoading();
       } else {
         this.setState({
           all_data: [],
           total_dataParent: 0,
           prevPage: this.state.activePage,
         });
+        this.toggleLoading();
       }
     });
   }
@@ -707,8 +710,9 @@ class WHManagement extends React.Component {
     const ws = wb.addWorksheet();
 
     ws.addRow(["wh_name", "wh_id", "wh_manager", "address", "owner", "wh_type"]);
-    ws.addRow(["wh_domain", "WH_1", "A", "address wh", "2000175941tes", "asp"]);
-    ws.addRow(["wh_domain", "WH_1", "B", "address wh", "2000175941tes", "dsp"]);
+    ws.addRow(["Jakarta", "JKT1", "Asep", "Priuk", "EID", "Internal"]);
+    ws.addRow(["Jakarta2", "JKT1", "Asep", "Priuk", "2000175941", "dsp"]);
+    ws.addRow(["Jakarta3", "JKT1", "Asep", "Priuk", "2000175941", "asp"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
