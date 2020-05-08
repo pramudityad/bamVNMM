@@ -11,7 +11,7 @@ import {
   DropdownToggle,
   Collapse,
 } from "reactstrap";
-import { Col, FormGroup, Label, Row, Table, Input } from "reactstrap";
+import { Col, FormGroup, Label, Row, Table, Input, InputGroup, InputGroupAddon, InputGroupText } from "reactstrap";
 import { ExcelRenderer } from "react-excel-renderer";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 import axios from "axios";
@@ -24,7 +24,7 @@ import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
-// import "../DRMcss.css";
+import "./DRMcss.css";
 
 const Checkbox = ({
   type = "checkbox",
@@ -79,6 +79,7 @@ class DRMDetail extends React.Component {
       activeItemName: "",
       activeItemId: null,
       createModal: false,
+      filter_list : {},
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -93,6 +94,8 @@ class DRMDetail extends React.Component {
     this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
+    this.handleFilterList = this.handleFilterList.bind(this);
+    this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
   }
 
   toggle(i) {
@@ -358,7 +361,11 @@ class DRMDetail extends React.Component {
   }
 
   getDRMDataList() {
-    this.getDatafromAPINODE("/drm/getDrm?lmt=" + this.state.perPage + '&pg=' + this.state.activePage).then((res) => {
+    let project_name_filter = this.state.filter_list.project_name === null || this.state.filter_list.project_name ===  undefined ? '"project_name" : {"$exists" : 1}' : '"project_name" : {"$regex" : "'+this.state.filter_list.project_name+'", "$options" : "i"}';
+    let tower_id_filter = this.state.filter_list.tower_id === null || this.state.filter_list.tower_id ===  undefined ? '"tower_id" : {"$exists" : 1}' : '"tower_id" : {"$regex" : "'+this.state.filter_list.tower_id+'", "$options" : "i"}';
+    let program_filter = this.state.filter_list.program === null || this.state.filter_list.program ===  undefined ? '"program" : {"$exists" : 1}' : '"program" : {"$regex" : "'+this.state.filter_list.program+'", "$options" : "i"}';
+    let whereAnd = 'q={'+project_name_filter+','+tower_id_filter+','+program_filter+'}'
+    this.getDatafromAPINODE("/drm/getDrm?lmt=" + this.state.perPage + '&pg=' + this.state.activePage+'&'+whereAnd).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -610,7 +617,7 @@ class DRMDetail extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE('/variants/variants');
+    let getAll_nonpage = await this.getDatafromAPINODE('/drm/getDrm_not_pagination');
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -618,23 +625,12 @@ class DRMDetail extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let headerRow = [
-      "Origin",
-      "Material ID",
-      "Material Name",
-      "Description",
-      "Category"
-    ];
+    let headerRow = ["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"];
     ws.addRow(headerRow);
 
-    for (let i = 1; i < headerRow.length + 1; i++) {
-      ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };
-    }
-
-
     for (let i = 0; i < download_all.length; i++) {
-      let list = download_all[i];
-      ws.addRow([list.origin, list.material_id, list.material_name, list.description, list.category]);
+      let drm = download_all[i];
+      ws.addRow([drm.tower_id, drm.project_name, drm.program, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -671,6 +667,23 @@ class DRMDetail extends React.Component {
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "DRM Template.xlsx");
   };
+
+  handleFilterList(e) {
+    const index = e.target.name;
+    let value = e.target.value;
+    if(value !== "" && value.length === 0) {
+      value = null;
+    }
+    let dataFilter = this.state.filter_list;
+    dataFilter[index] = value;
+    this.setState({filter_list : dataFilter, activePage: 1}, () => {
+      this.onChangeDebounced(e);
+    })
+  }
+
+  onChangeDebounced(e) {
+    this.getDRMDataList();
+  }
 
   render() {
     return (
@@ -766,9 +779,8 @@ class DRMDetail extends React.Component {
                   <Col>
                     <div className="divtable">
                       <Table responsive bordered>
-                        <thead style={{ backgroundColor: "#73818f" }} className="fixed">
+                        <thead className="fixed table-drm__header--middle">
                           <tr align="center">
-                            <th>NO DRM</th>
                             <th>TowerID</th>
                             <th>Project</th>
                             <th>Program</th>
@@ -814,11 +826,44 @@ class DRMDetail extends React.Component {
                             <th>ISSUED DETAIL</th>
                             <th>CR Flag engineering</th>
                           </tr>
+                          <tr>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.tower_id} name="tower_id" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.project_name} name="project_name" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '100px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.program} name="program" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                          </tr>
                         </thead>
                         <tbody>
                         {this.state.all_data.map(drm =>
                           <tr>
-                            <td>{drm.no_drm}</td>
                             <td>{drm.tower_id}</td>
                             <td>{drm.project_name}</td>
                             <td>{drm.program}</td>

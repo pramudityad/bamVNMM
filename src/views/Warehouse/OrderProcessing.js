@@ -74,7 +74,7 @@ class OrderProcessing extends Component {
     }
   }
 
-  async getDataFromAPINode(url) {
+  async getDataFromAPINODE(url) {
     try {
       let respond = await axios.get(API_URL_Node+url, {
         headers: {
@@ -110,13 +110,15 @@ class OrderProcessing extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED"}';
-    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_PROCESSING", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
-      console.log("MR List Sorted", res);
+    let filter_wh_id = '';
+    if(this.props.match.params.whid !== undefined){
+      filter_wh_id = ', "origin.value" : "'+this.props.match.params.whid +'"';
+    }
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED"'+filter_wh_id+'}';
+    this.getDataFromAPINODE('/matreq?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
       if(res.data !== undefined) {
-        const items = res.data._items;
-        const totalData = res.data._meta;
+        const items = res.data.data;
+        const totalData = res.data.totalResults;
         this.setState({mr_list : items, totalData: totalData});
       }
     })
@@ -375,7 +377,7 @@ class OrderProcessing extends Component {
     const modalNotComplete = this.state.modalNotComplete;
     if(modalNotComplete === false) {
       const _id_mr = e.currentTarget.id;
-      this.getDataFromAPINode('/matreq/'+_id_mr).then(res => {
+      this.getDataFromAPINODE('/matreq/'+_id_mr).then(res => {
         if(res.data !== undefined) {
           this.setState({data_material : res.data}, () => {
             console.log("Data Material", this.state.data_material);
@@ -662,7 +664,7 @@ class OrderProcessing extends Component {
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData.total}
+                  totalItemsCount={this.state.totalData}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"

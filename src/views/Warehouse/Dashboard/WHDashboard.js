@@ -280,13 +280,8 @@ class WarehouseDashboard extends Component {
                       <Link
                         to={{
                           pathname:
-                            "/wh-dashboard-eid/?_id=" +
-                            e._id +
-                            "&wh_id=" +
-                            e.wh_id +
-                            "&wh_name=" +
-                            e.wh_name,
-                        }}
+                            "/wh-dashboard-eid/"+e.wh_id
+                          }}
                       >
                         {/* <a href="wh-dashboard-eid"> */}
                         <h6>

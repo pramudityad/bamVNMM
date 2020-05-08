@@ -251,6 +251,13 @@ const routes = [
   { path: '/wh-dashboard-ext/:slug', exact: true, name: 'Warehouse External Detail', component: WHDashboardExtDet },
 
   { path: '/drm-detail', exact: true, name: 'DRM Detail', component: DRMDetail },
+
+  { path: '/order-received-per-wh/:whid', name: 'Order Received', component: OrderReceived },
+  { path: '/order-processing-per-wh/:whid', exact: true, name: 'Order Processing', component: OrderProcessing },
+  { path: '/ready-to-deliver-per-wh/:whid', exact: true, name: 'Ready To Deliver', component: ReadyToDeliver },
+  { path: '/joint-check-per-wh/:whid', exact: true, name: 'Joint Check', component: JointCheck },
+  { path: '/loading-process-per-wh/:whid', exact: true, name: 'Loading Process', component: LoadingProcess },
+  { path: '/material-dispatch-per-wh/:whid', exact: true, name: 'Material Dispatch', component: MaterialDispatch },
 ];
 
 export default routes;

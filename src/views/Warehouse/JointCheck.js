@@ -14,7 +14,7 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
-const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 class JointCheck extends Component {
   constructor(props) {
@@ -104,9 +104,28 @@ class JointCheck extends Component {
     }
   }
 
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios.get(API_URL_NODE+url, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_Node+url, data, {
+      let respond = await axios.patch(API_URL_NODE+url, data, {
         headers: {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser
@@ -140,13 +159,18 @@ class JointCheck extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "current_milestones": "MS_READY_TO_DELIVER"}';
-    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_JOINT_CHECK", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
-      console.log("MR List Sorted", res);
+
+    let filter_wh_id = '';
+    if(this.props.match.params.whid !== undefined){
+      filter_wh_id = ', "origin.value" : "'+this.props.match.params.whid +'"';
+    }
+    let whereAnd = '{"mr_id": '+filter_mr_id+', "current_milestones": "MS_READY_TO_DELIVER", "project_name" : '+filter_project_name+filter_wh_id+'}';
+    // let whereAnd = '{"mr_id": '+filter_mr_id+', "current_mr_status": "MR APPROVED", "current_milestones": "MS_ORDER_RECEIVED"'+filter_wh_id+'}';
+    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_RECEIVED", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
+    this.getDataFromAPINODE('/matreq?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
       if(res.data !== undefined) {
-        const items = res.data._items;
-        const totalData = res.data._meta;
+        const items = res.data.data;
+        const totalData = res.data.totalResults;
         this.setState({mr_list : items, totalData: totalData});
       }
     })
@@ -586,7 +610,7 @@ class JointCheck extends Component {
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData.total}
+                  totalItemsCount={this.state.totalData}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"

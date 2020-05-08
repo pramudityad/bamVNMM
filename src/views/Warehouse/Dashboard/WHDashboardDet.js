@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Col, Row } from 'reactstrap';
+import { Link } from 'react-router-dom';
 import Widget from './Widget';
 import "../wh_css.css";
 import { connect } from 'react-redux';
@@ -130,7 +131,7 @@ class WHDashboardDet extends Component {
 
   getWHManagementID() {
     let _id = new URLSearchParams(window.location.search).get("_id");
-    this.getDatafromAPINODE("/whManagement/warehouse/" + _id).then((res) => {
+    this.getDataFromAPINODE("/whManagement/warehouse/" + _id).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({ wh_data: res.data.data });
@@ -160,7 +161,7 @@ class WHDashboardDet extends Component {
     }
   }
 
-  async getDataFromAPINode(url) {
+  async getDataFromAPINODE(url) {
     try {
       let respond = await axios.get(API_URL_Node+url, {
         headers: {
@@ -274,36 +275,36 @@ class WHDashboardDet extends Component {
       <div className="animated fadeIn">
         <Row>
           <Col xs="12" sm="6" lg="4">
-            <a href="order-received" onMouseEnter={() => this.updateHover1("")} onMouseLeave={() => this.updateHover1("inverse")}>
+            <Link to={"/order-received-per-wh/"+this.props.match.params.slug} onMouseEnter={() => this.updateHover1("")} onMouseLeave={() => this.updateHover1("inverse")}>
               <Widget color="primary" variant={this.state.variant1} header={this.state.order_received} mainText="Order Received" smallText="The initial status of the MR after being approved by the supply team and ready to be processed by the warehouse." imageSource={this.state.img_1}/>
-            </a>
+            </Link>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="order-processing" onMouseEnter={() => this.updateHover2("")} onMouseLeave={() => this.updateHover2("inverse")}>
+            <Link to={"/order-processing-per-wh/"+this.props.match.params.slug} href="order-processing" onMouseEnter={() => this.updateHover2("")} onMouseLeave={() => this.updateHover2("inverse")}>
               <Widget color="primary" variant={this.state.variant2} header={this.state.order_processing} mainText="Order Processing" smallText="The status in which the warehouse prepares the material and will send notification for the project team when there is lack of material." imageSource={this.state.img_2}/>
-            </a>
+            </Link>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="ready-to-deliver" onMouseEnter={() => this.updateHover3("")} onMouseLeave={() => this.updateHover3("inverse")}>
+            <Link to={"/ready-to-deliver-per-wh/"+this.props.match.params.slug} href="ready-to-deliver" onMouseEnter={() => this.updateHover3("")} onMouseLeave={() => this.updateHover3("inverse")}>
               <Widget color="primary" variant={this.state.variant3} header={this.state.ready_to_deliver} mainText="Ready To Deliver" smallText="The status after MR has been processed or in the warehouse staging area. The MR in this status should have either complete material or not complete confirmed by the project team." imageSource={this.state.img_3}/>
-            </a>
+            </Link>
           </Col>
         </Row>
         <Row>
           <Col xs="12" sm="6" lg="4">
-            <a href="joint-check" onMouseEnter={() => this.updateHover4("")} onMouseLeave={() => this.updateHover4("inverse")}>
+            <Link to={"/joint-check-per-wh/"+this.props.match.params.slug} href="joint-check" onMouseEnter={() => this.updateHover4("")} onMouseLeave={() => this.updateHover4("inverse")}>
               <Widget color="primary" variant={this.state.variant4} header={this.state.joint_check} mainText="Joint Check" smallText="The status in which the warehouse team conduct a verification together with DSP and ASP to make sure that the MR will be delivered according to the plant specification." imageSource={this.state.img_4}/>
-            </a>
+            </Link>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="loading-process" onMouseEnter={() => this.updateHover5("")} onMouseLeave={() => this.updateHover5("inverse")}>
+            <Link to={"/loading-process-per-wh/"+this.props.match.params.slug} href="loading-process" onMouseEnter={() => this.updateHover5("")} onMouseLeave={() => this.updateHover5("inverse")}>
               <Widget color="primary" variant={this.state.variant5} header={this.state.loading_process} mainText="Loading Process" smallText="The status in which the MR will be delivered and has been loaded to the delivery truck. The DSP driver is only able to submit delivery information when the MR is in this status." imageSource={this.state.img_5}/>
-            </a>
+            </Link>
           </Col>
           <Col xs="12" sm="6" lg="4">
-            <a href="material-dispatch" onMouseEnter={() => this.updateHover6("")} onMouseLeave={() => this.updateHover6("inverse")}>
+            <Link to={"/material-dispatch-per-wh/"+this.props.match.params.slug} href="material-dispatch" onMouseEnter={() => this.updateHover6("")} onMouseLeave={() => this.updateHover6("inverse")}>
               <Widget color="primary" variant={this.state.variant6} header={this.state.material_dispatch} mainText="Material Dispatch" smallText="The status after the DSP driver submitted the delivery information to the server and the MR is being delivered by the DSP." imageSource={this.state.img_6}/>
-            </a>
+            </Link>
           </Col>
         </Row>
         <Row>
