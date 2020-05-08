@@ -1,4 +1,5 @@
 import React from 'react';
+import GRInternal from './views/MR/GR/GRInternal';
 // import WHDashboard from './views/Warehouse/WHDashboard';
 
 const Breadcrumbs = React.lazy(() => import('./views/Base/Breadcrumbs'));
@@ -108,6 +109,9 @@ const MatLibrary  = React.lazy(() => import('./views/MR/MatLibrary/MatLibrary'))
 
 const WHDashboard = React.lazy(() => import('./views/Warehouse/Dashboard/WHDashboard'));
 const WHDashboardDet = React.lazy(() => import('./views/Warehouse/Dashboard/WHDashboardDet'));
+
+const GRInternalDet = React.lazy(() => import('./views/MR/GR/GRInternal'));
+const GIInternalDet = React.lazy(() => import('./views/MR/GI/GIInternal'));
 
 const WHDashboardExt = React.lazy(() => import('./views/Warehouse/Dashboard/WHDashboardext'));
 const WHDashboardExtDet = React.lazy(() => import('./views/Warehouse/Dashboard/WHDashboardextDet'));
@@ -246,6 +250,8 @@ const routes = [
 
   { path: '/wh-dashboard-eid', exact: true, name: 'Warehouse Dashboard Internal', component: WHDashboard },
   { path: '/wh-dashboard-eid/:slug', exact: true, name: 'Warehouse Internal Detail', component: WHDashboardDet },
+  { path: '/wh-gr-eid/:slug', exact: true, name: 'GR Internal Detail', component: GRInternalDet },
+  { path: '/wh-gi-eid/:slug', exact: true, name: 'GI Internal Detail', component: GIInternalDet },
 
   { path: '/wh-dashboard-ext', exact: true, name: 'Warehouse Dashboard External', component: WHDashboardExt },
   { path: '/wh-dashboard-ext/:slug', exact: true, name: 'Warehouse External Detail', component: WHDashboardExtDet },

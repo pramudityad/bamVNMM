@@ -282,7 +282,7 @@ class WHManagement extends React.Component {
   };
 
   getWHStockList() {
-    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
+    this.getDatafromAPINODE("/whManagement/warehouse?q=&lmt=" +this.state.perPage +"&pg=" +this.state.activePage).then((res) => {
       console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({
@@ -404,7 +404,7 @@ class WHManagement extends React.Component {
   }
 
   componentDidMount() {
-    console.log("here ur dataLogin", this.props.dataLogin);
+    // console.log("here ur dataLogin", this.props.dataLogin);
     this.getWHStockList();
     // change this
     document.title = "Warehouse Management | BAM";
@@ -516,12 +516,12 @@ class WHManagement extends React.Component {
     this.toggleLoading();
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
-    console.log("xlsx data", JSON.stringify(BulkXLSX));
+    // console.log("xlsx data", JSON.stringify(BulkXLSX));
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     const res = await this.postDatatoAPINODE("/whManagement/createWarehouse", {
       managementData: BulkXLSX,
     });
-    console.log("res bulk ", res);
+    console.log("res bulk ", res.data);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -706,9 +706,9 @@ class WHManagement extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["wh_name", "wh_id", "wh_manager", "address", "owner"]);
-    ws.addRow(["wh_domain", "WH_1", "A", "address wh", "2000175941tes"]);
-    ws.addRow(["wh_domain", "WH_1", "B", "address wh", "2000175941tes"]);
+    ws.addRow(["wh_name", "wh_id", "wh_manager", "address", "owner", "wh_type"]);
+    ws.addRow(["wh_domain", "WH_1", "A", "address wh", "2000175941tes", "asp"]);
+    ws.addRow(["wh_domain", "WH_1", "B", "address wh", "2000175941tes", "dsp"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
@@ -890,6 +890,7 @@ class WHManagement extends React.Component {
                             <th>WH Manager</th>
                             <th>Address</th>
                             <th>Owner</th>
+                            <th>Owner Type</th>
                             <th></th>
                             <th></th>
                           </tr>
@@ -940,6 +941,9 @@ class WHManagement extends React.Component {
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.owner}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.wh_type}
                                   </td>
 
                                   <td>
@@ -1207,7 +1211,7 @@ class WHManagement extends React.Component {
             >
               Save
             </Button>{" "}
-            <Button
+            {/* <Button
               block
               color="secondary"
               className="btn-pill"
@@ -1215,7 +1219,7 @@ class WHManagement extends React.Component {
               onClick={this.saveTruncateBulk}
             >
               Truncate
-            </Button>
+            </Button> */}
           </ModalFooter>
         </Modal>
 

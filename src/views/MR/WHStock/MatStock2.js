@@ -547,10 +547,10 @@ class MaterialStock2 extends React.Component {
     });
     console.log("res bulk ", res);
     if (res.data !== undefined) {
-      this.setState({ action_status: "success", rowsXLS: [] });
+      this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed", rowsXLS: [] }, () => {
+      this.setState({ action_status: "failed" }, () => {
         this.toggleLoading();
       });
     }
@@ -739,6 +739,7 @@ class MaterialStock2 extends React.Component {
       "arrival_date",
       "project_name",
       "sku",
+      "sku_description",
       "qty",
       "wh_id",
       "serial_number",
@@ -753,8 +754,9 @@ class MaterialStock2 extends React.Component {
       "2020-04-17",
       "XL BAM DEMO 2021",
       "1",
+      "sku_description",
       100,
-      this.state.selected_wh,,
+      this.state.selected_wh,
       "serial_number",
       "box_number",
       "condition",
@@ -767,8 +769,9 @@ class MaterialStock2 extends React.Component {
       "2020-04-17",
       "XL BAM DEMO 2021",
       "1",
+      "sku_description",
       100,
-      this.state.selected_wh,,
+      this.state.selected_wh,
       "serial_number",
       "box_number",
       "condition",

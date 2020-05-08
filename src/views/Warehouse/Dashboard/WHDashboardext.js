@@ -47,6 +47,7 @@ class WarehouseDashboardExt extends Component {
     };
     this.toggle = this.toggle.bind(this);
     this.toggleFade = this.toggleFade.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
   }
 
   toggle() {
@@ -193,7 +194,7 @@ class WarehouseDashboardExt extends Component {
 
   getWHStockList() {
     this.toggleLoading();
-    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
+    this.getDatafromAPINODE('/whManagement/warehouse?q={"wh_type": {"$ne": "internal"}}').then((res) => {
       console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({
@@ -213,6 +214,9 @@ class WarehouseDashboardExt extends Component {
     });
   }
 
+  // loading = () => (
+  //   <div className="animated fadeIn pt-1 text-center">Loading...</div>
+  // );
 
   render() {
     return (
@@ -276,12 +280,8 @@ class WarehouseDashboardExt extends Component {
                       <Link
                         to={{
                           pathname:
-                            "/wh-dashboard-ext/?_id=" +
-                            e._id +
-                            "&wh_id=" +
-                            e.wh_id +
-                            "&wh_name=" +
-                            e.wh_name,
+                            "/wh-dashboard-eid/" +
+                            e.wh_id
                         }}
                       >
                         {/* <a href="wh-dashboard-eid"> */}
@@ -307,7 +307,7 @@ class WarehouseDashboardExt extends Component {
                         </p>{" "}
                         <p>{e.wh_manager}</p>
                         <p>
-                          <strong>WH Addres</strong>
+                          <strong>WH Address</strong>
                         </p>{" "}
                         <p>{e.address}</p>
                         <p>
@@ -317,16 +317,10 @@ class WarehouseDashboardExt extends Component {
                       </CardBody>
                       <CardFooter>
                         <Row className="align-items-center">
-                          {/* <Col col="2" xl className="mb-3 mb-xl-0">
+                          <Col col="2" xl className="mb-3 mb-xl-0">
                             <Link
                               to={{
-                                pathname:
-                                  "/material-stock2/?_id=" +
-                                  e._id +
-                                  "&wh_id=" +
-                                  e.wh_id +
-                                  "&wh_name=" +
-                                  e.wh_name,
+                                pathname:"/material-stock2/" +e.wh_id,
                               }}
                             >
                               <Button
@@ -343,13 +337,7 @@ class WarehouseDashboardExt extends Component {
                           <Col col="2" xl className="mb-3 mb-xl-0">
                             <Link
                               to={{
-                                pathname:
-                                  "/material-inbound-plan2/?_id=" +
-                                  e._id +
-                                  "&wh_id=" +
-                                  e.wh_id +
-                                  "&wh_name=" +
-                                  e.wh_name,
+                                pathname:"/material-inbound-plan2/" +e.wh_id,
                               }}
                             >
                               <Button
@@ -358,12 +346,16 @@ class WarehouseDashboardExt extends Component {
                                 size="sm"
                                 className="btn-pill"
                               >
-                                Inbound
+                                Plan
                               </Button>
                             </Link>
-                          </Col> */}
+                          </Col>
 
                           <Col col="2" xl className="mb-3 mb-xl-0">
+                          <Link
+                              to={{
+                                pathname:"/wh-gr-eid/" +e.wh_id,
+                              }}>
                             <Button
                               block
                               color="success"
@@ -372,9 +364,14 @@ class WarehouseDashboardExt extends Component {
                             >
                               GR
                             </Button>
+                            </Link>
                           </Col>
 
                           <Col col="2" xl className="mb-3 mb-xl-0">
+                          <Link
+                              to={{
+                                pathname:"/wh-gi-eid/" +e.wh_id,
+                              }}>
                             <Button
                               block
                               color="warning"
@@ -383,7 +380,8 @@ class WarehouseDashboardExt extends Component {
                             >
                               GI
                             </Button>
-                          </Col>
+                            </Link>
+                          </Col>                         
                         </Row>
                       </CardFooter>
                     </Collapse>
@@ -392,10 +390,12 @@ class WarehouseDashboardExt extends Component {
               </React.Fragment>
             ))}
         </Row>
+        {/* Modal Loading */}
         <Loading isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
           className={"modal-sm modal--loading "}>
         </Loading>
+        {/* end Modal Loading */}
       </div>
     );
   }
