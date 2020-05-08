@@ -349,6 +349,25 @@ class OrderCreated extends Component {
     this.getAllMR();
   }
 
+  loopSearchBar = () => {
+    let searchBar = [];
+    for(let i = 0; i < 14; i++) {
+      searchBar.push(
+        <td>
+          <div className="controls" style={{width: '150px'}}>
+            <InputGroup className="input-prepend">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[i]} name={i} size="sm"/>
+            </InputGroup>
+          </div>
+        </td>
+      )
+    }
+    return searchBar;
+  }
+
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
@@ -379,10 +398,6 @@ class OrderCreated extends Component {
 
     const downloadMR = {
       float: 'right'
-    }
-
-    const tableWidth = {
-      width: '150px'
     }
 
     return (
@@ -418,146 +433,7 @@ class OrderCreated extends Component {
                       <th>Created On</th>
                     </tr>
                     <tr>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[0]} name={0} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[1]} name={1} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[2]} name={2} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[3]} name={3} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[4]} name={4} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[5]} name={5} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[6]} name={6} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[7]} name={7} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[8]} name={8} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[9]} name={9} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[10]} name={10} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[11]} name={11} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[12]} name={12} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[13]} name={13} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
+                      {this.loopSearchBar()}
                     </tr>
                   </thead>
                   <tbody>
