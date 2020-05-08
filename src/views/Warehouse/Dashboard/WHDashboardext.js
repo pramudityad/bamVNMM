@@ -317,7 +317,7 @@ class WarehouseDashboardExt extends Component {
                       </CardBody>
                       <CardFooter>
                         <Row className="align-items-center">
-                          <Col col="2" xl className="mb-3 mb-xl-0">
+                          {/* <Col col="2" xl className="mb-3 mb-xl-0">
                             <Link
                               to={{
                                 pathname:"/material-stock2/" +e.wh_id,
@@ -349,7 +349,7 @@ class WarehouseDashboardExt extends Component {
                                 Plan
                               </Button>
                             </Link>
-                          </Col>
+                          </Col> */}
 
                           <Col col="2" xl className="mb-3 mb-xl-0">
                           <Link
