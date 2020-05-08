@@ -74,7 +74,7 @@ class MatInboundPlan extends React.Component {
       danger: false,
       all_data: [],
       data_PO: [],
-      wh_data: [],
+      wh_data: {},
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
       modalMatStockForm: false,
@@ -235,8 +235,8 @@ class MatInboundPlan extends React.Component {
 
   getWHInboundListNext() {
     this.toggleLoading();
-    let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
+    // let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
+    let getbyWH = '{"wh_id":"' + this.props.match.params.slug + '"}';
     this.getDatafromAPINODE(
       "/whInboundPlan/getWhInboundPlan?q=" +
         getbyWH +
@@ -251,7 +251,7 @@ class MatInboundPlan extends React.Component {
           all_data: res.data.data,
           prevPage: this.state.activePage,
           total_dataParent: res.data.totalResults,
-          selected_wh: get_wh_id,
+          selected_wh: this.props.match.params.slug,
         });
         this.toggleLoading();
       } else {
@@ -266,13 +266,15 @@ class MatInboundPlan extends React.Component {
   }
 
   getWHManagementID() {
-    let _id = new URLSearchParams(window.location.search).get("_id");
-    this.getDatafromAPINODE("/whManagement/warehouse/" + _id).then((res) => {
+    // let _id = new URLSearchParams(window.location.search).get("_id");
+    this.getDatafromAPINODE('/whManagement/warehouse?q={"wh_id":"' + this.props.match.params.slug + '"}').then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
-        this.setState({ wh_data: res.data.data });
+        if(res.data.data !== undefined){
+          this.setState({ wh_data: res.data.data[0] });
+        }
       } else {
-        this.setState({ wh_data: [] });
+        this.setState({ wh_data: {} });
       }
     });
   }
@@ -696,7 +698,7 @@ class MatInboundPlan extends React.Component {
       "2020-04-17",
       "XL BAM DEMO 2021",
       "1",
-      "WH_1",
+      this.state.selected_wh,,
     ]);
     ws.addRow([
       "5df99ce5face981b7ace8857",
@@ -704,7 +706,7 @@ class MatInboundPlan extends React.Component {
       "2020-04-17",
       "XL BAM DEMO 2021",
       "1",
-      "WH_1",
+      this.state.selected_wh,,
     ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();

@@ -738,6 +738,22 @@ class MRDetail extends Component {
                       {this.state.data_mr.mr_delivery_type}
                     </div>
                   </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>ETD</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.etd}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mr-detail__body--header-detail">
+                      <span>ETA</span>
+                    </div>
+                    <div>
+                      {this.state.data_mr.eta}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mr-detail__body--flex">
@@ -807,30 +823,7 @@ class MRDetail extends Component {
                 <hr className="mr-detail__line"/>
 
                 <div className="mr-detail__body--flex">
-                  <div>
-                    <div className="mr-detail__body--header-detail">
-                      <span>DSP Company</span>
-                    </div>
-                    <div>
-                      {this.state.data_mr.dsp_company}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="mr-detail__body--header-detail">
-                      <span>ETD</span>
-                    </div>
-                    <div>
-                      {this.state.data_mr.etd}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="mr-detail__body--header-detail">
-                      <span>ETA</span>
-                    </div>
-                    <div>
-                      {this.state.data_mr.eta}
-                    </div>
-                  </div>
+                  
                 </div>
               </Fragment>
               )}

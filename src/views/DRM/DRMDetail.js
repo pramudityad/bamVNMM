@@ -21,12 +21,10 @@ import Select from "react-select";
 import { saveAs } from "file-saver";
 import Excel from "exceljs";
 import { connect } from "react-redux";
-import { Redirect, Route, Switch, Link, useLocation } from "react-router-dom";
+import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
-import queryString from "query-string";
-import ModalCreateNew from '../../components/ModalCreateNew'
 
-import "../MatStyle.css";
+// import "../DRMcss.css";
 
 const Checkbox = ({
   type = "checkbox",
@@ -35,25 +33,21 @@ const Checkbox = ({
   onChange,
   value,
 }) => (
-  <input
-    type={type}
-    name={name}
-    checked={checked}
-    onChange={onChange}
-    value={value}
-    className="checkmark-dash"
-  />
-);
+    <input
+      type={type}
+      name={name}
+      checked={checked}
+      onChange={onChange}
+      value={value}
+      className="checkmark-dash"
+    />
+  );
 
-const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
-
-const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
-const usernameBAM = "adminbamidsuper";
-const passwordBAM = "F760qbAg2sml";
+// const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-class MaterialStock2 extends React.Component {
+class DRMDetail extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -62,12 +56,10 @@ class MaterialStock2 extends React.Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      filter_name: null,
       search: null,
       perPage: 10,
       prevPage: 1,
       activePage: 1,
-      selected_wh: null,
       total_data_PO: 0,
       pp_all: [],
       rowsXLS: [],
@@ -75,12 +67,6 @@ class MaterialStock2 extends React.Component {
       action_status: null,
       action_message: null,
       all_data: [],
-      wh_data: {},
-      wh_id: null,
-      wh_name: null,
-      wh_manager: null,
-      wh_address: null,
-      wh_owner: null,
       data_PO: [],
       packageSelected: [],
       modal_loading: false,
@@ -88,7 +74,6 @@ class MaterialStock2 extends React.Component {
       modalMatStockForm: false,
       modalMatStockEdit: false,
       MatStockForm: new Array(6).fill(null),
-      warehouse_selected: null,
       collapse: false,
       danger: false,
       activeItemName: "",
@@ -108,7 +93,6 @@ class MaterialStock2 extends React.Component {
     this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
-    this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
   }
 
   toggle(i) {
@@ -117,18 +101,6 @@ class MaterialStock2 extends React.Component {
     });
     this.setState({
       dropdownOpen: newArray,
-    });
-  }
-
-  togglecreateModal() {
-    this.setState({
-      createModal: !this.state.createModal,
-    });
-  }
-
-  resettogglecreateModal() {
-    this.setState({
-      rowsXLS: [],
     });
   }
 
@@ -175,6 +147,13 @@ class MaterialStock2 extends React.Component {
       modalMatStockForm: !prevState.modalMatStockForm,
     }));
   }
+
+  togglecreateModal() {
+    this.setState({
+      createModal: !this.state.createModal,
+    });
+  }
+
 
   async getDatafromAPINODE(url) {
     try {
@@ -266,44 +245,22 @@ class MaterialStock2 extends React.Component {
     });
   };
 
-  getWHStockListNext() {
-    this.toggleLoading();
-    // let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    // console.log("wh id ", get_wh_id);
-    let getbyWH = '{"wh_id":"' + this.props.match.params.slug + '"}';
-    this.getDatafromAPINODE("/whStock/getWhStock?q=" +getbyWH +"&lmt=" +this.state.perPage +"&pg=" +this.state.activePage
-    ).then((res) => {
-      // console.log("all data ", res.data);
+  SearchFilter = (e) => {
+    let keyword = e.target.value;
+    this.setState({ search: keyword });
+  };
+
+
+  getWHStockList() {
+    this.getDatafromAPINODE("/variants/variants?lmt=" + this.state.perPage + '&pg=' + this.state.activePage).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
           prevPage: this.state.activePage,
           total_dataParent: res.data.totalResults,
-          selected_wh: this.props.match.params.slug,
         });
-        this.toggleLoading();
       } else {
-        this.setState({
-          all_data: [],
-          total_dataParent: 0,
-          prevPage: this.state.activePage,
-        });
-        this.toggleLoading();
-      }
-    });
-  }
-
-  getWHManagementID() {
-    // let _id = new URLSearchParams(window.location.search).get("_id");
-    // let getbyWH = '{"wh_id":"' + this.props.match.params.slug + '"}';
-    this.getDatafromAPINODE('/whManagement/warehouse?q={"wh_id":"' + this.props.match.params.slug + '"}').then((res) => {
-      // console.log("all data ", res.data);
-      if (res.data !== undefined) {
-        if(res.data.data !== undefined){
-          this.setState({ wh_data: res.data.data[0] });
-        }
-      } else {
-        this.setState({ wh_data: [] });
+        this.setState({ all_data: [], total_dataParent: 0, prevPage: this.state.activePage });
       }
     });
   }
@@ -395,9 +352,23 @@ class MaterialStock2 extends React.Component {
   }
 
   componentDidMount() {
-    this.getWHStockListNext();
-    this.getWHManagementID();
-    document.title = "Material Stock | BAM";
+    // this.getWHStockList();();
+    this.getDRMDataList();
+    document.title = "DRM Detail | BAM";
+  }
+
+  getDRMDataList() {
+    this.getDatafromAPINODE("/drm/getDrm?lmt=" + this.state.perPage + '&pg=' + this.state.activePage).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+        });
+      } else {
+        this.setState({ all_data: [], total_dataParent: 0, prevPage: this.state.activePage });
+      }
+    });
   }
 
   handleChangeChecklist(e) {
@@ -417,21 +388,6 @@ class MaterialStock2 extends React.Component {
     this.setState((prevState) => ({
       asg_checked: prevState.asg_checked.set(item, isChecked),
     }));
-  }
-
-  convertDateFormat(jsondate){
-    let date = new Date(jsondate);
-    let year = date.getFullYear();
-    let month = date.getMonth()+1;
-    let dt = date.getDate();
-
-    if (dt < 10) {
-      dt = '0' + dt;
-    }
-    if (month < 10) {
-      month = '0' + month;
-    }
-    return year+'-' + month + '-'+dt;
   }
 
   handleChangeChecklistAll(e) {
@@ -459,7 +415,7 @@ class MaterialStock2 extends React.Component {
 
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
-      this.getWHStockListNext();
+      this.getWHStockList();
     });
   }
 
@@ -517,13 +473,13 @@ class MaterialStock2 extends React.Component {
     }
   }
 
-  saveMatStockWHBulk = async () => {
+  saveDRMBulk = async () => {
     this.toggleLoading();
     this.togglecreateModal();
-    const BulkXLSX = this.state.rowsXLS;
+    const dataXLS = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
-      stockData: BulkXLSX,
+    const res = await this.postDatatoAPINODE("/drm/createWithCheckDrm", {
+      'drmData': dataXLS,
     });
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
@@ -541,16 +497,16 @@ class MaterialStock2 extends React.Component {
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    console.log("xlsx data", JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE("/whStock/createWhStockTruncate", {
-      stockData: BulkXLSX,
+    // console.log('xlsx data', JSON.stringify(BulkXLSX));
+    const res = await this.postDatatoAPINODE("/variants/createVariantsTruncate", {
+      'materialData': BulkXLSX,
     });
-    console.log("res bulk ", res);
+    console.log('res bulk ', res);
     if (res.data !== undefined) {
-      this.setState({ action_status: "success", rowsXLS: [] });
+      this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed", rowsXLS: [] }, () => {
+      this.setState({ action_status: "failed" }, () => {
         this.toggleLoading();
       });
     }
@@ -563,11 +519,6 @@ class MaterialStock2 extends React.Component {
     dataForm[parseInt(index)] = value;
     this.setState({ MatStockForm: dataForm });
   }
-
-  SearchFilter = (e) => {
-    let keyword = e.target.value;
-    this.setState({ search: keyword });
-  };
 
   async saveUpdate() {
     let respondSaveEdit = undefined;
@@ -659,7 +610,7 @@ class MaterialStock2 extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE("/whStock/getWhStock");
+    let getAll_nonpage = await this.getDatafromAPINODE('/variants/variants');
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -668,19 +619,11 @@ class MaterialStock2 extends React.Component {
     const ws = wb.addWorksheet();
 
     let headerRow = [
-      "Owner ID",
-      "WH ID",
-      "PO Number",
-      "Project Name",
-      "Arrival Date",
-      "SKU",
-      "SKU Desc",
-      "Qty",
-      "Aging",
-      "Serial Number",
-      "Box Number",
-      "Condition",
-      "Notes",
+      "Origin",
+      "Material ID",
+      "Material Name",
+      "Description",
+      "Category"
     ];
     ws.addRow(headerRow);
 
@@ -688,27 +631,14 @@ class MaterialStock2 extends React.Component {
       ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };
     }
 
+
     for (let i = 0; i < download_all.length; i++) {
       let list = download_all[i];
-      ws.addRow([
-        list.owner_id,
-        this.state.selected_wh,
-        list.po_number,
-        list.project_name,
-        list.sku,
-        list.sku_description,
-        list.arrival_date,
-        list.qty,
-        list.ageing,
-        list.serial_number,
-        list.box_number,
-        list.condition,
-        list.notes,
-      ]);
+      ws.addRow([list.origin, list.material_id, list.material_name, list.description, list.category]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All Material Stock.xlsx");
+    saveAs(new Blob([allocexport]), "All DRM Data.xlsx");
   }
 
   DeleteData = async () => {
@@ -716,7 +646,7 @@ class MaterialStock2 extends React.Component {
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/whStock/deleteWhStock/" + objData._id
+      "/variants/deleteVariants/" + objData._id
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
@@ -727,129 +657,52 @@ class MaterialStock2 extends React.Component {
         });
       }
     });
-  };
+  }
 
-  exportMatStatus = async () => {
+  exportDRMTemplate = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow([
-      "owner_id",
-      "po_number",
-      "arrival_date",
-      "project_name",
-      "sku",
-      "qty",
-      "wh_id",
-      "serial_number",
-      "box_number",
-      "condition",
-      "notes",
-      "transaction_type",
-    ]);
-    ws.addRow([
-      "Jabo",
-      "PO0001",
-      "2020-04-17",
-      "XL BAM DEMO 2021",
-      "1",
-      100,
-      this.state.selected_wh,,
-      "serial_number",
-      "box_number",
-      "condition",
-      "notes",
-      "Inbound",
-    ]);
-    ws.addRow([
-      "CJ",
-      "PO0001",
-      "2020-04-17",
-      "XL BAM DEMO 2021",
-      "1",
-      100,
-      this.state.selected_wh,,
-      "serial_number",
-      "box_number",
-      "condition",
-      "notes",
-      "Outbond",
-    ]);
+    ws.addRow(["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"]);
+
+    ws.addRow(["JWT-BBS-0001","XL BAM DEMO 2020","Capacity"]);
+		ws.addRow(["JWT-BBS-0002","XL BAM DEMO 2020","Coverage"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), "Material Stock Template.xlsx");
+    saveAs(new Blob([PPFormat]), "DRM Template.xlsx");
   };
 
   render() {
     return (
       <div className="animated fadeIn">
-        <DefaultNotif
+        {/* }<DefaultNotif
           actionMessage={this.state.action_message}
           actionStatus={this.state.action_status}
-        />
+        /> */}
         <Row>
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{ marginTop: "8px", position: "absolute" }}>
-                  {" "}
-                  Material Stock {this.state.wh_data.wh_id} -{" "}
-                  {this.state.wh_data.wh_name}{" "}
+                <span style={{ marginTop: "5px", position: "absolute" }}>
+                  {" "}DRM Detail{" "}
                 </span>
-                <div
-                  className="card-header-actions"
-                  style={{ display: "inline-flex" }}
-                >
+                <div className="card-header-actions" style={{ display: "inline-flex" }}>
                   <div>
-                    {/* Open modal for create new */}
-                    {this.state.userRole.includes("Flow-PublicInternal") !==
-                    true ? (
-                      <div>
-                        <Button
-                          block
-                          color="success"
-                          onClick={this.togglecreateModal}
-                          // id="toggleCollapse1"
-                        >
-                          <i className="fa fa-plus-square" aria-hidden="true">
-                            {" "}
-                            &nbsp;{" "}
-                          </i>{" "}
-                          New
-                        </Button>
-                      </div>
-                    ) : (
-                      ""
-                    )}
+                    <Button block color="success" onClick={this.togglecreateModal} size="sm">
+                      <i className="fa fa-plus-square" aria-hidden="true">{" "}&nbsp;{" "}</i>{" "}New
+                  </Button>
                   </div>
-                  &nbsp;&nbsp;&nbsp;
-                  <div>
-                    <Button
-                      block
-                      color="info"
-                      onClick={this.toggleAddNew}
-                      id="toggleCollapse1"
-                    >
-                      <i className="icon-info" aria-hidden="true">
-                        {" "}
-                        &nbsp;{" "}
-                      </i>{" "}
-                      Info
-                    </Button>
-                  </div>
-                  &nbsp;&nbsp;&nbsp;
-                  <div>
-                    <Button
-                      onClick={this.downloadAll}
-                      block
-                      color="ghost-warning"
-                    >
-                      <i className="fa fa-download" aria-hidden="true">
-                        {" "}
-                        &nbsp;{" "}
-                      </i>{" "}
-                      Export
-                    </Button>
+                  <div style={{ marginRight: "10px" }}>
+                    <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggle(0);}} size="sm">
+                      <DropdownToggle caret color="light">
+                        Download Template
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem header>Uploader Template</DropdownItem>
+                        <DropdownItem onClick={this.exportDRMTemplate}>{" "}DRM Template</DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>{" "}Download All</DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
                   </div>
                 </div>
               </CardHeader>
@@ -866,157 +719,153 @@ class MaterialStock2 extends React.Component {
                       <table>
                         <tbody>
                           <tr>
-                            <td>WH Manager</td>
+                            <td>Upload File</td>
                             <td>:</td>
-                            <td>{this.state.wh_data.wh_manager}</td>
-                          </tr>
-                          <tr>
-                            <td>WH Address</td>
-                            <td>:</td>
-                            <td>{this.state.wh_data.address}</td>
-                          </tr>
-                          <tr>
-                            <td>WH Owner</td>
-                            <td>:</td>
-                            <td>{this.state.wh_data.owner}</td>
+                            <td>
+                              <input
+                                type="file"
+                                onChange={this.fileHandlerMaterial.bind(this)}
+                                style={{ padding: "10px", visiblity: "hidden" }}
+                              />
+                            </td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
                   </CardBody>
+                  <CardFooter>
+                    <Button
+                      color="success"
+                      disabled={this.state.rowsXLS.length === 0}
+                      onClick={this.saveDRMBulk}
+                    >
+                      {" "}
+                      <i className="fa fa-save" aria-hidden="true">
+                        {" "}
+                      </i>{" "}
+                      &nbsp;SAVE{" "}
+                    </Button>
+                    &nbsp;&nbsp;&nbsp;
+                    <Button
+                      color="warning"
+                      disabled={this.state.rowsXLS.length === 0}
+                      onClick={this.saveTruncateBulk}
+                    >
+                      {" "}
+                      <i className="fa fa-save" aria-hidden="true">
+                        {" "}
+                      </i>{" "}
+                      &nbsp;SAVE2{" "}
+                    </Button>
+                    {/* <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>                     */}
+                  </CardFooter>
                 </Card>
               </Collapse>
               <CardBody>
                 <Row>
                   <Col>
-                    <div style={{ marginBottom: "10px" }}></div>
-                    <input
-                      className="search-box-material"
-                      type="text"
-                      name="filter"
-                      placeholder="Search"
-                      onChange={(e) => this.SearchFilter(e)}
-                    />
-                  </Col>
-                </Row>
-                <Row>
-                  <Col>
                     <div className="divtable">
-                      <Table responsive size="sm">
-                        <thead
-                          style={{ backgroundColor: "#73818f" }}
-                          className="fixed"
-                        >
+                      <Table responsive bordered>
+                        <thead style={{ backgroundColor: "#73818f" }} className="fixed">
                           <tr align="center">
-                            <th>Owner ID</th>
-                            <th>WH ID</th>
-                            <th>PO Number</th>
-                            <th>Project Name</th>
-                            <th>Arrival Date</th>
-                            <th>SKU</th>
-                            <th>SKU Desc</th>
-                            <th>Qty</th>
-                            <th>Aging</th>
-                            <th>Serial Number</th>
-                            <th>Box Number</th>
-                            <th>Condition</th>
-                            <th>Notes</th>
-                            <th>Transaction Type</th>
-                            <th></th>
+                            <th>NO DRM</th>
+                            <th>TowerID</th>
+                            <th>Project</th>
+                            <th>Program</th>
+                            <th>Actual RBS DATA</th>
+                            <th>Actual DU</th>
+                            <th>RU B0 (900)</th>
+                            <th>RU B1 (2100)</th>
+                            <th>RU B3 (1800) </th>
+                            <th>RU B8 (900)</th>
+                            <th>RU B1B3</th>
+                            <th>RU Band Agnostic</th>
+                            <th>Remarks Need CR/Go as SoW Original</th>
+                            <th>Existing Antenna (type)</th>
+                            <th>ANTENNA_HEIGHT </th>
+                            <th>Scenario RAN</th>
+                            <th>Dismantle Antenna</th>
+                            <th>Dismantle RU</th>
+                            <th>Dismantele Accessories</th>
+                            <th>Dismantle DU</th>
+                            <th>Dismantle RBS/Encl</th>
+                            <th>EXISTING DAN SCENARIO IMPLEMENTASI RBS </th>
+                            <th>DRM FINAL (MODULE)</th>
+                            <th>DRM Final Radio</th>
+                            <th>DRM Final SOW Cabinet</th>
+                            <th>DRM FINAL (SOW G9/U9/L9)</th>
+                            <th>DRM FINAL (SOW G18/L18)</th>
+                            <th>DRM FINAL (SOW U21/L21)</th>
+                            <th>DRM FINAL (ANTENNA TYPE)</th>
+                            <th>PLAN ANTENNA AZIMUTH</th>
+                            <th>PLAN ANTENNA ET/MT</th>
+                            <th>Module</th>
+                            <th>Cabinet</th>
+                            <th>Radio</th>
+                            <th>Power RRU</th>
+                            <th>Antenna</th>
+                            <th>Dismantle</th>
+                            <th>System</th>
+                            <th>Optic RRU</th>
+                            <th>Area</th>
+                            <th>VERIFICATION (DATE)</th>
+                            <th>VERIFICATION (STATUS)</th>
+                            <th>VERIFICATION PIC</th>
+                            <th>ISSUED DETAIL</th>
+                            <th>CR Flag engineering</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.all_data
-                            .filter((e) => {
-                              if (this.state.search === null) {
-                                return e;
-                              } else if (
-                                e.owner_id
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.po_number
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.project_name
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase())
-                                //   ||
-                                // e.serial_number
-                                //   .toLowerCase()
-                                //   .includes(this.state.search.toLowerCase()) ||
-                                // e.box_number
-                                //   .toLowerCase()
-                                //   .includes(this.state.search.toLowerCase())
-                              ) {
-                                return e;
-                              }
-                            })
-                            .map((e) => (
-                              <React.Fragment key={e._id + "frag"}>
-                                <tr
-                                  style={{ backgroundColor: "#d3d9e7" }}
-                                  className="fixbody"
-                                  key={e._id}
-                                >
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.owner_id}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.wh_id}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.po_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.project_name}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {this.convertDateFormat(e.arrival_date)}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku_description}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.qty}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.ageing}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.serial_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.box_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.condition}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.notes}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.transaction_type}
-                                  </td>
-                                  <td>
-                                    <Button
-                                      size="sm"
-                                      color="danger"
-                                      value={e._id}
-                                      onClick={this.toggleDelete}
-                                      title="Delete"
-                                    >
-                                      <i
-                                        className="fa fa-trash"
-                                        aria-hidden="true"
-                                      ></i>
-                                    </Button>
-                                  </td>
-                                </tr>
-                              </React.Fragment>
-                            ))}
+                        {this.state.all_data.map(drm =>
+                          <tr>
+                            <td>{drm.no_drm}</td>
+                            <td>{drm.tower_id}</td>
+                            <td>{drm.project_name}</td>
+                            <td>{drm.program}</td>
+                            <td>{drm.actual_rbs_data}</td>
+                            <td>{drm.actual_du}</td>
+                            <td>{drm.ru_b0_900}</td>
+                            <td>{drm.ru_b1_2100}</td>
+                            <td>{drm.ru_b3_1800}</td>
+                            <td>{drm.ru_b8_900}</td>
+                            <td>{drm.ru_b1b3}</td>
+                            <td>{drm.ru_band_agnostic}</td>
+                            <td>{drm.remarks_need_cr_go_as_sow_original}</td>
+                            <td>{drm.existing_antenna_type}</td>
+                            <td>{drm.antenna_height}</td>
+                            <td>{drm.scenario_ran}</td>
+                            <td>{drm.dismantle_antenna}</td>
+                            <td>{drm.dismantle_ru}</td>
+                            <td>{drm.dismantle_accessories}</td>
+                            <td>{drm.dismantle_du}</td>
+                            <td>{drm.dismantle_rbs_encl}</td>
+                            <td>{drm.existing_dan_scenario_implementasi_rbs}</td>
+                            <td>{drm.drm_final_module}</td>
+                            <td>{drm.drm_final_radio}</td>
+                            <td>{drm.drm_final_sow_cabinet}</td>
+                            <td>{drm.drm_final_sow_g9_u9_l9}</td>
+                            <td>{drm.drm_final_sow_g18_l18}</td>
+                            <td>{drm.drm_final_sow_u21_l21}</td>
+                            <td>{drm.drm_final_antenna_type}</td>
+                            <td>{drm.plan_antenna_azimuth}</td>
+                            <td>{drm.plan_antenna_et_mt}</td>
+                            <td>{drm.module}</td>
+                            <td>{drm.cabinet}</td>
+                            <td>{drm.radio}</td>
+                            <td>{drm.power_rru}</td>
+                            <td>{drm.antenna}</td>
+                            <td>{drm.dismantle}</td>
+                            <td>{drm.system}</td>
+                            <td>{drm.optic_rru}</td>
+                            <td>{drm.area}</td>
+                            <td>{drm.verification_date}</td>
+                            <td>{drm.verification_status}</td>
+                            <td>{drm.verification_pic}</td>
+                            <td>{drm.issued_detail}</td>
+                            <td>{drm.cr_flag_engineering}</td>
+                          </tr>
+                        )}
+
                         </tbody>
                       </Table>
                     </div>
@@ -1040,13 +889,102 @@ class MaterialStock2 extends React.Component {
           </Col>
         </Row>
 
+        {/* Modal New PO */}
+        <Modal
+          isOpen={this.state.modalMatStockForm}
+          toggle={this.toggleMatStockForm}
+          className="modal--form-e"
+        >
+          <ModalHeader>Form Material Library</ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col sm="12">
+                <FormGroup>
+                  <Label htmlFor="owner_id">Owner ID</Label>
+                  <Input
+                    type="text"
+                    name="0"
+                    placeholder=""
+                    value={this.state.MatStockForm[0]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="po_number">PO Number</Label>
+                  <Input
+                    type="text"
+                    name="1"
+                    placeholder=""
+                    value={this.state.MatStockForm[1]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="arrival_date">Arrival Date</Label>
+                  <Input
+                    type="datetime-local"
+                    placeholder=""
+                    value={this.state.MatStockForm[2]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="project_name">Project Name</Label>
+                  <Input
+                    type="text"
+                    name="3"
+                    placeholder=""
+                    value={this.state.MatStockForm[3]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="sku">SKU</Label>
+                  <Input
+                    type="text"
+                    placeholder=""
+                    value={this.state.MatStockForm[4]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="sku_description">SKU Description</Label>
+                  <Input
+                    type="text"
+                    placeholder=""
+                    value={this.state.MatStockForm[5]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="qty">Qty</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    name="6"
+                    placeholder=""
+                    value={this.state.MatStockForm[6]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="success" onClick={this.saveNew}>
+              Submit
+            </Button>
+          </ModalFooter>
+        </Modal>
+        {/*  Modal New PO*/}
+
         {/* Modal Edit PP */}
         <Modal
           isOpen={this.state.modalMatStockEdit}
           toggle={this.toggleEdit}
           className="modal--form"
         >
-          <ModalHeader>Form Update Material Stock</ModalHeader>
+          <ModalHeader>Form Update Material Library</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
@@ -1122,127 +1060,6 @@ class MaterialStock2 extends React.Component {
         </Modal>
         {/*  Modal Edit PP*/}
 
-        {/* Modal create New */}
-        <ModalCreateNew
-        isOpen={this.state.createModal}
-        toggle={this.togglecreateModal}
-        className={this.props.className}
-        onClosed={this.resettogglecreateModal}
-        title='Create Material Stock'
-        >
-              <div>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Upload File</td>
-                      <td>:</td>
-                      <td>
-                        <input
-                          type="file"
-                          onChange={this.fileHandlerMaterial.bind(this)}
-                          style={{ padding: "10px", visiblity: "hidden" }}
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <ModalFooter>
-              <Button
-              block
-              color="link"
-              className="btn-pill"
-              onClick={this.exportMatStatus}
-              size="sm"
-            >
-              Download Template
-            </Button>{" "}
-            <Button
-              block
-              color="success"
-              className="btn-pill"
-              disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveMatStockWHBulk}
-              size="sm"
-            >
-              Save
-            </Button>{" "}
-            <Button
-              block
-              color="secondary"
-              className="btn-pill"
-              disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveTruncateBulk}
-              size="sm"
-            >
-              Truncate
-            </Button>
-          </ModalFooter>
-        </ModalCreateNew>
-
-        {/* <Modal
-          isOpen={this.state.createModal}
-          toggle={this.togglecreateModal}
-          className={this.props.className}
-          onClosed={this.resettogglecreateModal}
-        >
-          <ModalHeader toggle={this.togglecreateModal}>
-            Create New Stock
-          </ModalHeader>
-          <ModalBody>
-            <CardBody>
-              <div>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Upload File</td>
-                      <td>:</td>
-                      <td>
-                        <input
-                          type="file"
-                          onChange={this.fileHandlerMaterial.bind(this)}
-                          style={{ padding: "10px", visiblity: "hidden" }}
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </CardBody>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              block
-              color="link"
-              className="btn-pill"
-              onClick={this.exportMatStatus}
-              size="sm"
-            >
-              Download Template
-            </Button>{" "}
-            <Button
-              block
-              color="success"
-              className="btn-pill"
-              disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveMatStockWHBulk}
-              size="sm"
-            >
-              Save
-            </Button>{" "}
-            <Button
-              block
-              color="secondary"
-              className="btn-pill"
-              disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveTruncateBulk}
-              size="sm"
-            >
-              Truncate
-            </Button>
-          </ModalFooter>
-        </Modal> */}
-
         {/* Modal confirmation delete */}
         <Modal
           isOpen={this.state.danger}
@@ -1250,11 +1067,15 @@ class MaterialStock2 extends React.Component {
           className={"modal-danger " + this.props.className}
         >
           <ModalHeader toggle={this.toggleDelete}>
-            Delete Material Stock Confirmation
+            Delete Material Library Confirmation
           </ModalHeader>
           <ModalBody>Are you sure want to delete ?</ModalBody>
           <ModalFooter>
-            <Button color="danger" onClick={this.DeleteData}>
+            <Button
+              color="danger"
+              // value={e._id}
+              onClick={this.DeleteData}
+            >
               Delete
             </Button>
             <Button color="secondary" onClick={this.toggleDelete}>
@@ -1262,6 +1083,37 @@ class MaterialStock2 extends React.Component {
             </Button>
           </ModalFooter>
         </Modal>
+
+         {/* Modal create New */}
+         <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
+         <ModalHeader toggle={this.togglecreateModal}>Create New Material Library</ModalHeader>
+         <ModalBody>
+           <CardBody>
+             <div>
+               <table>
+                 <tbody>
+                   <tr>
+                     <td>Upload File</td>
+                     <td>:</td>
+                     <td>
+                       <input
+                         type="file"
+                         onChange={this.fileHandlerMaterial.bind(this)}
+                         style={{ padding: "10px", visiblity: "hidden" }}
+                       />
+                     </td>
+                   </tr>
+                 </tbody>
+               </table>
+             </div>
+           </CardBody>
+         </ModalBody>
+         <ModalFooter>
+           <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveDRMBulk}>Save</Button>{' '}
+           {/* }<Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button> */}
+         </ModalFooter>
+       </Modal>
+
 
         {/* Modal Loading */}
         <Modal
@@ -1299,4 +1151,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(MaterialStock2);
+export default connect(mapStateToProps)(DRMDetail);

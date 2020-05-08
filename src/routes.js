@@ -118,6 +118,8 @@ const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'
 const ListTSSRBoq = React.lazy(() => import('./views/Tssr/ListTSSRBoq'));
 const DetailTSSRBoq = React.lazy(() => import('./views/Tssr/TSSRBoq'));
 
+const DRMDetail = React.lazy(() => import('./views/DRM/DRMDetail'));
+
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -239,7 +241,7 @@ const routes = [
   { path: '/material-inbound-plan2/:slug', exact: true, name: 'Material Inbound Plan', component: MaterialInboundPlan },
   { path: '/wh-management', exact: true, name: 'Warehouse Management', component: WHManagement },
   { path: '/mat-library', exact: true, name: 'Material Library', component: MatLibrary },
-  
+
   { path: '/mr-dashboard-global', exact: true, name: 'Material Request Dashboard', component: MRDashboardGlob },
 
   { path: '/wh-dashboard-eid', exact: true, name: 'Warehouse Dashboard Internal', component: WHDashboard },
@@ -247,6 +249,8 @@ const routes = [
 
   { path: '/wh-dashboard-ext', exact: true, name: 'Warehouse Dashboard External', component: WHDashboardExt },
   { path: '/wh-dashboard-ext/:slug', exact: true, name: 'Warehouse External Detail', component: WHDashboardExtDet },
+
+  { path: '/drm-detail', exact: true, name: 'DRM Detail', component: DRMDetail },
 ];
 
 export default routes;

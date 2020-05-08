@@ -18,6 +18,10 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
 );
 
+const Config_group_type_DEFAULT = ["HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "SERVICE", "SERVICE", "SERVICE", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME"]
+
+const Config_group_DEFAULT = ["Config Cabinet", "Config Add L9", "Config Add L10", "Config Add L18", "Config Add L21", "Config BB 5212 (Reuse)", "Config UPG BW 1800", "Swapped Module/BB", "Config UPG BW 2100", "Config Radio B0 MIMO 2T2R", "Config Kit Radio B1 MIMO 2T2R", "Config Radio B1 MIMO 2T2R", "Config Kit Radio B3 MIMO 2T2R", "Config Radio B3 MIMO 2T2R", "Config Radio B1 MIMO 4T4R", "Config Radio B3 MIMO 4T4R", "Config Radio B1 + B3 DUAL BAND 2T2R" ,"Config Radio B1 + B3 DUAL BAND 4T4R", "Config Multi Sector", "Config Antenna", "Config Service 2", "Config Service 3", "Config Service 4", "Material 1 Power", "Material 2 Power", "Material 3 Power", "Material 4 Power", "Material 5 Power", "Service 1 Power", "Service 2 Power", "Service 3 Power", "Material 1 CME", "Material 2 CME", "Material 3 CME", "Material 4 CME", "Material 5 CME", "Service 1 CME", "Service 2 CME", "Service 3 CME"];
+
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
@@ -109,6 +113,10 @@ class TSSRBoq extends Component {
         total_comm : {},
         boq_tech_select : {},
         modal_alert : false,
+        drm_data : [],
+
+        view_tech_header_table : {"config_group_header" : [], "config_group_type_header" : []},
+        view_tech_all_header_table : {"config_group_header" : [], "config_group_type_header" : []},
       };
       this.saveDataTSSR = this.saveDataTSSR.bind(this);
       this.toggleAlert = this.toggleAlert.bind(this);
@@ -354,11 +362,60 @@ class TSSRBoq extends Component {
           this.setState({data_tech_boq : dataTech.data});
           if(res.data.data !== undefined){
             this.setState({data_tech_boq_sites : dataTech.data.techBoqSite}, () => {
+              this.viewTechBoqData(dataTech.data.techBoqSite);
               this.dataViewPagination(this.state.data_tech_boq_sites);
+              this.getDRMData(dataTech.data.techBoqSite, dataTech.data.project_name);
             });
           }
         }
       })
+    }
+
+    getDRMData(sites_tech, project){
+      let drmGet = {
+        "projectName": "XL BAM DEMO 2020",
+      }
+      let site_data = [];
+      sites_tech.map(e => site_data.push({
+         "tower_id": e.site_id,
+         "program": e.program
+      }));
+      drmGet["towerList"] = site_data;
+      this.postDatatoAPINODE('/drm/getDrmBySite', drmGet ).then((res) => {
+        if (res.data !== undefined) {
+          this.setState({
+            drm_data: res.data.data
+          });
+        } else {
+          this.setState({ drm_data: []});
+        }
+      });
+    }
+
+    viewTechBoqData(data_sites){
+      if(data_sites.length !== 0){
+        const configId = data_sites[0].siteItemConfig.map(e => e.config_id);
+        const typeHeader = data_sites[0].siteItemConfig.map(e => "CONFIG");
+        let all_config = data_sites.map(value => value.siteItemConfig.map(child => child)).reduce((l, n) => l.concat(n), []);
+        let config_group_avail_uniq = [...new Set(all_config.map(({ config_group }) => config_group))];
+        let config_group_non_default = [];
+        let config_group_type_avail = [];
+        let config_group_type_non_default = [];
+        for(let i = 0 ; i < config_group_avail_uniq.length; i++){
+          let findConfigGroupType = all_config.find(e => e.config_group === config_group_avail_uniq[i]).config_group_type;
+          config_group_type_avail.push(findConfigGroupType);
+          if(Config_group_DEFAULT.includes(config_group_avail_uniq[i])!== true){
+            config_group_non_default.push(config_group_avail_uniq[i]);
+            config_group_type_non_default.push(findConfigGroupType);
+          }
+        }
+        let config_group_all = Config_group_DEFAULT.concat(config_group_non_default);
+        let config_group_type_all = Config_group_type_DEFAULT.concat(config_group_type_non_default);
+
+        this.setState({view_tech_header_table : {"config_group_header" : config_group_avail_uniq, "config_group_type_header" : config_group_type_avail }, view_tech_all_header_table : {"config_group_header" : config_group_all, "config_group_type_header" : config_group_type_all } }, () => {
+          // this.dataViewPagination(data_sites);
+        });
+      }
     }
 
     dataViewPagination(dataTechView){
@@ -542,6 +599,64 @@ class TSSRBoq extends Component {
       this.toggleLoading();
     }
 
+    exportFormatTechnicalHorizontal = async () =>{
+      const wb = new Excel.Workbook();
+      const ws = wb.addWorksheet();
+
+      const dataTech = this.state.data_tech_boq;
+      let dataSites = [];
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        dataSites = this.state.data_tech_boq_sites_version;
+      }else{
+        dataSites = this.state.data_tech_boq_sites;
+      }
+
+      const header_config = this.state.view_tech_header_table;
+
+      let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
+      let HeaderRow2 = ["Tower ID", "Program", "SOW"];
+
+      let headerDRM = ["Actual RBS DATA", "Actual DU", "RU B0 (900)", "RU B1 (2100)", "RU B3 (1800) ", "RU B8 (900)", "RU B1B3", "RU Band Agnostic", "Remarks Need CR/Go as SoW Original", "Existing Antenna (type)", "ANTENNA_HEIGHT ", "Scenario RAN", "Dismantle Antenna", "Dismantle RU", "Dismantele Accessories", "Dismantle DU", "Dismantle RBS/Encl", "EXISTING DAN SCENARIO IMPLEMENTASI RBS ", "DRM FINAL (MODULE)", "DRM Final Radio", "DRM Final SOW Cabinet", "DRM FINAL (SOW G9/U9/L9)", "DRM FINAL (SOW G18/L18)", "DRM FINAL (SOW U21/L21)", "DRM FINAL (ANTENNA TYPE)", "PLAN ANTENNA AZIMUTH", "PLAN ANTENNA ET/MT", "Module", "Cabinet", "Radio", "Power RRU", "Antenna", "Dismantle", "System", "Optic RRU", "Area", "VERIFICATION (DATE)", "VERIFICATION (STATUS)", "VERIFICATION PIC", "ISSUED DETAIL", "CR Flag engineering"]
+
+      header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
+      header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
+
+      headerDRM.map(e => HeaderRow1.push("DRM"));
+      HeaderRow2 = HeaderRow2.concat(headerDRM);
+
+      ws.addRow(HeaderRow1);
+      ws.addRow(HeaderRow2);
+      for(let i = 0; i < dataSites.length ; i++){
+        let qtyConfig = []
+        for(let j = 0; j < header_config.config_group_header.length; j++ ){
+          let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+          if(dataConfigIdx !== undefined){
+            let idx_config_qty = dataConfigIdx.tssr_notes === undefined ? dataConfigIdx.qty : dataConfigIdx.tssr_notes.length !== 0 ? dataConfigIdx.tssr_notes[dataConfigIdx.tssr_notes.length-1].suggested_qty : dataConfigIdx.qty;
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, idx_config_qty]);
+          }else{
+            qtyConfig = qtyConfig.concat([null, null]);
+          }
+        }
+        let drm = this.getDataDRM(dataSites[i].site_id, dataSites[i].program);
+        ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].priority, dataSites[i].sow]
+          .concat(qtyConfig)
+          .concat([drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering])
+        );
+      }
+
+      const MRFormat = await wb.xlsx.writeBuffer();
+      saveAs(new Blob([MRFormat]), 'TSSR DRM '+dataTech.no_tech_boq+' Report.xlsx');
+    }
+
+    getDataDRM(tower, program){
+      const drmFind = this.state.drm_data.find(e => e.tower_id === tower && e.program === program);
+      if(drmFind !== undefined){
+        return drmFind;
+      }else{
+        return {}
+      }
+    }
+
     openDRMinPDB(){
       window.open("https://dev.xl.pdb.e-dpm.com/login/", "_blank");
       window.open("https://dev.xl.pdb.e-dpm.com/customerdeliverabledrmmenuxl/list/", "_blank")
@@ -568,6 +683,7 @@ class TSSRBoq extends Component {
                         <DropdownMenu>
                           <DropdownItem header> TSSR File</DropdownItem>
                           <DropdownItem onClick={this.exportFormatTSSRVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Vertical</DropdownItem>
+                          <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR DRM</DropdownItem>
                           <DropdownItem onClick={this.exportFormatTSSRUpdate}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Update Format</DropdownItem>
                         </DropdownMenu>
                       </Dropdown>
@@ -588,7 +704,7 @@ class TSSRBoq extends Component {
                         {this.state.data_tech_boq !== null && (
                           <React.Fragment>
                             <tr style={{fontWeight : '390', fontSize : '12px', fontStyle:'oblique'}}>
-                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Technical BOQ Origin Doc : {this.state.data_tech_boq.no_tech_boq}</td>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Technical BOQ Origin : {this.state.data_tech_boq.no_tech_boq}</td>
                             </tr>
                             <tr style={{fontWeight : '390', fontSize : '10px', fontStyle:'oblique'}}>
                               <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Project : {this.state.data_tech_boq.project_name}</td>

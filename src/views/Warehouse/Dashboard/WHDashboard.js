@@ -324,13 +324,7 @@ class WarehouseDashboard extends Component {
                           <Col col="2" xl className="mb-3 mb-xl-0">
                             <Link
                               to={{
-                                pathname:
-                                  "/material-stock2/?_id=" +
-                                  e._id +
-                                  "&wh_id=" +
-                                  e.wh_id +
-                                  "&wh_name=" +
-                                  e.wh_name,
+                                pathname:"/material-stock2/" +e.wh_id,
                               }}
                             >
                               <Button
@@ -347,13 +341,7 @@ class WarehouseDashboard extends Component {
                           <Col col="2" xl className="mb-3 mb-xl-0">
                             <Link
                               to={{
-                                pathname:
-                                  "/material-inbound-plan2/?_id=" +
-                                  e._id +
-                                  "&wh_id=" +
-                                  e.wh_id +
-                                  "&wh_name=" +
-                                  e.wh_name,
+                                pathname:"/material-inbound-plan2/" +e.wh_id,
                               }}
                             >
                               <Button

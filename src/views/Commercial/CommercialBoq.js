@@ -760,18 +760,18 @@ class CommercialBoq extends Component {
 
       ws.addRow([""]);
 
-      let ppIdRow = ["Tower ID", "Program", "SOW", "Category", "Config ID", "SAP", "Qty", "Description", "Unit Price after Incentive (USD)", "Unit Price after Incentive (IDR)", "Total Price after Incentive (USD)", "Total Price after Incentive (IDR)"];
+      let ppIdRow = ["Tower ID", "Program", "SOW", "Category", "Config ID", "SAP", "SAP Description", "Qty", "Description", "Unit Price after Incentive (USD)", "Unit Price after Incentive (IDR)", "Total Price after Incentive (USD)", "Total Price after Incentive (IDR)"];
 
       ws.addRow(ppIdRow);
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         if(this.state.version_selected !== null && dataComm.version !== this.state.version_selected){
           for(let j = 0; j < dataSites[i].itemsVersion.length; j++ ){
-            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].sap_number, dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].description, dataSites[i].itemsVersion[j].net_price_incentive_usd, dataSites[i].itemsVersion[j].net_price_incentive, dataSites[i].itemsVersion[j].total_price_incentive_usd, dataSites[i].itemsVersion[j].total_price_incentive]);
+            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].sap_number, dataSites[i].itemsVersion[j].sap_description, dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].description, dataSites[i].itemsVersion[j].net_price_incentive_usd, dataSites[i].itemsVersion[j].net_price_incentive, dataSites[i].itemsVersion[j].total_price_incentive_usd, dataSites[i].itemsVersion[j].total_price_incentive]);
           }
         }else{
           for(let j = 0; j < dataSites[i].items.length; j++ ){
-            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].qty, dataSites[i].items[j].description, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive, dataSites[i].items[j].total_price_incentive_usd, dataSites[i].items[j].total_price_incentive]);
+            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].sap_description, dataSites[i].items[j].qty, dataSites[i].items[j].description, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive, dataSites[i].items[j].total_price_incentive_usd, dataSites[i].items[j].total_price_incentive]);
           }
         }
       }
@@ -1025,7 +1025,7 @@ class CommercialBoq extends Component {
                           <th>SOW</th>
                           <th>Category</th>
                           <th>Config ID</th>
-                          <th>SAP</th>
+                          <th>SAP Description</th>
                           <th>Qty</th>
                           <th>Unit Price after Incentive (USD)</th>
                           <th>Unit Price after Incentive (IDR)</th>
@@ -1043,7 +1043,7 @@ class CommercialBoq extends Component {
                               <td>{site.sow}</td>
                               <td>{item.config_type}</td>
                               <td>{item.config_id}</td>
-                              <td>{item.sap_number}</td>
+                              <td>{item.sap_description}</td>
                               <td>{item.qty}</td>
                               <td style={{width : '75px'}}>
                                 <Input
