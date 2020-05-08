@@ -2072,8 +2072,8 @@ class TechnicalBoq extends Component {
 
     const header_config = this.state.view_tech_all_header_table;
 
-    let HeaderRow1 = ["General Info", "General Info", "General Info"];
-    let HeaderRow2 = ["tower_id","program","sow"];
+    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
+    let HeaderRow2 = ["tower_id","program", "sow", "priority"];
 
     header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
     header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
@@ -2101,7 +2101,7 @@ class TechnicalBoq extends Component {
           }
         }
       }
-      ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow].concat(qtyConfig));
+      ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].priority].concat(qtyConfig));
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
@@ -2122,8 +2122,8 @@ class TechnicalBoq extends Component {
 
     const header_config = this.state.view_tech_all_header_table;
 
-    let HeaderRow1 = ["General Info", "General Info", "General Info"];
-    let HeaderRow2 = ["tower_id","program","sow"];
+    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
+    let HeaderRow2 = ["tower_id","program", "sow", "priority"];
 
     header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
     header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty_commercial"]));
@@ -2151,7 +2151,7 @@ class TechnicalBoq extends Component {
           }
         }
       }
-      ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow].concat(qtyConfig));
+      ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].priority].concat(qtyConfig));
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
@@ -2162,8 +2162,8 @@ class TechnicalBoq extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let HeaderRow1 = ["General Info", "General Info", "General Info"];
-    let HeaderRow2 = ["tower_id","program","sow"];
+    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
+    let HeaderRow2 = ["tower_id","program", "sow", "priority"];
 
     Config_group_type_DEFAULT.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
     Config_group_DEFAULT.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
@@ -2189,8 +2189,8 @@ class TechnicalBoq extends Component {
 
     const header_config = this.state.view_tech_all_header_table;
 
-    let HeaderRow1 = ["General Info", "General Info", "General Info"];
-    let HeaderRow2 = ["TOWER ID","Program","SOW"];
+    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
+    let HeaderRow2 = ["tower_id","program", "sow", "priority"];
 
     header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
     header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
@@ -2218,7 +2218,7 @@ class TechnicalBoq extends Component {
           }
         }
       }
-      ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow].concat(qtyConfig));
+      ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].priority].concat(qtyConfig));
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
@@ -2635,15 +2635,35 @@ class TechnicalBoq extends Component {
 
                     </CardBody>
                   <CardFooter>
-                    {this.state.data_tech_boq !== null && (
-                    <Row>
-                      <Col>
-                        <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value="4" onClick={this.approvalTechnical} disabled={!this.state.API_Tech.approval_status === "PRE APPROVAL"}>
-                            {this.state.data_tech_boq.approval_status === "PRE APPROVAL" || this.state.data_tech_boq.approval_status === "REJECTED" ? "Submit to TSSR" : "Submitted"}
-                        </Button>
-                      </Col>
-                     </Row>
-                    )}
+                    <div style={{display : 'flex'}}>
+                      {this.state.data_tech_boq !== null && (
+                      <Row>
+                        <Col>
+                          <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value={"1"} onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.approval_status !== "PRE APPROVAL"}>
+                              {this.state.data_tech_boq.approval_status === "PRE APPROVAL" ? "Submit" : "Tech Submitted"}
+                          </Button>
+                        </Col>
+                       </Row>
+                      )}
+                      {(this.state.data_tech_boq !== null && (this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" || this.state.data_tech_boq.approval_status === "APPROVED" )) && (
+                      <Row>
+                        <Col>
+                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value={"2"} onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.approval_status !== 'REQUEST FOR APPROVAL'}>
+                              {this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" ? "Approve" : "Tech Approved"}
+                          </Button>
+                        </Col>
+                       </Row>
+                      )}
+                      {this.state.data_tech_boq !== null && (
+                      <Row>
+                        <Col>
+                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.tssr_approval_status !== "NOT SUBMITTED"}>
+                              {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" ? "Submit to TSSR" : "TSSR Submitted"}
+                          </Button>
+                        </Col>
+                       </Row>
+                      )}
+                    </div>
                   </CardFooter>
               </Card>
             </Col>
@@ -2659,7 +2679,7 @@ class TechnicalBoq extends Component {
                 {this.state.loading_checking !== null ? this.state.loading_checking : "Loading..."}
               </div>
               <div style={{textAlign : 'center'}}>
-                System is {this.state.loading_checking !== null ? "checking your upload file" : "processing ..."} 
+                System is {this.state.loading_checking !== null ? "checking your upload file" : "processing ..."}
               </div>
               <div style={{textAlign : 'center'}}>
                 {this.state.progress_count} / {this.state.progress_data}

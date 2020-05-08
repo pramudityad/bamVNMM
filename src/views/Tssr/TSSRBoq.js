@@ -18,6 +18,10 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
 );
 
+const Config_group_type_DEFAULT = ["HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "SERVICE", "SERVICE", "SERVICE", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME"]
+
+const Config_group_DEFAULT = ["Config Cabinet", "Config Add L9", "Config Add L10", "Config Add L18", "Config Add L21", "Config BB 5212 (Reuse)", "Config UPG BW 1800", "Swapped Module/BB", "Config UPG BW 2100", "Config Radio B0 MIMO 2T2R", "Config Kit Radio B1 MIMO 2T2R", "Config Radio B1 MIMO 2T2R", "Config Kit Radio B3 MIMO 2T2R", "Config Radio B3 MIMO 2T2R", "Config Radio B1 MIMO 4T4R", "Config Radio B3 MIMO 4T4R", "Config Radio B1 + B3 DUAL BAND 2T2R" ,"Config Radio B1 + B3 DUAL BAND 4T4R", "Config Multi Sector", "Config Antenna", "Config Service 2", "Config Service 3", "Config Service 4", "Material 1 Power", "Material 2 Power", "Material 3 Power", "Material 4 Power", "Material 5 Power", "Service 1 Power", "Service 2 Power", "Service 3 Power", "Material 1 CME", "Material 2 CME", "Material 3 CME", "Material 4 CME", "Material 5 CME", "Service 1 CME", "Service 2 CME", "Service 3 CME"];
+
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
@@ -109,6 +113,9 @@ class TSSRBoq extends Component {
         total_comm : {},
         boq_tech_select : {},
         modal_alert : false,
+        drm_data : [],
+
+        view_tech_all_header_table : {"config_group_header" : [], "config_group_type_header" : []},
       };
       this.saveDataTSSR = this.saveDataTSSR.bind(this);
       this.toggleAlert = this.toggleAlert.bind(this);
@@ -354,11 +361,58 @@ class TSSRBoq extends Component {
           this.setState({data_tech_boq : dataTech.data});
           if(res.data.data !== undefined){
             this.setState({data_tech_boq_sites : dataTech.data.techBoqSite}, () => {
+              this.viewTechBoqData(dataTech.data.techBoqSite);
               this.dataViewPagination(this.state.data_tech_boq_sites);
+              this.getDRMData(dataTech.data.techBoqSite, dataTech.data.project_name);
             });
           }
         }
       })
+    }
+
+    getDRMData(sites_tech, project){
+      let drmGet = {
+        "projectName": "XL BAM DEMO 2020",
+      }
+      let site_data = [];
+      sites_tech.map(e => site_data.push({
+         "tower_id": e.site_id,
+         "program": e.program
+      }));
+      drmGet["towerList"] = site_data;
+      this.postDatatoAPINODE('/drm/getDrmBySite', drmGet ).then((res) => {
+        if (res.data !== undefined) {
+          this.setState({
+            drm_data: res.data.data
+          });
+        } else {
+          this.setState({ drm_data: []});
+        }
+      });
+    }
+
+    viewTechBoqData(data_sites){
+      if(data_sites.length !== 0){
+        const configId = data_sites[0].siteItemConfig.map(e => e.config_id);
+        const typeHeader = data_sites[0].siteItemConfig.map(e => "CONFIG");
+        let all_config = data_sites.map(value => value.siteItemConfig.map(child => child)).reduce((l, n) => l.concat(n), []);
+        let config_group_avail_uniq = [...new Set(all_config.map(({ config_group }) => config_group))];
+        let config_group_non_default = [];
+        let config_group_type_non_default = [];
+        for(let i = 0 ; i < config_group_avail_uniq.length; i++){
+          let findConfigGroupType = all_config.find(e => e.config_group === config_group_avail_uniq[i]).config_group_type;
+          if(Config_group_DEFAULT.includes(config_group_avail_uniq[i])!== true){
+            config_group_non_default.push(config_group_avail_uniq[i]);
+            config_group_type_non_default.push(findConfigGroupType);
+          }
+        }
+        let config_group_all = Config_group_DEFAULT.concat(config_group_non_default);
+        let config_group_type_all = Config_group_type_DEFAULT.concat(config_group_type_non_default);
+
+        this.setState({view_tech_all_header_table : {"config_group_header" : config_group_all, "config_group_type_header" : config_group_type_all } }, () => {
+          this.dataViewPagination(data_sites);
+        });
+      }
     }
 
     dataViewPagination(dataTechView){
@@ -542,6 +596,54 @@ class TSSRBoq extends Component {
       this.toggleLoading();
     }
 
+    exportFormatTechnicalHorizontal = async () =>{
+      const wb = new Excel.Workbook();
+      const ws = wb.addWorksheet();
+
+      const dataTech = this.state.data_tech_boq;
+      let dataSites = [];
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        dataSites = this.state.data_tech_boq_sites_version;
+      }else{
+        dataSites = this.state.data_tech_boq_sites;
+      }
+
+      const header_config = this.state.view_tech_all_header_table;
+
+      let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
+      let HeaderRow2 = ["tower_id", "program", "priority", "sow"];
+
+      header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
+      header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
+
+      ws.addRow(HeaderRow1);
+      ws.addRow(HeaderRow2);
+      for(let i = 0; i < dataSites.length ; i++){
+        let qtyConfig = []
+        for(let j = 0; j < header_config.config_group_header.length; j++ ){
+          let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+          if(dataConfigIdx !== undefined){
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, dataConfigIdx.qty]);
+          }else{
+            qtyConfig = qtyConfig.concat([null, null]);
+          }
+        }
+        ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].priority, dataSites[i].sow].concat(qtyConfig));
+      }
+
+      const MRFormat = await wb.xlsx.writeBuffer();
+      saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Horizontal.xlsx');
+    }
+
+    getDataDRM(tower, program){
+      const drmFind = this.state.drm_data.find(e => e.tower_id === tower && e.program === program);
+      if(drmFind !== undefined){
+        return drmFind;
+      }else{
+        return []
+      }
+    }
+
     openDRMinPDB(){
       window.open("https://dev.xl.pdb.e-dpm.com/login/", "_blank");
       window.open("https://dev.xl.pdb.e-dpm.com/customerdeliverabledrmmenuxl/list/", "_blank")
@@ -588,7 +690,7 @@ class TSSRBoq extends Component {
                         {this.state.data_tech_boq !== null && (
                           <React.Fragment>
                             <tr style={{fontWeight : '390', fontSize : '12px', fontStyle:'oblique'}}>
-                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Technical BOQ Origin Doc : {this.state.data_tech_boq.no_tech_boq}</td>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Technical BOQ Origin : {this.state.data_tech_boq.no_tech_boq}</td>
                             </tr>
                             <tr style={{fontWeight : '390', fontSize : '10px', fontStyle:'oblique'}}>
                               <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Project : {this.state.data_tech_boq.project_name}</td>

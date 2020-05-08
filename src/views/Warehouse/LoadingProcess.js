@@ -12,6 +12,10 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
+
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
@@ -42,6 +46,7 @@ class LoadingProcess extends Component {
       shipment_detail : {},
       validation_form : {},
       modal_loading : false,
+      asp_list : [],
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -111,6 +116,26 @@ class LoadingProcess extends Component {
     } catch (err) {
       let respond = err;
       console.log("respond Patch data", err.response);
+      return respond;
+    }
+  }
+
+  async getDataFromAPIEXEL(url){
+    try {
+      let respond = await axios.get(API_URL_XL +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
       return respond;
     }
   }
@@ -286,11 +311,19 @@ class LoadingProcess extends Component {
     for(let i = 0; i < dataMRSelected.length; i++){
       list_mr_shipment.push({"mrId": dataMRSelected[i].mr_id});
     }
+    let getDataTransporter = this.state.asp_list.find(e => e.Vendor_Code === inputanDetailShipment.transporter);
+    let nameTransporter = inputanDetailShipment.transporter;
+    if(getDataTransporter !== undefined){
+      nameTransporter = getDataTransporter.Name;
+    }
     const dataShipment = {
       "mrList" : list_mr_shipment,
       "shipmentNumber" : inputanDetailShipment.shipment_number,
       "dspData": {
-      	  "dsp_transporter": inputanDetailShipment.transporter,
+          "dsp_transporter_code": inputanDetailShipment.transporter,
+      	  "dsp_transporter": nameTransporter,
+          "dsp_destination": inputanDetailShipment.destination_address,
+          "dsp_note": inputanDetailShipment.shipment_note,
           "dsp_name": inputanDetailShipment.driver_name,
           "dsp_phone": inputanDetailShipment.driver_phone_number,
           "dsp_truck": inputanDetailShipment.truck_number,
@@ -322,8 +355,17 @@ class LoadingProcess extends Component {
 
   componentDidMount() {
     this.getMRList();
-    // this.getAllMR();
+    this.loadOptionsASP();
     document.title = 'Loading Process | BAM';
+  }
+
+  loadOptionsASP() {
+    this.getDataFromAPIEXEL('/vendor_data_non_page').then(res => {
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({asp_list : items});
+      }
+    })
   }
 
   handlePageChange(pageNumber) {
@@ -448,7 +490,16 @@ class LoadingProcess extends Component {
                       </Col>
                       <Col md="8">
                         <div style={{display : 'flex', "align-items": "baseline"}}>
-                        <Input type="text" name="1" placeholder="" name="transporter" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.transporter}/>
+                        <Input type="select" placeholder="" name="transporter" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.transporter === undefined ? "" : this.state.shipment_detail.transporter}>
+                          <option value="" disabled selected hidden>Select ASP</option>
+                          {this.state.asp_list.map((list, i) =>
+                            <option value={list.Vendor_Code}>{list.Name}</option>
+                          )}
+                          <option value={"PT BMS Delivery"}>PT BMS Delivery</option>
+                          <option value={"PT MITT Delivery"}>PT MITT Delivery</option>
+                          <option value={"PT IXT Delivery"}>PT IXT Delivery</option>
+                          <option value={"PT ARA Delivery"}>PT ARA Delivery</option>
+                        </Input>
                         {this.state.validation_form.truck_number === false && (
                           <i class="fa fa-exclamation-triangle" aria-hidden="true" style={{color : "rgba(255,61,0 ,1)", paddingLeft : '10px'}}></i>
                         )}
@@ -461,7 +512,13 @@ class LoadingProcess extends Component {
                       </Col>
                       <Col md="8">
                         <div style={{display : 'flex', "align-items": "baseline"}}>
-                        <Input type="text" name="3" placeholder="" name="truck_type" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.truck_type}/>
+                        <Input type="select" placeholder="" name="truck_type" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.truck_type === undefined ? "" : this.state.shipment_detail.truck_type}>
+                          <option value="" disabled hidden>Select Truct Type</option>
+                          <option value="CD1">CD1</option>
+                          <option value="CD2">CD2</option>
+                          <option value="CD3">CD3</option>
+                          <option value="CD4">CD4</option>
+                        </Input>
                         {this.state.validation_form.truck_number === false && (
                           <i class="fa fa-exclamation-triangle" aria-hidden="true" style={{color : "rgba(255,61,0 ,1)", paddingLeft : '10px'}}></i>
                         )}

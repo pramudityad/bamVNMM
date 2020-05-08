@@ -54,6 +54,7 @@ class SubmissionCommBoq extends Component {
         tokenUser : this.props.dataLogin.token,
 
         submission_number_selected : 'all',
+        submission_status_selected : 'all',
 
         boq_comm_API : null,
         pp_all : [],
@@ -107,6 +108,9 @@ class SubmissionCommBoq extends Component {
         total_comm : {},
         boq_tech_select : {},
         modal_delete : false,
+        data_tech_boq_sites : [],
+        list_priority_avail : [],
+        priority_selected : [],
       };
       this.toggleDelete = this.toggleDelete.bind(this);
       this.toggleLoading = this.toggleLoading.bind(this);
@@ -143,6 +147,7 @@ class SubmissionCommBoq extends Component {
       this.createNewSubmission = this.createNewSubmission.bind(this);
       this.handleChangeSubmissionNumber = this.handleChangeSubmissionNumber.bind(this);
       this.deleteSubmission = this.deleteSubmission.bind(this);
+      this.handleSelectPriority = this.handleSelectPriority.bind(this);
     }
 
     toggleAddNew() {
@@ -680,10 +685,26 @@ class SubmissionCommBoq extends Component {
       let getComm = await this.getDataFromAPINODE('/commBoq/'+_id)
       if(getComm.data !== undefined){
         const dataComm = getComm.data;
+        this.getTechBoqData(dataComm.data.list_of_tech[0].id_tech_boq_doc);
         this.setState({data_comm_boq : dataComm.data, data_comm_boq_items : dataComm.data.site}, () => {
           this.viewSubmissionCommData('all');
         });
       }
+    }
+
+    getTechBoqData(_id_tech){
+      //Get Priority
+      this.getDataFromAPINODE('/techBoq/'+_id_tech+'?v={"techBoqSite.site_id" : 1, "techBoqSite.program" : 1, "techBoqSite.priority" : 1}').then(res => {
+        if(res.data !== undefined){
+          const dataTech = res.data;
+          let listPriority = [...new Set(dataTech.data.techBoqSite.map(({priority}) =>priority))];
+          let listPrioritySelection = [];
+          listPriority.map(i =>
+              listPrioritySelection.push({'label' : i, 'value' : i})
+          )
+          this.setState({data_tech_boq_sites : dataTech.data.techBoqSite, list_priority_avail : listPrioritySelection});
+        }
+      })
     }
 
     handleChangeincentive = (e) => {
@@ -1523,18 +1544,6 @@ class SubmissionCommBoq extends Component {
       return newValue;
     };
 
-    getTechBoqData(_id_tech){
-      this.getDataFromAPINODE('/techBoq/'+_id_tech).then(res => {
-        if(res.data !== undefined){
-          const dataTech = res.data;
-          this.setState({data_tech_boq_selected : dataTech.data});
-          if(res.data.data !== undefined){
-            this.setState({data_tech_boq_sites_selected : dataTech.data.techBoqSite});
-          }
-        }
-      })
-    }
-
     // saveNote = (e) => {
     //   const commAPI = this.state.boq_comm_API;
     //   const numbNote = e;
@@ -1732,13 +1741,13 @@ class SubmissionCommBoq extends Component {
 
       const dataComm = this.state.data_comm_boq;
       let dataSites = dataSites = this.state.data_comm_boq_items;
-      let dataSitesNonSubms = dataSites = this.state.data_comm_boq_items.filter( e => e.submission_id === undefined || e.submission_id === null);
+      let dataSitesNonSubms = this.state.data_comm_boq_items.filter( e => e.submission_id === undefined || e.submission_id === null);
 
-      const headerFormat = ["tower_id"];
+      const headerFormat = ["tower_id", "priority"];
 
       ws.addRow(headerFormat);
       for(let i = 0; i < dataSitesNonSubms.length ; i++){
-        ws.addRow([dataSites[i].site_id])
+        ws.addRow([dataSites[i].site_id, this.getPriorityFromTech(dataSitesNonSubms[i].site_id, dataSitesNonSubms[i].program)])
       }
       const comFormat = await wb.xlsx.writeBuffer()
       saveAs(new Blob([comFormat]), 'Submission Commercial BOQ '+dataComm.no_comm_boq+' Format.xlsx');
@@ -1752,14 +1761,33 @@ class SubmissionCommBoq extends Component {
     }
 
     viewSubmissionCommData(numb){
-      const dataSites = this.state.data_comm_boq_items;
-      console.log("numb", numb);
-      if(numb === 'all'){
-        this.setState({ data_view_submission_items : dataSites});
-      }else if(numb === 'na'){
-        this.setState({ data_view_submission_items : dataSites.filter( e => e.submission_id === undefined || e.submission_id === null)});
+      const dataCommSubmissionStstus = this.state.data_comm_boq.comm_boq_submission_doc.find(e => e.submission_id === numb);
+      let dataSites = this.state.data_comm_boq_items;
+      if(dataCommSubmissionStstus !== undefined){
+        if(dataCommSubmissionStstus.submission_status === "CANCELED"){
+          if(dataCommSubmissionStstus.site_list !== undefined){
+            console.log("dataCommSubmissionStstus.site_list", dataCommSubmissionStstus.site_list);
+            dataSites = dataSites.filter(e => dataCommSubmissionStstus.site_list.includes(e._id));
+            console.log("dataCommSubmissionStstus.site_list dataSites", dataSites);
+          }
+        }else{
+          if(numb === 'all'){
+            this.setState({ data_view_submission_items : dataSites});
+          }else if(numb === 'na'){
+            this.setState({ data_view_submission_items : dataSites.filter( e => e.submission_id === undefined || e.submission_id === null)});
+          }else{
+            this.setState({ data_view_submission_items : dataSites.filter( e => e.submission_id === numb)});
+          }
+        }
+        this.setState({submission_status_selected : dataCommSubmissionStstus.submission_status});
       }else{
-        this.setState({ data_view_submission_items : dataSites.filter( e => e.submission_id === numb)});
+        if(numb === 'all'){
+          this.setState({ data_view_submission_items : dataSites});
+        }else if(numb === 'na'){
+          this.setState({ data_view_submission_items : dataSites.filter( e => e.submission_id === undefined || e.submission_id === null)});
+        }else{
+          this.setState({ data_view_submission_items : dataSites.filter( e => e.submission_id === numb)});
+        }
       }
     }
 
@@ -1862,6 +1890,55 @@ class SubmissionCommBoq extends Component {
       saveAs(new Blob([MRFormat]), 'Submission Commercial BOQ '+this.state.submission_number_selected+'.xlsx');
     }
 
+    getPriorityFromTech(tower, program){
+      const dataFindTowerPriroty = this.state.data_tech_boq_sites.find(e => e.site_id === tower && e.program === program);
+      if(dataFindTowerPriroty !== undefined){
+        return dataFindTowerPriroty.priority;
+      }else{
+        return "";
+      }
+    }
+
+    handleSelectPriority = (newValue) => {
+      if (newValue !== null) {
+        const selectPriority = [];
+        newValue.forEach( i => {
+          selectPriority.push(i.value)
+        })
+        this.setState({priority_selected : selectPriority});
+        this.priorityToXLSCreation(selectPriority)
+      } else {
+        this.setState({priority_selected : []});
+        this.priorityToXLSCreation([])
+      }
+      return newValue;
+    }
+
+    priorityToXLSCreation(arrayPriority){
+      if(arrayPriority.length !== 0){
+        let dataSites = dataSites = this.state.data_comm_boq_items;
+        let dataSitesNonSubms = this.state.data_comm_boq_items.filter( e => e.submission_id === undefined || e.submission_id === null);
+        let dataPrioritySiteAll = this.state.data_tech_boq_sites.filter(e => arrayPriority.includes(e.priority)).map(e => e.site_id);
+
+        let dataSiteNonSubmsPriority = dataSitesNonSubms.filter(e => dataPrioritySiteAll.includes(e.site_id));
+
+        let arraySites = [];
+
+        arraySites.push(["tower_id"]);
+
+        for(let i = 0; i < dataSiteNonSubmsPriority.length ; i++){
+          arraySites.push([dataSites[i].site_id]);
+        }
+        if(arraySites.length === 0){
+          this.setState({rowsXLS : arraySites});
+        }else{
+          this.setState({rowsXLS : arraySites});
+        }
+      }else{
+        this.setState({rowsXLS : []});
+      }
+    }
+
     render() {
       return (
         <div>
@@ -1899,11 +1976,26 @@ class SubmissionCommBoq extends Component {
                           <Col md="12">
                           {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
                             <React.Fragment>
-                              <input type="file" onChange={this.fileHandlerCommercial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} />
-                                <Button style={{'float' : 'right',margin : '8px'}} color="primary" onClick={this.createNewSubmission}>
+                              <div style={{display : 'flex', "align-items": "baseline"}}>
+                              <input type="file" onChange={this.fileHandlerCommercial.bind(this)} style={{"padding":"10px","visiblity":"hidden", width : '200px'}} />
+                              <span style={{ fontWeight : '700'}}> OR &nbsp;</span>
+                              <span style={{marginLeft : '20px'}}>Select Priority :</span>
+                              <div style={{marginLeft : '10px', width : "200px"}}>
+                                <Select
+                                  isMulti
+                                  name="priority"
+                                  options={this.state.list_priority_avail}
+                                  className="basic-multi-select"
+                                  classNamePrefix="select"
+                                  onChange={this.handleSelectPriority}
+                                  isDisabled = {this.state.list_priority_avail.length==0}
+                                />
+                              </div>
+                                <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.createNewSubmission} disabled={this.state.rowsXLS.length === 0}>
                                   <i className="fa fa-paste">&nbsp;&nbsp;</i>
-                                  New Submission
+                                  New
                                 </Button>
+                              </div>
                             </React.Fragment>
                           )}
                           </Col>
@@ -1924,8 +2016,12 @@ class SubmissionCommBoq extends Component {
                               <select onChange={this.handleChangeSubmissionNumber} value={this.state.submission_number_selected}>
                                 <option value="all">All</option>
                                 {this.state.data_comm_boq !== null && (
-                                  this.state.data_comm_boq.comm_boq_submission_doc.filter(s => s.submission_status !== "CANCELED").map(e =>
-                                    <option value={e.submission_id}>{e.submission_id}</option>
+                                  this.state.data_comm_boq.comm_boq_submission_doc.map(e =>
+                                    e.submission_status === "CANCELED" ? (
+                                      <option style={{color : 'rgba(230,74,25 ,1)'}} value={e.submission_id}>{e.submission_id + "  (CANCELED)"}</option>
+                                    ) : (
+                                      <option value={e.submission_id}>{e.submission_id}</option>
+                                    )
                                   )
                                 )}
                                 <option value="na">Not Assign</option>
@@ -1947,9 +2043,15 @@ class SubmissionCommBoq extends Component {
                         </tr>
                         {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
                           <React.Fragment>
-                            <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
-                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Submission Doc : {this.state.submission_number_selected} {this.state.submission_number_selected !== "na" && this.state.submission_number_selected !== "all" && (<Button color="danger" size="sm" style={{marginLeft : "20px", fontSize:"10px", paddingTop : '2px', paddingBottom : '2px' }} onClick={this.toggleDelete}>Delete</Button>)}</td>
-                            </tr>
+                            {this.state.submission_status_selected === "CANCELED" ? (
+                              <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
+                                <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500', color: 'rgba(230,74,25 ,1)'}}>Submission Doc : {this.state.submission_number_selected}</td>
+                              </tr>
+                            ) : (
+                              <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
+                                <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Submission Doc : {this.state.submission_number_selected} {this.state.submission_number_selected !== "na" && this.state.submission_number_selected !== "all" && (<Button color="danger" size="sm" style={{marginLeft : "20px", fontSize:"10px", paddingTop : '2px', paddingBottom : '2px' }} onClick={this.toggleDelete}>Delete</Button>)}</td>
+                              </tr>
+                            )}
                           </React.Fragment>
                         )}
                       </tbody>
@@ -2004,9 +2106,11 @@ class SubmissionCommBoq extends Component {
                     <Table hover bordered responsive size="sm" width="100%">
                         <thead>
                         <tr>
+                          <th>Priority</th>
                           <th>Tower ID</th>
                           <th>Tower Name</th>
                           <th>Config ID</th>
+                          <th>SAP Desc</th>
                           <th>Qty</th>
                           <th>Unit Price after Incentive (USD)</th>
                           <th>Unit Price after Incentive (IDR)</th>
@@ -2018,9 +2122,11 @@ class SubmissionCommBoq extends Component {
                         <tbody>
                           {site.items.map(item =>
                             <tr>
+                              <td>{this.getPriorityFromTech(site.site_id, site.program)}</td>
                               <td>{item.site_id}</td>
                               <td>{item.site_name}</td>
                               <td>{item.config_id}</td>
+                              <td>{item.sap_description}</td>
                               <td>{item.qty}</td>
                               <td>{item.net_price_incentive_usd}</td>
                               <td>{item.net_price_incentive}</td>

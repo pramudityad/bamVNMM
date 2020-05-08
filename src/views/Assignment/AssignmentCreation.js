@@ -198,7 +198,6 @@ class AssignmentCreation extends Component {
 
   loadOptionsASP() {
     this.getDataFromAPIEXEL('/vendor_data_non_page').then(res => {
-      console.log("ASP List", res);
       if(res.data !== undefined) {
         const items = res.data._items;
         this.setState({asp_list : items});

@@ -114,6 +114,8 @@ const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'
 const ListTSSRBoq = React.lazy(() => import('./views/Tssr/ListTSSRBoq'));
 const DetailTSSRBoq = React.lazy(() => import('./views/Tssr/TSSRBoq'));
 
+const DRMDetail = React.lazy(() => import('./views/DRM/DRMDetail'));
+
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -238,6 +240,8 @@ const routes = [
 
   { path: '/wh-dashboard2', exact: true, name: 'Warehouse Dashboard', component: WHDashboard },
   { path: '/wh-dashboard3', exact: true, name: 'Warehouse Dashboard', component: WHDashboard3 },
+
+  { path: '/drm-detail', exact: true, name: 'DRM Detail', component: DRMDetail },
 ];
 
 export default routes;

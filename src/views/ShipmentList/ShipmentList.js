@@ -314,6 +314,14 @@ class ShipmentList extends Component {
                         <Input type="text" name="3" placeholder="" name="truck_type" value={this.state.shipment_detail.truck_type} disabled/>
                       </Col>
                     </FormGroup>
+                    <FormGroup row>
+                      <Col md="2">
+                        <Label htmlFor="truck_type" >Destination Address</Label>
+                      </Col>
+                      <Col md="8">
+                        <Input type="text" name="3" placeholder="" name="dsp_destination" value={this.state.shipment_detail.destination} disabled/>
+                      </Col>
+                    </FormGroup>
                   </Col>
                   <Col xs="6" lg="6" md="6">
                     <FormGroup row>
@@ -338,6 +346,14 @@ class ShipmentList extends Component {
                       </Col>
                       <Col md="8">
                         <Input type="text" name="5" placeholder="" name="driver_phone_number" value={this.state.shipment_detail.driver_phone} disabled/>
+                      </Col>
+                    </FormGroup>
+                    <FormGroup row>
+                      <Col md="2">
+                        <Label htmlFor="driver_phone_number" >Note</Label>
+                      </Col>
+                      <Col md="8">
+                        <Input type="text" name="5" placeholder="" name="dsp_note" value={this.state.shipment_detail.note} disabled/>
                       </Col>
                     </FormGroup>
                   </Col>

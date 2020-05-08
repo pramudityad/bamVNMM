@@ -46,6 +46,11 @@ export default {
           icon: 'icon-docs',
         },
         {
+          name: 'DRM',
+          url: '/drm-detail',
+          icon: 'icon-docs',
+        },
+        {
           name: 'TSSR BOQ',
           url: '/list-tssr-boq',
           icon: 'icon-docs',
