@@ -33,15 +33,15 @@ const Checkbox = ({
   onChange,
   value,
 }) => (
-    <input
-      type={type}
-      name={name}
-      checked={checked}
-      onChange={onChange}
-      value={value}
-      className="checkmark-dash"
-    />
-  );
+  <input
+    type={type}
+    name={name}
+    checked={checked}
+    onChange={onChange}
+    value={value}
+    className="checkmark-dash"
+  />
+);
 
 const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
@@ -74,7 +74,7 @@ class MatInboundPlan extends React.Component {
       danger: false,
       all_data: [],
       data_PO: [],
-      wh_data: [],
+      wh_data: {},
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
       modalMatStockForm: false,
@@ -97,6 +97,7 @@ class MatInboundPlan extends React.Component {
     this.downloadAll = this.downloadAll.bind(this);
     this.toggleDelete = this.toggleDelete.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
+    this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
   }
 
   toggle(i) {
@@ -115,6 +116,12 @@ class MatInboundPlan extends React.Component {
   togglecreateModal() {
     this.setState({
       createModal: !this.state.createModal,
+    });
+  }
+
+  resettogglecreateModal() {
+    this.setState({
+      rowsXLS: [],
     });
   }
 
@@ -228,15 +235,15 @@ class MatInboundPlan extends React.Component {
 
   getWHInboundListNext() {
     this.toggleLoading();
-    let get_wh_id = (new URLSearchParams(window.location.search)).get("wh_id");
-    let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
+    // let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
+    let getbyWH = '{"wh_id":"' + this.props.match.params.slug + '"}';
     this.getDatafromAPINODE(
       "/whInboundPlan/getWhInboundPlan?q=" +
-      getbyWH +
-      "&lmt=" +
-      this.state.perPage +
-      "&pg=" +
-      this.state.activePage
+        getbyWH +
+        "&lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
     ).then((res) => {
       // console.log('all data based on ', get_wh_id, res.data)
       if (res.data !== undefined) {
@@ -244,7 +251,7 @@ class MatInboundPlan extends React.Component {
           all_data: res.data.data,
           prevPage: this.state.activePage,
           total_dataParent: res.data.totalResults,
-          selected_wh : get_wh_id
+          selected_wh: this.props.match.params.slug,
         });
         this.toggleLoading();
       } else {
@@ -259,13 +266,15 @@ class MatInboundPlan extends React.Component {
   }
 
   getWHManagementID() {
-    let _id = new URLSearchParams(window.location.search).get("_id");
-    this.getDatafromAPINODE("/whManagement/warehouse/" + _id).then((res) => {
+    // let _id = new URLSearchParams(window.location.search).get("_id");
+    this.getDatafromAPINODE('/whManagement/warehouse?q={"wh_id":"' + this.props.match.params.slug + '"}').then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
-        this.setState({ wh_data: res.data.data });
+        if(res.data.data !== undefined){
+          this.setState({ wh_data: res.data.data[0] });
+        }
       } else {
-        this.setState({ wh_data: [] });
+        this.setState({ wh_data: {} });
       }
     });
   }
@@ -500,6 +509,21 @@ class MatInboundPlan extends React.Component {
     this.setState({ MatStockForm: dataForm });
   }
 
+  convertDateFormat(jsondate){
+    let date = new Date(jsondate);
+    let year = date.getFullYear();
+    let month = date.getMonth()+1;
+    let dt = date.getDate();
+
+    if (dt < 10) {
+      dt = '0' + dt;
+    }
+    if (month < 10) {
+      month = '0' + month;
+    }
+    return year+'-' + month + '-'+dt;
+  }
+
   async saveUpdate() {
     let respondSaveEdit = undefined;
     const dataPPEdit = this.state.MatStockForm;
@@ -654,7 +678,7 @@ class MatInboundPlan extends React.Component {
         });
       }
     });
-  }
+  };
 
   exportMatInbound = async () => {
     const wb = new Excel.Workbook();
@@ -674,7 +698,7 @@ class MatInboundPlan extends React.Component {
       "2020-04-17",
       "XL BAM DEMO 2021",
       "1",
-      "WH_1",
+      this.state.selected_wh,,
     ]);
     ws.addRow([
       "5df99ce5face981b7ace8857",
@@ -682,7 +706,7 @@ class MatInboundPlan extends React.Component {
       "2020-04-17",
       "XL BAM DEMO 2021",
       "1",
-      "WH_1",
+      this.state.selected_wh,,
     ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
@@ -702,7 +726,7 @@ class MatInboundPlan extends React.Component {
               <CardHeader>
                 <span style={{ marginTop: "8px", position: "absolute" }}>
                   Material Inbound Plan {this.state.wh_data.wh_id} -{" "}
-                  {this.state.wh_data.wh_name}{" "} {" "}
+                  {this.state.wh_data.wh_name}{" "}
                 </span>
                 <div
                   className="card-header-actions"
@@ -711,24 +735,24 @@ class MatInboundPlan extends React.Component {
                   <div>
                     {/* Open modal for create new */}
                     {this.state.userRole.includes("Flow-PublicInternal") !==
-                      true ? (
-                        <div>
-                          <Button
-                            block
-                            color="success"
-                            onClick={this.togglecreateModal}
+                    true ? (
+                      <div>
+                        <Button
+                          block
+                          color="success"
+                          onClick={this.togglecreateModal}
                           // id="toggleCollapse1"
-                          >
-                            <i className="fa fa-plus-square" aria-hidden="true">
-                              {" "}
+                        >
+                          <i className="fa fa-plus-square" aria-hidden="true">
+                            {" "}
                             &nbsp;{" "}
-                            </i>{" "}
+                          </i>{" "}
                           New
                         </Button>
-                        </div>
-                      ) : (
-                        ""
-                      )}
+                      </div>
+                    ) : (
+                      ""
+                    )}
                   </div>
                   &nbsp;&nbsp;&nbsp;
                   <div>
@@ -747,10 +771,17 @@ class MatInboundPlan extends React.Component {
                   </div>
                   &nbsp;&nbsp;&nbsp;
                   <div>
-                    <Button onClick={this.downloadAll} block color="ghost-warning"><i className="fa fa-download" aria-hidden="true">
-                      {" "}
-                            &nbsp;{" "}
-                    </i>{" "}Export</Button>
+                    <Button
+                      onClick={this.downloadAll}
+                      block
+                      color="ghost-warning"
+                    >
+                      <i className="fa fa-download" aria-hidden="true">
+                        {" "}
+                        &nbsp;{" "}
+                      </i>{" "}
+                      Export
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -767,7 +798,7 @@ class MatInboundPlan extends React.Component {
                       <table>
                         <tbody>
                           <tr>
-                          <td>WH Manager</td>
+                            <td>WH Manager</td>
                             <td>:</td>
                             <td>{this.state.wh_data.wh_manager}</td>
                           </tr>
@@ -790,8 +821,7 @@ class MatInboundPlan extends React.Component {
               <CardBody>
                 <Row>
                   <Col>
-                    <div style={{ marginBottom: "10px" }}>
-                    </div>
+                    <div style={{ marginBottom: "10px" }}></div>
                     <input
                       className="search-box-material"
                       type="text"
@@ -873,13 +903,17 @@ class MatInboundPlan extends React.Component {
                                     {e.project_name}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
-                                    {e.arrival_date}
+                                  {this.convertDateFormat(e.arrival_date)}
                                   </td>
-                                  <td style={{ textAlign: "center" }}>{e.sku}</td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.sku}
+                                  </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.sku_description}
                                   </td>
-                                  <td style={{ textAlign: "center" }}>{e.qty}</td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.qty}
+                                  </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.ageing}
                                   </td>
@@ -946,10 +980,7 @@ class MatInboundPlan extends React.Component {
           </ModalHeader>
           <ModalBody>Are you sure want to delete ?</ModalBody>
           <ModalFooter>
-            <Button
-              color="danger"
-              onClick={this.DeleteData}
-            >
+            <Button color="danger" onClick={this.DeleteData}>
               Delete
             </Button>
             <Button color="secondary" onClick={this.toggleDelete}>
@@ -959,8 +990,15 @@ class MatInboundPlan extends React.Component {
         </Modal>
 
         {/* Modal create New */}
-        <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-          <ModalHeader toggle={this.togglecreateModal}>Create New Stock</ModalHeader>
+        <Modal
+          isOpen={this.state.createModal}
+          toggle={this.togglecreateModal}
+          className={this.props.className}
+          onClosed={this.resettogglecreateModal}
+        >
+          <ModalHeader toggle={this.togglecreateModal}>
+            Create New Stock
+          </ModalHeader>
           <ModalBody>
             <CardBody>
               <div>
@@ -983,9 +1021,32 @@ class MatInboundPlan extends React.Component {
             </CardBody>
           </ModalBody>
           <ModalFooter>
-            <Button block color="link" className="btn-pill" onClick={this.exportMatInbound}>Download Template</Button>{' '}
-            <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveCPOBulk}>Save</Button>{' '}
-            <Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button>
+            <Button
+              block
+              color="link"
+              className="btn-pill"
+              onClick={this.exportMatInbound}
+            >
+              Download Template
+            </Button>{" "}
+            <Button
+              block
+              color="success"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveCPOBulk}
+            >
+              Save
+            </Button>{" "}
+            <Button
+              block
+              color="secondary"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveTruncateBulk}
+            >
+              Truncate
+            </Button>
           </ModalFooter>
         </Modal>
 

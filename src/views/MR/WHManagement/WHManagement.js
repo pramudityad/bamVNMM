@@ -33,23 +33,23 @@ const Checkbox = ({
   onChange,
   value,
 }) => (
-    <input
-      type={type}
-      name={name}
-      checked={checked}
-      onChange={onChange}
-      value={value}
-      className="checkmark-dash"
-    />
-  );
+  <input
+    type={type}
+    name={name}
+    checked={checked}
+    onChange={onChange}
+    value={value}
+    className="checkmark-dash"
+  />
+);
 
 const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
-const usernameXL = 'adminbamidsuper';
-const passwordXL = 'F760qbAg2sml';
+const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
+const usernameXL = "adminbamidsuper";
+const passwordXL = "F760qbAg2sml";
 
 class WHManagement extends React.Component {
   constructor(props) {
@@ -98,6 +98,7 @@ class WHManagement extends React.Component {
     this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
+    this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
   }
 
   toggle(i) {
@@ -117,6 +118,12 @@ class WHManagement extends React.Component {
     const modalDelete = this.state.danger;
     this.setState({
       danger: !this.state.danger,
+    });
+  }
+
+  resettogglecreateModal() {
+    this.setState({
+      rowsXLS: [],
     });
   }
 
@@ -156,12 +163,12 @@ class WHManagement extends React.Component {
   async getDatafromAPIEXEL(url) {
     try {
       let respond = await axios.get(API_URL_XL + url, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         auth: {
           username: usernameXL,
-          password: passwordXL
+          password: passwordXL,
         },
-      })
+      });
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Get Data", respond);
       }
@@ -259,7 +266,6 @@ class WHManagement extends React.Component {
     });
   }
 
-
   handleChangeFilter = (e) => {
     let value = e.target.value;
     if (value.length === 0) {
@@ -279,27 +285,32 @@ class WHManagement extends React.Component {
     this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
       console.log("all data ", res.data);
       if (res.data !== undefined) {
-        this.setState({ all_data: res.data.data, prevPage: this.state.activePage,
-          total_dataParent: res.data.totalResults, });
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+        });
       } else {
-        this.setState({ all_data: [], total_dataParent: 0,
-          prevPage: this.state.activePage, });
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
       }
     });
   }
 
-
   getASPList() {
     // switch (this.props.dataLogin.account_id) {
     //   case "xl":
-        this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
-          // console.log("asp data ", res.data);
-          if (res.data !== undefined) {
-            this.setState({ asp_data: res.data._items });
-          } else {
-            this.setState({ asp_data: [] });
-          }
-        });
+    this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
+      // console.log("asp data ", res.data);
+      if (res.data !== undefined) {
+        this.setState({ asp_data: res.data._items });
+      } else {
+        this.setState({ asp_data: [] });
+      }
+    });
     //     break;
     //   default:
     //     break;
@@ -507,13 +518,10 @@ class WHManagement extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     console.log("xlsx data", JSON.stringify(BulkXLSX));
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE(
-      "/whManagement/createWarehouse",
-      {
-        'managementData': BulkXLSX,
-      }
-    );
-    console.log('res bulk ', res);
+    const res = await this.postDatatoAPINODE("/whManagement/createWarehouse", {
+      managementData: BulkXLSX,
+    });
+    console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -529,11 +537,14 @@ class WHManagement extends React.Component {
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    console.log('xlsx data', JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE("/whManagement/createWhManagementTruncate", {
-      'managementData': BulkXLSX,
-    });
-    console.log('res bulk ', res);
+    console.log("xlsx data", JSON.stringify(BulkXLSX));
+    const res = await this.postDatatoAPINODE(
+      "/whManagement/createWhManagementTruncate",
+      {
+        managementData: BulkXLSX,
+      }
+    );
+    console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -547,7 +558,7 @@ class WHManagement extends React.Component {
   handleChangeForm(e) {
     const value = e.target.value;
     const index = e.target.name;
-    console.log('value ', value, index);
+    console.log("value ", value, index);
     let dataForm = this.state.DataForm;
     dataForm[parseInt(index)] = value;
     this.setState({ DataForm: dataForm });
@@ -561,17 +572,17 @@ class WHManagement extends React.Component {
     );
     const objData = this.state.all_data.find((e) => e._id);
     let pp = {
-      'wh_name': dataPPEdit[0],
-      'wh_id': dataPPEdit[1],
-      'wh_manager': dataPPEdit[2],
-      'address': dataPPEdit[3],
-      'owner': dataPPEdit[4],
+      wh_name: dataPPEdit[0],
+      wh_id: dataPPEdit[1],
+      wh_manager: dataPPEdit[2],
+      address: dataPPEdit[3],
+      owner: dataPPEdit[4],
     };
     this.toggleLoading();
     this.toggleEdit();
     let patchData = await this.patchDatatoAPINODE(
       "/whManagement/UpdateOneWarehouse/" + objData._id,
-      { 'data': pp }
+      { data: pp }
     );
     console.log("patch data ", pp);
     if (patchData === undefined) {
@@ -689,8 +700,7 @@ class WHManagement extends React.Component {
         });
       }
     });
-  }
-
+  };
 
   exportMatStatus = async () => {
     const wb = new Excel.Workbook();
@@ -747,31 +757,38 @@ class WHManagement extends React.Component {
                   </div> */}
                   <div>
                     {this.state.userRole.includes("Flow-PublicInternal") !==
-                      true ? (
-                        <div>
-                          <Button
-                            block
-                            color="success"
-                            onClick={this.togglecreateModal}
+                    true ? (
+                      <div>
+                        <Button
+                          block
+                          color="success"
+                          onClick={this.togglecreateModal}
                           // id="toggleCollapse1"
-                          >
-                            <i className="fa fa-plus-square" aria-hidden="true">
-                              {" "}
+                        >
+                          <i className="fa fa-plus-square" aria-hidden="true">
+                            {" "}
                             &nbsp;{" "}
-                            </i>{" "}
+                          </i>{" "}
                           New
                         </Button>
-                        </div>
-                      ) : (
-                        ""
-                      )}
+                      </div>
+                    ) : (
+                      ""
+                    )}
                   </div>
                   &nbsp;&nbsp;&nbsp;
                   <div>
-                    <Button onClick={this.downloadAll} block color="ghost-warning"><i className="fa fa-download" aria-hidden="true">
-                      {" "}
-                            &nbsp;{" "}
-                    </i>{" "}Export</Button>
+                    <Button
+                      onClick={this.downloadAll}
+                      block
+                      color="ghost-warning"
+                    >
+                      <i className="fa fa-download" aria-hidden="true">
+                        {" "}
+                        &nbsp;{" "}
+                      </i>{" "}
+                      Export
+                    </Button>
                   </div>
                 </div>
                 {/* <div>
@@ -848,8 +865,7 @@ class WHManagement extends React.Component {
                           margin: "5px",
                           display: "inline-flex",
                         }}
-                      >
-                      </div>
+                      ></div>
                     </div>
                     <input
                       className="search-box-material"
@@ -922,7 +938,9 @@ class WHManagement extends React.Component {
                                   <td style={{ textAlign: "center" }}>
                                     {e.address}
                                   </td>
-                                  <td style={{ textAlign: "center" }}>{e.owner}</td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.owner}
+                                  </td>
 
                                   <td>
                                     <Button
@@ -1085,7 +1103,7 @@ class WHManagement extends React.Component {
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="wh_id">Warehouse ID	</Label>
+                  <Label htmlFor="wh_id">Warehouse ID </Label>
                   <Input
                     type="text"
                     name="1"
@@ -1124,9 +1142,7 @@ class WHManagement extends React.Component {
                     onChange={this.handleChangeForm}
                   >
                     {this.state.asp_data.map((asp) => (
-                      <option value={asp.Name}>
-                        {asp.Name}
-                      </option>
+                      <option value={asp.Name}>{asp.Name}</option>
                     ))}
                     <option value="Internal">Internal</option>
                   </Input>
@@ -1143,8 +1159,15 @@ class WHManagement extends React.Component {
         {/*  Modal Edit PP*/}
 
         {/* Modal create New */}
-        <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-          <ModalHeader toggle={this.togglecreateModal}>Create New WareHouse</ModalHeader>
+        <Modal
+          isOpen={this.state.createModal}
+          toggle={this.togglecreateModal}
+          className={this.props.className}
+          onClosed={this.resettogglecreateModal}
+        >
+          <ModalHeader toggle={this.togglecreateModal}>
+            Create New WareHouse
+          </ModalHeader>
           <ModalBody>
             <CardBody>
               <div>
@@ -1167,9 +1190,32 @@ class WHManagement extends React.Component {
             </CardBody>
           </ModalBody>
           <ModalFooter>
-            <Button block color="link" className="btn-pill" onClick={this.exportMatStatus}>Download Template</Button>{' '}
-            <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveMatStockWHBulk}>Save</Button>{' '}
-            <Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button>
+            <Button
+              block
+              color="link"
+              className="btn-pill"
+              onClick={this.exportMatStatus}
+            >
+              Download Template
+            </Button>{" "}
+            <Button
+              block
+              color="success"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveMatStockWHBulk}
+            >
+              Save
+            </Button>{" "}
+            <Button
+              block
+              color="secondary"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveTruncateBulk}
+            >
+              Truncate
+            </Button>
           </ModalFooter>
         </Modal>
 
@@ -1184,10 +1230,7 @@ class WHManagement extends React.Component {
           </ModalHeader>
           <ModalBody>Are you sure want to delete ?</ModalBody>
           <ModalFooter>
-            <Button
-              color="danger"
-              onClick={this.DeleteData}
-            >
+            <Button color="danger" onClick={this.DeleteData}>
               Delete
             </Button>
             <Button color="secondary" onClick={this.toggleDelete}>

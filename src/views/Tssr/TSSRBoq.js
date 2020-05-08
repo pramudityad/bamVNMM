@@ -115,6 +115,7 @@ class TSSRBoq extends Component {
         modal_alert : false,
         drm_data : [],
 
+        view_tech_header_table : {"config_group_header" : [], "config_group_type_header" : []},
         view_tech_all_header_table : {"config_group_header" : [], "config_group_type_header" : []},
       };
       this.saveDataTSSR = this.saveDataTSSR.bind(this);
@@ -398,9 +399,11 @@ class TSSRBoq extends Component {
         let all_config = data_sites.map(value => value.siteItemConfig.map(child => child)).reduce((l, n) => l.concat(n), []);
         let config_group_avail_uniq = [...new Set(all_config.map(({ config_group }) => config_group))];
         let config_group_non_default = [];
+        let config_group_type_avail = [];
         let config_group_type_non_default = [];
         for(let i = 0 ; i < config_group_avail_uniq.length; i++){
           let findConfigGroupType = all_config.find(e => e.config_group === config_group_avail_uniq[i]).config_group_type;
+          config_group_type_avail.push(findConfigGroupType);
           if(Config_group_DEFAULT.includes(config_group_avail_uniq[i])!== true){
             config_group_non_default.push(config_group_avail_uniq[i]);
             config_group_type_non_default.push(findConfigGroupType);
@@ -409,8 +412,8 @@ class TSSRBoq extends Component {
         let config_group_all = Config_group_DEFAULT.concat(config_group_non_default);
         let config_group_type_all = Config_group_type_DEFAULT.concat(config_group_type_non_default);
 
-        this.setState({view_tech_all_header_table : {"config_group_header" : config_group_all, "config_group_type_header" : config_group_type_all } }, () => {
-          this.dataViewPagination(data_sites);
+        this.setState({view_tech_header_table : {"config_group_header" : config_group_avail_uniq, "config_group_type_header" : config_group_type_avail }, view_tech_all_header_table : {"config_group_header" : config_group_all, "config_group_type_header" : config_group_type_all } }, () => {
+          // this.dataViewPagination(data_sites);
         });
       }
     }
@@ -608,13 +611,18 @@ class TSSRBoq extends Component {
         dataSites = this.state.data_tech_boq_sites;
       }
 
-      const header_config = this.state.view_tech_all_header_table;
+      const header_config = this.state.view_tech_header_table;
 
       let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
-      let HeaderRow2 = ["tower_id", "program", "priority", "sow"];
+      let HeaderRow2 = ["Tower ID", "Program", "SOW"];
+
+      let headerDRM = ["Actual RBS DATA", "Actual DU", "RU B0 (900)", "RU B1 (2100)", "RU B3 (1800) ", "RU B8 (900)", "RU B1B3", "RU Band Agnostic", "Remarks Need CR/Go as SoW Original", "Existing Antenna (type)", "ANTENNA_HEIGHT ", "Scenario RAN", "Dismantle Antenna", "Dismantle RU", "Dismantele Accessories", "Dismantle DU", "Dismantle RBS/Encl", "EXISTING DAN SCENARIO IMPLEMENTASI RBS ", "DRM FINAL (MODULE)", "DRM Final Radio", "DRM Final SOW Cabinet", "DRM FINAL (SOW G9/U9/L9)", "DRM FINAL (SOW G18/L18)", "DRM FINAL (SOW U21/L21)", "DRM FINAL (ANTENNA TYPE)", "PLAN ANTENNA AZIMUTH", "PLAN ANTENNA ET/MT", "Module", "Cabinet", "Radio", "Power RRU", "Antenna", "Dismantle", "System", "Optic RRU", "Area", "VERIFICATION (DATE)", "VERIFICATION (STATUS)", "VERIFICATION PIC", "ISSUED DETAIL", "CR Flag engineering"]
 
       header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
       header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
+
+      headerDRM.map(e => HeaderRow1.push("DRM"));
+      HeaderRow2 = HeaderRow2.concat(headerDRM);
 
       ws.addRow(HeaderRow1);
       ws.addRow(HeaderRow2);
@@ -623,16 +631,21 @@ class TSSRBoq extends Component {
         for(let j = 0; j < header_config.config_group_header.length; j++ ){
           let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
           if(dataConfigIdx !== undefined){
-            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, dataConfigIdx.qty]);
+            let idx_config_qty = dataConfigIdx.tssr_notes === undefined ? dataConfigIdx.qty : dataConfigIdx.tssr_notes.length !== 0 ? dataConfigIdx.tssr_notes[dataConfigIdx.tssr_notes.length-1].suggested_qty : dataConfigIdx.qty;
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, idx_config_qty]);
           }else{
             qtyConfig = qtyConfig.concat([null, null]);
           }
         }
-        ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].priority, dataSites[i].sow].concat(qtyConfig));
+        let drm = this.getDataDRM(dataSites[i].site_id, dataSites[i].program);
+        ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].priority, dataSites[i].sow]
+          .concat(qtyConfig)
+          .concat([drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering])
+        );
       }
 
       const MRFormat = await wb.xlsx.writeBuffer();
-      saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Horizontal.xlsx');
+      saveAs(new Blob([MRFormat]), 'TSSR DRM '+dataTech.no_tech_boq+' Report.xlsx');
     }
 
     getDataDRM(tower, program){
@@ -640,7 +653,7 @@ class TSSRBoq extends Component {
       if(drmFind !== undefined){
         return drmFind;
       }else{
-        return []
+        return {}
       }
     }
 
@@ -670,6 +683,7 @@ class TSSRBoq extends Component {
                         <DropdownMenu>
                           <DropdownItem header> TSSR File</DropdownItem>
                           <DropdownItem onClick={this.exportFormatTSSRVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Vertical</DropdownItem>
+                          <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR DRM</DropdownItem>
                           <DropdownItem onClick={this.exportFormatTSSRUpdate}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Update Format</DropdownItem>
                         </DropdownMenu>
                       </Dropdown>

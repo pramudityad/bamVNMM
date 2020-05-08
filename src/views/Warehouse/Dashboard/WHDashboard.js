@@ -9,12 +9,13 @@ import {
   Collapse,
   Button,
 } from "reactstrap";
-import { InputGroup, InputGroupAddon, InputGroupText} from "reactstrap";
+import { InputGroup, InputGroupAddon, InputGroupText, Modal, ModalBody, ModalFooter } from "reactstrap";
 import { Link } from "react-router-dom";
-import Widget from "./Widget";
-import "./wh_css.css";
+// import Widget from "./Widget";
+import "../wh_css.css";
 import { connect } from "react-redux";
 import axios from "axios";
+import Loading from '../../components/Loading'
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
@@ -42,9 +43,11 @@ class WarehouseDashboard extends Component {
       wh_manager: null,
       wh_address: null,
       wh_owner: null,
+      modal_loading: false,
     };
     this.toggle = this.toggle.bind(this);
     this.toggleFade = this.toggleFade.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
   }
 
   toggle() {
@@ -55,6 +58,12 @@ class WarehouseDashboard extends Component {
     this.setState((prevState) => {
       return { fadeIn: !prevState };
     });
+  }
+
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
   }
 
   SearchFilter = (e) => {
@@ -184,6 +193,7 @@ class WarehouseDashboard extends Component {
   }
 
   getWHStockList() {
+    this.toggleLoading();
     this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
       console.log("all data ", res.data);
       if (res.data !== undefined) {
@@ -192,19 +202,21 @@ class WarehouseDashboard extends Component {
           prevPage: this.state.activePage,
           total_dataParent: res.data.totalResults,
         });
+        this.toggleLoading();
       } else {
         this.setState({
           all_data: [],
           total_dataParent: 0,
           prevPage: this.state.activePage,
         });
+        this.toggleLoading();
       }
     });
   }
 
-  loading = () => (
-    <div className="animated fadeIn pt-1 text-center">Loading...</div>
-  );
+  // loading = () => (
+  //   <div className="animated fadeIn pt-1 text-center">Loading...</div>
+  // );
 
   render() {
     return (
@@ -215,7 +227,14 @@ class WarehouseDashboard extends Component {
               <Col>
                 <InputGroup className="input-prepend">
                   <InputGroupAddon addonType="prepend">
-                    <InputGroupText style={{backgroundColor : "rgba(100,181,246 ,1)", borderColor : "rgba(144,164,174 ,1)"}}><i className="fa fa-search"></i></InputGroupText>
+                    <InputGroupText
+                      style={{
+                        backgroundColor: "rgba(100,181,246 ,1)",
+                        borderColor: "rgba(144,164,174 ,1)",
+                      }}
+                    >
+                      <i className="fa fa-search"></i>
+                    </InputGroupText>
                   </InputGroupAddon>
                   <input
                     className="search-box-whdashboard"
@@ -258,10 +277,23 @@ class WarehouseDashboard extends Component {
                 <Col xs="12" sm="6" md="4">
                   <Card>
                     <CardHeader>
-                      <a href="wh-dashboard">
-                        <h5>{e.wh_name}</h5>
-                        <h6>{e.wh_id}</h6>
-                      </a>
+                      <Link
+                        to={{
+                          pathname:
+                            "/wh-dashboard-eid/?_id=" +
+                            e._id +
+                            "&wh_id=" +
+                            e.wh_id +
+                            "&wh_name=" +
+                            e.wh_name,
+                        }}
+                      >
+                        {/* <a href="wh-dashboard-eid"> */}
+                        <h6>
+                          {e.wh_name} {e.wh_id}
+                        </h6>
+                        {/* </a> */}
+                      </Link>
                       {/* <div className="card-header-actions">
                         <a
                           className="card-header-action btn btn-minimize"
@@ -274,29 +306,33 @@ class WarehouseDashboard extends Component {
                     </CardHeader>
                     <Collapse isOpen={this.state.collapse} id="collapseExample">
                       <CardBody>
-                        WH Manager : <br /> {e.wh_manager}
-                        <br />
-                        <br />
-                        WH Address : <br /> {e.address}
-                        <br />
-                        <br />
-                        Owner : <br /> {e.owner}
+                        <p>
+                          <strong>WH Manager</strong>
+                        </p>{" "}
+                        <p>{e.wh_manager}</p>
+                        <p>
+                          <strong>WH Addres</strong>
+                        </p>{" "}
+                        <p>{e.address}</p>
+                        <p>
+                          <strong>Owner</strong>
+                        </p>{" "}
+                        <p>{e.owner}</p>
                       </CardBody>
                       <CardFooter>
                         <Row className="align-items-center">
                           <Col col="2" xl className="mb-3 mb-xl-0">
                             <Link
                               to={{
-                                pathname:
-                                  "/material-stock2/?_id=" +
-                                  e._id +
-                                  "&wh_id=" +
-                                  e.wh_id +
-                                  "&wh_name=" +
-                                  e.wh_name,
+                                pathname:"/material-stock2/" +e.wh_id,
                               }}
                             >
-                              <Button block color="primary" size="sm" className="btn-pill">
+                              <Button
+                                block
+                                color="primary"
+                                size="sm"
+                                className="btn-pill"
+                              >
                                 Stock
                               </Button>
                             </Link>
@@ -305,32 +341,41 @@ class WarehouseDashboard extends Component {
                           <Col col="2" xl className="mb-3 mb-xl-0">
                             <Link
                               to={{
-                                pathname:
-                                  "/material-inbound-plan2/?_id=" +
-                                  e._id +
-                                  "&wh_id=" +
-                                  e.wh_id +
-                                  "&wh_name=" +
-                                  e.wh_name,
+                                pathname:"/material-inbound-plan2/" +e.wh_id,
                               }}
                             >
-                              <Button block color="secondary" size="sm" className="btn-pill">
+                              <Button
+                                block
+                                color="secondary"
+                                size="sm"
+                                className="btn-pill"
+                              >
                                 Inbound
                               </Button>
                             </Link>
                           </Col>
 
-                          <Col col="2" xl className="mb-3 mb-xl-0">
-                            <Button block color="success" size="sm" className="btn-pill">
+                          {/* <Col col="2" xl className="mb-3 mb-xl-0">
+                            <Button
+                              block
+                              color="success"
+                              size="sm"
+                              className="btn-pill"
+                            >
                               GR
                             </Button>
                           </Col>
 
                           <Col col="2" xl className="mb-3 mb-xl-0">
-                            <Button block color="warning" size="sm" className="btn-pill">
+                            <Button
+                              block
+                              color="warning"
+                              size="sm"
+                              className="btn-pill"
+                            >
                               GI
                             </Button>
-                          </Col>
+                          </Col> */}
                         </Row>
                       </CardFooter>
                     </Collapse>
@@ -339,6 +384,12 @@ class WarehouseDashboard extends Component {
               </React.Fragment>
             ))}
         </Row>
+        {/* Modal Loading */}
+        <Loading isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm modal--loading "}>
+        </Loading>
+        {/* end Modal Loading */}
       </div>
     );
   }

@@ -102,11 +102,11 @@ export default {
       name: 'Material Request',
       icon: 'icon-note',
       children: [
-        // {
-        //   name: 'WH Dashboard',
-        //   url: '/wh-dashboard',
-        //   icon: 'icon-speedometer',
-        // },
+        {
+          name: 'MR Dashboard',
+          url: '/mr-dashboard-global',
+          icon: 'icon-speedometer',
+        },
         {
           name: 'MR List',
           url: '/mr-list',
@@ -140,12 +140,12 @@ export default {
       children: [
         {
           name: 'WH Dashboard EID',
-          url: '/wh-dashboard2',
+          url: '/wh-dashboard-eid',
           icon: 'icon-speedometer',
         },
         {
           name: 'WH Dashboard ASP/DSP',
-          url: '/wh-dashboard3',
+          url: '/wh-dashboard-ext',
           icon: 'icon-speedometer',
         },
         {

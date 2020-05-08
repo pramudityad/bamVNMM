@@ -48,7 +48,8 @@ const BulkMRCreation = React.lazy(() => import('./views/MR/BulkMR'));
 const MRDetail = React.lazy(() => import('./views/MR/MRDetail'));
 const PSUpload = React.lazy(() => import('./views/MR/PSUpload'));
 const MRProgress = React.lazy(() => import('./views/MR/MRProgress'));
-const WarehouseDashboard = React.lazy(() => import('./views/Warehouse/WarehouseDashboard'));
+const MRDashboardGlob = React.lazy(() => import('./views/MR/Dashboard/MRDashboardGlob'));
+
 const OrderReceived = React.lazy(() => import('./views/Warehouse/OrderReceived'));
 const OrderProcessing = React.lazy(() => import('./views/Warehouse/OrderProcessing'));
 const ReadyToDeliver = React.lazy(() => import('./views/Warehouse/ReadyToDeliver'));
@@ -105,8 +106,11 @@ const MaterialStock  = React.lazy(() => import('./views/MR/WHStock/MatStock2'));
 const MaterialInboundPlan  = React.lazy(() => import('./views/MR/WHInbound/MatInboundPlan2'));
 const MatLibrary  = React.lazy(() => import('./views/MR/MatLibrary/MatLibrary'));
 
-const WHDashboard = React.lazy(() => import('./views/Warehouse/WHDashboard'));
-const WHDashboard3 = React.lazy(() => import('./views/Warehouse/WHDashboardext'));
+const WHDashboard = React.lazy(() => import('./views/Warehouse/Dashboard/WHDashboard'));
+const WHDashboardDet = React.lazy(() => import('./views/Warehouse/Dashboard/WHDashboardDet'));
+
+const WHDashboardExt = React.lazy(() => import('./views/Warehouse/Dashboard/WHDashboardext'));
+const WHDashboardExtDet = React.lazy(() => import('./views/Warehouse/Dashboard/WHDashboardextDet'));
 
 const ListCPOBoq = React.lazy(() => import('./views/TechnicalCPO/ListCPOBoq'));
 const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'));
@@ -174,7 +178,7 @@ const routes = [
   { path: '/bulk-mr-approval', name: 'Bulk MR Approval', component: BulkApproval },
   { path: '/ps-upload/:id', exact: true, name: 'MR List', component: PSUpload },
   { path: '/mr-progress/:id', exact: true, name: 'MR Progress', component: MRProgress },
-  { path: '/wh-dashboard', exact: true, name: 'Warehouse Dashboard', component: WarehouseDashboard },
+
   { path: '/order-received', exact: true, name: 'Order Received', component: OrderReceived },
   { path: '/order-processing', exact: true, name: 'Order Processing', component: OrderProcessing },
   { path: '/ready-to-deliver', exact: true, name: 'Ready To Deliver', component: ReadyToDeliver },
@@ -238,8 +242,13 @@ const routes = [
   { path: '/wh-management', exact: true, name: 'Warehouse Management', component: WHManagement },
   { path: '/mat-library', exact: true, name: 'Material Library', component: MatLibrary },
 
-  { path: '/wh-dashboard2', exact: true, name: 'Warehouse Dashboard', component: WHDashboard },
-  { path: '/wh-dashboard3', exact: true, name: 'Warehouse Dashboard', component: WHDashboard3 },
+  { path: '/mr-dashboard-global', exact: true, name: 'Material Request Dashboard', component: MRDashboardGlob },
+
+  { path: '/wh-dashboard-eid', exact: true, name: 'Warehouse Dashboard Internal', component: WHDashboard },
+  { path: '/wh-dashboard-eid/:slug', exact: true, name: 'Warehouse Internal Detail', component: WHDashboardDet },
+
+  { path: '/wh-dashboard-ext', exact: true, name: 'Warehouse Dashboard External', component: WHDashboardExt },
+  { path: '/wh-dashboard-ext/:slug', exact: true, name: 'Warehouse External Detail', component: WHDashboardExtDet },
 
   { path: '/drm-detail', exact: true, name: 'DRM Detail', component: DRMDetail },
 ];

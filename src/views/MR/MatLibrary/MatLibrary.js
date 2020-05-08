@@ -33,18 +33,17 @@ const Checkbox = ({
   onChange,
   value,
 }) => (
-    <input
-      type={type}
-      name={name}
-      checked={checked}
-      onChange={onChange}
-      value={value}
-      className="checkmark-dash"
-    />
-  );
+  <input
+    type={type}
+    name={name}
+    checked={checked}
+    onChange={onChange}
+    value={value}
+    className="checkmark-dash"
+  />
+);
 
 const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
-
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
@@ -94,6 +93,7 @@ class MatLibrary extends React.Component {
     this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
+    this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
   }
 
   toggle(i) {
@@ -113,6 +113,12 @@ class MatLibrary extends React.Component {
     const modalDelete = this.state.danger;
     this.setState({
       danger: !this.state.danger,
+    });
+  }
+
+  resettogglecreateModal() {
+    this.setState({
+      rowsXLS: [],
     });
   }
 
@@ -154,7 +160,6 @@ class MatLibrary extends React.Component {
       createModal: !this.state.createModal,
     });
   }
-
 
   async getDatafromAPINODE(url) {
     try {
@@ -251,9 +256,13 @@ class MatLibrary extends React.Component {
     this.setState({ search: keyword });
   };
 
-
   getWHStockList() {
-    this.getDatafromAPINODE("/variants/variants?lmt=" + this.state.perPage + '&pg=' + this.state.activePage).then((res) => {
+    this.getDatafromAPINODE(
+      "/variants/variants?lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
+    ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -261,7 +270,11 @@ class MatLibrary extends React.Component {
           total_dataParent: res.data.totalResults,
         });
       } else {
-        this.setState({ all_data: [], total_dataParent: 0, prevPage: this.state.activePage });
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
       }
     });
   }
@@ -465,7 +478,7 @@ class MatLibrary extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     const res = await this.postDatatoAPINODE("/variants/createVariants", {
-      'materialData': BulkXLSX,
+      materialData: BulkXLSX,
     });
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
@@ -484,10 +497,13 @@ class MatLibrary extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     // console.log('xlsx data', JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE("/variants/createVariantsTruncate", {
-      'materialData': BulkXLSX,
-    });
-    console.log('res bulk ', res);
+    const res = await this.postDatatoAPINODE(
+      "/variants/createVariantsTruncate",
+      {
+        materialData: BulkXLSX,
+      }
+    );
+    console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -596,7 +612,7 @@ class MatLibrary extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE('/variants/variants');
+    let getAll_nonpage = await this.getDatafromAPINODE("/variants/variants");
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -609,7 +625,7 @@ class MatLibrary extends React.Component {
       "Material ID",
       "Material Name",
       "Description",
-      "Category"
+      "Category",
     ];
     ws.addRow(headerRow);
 
@@ -617,10 +633,15 @@ class MatLibrary extends React.Component {
       ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };
     }
 
-
     for (let i = 0; i < download_all.length; i++) {
       let list = download_all[i];
-      ws.addRow([list.origin, list.material_id, list.material_name, list.description, list.category]);
+      ws.addRow([
+        list.origin,
+        list.material_id,
+        list.material_name,
+        list.description,
+        list.category,
+      ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -643,15 +664,33 @@ class MatLibrary extends React.Component {
         });
       }
     });
-  }
+  };
 
   exportMatStatus = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["origin", "material_name", "material_id", "description", "category"]);
-    ws.addRow(["LCM", "Mat A", "EID-42020500040", "Optic Cable 2F LC-LC SM, 20M for RRUS01 (RPM2533512/20)", " Optic"]);
-    ws.addRow(["LCM", "Mat B", "RL2LC-SM20000", "Optic Cable 2F LC-LC SM, 20M for RRUS01 (RPM2533512/20)", " Optic"]);
+    ws.addRow([
+      "origin",
+      "material_name",
+      "material_id",
+      "description",
+      "category",
+    ]);
+    ws.addRow([
+      "LCM",
+      "Mat A",
+      "EID-42020500040",
+      "Optic Cable 2F LC-LC SM, 20M for RRUS01 (RPM2533512/20)",
+      " Optic",
+    ]);
+    ws.addRow([
+      "LCM",
+      "Mat B",
+      "RL2LC-SM20000",
+      "Optic Cable 2F LC-LC SM, 20M for RRUS01 (RPM2533512/20)",
+      " Optic",
+    ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "Material Library Template.xlsx");
@@ -700,31 +739,38 @@ class MatLibrary extends React.Component {
                   </div> */}
                   <div>
                     {this.state.userRole.includes("Flow-PublicInternal") !==
-                      true ? (
-                        <div>
-                          <Button
-                            block
-                            color="success"
-                            onClick={this.togglecreateModal}
-                            // id="toggleCollapse1"
-                          >
-                            <i className="fa fa-plus-square" aria-hidden="true">
-                              {" "}
+                    true ? (
+                      <div>
+                        <Button
+                          block
+                          color="success"
+                          onClick={this.togglecreateModal}
+                          // id="toggleCollapse1"
+                        >
+                          <i className="fa fa-plus-square" aria-hidden="true">
+                            {" "}
                             &nbsp;{" "}
-                            </i>{" "}
+                          </i>{" "}
                           New
                         </Button>
-                        </div>
-                      ) : (
-                        ""
-                      )}
+                      </div>
+                    ) : (
+                      ""
+                    )}
                   </div>
                   &nbsp;&nbsp;&nbsp;
                   <div>
-                    <Button onClick={this.downloadAll} block color="ghost-warning"><i className="fa fa-download" aria-hidden="true">
-                      {" "}
-                            &nbsp;{" "}
-                    </i>{" "}Export</Button>
+                    <Button
+                      onClick={this.downloadAll}
+                      block
+                      color="ghost-warning"
+                    >
+                      <i className="fa fa-download" aria-hidden="true">
+                        {" "}
+                        &nbsp;{" "}
+                      </i>{" "}
+                      Export
+                    </Button>
                   </div>
                 </div>
                 {/* <div>
@@ -876,7 +922,9 @@ class MatLibrary extends React.Component {
                                   <td style={{ textAlign: "center" }}>
                                     {e.description}
                                   </td>
-                                  <td style={{ textAlign: "center" }}>{e.category}</td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.category}
+                                  </td>
 
                                   {/* <td>
                                   <Button
@@ -1127,37 +1175,66 @@ class MatLibrary extends React.Component {
           </ModalFooter>
         </Modal>
 
-         {/* Modal create New */}
-         <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-         <ModalHeader toggle={this.togglecreateModal}>Create New Material Library</ModalHeader>
-         <ModalBody>
-           <CardBody>
-             <div>
-               <table>
-                 <tbody>
-                   <tr>
-                     <td>Upload File</td>
-                     <td>:</td>
-                     <td>
-                       <input
-                         type="file"
-                         onChange={this.fileHandlerMaterial.bind(this)}
-                         style={{ padding: "10px", visiblity: "hidden" }}
-                       />
-                     </td>
-                   </tr>
-                 </tbody>
-               </table>
-             </div>
-           </CardBody>
-         </ModalBody>
-         <ModalFooter>
-           <Button block color="link" className="btn-pill" onClick={this.exportMatStatus}>Download Template</Button>{' '}
-           <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveMatStockWHBulk}>Save</Button>{' '}
-           <Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button>
-         </ModalFooter>
-       </Modal>
-
+        {/* Modal create New */}
+        <Modal
+          isOpen={this.state.createModal}
+          toggle={this.togglecreateModal}
+          className={this.props.className}
+          onClosed={this.resettogglecreateModal}
+        >
+          <ModalHeader toggle={this.togglecreateModal}>
+            Create New Material Library
+          </ModalHeader>
+          <ModalBody>
+            <CardBody>
+              <div>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Upload File</td>
+                      <td>:</td>
+                      <td>
+                        <input
+                          type="file"
+                          onChange={this.fileHandlerMaterial.bind(this)}
+                          style={{ padding: "10px", visiblity: "hidden" }}
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardBody>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              block
+              color="link"
+              className="btn-pill"
+              onClick={this.exportMatStatus}
+            >
+              Download Template
+            </Button>{" "}
+            <Button
+              block
+              color="success"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveMatStockWHBulk}
+            >
+              Save
+            </Button>{" "}
+            <Button
+              block
+              color="secondary"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveTruncateBulk}
+            >
+              Truncate
+            </Button>
+          </ModalFooter>
+        </Modal>
 
         {/* Modal Loading */}
         <Modal
