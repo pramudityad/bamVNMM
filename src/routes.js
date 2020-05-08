@@ -120,6 +120,9 @@ const DetailTSSRBoq = React.lazy(() => import('./views/Tssr/TSSRBoq'));
 
 const DRMDetail = React.lazy(() => import('./views/DRM/DRMDetail'));
 
+const GR  = React.lazy(() => import('./views/Warehouse/GR'));
+const GI  = React.lazy(() => import('./views/Warehouse/GI'));
+
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -251,6 +254,9 @@ const routes = [
   { path: '/wh-dashboard-ext/:slug', exact: true, name: 'Warehouse External Detail', component: WHDashboardExtDet },
 
   { path: '/drm-detail', exact: true, name: 'DRM Detail', component: DRMDetail },
+
+  { path: '/gr', exact: true, name: 'GR', component: GR },
+  { path: '/gi', exact: true, name: 'GI', component: GI },
 ];
 
 export default routes;
