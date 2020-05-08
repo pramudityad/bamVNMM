@@ -21,8 +21,10 @@ import Select from "react-select";
 import { saveAs } from "file-saver";
 import Excel from "exceljs";
 import { connect } from "react-redux";
-import { Redirect, Route, Switch, Link } from "react-router-dom";
+import { Redirect, Route, Switch, Link, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
+import queryString from "query-string";
+import ModalCreateNew from "../../components/ModalCreateNew";
 
 import "../MatStyle.css";
 
@@ -51,7 +53,7 @@ const passwordBAM = "F760qbAg2sml";
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-class MatInboundPlan extends React.Component {
+class GIInternal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -60,31 +62,40 @@ class MatInboundPlan extends React.Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      filter_name: null,
       search: null,
       perPage: 10,
       prevPage: 1,
       activePage: 1,
-      total_data_PO: 0,
       selected_wh: null,
+      total_data_PO: 0,
       pp_all: [],
       rowsXLS: [],
-      cpo_array: [],
+      data_array: [],
       action_status: null,
       action_message: null,
-      danger: false,
       all_data: [],
-      data_PO: [],
       wh_data: {},
+      wh_id: null,
+      wh_name: null,
+      wh_manager: null,
+      wh_address: null,
+      wh_owner: null,
+      data_PO: [],
+      packageSelected: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
       modalMatStockForm: false,
-      POForm: new Array(5).fill(null),
-      collapse: false,
       modalMatStockEdit: false,
       MatStockForm: new Array(6).fill(null),
+      warehouse_selected: null,
+      collapse: false,
+      danger: false,
+      activeItemName: "",
+      activeItemId: null,
       createModal: false,
     };
-    this.togglePOForm = this.togglePOForm.bind(this);
+    this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.changeFilterDebounce = debounce(this.changeFilterName, 500);
@@ -94,8 +105,8 @@ class MatInboundPlan extends React.Component {
     this.toggleEdit = this.toggleEdit.bind(this);
     this.saveNew = this.saveNew.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
-    this.downloadAll = this.downloadAll.bind(this);
     this.toggleDelete = this.toggleDelete.bind(this);
+    this.downloadAll = this.downloadAll.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
   }
@@ -109,10 +120,6 @@ class MatInboundPlan extends React.Component {
     });
   }
 
-  toggleAddNew() {
-    this.setState({ collapse: !this.state.collapse });
-  }
-
   togglecreateModal() {
     this.setState({
       createModal: !this.state.createModal,
@@ -123,6 +130,50 @@ class MatInboundPlan extends React.Component {
     this.setState({
       rowsXLS: [],
     });
+  }
+
+  toggleAddNew() {
+    this.setState({ collapse: !this.state.collapse });
+  }
+
+  toggleDelete(e) {
+    const modalDelete = this.state.danger;
+    this.setState({
+      danger: !this.state.danger,
+    });
+  }
+
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
+  }
+
+  toggleEdit(e) {
+    const modalMatStockEdit = this.state.modalMatStockEdit;
+    if (modalMatStockEdit === false) {
+      const value = e.currentTarget.value;
+      const aEdit = this.state.all_data.find((e) => e.owner_id === value);
+      let dataForm = this.state.MatStockForm;
+      dataForm[0] = aEdit.sku_description;
+      dataForm[1] = aEdit.serial_number;
+      dataForm[2] = aEdit.project_name;
+      dataForm[3] = aEdit.box_number;
+      dataForm[4] = aEdit.condition;
+      dataForm[5] = aEdit.notes;
+      this.setState({ MatStockForm: dataForm });
+    } else {
+      this.setState({ MatStockForm: new Array(6).fill(null) });
+    }
+    this.setState((prevState) => ({
+      modalMatStockEdit: !prevState.modalMatStockEdit,
+    }));
+  }
+
+  toggleMatStockForm() {
+    this.setState((prevState) => ({
+      modalMatStockForm: !prevState.modalMatStockForm,
+    }));
   }
 
   async getDatafromAPINODE(url) {
@@ -163,6 +214,25 @@ class MatInboundPlan extends React.Component {
     }
   }
 
+  async patchDatatoAPINODE(url, data) {
+    try {
+      let respond = await axios.patch(API_URL_NODE + url, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + this.state.tokenUser,
+        },
+      });
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond patch Data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond patch Data err", err);
+      return respond;
+    }
+  }
+
   async deleteDataFromAPINODE(url) {
     try {
       let respond = await axios.delete(API_URL_NODE + url, {
@@ -182,46 +252,9 @@ class MatInboundPlan extends React.Component {
     }
   }
 
-  async patchDatatoAPINODE(url, data) {
-    try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond Post Data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      console.log("respond Post Data err", err);
-      return respond;
-    }
-  }
-
-  toggleLoading() {
-    this.setState((prevState) => ({
-      modal_loading: !prevState.modal_loading,
-    }));
-  }
-
-  toggleDelete(e) {
-    const modalDelete = this.state.danger;
-    this.setState({
-      danger: !this.state.danger,
-    });
-  }
-
   changeFilterName(value) {
-    this.getWHInboundList();
+    this.getWHStockList();
   }
-
-  SearchFilter = (e) => {
-    let keyword = e.target.value;
-    this.setState({ search: keyword });
-  };
 
   handleChangeFilter = (e) => {
     let value = e.target.value;
@@ -233,19 +266,23 @@ class MatInboundPlan extends React.Component {
     });
   };
 
-  getWHInboundListNext() {
+  getWHStockListNext() {
     this.toggleLoading();
     // let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    let getbyWH = '{"wh_id":"' + this.props.match.params.slug + '"}';
+    // console.log("wh id ", get_wh_id);
+    let getbyWH =
+      '{"wh_id":"' +
+      this.props.match.params.slug +
+      '","transaction_type":"Outbond"}';
     this.getDatafromAPINODE(
-      "/whInboundPlan/getWhInboundPlan?q=" +
+      "/whStock/getWhStock?q=" +
         getbyWH +
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
         this.state.activePage
     ).then((res) => {
-      // console.log('all data based on ', get_wh_id, res.data)
+      // console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -267,14 +304,19 @@ class MatInboundPlan extends React.Component {
 
   getWHManagementID() {
     // let _id = new URLSearchParams(window.location.search).get("_id");
-    this.getDatafromAPINODE('/whManagement/warehouse?q={"wh_id":"' + this.props.match.params.slug + '"}').then((res) => {
+    // let getbyWH = '{"wh_id":"' + this.props.match.params.slug + '"}';
+    this.getDatafromAPINODE(
+      '/whManagement/warehouse?q={"wh_id":"' +
+        this.props.match.params.slug +
+        '"}'
+    ).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
-        if(res.data.data !== undefined){
+        if (res.data.data !== undefined) {
           this.setState({ wh_data: res.data.data[0] });
         }
       } else {
-        this.setState({ wh_data: {} });
+        this.setState({ wh_data: [] });
       }
     });
   }
@@ -323,7 +365,7 @@ class MatInboundPlan extends React.Component {
     const file = input.target.files[0];
     const reader = new FileReader();
     const rABS = !!reader.readAsBinaryString;
-    console.log("rABS");
+    // console.log("rABS");
     reader.onload = (e) => {
       /* Parse data */
       const bstr = e.target.result;
@@ -366,89 +408,118 @@ class MatInboundPlan extends React.Component {
   }
 
   componentDidMount() {
-    this.getWHInboundListNext();
+    this.getWHStockListNext();
     this.getWHManagementID();
-    document.title = "Material Inbound Plan | BAM";
+    document.title = "Material Stock | BAM";
+  }
+
+  handleChangeChecklist(e) {
+    const item = e.target.name;
+    const isChecked = e.target.checked;
+    const mrList = this.state.assignment_list;
+    let dataMRChecked = this.state.data_asg_checked;
+    if (isChecked === true) {
+      const getMR = mrList.find((e) => e._id === item);
+      dataMRChecked.push(getMR);
+    } else {
+      dataMRChecked = dataMRChecked.filter(function (e) {
+        return e._id !== item;
+      });
+    }
+    this.setState({ data_asg_checked: dataMRChecked });
+    this.setState((prevState) => ({
+      asg_checked: prevState.asg_checked.set(item, isChecked),
+    }));
+  }
+
+  convertDateFormat(jsondate) {
+    let date = new Date(jsondate);
+    let year = date.getFullYear();
+    let month = date.getMonth() + 1;
+    let dt = date.getDate();
+
+    if (dt < 10) {
+      dt = "0" + dt;
+    }
+    if (month < 10) {
+      month = "0" + month;
+    }
+    return year + "-" + month + "-" + dt;
+  }
+
+  handleChangeChecklistAll(e) {
+    const isChecked = e.target.checked;
+    const mrList = this.state.assignment_all;
+    let dataMRChecked = this.state.data_asg_checked;
+    if (isChecked === true) {
+      for (let i = 0; i < mrList.length; i++) {
+        if (this.state.asg_checked.get(mrList[i]._id) !== true) {
+          dataMRChecked.push(mrList[i]);
+        }
+        this.setState((prevState) => ({
+          asg_checked: prevState.asg_checked.set(mrList[i]._id, true),
+        }));
+      }
+      this.setState({
+        data_asg_checked: dataMRChecked,
+        asg_checked_all: isChecked,
+      });
+    } else {
+      this.setState({ asg_checked: new Map(), data_asg_checked: [] });
+      this.setState({ asg_checked_all: isChecked });
+    }
   }
 
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
-      this.getWHInboundListNext();
+      this.getWHStockListNext();
     });
   }
 
-  toggleEdit(e) {
-    const modalMatStockEdit = this.state.modalMatStockEdit;
-    if (modalMatStockEdit === false) {
-      const value = e.currentTarget.value;
-      const aEdit = this.state.all_data.find((e) => e.owner_id === value);
-      let dataForm = this.state.POForm;
-      dataForm[0] = aEdit.owner_id;
-      dataForm[1] = aEdit.po_number;
-      dataForm[2] = aEdit.arrival_date;
-      dataForm[3] = aEdit.project_name;
-      dataForm[4] = aEdit.sku;
-      this.setState({ POForm: dataForm });
-    } else {
-      this.setState({ POForm: new Array(6).fill(null) });
-    }
-    this.setState((prevState) => ({
-      modalMatStockEdit: !prevState.modalMatStockEdit,
-    }));
-  }
-
-  togglePOForm() {
-    this.setState((prevState) => ({
-      modalMatStockForm: !prevState.modalMatStockForm,
-    }));
-  }
-
-  async getMatInboundFormat(dataImport) {
+  async getMatStockFormat(dataImport) {
     const dataHeader = dataImport[0];
     const onlyParent = dataImport
       .map((e) => e)
       .filter((e) =>
-        this.checkValuetoString(e[this.getIndex(dataHeader, "po_number")])
+        this.checkValuetoString(e[this.getIndex(dataHeader, "owner_id")])
       );
-    let cpo_array = [];
+    let data_array = [];
     if (onlyParent !== undefined && onlyParent.length !== 0) {
       for (let i = 1; i < onlyParent.length; i++) {
-        const cpo = {
+        const aa = {
+          owner_id: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "owner_id")]
+          ),
           po_number: this.checkValue(
             onlyParent[i][this.getIndex(dataHeader, "po_number")]
           ),
-          date: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "date")]
+          arrival_date: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "arrival_date")]
           ),
-          currency: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "currency")]
+          id_project_doc: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "id_project_doc")]
           ),
-          payment_terms: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "payment_terms")]
-          ),
-          shipping_terms: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "shipping_terms")]
-          ),
-          contract: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "contract")]
-          ),
-          contact: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "contact")]
-          ),
+          sku: this.checkValue(onlyParent[i][this.getIndex(dataHeader, "sku")]),
         };
-        if (cpo.po_number !== undefined && cpo.po_number !== null) {
-          cpo["po_number"] = cpo.po_number.toString();
+        if (aa.owner_id !== undefined && aa.owner_id !== null) {
+          aa["owner_id"] = aa.owner_id.toString();
         }
-        if (cpo.year !== undefined && cpo.year !== null) {
-          cpo["po_year"] = cpo.year.toString();
+        if (aa.po_number !== undefined && aa.po_number !== null) {
+          aa["po_number"] = aa.po_number.toString();
         }
-        if (cpo.currency !== undefined && cpo.currency !== null) {
-          cpo["currency"] = cpo.currency.toString();
+        if (aa.arrival_date !== undefined && aa.arrival_date !== null) {
+          aa["arrival_date"] = aa.arrival_date.toString();
         }
-        cpo_array.push(cpo);
+        if (aa.id_project_doc !== undefined && aa.id_project_doc !== null) {
+          aa["id_project_doc"] = aa.id_project_doc.toString();
+        }
+        if (aa.sku !== undefined && aa.sku !== null) {
+          aa["sku"] = aa.sku.toString();
+        }
+        data_array.push(aa);
       }
-      // console.log(JSON.stringify(cpo_array));
-      return cpo_array;
+      // console.log(JSON.stringify(data_array));
+      return data_array;
     } else {
       this.setState(
         { action_status: "failed", action_message: "Please check your format" },
@@ -459,15 +530,15 @@ class MatInboundPlan extends React.Component {
     }
   }
 
-  saveCPOBulk = async () => {
+  saveMatStockWHBulk = async () => {
     this.toggleLoading();
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
-    // const cpoData = await this.getMatInboundFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE(
-      "/whInboundPlan/createWhInboundPlan",
-      { inboundPlanData: BulkXLSX }
-    );
+    // const BulkData = await this.getMatStockFormat(BulkXLSX);
+    const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
+      stockData: BulkXLSX,
+    });
+    // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -483,19 +554,16 @@ class MatInboundPlan extends React.Component {
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    // console.log("xlsx data", JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE(
-      "/whInboundPlan/createWhInboundPlanTruncate",
-      {
-        inboundPlanData: BulkXLSX,
-      }
-    );
-    // console.log("res bulk ", res);
+    console.log("xlsx data", JSON.stringify(BulkXLSX));
+    const res = await this.postDatatoAPINODE("/whStock/createWhStockTruncate", {
+      stockData: BulkXLSX,
+    });
+    console.log("res bulk ", res);
     if (res.data !== undefined) {
-      this.setState({ action_status: "success" });
+      this.setState({ action_status: "success", rowsXLS: [] });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed" }, () => {
+      this.setState({ action_status: "failed", rowsXLS: [] }, () => {
         this.toggleLoading();
       });
     }
@@ -509,20 +577,10 @@ class MatInboundPlan extends React.Component {
     this.setState({ MatStockForm: dataForm });
   }
 
-  convertDateFormat(jsondate){
-    let date = new Date(jsondate);
-    let year = date.getFullYear();
-    let month = date.getMonth()+1;
-    let dt = date.getDate();
-
-    if (dt < 10) {
-      dt = '0' + dt;
-    }
-    if (month < 10) {
-      month = '0' + month;
-    }
-    return year+'-' + month + '-'+dt;
-  }
+  SearchFilter = (e) => {
+    let keyword = e.target.value;
+    this.setState({ search: keyword });
+  };
 
   async saveUpdate() {
     let respondSaveEdit = undefined;
@@ -532,16 +590,23 @@ class MatInboundPlan extends React.Component {
     );
     const objData = this.state.all_data.find((e) => e._id);
     let pp = {
-      owner_id: dataPPEdit[0],
-      po_number: dataPPEdit[1],
-      arrival_date: dataPPEdit[2],
-      project_name: dataPPEdit[3],
-      sku: dataPPEdit[4],
+      sku_description: dataPPEdit[0],
+      serial_number: dataPPEdit[1],
+      project_name: dataPPEdit[2],
+      box_number: dataPPEdit[3],
+      condition: dataPPEdit[4],
+      notes: dataPPEdit[5],
+      id_project_doc: objData.id_project_doc,
+      arrival_date: objData.arrival_date,
+      po_number: objData.po_number,
+      owner_id: objData.owner_id,
+      sku: objData.sku,
     };
+    console.log("patch data ", pp);
     this.toggleLoading();
     this.toggleEdit();
     let patchData = await this.patchDatatoAPINODE(
-      "/whInboundPlan/UpdateOneWhInboundPlanwithDelete/" + objData._id,
+      "/whStock/updateOneWhStockwithDelete/" + objData._id,
       { data: [pp] }
     );
     if (patchData === undefined) {
@@ -567,21 +632,20 @@ class MatInboundPlan extends React.Component {
     let poData = [];
     let respondSaveNew = undefined;
     const dataPPEdit = this.state.MatStockForm;
-    const ppcountID = Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(6, "0");
     let pp = {
       owner_id: dataPPEdit[0],
       po_number: dataPPEdit[1],
       arrival_date: dataPPEdit[2],
       project_name: dataPPEdit[3],
       sku: dataPPEdit[4],
+      sku_description: dataPPEdit[5],
+      qty: dataPPEdit[6],
     };
     poData.push(pp);
-    let postData = await this.postDatatoAPINODE(
-      "/whInboundPlan/createOneWhInboundPlan",
-      pp
-    ).then((res) => {
+    let postData = await this.postDatatoAPINODE("/whStock/createOneWhStockp", {
+      stockData: pp,
+    }).then((res) => {
+      console.log("res save one ", res);
       if (res.data !== undefined) {
         this.toggleLoading();
       } else {
@@ -608,9 +672,7 @@ class MatInboundPlan extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE(
-      "/whInboundPlan/getWhInboundPlan"
-    );
+    let getAll_nonpage = await this.getDatafromAPINODE("/whStock/getWhStock");
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -643,7 +705,7 @@ class MatInboundPlan extends React.Component {
       let list = download_all[i];
       ws.addRow([
         list.owner_id,
-        list.wh_id,
+        this.state.selected_wh,
         list.po_number,
         list.project_name,
         list.sku,
@@ -659,7 +721,7 @@ class MatInboundPlan extends React.Component {
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All Material Inbound.xlsx");
+    saveAs(new Blob([allocexport]), "All Material Stock.xlsx");
   }
 
   DeleteData = async () => {
@@ -667,7 +729,7 @@ class MatInboundPlan extends React.Component {
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/whInboundPlan/deleteWhInboundPlan/" + objData._id
+      "/whStock/deleteWhStock/" + objData._id
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
@@ -680,7 +742,7 @@ class MatInboundPlan extends React.Component {
     });
   };
 
-  exportMatInbound = async () => {
+  exportMatStatus = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
@@ -690,13 +752,13 @@ class MatInboundPlan extends React.Component {
       "arrival_date",
       "project_name",
       "sku",
-      "sku_description",
       "qty",
       "wh_id",
       "serial_number",
       "box_number",
       "condition",
       "notes",
+      "transaction_type",
     ]);
     ws.addRow([
       "Jabo",
@@ -704,13 +766,14 @@ class MatInboundPlan extends React.Component {
       "2020-04-17",
       "XL BAM DEMO 2021",
       "1",
-      "sku_description",
       100,
       this.state.selected_wh,
+      ,
       "serial_number",
       "box_number",
       "condition",
       "notes",
+      "Outbond",
     ]);
     ws.addRow([
       "CJ",
@@ -718,17 +781,18 @@ class MatInboundPlan extends React.Component {
       "2020-04-17",
       "XL BAM DEMO 2021",
       "1",
-      "sku_description",
       100,
       this.state.selected_wh,
+      ,
       "serial_number",
       "box_number",
       "condition",
       "notes",
+      "Outbond",
     ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), "Material Inbound Template.xlsx");
+    saveAs(new Blob([PPFormat]), "GI Internal Template.xlsx");
   };
 
   render() {
@@ -743,7 +807,8 @@ class MatInboundPlan extends React.Component {
             <Card style={{}}>
               <CardHeader>
                 <span style={{ marginTop: "8px", position: "absolute" }}>
-                  Material Inbound Plan {this.state.wh_data.wh_id} -{" "}
+                  {" "}
+                  GI Internal {this.state.wh_data.wh_id} -{" "}
                   {this.state.wh_data.wh_name}{" "}
                 </span>
                 <div
@@ -858,8 +923,8 @@ class MatInboundPlan extends React.Component {
                           className="fixed"
                         >
                           <tr align="center">
-                            <th> Owner ID</th>
-                            <th> WH ID</th>
+                            <th>Owner ID</th>
+                            <th>WH ID</th>
                             <th>PO Number</th>
                             <th>Project Name</th>
                             <th>Arrival Date</th>
@@ -871,7 +936,7 @@ class MatInboundPlan extends React.Component {
                             <th>Box Number</th>
                             <th>Condition</th>
                             <th>Notes</th>
-                            {/* <th></th> */}
+                            <th>Transaction Type</th>
                             <th></th>
                           </tr>
                         </thead>
@@ -921,7 +986,7 @@ class MatInboundPlan extends React.Component {
                                     {e.project_name}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
-                                  {this.convertDateFormat(e.arrival_date)}
+                                    {this.convertDateFormat(e.arrival_date)}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.sku}
@@ -946,6 +1011,9 @@ class MatInboundPlan extends React.Component {
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.notes}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.transaction_type}
                                   </td>
                                   <td>
                                     <Button
@@ -987,35 +1055,154 @@ class MatInboundPlan extends React.Component {
           </Col>
         </Row>
 
-        {/* Modal confirmation delete */}
+        {/* Modal Edit PP */}
         <Modal
-          isOpen={this.state.danger}
-          toggle={this.toggleDelete}
-          className={"modal-danger " + this.props.className}
+          isOpen={this.state.modalMatStockEdit}
+          toggle={this.toggleEdit}
+          className="modal--form"
         >
-          <ModalHeader toggle={this.toggleDelete}>
-            Delete Material Stock Confirmation
-          </ModalHeader>
-          <ModalBody>Are you sure want to delete ?</ModalBody>
+          <ModalHeader>Form Update Material Stock</ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col sm="12">
+                <FormGroup>
+                  <Label htmlFor="sku_description">SKU Description</Label>
+                  <Input
+                    type="text"
+                    name="0"
+                    placeholder=""
+                    value={this.state.MatStockForm[0]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="serial_number">Serial Number</Label>
+                  <Input
+                    type="text"
+                    name="1"
+                    placeholder=""
+                    value={this.state.MatStockForm[1]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="project_name">Project Name</Label>
+                  <Input
+                    type="datetime-local"
+                    placeholder=""
+                    value={this.state.MatStockForm[2]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="box_number">Box Number</Label>
+                  <Input
+                    type="text"
+                    name="3"
+                    placeholder=""
+                    value={this.state.MatStockForm[3]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="condition">Condition</Label>
+                  <Input
+                    type="text"
+                    min="0"
+                    name="4"
+                    placeholder=""
+                    value={this.state.MatStockForm[4]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    name="6"
+                    placeholder=""
+                    value={this.state.MatStockForm[5]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+          </ModalBody>
           <ModalFooter>
-            <Button color="danger" onClick={this.DeleteData}>
-              Delete
-            </Button>
-            <Button color="secondary" onClick={this.toggleDelete}>
-              Cancel
+            <Button color="success" onClick={this.saveUpdate}>
+              Update
             </Button>
           </ModalFooter>
         </Modal>
+        {/*  Modal Edit PP*/}
 
         {/* Modal create New */}
-        <Modal
+        <ModalCreateNew
+          isOpen={this.state.createModal}
+          toggle={this.togglecreateModal}
+          className={this.props.className}
+          onClosed={this.resettogglecreateModal}
+          title="Create New GI"
+        >
+          <div>
+            <table>
+              <tbody>
+                <tr>
+                  <td>Upload File</td>
+                  <td>:</td>
+                  <td>
+                    <input
+                      type="file"
+                      onChange={this.fileHandlerMaterial.bind(this)}
+                      style={{ padding: "10px", visiblity: "hidden" }}
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ModalFooter>
+            <Button
+              block
+              color="link"
+              className="btn-pill"
+              onClick={this.exportMatStatus}
+              size="sm"
+            >
+              Download Template
+            </Button>{" "}
+            <Button
+              block
+              color="success"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveMatStockWHBulk}
+              size="sm"
+            >
+              Save
+            </Button>{" "}
+            <Button
+              block
+              color="secondary"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveTruncateBulk}
+              size="sm"
+            >
+              Truncate
+            </Button>
+          </ModalFooter>
+        </ModalCreateNew>
+
+        {/* <Modal
           isOpen={this.state.createModal}
           toggle={this.togglecreateModal}
           className={this.props.className}
           onClosed={this.resettogglecreateModal}
         >
           <ModalHeader toggle={this.togglecreateModal}>
-            Create New Plan
+            Create New Stock
           </ModalHeader>
           <ModalBody>
             <CardBody>
@@ -1043,7 +1230,8 @@ class MatInboundPlan extends React.Component {
               block
               color="link"
               className="btn-pill"
-              onClick={this.exportMatInbound}
+              onClick={this.exportMatStatus}
+              size="sm"
             >
               Download Template
             </Button>{" "}
@@ -1052,7 +1240,8 @@ class MatInboundPlan extends React.Component {
               color="success"
               className="btn-pill"
               disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveCPOBulk}
+              onClick={this.saveMatStockWHBulk}
+              size="sm"
             >
               Save
             </Button>{" "}
@@ -1062,153 +1251,32 @@ class MatInboundPlan extends React.Component {
               className="btn-pill"
               disabled={this.state.rowsXLS.length === 0}
               onClick={this.saveTruncateBulk}
+              size="sm"
             >
               Truncate
             </Button>
           </ModalFooter>
-        </Modal>
+        </Modal> */}
 
-        {/* Modal New PO */}
+        {/* Modal confirmation delete */}
         <Modal
-          isOpen={this.state.modalMatStockForm}
-          toggle={this.togglePOForm}
-          className="modal--form-e"
+          isOpen={this.state.danger}
+          toggle={this.toggleDelete}
+          className={"modal-danger " + this.props.className}
         >
-          <ModalHeader>Form CPO</ModalHeader>
-          <ModalBody>
-            <Row>
-              <Col sm="12">
-                <FormGroup>
-                  <Label htmlFor="po_number">Owner ID</Label>
-                  <Input
-                    type="text"
-                    name="0"
-                    placeholder=""
-                    value={this.state.POForm[0]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="po_year">PO Number</Label>
-                  <Input
-                    type="text"
-                    name="1"
-                    placeholder=""
-                    value={this.state.POForm[1]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="arrival_date">Arrival Date</Label>
-                  <Input
-                    type="datetime-local"
-                    placeholder=""
-                    value={this.state.POForm[2]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="project_name">Project Name</Label>
-                  <Input
-                    type="text"
-                    name="3"
-                    placeholder=""
-                    value={this.state.POForm[3]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="sku">SKU</Label>
-                  <Input
-                    type="text"
-                    min="0"
-                    name="4"
-                    placeholder=""
-                    value={this.state.POForm[4]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-              </Col>
-            </Row>
-          </ModalBody>
+          <ModalHeader toggle={this.toggleDelete}>
+            Delete Material Stock Confirmation
+          </ModalHeader>
+          <ModalBody>Are you sure want to delete ?</ModalBody>
           <ModalFooter>
-            <Button color="success" onClick={this.saveNew}>
-              Submit
+            <Button color="danger" onClick={this.DeleteData}>
+              Delete
+            </Button>
+            <Button color="secondary" onClick={this.toggleDelete}>
+              Cancel
             </Button>
           </ModalFooter>
         </Modal>
-        {/*  Modal New PO*/}
-
-        {/* Modal Edit PP */}
-        <Modal
-          isOpen={this.state.modalMatStockEdit}
-          toggle={this.toggleEdit}
-          className="modal--form"
-        >
-          <ModalHeader>Form Update Product Package</ModalHeader>
-          <ModalBody>
-            <Row>
-              <Col sm="12">
-                <FormGroup>
-                  <Label htmlFor="po_number">Owner ID</Label>
-                  <Input
-                    type="text"
-                    name="0"
-                    placeholder=""
-                    value={this.state.POForm[0]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="po_year">PO Number</Label>
-                  <Input
-                    type="text"
-                    name="1"
-                    placeholder=""
-                    value={this.state.POForm[1]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="arrival_date">Arrival Date</Label>
-                  <Input
-                    type="datetime-local"
-                    placeholder=""
-                    value={this.state.POForm[2]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="project_name">Project Name</Label>
-                  <Input
-                    type="text"
-                    name="3"
-                    placeholder=""
-                    value={this.state.POForm[3]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="sku">SKU</Label>
-                  <Input
-                    type="text"
-                    min="0"
-                    name="4"
-                    placeholder=""
-                    value={this.state.POForm[4]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-              </Col>
-            </Row>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="success" onClick={this.saveUpdate}>
-              Update
-            </Button>
-          </ModalFooter>
-        </Modal>
-        {/*  Modal Edit PP*/}
 
         {/* Modal Loading */}
         <Modal
@@ -1246,4 +1314,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(MatInboundPlan);
+export default connect(mapStateToProps)(GIInternal);
