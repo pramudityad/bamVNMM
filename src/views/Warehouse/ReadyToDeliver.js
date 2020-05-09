@@ -124,7 +124,7 @@ class ReadyToDeliver extends Component {
     }
     let whereAnd = '{"mr_id": '+filter_mr_id+', "$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_ORDER_PROCESSING"'+filter_wh_id+'}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_ORDER_RECEIVED", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    this.getDataFromAPINODE('/matreq?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
+    this.getDataFromAPINODE('/matreq?srt=_id:-1&q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
       if(res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;

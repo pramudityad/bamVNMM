@@ -38,7 +38,7 @@ class GR extends Component {
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
-    this.onChangeDebounced = debounce(this.onChangeDebounced, 500); 
+    this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
@@ -147,7 +147,7 @@ class GR extends Component {
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
     let whereAnd = '{"mr_id": '+filter_mr_id+',"dsp_handover.location":"warehouse"}';
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_JOINT_CHECK", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    this.getDataFromAPINODE('/matreq?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
+    this.getDataFromAPINODE('/matreq?srt=_id:-1&q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
       console.log("MR List Sorted", res);
       if(res.data !== undefined) {
         const items = res.data.data;

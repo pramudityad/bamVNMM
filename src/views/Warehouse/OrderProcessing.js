@@ -115,7 +115,7 @@ class OrderProcessing extends Component {
       filter_wh_id = ', "origin.value" : "'+this.props.match.params.whid +'"';
     }
     let whereAnd = '{"mr_id": '+filter_mr_id+', "current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED"'+filter_wh_id+'}';
-    this.getDataFromAPINODE('/matreq?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
+    this.getDataFromAPINODE('/matreq?srt=_id:-1&q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
       if(res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;

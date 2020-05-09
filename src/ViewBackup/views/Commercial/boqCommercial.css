@@ -16,14 +16,9 @@
     width: 300px;
   }
 
-.table-bordered td {
+  .table-bordered th, .table-bordered td {
     vertical-align: middle;
     text-align: center;
-}
-
-.table-bordered thead th, {
-  vertical-align: middle !important;
-  display: table-cell !important;
 }
 
 .boq-tech-status-PA {

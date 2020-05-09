@@ -471,7 +471,7 @@ class TSSRBoq extends Component {
       if(currValue === 5){
         tssrApproval["tssrNote"] = true;
         tssrApproval["techBoqNote"] = {};
-        tssrApproval["techBoqNote"]["note_value"] = this.state.tssr_comment !== null ? this.state.tssr_comment : this.state.data_tech_boq === null ? "-" : this.state.data_tech_boq.notes === undefined ? " " : this.state.data_tech_boq.notes.length !== 0 ? this.state.data_tech_boq.notes[this.state.data_tech_boq.notes.length-1].note_value : " ";
+        tssrApproval["techBoqNote"]["note_value"] = this.state.tssr_comment !== null ? this.state.tssr_comment : this.state.data_tech_boq === null ? " " : this.state.data_tech_boq.notes === undefined ? " " : this.state.data_tech_boq.notes.length !== 0 ? this.state.data_tech_boq.notes[this.state.data_tech_boq.notes.length-1].note_value : " ";
         let config_comment = this.state.tssr_config_comment;
         let config_qty = this.state.tssr_config_qty;
         for(let i = 0; i < data_tech.length; i++){
