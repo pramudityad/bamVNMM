@@ -5,6 +5,7 @@ import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
+import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
@@ -59,7 +60,10 @@ class MRCreation extends Component {
         redirectSign : false,
         action_status : null,
         action_message : null,
-        toggle_display : "new"
+        toggle_display : "new",
+        identifier_by : "tower_id",
+        tower_selected_id : null,
+        dsp_list : [],
     };
     this.saveMRtoAPI = this.saveMRtoAPI.bind(this);
     this.handleChangeFormMRCreation = this.handleChangeFormMRCreation.bind(this);
@@ -69,6 +73,9 @@ class MRCreation extends Component {
     this.showHide = this.showHide.bind(this);
     this.handleChangeProjectXL = this.handleChangeProjectXL.bind(this);
     this.handleChangeTowerXL = this.handleChangeTowerXL.bind(this);
+    this.handleChangeIdentifierBy = this.handleChangeIdentifierBy.bind(this);
+    this.loadOptionsTowerID = this.loadOptionsTowerID.bind(this);
+    this.loadOptionsCDID = this.loadOptionsCDID.bind(this);
   }
 
   async postDatatoAPINODE(url, data){
@@ -167,6 +174,11 @@ class MRCreation extends Component {
     })
   }
 
+  handleChangeIdentifierBy(e){
+    const value = e.target.value;
+    this.setState({identifier_by : value});
+  }
+
   handleChangeTSSR = (newValue) => {
     const _id_tssr = newValue.value;
     const data_tssr_selection = this.state.list_tssr.find(e => e._id === _id_tssr);
@@ -206,7 +218,7 @@ class MRCreation extends Component {
 
   selectedDatetoFormat(date){
     let dateSplit = date.split("-");
-    return dateSplit[0]+"-"+dateSplit[2]+"-"+dateSplit[1]
+    return dateSplit[0]+"-"+dateSplit[1]+"-"+dateSplit[2]
   }
 
   async saveMRtoAPI(){
@@ -220,9 +232,10 @@ class MRCreation extends Component {
     let list_site = [];
     //     "mr_type": dataForm[3],
     //     "mr_delivery_type": dataForm[4],
+    console.log("this.selectedDatetoFormat(dataForm[5])", this.selectedDatetoFormat(dataForm[5]));
     let dataXLS = [
-      ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "dsp_company", "mr_comment_project", "sent_mr_request", "identifier"],
-      ["new", this.state.project_name_selected, this.selectMRType(dataForm[3]), this.selectDeliveryType(dataForm[4]), dataForm[8], this.selectedDatetoFormat(dataForm[5]), this.selectedDatetoFormat(dataForm[6]), dataFormName[7], "", "", dataForm[1]]
+      ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "dsp_company", "mr_comment_project", "sent_mr_request", "created_based", "identifier"],
+      ["new", this.state.project_name_selected, this.selectMRType(dataForm[3]), this.selectDeliveryType(dataForm[4]), dataForm[8], this.selectedDatetoFormat(dataForm[5]), this.selectedDatetoFormat(dataForm[6]), dataForm[7], "", "", this.state.identifier_by, this.state.tower_selected_id]
     ]
     const respondCheckingMR = await this.postDatatoAPINODE('/matreq/matreqByActivity', {"data" : dataXLS});
     if(respondCheckingMR.data !== undefined && respondCheckingMR.status >= 200 && respondCheckingMR.status <= 300 ) {
@@ -323,10 +336,20 @@ class MRCreation extends Component {
 
   componentDidMount(){
     // this.getDataCD();
-    this.getDataTower();
+    // this.getDataTower();
+    this.getDSPList();
     this.getDataProject();
     this.getDataWarehouse();
     document.title = "MR Creation | BAM"
+  }
+
+  getDSPList() {
+    this.getDatafromAPIXL('/vendor_data_non_page?where={"Type":"DSP"}').then(res => {
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({dsp_list : items});
+      }
+    })
   }
 
   getDataTower(){
@@ -340,7 +363,7 @@ class MRCreation extends Component {
   }
 
   getDataWarehouse(){
-    this.getDataFromAPINODE('/whManagement/warehouse').then( resWH => {
+    this.getDataFromAPINODE('/whManagement/warehouse?q={"wh_type":{"$regex" : "internal", "$options" : "i"}}').then( resWH => {
       if(resWH.data !== undefined){
         this.setState({ list_warehouse : resWH.data.data })
       }
@@ -392,14 +415,14 @@ class MRCreation extends Component {
     return e;
   }
 
-  handleChangeTowerXL(e){
-    let dataForm = this.state.create_mr_form;
-    let dataFormName = this.state.create_mr_name_form;
-    dataForm[1] = e.value;
-    dataFormName[1] = e.label;
-    this.setState({create_mr_form : dataForm, create_mr_name_form : dataFormName });
-    return e
-  }
+  // handleChangeTowerXL(e){
+  //   let dataForm = this.state.create_mr_form;
+  //   let dataFormName = this.state.create_mr_name_form;
+  //   dataForm[1] = e.value;
+  //   dataFormName[1] = e.label;
+  //   this.setState({create_mr_form : dataForm, create_mr_name_form : dataFormName });
+  //   return e
+  // }
 
   handleChangeProject(e){
     const value = e.target.value;
@@ -416,6 +439,42 @@ class MRCreation extends Component {
     this.setState({cd_id_selected : value, data_cd_id_selected : data_CD}, () => {
       this.getDataCDProject();
     });
+  }
+
+  async loadOptionsTowerID(inputValue) {
+    if(!inputValue || inputValue.length < 3 ) {
+      return [];
+    } else {
+      let tower_id_list = [];
+      // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
+      const getTowerID = await this.getDatafromAPIXL('/tower_site_sorted_non_page?where={"tower_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      if(getTowerID !== undefined && getTowerID.data !== undefined) {
+        getTowerID.data._items.map(tower =>
+          tower_id_list.push({'label' : tower.tower_id, 'value' : tower.tower_id}))
+      }
+      return tower_id_list;
+    }
+  }
+
+  async loadOptionsCDID(inputValue) {
+    if(!inputValue) {
+      return [];
+    } else {
+      let wp_id_list = [];
+      // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
+      const getWPID = await this.getDatafromAPIXL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      if(getWPID !== undefined && getWPID.data !== undefined) {
+        getWPID.data._items.map(wp =>
+          wp_id_list.push({'value' : wp.WP_ID , 'label' : wp.WP_ID +" ( "+wp.WP_Name+" )"}))
+      }
+      return wp_id_list;
+    }
+  }
+
+  handleChangeTowerXL(e){
+    console.log(" e.value",  e.value);
+    this.setState({tower_selected_id : e.value});
+    return e
   }
 
   showHide(e) {
@@ -471,7 +530,6 @@ class MRCreation extends Component {
   }
 
   render() {
-    console.log("list_cd_id", this.state.create_mr_form[6]);
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);
     }
@@ -528,12 +586,27 @@ class MRCreation extends Component {
               <Row form>
                 <Col md={6}>
                   <FormGroup>
-                    <Label>Tower ID</Label>
-                      <Select
+                    <Label>
+                      <select type="select" onChange={this.handleChangeIdentifierBy} value={this.state.identifier_by}>
+                        <option value="cd_id">CD ID</option>
+                        <option value="tower_id">Tower ID</option>
+                      </select>
+                    </Label>
+                    {this.state.identifier_by === "tower_id" ? (
+                      <AsyncSelect
                         cacheOptions
-                        options={this.state.list_tower_selection}
+                        loadOptions={this.loadOptionsTowerID}
+                        defaultOptions
                         onChange={this.handleChangeTowerXL}
                       />
+                    ) : (
+                      <AsyncSelect
+                        cacheOptions
+                        loadOptions={this.loadOptionsCDID}
+                        defaultOptions
+                        onChange={this.handleChangeTowerXL}
+                      />
+                    )}
                   </FormGroup>
                 </Col>
               </Row>
@@ -585,10 +658,9 @@ class MRCreation extends Component {
                     <Label>DSP Company</Label>
                     <Input type="select" name="7" value={this.state.create_mr_form[7]} onChange={this.handleChangeFormMRCreation}>
                       <option value="" disabled selected hidden>Select DSP Company</option>
-                      <option value={1}>PT BMS Delivery</option>
-                      <option value={2}>PT MITT Delivery</option>
-                      <option value={3}>PT IXT Delivery</option>
-                      <option value={4}>PT ARA Delivery</option>
+                      {this.state.dsp_list.map(e =>
+                        <option value={e.Vendor_Code}>{e.Name}</option>
+                      )}
                     </Input>
                   </FormGroup>
                 </Col>

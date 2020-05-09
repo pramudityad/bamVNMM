@@ -86,3 +86,8 @@
 .page-choose {
   margin-top: 10px;
 }
+
+.table-tssr__header--fixed th{
+  display: table-cell;
+  vertical-align: middle !important;
+}

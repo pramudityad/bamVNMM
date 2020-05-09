@@ -420,80 +420,18 @@ class MRDetail extends Component {
     });
   }
 
-  milestoneStat(ms_name, ms_date, ms_updater, index)
+  milestoneStat(ms_name, ms_status, ms_date, ms_updater, index)
   {
-    switch ( ms_name )
-    {
-      case 'MS_ORDER_CREATED':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Order Created</h3>
-          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      case 'MS_ORDER_RECEIVED':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Order Received</h3>
-          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      case 'MS_ORDER_PROCESSING':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Order Processing</h3>
-          <h4 className="vertical-timeline-element-subtitle">by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      case 'MS_READY_TO_DELIVER':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(227, 30, 16)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Ready to Deliver</h3>
-          <h4 className="vertical-timeline-element-subtitle">confirmed by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      case 'MS_JOINT_CHECK':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Joint Check</h3>
-          <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      case 'MS_LOADING_PROCESS':
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date={ms_date}
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Loading Process</h3>
-          <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
-        </VerticalTimelineElement>;
-      default:
-        return <VerticalTimelineElement
-          className="vertical-timeline-element--work"
-          date=""
-          iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
-
-      >
-          <h3 className="vertical-timeline-element-title">Data not available</h3>
-        </VerticalTimelineElement>;
-    }
+    return (
+      <VerticalTimelineElement
+        className="vertical-timeline-element--work"
+        date={ms_date}
+        iconStyle={{ background: 'rgb(33, 150, 243)', color: '#fff' }}
+        >
+        <h3 className="vertical-timeline-element-title">{ms_name + " " +ms_status}</h3>
+        <h4 className="vertical-timeline-element-subtitle">initiated by <b>{ms_updater}</b></h4>
+      </VerticalTimelineElement>
+    )
   }
 
   componentDidMount(){
@@ -661,7 +599,20 @@ class MRDetail extends Component {
   async saveUpdateMaterial(){
     const dataXLS = this.state.rowsXLS;
     const dataMR = this.state.data_mr;
-    console.log("dataXLS variant", JSON.stringify({"data" : dataXLS}));
+    let patchDataMat = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataMR._id, {"data" : dataXLS});
+    if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
+      this.setState({ action_status : 'success'});
+    } else{
+      if(patchDataMat.response !== undefined && patchDataMat.response.data !== undefined && patchDataMat.response.data.error !== undefined){
+        if(patchDataMat.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
   }
 
   render() {
@@ -1124,8 +1075,8 @@ class MRDetail extends Component {
                       >
                         <VerticalTimeline>
                           {this.state.data_mr !== null &&
-                            this.state.data_mr.mr_milestones.map((ms, i) => {
-                              return this.milestoneStat(ms.ms_name, ms.ms_date, ms.ms_updater, i)
+                            this.state.data_mr.mr_status.filter(e => e.mr_status_name !== "IMPLEMENTATION").map((ms, i) => {
+                              return this.milestoneStat(ms.mr_status_name, ms.mr_status_value, ms.mr_status_date, ms.mr_status_updater, i)
                             })
                           }
                         </VerticalTimeline>

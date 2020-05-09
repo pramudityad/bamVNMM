@@ -114,6 +114,7 @@ class TSSRBoq extends Component {
         boq_tech_select : {},
         modal_alert : false,
         drm_data : [],
+        view_drm : 'tssr',
 
         view_tech_header_table : {"config_group_header" : [], "config_group_type_header" : []},
         view_tech_all_header_table : {"config_group_header" : [], "config_group_type_header" : []},
@@ -131,6 +132,7 @@ class TSSRBoq extends Component {
       this.handleChangeQtyTSSRConfig = this.handleChangeQtyTSSRConfig.bind(this);
       this.handlePageChange = this.handlePageChange.bind(this);
       this.openDRMinPDB = this.openDRMinPDB.bind(this);
+      this.handleChangeViewDRM = this.handleChangeViewDRM.bind(this);
     }
 
     checkValueReturn(value1, value2){
@@ -599,7 +601,7 @@ class TSSRBoq extends Component {
       this.toggleLoading();
     }
 
-    exportFormatTechnicalHorizontal = async () =>{
+    exportFormatTSSRHorizontalWithDRM = async () =>{
       const wb = new Excel.Workbook();
       const ws = wb.addWorksheet();
 
@@ -644,8 +646,31 @@ class TSSRBoq extends Component {
         );
       }
 
-      const MRFormat = await wb.xlsx.writeBuffer();
-      saveAs(new Blob([MRFormat]), 'TSSR DRM '+dataTech.no_tech_boq+' Report.xlsx');
+      const TSSRDRM = await wb.xlsx.writeBuffer();
+      saveAs(new Blob([TSSRDRM]), 'TSSR '+dataTech.no_tech_boq+' Report with DRM.xlsx');
+    }
+
+    exportDRMofTSSR= async () =>{
+      const wb = new Excel.Workbook();
+      const ws = wb.addWorksheet();
+
+      const dataTech = this.state.data_tech_boq;
+      let dataSites = this.state.data_tech_boq_sites;
+
+      let headerDRM = ["Tower ID", "Program Name", "Project", "Actual RBS DATA", "Actual DU", "RU B0 (900)", "RU B1 (2100)", "RU B3 (1800) ", "RU B8 (900)", "RU B1B3", "RU Band Agnostic", "Remarks Need CR/Go as SoW Original", "Existing Antenna (type)", "ANTENNA_HEIGHT ", "Scenario RAN", "Dismantle Antenna", "Dismantle RU", "Dismantele Accessories", "Dismantle DU", "Dismantle RBS/Encl", "EXISTING DAN SCENARIO IMPLEMENTASI RBS ", "DRM FINAL (MODULE)", "DRM Final Radio", "DRM Final SOW Cabinet", "DRM FINAL (SOW G9/U9/L9)", "DRM FINAL (SOW G18/L18)", "DRM FINAL (SOW U21/L21)", "DRM FINAL (ANTENNA TYPE)", "PLAN ANTENNA AZIMUTH", "PLAN ANTENNA ET/MT", "Module", "Cabinet", "Radio", "Power RRU", "Antenna", "Dismantle", "System", "Optic RRU", "Area", "VERIFICATION (DATE)", "VERIFICATION (STATUS)", "VERIFICATION PIC", "ISSUED DETAIL", "CR Flag engineering"]
+
+      ws.addRow(["TSSR No.", dataTech.no_tech_boq]);
+      ws.addRow(["Project Name", dataTech.project_name]);
+      ws.addRow([""]);
+
+      ws.addRow(headerDRM);
+      for(let i = 0; i < dataSites.length ; i++){
+        let drm = this.getDataDRM(dataSites[i].site_id, dataSites[i].program);
+        ws.addRow([drm.tower_id, drm.project_name, drm.program, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering]);
+      }
+
+      const DRMPrint = await wb.xlsx.writeBuffer();
+      saveAs(new Blob([DRMPrint]), 'DRM of TSSR'+dataTech.no_tech_boq+'.xlsx');
     }
 
     getDataDRM(tower, program){
@@ -657,12 +682,73 @@ class TSSRBoq extends Component {
       }
     }
 
+    viewDataDRM(tower, program){
+      let viewDRM = {}
+      const drmFind = this.state.drm_data.find(e => e.tower_id === tower && e.program === program);
+      if(drmFind !== undefined){
+        viewDRM = drmFind;
+      }else{
+        viewDRM = {};
+      }
+      return(
+        <Fragment>
+            <td>{viewDRM.actual_rbs_data}</td>
+            <td>{viewDRM.actual_du}</td>
+            <td>{viewDRM.ru_b0_900}</td>
+            <td>{viewDRM.ru_b1_2100}</td>
+            <td>{viewDRM.ru_b3_1800}</td>
+            <td>{viewDRM.ru_b8_900}</td>
+            <td>{viewDRM.ru_b1b3}</td>
+            <td>{viewDRM.ru_band_agnostic}</td>
+            <td>{viewDRM.remarks_need_cr_go_as_sow_original}</td>
+            <td>{viewDRM.existing_antenna_type}</td>
+            <td>{viewDRM.antenna_height}</td>
+            <td>{viewDRM.scenario_ran}</td>
+            <td>{viewDRM.dismantle_antenna}</td>
+            <td>{viewDRM.dismantle_ru}</td>
+            <td>{viewDRM.dismantle_accessories}</td>
+            <td>{viewDRM.dismantle_du}</td>
+            <td>{viewDRM.dismantle_rbs_encl}</td>
+            <td>{viewDRM.existing_dan_scenario_implementasi_rbs}</td>
+            <td>{viewDRM.drm_final_module}</td>
+            <td>{viewDRM.drm_final_radio}</td>
+            <td>{viewDRM.drm_final_sow_cabinet}</td>
+            <td>{viewDRM.drm_final_sow_g9_u9_l9}</td>
+            <td>{viewDRM.drm_final_sow_g18_l18}</td>
+            <td>{viewDRM.drm_final_sow_u21_l21}</td>
+            <td>{viewDRM.drm_final_antenna_type}</td>
+            <td>{viewDRM.plan_antenna_azimuth}</td>
+            <td>{viewDRM.plan_antenna_et_mt}</td>
+            <td>{viewDRM.module}</td>
+            <td>{viewDRM.cabinet}</td>
+            <td>{viewDRM.radio}</td>
+            <td>{viewDRM.power_rru}</td>
+            <td>{viewDRM.antenna}</td>
+            <td>{viewDRM.dismantle}</td>
+            <td>{viewDRM.system}</td>
+            <td>{viewDRM.optic_rru}</td>
+            <td>{viewDRM.area}</td>
+            <td>{viewDRM.verification_date}</td>
+            <td>{viewDRM.verification_status}</td>
+            <td>{viewDRM.verification_pic}</td>
+            <td>{viewDRM.issued_detail}</td>
+            <td>{viewDRM.cr_flag_engineering}</td>
+        </Fragment>
+      )
+    }
+
+    handleChangeViewDRM(e){
+      const value = e.target.value;
+      this.setState({view_drm : value});
+    }
+
     openDRMinPDB(){
       window.open("https://dev.xl.pdb.e-dpm.com/login/", "_blank");
       window.open("https://dev.xl.pdb.e-dpm.com/customerdeliverabledrmmenuxl/list/", "_blank")
     }
 
     render() {
+      let viewDataDRM = {};
       return (
         <div>
           <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -673,9 +759,16 @@ class TSSRBoq extends Component {
                   <span style={{lineHeight :'2', fontSize : '17px'}}> TSSR BOQ </span>
                   {this.state.data_tech_boq !== null && (
                     <React.Fragment>
-                      <Button onClick={this.openDRMinPDB} style={{float : 'right'}} color="primary">
-                        Upload DRM
-                      </Button>
+                      {this.state.view_drm === "tssr" && (
+                        <Button onClick={this.handleChangeViewDRM} value="drm" style={{float : 'right'}} color="primary">
+                          View DRM
+                        </Button>
+                      )}
+                      {this.state.view_drm === "drm" && (
+                        <Button onClick={this.handleChangeViewDRM} value="tssr" style={{float : 'right'}} color="primary">
+                          View TSSR
+                        </Button>
+                      )}
                       <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
                         <DropdownToggle caret color="secondary">
                           <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
@@ -683,7 +776,8 @@ class TSSRBoq extends Component {
                         <DropdownMenu>
                           <DropdownItem header> TSSR File</DropdownItem>
                           <DropdownItem onClick={this.exportFormatTSSRVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Vertical</DropdownItem>
-                          <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR DRM</DropdownItem>
+                          <DropdownItem onClick={this.exportFormatTSSRHorizontalWithDRM}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR with DRM Report</DropdownItem>
+                          <DropdownItem onClick={this.exportDRMofTSSR}> <i className="fa fa-file-text-o" aria-hidden="true"></i>DRM of TSSR</DropdownItem>
                           <DropdownItem onClick={this.exportFormatTSSRUpdate}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Update Format</DropdownItem>
                         </DropdownMenu>
                       </Dropdown>
@@ -719,59 +813,124 @@ class TSSRBoq extends Component {
                     <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
                     </Col>
                   </Row>
-
-                  <div class='divtable'>
-                    <Table hover bordered striped responsive size="sm" width="100%">
-                        <thead class="table-commercial__header--fixed">
-                        <tr>
-                          <th>Tower ID</th>
-                          <th>Program</th>
-                          <th>SOW</th>
-                          <th>Config</th>
-                          <th>SAP Number</th>
-                          <th>Qty Technical</th>
-                          <th>Qty TSSR</th>
-                          <th>Diff</th>
-                          <th>Note</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                      {this.state.data_tech_boq_sites_pagination.map(site =>
-                        site.siteItemConfig.map(conf =>
-                            <tr>
-                              <td>{site.site_id}</td>
-                              <td>{site.program}</td>
-                              <td>{site.sow}</td>
-                              <td>{conf.config_id}</td>
-                              <td>{conf.sap_number}</td>
-                              <td>{conf.qty}</td>
-                              <td style={{width : '125px'}}>
-                                <Input
-                                  type="number"
-                                  name={conf._id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeQtyTSSRConfig}
-                                  value={this.state.tssr_config_qty.has(conf._id) === true ? this.state.tssr_config_qty.get(conf._id) : conf.tssr_notes === undefined ? conf.qty : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].suggested_qty : conf.qty}
-                                />
-                              </td>
-                              <td>{conf.qty - (this.state.tssr_config_qty.has(conf._id) === true ? this.state.tssr_config_qty.get(conf._id) : conf.tssr_notes === undefined ? conf.qty : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].suggested_qty : conf.qty) }</td>
-                              <td>
-                                <Input
-                                  type="text"
-                                  name={conf._id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeCommentConfig}
-                                  value={this.state.tssr_config_comment.has(conf._id) === true ? this.state.tssr_config_comment.get(conf._id) : conf.tssr_notes === undefined ? "" : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].note : ""}
-                                />
-                              </td>
-                            </tr>
-                        )
-                      )}
-                      </tbody>
-                    </Table>
-                  </div>
+                  {this.state.view_drm === "tssr" && (
+                    <div class='divtable'>
+                      <Table hover bordered striped responsive size="sm" width="100%">
+                          <thead class="table-tssr__header--fixed">
+                          <tr>
+                            <th>Tower ID</th>
+                            <th>Program</th>
+                            <th>SOW</th>
+                            <th>Config</th>
+                            <th>SAP Number</th>
+                            <th>Qty Technical</th>
+                            <th>Qty TSSR</th>
+                            <th>Diff</th>
+                            <th>Note</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                        {this.state.data_tech_boq_sites_pagination.map(site =>
+                          site.siteItemConfig.map(conf =>
+                              <tr>
+                                <td>{site.site_id}</td>
+                                <td>{site.program}</td>
+                                <td>{site.sow}</td>
+                                <td>{conf.config_id}</td>
+                                <td>{conf.sap_number}</td>
+                                <td>{conf.qty}</td>
+                                <td style={{width : '125px'}}>
+                                  <Input
+                                    type="number"
+                                    name={conf._id}
+                                    className="BoQ-style-qty"
+                                    placeholder=""
+                                    onChange={this.handleChangeQtyTSSRConfig}
+                                    value={this.state.tssr_config_qty.has(conf._id) === true ? this.state.tssr_config_qty.get(conf._id) : conf.tssr_notes === undefined ? conf.qty : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].suggested_qty : conf.qty}
+                                  />
+                                </td>
+                                <td>{conf.qty - (this.state.tssr_config_qty.has(conf._id) === true ? this.state.tssr_config_qty.get(conf._id) : conf.tssr_notes === undefined ? conf.qty : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].suggested_qty : conf.qty) }</td>
+                                <td>
+                                  <Input
+                                    type="text"
+                                    name={conf._id}
+                                    className="BoQ-style-qty"
+                                    placeholder=""
+                                    onChange={this.handleChangeCommentConfig}
+                                    value={this.state.tssr_config_comment.has(conf._id) === true ? this.state.tssr_config_comment.get(conf._id) : conf.tssr_notes === undefined ? "" : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].note : ""}
+                                  />
+                                </td>
+                              </tr>
+                          )
+                        )}
+                        </tbody>
+                      </Table>
+                    </div>
+                  )}
+                  {this.state.view_drm === "drm" && (
+                    <div class='divtable'>
+                      <Table hover bordered striped responsive size="sm" width="100%">
+                          <thead class="table-tssr__header--fixed">
+                          <tr>
+                            <th>TowerID</th>
+                            <th>Program</th>
+                            <th>Actual RBS DATA</th>
+                            <th>Actual DU</th>
+                            <th>RU B0 (900)</th>
+                            <th>RU B1 (2100)</th>
+                            <th>RU B3 (1800) </th>
+                            <th>RU B8 (900)</th>
+                            <th>RU B1B3</th>
+                            <th>RU Band Agnostic</th>
+                            <th>Remarks Need CR/Go as SoW Original</th>
+                            <th>Existing Antenna (type)</th>
+                            <th>ANTENNA_HEIGHT </th>
+                            <th>Scenario RAN</th>
+                            <th>Dismantle Antenna</th>
+                            <th>Dismantle RU</th>
+                            <th>Dismantele Accessories</th>
+                            <th>Dismantle DU</th>
+                            <th>Dismantle RBS/Encl</th>
+                            <th>EXISTING DAN SCENARIO IMPLEMENTASI RBS </th>
+                            <th>DRM FINAL (MODULE)</th>
+                            <th>DRM Final Radio</th>
+                            <th>DRM Final SOW Cabinet</th>
+                            <th>DRM FINAL (SOW G9/U9/L9)</th>
+                            <th>DRM FINAL (SOW G18/L18)</th>
+                            <th>DRM FINAL (SOW U21/L21)</th>
+                            <th>DRM FINAL (ANTENNA TYPE)</th>
+                            <th>PLAN ANTENNA AZIMUTH</th>
+                            <th>PLAN ANTENNA ET/MT</th>
+                            <th>Module</th>
+                            <th>Cabinet</th>
+                            <th>Radio</th>
+                            <th>Power RRU</th>
+                            <th>Antenna</th>
+                            <th>Dismantle</th>
+                            <th>System</th>
+                            <th>Optic RRU</th>
+                            <th>Area</th>
+                            <th>VERIFICATION (DATE)</th>
+                            <th>VERIFICATION (STATUS)</th>
+                            <th>VERIFICATION PIC</th>
+                            <th>ISSUED DETAIL</th>
+                            <th>CR Flag engineering</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                        {this.state.data_tech_boq_sites_pagination.map(site =>
+                          site.siteItemConfig.map(conf =>
+                              <tr>
+                                <td>{site.site_id}</td>
+                                <td>{site.program}</td>
+                                {this.viewDataDRM(site.site_id, site.program)}
+                              </tr>
+                          )
+                        )}
+                        </tbody>
+                      </Table>
+                    </div>
+                  )}
                   <nav>
                     <div>
                       <Pagination

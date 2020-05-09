@@ -266,8 +266,8 @@ class ListTechnical extends Component {
                     <th>Project</th>
                     <th>Creator</th>
                     <th>Ver.</th>
-                    <th style={{'width' : '200px', textAlign : 'center'}}>Status</th>
-                    <th style={{'width' : '200px', textAlign : 'center'}}>Action</th>
+                    <th style={{'width' : '150px', textAlign : 'center'}}>Status</th>
+                    <th style={{'width' : '225px', textAlign : 'center'}}>Action</th>
                   </tr>
                   <tr>
                       <td>
@@ -326,7 +326,7 @@ class ListTechnical extends Component {
                               {boq.approval_status === "PRE APPROVAL" || boq.approval_status === "REJECTED" ? (
                                 <span className="boq-tech-status-PA">{boq.approval_status}</span>
                               ) : boq.approval_status === "REQUEST FOR APPROVAL" ? (
-                                <span className="boq-tech-status-WA">{boq.approval_status}</span>
+                                <span className="boq-tech-status-WA">{"Requested to TSSR"}</span>
                               ) : (
                                 <span className="boq-tech-status-A">{boq.approval_status}</span>
                               )}

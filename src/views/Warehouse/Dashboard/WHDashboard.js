@@ -194,8 +194,7 @@ class WarehouseDashboard extends Component {
 
   getWHStockList() {
     this.toggleLoading();
-    this.getDatafromAPINODE('/whManagement/warehouse?q={"wh_type":"internal"}').then((res) => {
-      console.log("all data ", res.data);
+    this.getDatafromAPINODE('/whManagement/warehouse?q={"wh_type":{"$regex" : "internal", "$options" : "i"}}').then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -381,7 +380,7 @@ class WarehouseDashboard extends Component {
                               GI
                             </Button>
                             </Link>
-                          </Col>                         
+                          </Col>
                         </Row>
                       </CardFooter>
                     </Collapse>

@@ -258,8 +258,7 @@ class OrderCreated extends Component {
     }
     if(successUpdate.length !== 0){
       this.setState({action_status : "success"});
-      this.getMRList();
-      // setTimeout(function(){ window.location.reload(); }, 2000);
+      setTimeout(function(){ window.location.reload(); }, 2000);
     }
   }
 
@@ -268,7 +267,6 @@ class OrderCreated extends Component {
     this.patchDatatoAPINODE('/matreq/approveMatreq/'+id_doc).then(res => {
       if(res.data !== undefined){
         this.setState({ action_status : "success" });
-        this.getMRList();
       }else{
         this.setState({ action_status : "failed" });
       }
@@ -280,7 +278,6 @@ class OrderCreated extends Component {
     this.patchDatatoAPINODE('/matreq/rejectMatreq/'+id_doc).then(res => {
       if(res.data !== undefined){
         this.setState({ action_status : "success" });
-        this.getMRList();
       }else{
         this.setState({ action_status : "failed" });
       }

@@ -770,7 +770,7 @@ class MRDetail extends Component {
                       <span>Origin</span>
                     </div>
                     <div>
-                      {this.state.data_mr.origin.title + " " +this.state.data_mr.origin.value}
+                      {this.state.data_mr.origin !== null ? this.state.data_mr.origin.title + " " +this.state.data_mr.origin.value : ""}
                     </div>
                   </div>
                 </div>
@@ -823,7 +823,7 @@ class MRDetail extends Component {
                 <hr className="mr-detail__line"/>
 
                 <div className="mr-detail__body--flex">
-                  
+
                 </div>
               </Fragment>
               )}

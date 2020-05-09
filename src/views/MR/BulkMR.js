@@ -24,6 +24,10 @@ const API_URL_PDB_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const usernameTselApi = 'adminbamidsuper';
 const passwordTselApi = 'F760qbAg2sml';
 
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
+
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
@@ -75,6 +79,7 @@ class BulkMR extends Component {
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
       tokenUser : this.props.dataLogin.token,
+      asp_list : [],
         rowsXLS : [],
         list_data_activity : [],
         data : [],
@@ -91,6 +96,26 @@ class BulkMR extends Component {
     };
     this.exportFormatBulkMR = this.exportFormatBulkMR.bind(this);
     this.saveDataMRBulk = this.saveDataMRBulk.bind(this);
+  }
+
+  async getDataFromAPIEXEL(url) {
+    try {
+      let respond = await axios.get(API_URL_XL+url, {
+        headers: {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        }
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
   }
 
   async getDataFromAPINODE(url) {
@@ -289,12 +314,22 @@ class BulkMR extends Component {
 
   componentDidMount(){
     this.getDataWarehouse();
+    this.getASPList();
   }
 
   getDataWarehouse(){
-    this.getDataFromAPINODE('/whManagement/warehouse').then( resWH => {
+    this.getDataFromAPINODE('/whManagement/warehouse?q={"wh_type":{"$regex" : "internal", "$options" : "i"}}').then( resWH => {
       if(resWH.data !== undefined){
         this.setState({ list_warehouse : resWH.data.data })
+      }
+    })
+  }
+
+  getASPList() {
+    this.getDataFromAPIEXEL('/vendor_data_non_page?where={"Type":"DSP"}').then(res => {
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({asp_list : items});
       }
     })
   }
@@ -363,7 +398,15 @@ class BulkMR extends Component {
         this.setState({ action_status : 'failed', action_message : '[ '+wp_invalid.join('", "')+' ] => unknown' });
       }
     } else{
-      this.setState({ action_status : 'failed' });
+      if(respondCheckingMR.response !== undefined && respondCheckingMR.response.data !== undefined && respondCheckingMR.response.data.error !== undefined){
+        if(respondCheckingMR.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
     }
     this.setState({waiting_status : false});
   }
@@ -543,10 +586,12 @@ class BulkMR extends Component {
       "dsp_company",
       "mr_comment_project",
       "sent_mr_request",
+      "created_based",
       "identifier"
     ]);
 
-    ws.addRow(["new", "XL BAM DEMO 2020",	"1",	"1",	"JKT1",	"2020-19-04",	"2020-21-04",	"PT BMS Delivery", null, null, "JAW-JT-BBS-0001"]);
+    ws.addRow(["new", "XL BAM DEMO 2020",	"1",	"1",	"JKT1",	"2020-04-19",	"2020-04-21",	"20001TEST1", null, null, "tower_id", "JAW-JT-BBS-0001"]);
+    ws.addRow(["new", "XL BAM DEMO 2020",	"1",	"1",	"JKT1",	"2020-04-19",	"YYYY-MM-DD",	"20001TEST3", null, null, "cd_id", "X2660930"]);
 
     const MRFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MRFormat]), 'MR Uploader Template.xlsx');
@@ -658,6 +703,27 @@ class BulkMR extends Component {
                         <tr>
                           <td>{wh.wh_id}</td>
                           <td>{wh.wh_name}</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </Table>
+                </Col>
+                <Col sm="6" lg="6">
+                  <Table hover bordered responsive size="sm" style={{width : '100%'}}>
+                    <thead>
+                      <tr style={{backgroundColor : "rgb(11, 72, 107)", color: "white"}}>
+                        <td colSpan="2">ASP Vendor</td>
+                      </tr>
+                      <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {this.state.asp_list.map(e =>
+                        <tr>
+                          <td>{e.Vendor_Code}</td>
+                          <td>{e.Name}</td>
                         </tr>
                       )}
                     </tbody>

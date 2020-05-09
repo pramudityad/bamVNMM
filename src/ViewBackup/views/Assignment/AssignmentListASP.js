@@ -253,7 +253,7 @@ class AssignmentListASP extends Component {
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData.total}
+                  totalItemsCount={this.state.totalData}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"
