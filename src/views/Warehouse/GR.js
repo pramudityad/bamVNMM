@@ -145,7 +145,7 @@ class GR extends Component {
     let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
     let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
     let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+',"dsp_handover.location":"warehouse"}';
+    let whereAnd = '{"mr_id": '+filter_mr_id+',"dsp_handover.location":"warehouse", "asp_material_gi" : null}';
     console.log('GR filter ', whereAnd);
     // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": '+filter_current_status+', "current_milestones": "MS_JOINT_CHECK", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
     this.getDataFromAPINODE('/matreq?srt=_id:-1&q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
