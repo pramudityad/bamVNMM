@@ -708,7 +708,7 @@ class ConfigUpload extends React.Component {
     const ws = wb.addWorksheet();
 
     let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
-    let HeaderRow2 = ["tower_id","program", "priority", "sow"];
+    let HeaderRow2 = ["tower_id","program", "sow", "priority"];
 
     Config_group_type_DEFAULT.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
     Config_group_DEFAULT.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
