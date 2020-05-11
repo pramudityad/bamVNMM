@@ -180,85 +180,87 @@ class WHDashboardDet extends Component {
     }
   }
 
-  getOrderCreated() {    
-    this.getDataFromAPI('/mr_op?where={"current_mr_status":"MR REQUESTED", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
-      console.log("Order Created", res);
-      if(res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({order_created : items.total});
-      }
-    })
-  }
 
-  getOrderReceived() {    
-    this.getDataFromAPI('/mr_op?where={"current_mr_status": "MR APPROVED", "current_milestones":"MS_ORDER_RECEIVED", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
-      console.log("Order Received", res);
-      if(res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({order_received : items.total});
-      }
-    })
-  }
 
-  getOrderProcessing() {    
-    this.getDataFromAPI('/mr_op?where={"current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
-      console.log("Order Processing", res);
-      if(res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({order_processing : items.total});
-      }
-    })
-  }
+    getOrderCreated() {
+      this.getDataFromAPINODE('/matreq?lmt=1&pg=1&q={"current_mr_status":"MR REQUESTED", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
+        console.log("Order Created", res);
+        if(res.data !== undefined) {
+          const items = res.data;
+          this.setState({order_created : items.totalResults});
+        }
+      })
+    }
 
-  getReadyToDeliver() {    
-    this.getDataFromAPI('/mr_op?where={"$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_READY_TO_DELIVER"}, "origin.value" : "'+ this.props.match.params.slug +'"').then(res => {
-      console.log("Ready To Deliver", res);
-      if(res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({ready_to_deliver : items.total});
-      }
-    })
-  }
+    getOrderReceived() {
+      this.getDataFromAPINODE('/matreq?lmt=1&pg=1&q={"current_mr_status": "MR APPROVED", "current_milestones":"MS_ORDER_RECEIVED", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
+        console.log("Order Received", res);
+        if(res.data !== undefined) {
+          const items = res.data;
+          this.setState({order_received : items.totalResults});
+        }
+      })
+    }
 
-  getJointCheck() {    
-    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_READY_TO_DELIVER", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
-      console.log("Joint Check", res);
-      if(res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({joint_check : items.total});
-      }
-    })
-  }
+    getOrderProcessing() {
+      this.getDataFromAPINODE('/matreq?lmt=1&pg=1&q={"current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
+        console.log("Order Processing", res);
+        if(res.data !== undefined) {
+          const items = res.data;
+          this.setState({order_processing : items.totalResults});
+        }
+      })
+    }
 
-  getLoadingProcess() {    
-    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_JOINT_CHECK", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
-      console.log("Loading Process", res);
-      if(res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({loading_process : items.total});
-      }
-    })
-  }
+    getReadyToDeliver() {
+      this.getDataFromAPINODE('/matreq?lmt=1&pg=1&q={"$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_READY_TO_DELIVER"}, "origin.value" : "'+ this.props.match.params.slug +'"').then(res => {
+        console.log("Ready To Deliver", res);
+        if(res.data !== undefined) {
+          const items = res.data;
+          this.setState({ready_to_deliver : items.totalResults});
+        }
+      })
+    }
 
-  getMaterialDispatch() {    
-    this.getDataFromAPI('/mr_op?where={"current_milestones":"MS_DISPATCH", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
-      console.log("Material Dispatch", res);
-      if(res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({material_dispatch : items.total});
-      }
-    })
-  }
+    getJointCheck() {
+      this.getDataFromAPINODE('/matreq?lmt=1&pg=1&q={"current_milestones": "MS_READY_TO_DELIVER", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
+        console.log("Joint Check", res);
+        if(res.data !== undefined) {
+          const items = res.data;
+          this.setState({joint_check : items.totalResults});
+        }
+      })
+    }
 
-  getMaterialOnHold() {    
-    this.getDataFromAPI('/mr_op?where={"current_mr_status":"LACK OF MATERIAL", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
-      console.log("Material On Hold", res);
-      if(res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({material_on_hold : items.total});
-      }
-    })
-  }
+    getLoadingProcess() {
+      this.getDataFromAPINODE('/matreq?lmt=1&pg=1&q={"current_milestones": "MS_JOINT_CHECK", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
+        console.log("Loading Process", res);
+        if(res.data !== undefined) {
+          const items = res.data;
+          this.setState({loading_process : items.totalResults});
+        }
+      })
+    }
+
+    getMaterialDispatch() {
+      this.getDataFromAPINODE('/matreq?lmt=1&pg=1&q={"current_milestones":"MS_DISPATCH", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
+        console.log("Material Dispatch", res);
+        if(res.data !== undefined) {
+          const items = res.data;
+          this.setState({material_dispatch : items.totalResults});
+        }
+      })
+    }
+
+    getMaterialOnHold() {
+      this.getDataFromAPINODE('/matreq?lmt=1&pg=1&q={"current_mr_status":"LACK OF MATERIAL", "origin.value" : "'+ this.props.match.params.slug +'"}').then(res => {
+        console.log("Material On Hold", res);
+        if(res.data !== undefined) {
+          const items = res.data;
+          this.setState({material_on_hold : items.totalResults});
+        }
+      })
+    }
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 

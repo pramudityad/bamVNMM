@@ -355,7 +355,7 @@ class WarehouseDashboardExt extends Component {
                           <Link
                               to={{
                                 // pathname:"/wh-gr-eid/" +e.wh_id,
-                                pathname: "/wh-gr-ext"
+                                pathname: "/wh-gr-ext-per-wh/"+e.wh_id
                               }}>
                             <Button
                               block
@@ -372,7 +372,7 @@ class WarehouseDashboardExt extends Component {
                           <Link
                               to={{
                                 // pathname:"/wh-gi-eid/" +e.wh_id,
-                                pathname: "/wh-gi-ext"
+                                pathname: "/wh-gi-ext-per-wh/"+e.wh_id
                               }}>
                             <Button
                               block
