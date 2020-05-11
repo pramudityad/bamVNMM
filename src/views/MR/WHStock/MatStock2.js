@@ -24,7 +24,9 @@ import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import queryString from "query-string";
+
 import ModalCreateNew from '../../components/ModalCreateNew'
+import ModalDelete from '../../components/ModalDelete';
 
 import "../MatStyle.css";
 
@@ -138,9 +140,20 @@ class MaterialStock2 extends React.Component {
 
   toggleDelete(e) {
     const modalDelete = this.state.danger;
-    this.setState({
-      danger: !this.state.danger,
-    });
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      this.setState({
+        danger: !this.state.danger,
+        selected_id: _id,
+      });
+    } else {
+      this.setState({
+        danger: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete:!prevState.modalDelete,
+    }));
   }
 
   toggleLoading() {
@@ -711,40 +724,24 @@ class MaterialStock2 extends React.Component {
     saveAs(new Blob([allocexport]), "All Material Stock.xlsx");
   }
 
-  // DeleteData = async () => {
-  //   const objData = this.state.all_data.find((e) => e._id);
-  //   this.toggleLoading();
-  //   this.toggleDelete();
-  //   const DelData = this.deleteDataFromAPINODE(
-  //     "/whStock/deleteWhStock/" + objData._id
-  //   ).then((res) => {
-  //     if (res.data !== undefined) {
-  //       this.setState({ action_status: "success" });
-  //       this.toggleLoading();
-  //     } else {
-  //       this.setState({ action_status: "failed" }, () => {
-  //         this.toggleLoading();
-  //       });
-  //     }
-  //   });
-  // };
-  DeleteData(r) {
-    // this.toggleDanger();
-    const _idData = r.currentTarget.value;
+  DeleteData = async () => {
+    const objData = this.state.selected_id
+    this.toggleLoading();
+    this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/whStock/deleteWhStock/" + _idData
+      "/whStock/deleteWhStock/" + objData
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getWHStockListNext();
-        // this.toggleLoading();
+        this.toggleLoading();        
       } else {
         this.setState({ action_status: "failed" }, () => {
-          // this.toggleLoading();
+          this.toggleLoading();
         });
       }
     });
-  }
+  };
 
   exportMatStatus = async () => {
     const wb = new Excel.Workbook();
@@ -1025,7 +1022,7 @@ class MaterialStock2 extends React.Component {
                                       size="sm"
                                       color="danger"
                                       value={e._id}
-                                      onClick={(r) => { if (window.confirm('Are you sure to delete this item?')) this.DeleteData(r, "value")}}
+                                      onClick={this.toggleDelete}
                                       title="Delete"
                                     >
                                       <i
@@ -1264,24 +1261,16 @@ class MaterialStock2 extends React.Component {
         </Modal> */}
 
         {/* Modal confirmation delete */}
-        <Modal
-          isOpen={this.state.danger}
+        <ModalDelete  isOpen={this.state.danger}
           toggle={this.toggleDelete}
-          className={"modal-danger " + this.props.className}
-        >
-          <ModalHeader toggle={this.toggleDelete}>
-            Delete Material Stock Confirmation
-          </ModalHeader>
-          <ModalBody>Are you sure want to delete ?</ModalBody>
-          <ModalFooter>
-            <Button color="danger" onClick={this.DeleteData}>
+          className={"modal-danger " + this.props.className} title="Delete Stock">
+        <Button color="danger" onClick={this.DeleteData}>
               Delete
             </Button>
             <Button color="secondary" onClick={this.toggleDelete}>
               Cancel
             </Button>
-          </ModalFooter>
-        </Modal>
+        </ModalDelete>
 
         {/* Modal Loading */}
         <Modal

@@ -24,6 +24,8 @@ import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
+import ModalDelete from '../../components/ModalDelete';
+
 import "../MatStyle.css";
 
 const Checkbox = ({
@@ -85,6 +87,8 @@ class WHManagement extends React.Component {
       activeItemId: null,
       createModal: false,
       selected_id: "",
+      selected_wh_name: "",
+      selected_wh_id: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -117,9 +121,20 @@ class WHManagement extends React.Component {
 
   toggleDelete(e) {
     const modalDelete = this.state.danger;
-    this.setState({
-      danger: !this.state.danger,
-    });
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      this.setState({
+        danger: !this.state.danger,
+        selected_id: _id,
+      });
+    } else {
+      this.setState({
+        danger: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete:!prevState.modalDelete,
+    }));
   }
 
   resettogglecreateModal() {
@@ -468,60 +483,6 @@ class WHManagement extends React.Component {
     });
   }
 
-  async getMatStockFormat(dataImport) {
-    const dataHeader = dataImport[0];
-    const onlyParent = dataImport
-      .map((e) => e)
-      .filter((e) =>
-        this.checkValuetoString(e[this.getIndex(dataHeader, "owner_id")])
-      );
-    let data_array = [];
-    if (onlyParent !== undefined && onlyParent.length !== 0) {
-      for (let i = 1; i < onlyParent.length; i++) {
-        const aa = {
-          owner_id: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "owner_id")]
-          ),
-          po_number: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "po_number")]
-          ),
-          arrival_date: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "arrival_date")]
-          ),
-          id_project_doc: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "id_project_doc")]
-          ),
-          sku: this.checkValue(onlyParent[i][this.getIndex(dataHeader, "sku")]),
-        };
-        if (aa.owner_id !== undefined && aa.owner_id !== null) {
-          aa["owner_id"] = aa.owner_id.toString();
-        }
-        if (aa.po_number !== undefined && aa.po_number !== null) {
-          aa["po_number"] = aa.po_number.toString();
-        }
-        if (aa.arrival_date !== undefined && aa.arrival_date !== null) {
-          aa["arrival_date"] = aa.arrival_date.toString();
-        }
-        if (aa.id_project_doc !== undefined && aa.id_project_doc !== null) {
-          aa["id_project_doc"] = aa.id_project_doc.toString();
-        }
-        if (aa.sku !== undefined && aa.sku !== null) {
-          aa["sku"] = aa.sku.toString();
-        }
-        data_array.push(aa);
-      }
-      // console.log(JSON.stringify(data_array));
-      return data_array;
-    } else {
-      this.setState(
-        { action_status: "failed", action_message: "Please check your format" },
-        () => {
-          this.toggleLoading();
-        }
-      );
-    }
-  }
-
   saveMatStockWHBulk = async () => {
     this.toggleLoading();
     this.togglecreateModal();
@@ -646,18 +607,6 @@ class WHManagement extends React.Component {
     });
   }
 
-  numToSSColumn(num) {
-    var s = "",
-      t;
-
-    while (num > 0) {
-      t = (num - 1) % 26;
-      s = String.fromCharCode(65 + t) + s;
-      num = ((num - t) / 26) | 0;
-    }
-    return s || undefined;
-  }
-
   async downloadAll() {
     let download_all = [];
     let getAll_nonpage = await this.getDatafromAPINODE("/whStock/getWhStock");
@@ -696,41 +645,42 @@ class WHManagement extends React.Component {
     saveAs(new Blob([allocexport]), "All Warehouse.xlsx");
   }
 
-  // DeleteData = async () => {
-  //   const objData = this.state.all_data.find((e) => e._id);
-  //   this.toggleLoading();
-  //   this.toggleDelete();
-  //   const DelData = this.deleteDataFromAPINODE(
-  //     "/whManagement/deleteWarehouse/" + objData._id
-  //   ).then((res) => {
-  //     if (res.data !== undefined) {
-  //       this.setState({ action_status: "success" });
-  //       this.toggleLoading();
-  //     } else {
-  //       this.setState({ action_status: "failed" }, () => {
-  //         this.toggleLoading();
-  //       });
-  //     }
-  //   });
-  // };
-
-  DeleteData(r) {
-    // this.toggleDanger();
-    const _idData = r.currentTarget.value;
+  DeleteData = async () => {
+    const objData = this.state.selected_id
+    this.toggleLoading();
+    this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/whManagement/deleteWarehouse/" + _idData
+      "/whManagement/deleteWarehouse/" + objData
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getWHStockList();
-        // this.toggleLoading();
+        this.toggleLoading();        
       } else {
         this.setState({ action_status: "failed" }, () => {
-          // this.toggleLoading();
+          this.toggleLoading();
         });
       }
     });
-  }
+  };
+
+  // DeleteData(r) {
+  //   // this.toggleDanger();
+  //   const _idData = r.currentTarget.value;
+  //   const DelData = this.deleteDataFromAPINODE(
+  //     "/whManagement/deleteWarehouse/" + _idData
+  //   ).then((res) => {
+  //     if (res.data !== undefined) {
+  //       this.setState({ action_status: "success" });
+  //       this.getWHStockList();
+  //       // this.toggleLoading();
+  //     } else {
+  //       this.setState({ action_status: "failed" }, () => {
+  //         // this.toggleLoading();
+  //       });
+  //     }
+  //   });
+  // }
 
   exportMatStatus = async () => {
     const wb = new Excel.Workbook();
@@ -973,14 +923,7 @@ class WHManagement extends React.Component {
                                       size="sm"
                                       color="danger"
                                       value={e._id}
-                                      onClick={(r) => {
-                                        if (
-                                          window.confirm(
-                                            "Are you sure to delete this item?"
-                                          )
-                                        )
-                                          this.DeleteData(r, "value");
-                                      }}
+                                      onClick={this.toggleDelete}
                                       title="Delete"
                                     >
                                       <i
@@ -1239,24 +1182,16 @@ class WHManagement extends React.Component {
         </Modal>
 
         {/* Modal confirmation delete */}
-        <Modal
-          isOpen={this.state.danger}
+        <ModalDelete  isOpen={this.state.danger}
           toggle={this.toggleDelete}
-          className={"modal-danger " + this.props.className}
-        >
-          <ModalHeader toggle={this.toggleDelete}>
-            Delete Material Stock Confirmation
-          </ModalHeader>
-          <ModalBody>Are you sure want to delete ?</ModalBody>
-          <ModalFooter>
-            <Button color="danger" onClick={this.DeleteData}>
+          className={"modal-danger " + this.props.className} title="Delete WH">
+        <Button color="danger" onClick={this.DeleteData}>
               Delete
             </Button>
             <Button color="secondary" onClick={this.toggleDelete}>
               Cancel
             </Button>
-          </ModalFooter>
-        </Modal>
+        </ModalDelete>
 
         {/* Modal Loading */}
         <Modal

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { ModalBody, ModalHeader, CardBody } from "reactstrap";
+import { ModalBody, ModalHeader, Modal, ModalFooter } from "reactstrap";
 
 const ModalDelete = ({ isOpen, toggle, className, title, children }) => {
   return (
