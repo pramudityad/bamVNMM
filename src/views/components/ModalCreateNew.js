@@ -1,10 +1,8 @@
 import React, { Component } from "react";
 import {
-    Button,
     Modal,
     ModalBody,
     ModalHeader,
-    ModalFooter,
     CardBody
 } from "reactstrap";
 
