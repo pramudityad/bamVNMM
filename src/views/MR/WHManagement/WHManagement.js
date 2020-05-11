@@ -84,6 +84,7 @@ class WHManagement extends React.Component {
       activeItemName: "",
       activeItemId: null,
       createModal: false,
+      selected_id: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -133,7 +134,7 @@ class WHManagement extends React.Component {
     }));
   }
 
-  toggleEdit(e) {
+  toggleEdit(e) {    
     this.getASPList();
     const modalEdit = this.state.modalEdit;
     if (modalEdit === false) {
@@ -145,7 +146,7 @@ class WHManagement extends React.Component {
       dataForm[2] = aEdit.wh_manager;
       dataForm[3] = aEdit.address;
       dataForm[4] = aEdit.owner;
-      this.setState({ DataForm: dataForm });
+      this.setState({ DataForm: dataForm,  selected_id: value});
     } else {
       this.setState({ DataForm: new Array(6).fill(null) });
     }
@@ -570,10 +571,8 @@ class WHManagement extends React.Component {
   async saveUpdate() {
     let respondSaveEdit = undefined;
     const dataPPEdit = this.state.DataForm;
-    const dataPP = this.state.all_data.find(
-      (e) => e.owner_id === dataPPEdit[0]
-    );
-    const objData = this.state.all_data.find((e) => e._id);
+    const objData = this.state.selected_id;
+    // console.log('obj data ', objData);
     let pp = {
       wh_name: dataPPEdit[0],
       wh_id: dataPPEdit[1],
@@ -584,7 +583,7 @@ class WHManagement extends React.Component {
     this.toggleLoading();
     this.toggleEdit();
     let patchData = await this.patchDatatoAPINODE(
-      "/whManagement/UpdateOneWarehouse/" + objData._id,
+      "/whManagement/UpdateOneWarehouse/" + objData,
       { data: pp }
     );
     console.log("patch data ", pp);
