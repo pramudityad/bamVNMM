@@ -662,23 +662,41 @@ class MatInboundPlan extends React.Component {
     saveAs(new Blob([allocexport]), "All Material Inbound.xlsx");
   }
 
-  DeleteData = async () => {
-    const objData = this.state.all_data.find((e) => e._id);
-    this.toggleLoading();
-    this.toggleDelete();
+  // DeleteData = async () => {
+  //   const objData = this.state.all_data.find((e) => e._id);
+  //   this.toggleLoading();
+  //   this.toggleDelete();
+  //   const DelData = this.deleteDataFromAPINODE(
+  //     "/whInboundPlan/deleteWhInboundPlan/" + objData._id
+  //   ).then((res) => {
+  //     if (res.data !== undefined) {
+  //       this.setState({ action_status: "success" });
+  //       this.toggleLoading();
+  //     } else {
+  //       this.setState({ action_status: "failed" }, () => {
+  //         this.toggleLoading();
+  //       });
+  //     }
+  //   });
+  // };
+
+  DeleteData(r) {
+    // this.toggleDanger();
+    const _idData = r.currentTarget.value;
     const DelData = this.deleteDataFromAPINODE(
-      "/whInboundPlan/deleteWhInboundPlan/" + objData._id
+      "/whInboundPlan/deleteWhInboundPlan/" + _idData
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
-        this.toggleLoading();
+        this.getWHInboundListNext();
+        // this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
-          this.toggleLoading();
+          // this.toggleLoading();
         });
       }
     });
-  };
+  }
 
   exportMatInbound = async () => {
     const wb = new Excel.Workbook();
@@ -952,7 +970,7 @@ class MatInboundPlan extends React.Component {
                                       size="sm"
                                       color="danger"
                                       value={e._id}
-                                      onClick={this.toggleDelete}
+                                      onClick={(r) => { if (window.confirm('Are you sure you wish to delete this item?')) this.DeleteData(r, "value")}}
                                       title="Delete"
                                     >
                                       <i

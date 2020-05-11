@@ -687,23 +687,41 @@ class WHManagement extends React.Component {
     saveAs(new Blob([allocexport]), "All Warehouse.xlsx");
   }
 
-  DeleteData = async () => {
-    const objData = this.state.all_data.find((e) => e._id);
-    this.toggleLoading();
-    this.toggleDelete();
+  // DeleteData = async () => {
+  //   const objData = this.state.all_data.find((e) => e._id);
+  //   this.toggleLoading();
+  //   this.toggleDelete();
+  //   const DelData = this.deleteDataFromAPINODE(
+  //     "/whManagement/deleteWarehouse/" + objData._id
+  //   ).then((res) => {
+  //     if (res.data !== undefined) {
+  //       this.setState({ action_status: "success" });
+  //       this.toggleLoading();
+  //     } else {
+  //       this.setState({ action_status: "failed" }, () => {
+  //         this.toggleLoading();
+  //       });
+  //     }
+  //   });
+  // };
+
+  DeleteData(r) {
+    // this.toggleDanger();
+    const _idData = r.currentTarget.value;
     const DelData = this.deleteDataFromAPINODE(
-      "/whManagement/deleteWarehouse/" + objData._id
+      "/whManagement/deleteWarehouse/" + _idData
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
-        this.toggleLoading();
+        this.getWHStockList();
+        // this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
-          this.toggleLoading();
+          // this.toggleLoading();
         });
       }
     });
-  };
+  }
 
   exportMatStatus = async () => {
     const wb = new Excel.Workbook();
@@ -919,7 +937,7 @@ class WHManagement extends React.Component {
                                       size="sm"
                                       color="danger"
                                       value={e._id}
-                                      onClick={this.toggleDelete}
+                                      onClick={(r) => { if (window.confirm('Are you sure to delete this item?')) this.DeleteData(r, "value")}}
                                       title="Delete"
                                     >
                                       <i
