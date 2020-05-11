@@ -26,6 +26,9 @@ import * as XLSX from "xlsx";
 
 import "../MatStyle.css";
 
+import ModalDelete from '../../components/ModalDelete';
+
+
 const Checkbox = ({
   type = "checkbox",
   name,
@@ -209,9 +212,20 @@ class MatInboundPlan extends React.Component {
 
   toggleDelete(e) {
     const modalDelete = this.state.danger;
-    this.setState({
-      danger: !this.state.danger,
-    });
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      this.setState({
+        danger: !this.state.danger,
+        selected_id: _id,
+      });
+    } else {
+      this.setState({
+        danger: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete:!prevState.modalDelete,
+    }));
   }
 
   changeFilterName(value) {
@@ -662,41 +676,24 @@ class MatInboundPlan extends React.Component {
     saveAs(new Blob([allocexport]), "All Material Inbound.xlsx");
   }
 
-  // DeleteData = async () => {
-  //   const objData = this.state.all_data.find((e) => e._id);
-  //   this.toggleLoading();
-  //   this.toggleDelete();
-  //   const DelData = this.deleteDataFromAPINODE(
-  //     "/whInboundPlan/deleteWhInboundPlan/" + objData._id
-  //   ).then((res) => {
-  //     if (res.data !== undefined) {
-  //       this.setState({ action_status: "success" });
-  //       this.toggleLoading();
-  //     } else {
-  //       this.setState({ action_status: "failed" }, () => {
-  //         this.toggleLoading();
-  //       });
-  //     }
-  //   });
-  // };
-
-  DeleteData(r) {
-    // this.toggleDanger();
-    const _idData = r.currentTarget.value;
+  DeleteData = async () => {
+    const objData = this.state.selected_id
+    this.toggleLoading();
+    this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/whInboundPlan/deleteWhInboundPlan/" + _idData
+      "/whInboundPlan/deleteWhInboundPlan/" + objData
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getWHInboundListNext();
-        // this.toggleLoading();
+        this.toggleLoading();        
       } else {
         this.setState({ action_status: "failed" }, () => {
-          // this.toggleLoading();
+          this.toggleLoading();
         });
       }
     });
-  }
+  };
 
   exportMatInbound = async () => {
     const wb = new Excel.Workbook();
@@ -970,7 +967,7 @@ class MatInboundPlan extends React.Component {
                                       size="sm"
                                       color="danger"
                                       value={e._id}
-                                      onClick={(r) => { if (window.confirm('Are you sure you wish to delete this item?')) this.DeleteData(r, "value")}}
+                                      onClick={this.toggleDelete}
                                       title="Delete"
                                     >
                                       <i
@@ -1006,24 +1003,16 @@ class MatInboundPlan extends React.Component {
         </Row>
 
         {/* Modal confirmation delete */}
-        <Modal
-          isOpen={this.state.danger}
+        <ModalDelete  isOpen={this.state.danger}
           toggle={this.toggleDelete}
-          className={"modal-danger " + this.props.className}
-        >
-          <ModalHeader toggle={this.toggleDelete}>
-            Delete Material Stock Confirmation
-          </ModalHeader>
-          <ModalBody>Are you sure want to delete ?</ModalBody>
-          <ModalFooter>
-            <Button color="danger" onClick={this.DeleteData}>
+          className={"modal-danger " + this.props.className} title="Delete Inbound">
+        <Button color="danger" onClick={this.DeleteData}>
               Delete
             </Button>
             <Button color="secondary" onClick={this.toggleDelete}>
               Cancel
             </Button>
-          </ModalFooter>
-        </Modal>
+        </ModalDelete>
 
         {/* Modal create New */}
         <Modal
