@@ -26,7 +26,9 @@ import * as XLSX from "xlsx";
 
 import "../MatStyle.css";
 
+import ModalCreateNew from "../../components/ModalCreateNew";
 import ModalDelete from "../../components/ModalDelete";
+import Loading from "../../components/Loading";
 
 const Checkbox = ({
   type = "checkbox",
@@ -754,18 +756,31 @@ class MatInboundPlan extends React.Component {
                     </Button>
                   </div>
                   &nbsp;&nbsp;&nbsp;
-                  <div>
-                    <Button
-                      onClick={this.downloadAll}
-                      block
-                      color="ghost-warning"
+                  <div style={{ marginRight: "10px" }}>
+                    <Dropdown
+                      isOpen={this.state.dropdownOpen[1]}
+                      toggle={() => {
+                        this.toggle(1);
+                      }}
                     >
-                      <i className="fa fa-download" aria-hidden="true">
-                        {" "}
-                        &nbsp;{" "}
-                      </i>{" "}
-                      Export
-                    </Button>
+                      <DropdownToggle block color="ghost-warning">
+                        <i className="fa fa-download" aria-hidden="true">
+                          {" "}
+                          &nbsp;{" "}
+                        </i>{" "}
+                        Export
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem header>Uploader Template</DropdownItem>
+                        <DropdownItem onClick={this.exportMatInbound}>
+                          {" "}
+                          Material Inbound Template
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>
+                          > Download All{" "}
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
                   </div>
                 </div>
               </CardHeader>
@@ -844,70 +859,65 @@ class MatInboundPlan extends React.Component {
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.all_data
-                            .map((e) => (
-                              <React.Fragment key={e._id + "frag"}>
-                                <tr
-                                  style={{ backgroundColor: "#d3d9e7" }}
-                                  className="fixbody"
-                                  key={e._id}
-                                >
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.owner_id}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.wh_id}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.po_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.project_name}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {this.convertDateFormat(e.arrival_date)}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku_description}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.qty}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.ageing}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.serial_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.box_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.condition}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.notes}
-                                  </td>
-                                  <td>
-                                    <Button
-                                      size="sm"
-                                      color="danger"
-                                      value={e._id}
-                                      onClick={this.toggleDelete}
-                                      title="Delete"
-                                    >
-                                      <i
-                                        className="fa fa-trash"
-                                        aria-hidden="true"
-                                      ></i>
-                                    </Button>
-                                  </td>
-                                </tr>
-                              </React.Fragment>
-                            ))}
+                          {this.state.all_data.map((e) => (
+                            <React.Fragment key={e._id + "frag"}>
+                              <tr
+                                style={{ backgroundColor: "#d3d9e7" }}
+                                className="fixbody"
+                                key={e._id}
+                              >
+                                <td style={{ textAlign: "center" }}>
+                                  {e.owner_id}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.wh_id}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.po_number}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.project_name}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {this.convertDateFormat(e.arrival_date)}
+                                </td>
+                                <td style={{ textAlign: "center" }}>{e.sku}</td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.sku_description}
+                                </td>
+                                <td style={{ textAlign: "center" }}>{e.qty}</td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.ageing}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.serial_number}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.box_number}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.condition}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.notes}
+                                </td>
+                                <td>
+                                  <Button
+                                    size="sm"
+                                    color="danger"
+                                    value={e._id}
+                                    onClick={this.toggleDelete}
+                                    title="Delete"
+                                  >
+                                    <i
+                                      className="fa fa-trash"
+                                      aria-hidden="true"
+                                    ></i>
+                                  </Button>
+                                </td>
+                              </tr>
+                            </React.Fragment>
+                          ))}
                         </tbody>
                       </Table>
                     </div>
@@ -947,45 +957,40 @@ class MatInboundPlan extends React.Component {
         </ModalDelete>
 
         {/* Modal create New */}
-        <Modal
+        <ModalCreateNew
           isOpen={this.state.createModal}
           toggle={this.togglecreateModal}
           className={this.props.className}
           onClosed={this.resettogglecreateModal}
+          title="Create Plan"
         >
-          <ModalHeader toggle={this.togglecreateModal}>
-            Create New Plan
-          </ModalHeader>
-          <ModalBody>
-            <CardBody>
-              <div>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Upload File</td>
-                      <td>:</td>
-                      <td>
-                        <input
-                          type="file"
-                          onChange={this.fileHandlerMaterial.bind(this)}
-                          style={{ padding: "10px", visiblity: "hidden" }}
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </CardBody>
-          </ModalBody>
+          <div>
+            <table>
+              <tbody>
+                <tr>
+                  <td>Upload File</td>
+                  <td>:</td>
+                  <td>
+                    <input
+                      type="file"
+                      onChange={this.fileHandlerMaterial.bind(this)}
+                      style={{ padding: "10px", visiblity: "hidden" }}
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <ModalFooter>
-            <Button
+            {/* <Button
               block
               color="link"
               className="btn-pill"
               onClick={this.exportMatInbound}
+              size="sm"
             >
               Download Template
-            </Button>{" "}
+            </Button>{" "} */}
             <Button
               block
               color="success"
@@ -1005,7 +1010,7 @@ class MatInboundPlan extends React.Component {
               Truncate
             </Button>
           </ModalFooter>
-        </Modal>
+        </ModalCreateNew>
 
         {/* Modal New PO */}
         <Modal
@@ -1150,29 +1155,11 @@ class MatInboundPlan extends React.Component {
         {/*  Modal Edit PP*/}
 
         {/* Modal Loading */}
-        <Modal
+        <Loading
           isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
           className={"modal-sm modal--loading "}
-        >
-          <ModalBody>
-            <div style={{ textAlign: "center" }}>
-              <div className="lds-ring">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-              </div>
-            </div>
-            <div style={{ textAlign: "center" }}>Loading ...</div>
-            <div style={{ textAlign: "center" }}>System is processing ...</div>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="secondary" onClick={this.toggleLoading}>
-              Close
-            </Button>
-          </ModalFooter>
-        </Modal>
+        ></Loading>
         {/* end Modal Loading */}
       </div>
     );

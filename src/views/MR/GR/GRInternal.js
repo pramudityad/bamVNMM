@@ -24,7 +24,9 @@ import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import queryString from "query-string";
+
 import ModalCreateNew from "../../components/ModalCreateNew";
+import ModalDelete from "../../components/ModalDelete";
 
 import "../MatStyle.css";
 
@@ -94,6 +96,7 @@ class GRInternal extends React.Component {
       activeItemName: "",
       activeItemId: null,
       createModal: false,
+      selected_id: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -138,9 +141,20 @@ class GRInternal extends React.Component {
 
   toggleDelete(e) {
     const modalDelete = this.state.danger;
-    this.setState({
-      danger: !this.state.danger,
-    });
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      this.setState({
+        danger: !this.state.danger,
+        selected_id: _id,
+      });
+    } else {
+      this.setState({
+        danger: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete: !prevState.modalDelete,
+    }));
   }
 
   toggleLoading() {
@@ -725,14 +739,15 @@ class GRInternal extends React.Component {
   }
 
   DeleteData = async () => {
-    const objData = this.state.all_data.find((e) => e._id);
+    const objData = this.state.selected_id;
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/whStock/deleteWhStock/" + objData._id
+      "/whStock/deleteWhStock/" + objData
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
+        this.getWHStockListNext();
         this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
@@ -853,18 +868,31 @@ class GRInternal extends React.Component {
                     </Button>
                   </div>
                   &nbsp;&nbsp;&nbsp;
-                  <div>
-                    <Button
-                      onClick={this.downloadAll}
-                      block
-                      color="ghost-warning"
+                  <div style={{ marginRight: "10px" }}>
+                    <Dropdown
+                      isOpen={this.state.dropdownOpen[1]}
+                      toggle={() => {
+                        this.toggle(1);
+                      }}
                     >
-                      <i className="fa fa-download" aria-hidden="true">
-                        {" "}
-                        &nbsp;{" "}
-                      </i>{" "}
-                      Export
-                    </Button>
+                      <DropdownToggle block color="ghost-warning">
+                        <i className="fa fa-download" aria-hidden="true">
+                          {" "}
+                          &nbsp;{" "}
+                        </i>{" "}
+                        Export
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem header>Uploader Template</DropdownItem>
+                        <DropdownItem onClick={this.exportMatStatus}>
+                          {" "}
+                          GR Template
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>
+                          > Download All{" "}
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
                   </div>
                 </div>
               </CardHeader>
@@ -1163,7 +1191,7 @@ class GRInternal extends React.Component {
             </table>
           </div>
           <ModalFooter>
-            <Button
+            {/* <Button
               block
               color="link"
               className="btn-pill"
@@ -1171,7 +1199,7 @@ class GRInternal extends React.Component {
               size="sm"
             >
               Download Template
-            </Button>{" "}
+            </Button>{" "} */}
             <Button
               block
               color="success"
@@ -1195,88 +1223,20 @@ class GRInternal extends React.Component {
           </ModalFooter>
         </ModalCreateNew>
 
-        {/* <Modal
-          isOpen={this.state.createModal}
-          toggle={this.togglecreateModal}
-          className={this.props.className}
-          onClosed={this.resettogglecreateModal}
-        >
-          <ModalHeader toggle={this.togglecreateModal}>
-            Create New Stock
-          </ModalHeader>
-          <ModalBody>
-            <CardBody>
-              <div>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Upload File</td>
-                      <td>:</td>
-                      <td>
-                        <input
-                          type="file"
-                          onChange={this.fileHandlerMaterial.bind(this)}
-                          style={{ padding: "10px", visiblity: "hidden" }}
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </CardBody>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              block
-              color="link"
-              className="btn-pill"
-              onClick={this.exportMatStatus}
-              size="sm"
-            >
-              Download Template
-            </Button>{" "}
-            <Button
-              block
-              color="success"
-              className="btn-pill"
-              disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveMatStockWHBulk}
-              size="sm"
-            >
-              Save
-            </Button>{" "}
-            <Button
-              block
-              color="secondary"
-              className="btn-pill"
-              disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveTruncateBulk}
-              size="sm"
-            >
-              Truncate
-            </Button>
-          </ModalFooter>
-        </Modal> */}
-
         {/* Modal confirmation delete */}
-        <Modal
+        <ModalDelete
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
+          title="Delete GR"
         >
-          <ModalHeader toggle={this.toggleDelete}>
-            Delete Material Stock Confirmation
-          </ModalHeader>
-          <ModalBody>Are you sure want to delete ?</ModalBody>
-          <ModalFooter>
-            <Button color="danger" onClick={this.DeleteData}>
-              Delete
-            </Button>
-            <Button color="secondary" onClick={this.toggleDelete}>
-              Cancel
-            </Button>
-          </ModalFooter>
-        </Modal>
+          <Button color="danger" onClick={this.DeleteData}>
+            Delete
+          </Button>
+          <Button color="secondary" onClick={this.toggleDelete}>
+            Cancel
+          </Button>
+        </ModalDelete>
 
         {/* Modal Loading */}
         <Modal

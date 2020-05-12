@@ -24,7 +24,9 @@ import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import queryString from "query-string";
+
 import ModalCreateNew from "../../components/ModalCreateNew";
+import ModalDelete from "../../components/ModalDelete";
 
 import "../MatStyle.css";
 
@@ -94,6 +96,7 @@ class GIInternal extends React.Component {
       activeItemName: "",
       activeItemId: null,
       createModal: false,
+      selected_id: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -138,9 +141,20 @@ class GIInternal extends React.Component {
 
   toggleDelete(e) {
     const modalDelete = this.state.danger;
-    this.setState({
-      danger: !this.state.danger,
-    });
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      this.setState({
+        danger: !this.state.danger,
+        selected_id: _id,
+      });
+    } else {
+      this.setState({
+        danger: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete: !prevState.modalDelete,
+    }));
   }
 
   toggleLoading() {
@@ -725,7 +739,7 @@ class GIInternal extends React.Component {
   }
 
   DeleteData = async () => {
-    const objData = this.state.all_data.find((e) => e._id);
+    const objData = this.state.selected_id;
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
@@ -733,6 +747,7 @@ class GIInternal extends React.Component {
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
+        this.getWHStockListNext();
         this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
@@ -853,18 +868,31 @@ class GIInternal extends React.Component {
                     </Button>
                   </div>
                   &nbsp;&nbsp;&nbsp;
-                  <div>
-                    <Button
-                      onClick={this.downloadAll}
-                      block
-                      color="ghost-warning"
+                  <div style={{ marginRight: "10px" }}>
+                    <Dropdown
+                      isOpen={this.state.dropdownOpen[1]}
+                      toggle={() => {
+                        this.toggle(1);
+                      }}
                     >
-                      <i className="fa fa-download" aria-hidden="true">
-                        {" "}
-                        &nbsp;{" "}
-                      </i>{" "}
-                      Export
-                    </Button>
+                      <DropdownToggle block color="ghost-warning">
+                        <i className="fa fa-download" aria-hidden="true">
+                          {" "}
+                          &nbsp;{" "}
+                        </i>{" "}
+                        Export
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem header>Uploader Template</DropdownItem>
+                        <DropdownItem onClick={this.exportMatStatus}>
+                          {" "}
+                          GI Template
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>
+                          > Download All{" "}
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
                   </div>
                 </div>
               </CardHeader>
@@ -1163,7 +1191,7 @@ class GIInternal extends React.Component {
             </table>
           </div>
           <ModalFooter>
-            <Button
+            {/* <Button
               block
               color="link"
               className="btn-pill"
@@ -1171,7 +1199,7 @@ class GIInternal extends React.Component {
               size="sm"
             >
               Download Template
-            </Button>{" "}
+            </Button>{" "} */}
             <Button
               block
               color="success"
@@ -1259,24 +1287,19 @@ class GIInternal extends React.Component {
         </Modal> */}
 
         {/* Modal confirmation delete */}
-        <Modal
+        <ModalDelete
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
+          title="Delete GI"
         >
-          <ModalHeader toggle={this.toggleDelete}>
-            Delete Material Stock Confirmation
-          </ModalHeader>
-          <ModalBody>Are you sure want to delete ?</ModalBody>
-          <ModalFooter>
-            <Button color="danger" onClick={this.DeleteData}>
-              Delete
-            </Button>
-            <Button color="secondary" onClick={this.toggleDelete}>
-              Cancel
-            </Button>
-          </ModalFooter>
-        </Modal>
+          <Button color="danger" onClick={this.DeleteData}>
+            Delete
+          </Button>
+          <Button color="secondary" onClick={this.toggleDelete}>
+            Cancel
+          </Button>
+        </ModalDelete>
 
         {/* Modal Loading */}
         <Modal

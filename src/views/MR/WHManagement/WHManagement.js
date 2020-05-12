@@ -823,19 +823,6 @@ class WHManagement extends React.Component {
                       </DropdownMenu>
                     </Dropdown>
                   </div>
-                  {/* <div>                    
-                    <Button
-                      onClick={this.downloadAll}
-                      block
-                      color="ghost-warning"
-                    >
-                      <i className="fa fa-download" aria-hidden="true">
-                        {" "}
-                        &nbsp;{" "}
-                      </i>{" "}
-                      Export
-                    </Button>
-                  </div> */}
                 </div>
               </CardHeader>
               <Collapse
@@ -864,7 +851,7 @@ class WHManagement extends React.Component {
                       className="search-box-material"
                       type="text"
                       name="filter"
-                      placeholder="Search WH ID"
+                      placeholder="Search WH Name"
                       onChange={this.handleChangeFilter}
                       value={this.state.filter_name}
                     />

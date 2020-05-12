@@ -24,6 +24,10 @@ import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
+import Loading from '../../components/Loading'
+import ModalCreateNew from "../../components/ModalCreateNew";
+import ModalDelete from "../../components/ModalDelete";
+
 import "../MatStyle.css";
 
 const Checkbox = ({
@@ -80,6 +84,7 @@ class MatLibrary extends React.Component {
       activeItemName: "",
       activeItemId: null,
       createModal: false,
+      selected_id: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -112,9 +117,20 @@ class MatLibrary extends React.Component {
 
   toggleDelete(e) {
     const modalDelete = this.state.danger;
-    this.setState({
-      danger: !this.state.danger,
-    });
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      this.setState({
+        danger: !this.state.danger,
+        selected_id: _id,
+      });
+    } else {
+      this.setState({
+        danger: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete: !prevState.modalDelete,
+    }));
   }
 
   resettogglecreateModal() {
@@ -657,14 +673,15 @@ class MatLibrary extends React.Component {
   }
 
   DeleteData = async () => {
-    const objData = this.state.all_data.find((e) => e._id);
+    const objData = this.state.selected_id;
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/variants/deleteVariants/" + objData._id
+      "/variants/deleteVariants/" + objData
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
+        this.getWHStockList();
         this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
@@ -723,28 +740,6 @@ class MatLibrary extends React.Component {
                   className="card-header-actions"
                   style={{ display: "inline-flex" }}
                 >
-                  {/* <div style={{ marginRight: "10px" }}>
-                    <Dropdown
-                      isOpen={this.state.dropdownOpen[0]}
-                      toggle={() => {
-                        this.toggle(0);
-                      }}
-                    >
-                      <DropdownToggle caret color="light">
-                        Download Template
-                      </DropdownToggle>
-                      <DropdownMenu>
-                        <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportMatStatus}>
-                          {" "}
-                          Material Library Template
-                        </DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>
-                          > Download All{" "}
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
-                  </div> */}
                   <div>
                     {this.state.userRole.includes("Flow-PublicInternal") !==
                     true ? (
@@ -768,17 +763,30 @@ class MatLibrary extends React.Component {
                   </div>
                   &nbsp;&nbsp;&nbsp;
                   <div>
-                    <Button
-                      onClick={this.downloadAll}
-                      block
-                      color="ghost-warning"
+                  <Dropdown
+                      isOpen={this.state.dropdownOpen[1]}
+                      toggle={() => {
+                        this.toggle(1);
+                      }}
                     >
-                      <i className="fa fa-download" aria-hidden="true">
-                        {" "}
-                        &nbsp;{" "}
-                      </i>{" "}
-                      Export
-                    </Button>
+                      <DropdownToggle block color="ghost-warning">
+                        <i className="fa fa-download" aria-hidden="true">
+                          {" "}
+                          &nbsp;{" "}
+                        </i>{" "}
+                        Export
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem header>Uploader Template</DropdownItem>
+                        <DropdownItem onClick={this.exportMatStatus}>
+                          {" "}
+                          Material Library Template
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>
+                          > Download All{" "}
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
                   </div>
                 </div>
                 {/* <div>
@@ -787,61 +795,7 @@ class MatLibrary extends React.Component {
                   </Button>
                 </div> */}
               </CardHeader>
-              <Collapse
-                isOpen={this.state.collapse}
-                onEntering={this.onEntering}
-                onEntered={this.onEntered}
-                onExiting={this.onExiting}
-                onExited={this.onExited}
-              >
-                <Card style={{ margin: "10px 10px 5px 10px" }}>
-                  <CardBody>
-                    <div>
-                      <table>
-                        <tbody>
-                          <tr>
-                            <td>Upload File</td>
-                            <td>:</td>
-                            <td>
-                              <input
-                                type="file"
-                                onChange={this.fileHandlerMaterial.bind(this)}
-                                style={{ padding: "10px", visiblity: "hidden" }}
-                              />
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardBody>
-                  <CardFooter>
-                    <Button
-                      color="success"
-                      disabled={this.state.rowsXLS.length === 0}
-                      onClick={this.saveMatStockWHBulk}
-                    >
-                      {" "}
-                      <i className="fa fa-save" aria-hidden="true">
-                        {" "}
-                      </i>{" "}
-                      &nbsp;SAVE{" "}
-                    </Button>
-                    &nbsp;&nbsp;&nbsp;
-                    <Button
-                      color="warning"
-                      disabled={this.state.rowsXLS.length === 0}
-                      onClick={this.saveTruncateBulk}
-                    >
-                      {" "}
-                      <i className="fa fa-save" aria-hidden="true">
-                        {" "}
-                      </i>{" "}
-                      &nbsp;SAVE2{" "}
-                    </Button>
-                    {/* <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>                     */}
-                  </CardFooter>
-                </Card>
-              </Collapse>
+
               <CardBody>
                 <Row>
                   <Col>
@@ -1137,69 +1091,55 @@ class MatLibrary extends React.Component {
         {/*  Modal Edit PP*/}
 
         {/* Modal confirmation delete */}
-        <Modal
+        <ModalDelete
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
+          title="Delete Material Library"
         >
-          <ModalHeader toggle={this.toggleDelete}>
-            Delete Material Library Confirmation
-          </ModalHeader>
-          <ModalBody>Are you sure want to delete ?</ModalBody>
-          <ModalFooter>
-            <Button
-              color="danger"
-              // value={e._id}
-              onClick={this.DeleteData}
-            >
-              Delete
-            </Button>
-            <Button color="secondary" onClick={this.toggleDelete}>
-              Cancel
-            </Button>
-          </ModalFooter>
-        </Modal>
+          <Button color="danger" onClick={this.DeleteData}>
+            Delete
+          </Button>
+          <Button color="secondary" onClick={this.toggleDelete}>
+            Cancel
+          </Button>
+        </ModalDelete>
 
         {/* Modal create New */}
-        <Modal
+        <ModalCreateNew
           isOpen={this.state.createModal}
           toggle={this.togglecreateModal}
           className={this.props.className}
           onClosed={this.resettogglecreateModal}
+          title="Create Material Variant"
         >
-          <ModalHeader toggle={this.togglecreateModal}>
-            Create New Material Library
-          </ModalHeader>
-          <ModalBody>
-            <CardBody>
-              <div>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Upload File</td>
-                      <td>:</td>
-                      <td>
-                        <input
-                          type="file"
-                          onChange={this.fileHandlerMaterial.bind(this)}
-                          style={{ padding: "10px", visiblity: "hidden" }}
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </CardBody>
-          </ModalBody>
+          <div>
+            <table>
+              <tbody>
+                <tr>
+                  <td>Upload File</td>
+                  <td>:</td>
+                  <td>
+                    <input
+                      type="file"
+                      onChange={this.fileHandlerMaterial.bind(this)}
+                      style={{ padding: "10px", visiblity: "hidden" }}
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <ModalFooter>
-            <Button
+            {/* <Button
               block
               color="link"
               className="btn-pill"
               onClick={this.exportMatStatus}
+              size="sm"
             >
               Download Template
-            </Button>{" "}
+            </Button>{" "} */}
             <Button
               block
               color="success"
@@ -1219,32 +1159,13 @@ class MatLibrary extends React.Component {
               Truncate
             </Button>
           </ModalFooter>
-        </Modal>
+        </ModalCreateNew>
 
-        {/* Modal Loading */}
-        <Modal
-          isOpen={this.state.modal_loading}
+       {/* Modal Loading */}
+       <Loading isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
-          className={"modal-sm modal--loading "}
-        >
-          <ModalBody>
-            <div style={{ textAlign: "center" }}>
-              <div className="lds-ring">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-              </div>
-            </div>
-            <div style={{ textAlign: "center" }}>Loading ...</div>
-            <div style={{ textAlign: "center" }}>System is processing ...</div>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="secondary" onClick={this.toggleLoading}>
-              Close
-            </Button>
-          </ModalFooter>
-        </Modal>
+          className={"modal-sm modal--loading "}>
+        </Loading>
         {/* end Modal Loading */}
       </div>
     );
