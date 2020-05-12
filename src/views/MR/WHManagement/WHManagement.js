@@ -627,7 +627,7 @@ class WHManagement extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE("/whStock/getWhStock");
+    let getAll_nonpage = await this.getDatafromAPINODE("/whManagement/warehouse");
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
