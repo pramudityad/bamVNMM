@@ -149,23 +149,21 @@ class LoadingProcess extends Component {
   getMRList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    let filter_mr_id = this.state.filter_list[0] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}';
-    let filter_project_name = this.state.filter_list[1] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}';
-    let filter_cd_id = this.state.filter_list[2] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}';
-    let filter_site_id = this.state.filter_list[3] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}';
-    let filter_site_name = this.state.filter_list[4] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}';
-    let filter_current_status = this.state.filter_list[5] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}';
-    let filter_current_milestones = this.state.filter_list[6] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}';
-    let filter_dsp = this.state.filter_list[7] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}';
-    let filter_eta = this.state.filter_list[8] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}';
-    let filter_created_by = this.state.filter_list[9] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}';
-    let filter_updated_on = this.state.filter_list[10] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}';
-    let filter_created_on = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}';
-    let filter_wh_id = '';
-    if (this.props.match.params.whid !== undefined) {
-      filter_wh_id = ', "origin.value" : "' + this.props.match.params.whid + '"';
-    }
-    let whereAnd = '{"mr_id": ' + filter_mr_id + ', "project_name": ' + filter_project_name + ', "cd_id": ' + filter_cd_id + ', "site_info.site_id": ' + filter_site_id + ', "site_info.site_name": ' + filter_site_name + ', "dsp_company": ' + filter_dsp + ', "eta": ' + filter_eta + ', "updated_on": ' + filter_updated_on + ', "created_on": ' + filter_created_on + ', "current_milestones": "MS_JOINT_CHECK"' + filter_wh_id + '}';
+    let filter_array = [];
+    this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
+    this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
+    this.state.filter_list[2] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
+    this.state.filter_list[3] !== "" && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
+    this.state.filter_list[4] !== "" && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+    this.state.filter_list[5] !== "" && (filter_array.push('"current_mr_status":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
+    filter_array.push('"current_milestones":"MS_JOINT_CHECK"');
+    this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
+    this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
+    this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
+    this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
+    let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       console.log("MR List Sorted", res);
       if (res.data !== undefined) {
@@ -177,23 +175,21 @@ class LoadingProcess extends Component {
   }
 
   getAllMR() {
-    let filter_mr_id = this.state.filter_list[0] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}';
-    let filter_project_name = this.state.filter_list[1] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}';
-    let filter_cd_id = this.state.filter_list[2] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}';
-    let filter_site_id = this.state.filter_list[3] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}';
-    let filter_site_name = this.state.filter_list[4] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}';
-    let filter_current_status = this.state.filter_list[5] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}';
-    let filter_current_milestones = this.state.filter_list[6] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}';
-    let filter_dsp = this.state.filter_list[7] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}';
-    let filter_eta = this.state.filter_list[8] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}';
-    let filter_created_by = this.state.filter_list[9] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}';
-    let filter_updated_on = this.state.filter_list[10] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}';
-    let filter_created_on = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}';
-    let filter_wh_id = '';
-    if (this.props.match.params.whid !== undefined) {
-      filter_wh_id = ', "origin.value" : "' + this.props.match.params.whid + '"';
-    }
-    let whereAnd = '{"mr_id": ' + filter_mr_id + ', "project_name": ' + filter_project_name + ', "cd_id": ' + filter_cd_id + ', "site_info.site_id": ' + filter_site_id + ', "site_info.site_name": ' + filter_site_name + ', "dsp_company": ' + filter_dsp + ', "eta": ' + filter_eta + ', "updated_on": ' + filter_updated_on + ', "created_on": ' + filter_created_on + ', "current_milestones": "MS_JOINT_CHECK"' + filter_wh_id + '}';
+    let filter_array = [];
+    this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
+    this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
+    this.state.filter_list[2] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
+    this.state.filter_list[3] !== "" && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
+    this.state.filter_list[4] !== "" && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+    this.state.filter_list[5] !== "" && (filter_array.push('"current_mr_status":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
+    filter_array.push('"current_milestones":"MS_JOINT_CHECK"');
+    this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
+    this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
+    this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
+    this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
+    let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
       console.log("MR List All", res);
       if (res.data !== undefined) {
@@ -675,9 +671,21 @@ class LoadingProcess extends Component {
                         </td>
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
-                        <td>{list.cd_id}</td>
-                        <td>{list.site_info[0].site_id}</td>
-                        <td>{list.site_info[0].site_name}</td>
+                        <td>
+                          {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>
+                            j === list.cust_del.length - 1 ? custdel.cd_id : custdel.cd_id + ', '
+                          ))}
+                        </td>
+                        <td>
+                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
+                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_id + ', '
+                          ))}
+                        </td>
+                        <td>
+                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
+                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_name + ', '
+                          ))}
+                        </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
