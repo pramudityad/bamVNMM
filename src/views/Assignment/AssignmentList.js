@@ -77,7 +77,7 @@ class AssignmentList extends Component {
   getAssignmentList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPINODE('/aspAssignment/aspassign?lmt='+maxPage+'&pg='+page).then(res => {
+    this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&lmt='+maxPage+'&pg='+page).then(res => {
       if(res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
@@ -129,6 +129,12 @@ class AssignmentList extends Component {
     const tableWidth = {
       width: '150px'
     }
+
+    // yang belom bisa :
+    // 1. Technical BOQ Vertical format uploader
+    // 2. SAP Desc effect to Config
+    // 3. TSSR BOQ Horizontal
+
 
     return (
       <div className="animated fadeIn">
