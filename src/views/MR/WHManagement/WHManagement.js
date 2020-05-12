@@ -80,7 +80,7 @@ class WHManagement extends React.Component {
       dropdownOpen: new Array(6).fill(false),
       modalMatStockForm: false,
       modalEdit: false,
-      DataForm: new Array(6).fill(null),
+      DataForm: new Array(8).fill(null),
       collapse: false,
       danger: false,
       activeItemName: "",
@@ -161,6 +161,8 @@ class WHManagement extends React.Component {
       dataForm[2] = aEdit.wh_manager;
       dataForm[3] = aEdit.address;
       dataForm[4] = aEdit.owner;
+      dataForm[6] = aEdit.latitude;
+      dataForm[7] = aEdit.longitude;
       this.setState({ DataForm: dataForm, selected_id: value });
     } else {
       this.setState({ DataForm: new Array(6).fill(null) });
@@ -546,6 +548,8 @@ class WHManagement extends React.Component {
       wh_manager: dataPPEdit[2],
       address: dataPPEdit[3],
       owner: dataPPEdit[4],
+      latitude: dataPPEdit[6],
+      longitude: dataPPEdit[7],
     };
     this.toggleLoading();
     this.toggleEdit();
@@ -584,6 +588,8 @@ class WHManagement extends React.Component {
       address: dataPPEdit[3],
       owner: dataPPEdit[4],
       wh_type: dataPPEdit[5],
+      latitude: dataPPEdit[6],
+      longitude: dataPPEdit[7],
     };
     poData.push(pp);
     console.log("post data ", pp);
@@ -622,7 +628,10 @@ class WHManagement extends React.Component {
       "Warehouse ID",
       "WH Manager",
       "Address",
+      "Latitude",
+      "Longitude",
       "Owner",
+      "WH Type"
     ];
     ws.addRow(headerRow);
 
@@ -637,7 +646,10 @@ class WHManagement extends React.Component {
         list.wh_id,
         list.wh_manager,
         list.address,
+        list.latitude,
+        list.longitude,
         list.owner,
+        list.wh_type
       ]);
     }
 
@@ -693,10 +705,12 @@ class WHManagement extends React.Component {
       "address",
       "owner",
       "wh_type",
+      "latitude",
+      "longitude",
     ]);
-    ws.addRow(["Jakarta", "JKT1", "Asep", "Priuk", "EID", "Internal"]);
-    ws.addRow(["Jakarta2", "JKT1", "Asep", "Priuk", "2000175941", "dsp"]);
-    ws.addRow(["Jakarta3", "JKT1", "Asep", "Priuk", "2000175941", "asp"]);
+    ws.addRow(["Jakarta", "JKT1", "Asep", "Priuk", 0,0, "EID", "Internal"]);
+    ws.addRow(["Jakarta2", "JKT1", "Asep", "Priuk", 0,0, "2000175941", "dsp"]);
+    ws.addRow(["Jakarta3", "JKT1", "Asep", "Priuk", 0,0, "2000175941", "asp"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
@@ -850,8 +864,10 @@ class WHManagement extends React.Component {
                             <th>Warehouse ID</th>
                             <th>WH Manager</th>
                             <th>Address</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
                             <th>Owner</th>
-                            <th>Owner Type</th>
+                            <th>WH Type</th>
                             <th></th>
                             <th></th>
                           </tr>
@@ -899,6 +915,12 @@ class WHManagement extends React.Component {
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.address}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.latitude}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.longitude}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.owner}
@@ -1010,7 +1032,29 @@ class WHManagement extends React.Component {
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="owner">Owner Type</Label>
+                  <Label htmlFor="latitude">Latitude</Label>
+                  <Input
+                    type='number'
+                    step="0.1"
+                    name="6"
+                    placeholder=""
+                    value={this.state.DataForm[6]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="longitude">Longitude</Label>
+                  <Input
+                    type='number'
+                    step="0.1"
+                    name="7"
+                    placeholder=""
+                    value={this.state.DataForm[7]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="owner type">Owner Type</Label>
                   <Input
                     type="select"
                     name="5"
