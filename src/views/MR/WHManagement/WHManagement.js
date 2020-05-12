@@ -613,6 +613,18 @@ class WHManagement extends React.Component {
     });
   }
 
+  numToSSColumn(num) {
+    var s = "",
+      t;
+
+    while (num > 0) {
+      t = (num - 1) % 26;
+      s = String.fromCharCode(65 + t) + s;
+      num = ((num - t) / 26) | 0;
+    }
+    return s || undefined;
+  }
+
   async downloadAll() {
     let download_all = [];
     let getAll_nonpage = await this.getDatafromAPINODE("/whStock/getWhStock");
