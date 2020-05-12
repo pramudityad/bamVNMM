@@ -24,7 +24,8 @@ import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
-import ModalDelete from '../../components/ModalDelete';
+import ModalDelete from "../../components/ModalDelete";
+import Loading from '../../components/Loading'
 
 import "../MatStyle.css";
 
@@ -63,6 +64,7 @@ class WHManagement extends React.Component {
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
       search: null,
+      filter_name: null,
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -93,7 +95,7 @@ class WHManagement extends React.Component {
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterDebounce = debounce(this.changeFilterName, 500);
+    this.changeFilterName = debounce(this.changeFilterName, 500);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
@@ -133,7 +135,7 @@ class WHManagement extends React.Component {
       });
     }
     this.setState((prevState) => ({
-      modalDelete:!prevState.modalDelete,
+      modalDelete: !prevState.modalDelete,
     }));
   }
 
@@ -275,14 +277,14 @@ class WHManagement extends React.Component {
     }
   }
 
-  changeFilterName(value) {
-    this.getWHStockList();
-  }
-
   togglecreateModal() {
     this.setState({
       createModal: !this.state.createModal,
     });
+  }
+
+  changeFilterName(value) {
+    this.getWHStockList();
   }
 
   handleChangeFilter = (e) => {
@@ -291,24 +293,26 @@ class WHManagement extends React.Component {
       value = null;
     }
     this.setState({ filter_name: value }, () => {
-      this.changeFilterDebounce(value);
+      this.changeFilterName(value);
     });
-  };
-
-  SearchFilter = (e) => {
-    let keyword = e.target.value;
-    this.setState({ search: keyword });
   };
 
   getWHStockList() {
     this.toggleLoading();
+    let filter_wh_name =
+      this.state.filter_name === null
+        ? '{"$exists" : 1}'
+        : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    let whereAnd = '{"wh_name": ' + filter_wh_name + "}";
     this.getDatafromAPINODE(
-      "/whManagement/warehouse?q=&lmt=" +
+      "/whManagement/warehouse?q=" +
+        whereAnd +
+        "&lmt=" +
         this.state.perPage +
         "&pg=" +
         this.state.activePage
     ).then((res) => {
-      console.log("all data ", res.data);
+      // console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -627,7 +631,9 @@ class WHManagement extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE("/whManagement/warehouse");
+    let getAll_nonpage = await this.getDatafromAPINODE(
+      "/whManagement/warehouse"
+    );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -643,7 +649,7 @@ class WHManagement extends React.Component {
       "Latitude",
       "Longitude",
       "Owner",
-      "WH Type"
+      "WH Type",
     ];
     ws.addRow(headerRow);
 
@@ -661,7 +667,7 @@ class WHManagement extends React.Component {
         list.latitude,
         list.longitude,
         list.owner,
-        list.wh_type
+        list.wh_type,
       ]);
     }
 
@@ -670,7 +676,7 @@ class WHManagement extends React.Component {
   }
 
   DeleteData = async () => {
-    const objData = this.state.selected_id
+    const objData = this.state.selected_id;
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
@@ -679,7 +685,7 @@ class WHManagement extends React.Component {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getWHStockList();
-        this.toggleLoading();        
+        this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
           this.toggleLoading();
@@ -720,9 +726,9 @@ class WHManagement extends React.Component {
       "owner",
       "wh_type",
     ]);
-    ws.addRow(["Jakarta", "JKT1", "Asep", "Priuk", 0,0, "EID", "Internal"]);
-    ws.addRow(["Jakarta2", "JKT1", "Asep", "Priuk", 0,0, "2000175941", "dsp"]);
-    ws.addRow(["Jakarta3", "JKT1", "Asep", "Priuk", 0,0, "2000175941", "asp"]);
+    ws.addRow(["Jakarta", "JKT1", "Asep", "Priuk", 0, 0, "EID", "Internal"]);
+    ws.addRow(["Jakarta2", "JKT1", "Asep", "Priuk", 0, 0, "2000175941", "dsp"]);
+    ws.addRow(["Jakarta3", "JKT1", "Asep", "Priuk", 0, 0, "2000175941", "asp"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
@@ -858,8 +864,9 @@ class WHManagement extends React.Component {
                       className="search-box-material"
                       type="text"
                       name="filter"
-                      placeholder="Search"
-                      onChange={(e) => this.SearchFilter(e)}
+                      placeholder="Search WH ID"
+                      onChange={this.handleChangeFilter}
+                      value={this.state.filter_name}
                     />
                   </Col>
                 </Row>
@@ -886,29 +893,6 @@ class WHManagement extends React.Component {
                         </thead>
                         <tbody>
                           {this.state.all_data
-                            .filter((e) => {
-                              if (this.state.search === null) {
-                                return e;
-                              } else if (
-                                e.wh_name
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.wh_id
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.wh_manager
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.address
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.owner
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase())
-                              ) {
-                                return e;
-                              }
-                            })
                             .map((e) => (
                               <React.Fragment key={e._id + "frag"}>
                                 <tr
@@ -1046,7 +1030,7 @@ class WHManagement extends React.Component {
                 <FormGroup>
                   <Label htmlFor="latitude">Latitude</Label>
                   <Input
-                    type='number'
+                    type="number"
                     step="0.1"
                     name="6"
                     placeholder=""
@@ -1057,7 +1041,7 @@ class WHManagement extends React.Component {
                 <FormGroup>
                   <Label htmlFor="longitude">Longitude</Label>
                   <Input
-                    type='number'
+                    type="number"
                     step="0.1"
                     name="7"
                     placeholder=""
@@ -1238,41 +1222,25 @@ class WHManagement extends React.Component {
         </Modal>
 
         {/* Modal confirmation delete */}
-        <ModalDelete  isOpen={this.state.danger}
+        <ModalDelete
+          isOpen={this.state.danger}
           toggle={this.toggleDelete}
-          className={"modal-danger " + this.props.className} title="Delete WH">
-        <Button color="danger" onClick={this.DeleteData}>
-              Delete
-            </Button>
-            <Button color="secondary" onClick={this.toggleDelete}>
-              Cancel
-            </Button>
+          className={"modal-danger " + this.props.className}
+          title="Delete WH"
+        >
+          <Button color="danger" onClick={this.DeleteData}>
+            Delete
+          </Button>
+          <Button color="secondary" onClick={this.toggleDelete}>
+            Cancel
+          </Button>
         </ModalDelete>
 
         {/* Modal Loading */}
-        <Modal
-          isOpen={this.state.modal_loading}
+        <Loading isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
-          className={"modal-sm modal--loading "}
-        >
-          <ModalBody>
-            <div style={{ textAlign: "center" }}>
-              <div className="lds-ring">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-              </div>
-            </div>
-            <div style={{ textAlign: "center" }}>Loading ...</div>
-            <div style={{ textAlign: "center" }}>System is processing ...</div>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="secondary" onClick={this.toggleLoading}>
-              Close
-            </Button>
-          </ModalFooter>
-        </Modal>
+          className={"modal-sm modal--loading "}>
+        </Loading>
         {/* end Modal Loading */}
       </div>
     );

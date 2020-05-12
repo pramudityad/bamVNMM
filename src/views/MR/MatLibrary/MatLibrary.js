@@ -57,6 +57,7 @@ class MatLibrary extends React.Component {
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
       search: null,
+      filter_list: null,
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -83,7 +84,7 @@ class MatLibrary extends React.Component {
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterDebounce = debounce(this.changeFilterName, 500);
+    this.changeFilterName = debounce(this.changeFilterName, 500);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
@@ -246,35 +247,47 @@ class MatLibrary extends React.Component {
     if (value.length === 0) {
       value = null;
     }
-    this.setState({ filter_name: value }, () => {
-      this.changeFilterDebounce(value);
+    this.setState({ filter_list: value }, () => {
+      this.changeFilterName(value);
     });
   };
 
-  SearchFilter = (e) => {
-    let keyword = e.target.value;
-    this.setState({ search: keyword });
-  };
+  // SearchFilter = (e) => {
+  //   let keyword = e.target.value;
+  //   this.setState({ search: keyword });
+  // };
 
   getWHStockList() {
+    this.toggleLoading();
+    let filter_mat_id =
+      this.state.filter_list === null
+        ? '{"$exists" : 1}'
+        : '{"$regex" : "' + this.state.filter_list + '", "$options" : "i"}';
+    let whereAnd = '{"material_id": ' + filter_mat_id + "}";
+    // console.log("filter whereand ".whereAnd);
     this.getDatafromAPINODE(
-      "/variants/variants?lmt=" +
+      "/variants/variants?q=" +
+        whereAnd +
+        "&lmt=" +
         this.state.perPage +
         "&pg=" +
         this.state.activePage
     ).then((res) => {
+      // console.log("List All", res.data);
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
           prevPage: this.state.activePage,
           total_dataParent: res.data.totalResults,
         });
+        this.toggleLoading();
       } else {
         this.setState({
           all_data: [],
           total_dataParent: 0,
           prevPage: this.state.activePage,
         });
+        this.toggleLoading();
       }
     });
   }
@@ -852,8 +865,9 @@ class MatLibrary extends React.Component {
                           className="search-box-material"
                           type="text"
                           name="filter"
-                          placeholder="Search"
-                          onChange={(e) => this.SearchFilter(e)}
+                          placeholder="Search Material"
+                          onChange={this.handleChangeFilter}
+                          value={this.state.filter_list}
                         />
                       </div>
                     </div>
@@ -878,55 +892,31 @@ class MatLibrary extends React.Component {
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.all_data
-                            .filter((e) => {
-                              if (this.state.search === null) {
-                                return e;
-                              } else if (
-                                e.origin
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.material_id
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.material_name
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.description
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.category
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase())
-                              ) {
-                                return e;
-                              }
-                            })
-                            .map((e) => (
-                              <React.Fragment key={e._id + "frag"}>
-                                <tr
-                                  style={{ backgroundColor: "#d3d9e7" }}
-                                  className="fixbody"
-                                  key={e._id}
-                                >
-                                  {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.origin}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.material_id}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.material_name}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.description}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.category}
-                                  </td>
+                          {this.state.all_data.map((e) => (
+                            <React.Fragment key={e._id + "frag"}>
+                              <tr
+                                style={{ backgroundColor: "#d3d9e7" }}
+                                className="fixbody"
+                                key={e._id}
+                              >
+                                {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
+                                <td style={{ textAlign: "center" }}>
+                                  {e.origin}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.material_id}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.material_name}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.description}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.category}
+                                </td>
 
-                                  {/* <td>
+                                {/* <td>
                                   <Button
                                     size="sm"
                                     color="secondary"
@@ -940,23 +930,23 @@ class MatLibrary extends React.Component {
                                     ></i>
                                   </Button>
                                 </td> */}
-                                  <td>
-                                    <Button
-                                      size="sm"
-                                      color="danger"
-                                      value={e._id}
-                                      onClick={this.toggleDelete}
-                                      title="Delete"
-                                    >
-                                      <i
-                                        className="fa fa-trash"
-                                        aria-hidden="true"
-                                      ></i>
-                                    </Button>
-                                  </td>
-                                </tr>
-                              </React.Fragment>
-                            ))}
+                                <td>
+                                  <Button
+                                    size="sm"
+                                    color="danger"
+                                    value={e._id}
+                                    onClick={this.toggleDelete}
+                                    title="Delete"
+                                  >
+                                    <i
+                                      className="fa fa-trash"
+                                      aria-hidden="true"
+                                    ></i>
+                                  </Button>
+                                </td>
+                              </tr>
+                            </React.Fragment>
+                          ))}
                         </tbody>
                       </Table>
                     </div>

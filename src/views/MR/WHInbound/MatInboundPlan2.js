@@ -26,8 +26,7 @@ import * as XLSX from "xlsx";
 
 import "../MatStyle.css";
 
-import ModalDelete from '../../components/ModalDelete';
-
+import ModalDelete from "../../components/ModalDelete";
 
 const Checkbox = ({
   type = "checkbox",
@@ -63,7 +62,7 @@ class MatInboundPlan extends React.Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      search: null,
+      filter_name: null,
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -90,7 +89,7 @@ class MatInboundPlan extends React.Component {
     this.togglePOForm = this.togglePOForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterDebounce = debounce(this.changeFilterName, 500);
+    this.changeFilterName = debounce(this.changeFilterName, 500);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
@@ -224,18 +223,13 @@ class MatInboundPlan extends React.Component {
       });
     }
     this.setState((prevState) => ({
-      modalDelete:!prevState.modalDelete,
+      modalDelete: !prevState.modalDelete,
     }));
   }
 
   changeFilterName(value) {
-    this.getWHInboundList();
+    this.getWHInboundListNext();
   }
-
-  SearchFilter = (e) => {
-    let keyword = e.target.value;
-    this.setState({ search: keyword });
-  };
 
   handleChangeFilter = (e) => {
     let value = e.target.value;
@@ -243,14 +237,23 @@ class MatInboundPlan extends React.Component {
       value = null;
     }
     this.setState({ filter_name: value }, () => {
-      this.changeFilterDebounce(value);
+      this.changeFilterName(value);
     });
   };
 
   getWHInboundListNext() {
     this.toggleLoading();
     // let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    let getbyWH = '{"wh_id":"' + this.props.match.params.slug + '"}';
+    let filter_sku =
+      this.state.filter_name === null
+        ? '{"$exists" : 1}'
+        : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    let getbyWH =
+      '{"wh_id":"' +
+      this.props.match.params.slug +
+      '","sku":' +
+      filter_sku +
+      "}";
     this.getDatafromAPINODE(
       "/whInboundPlan/getWhInboundPlan?q=" +
         getbyWH +
@@ -281,10 +284,14 @@ class MatInboundPlan extends React.Component {
 
   getWHManagementID() {
     // let _id = new URLSearchParams(window.location.search).get("_id");
-    this.getDatafromAPINODE('/whManagement/warehouse?q={"wh_id":"' + this.props.match.params.slug + '"}').then((res) => {
+    this.getDatafromAPINODE(
+      '/whManagement/warehouse?q={"wh_id":"' +
+        this.props.match.params.slug +
+        '"}'
+    ).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
-        if(res.data.data !== undefined){
+        if (res.data.data !== undefined) {
           this.setState({ wh_data: res.data.data[0] });
         }
       } else {
@@ -523,19 +530,19 @@ class MatInboundPlan extends React.Component {
     this.setState({ MatStockForm: dataForm });
   }
 
-  convertDateFormat(jsondate){
+  convertDateFormat(jsondate) {
     let date = new Date(jsondate);
     let year = date.getFullYear();
-    let month = date.getMonth()+1;
+    let month = date.getMonth() + 1;
     let dt = date.getDate();
 
     if (dt < 10) {
-      dt = '0' + dt;
+      dt = "0" + dt;
     }
     if (month < 10) {
-      month = '0' + month;
+      month = "0" + month;
     }
-    return year+'-' + month + '-'+dt;
+    return year + "-" + month + "-" + dt;
   }
 
   async saveUpdate() {
@@ -677,7 +684,7 @@ class MatInboundPlan extends React.Component {
   }
 
   DeleteData = async () => {
-    const objData = this.state.selected_id
+    const objData = this.state.selected_id;
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
@@ -686,7 +693,7 @@ class MatInboundPlan extends React.Component {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getWHInboundListNext();
-        this.toggleLoading();        
+        this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
           this.toggleLoading();
@@ -859,8 +866,10 @@ class MatInboundPlan extends React.Component {
                       className="search-box-material"
                       type="text"
                       name="filter"
-                      placeholder="Search"
-                      onChange={(e) => this.SearchFilter(e)}
+                      placeholder="Search SKU"
+                      // onChange={(e) => this.SearchFilter(e)}
+                      onChange={this.handleChangeFilter}
+                      value={this.state.filter_name}
                     />
                   </Col>
                 </Row>
@@ -892,30 +901,30 @@ class MatInboundPlan extends React.Component {
                         </thead>
                         <tbody>
                           {this.state.all_data
-                            .filter((e) => {
-                              if (this.state.search === null) {
-                                return e;
-                              } else if (
-                                e.owner_id
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.po_number
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.project_name
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase())
-                                //   ||
-                                // e.serial_number
-                                //   .toLowerCase()
-                                //   .includes(this.state.search.toLowerCase()) ||
-                                // e.box_number
-                                //   .toLowerCase()
-                                //   .includes(this.state.search.toLowerCase())
-                              ) {
-                                return e;
-                              }
-                            })
+                            // .filter((e) => {
+                            //   if (this.state.search === null) {
+                            //     return e;
+                            //   } else if (
+                            //     e.owner_id
+                            //       .toLowerCase()
+                            //       .includes(this.state.search.toLowerCase()) ||
+                            //     e.po_number
+                            //       .toLowerCase()
+                            //       .includes(this.state.search.toLowerCase()) ||
+                            //     e.project_name
+                            //       .toLowerCase()
+                            //       .includes(this.state.search.toLowerCase())
+                            //     //   ||
+                            //     // e.serial_number
+                            //     //   .toLowerCase()
+                            //     //   .includes(this.state.search.toLowerCase()) ||
+                            //     // e.box_number
+                            //     //   .toLowerCase()
+                            //     //   .includes(this.state.search.toLowerCase())
+                            //   ) {
+                            //     return e;
+                            //   }
+                            // })
                             .map((e) => (
                               <React.Fragment key={e._id + "frag"}>
                                 <tr
@@ -936,7 +945,7 @@ class MatInboundPlan extends React.Component {
                                     {e.project_name}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
-                                  {this.convertDateFormat(e.arrival_date)}
+                                    {this.convertDateFormat(e.arrival_date)}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.sku}
@@ -1003,15 +1012,18 @@ class MatInboundPlan extends React.Component {
         </Row>
 
         {/* Modal confirmation delete */}
-        <ModalDelete  isOpen={this.state.danger}
+        <ModalDelete
+          isOpen={this.state.danger}
           toggle={this.toggleDelete}
-          className={"modal-danger " + this.props.className} title="Delete Inbound">
-        <Button color="danger" onClick={this.DeleteData}>
-              Delete
-            </Button>
-            <Button color="secondary" onClick={this.toggleDelete}>
-              Cancel
-            </Button>
+          className={"modal-danger " + this.props.className}
+          title="Delete Inbound"
+        >
+          <Button color="danger" onClick={this.DeleteData}>
+            Delete
+          </Button>
+          <Button color="secondary" onClick={this.toggleDelete}>
+            Cancel
+          </Button>
         </ModalDelete>
 
         {/* Modal create New */}
