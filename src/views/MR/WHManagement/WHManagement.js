@@ -703,10 +703,10 @@ class WHManagement extends React.Component {
       "wh_id",
       "wh_manager",
       "address",
-      "owner",
-      "wh_type",
       "latitude",
       "longitude",
+      "owner",
+      "wh_type",
     ]);
     ws.addRow(["Jakarta", "JKT1", "Asep", "Priuk", 0,0, "EID", "Internal"]);
     ws.addRow(["Jakarta2", "JKT1", "Asep", "Priuk", 0,0, "2000175941", "dsp"]);
