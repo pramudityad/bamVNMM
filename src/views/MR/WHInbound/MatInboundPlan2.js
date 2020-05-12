@@ -424,62 +424,6 @@ class MatInboundPlan extends React.Component {
     }));
   }
 
-  async getMatInboundFormat(dataImport) {
-    const dataHeader = dataImport[0];
-    const onlyParent = dataImport
-      .map((e) => e)
-      .filter((e) =>
-        this.checkValuetoString(e[this.getIndex(dataHeader, "po_number")])
-      );
-    let cpo_array = [];
-    if (onlyParent !== undefined && onlyParent.length !== 0) {
-      for (let i = 1; i < onlyParent.length; i++) {
-        const cpo = {
-          po_number: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "po_number")]
-          ),
-          date: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "date")]
-          ),
-          currency: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "currency")]
-          ),
-          payment_terms: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "payment_terms")]
-          ),
-          shipping_terms: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "shipping_terms")]
-          ),
-          contract: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "contract")]
-          ),
-          contact: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "contact")]
-          ),
-        };
-        if (cpo.po_number !== undefined && cpo.po_number !== null) {
-          cpo["po_number"] = cpo.po_number.toString();
-        }
-        if (cpo.year !== undefined && cpo.year !== null) {
-          cpo["po_year"] = cpo.year.toString();
-        }
-        if (cpo.currency !== undefined && cpo.currency !== null) {
-          cpo["currency"] = cpo.currency.toString();
-        }
-        cpo_array.push(cpo);
-      }
-      // console.log(JSON.stringify(cpo_array));
-      return cpo_array;
-    } else {
-      this.setState(
-        { action_status: "failed", action_message: "Please check your format" },
-        () => {
-          this.toggleLoading();
-        }
-      );
-    }
-  }
-
   saveCPOBulk = async () => {
     this.toggleLoading();
     this.togglecreateModal();
@@ -901,30 +845,6 @@ class MatInboundPlan extends React.Component {
                         </thead>
                         <tbody>
                           {this.state.all_data
-                            // .filter((e) => {
-                            //   if (this.state.search === null) {
-                            //     return e;
-                            //   } else if (
-                            //     e.owner_id
-                            //       .toLowerCase()
-                            //       .includes(this.state.search.toLowerCase()) ||
-                            //     e.po_number
-                            //       .toLowerCase()
-                            //       .includes(this.state.search.toLowerCase()) ||
-                            //     e.project_name
-                            //       .toLowerCase()
-                            //       .includes(this.state.search.toLowerCase())
-                            //     //   ||
-                            //     // e.serial_number
-                            //     //   .toLowerCase()
-                            //     //   .includes(this.state.search.toLowerCase()) ||
-                            //     // e.box_number
-                            //     //   .toLowerCase()
-                            //     //   .includes(this.state.search.toLowerCase())
-                            //   ) {
-                            //     return e;
-                            //   }
-                            // })
                             .map((e) => (
                               <React.Fragment key={e._id + "frag"}>
                                 <tr

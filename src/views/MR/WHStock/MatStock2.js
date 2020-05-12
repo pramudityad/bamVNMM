@@ -964,30 +964,6 @@ class MaterialStock2 extends React.Component {
                         </thead>
                         <tbody>
                           {this.state.all_data
-                            // .filter((e) => {
-                            //   if (this.state.search === null) {
-                            //     return e;
-                            //   } else if (
-                            //     e.owner_id
-                            //       .toLowerCase()
-                            //       .includes(this.state.search.toLowerCase()) ||
-                            //     e.po_number
-                            //       .toLowerCase()
-                            //       .includes(this.state.search.toLowerCase()) ||
-                            //     e.project_name
-                            //       .toLowerCase()
-                            //       .includes(this.state.search.toLowerCase())
-                            //     //   ||
-                            //     // e.serial_number
-                            //     //   .toLowerCase()
-                            //     //   .includes(this.state.search.toLowerCase()) ||
-                            //     // e.box_number
-                            //     //   .toLowerCase()
-                            //     //   .includes(this.state.search.toLowerCase())
-                            //   ) {
-                            //     return e;
-                            //   }
-                            // })
                             .map((e) => (
                               <React.Fragment key={e._id + "frag"}>
                                 <tr

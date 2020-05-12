@@ -252,11 +252,6 @@ class MatLibrary extends React.Component {
     });
   };
 
-  // SearchFilter = (e) => {
-  //   let keyword = e.target.value;
-  //   this.setState({ search: keyword });
-  // };
-
   getWHStockList() {
     this.toggleLoading();
     let filter_mat_id =
