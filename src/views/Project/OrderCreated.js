@@ -21,20 +21,20 @@ class OrderCreated extends Component {
     super(props);
 
     this.state = {
-      userRole : this.props.dataLogin.role,
-      userId : this.props.dataLogin._id,
-      userName : this.props.dataLogin.userName,
-      userEmail : this.props.dataLogin.email,
-      tokenUser : this.props.dataLogin.token,
-      mr_list : [],
-      prevPage : 0,
-      activePage : 1,
-      totalData : 0,
-      perPage : 10,
-      filter_list : new Array(14).fill(""),
-      mr_all : [],
-      action_status : null,
-      action_message : null,
+      userRole: this.props.dataLogin.role,
+      userId: this.props.dataLogin._id,
+      userName: this.props.dataLogin.userName,
+      userEmail: this.props.dataLogin.email,
+      tokenUser: this.props.dataLogin.token,
+      mr_list: [],
+      prevPage: 0,
+      activePage: 1,
+      totalData: 0,
+      perPage: 10,
+      filter_list: new Array(14).fill(""),
+      mr_all: [],
+      action_status: null,
+      action_message: null,
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -48,39 +48,58 @@ class OrderCreated extends Component {
 
   async getDataFromAPI(url) {
     try {
-      let respond = await axios.get(API_URL+url, {
-        headers: {'Content-Type':'application/json'},
+      let respond = await axios.get(API_URL + url, {
+        headers: { 'Content-Type': 'application/json' },
         auth: {
           username: username,
           password: password
         }
       });
-      if(respond.status >= 200 && respond.status < 300) {
+      if (respond.status >= 200 && respond.status < 300) {
         console.log("respond data", respond);
       }
       return respond;
-    } catch(err) {
+    } catch (err) {
       let respond = err;
       console.log("respond data", err);
       return respond;
     }
   }
 
-  async patchDatatoAPINODE(url, data){
+  async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.patch(API_URL_NODE +url, data, {
-        headers : {
-          'Content-Type':'application/json',
-          'Authorization': 'Bearer '+this.state.tokenUser
+      let respond = await axios.get(API_URL_NODE + url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.state.tokenUser
+        },
+      });
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async patchDatatoAPINODE(url, data) {
+    try {
+      let respond = await axios.patch(API_URL_NODE + url, data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.state.tokenUser
         },
       })
-      if(respond.status >= 200 && respond.status < 300){
+      if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Post Data", respond);
       }
       return respond;
-    }catch (err) {
+    } catch (err) {
       let respond = err;
-      this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+      this.setState({ action_status: 'failed', action_message: 'Sorry, There is something error, please refresh page and try again' })
       console.log("respond Post Data", err);
       return respond;
     }
@@ -89,65 +108,67 @@ class OrderCreated extends Component {
   getMRList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    let filter_mr_id = this.state.filter_list[0] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[0]+'", "$options" : "i"}';
-    let filter_implementation_id = this.state.filter_list[1] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
-    let filter_project_name = this.state.filter_list[2] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
-    let filter_cd_id = this.state.filter_list[3] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
-    let filter_site_id = this.state.filter_list[4] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
-    let filter_site_name = this.state.filter_list[5] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
-    let filter_current_status = this.state.filter_list[6] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[6]+'", "$options" : "i"}';
-    let filter_current_milestones = this.state.filter_list[7] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[7]+'", "$options" : "i"}';
-    let filter_dsp = this.state.filter_list[8] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[8]+'", "$options" : "i"}';
-    let filter_asp = this.state.filter_list[9] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[9]+'", "$options" : "i"}';
-    let filter_eta = this.state.filter_list[10] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[10]+'", "$options" : "i"}';
-    let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
-    let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
-    let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+',"current_mr_status": "MR REQUESTED"}';
-    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": "MR REQUESTED", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    this.getDataFromAPI('/mr_op?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
+    let filter_mr_id = this.state.filter_list[0] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}';
+    let filter_project_name = this.state.filter_list[1] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}';
+    let filter_cd_id = this.state.filter_list[2] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}';
+    let filter_site_id = this.state.filter_list[3] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}';
+    let filter_site_name = this.state.filter_list[4] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}';
+    let filter_current_status = this.state.filter_list[5] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}';
+    let filter_current_milestones = this.state.filter_list[6] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}';
+    let filter_dsp = this.state.filter_list[7] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}';
+    let filter_eta = this.state.filter_list[8] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}';
+    let filter_created_by = this.state.filter_list[9] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}';
+    let filter_updated_on = this.state.filter_list[10] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}';
+    let filter_created_on = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}';
+    let filter_wh_id = '';
+    if (this.props.match.params.whid !== undefined) {
+      filter_wh_id = ', "origin.value" : "' + this.props.match.params.whid + '"';
+    }
+    let whereAnd = '{"mr_id": ' + filter_mr_id + ', "project_name": ' + filter_project_name + ', "cd_id": ' + filter_cd_id + ', "site_info.site_id": ' + filter_site_id + ', "site_info.site_name": ' + filter_site_name + ', "dsp_company": ' + filter_dsp + ', "eta": ' + filter_eta + ', "updated_on": ' + filter_updated_on + ', "created_on": ' + filter_created_on + ', "current_mr_status": "MR REQUESTED"' + filter_wh_id + '}';
+    this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       console.log("MR List Sorted", res);
-      if(res.data !== undefined) {
-        const items = res.data._items;
-        const totalData = res.data._meta;
-        this.setState({mr_list : items, totalData: totalData});
+      if (res.data !== undefined) {
+        const items = res.data.data;
+        const totalData = res.data.totalResults;
+        this.setState({ mr_list: items, totalData: totalData });
       }
     })
   }
 
   getAllMR() {
-    let filter_mr_id = this.state.filter_list[0] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[0]+'", "$options" : "i"}';
-    let filter_implementation_id = this.state.filter_list[1] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
-    let filter_project_name = this.state.filter_list[2] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
-    let filter_cd_id = this.state.filter_list[3] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
-    let filter_site_id = this.state.filter_list[4] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
-    let filter_site_name = this.state.filter_list[5] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
-    let filter_current_status = this.state.filter_list[6] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[6]+'", "$options" : "i"}';
-    let filter_current_milestones = this.state.filter_list[7] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[7]+'", "$options" : "i"}';
-    let filter_dsp = this.state.filter_list[8] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[8]+'", "$options" : "i"}';
-    let filter_asp = this.state.filter_list[9] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[9]+'", "$options" : "i"}';
-    let filter_eta = this.state.filter_list[10] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[10]+'", "$options" : "i"}';
-    let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
-    let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
-    let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "site_info.site_id": '+filter_site_id+', "site_info.site_name": '+filter_site_name+', "current_mr_status": "MR REQUESTED", "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_mr_status": "MR REQUESTED", "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
+    let filter_mr_id = this.state.filter_list[0] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}';
+    let filter_project_name = this.state.filter_list[1] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}';
+    let filter_cd_id = this.state.filter_list[2] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}';
+    let filter_site_id = this.state.filter_list[3] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}';
+    let filter_site_name = this.state.filter_list[4] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}';
+    let filter_current_status = this.state.filter_list[5] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}';
+    let filter_current_milestones = this.state.filter_list[6] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}';
+    let filter_dsp = this.state.filter_list[7] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}';
+    let filter_eta = this.state.filter_list[8] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}';
+    let filter_created_by = this.state.filter_list[9] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}';
+    let filter_updated_on = this.state.filter_list[10] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}';
+    let filter_created_on = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}';
+    let filter_wh_id = '';
+    if (this.props.match.params.whid !== undefined) {
+      filter_wh_id = ', "origin.value" : "' + this.props.match.params.whid + '"';
+    }
+    let whereAnd = '{"mr_id": ' + filter_mr_id + ', "project_name": ' + filter_project_name + ', "cd_id": ' + filter_cd_id + ', "site_info.site_id": ' + filter_site_id + ', "site_info.site_name": ' + filter_site_name + ', "dsp_company": ' + filter_dsp + ', "eta": ' + filter_eta + ', "updated_on": ' + filter_updated_on + ', "created_on": ' + filter_created_on + ', "current_mr_status": "MR REQUESTED"' + filter_wh_id + '}';
+    this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
       console.log("MR List All", res);
-      if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({mr_all : items});
+      if (res.data !== undefined) {
+        const items = res.data.data;
+        this.setState({ mr_all: items });
       }
     })
   }
 
-  numToSSColumn(num){
+  numToSSColumn(num) {
     var s = '', t;
 
     while (num > 0) {
       t = (num - 1) % 26;
       s = String.fromCharCode(65 + t) + s;
-      num = (num - t)/26 | 0;
+      num = (num - t) / 26 | 0;
     }
     return s || undefined;
   }
@@ -158,15 +179,15 @@ class OrderCreated extends Component {
 
     const allMR = this.state.mr_all;
 
-    let headerRow = ["MR ID", "Implementation ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ASP", "ETA", "Created By", "Updated On", "Created On"];
+    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Created By", "Updated On", "Created On"];
     ws.addRow(headerRow);
 
-    for(let i = 1; i < headerRow.length+1; i++){
-      ws.getCell(this.numToSSColumn(i)+'1').font  = { size: 11, bold : true };
+    for (let i = 1; i < headerRow.length + 1; i++) {
+      ws.getCell(this.numToSSColumn(i) + '1').font = { size: 11, bold: true };
     }
 
-    for(let i = 0; i < allMR.length; i++){
-      ws.addRow([allMR[i].mr_id, allMR[i].implementation_id, allMR[i].project_name, allMR[i].cd_id, "", "", allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, "", allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
+    for (let i = 0; i < allMR.length; i++) {
+      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0].site_id, allMR[i].site_info[0].site_name, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -175,9 +196,9 @@ class OrderCreated extends Component {
 
   async patchDataToAPI(url, data, _etag) {
     try {
-      let respond = await axios.patch(API_URL+url, data, {
+      let respond = await axios.patch(API_URL + url, data, {
         headers: {
-          'Content-Type':'application/json',
+          'Content-Type': 'application/json',
           'If-Match': _etag
         },
         auth: {
@@ -185,13 +206,13 @@ class OrderCreated extends Component {
           password: password
         }
       })
-      if(respond.status >= 200 && respond.status < 300) {
+      if (respond.status >= 200 && respond.status < 300) {
         console.log('respond patch data', respond);
       }
       return respond;
-    } catch(err) {
+    } catch (err) {
       let respond = undefined;
-      this.setState({action_status: 'failed', action_message: 'Sorry, there is something wrong, please try again!'});
+      this.setState({ action_status: 'failed', action_message: 'Sorry, there is something wrong, please try again!' });
       console.log('respond patch data', err);
       return respond;
     }
@@ -199,13 +220,13 @@ class OrderCreated extends Component {
 
   async proceedMilestone(e) {
     const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
     let successUpdate = [];
     let updateMR = {};
     const dataMR = this.state.mr_list.find(e => e._id === _id);
-    if(dataMR.mr_type === "Relocation") {
+    if (dataMR.mr_type === "Relocation") {
       let currStatus = [
         {
           "mr_status_name": "READY_TO_DELIVER",
@@ -250,39 +271,39 @@ class OrderCreated extends Component {
       updateMR['mr_milestones'] = dataMR.mr_milestones.concat(currMilestones);
       updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
     }
-    let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
-    if(res !== undefined) {
-      if(res.data !== undefined) {
+    let res = await this.patchDataToAPI('/mr_op/' + _id, updateMR, _etag);
+    if (res !== undefined) {
+      if (res.data !== undefined) {
         successUpdate.push(res.data);
       }
     }
-    if(successUpdate.length !== 0){
-      this.setState({action_status : "success"});
+    if (successUpdate.length !== 0) {
+      this.setState({ action_status: "success" });
       this.getMRList();
       // setTimeout(function(){ window.location.reload(); }, 2000);
     }
   }
 
-  ApproveMR(e){
+  ApproveMR(e) {
     const id_doc = e.currentTarget.id;
-    this.patchDatatoAPINODE('/matreq/approveMatreq/'+id_doc).then(res => {
-      if(res.data !== undefined){
-        this.setState({ action_status : "success" });
+    this.patchDatatoAPINODE('/matreq/approveMatreq/' + id_doc).then(res => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
         this.getMRList();
-      }else{
-        this.setState({ action_status : "failed" });
+      } else {
+        this.setState({ action_status: "failed" });
       }
     })
   }
 
-  rejectMR(e){
+  rejectMR(e) {
     const id_doc = e.currentTarget.id;
-    this.patchDatatoAPINODE('/matreq/rejectMatreq/'+id_doc).then(res => {
-      if(res.data !== undefined){
-        this.setState({ action_status : "success" });
+    this.patchDatatoAPINODE('/matreq/rejectMatreq/' + id_doc).then(res => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
         this.getMRList();
-      }else{
-        this.setState({ action_status : "failed" });
+      } else {
+        this.setState({ action_status: "failed" });
       }
     })
   }
@@ -326,7 +347,7 @@ class OrderCreated extends Component {
   }
 
   handlePageChange(pageNumber) {
-    this.setState({activePage: pageNumber}, () => {
+    this.setState({ activePage: pageNumber }, () => {
       this.getMRList();
     });
   }
@@ -334,12 +355,12 @@ class OrderCreated extends Component {
   handleFilterList(e) {
     const index = e.target.name;
     let value = e.target.value;
-    if(value !== "" && value.length === 0) {
+    if (value !== "" && value.length === 0) {
       value = "";
     }
     let dataFilter = this.state.filter_list;
     dataFilter[parseInt(index)] = value;
-    this.setState({filter_list : dataFilter, activePage: 1}, () => {
+    this.setState({ filter_list: dataFilter, activePage: 1 }, () => {
       this.onChangeDebounced(e);
     })
   }
@@ -351,15 +372,15 @@ class OrderCreated extends Component {
 
   loopSearchBar = () => {
     let searchBar = [];
-    for(let i = 0; i < 14; i++) {
+    for (let i = 0; i < 12; i++) {
       searchBar.push(
         <td>
-          <div className="controls" style={{width: '150px'}}>
+          <div className="controls" style={{ width: '150px' }}>
             <InputGroup className="input-prepend">
               <InputGroupAddon addonType="prepend">
                 <InputGroupText><i className="fa fa-search"></i></InputGroupText>
               </InputGroupAddon>
-              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[i]} name={i} size="sm"/>
+              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[i]} name={i} size="sm" />
             </InputGroup>
           </div>
         </td>
@@ -371,17 +392,17 @@ class OrderCreated extends Component {
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
-    function AlertProcess(props){
+    function AlertProcess(props) {
       const alert = props.alertAct;
       const message = props.messageAct;
-      if(alert === 'failed'){
+      if (alert === 'failed') {
         return (
           <div className="alert alert-danger" role="alert">
             {message.length !== 0 ? message : 'Sorry, there was an error when we tried to save it, please reload your page and try again'}
           </div>
         )
       } else {
-        if(alert === 'success'){
+        if (alert === 'success') {
           return (
             <div className="alert alert-success" role="alert">
               {message}
@@ -407,18 +428,17 @@ class OrderCreated extends Component {
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Order Created
+                <span style={{ lineHeight: '2' }}>
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> Order Created
                 </span>
-                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
+                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download MR List</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2" style={{verticalAlign: "middle"}}>Action</th>
+                      <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
                       <th>MR ID</th>
-                      <th>Implementation ID</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
                       <th>Site ID</th>
@@ -426,7 +446,6 @@ class OrderCreated extends Component {
                       <th>Current Status</th>
                       <th>Current Milestone</th>
                       <th>DSP</th>
-                      <th>ASP</th>
                       <th>ETA</th>
                       <th>Created By</th>
                       <th>Updated On</th>
@@ -445,11 +464,10 @@ class OrderCreated extends Component {
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
-                          <Button outline color="success" size="sm" className="btn-pill" style={{width: "90px", marginBottom: "4px"}} id={list._id} value={list._etag} onClick={this.ApproveMR}><i className="fa fa-check" style={{marginRight: "8px"}}></i>Approve</Button>
-                          <Button outline color="danger" size="sm" className="btn-pill" style={{width: "90px"}} id={list._id} value={list._etag} onClick={this.rejectMR}><i className="fa fa-times" style={{marginRight: "8px"}}></i>Reject</Button>
+                          <Button outline color="success" size="sm" className="btn-pill" style={{ width: "90px", marginBottom: "4px" }} id={list._id} value={list._etag} onClick={this.ApproveMR}><i className="fa fa-check" style={{ marginRight: "8px" }}></i>Approve</Button>
+                          <Button outline color="danger" size="sm" className="btn-pill" style={{ width: "90px" }} id={list._id} value={list._etag} onClick={this.rejectMR}><i className="fa fa-times" style={{ marginRight: "8px" }}></i>Reject</Button>
                         </td>
-                        <td><Link to={'/mr-detail/'+list._id}>{list.mr_id}</Link></td>
-                        <td>{list.implementation_id}</td>
+                        <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
                         <td>{list.cd_id}</td>
                         <td>{list.site_info[0].site_id}</td>
@@ -457,7 +475,6 @@ class OrderCreated extends Component {
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
-                        <td>{list.asp_company}</td>
                         <td>{list.eta}</td>
                         <td></td>
                         <td>{list.updated_on}</td>
@@ -466,6 +483,9 @@ class OrderCreated extends Component {
                     )}
                   </tbody>
                 </Table>
+                <div style={{ margin: "8px 0px" }}>
+                  <small>Showing {this.state.mr_all.length} entries</small>
+                </div>
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
@@ -486,7 +506,7 @@ class OrderCreated extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    dataLogin : state.loginData
+    dataLogin: state.loginData
   }
 }
 
