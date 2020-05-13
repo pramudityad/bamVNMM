@@ -24,7 +24,7 @@ import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
-import Loading from '../../components/Loading'
+import Loading from "../../components/Loading";
 import ModalCreateNew from "../../components/ModalCreateNew";
 import ModalDelete from "../../components/ModalDelete";
 
@@ -85,6 +85,8 @@ class MatLibrary extends React.Component {
       activeItemId: null,
       createModal: false,
       selected_id: "",
+      sortType: 1,
+      sortField: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -94,12 +96,12 @@ class MatLibrary extends React.Component {
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
     this.toggleEdit = this.toggleEdit.bind(this);
-    this.saveNew = this.saveNew.bind(this);
-    this.saveUpdate = this.saveUpdate.bind(this);
+
     this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
+    this.requestSort = this.requestSort.bind(this);
   }
 
   toggle(i) {
@@ -394,105 +396,25 @@ class MatLibrary extends React.Component {
     document.title = "Material Library | BAM";
   }
 
-  handleChangeChecklist(e) {
-    const item = e.target.name;
-    const isChecked = e.target.checked;
-    const mrList = this.state.assignment_list;
-    let dataMRChecked = this.state.data_asg_checked;
-    if (isChecked === true) {
-      const getMR = mrList.find((e) => e._id === item);
-      dataMRChecked.push(getMR);
-    } else {
-      dataMRChecked = dataMRChecked.filter(function (e) {
-        return e._id !== item;
-      });
-    }
-    this.setState({ data_asg_checked: dataMRChecked });
-    this.setState((prevState) => ({
-      asg_checked: prevState.asg_checked.set(item, isChecked),
-    }));
-  }
-
-  handleChangeChecklistAll(e) {
-    const isChecked = e.target.checked;
-    const mrList = this.state.assignment_all;
-    let dataMRChecked = this.state.data_asg_checked;
-    if (isChecked === true) {
-      for (let i = 0; i < mrList.length; i++) {
-        if (this.state.asg_checked.get(mrList[i]._id) !== true) {
-          dataMRChecked.push(mrList[i]);
-        }
-        this.setState((prevState) => ({
-          asg_checked: prevState.asg_checked.set(mrList[i]._id, true),
-        }));
-      }
-      this.setState({
-        data_asg_checked: dataMRChecked,
-        asg_checked_all: isChecked,
-      });
-    } else {
-      this.setState({ asg_checked: new Map(), data_asg_checked: [] });
-      this.setState({ asg_checked_all: isChecked });
-    }
-  }
-
   handlePageChange(pageNumber) {
-    this.setState({ activePage: pageNumber }, () => {
-      this.getWHStockList();
-    });
-  }
-
-  async getMatStockFormat(dataImport) {
-    const dataHeader = dataImport[0];
-    const onlyParent = dataImport
-      .map((e) => e)
-      .filter((e) =>
-        this.checkValuetoString(e[this.getIndex(dataHeader, "owner_id")])
-      );
-    let data_array = [];
-    if (onlyParent !== undefined && onlyParent.length !== 0) {
-      for (let i = 1; i < onlyParent.length; i++) {
-        const aa = {
-          owner_id: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "owner_id")]
-          ),
-          po_number: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "po_number")]
-          ),
-          arrival_date: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "arrival_date")]
-          ),
-          id_project_doc: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "id_project_doc")]
-          ),
-          sku: this.checkValue(onlyParent[i][this.getIndex(dataHeader, "sku")]),
-        };
-        if (aa.owner_id !== undefined && aa.owner_id !== null) {
-          aa["owner_id"] = aa.owner_id.toString();
-        }
-        if (aa.po_number !== undefined && aa.po_number !== null) {
-          aa["po_number"] = aa.po_number.toString();
-        }
-        if (aa.arrival_date !== undefined && aa.arrival_date !== null) {
-          aa["arrival_date"] = aa.arrival_date.toString();
-        }
-        if (aa.id_project_doc !== undefined && aa.id_project_doc !== null) {
-          aa["id_project_doc"] = aa.id_project_doc.toString();
-        }
-        if (aa.sku !== undefined && aa.sku !== null) {
-          aa["sku"] = aa.sku.toString();
-        }
-        data_array.push(aa);
-      }
-      // console.log(JSON.stringify(data_array));
-      return data_array;
-    } else {
-      this.setState(
-        { action_status: "failed", action_message: "Please check your format" },
-        () => {
-          this.toggleLoading();
-        }
-      );
+    let sortType = this.state.sortType;
+    // console.log("page handle sort ", sortType);
+    switch (sortType) {
+      case 1:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getListSort();
+        });
+        break;
+      case -1:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getListSort();
+        });
+        break;
+      default:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getWHStockList();
+        });
+        break;
     }
   }
 
@@ -546,82 +468,6 @@ class MatLibrary extends React.Component {
     this.setState({ MatStockForm: dataForm });
   }
 
-  async saveUpdate() {
-    let respondSaveEdit = undefined;
-    const dataPPEdit = this.state.MatStockForm;
-    const dataPP = this.state.all_data.find(
-      (e) => e.owner_id === dataPPEdit[0]
-    );
-    const objData = this.state.all_data.find((e) => e._id);
-    let pp = {
-      sku_description: dataPPEdit[0],
-      serial_number: dataPPEdit[1],
-      project_name: dataPPEdit[2],
-      box_number: dataPPEdit[3],
-      condition: dataPPEdit[4],
-      notes: dataPPEdit[5],
-      id_project_doc: objData.id_project_doc,
-      arrival_date: objData.arrival_date,
-      po_number: objData.po_number,
-      owner_id: objData.owner_id,
-      sku: objData.sku,
-    };
-    console.log("patch data ", pp);
-    this.toggleLoading();
-    this.toggleEdit();
-    let patchData = await this.patchDatatoAPINODE(
-      "/whStock/updateOneWhStockwithDelete/" + objData._id,
-      { data: [pp] }
-    );
-    if (patchData === undefined) {
-      patchData = {};
-      patchData["data"] = undefined;
-    }
-    if (patchData.data !== undefined) {
-      this.setState({ action_status: "success" }, () => {
-        this.toggleLoading();
-        setTimeout(function () {
-          window.location.reload();
-        }, 2000);
-      });
-    } else {
-      this.toggleLoading();
-      this.setState({ action_status: "failed" });
-    }
-  }
-
-  async saveNew() {
-    this.toggleMatStockForm();
-    this.toggleLoading();
-    let poData = [];
-    let respondSaveNew = undefined;
-    const dataPPEdit = this.state.MatStockForm;
-    let pp = {
-      owner_id: dataPPEdit[0],
-      po_number: dataPPEdit[1],
-      arrival_date: dataPPEdit[2],
-      project_name: dataPPEdit[3],
-      sku: dataPPEdit[4],
-      sku_description: dataPPEdit[5],
-      qty: dataPPEdit[6],
-    };
-    poData.push(pp);
-    let postData = await this.postDatatoAPINODE("/whStock/createOneWhStockp", {
-      stockData: pp,
-    }).then((res) => {
-      console.log("res save one ", res);
-      if (res.data !== undefined) {
-        this.toggleLoading();
-      } else {
-        this.setState({
-          action_status: "failed",
-          action_message: res.response.data.error,
-        });
-        this.toggleLoading();
-      }
-    });
-  }
-
   numToSSColumn(num) {
     var s = "",
       t;
@@ -636,7 +482,9 @@ class MatLibrary extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE("/variants/variants");
+    let getAll_nonpage = await this.getDatafromAPINODE(
+      "/variants/variants?noPg=1"
+    );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -721,6 +569,57 @@ class MatLibrary extends React.Component {
     saveAs(new Blob([PPFormat]), "Material Library Template.xlsx");
   };
 
+  getListSort() {
+    this.toggleLoading();
+    this.getDatafromAPINODE(
+      "/variants/variants?srt=" +
+        this.state.sortField +
+        ":" +
+        this.state.sortType +
+        "&lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
+    ).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+          // sortType: -1
+        });
+        this.toggleLoading();
+      } else {
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
+        this.toggleLoading();
+      }
+    });
+  }
+
+  requestSort(e) {
+    let sortType = this.state.sortType;
+    // console.log('sortType atas', this.state.sortType)
+    let sort = e;
+    const ascending = 1;
+    const descending = -1;
+    if (sortType === -1) {
+      this.setState({ sortType: ascending, sortField: sort }, () => {
+        // console.log('sortType 1 ', this.state.sortType)
+        this.getListSort();
+      });
+    } else {
+      this.setState({ sortType: descending, sortField: sort }, () => {
+        // console.log('sortType -1 ', this.state.sortType)
+        this.getListSort();
+      });
+    }
+    
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -763,7 +662,7 @@ class MatLibrary extends React.Component {
                   </div>
                   &nbsp;&nbsp;&nbsp;
                   <div>
-                  <Dropdown
+                    <Dropdown
                       isOpen={this.state.dropdownOpen[1]}
                       toggle={() => {
                         this.toggle(1);
@@ -831,9 +730,23 @@ class MatLibrary extends React.Component {
                           className="fixed"
                         >
                           <tr align="center">
-                            <th>Origin</th>
-                            <th>Material ID</th>
-                            <th>Material Name</th>
+                            <th><Button color="ghost-dark"
+                                onClick={() => this.requestSort('origin')}
+                              >
+                                Origin
+                              </Button></th>
+                            <th>
+                              <Button color="ghost-dark"
+                                onClick={() => this.requestSort('material_id')}
+                              >
+                                Material ID
+                              </Button>
+                            </th>
+                            <th><Button color="ghost-dark"
+                                onClick={() => this.requestSort('material_name')}
+                              >
+                                Material Name
+                              </Button></th>
                             <th>Description</th>
                             <th>Category</th>
                             {/* <th></th> */}
@@ -1161,11 +1074,12 @@ class MatLibrary extends React.Component {
           </ModalFooter>
         </ModalCreateNew>
 
-       {/* Modal Loading */}
-       <Loading isOpen={this.state.modal_loading}
+        {/* Modal Loading */}
+        <Loading
+          isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
-          className={"modal-sm modal--loading "}>
-        </Loading>
+          className={"modal-sm modal--loading "}
+        ></Loading>
         {/* end Modal Loading */}
       </div>
     );

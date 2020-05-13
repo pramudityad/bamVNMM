@@ -87,6 +87,8 @@ class MatInboundPlan extends React.Component {
       modalMatStockEdit: false,
       MatStockForm: new Array(6).fill(null),
       createModal: false,
+      sortType: 1,
+      sortField: "",
     };
     this.togglePOForm = this.togglePOForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -102,6 +104,7 @@ class MatInboundPlan extends React.Component {
     this.toggleDelete = this.toggleDelete.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
+    this.requestSort = this.requestSort.bind(this);
   }
 
   toggle(i) {
@@ -395,9 +398,25 @@ class MatInboundPlan extends React.Component {
   }
 
   handlePageChange(pageNumber) {
-    this.setState({ activePage: pageNumber }, () => {
-      this.getWHInboundListNext();
-    });
+    let sortType = this.state.sortType;
+    // console.log("page handle sort ", sortType);
+    switch (sortType) {
+      case 1:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getListSort();
+        });
+        break;
+      case -1:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getListSort();
+        });
+        break;
+      default:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getWHInboundListNext();
+        });
+        break;
+    }
   }
 
   toggleEdit(e) {
@@ -576,7 +595,7 @@ class MatInboundPlan extends React.Component {
   async downloadAll() {
     let download_all = [];
     let getAll_nonpage = await this.getDatafromAPINODE(
-      "/whInboundPlan/getWhInboundPlan"
+      "/whInboundPlan/getWhInboundPlan?noPg=1"
     );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
@@ -698,6 +717,57 @@ class MatInboundPlan extends React.Component {
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "Material Inbound Template.xlsx");
   };
+
+  getListSort() {
+    this.toggleLoading();
+    this.getDatafromAPINODE(
+      "/whInboundPlan/getWhInboundPlan?srt=" +
+        this.state.sortField +
+        ":" +
+        this.state.sortType +
+        "&lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
+    ).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+          // sortType: -1
+        });
+        this.toggleLoading();
+      } else {
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
+        this.toggleLoading();
+      }
+    });
+  }
+
+  requestSort(e) {
+    let sortType = this.state.sortType;
+    // console.log('sortType atas', this.state.sortType)
+    let sort = e;
+    const ascending = 1;
+    const descending = -1;
+    if (sortType === -1) {
+      this.setState({ sortType: ascending, sortField: sort }, () => {
+        // console.log('sortType 1 ', this.state.sortType)
+        this.getListSort();
+      });
+    } else {
+      this.setState({ sortType: descending, sortField: sort }, () => {
+        // console.log('sortType -1 ', this.state.sortType)
+        this.getListSort();
+      });
+    }
+    
+  }
 
   render() {
     return (

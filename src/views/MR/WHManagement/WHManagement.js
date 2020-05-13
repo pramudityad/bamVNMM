@@ -91,6 +91,8 @@ class WHManagement extends React.Component {
       selected_id: "",
       selected_wh_name: "",
       selected_wh_id: "",
+      sortType: 1,
+      sortField: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -106,6 +108,7 @@ class WHManagement extends React.Component {
     this.downloadAll = this.downloadAll.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
+    this.requestSort = this.requestSort.bind(this);
   }
 
   toggle(i) {
@@ -484,9 +487,25 @@ class WHManagement extends React.Component {
   }
 
   handlePageChange(pageNumber) {
-    this.setState({ activePage: pageNumber }, () => {
-      this.getWHStockList();
-    });
+    let sortType = this.state.sortType;
+    // console.log("page handle sort ", sortType);
+    switch (sortType) {
+      case 1:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getListSort();
+        });
+        break;
+      case -1:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getListSort();
+        });
+        break;
+      default:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getWHStockList();
+        });
+        break;
+    }
   }
 
   saveMatStockWHBulk = async () => {
@@ -632,7 +651,7 @@ class WHManagement extends React.Component {
   async downloadAll() {
     let download_all = [];
     let getAll_nonpage = await this.getDatafromAPINODE(
-      "/whManagement/warehouse"
+      "/whManagement/warehouse?noPg=1"
     );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
@@ -694,24 +713,6 @@ class WHManagement extends React.Component {
     });
   };
 
-  // DeleteData(r) {
-  //   // this.toggleDanger();
-  //   const _idData = r.currentTarget.value;
-  //   const DelData = this.deleteDataFromAPINODE(
-  //     "/whManagement/deleteWarehouse/" + _idData
-  //   ).then((res) => {
-  //     if (res.data !== undefined) {
-  //       this.setState({ action_status: "success" });
-  //       this.getWHStockList();
-  //       // this.toggleLoading();
-  //     } else {
-  //       this.setState({ action_status: "failed" }, () => {
-  //         // this.toggleLoading();
-  //       });
-  //     }
-  //   });
-  // }
-
   exportMatStatus = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -733,6 +734,57 @@ class WHManagement extends React.Component {
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
   };
+
+  getListSort() {
+    this.toggleLoading();
+    this.getDatafromAPINODE(
+      "/whManagement/warehouse?srt=" +
+        this.state.sortField +
+        ":" +
+        this.state.sortType +
+        "&lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
+    ).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+          // sortType: -1
+        });
+        this.toggleLoading();
+      } else {
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
+        this.toggleLoading();
+      }
+    });
+  }
+
+  requestSort(e) {
+    let sortType = this.state.sortType;
+    // console.log('sortType atas', this.state.sortType)
+    let sort = e;
+    const ascending = 1;
+    const descending = -1;
+    if (sortType === -1) {
+      this.setState({ sortType: ascending, sortField: sort }, () => {
+        // console.log('sortType 1 ', this.state.sortType)
+        this.getListSort();
+      });
+    } else {
+      this.setState({ sortType: descending, sortField: sort }, () => {
+        // console.log('sortType -1 ', this.state.sortType)
+        this.getListSort();
+      });
+    }
+    
+  }
 
   render() {
     return (
@@ -778,19 +830,7 @@ class WHManagement extends React.Component {
                               > Bulk{" "}
                             </DropdownItem>
                           </DropdownMenu>
-                        </Dropdown>
-                        {/* <Button
-                          block
-                          color="success"
-                          onClick={this.togglecreateModal}
-                          // id="toggleCollapse1"
-                        >
-                          <i className="fa fa-plus-square" aria-hidden="true">
-                            {" "}
-                            &nbsp;{" "}
-                          </i>{" "}
-                          New
-                        </Button> */}
+                        </Dropdown> 
                       </div>
                     ) : (
                       ""
@@ -866,8 +906,16 @@ class WHManagement extends React.Component {
                           className="fixed"
                         >
                           <tr align="center">
-                            <th>Warehouse Name</th>
-                            <th>Warehouse ID</th>
+                          <th><Button color="ghost-dark"
+                                onClick={() => this.requestSort('wh_name')}
+                              >
+                                Warehouse Name
+                              </Button></th>
+                              <th><Button color="ghost-dark"
+                                onClick={() => this.requestSort('wh_id')}
+                              >
+                                Warehouse ID
+                              </Button></th>
                             <th>WH Manager</th>
                             <th>Address</th>
                             <th>Latitude</th>
