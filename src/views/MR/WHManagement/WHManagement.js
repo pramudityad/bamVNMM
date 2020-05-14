@@ -1164,7 +1164,7 @@ class WHManagement extends React.Component {
           </ModalBody>
           <ModalFooter>
             <Button color="success" onClick={this.saveNew}>
-              Submit
+              Create
             </Button>
           </ModalFooter>
         </Modal>
