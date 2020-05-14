@@ -24,9 +24,6 @@ import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
-import ModalDelete from "../../components/ModalDelete";
-import Loading from '../../components/Loading'
-
 import "../MatStyle.css";
 
 const Checkbox = ({
@@ -36,25 +33,25 @@ const Checkbox = ({
   onChange,
   value,
 }) => (
-  <input
-    type={type}
-    name={name}
-    checked={checked}
-    onChange={onChange}
-    value={value}
-    className="checkmark-dash"
-  />
-);
+    <input
+      type={type}
+      name={name}
+      checked={checked}
+      onChange={onChange}
+      value={value}
+      className="checkmark-dash"
+    />
+  );
 
 const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
+const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
+const usernameBAM = "adminbamidsuper";
+const passwordBAM = "F760qbAg2sml";
+
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
-const usernameXL = "adminbamidsuper";
-const passwordXL = "F760qbAg2sml";
-
-class WHManagement extends React.Component {
+class MaterialStock extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -63,8 +60,8 @@ class WHManagement extends React.Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      search: null,
       filter_name: null,
+      search: null,
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -75,29 +72,25 @@ class WHManagement extends React.Component {
       action_status: null,
       action_message: null,
       all_data: [],
-      asp_data: [],
+      wh_data: [],
       data_PO: [],
       packageSelected: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
       modalMatStockForm: false,
-      modalEdit: false,
-      DataForm: new Array(8).fill(null),
+      modalMatStockEdit: false,
+      MatStockForm: new Array(6).fill(null),
+      warehouse_selected: null,
       collapse: false,
       danger: false,
       activeItemName: "",
       activeItemId: null,
       createModal: false,
-      selected_id: "",
-      selected_wh_name: "",
-      selected_wh_id: "",
-      sortType: 0,
-      sortField: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterName = debounce(this.changeFilterName, 500);
+    this.changeFilterDebounce = debounce(this.changeFilterName, 500);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
@@ -106,11 +99,8 @@ class WHManagement extends React.Component {
     this.saveUpdate = this.saveUpdate.bind(this);
     this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
+    this.getWHStockList = this.getWHStockList.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
-    this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
-    this.requestSort = this.requestSort.bind(this);
-    this.handleChangeLimit = this.handleChangeLimit.bind(this);
-
   }
 
   toggle(i) {
@@ -122,31 +112,20 @@ class WHManagement extends React.Component {
     });
   }
 
+  togglecreateModal() {
+    this.setState({
+      createModal: !this.state.createModal,
+    });
+  }
+
   toggleAddNew() {
     this.setState({ collapse: !this.state.collapse });
   }
 
   toggleDelete(e) {
     const modalDelete = this.state.danger;
-    if (modalDelete === false) {
-      const _id = e.currentTarget.value;
-      this.setState({
-        danger: !this.state.danger,
-        selected_id: _id,
-      });
-    } else {
-      this.setState({
-        danger: false,
-      });
-    }
-    this.setState((prevState) => ({
-      modalDelete: !prevState.modalDelete,
-    }));
-  }
-
-  resettogglecreateModal() {
     this.setState({
-      rowsXLS: [],
+      danger: !this.state.danger,
     });
   }
 
@@ -157,53 +136,30 @@ class WHManagement extends React.Component {
   }
 
   toggleEdit(e) {
-    this.getASPList();
-    const modalEdit = this.state.modalEdit;
-    if (modalEdit === false) {
+    const modalMatStockEdit = this.state.modalMatStockEdit;
+    if (modalMatStockEdit === false) {
       const value = e.currentTarget.value;
-      const aEdit = this.state.all_data.find((e) => e._id === value);
-      let dataForm = this.state.DataForm;
-      dataForm[0] = aEdit.wh_name;
-      dataForm[1] = aEdit.wh_id;
-      dataForm[2] = aEdit.wh_manager;
-      dataForm[3] = aEdit.address;
-      dataForm[4] = aEdit.owner;
-      dataForm[6] = aEdit.latitude;
-      dataForm[7] = aEdit.longitude;
-      this.setState({ DataForm: dataForm, selected_id: value });
+      const aEdit = this.state.all_data.find((e) => e.owner_id === value);
+      let dataForm = this.state.MatStockForm;
+      dataForm[0] = aEdit.sku_description;
+      dataForm[1] = aEdit.serial_number;
+      dataForm[2] = aEdit.project_name;
+      dataForm[3] = aEdit.box_number;
+      dataForm[4] = aEdit.condition;
+      dataForm[5] = aEdit.notes;
+      this.setState({ MatStockForm: dataForm });
     } else {
-      this.setState({ DataForm: new Array(6).fill(null) });
+      this.setState({ MatStockForm: new Array(6).fill(null) });
     }
     this.setState((prevState) => ({
-      modalEdit: !prevState.modalEdit,
+      modalMatStockEdit: !prevState.modalMatStockEdit,
     }));
   }
 
   toggleMatStockForm() {
-    this.getASPList();
     this.setState((prevState) => ({
       modalMatStockForm: !prevState.modalMatStockForm,
     }));
-  }
-
-  async getDatafromAPIEXEL(url) {
-    try {
-      let respond = await axios.get(API_URL_XL + url, {
-        headers: { "Content-Type": "application/json" },
-        auth: {
-          username: usernameXL,
-          password: passwordXL,
-        },
-      });
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond Get Data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      console.log("respond Get Data", err);
-      return respond;
-    }
   }
 
   async getDatafromAPINODE(url) {
@@ -282,12 +238,6 @@ class WHManagement extends React.Component {
     }
   }
 
-  togglecreateModal() {
-    this.setState({
-      createModal: !this.state.createModal,
-    });
-  }
-
   changeFilterName(value) {
     this.getWHStockList();
   }
@@ -298,24 +248,22 @@ class WHManagement extends React.Component {
       value = null;
     }
     this.setState({ filter_name: value }, () => {
-      this.changeFilterName(value);
+      this.changeFilterDebounce(value);
     });
   };
 
-  getWHStockList() {
+  getWHStockList(e) {
     this.toggleLoading();
-    let filter_wh_name =
-      this.state.filter_name === null
-        ? '{"$exists" : 1}'
-        : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
-    let whereAnd = '{"wh_name": ' + filter_wh_name + "}";
+    let get_wh_id = e.target.value;
+    // console.log("wh_id", get_wh_id);
+    let getbyWH = '{"wh_id":"' + get_wh_id + '"}';
     this.getDatafromAPINODE(
-      "/whManagement/warehouse?q=" +
-        whereAnd +
-        "&lmt=" +
-        this.state.perPage +
-        "&pg=" +
-        this.state.activePage
+      "/whStock/getWhStock?q=" +
+      getbyWH +
+      "&lmt=" +
+      this.state.perPage +
+      "&pg=" +
+      this.state.activePage
     ).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
@@ -336,21 +284,15 @@ class WHManagement extends React.Component {
     });
   }
 
-  getASPList() {
-    // switch (this.props.dataLogin.account_id) {
-    //   case "xl":
-    this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
-      // console.log("asp data ", res.data);
+  getWHManagement() {
+    this.getDatafromAPINODE("/whManagement/warehouse").then((res) => {
+      // console.log("all data ", res.data);
       if (res.data !== undefined) {
-        this.setState({ asp_data: res.data._items });
+        this.setState({ wh_data: res.data.data });
       } else {
-        this.setState({ asp_data: [] });
+        this.setState({ wh_data: [] });
       }
     });
-    //     break;
-    //   default:
-    //     break;
-    // }
   }
 
   isSameValue(element, value) {
@@ -440,10 +382,9 @@ class WHManagement extends React.Component {
   }
 
   componentDidMount() {
-    // console.log("here ur dataLogin", this.props.dataLogin);
-    this.getWHStockList();
-    // change this
-    document.title = "Warehouse Management | BAM";
+    // this.getWHStockList();
+    this.getWHManagement();
+    document.title = "Material Stock | BAM";
   }
 
   handleChangeChecklist(e) {
@@ -488,53 +429,63 @@ class WHManagement extends React.Component {
     }
   }
 
-  handleChangeLimit(e) {
-    let limitpg = e.currentTarget.value;
-    let sortType = this.state.sortType;
-    switch (sortType) {
-      case 1:
-        this.setState({ perPage: limitpg }, () => {
-          this.getListSort();
-        });
-        break;
-      case -1:
-        this.setState({ perPage: limitpg }, () => {
-          this.getListSort();
-        });
-        break;
-      case 0:
-        this.setState({ perPage: limitpg }, () => {
-          this.getWHStockList();
-        });
-        break;
-      default:
-        // nothing
-        break;
-    }
+  handlePageChange(pageNumber) {
+    this.setState({ activePage: pageNumber }, () => {
+      this.getWHStockList();
+    });
   }
 
-  handlePageChange(pageNumber) {
-    let sortType = this.state.sortType;
-    // console.log("page handle sort ", sortType);
-    switch (sortType) {
-      case 1:
-        this.setState({ activePage: pageNumber }, () => {
-          this.getListSort();
-        });
-        break;
-      case -1:
-        this.setState({ activePage: pageNumber }, () => {
-          this.getListSort();
-        });
-        break;
-      case 0:
-        this.setState({ activePage: pageNumber }, () => {
-          this.getWHStockList();
-        });
-        break;
-      default:
-        // nothing
-        break;
+  async getMatStockFormat(dataImport) {
+    const dataHeader = dataImport[0];
+    const onlyParent = dataImport
+      .map((e) => e)
+      .filter((e) =>
+        this.checkValuetoString(e[this.getIndex(dataHeader, "owner_id")])
+      );
+    let data_array = [];
+    if (onlyParent !== undefined && onlyParent.length !== 0) {
+      for (let i = 1; i < onlyParent.length; i++) {
+        const aa = {
+          owner_id: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "owner_id")]
+          ),
+          po_number: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "po_number")]
+          ),
+          arrival_date: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "arrival_date")]
+          ),
+          id_project_doc: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "id_project_doc")]
+          ),
+          sku: this.checkValue(onlyParent[i][this.getIndex(dataHeader, "sku")]),
+        };
+        if (aa.owner_id !== undefined && aa.owner_id !== null) {
+          aa["owner_id"] = aa.owner_id.toString();
+        }
+        if (aa.po_number !== undefined && aa.po_number !== null) {
+          aa["po_number"] = aa.po_number.toString();
+        }
+        if (aa.arrival_date !== undefined && aa.arrival_date !== null) {
+          aa["arrival_date"] = aa.arrival_date.toString();
+        }
+        if (aa.id_project_doc !== undefined && aa.id_project_doc !== null) {
+          aa["id_project_doc"] = aa.id_project_doc.toString();
+        }
+        if (aa.sku !== undefined && aa.sku !== null) {
+          aa["sku"] = aa.sku.toString();
+        }
+        data_array.push(aa);
+      }
+      // console.log(JSON.stringify(data_array));
+      return data_array;
+    } else {
+      this.setState(
+        { action_status: "failed", action_message: "Please check your format" },
+        () => {
+          this.toggleLoading();
+        }
+      );
     }
   }
 
@@ -542,12 +493,11 @@ class WHManagement extends React.Component {
     this.toggleLoading();
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
-    console.log("xlsx data", JSON.stringify(BulkXLSX));
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE("/whManagement/createWarehouse", {
-      managementData: BulkXLSX,
+    const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
+      stockData: BulkXLSX,
     });
-    console.log("res bulk ", res.data);
+    // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -564,12 +514,9 @@ class WHManagement extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     console.log("xlsx data", JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE(
-      "/whManagement/createWhManagementTruncate",
-      {
-        managementData: BulkXLSX,
-      }
-    );
+    const res = await this.postDatatoAPINODE("/whStock/createWhStockTruncate", {
+      stockData: BulkXLSX,
+    });
     console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
@@ -584,33 +531,43 @@ class WHManagement extends React.Component {
   handleChangeForm(e) {
     const value = e.target.value;
     const index = e.target.name;
-    console.log("value ", value, index);
-    let dataForm = this.state.DataForm;
+    let dataForm = this.state.MatStockForm;
     dataForm[parseInt(index)] = value;
-    this.setState({ DataForm: dataForm });
+    this.setState({ MatStockForm: dataForm });
   }
+
+  SearchFilter = (e) => {
+    let keyword = e.target.value;
+    this.setState({ search: keyword });
+  };
 
   async saveUpdate() {
     let respondSaveEdit = undefined;
-    const dataPPEdit = this.state.DataForm;
-    const objData = this.state.selected_id;
-    // console.log('obj data ', objData);
+    const dataPPEdit = this.state.MatStockForm;
+    const dataPP = this.state.all_data.find(
+      (e) => e.owner_id === dataPPEdit[0]
+    );
+    const objData = this.state.all_data.find((e) => e._id);
     let pp = {
-      wh_name: dataPPEdit[0],
-      wh_id: dataPPEdit[1],
-      wh_manager: dataPPEdit[2],
-      address: dataPPEdit[3],
-      owner: dataPPEdit[4],
-      latitude: dataPPEdit[6],
-      longitude: dataPPEdit[7],
+      sku_description: dataPPEdit[0],
+      serial_number: dataPPEdit[1],
+      project_name: dataPPEdit[2],
+      box_number: dataPPEdit[3],
+      condition: dataPPEdit[4],
+      notes: dataPPEdit[5],
+      id_project_doc: objData.id_project_doc,
+      arrival_date: objData.arrival_date,
+      po_number: objData.po_number,
+      owner_id: objData.owner_id,
+      sku: objData.sku,
     };
+    console.log("patch data ", pp);
     this.toggleLoading();
     this.toggleEdit();
     let patchData = await this.patchDatatoAPINODE(
-      "/whManagement/UpdateOneWarehouse/" + objData,
-      { data: pp }
+      "/whStock/updateOneWhStockwithDelete/" + objData._id,
+      { data: [pp] }
     );
-    console.log("patch data ", pp);
     if (patchData === undefined) {
       patchData = {};
       patchData["data"] = undefined;
@@ -633,33 +590,27 @@ class WHManagement extends React.Component {
     this.toggleLoading();
     let poData = [];
     let respondSaveNew = undefined;
-    const dataPPEdit = this.state.DataForm;
+    const dataPPEdit = this.state.MatStockForm;
     let pp = {
-      wh_name: dataPPEdit[0],
-      wh_id: dataPPEdit[1],
-      wh_manager: dataPPEdit[2],
-      address: dataPPEdit[3],
-      owner: dataPPEdit[4],
-      wh_type: dataPPEdit[5],
-      latitude: dataPPEdit[6],
-      longitude: dataPPEdit[7],
+      owner_id: dataPPEdit[0],
+      po_number: dataPPEdit[1],
+      arrival_date: dataPPEdit[2],
+      project_name: dataPPEdit[3],
+      sku: dataPPEdit[4],
+      sku_description: dataPPEdit[5],
+      qty: dataPPEdit[6],
     };
     poData.push(pp);
-    console.log("post data ", pp);
-    let postData = await this.postDatatoAPINODE(
-      "/whManagement/createOneWarehouse",
-      {
-        managementData: pp,
-      }
-    ).then((res) => {
+    let postData = await this.postDatatoAPINODE("/whStock/createOneWhStockp", {
+      stockData: pp,
+    }).then((res) => {
       console.log("res save one ", res);
       if (res.data !== undefined) {
-        this.setState({ action_status: "success" }, () => {
-          this.toggleLoading();
-        });
+        this.toggleLoading();
       } else {
         this.setState({
           action_status: "failed",
+          action_message: res.response.data.error,
         });
         this.toggleLoading();
       }
@@ -680,9 +631,7 @@ class WHManagement extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE(
-      "/whManagement/warehouse?noPg=1"
-    );
+    let getAll_nonpage = await this.getDatafromAPINODE("/whStock/getWhStock");
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -691,14 +640,19 @@ class WHManagement extends React.Component {
     const ws = wb.addWorksheet();
 
     let headerRow = [
-      "Warehouse Name",
-      "Warehouse ID",
-      "WH Manager",
-      "Address",
-      "Latitude",
-      "Longitude",
-      "Owner",
-      "WH Type",
+      "Owner ID",
+      "WH ID",
+      "PO Number",
+      "Project Name",
+      "Arrival Date",
+      "SKU",
+      "SKU Desc",
+      "Qty",
+      "Aging",
+      "Serial Number",
+      "Box Number",
+      "Condition",
+      "Notes",
     ];
     ws.addRow(headerRow);
 
@@ -709,31 +663,35 @@ class WHManagement extends React.Component {
     for (let i = 0; i < download_all.length; i++) {
       let list = download_all[i];
       ws.addRow([
-        list.wh_name,
+        list.owner_id,
         list.wh_id,
-        list.wh_manager,
-        list.address,
-        list.latitude,
-        list.longitude,
-        list.owner,
-        list.wh_type,
+        list.po_number,
+        list.project_name,
+        list.sku,
+        list.sku_description,
+        list.arrival_date,
+        list.qty,
+        list.ageing,
+        list.serial_number,
+        list.box_number,
+        list.condition,
+        list.notes,
       ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All Warehouse.xlsx");
+    saveAs(new Blob([allocexport]), "All Material Stock.xlsx");
   }
 
   DeleteData = async () => {
-    const objData = this.state.selected_id;
+    const objData = this.state.all_data.find((e) => e._id);
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/whManagement/deleteWarehouse/" + objData
+      "/whStock/deleteWhStock/" + objData._id
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
-        this.getWHStockList();
         this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
@@ -741,79 +699,43 @@ class WHManagement extends React.Component {
         });
       }
     });
-  };
+  }
 
   exportMatStatus = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
     ws.addRow([
-      "wh_name",
+      "owner_id",
+      "po_number",
+      "arrival_date",
+      "project_name",
+      "sku",
+      "qty",
       "wh_id",
-      "wh_manager",
-      "address",
-      "latitude",
-      "longitude",
-      "owner",
-      "wh_type",
     ]);
-    ws.addRow(["Jakarta", "JKT1", "Asep", "Priuk", 0, 0, "EID", "Internal"]);
-    ws.addRow(["Jakarta2", "JKT1", "Asep", "Priuk", 0, 0, "2000175941", "dsp"]);
-    ws.addRow(["Jakarta3", "JKT1", "Asep", "Priuk", 0, 0, "2000175941", "asp"]);
+    ws.addRow([
+      "5df99ce5face981b7ace8861",
+      "PO0001",
+      "2020-04-17",
+      "XL BAM DEMO 2021",
+      "1",
+      100,
+      "WH_1",
+    ]);
+    ws.addRow([
+      "5df99ce5face981b7ace8861",
+      "PO0001",
+      "2020-04-17",
+      "XL BAM DEMO 2021",
+      "1",
+      100,
+      "WH_1",
+    ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
+    saveAs(new Blob([PPFormat]), "Material Stock Template.xlsx");
   };
-
-  getListSort() {
-    this.toggleLoading();
-    this.getDatafromAPINODE(
-      "/whManagement/warehouse?srt=" +
-        this.state.sortField +
-        ":" +
-        this.state.sortType +
-        "&lmt=" +
-        this.state.perPage +
-        "&pg=" +
-        this.state.activePage
-    ).then((res) => {
-      if (res.data !== undefined) {
-        this.setState({
-          all_data: res.data.data,
-          prevPage: this.state.activePage,
-          total_dataParent: res.data.totalResults,
-          // sortType: -1
-        });
-        this.toggleLoading();
-      } else {
-        this.setState({
-          all_data: [],
-          total_dataParent: 0,
-          prevPage: this.state.activePage,
-        });
-        this.toggleLoading();
-      }
-    });
-  }
-
-  requestSort(e) {
-    let sortType = this.state.sortType;
-    if (sortType === 0) {
-      sortType = 1;
-    }
-    let sort = e;
-    const ascending = 1;
-    const descending = -1;
-    if (sortType === -1) {
-      this.setState({ sortType: ascending, sortField: sort }, () => {
-        this.getListSort();
-      });
-    } else {
-      this.setState({ sortType: descending, sortField: sort }, () => {
-        this.getListSort();
-      });
-    }
-  }
 
   render() {
     return (
@@ -828,71 +750,69 @@ class WHManagement extends React.Component {
               <CardHeader>
                 <span style={{ marginTop: "8px", position: "absolute" }}>
                   {" "}
-                  WH Management{" "}
+                  Material Stock{" "}
                 </span>
                 <div
                   className="card-header-actions"
                   style={{ display: "inline-flex" }}
                 >
-                  <div>
-                    {this.state.userRole.includes("Flow-PublicInternal") !==
-                    true ? (
-                      <div>
-                        <Dropdown
-                          isOpen={this.state.dropdownOpen[0]}
-                          toggle={() => {
-                            this.toggle(0);
-                          }}
-                        >
-                          <DropdownToggle block color="success">
-                            <i className="fa fa-plus-square" aria-hidden="true">
-                              {" "}
-                              &nbsp;{" "}
-                            </i>{" "}
-                            Create New
-                          </DropdownToggle>
-                          <DropdownMenu>
-                            <DropdownItem onClick={this.toggleMatStockForm}>
-                              > Form{" "}
-                            </DropdownItem>
-                            <DropdownItem onClick={this.togglecreateModal}>
-                              > Bulk{" "}
-                            </DropdownItem>
-                          </DropdownMenu>
-                        </Dropdown>
-                      </div>
-                    ) : (
-                      ""
-                    )}
-                  </div>
-                  &nbsp;&nbsp;&nbsp;
-                  <div style={{ marginRight: "10px" }}>
+                  {/* <div style={{ marginRight: "10px" }}>
                     <Dropdown
-                      isOpen={this.state.dropdownOpen[1]}
+                      isOpen={this.state.dropdownOpen[0]}
                       toggle={() => {
-                        this.toggle(1);
+                        this.toggle(0);
                       }}
                     >
-                      <DropdownToggle block color="ghost-warning">
-                        <i className="fa fa-download" aria-hidden="true">
-                          {" "}
-                          &nbsp;{" "}
-                        </i>{" "}
-                        Export
+                      <DropdownToggle caret color="light">
+                        Download Template
                       </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportMatStatus}>
                           {" "}
-                          WH Management Template
+                          Material Stock Template
                         </DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>
                           > Download All{" "}
                         </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
+                  </div> */}
+                  <div>
+                    {/* Open modal for create new */}
+                    {this.state.userRole.includes("Flow-PublicInternal") !==
+                      true ? (
+                        <div>
+                          <Button
+                            block
+                            color="success"
+                            onClick={this.togglecreateModal}
+                          // id="toggleCollapse1"
+                          >
+                            <i className="fa fa-plus-square" aria-hidden="true">
+                              {" "}
+                            &nbsp;{" "}
+                            </i>{" "}
+                          New
+                        </Button>
+                        </div>
+                      ) : (
+                        ""
+                      )}
+                  </div>
+                   &nbsp;&nbsp;&nbsp;
+                  <div>
+                    <Button onClick={this.downloadAll} block color="ghost-warning"><i className="fa fa-download" aria-hidden="true">
+                      {" "}
+                            &nbsp;{" "}
+                    </i>{" "}Export</Button>
                   </div>
                 </div>
+                {/* <div>
+                  <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}>
+                    <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form
+                  </Button>
+                </div> */}
               </CardHeader>
               <Collapse
                 isOpen={this.state.collapse}
@@ -900,80 +820,159 @@ class WHManagement extends React.Component {
                 onEntered={this.onEntered}
                 onExiting={this.onExiting}
                 onExited={this.onExited}
-              ></Collapse>
+              >
+                <Card style={{ margin: "10px 10px 5px 10px" }}>
+                  <CardBody>
+                    <div>
+                      <table>
+                        <tbody>
+                          <tr>
+                            <td>Upload File</td>
+                            <td>:</td>
+                            <td>
+                              <input
+                                type="file"
+                                onChange={this.fileHandlerMaterial.bind(this)}
+                                style={{ padding: "10px", visiblity: "hidden" }}
+                              />
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardBody>
+                  <CardFooter>
+                    <Button
+                      color="success"
+                      disabled={this.state.rowsXLS.length === 0}
+                      onClick={this.saveMatStockWHBulk}
+                    >
+                      {" "}
+                      <i className="fa fa-save" aria-hidden="true">
+                        {" "}
+                      </i>{" "}
+                      &nbsp;SAVE{" "}
+                    </Button>
+                    &nbsp;&nbsp;&nbsp;
+                    <Button
+                      color="warning"
+                      disabled={this.state.rowsXLS.length === 0}
+                      onClick={this.saveTruncateBulk}
+                    >
+                      {" "}
+                      <i className="fa fa-save" aria-hidden="true">
+                        {" "}
+                      </i>{" "}
+                      &nbsp;SAVE2{" "}
+                    </Button>
+                    {/* <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>                     */}
+                  </CardFooter>
+                </Card>
+              </Collapse>
               <CardBody>
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                    <div
+                      {/* <span
                         style={{
-                          float: "left",
-                          margin: "5px",
-                          display: "inline-flex",
+                          fontSize: "20px",
+                          fontWeight: "500",
+                          position: "absolute",
                         }}
                       >
-                        <Input
-                          type="select"
-                          name="select"
-                          id="selectLimit"
-                          onChange={this.handleChangeLimit}
-                        >
-                          <option value={"10"}>10</option>
-                          <option value={"25"}>25</option>
-                          <option value={"50"}>50</option>
-                          <option value={"100"}>100</option>
-                          <option value={"noPg=1"}>All</option>
-                        </Input>
-                      </div>
+                        Material Stock List
+                      </span> */}
                       <div
                         style={{
                           float: "left",
-                          margin: "5px",
-                          display: "inline-flex",
+                          // marginTop: "25px",
+                          // display: "inline-flex",
                         }}
-                      ></div>
+                      >
+                        <FormGroup row>
+                          <Col xs="6" md="3">
+                            <Label for="exampleSelect">
+                              Select Warehouse
+                          </Label>
+                          </Col>
+                          <Col xs="12" md="9">
+                            <Input
+                              id="exampleSelect"
+                              type="select"
+                              name="select"
+                              onChange={this.getWHStockList}
+                            // placeholder="Select Warehouse"
+                            >
+                              {this.state.wh_data.map((opt) => (
+                                <option value={opt.wh_id}>
+                                  {opt.wh_name} - {opt.wh_id}
+                                </option>
+                              ))}
+                            </Input>
+                          </Col>
+                        </FormGroup>
+                      </div>
                     </div>
                     <input
                       className="search-box-material"
                       type="text"
                       name="filter"
-                      placeholder="Search WH Name"
-                      onChange={this.handleChangeFilter}
-                      value={this.state.filter_name}
+                      placeholder="Search"
+                      onChange={(e) => this.SearchFilter(e)}
                     />
                   </Col>
                 </Row>
                 <Row>
                   <Col>
                     <div className="divtable">
-                      <Table responsive size="sm">
+                      <Table responsive size="sm" >
                         <thead
                           style={{ backgroundColor: "#73818f" }}
                           className="fixed"
                         >
                           <tr align="center">
-                          <th><Button color="ghost-dark"
-                                onClick={() => this.requestSort('wh_name')}
-                              >
-                                Warehouse Name
-                              </Button></th>
-                              <th><Button color="ghost-dark"
-                                onClick={() => this.requestSort('wh_id')}
-                              >
-                                Warehouse ID
-                              </Button></th>
-                            <th>WH Manager</th>
-                            <th>Address</th>
-                            <th>Latitude</th>
-                            <th>Longitude</th>
-                            <th>Owner</th>
-                            <th>WH Type</th>
-                            <th></th>
+                            <th> Owner ID</th>
+                            <th> WH ID</th>
+                            <th>PO Number</th>
+                            <th>Project Name</th>
+                            <th>Arrival Date</th>
+                            <th>SKU</th>
+                            <th>SKU Desc</th>
+                            <th>Qty</th>
+                            <th>Aging</th>
+                            <th>Serial Number</th>
+                            <th>Box Number</th>
+                            <th>Condition</th>
+                            <th>Notes</th>
                             <th></th>
                           </tr>
                         </thead>
                         <tbody>
                           {this.state.all_data
+                            .filter((e) => {
+                              if (this.state.search === null) {
+                                return e;
+                              } else if (
+                                e.owner_id
+                                  .toLowerCase()
+                                  .includes(this.state.search.toLowerCase()) ||
+                                e.po_number
+                                  .toLowerCase()
+                                  .includes(this.state.search.toLowerCase()) ||
+                                e.project_name
+                                  .toLowerCase()
+                                  .includes(this.state.search.toLowerCase())
+                                //   ||
+                                // e.serial_number
+                                //   .toLowerCase()
+                                //   .includes(this.state.search.toLowerCase()) ||
+                                // e.box_number
+                                //   .toLowerCase()
+                                //   .includes(this.state.search.toLowerCase())
+                              ) {
+                                return e;
+                              }
+                            })
                             .map((e) => (
                               <React.Fragment key={e._id + "frag"}>
                                 <tr
@@ -982,40 +981,43 @@ class WHManagement extends React.Component {
                                   key={e._id}
                                 >
                                   <td style={{ textAlign: "center" }}>
-                                    {e.wh_name}
+                                    {e.owner_id}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.wh_id}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
-                                    {e.wh_manager}
+                                    {e.po_number}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
-                                    {e.address}
+                                    {e.project_name}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
-                                    {e.latitude}
+                                    {e.arrival_date}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
-                                    {e.longitude}
+                                    {e.sku}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
-                                    {e.owner_name}
+                                    {e.sku_description}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
-                                    {e.wh_type}
+                                    {e.qty}
                                   </td>
-
-                                  <td>
-                                    <Button
-                                      size="sm"
-                                      color="secondary"
-                                      value={e._id}
-                                      onClick={this.toggleEdit}
-                                      title="Edit"
-                                    >
-                                      <i className="icon-pencil icons"></i>
-                                    </Button>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.ageing}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.serial_number}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.box_number}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.condition}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.notes}
                                   </td>
                                   <td>
                                     <Button
@@ -1056,184 +1058,78 @@ class WHManagement extends React.Component {
             </Card>
           </Col>
         </Row>
-        {/* dont need */}
 
-        {/* Modal New PO */}
-        <Modal
-          isOpen={this.state.modalMatStockForm}
-          toggle={this.toggleMatStockForm}
-          className="modal--form-e"
-        >
-          <ModalHeader>Form WH Management</ModalHeader>
-          <ModalBody>
-            <Row>
-              <Col sm="12">
-                <FormGroup>
-                  <Label htmlFor="wh_name">Warehouse Name</Label>
-                  <Input
-                    type="text"
-                    name="0"
-                    placeholder=""
-                    value={this.state.DataForm[0]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="wh_id">Warehouse ID </Label>
-                  <Input
-                    type="text"
-                    name="1"
-                    placeholder=""
-                    value={this.state.DataForm[1]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="wh_manager">WH Manager</Label>
-                  <Input
-                    type="text"
-                    name="2"
-                    placeholder=""
-                    value={this.state.DataForm[2]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    type="text"
-                    name="3"
-                    placeholder=""
-                    value={this.state.DataForm[3]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="latitude">Latitude</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    name="6"
-                    placeholder=""
-                    value={this.state.DataForm[6]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="longitude">Longitude</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    name="7"
-                    placeholder=""
-                    value={this.state.DataForm[7]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="owner type">Owner Type</Label>
-                  <Input
-                    type="select"
-                    name="5"
-                    placeholder=""
-                    value={this.state.DataForm[5]}
-                    onChange={this.handleChangeForm}
-                  >
-                    <option value="ASP">ASP</option>
-                    <option value="DSP">DSP</option>
-                    <option value="Internal">Internal</option>
-                  </Input>
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="owner">Owner</Label>
-                  <Input
-                    type="select"
-                    name="4"
-                    placeholder=""
-                    value={this.state.DataForm[4]}
-                    onChange={this.handleChangeForm}
-                  >
-                    {this.state.asp_data.map((asp) => (
-                      <option value={asp.Vendor_Code}>{asp.Name}</option>
-                    ))}
-                    <option value="Internal">Internal</option>
-                  </Input>
-                </FormGroup>
-              </Col>
-            </Row>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="success" onClick={this.saveNew}>
-              Submit
-            </Button>
-          </ModalFooter>
-        </Modal>
-        {/*  Modal New PO*/}
 
         {/* Modal Edit PP */}
         <Modal
-          isOpen={this.state.modalEdit}
+          isOpen={this.state.modalMatStockEdit}
           toggle={this.toggleEdit}
           className="modal--form"
         >
-          <ModalHeader>Form Update WH Management</ModalHeader>
+          <ModalHeader>Form Update Material Stock</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="wh_name">Warehouse Name</Label>
+                  <Label htmlFor="sku_description">SKU Description</Label>
                   <Input
                     type="text"
                     name="0"
                     placeholder=""
-                    value={this.state.DataForm[0]}
+                    value={this.state.MatStockForm[0]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="wh_id">Warehouse ID </Label>
+                  <Label htmlFor="serial_number">Serial Number</Label>
                   <Input
                     type="text"
                     name="1"
                     placeholder=""
-                    value={this.state.DataForm[1]}
+                    value={this.state.MatStockForm[1]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="wh_manager">WH Manager</Label>
+                  <Label htmlFor="project_name">Project Name</Label>
                   <Input
-                    type="text"
-                    name="2"
+                    type="datetime-local"
                     placeholder=""
-                    value={this.state.DataForm[2]}
+                    value={this.state.MatStockForm[2]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="box_number">Box Number</Label>
                   <Input
                     type="text"
                     name="3"
                     placeholder=""
-                    value={this.state.DataForm[3]}
+                    value={this.state.MatStockForm[3]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="owner">Owner</Label>
+                  <Label htmlFor="condition">Condition</Label>
                   <Input
-                    type="select"
+                    type="text"
+                    min="0"
                     name="4"
                     placeholder=""
-                    value={this.state.DataForm[4]}
+                    value={this.state.MatStockForm[4]}
                     onChange={this.handleChangeForm}
-                  >
-                    {this.state.asp_data.map((asp) => (
-                      <option value={asp.Vendor_Code}>{asp.Name}</option>
-                    ))}
-                    <option value="Internal">Internal</option>
-                  </Input>
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    name="6"
+                    placeholder=""
+                    value={this.state.MatStockForm[5]}
+                    onChange={this.handleChangeForm}
+                  />
                 </FormGroup>
               </Col>
             </Row>
@@ -1247,15 +1143,8 @@ class WHManagement extends React.Component {
         {/*  Modal Edit PP*/}
 
         {/* Modal create New */}
-        <Modal
-          isOpen={this.state.createModal}
-          toggle={this.togglecreateModal}
-          className={this.props.className}
-          onClosed={this.resettogglecreateModal}
-        >
-          <ModalHeader toggle={this.togglecreateModal}>
-            Create New WareHouse
-          </ModalHeader>
+        <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
+          <ModalHeader toggle={this.togglecreateModal}>Create New Stock</ModalHeader>
           <ModalBody>
             <CardBody>
               <div>
@@ -1278,55 +1167,59 @@ class WHManagement extends React.Component {
             </CardBody>
           </ModalBody>
           <ModalFooter>
-            {/* <Button
-              block
-              color="link"
-              className="btn-pill"
-              onClick={this.exportMatStatus}
-            >
-              Download Template
-            </Button>{" "} */}
-            <Button
-              block
-              color="success"
-              className="btn-pill"
-              disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveMatStockWHBulk}
-            >
-              Save
-            </Button>{" "}
-            {/* <Button
-              block
-              color="secondary"
-              className="btn-pill"
-              disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveTruncateBulk}
-            >
-              Truncate
-            </Button> */}
+            <Button block color="link" className="btn-pill" onClick={this.exportMatStatus}>Download Template</Button>{' '}
+            <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveMatStockWHBulk}>Save</Button>{' '}
+            <Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button>
           </ModalFooter>
         </Modal>
 
         {/* Modal confirmation delete */}
-        <ModalDelete
+        <Modal
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
-          title="Delete WH"
         >
-          <Button color="danger" onClick={this.DeleteData}>
-            Delete
-          </Button>
-          <Button color="secondary" onClick={this.toggleDelete}>
-            Cancel
-          </Button>
-        </ModalDelete>
+          <ModalHeader toggle={this.toggleDelete}>
+            Delete Material Stock Confirmation
+          </ModalHeader>
+          <ModalBody>Are you sure want to delete ?</ModalBody>
+          <ModalFooter>
+            <Button
+              color="danger"
+              onClick={this.DeleteData}
+            >
+              Delete
+            </Button>
+            <Button color="secondary" onClick={this.toggleDelete}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </Modal>
 
         {/* Modal Loading */}
-        <Loading isOpen={this.state.modal_loading}
+        <Modal
+          isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
-          className={"modal-sm modal--loading "}>
-        </Loading>
+          className={"modal-sm modal--loading "}
+        >
+          <ModalBody>
+            <div style={{ textAlign: "center" }}>
+              <div className="lds-ring">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            </div>
+            <div style={{ textAlign: "center" }}>Loading ...</div>
+            <div style={{ textAlign: "center" }}>System is processing ...</div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="secondary" onClick={this.toggleLoading}>
+              Close
+            </Button>
+          </ModalFooter>
+        </Modal>
         {/* end Modal Loading */}
       </div>
     );
@@ -1339,4 +1232,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(WHManagement);
+export default connect(mapStateToProps)(MaterialStock);
