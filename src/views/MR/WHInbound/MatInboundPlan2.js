@@ -896,18 +896,38 @@ class MatInboundPlan extends React.Component {
                     <div>
                       <table>
                         <tbody>
+                        <tr>
+                            <td><b>Warehouse Name</b></td>
+                            <td>:</td>
+                            <td>{this.state.wh_data.wh_name}</td>
+                          </tr>
                           <tr>
-                            <td>WH Manager</td>
+                            <td><b>Warehouse ID</b></td>
+                            <td>:</td>
+                            <td>{this.state.wh_data.wh_id}</td>
+                          </tr>
+                          <tr>
+                            <td><b>Warehouse Manager</b></td>
                             <td>:</td>
                             <td>{this.state.wh_data.wh_manager}</td>
                           </tr>
                           <tr>
-                            <td>WH Address</td>
+                            <td><b>Warehouse Address</b></td>
                             <td>:</td>
                             <td>{this.state.wh_data.address}</td>
                           </tr>
                           <tr>
-                            <td>WH Owner</td>
+                            <td><b>Latitude</b></td>
+                            <td>:</td>
+                            <td>{this.state.wh_data.latitude}</td>
+                          </tr>
+                          <tr>
+                            <td><b>Longitude</b></td>
+                            <td>:</td>
+                            <td>{this.state.wh_data.longitude}</td>
+                          </tr>
+                          <tr>
+                            <td><b>Warehouse Owner</b></td>
                             <td>:</td>
                             <td>{this.state.wh_data.owner}</td>
                           </tr>
