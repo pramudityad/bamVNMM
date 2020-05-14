@@ -85,7 +85,7 @@ class MatLibrary extends React.Component {
       activeItemId: null,
       createModal: false,
       selected_id: "",
-      sortType: 1,
+      sortType: 0,
       sortField: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
@@ -96,7 +96,7 @@ class MatLibrary extends React.Component {
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
     this.toggleEdit = this.toggleEdit.bind(this);
-
+    this.handleChangeLimit = this.handleChangeLimit.bind(this);
     this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
@@ -396,6 +396,31 @@ class MatLibrary extends React.Component {
     document.title = "Material Library | BAM";
   }
 
+  handleChangeLimit(e) {
+    let limitpg = e.currentTarget.value;
+    let sortType = this.state.sortType;
+    switch (sortType) {
+      case 1:
+        this.setState({ perPage: limitpg }, () => {
+          this.getListSort();
+        });
+        break;
+      case -1:
+        this.setState({ perPage: limitpg }, () => {
+          this.getListSort();
+        });
+        break;
+      case 0:
+        this.setState({ perPage: limitpg }, () => {
+          this.getWHStockList();
+        });
+        break;
+      default:
+        // nothing
+        break;
+    }
+  }
+
   handlePageChange(pageNumber) {
     let sortType = this.state.sortType;
     // console.log("page handle sort ", sortType);
@@ -410,10 +435,13 @@ class MatLibrary extends React.Component {
           this.getListSort();
         });
         break;
-      default:
+      case 0:
         this.setState({ activePage: pageNumber }, () => {
           this.getWHStockList();
         });
+        break;
+      default:
+        // nothing
         break;
     }
   }
@@ -602,22 +630,21 @@ class MatLibrary extends React.Component {
 
   requestSort(e) {
     let sortType = this.state.sortType;
-    // console.log('sortType atas', this.state.sortType)
+    if (sortType === 0) {
+      sortType = 1;
+    }
     let sort = e;
     const ascending = 1;
     const descending = -1;
     if (sortType === -1) {
       this.setState({ sortType: ascending, sortField: sort }, () => {
-        // console.log('sortType 1 ', this.state.sortType)
         this.getListSort();
       });
     } else {
       this.setState({ sortType: descending, sortField: sort }, () => {
-        // console.log('sortType -1 ', this.state.sortType)
         this.getListSort();
       });
     }
-    
   }
 
   render() {
@@ -699,9 +726,26 @@ class MatLibrary extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                      {/* <span style={{ fontSize: "20px", fontWeight: "500" }}>
-                        Material Library
-                      </span> */}
+                      <div
+                        style={{
+                          float: "left",
+                          margin: "5px",
+                          display: "inline-flex",
+                        }}
+                      >
+                        <Input
+                          type="select"
+                          name="select"
+                          id="selectLimit"
+                          onChange={this.handleChangeLimit}
+                        >
+                          <option value={"10"}>10</option>
+                          <option value={"25"}>25</option>
+                          <option value={"50"}>50</option>
+                          <option value={"100"}>100</option>
+                          <option value={"noPg=1"}>All</option>
+                        </Input>
+                      </div>
                       <div
                         style={{
                           float: "right",
@@ -730,23 +774,32 @@ class MatLibrary extends React.Component {
                           className="fixed"
                         >
                           <tr align="center">
-                            <th><Button color="ghost-dark"
-                                onClick={() => this.requestSort('origin')}
+                            <th>
+                              <Button
+                                color="ghost-dark"
+                                onClick={() => this.requestSort("origin")}
                               >
                                 Origin
-                              </Button></th>
+                              </Button>
+                            </th>
                             <th>
-                              <Button color="ghost-dark"
-                                onClick={() => this.requestSort('material_id')}
+                              <Button
+                                color="ghost-dark"
+                                onClick={() => this.requestSort("material_id")}
                               >
                                 Material ID
                               </Button>
                             </th>
-                            <th><Button color="ghost-dark"
-                                onClick={() => this.requestSort('material_name')}
+                            <th>
+                              <Button
+                                color="ghost-dark"
+                                onClick={() =>
+                                  this.requestSort("material_name")
+                                }
                               >
                                 Material Name
-                              </Button></th>
+                              </Button>
+                            </th>
                             <th>Description</th>
                             <th>Category</th>
                             {/* <th></th> */}

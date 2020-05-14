@@ -96,6 +96,7 @@ class MaterialStock2 extends React.Component {
       activeItemName: "",
       activeItemId: null,
       createModal: false,
+      sortType: 0,
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -112,7 +113,7 @@ class MaterialStock2 extends React.Component {
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
     this.requestSort = this.requestSort.bind(this);
-
+    this.handleChangeLimit = this.handleChangeLimit.bind(this);
   }
 
   toggle(i) {
@@ -490,6 +491,31 @@ class MaterialStock2 extends React.Component {
     }
   }
 
+  handleChangeLimit(e) {
+    let limitpg = e.currentTarget.value;
+    let sortType = this.state.sortType;
+    switch (sortType) {
+      case 1:
+        this.setState({ perPage: limitpg }, () => {
+          this.getListSort();
+        });
+        break;
+      case -1:
+        this.setState({ perPage: limitpg }, () => {
+          this.getListSort();
+        });
+        break;
+      case 0:
+        this.setState({ perPage: limitpg }, () => {
+          this.getWHStockListNext();
+        });
+        break;
+      default:
+        // nothing
+        break;
+    }
+  }
+
   handlePageChange(pageNumber) {
     let sortType = this.state.sortType;
     // console.log("page handle sort ", sortType);
@@ -504,10 +530,13 @@ class MaterialStock2 extends React.Component {
           this.getListSort();
         });
         break;
-      default:
+      case 0:
         this.setState({ activePage: pageNumber }, () => {
           this.getWHStockListNext();
         });
+        break;
+      default:
+        // nothing
         break;
     }
   }
@@ -612,11 +641,6 @@ class MaterialStock2 extends React.Component {
     dataForm[parseInt(index)] = value;
     this.setState({ MatStockForm: dataForm });
   }
-
-  // SearchFilter = (e) => {
-  //   let keyword = e.target.value;
-  //   this.setState({ search: keyword });
-  // };
 
   async saveUpdate() {
     let respondSaveEdit = undefined;
@@ -868,18 +892,18 @@ class MaterialStock2 extends React.Component {
 
   requestSort(e) {
     let sortType = this.state.sortType;
-    // console.log('sortType atas', this.state.sortType)
+    if (sortType === 0) {
+      sortType = 1;
+    }
     let sort = e;
     const ascending = 1;
     const descending = -1;
     if (sortType === -1) {
       this.setState({ sortType: ascending, sortField: sort }, () => {
-        // console.log('sortType 1 ', this.state.sortType)
         this.getListSort();
       });
     } else {
       this.setState({ sortType: descending, sortField: sort }, () => {
-        // console.log('sortType -1 ', this.state.sortType)
         this.getListSort();
       });
     }
@@ -1006,8 +1030,33 @@ class MaterialStock2 extends React.Component {
               </Collapse>
               <CardBody>
                 <Row>
-                  <Col>
-                    <div style={{ marginBottom: "10px" }}></div>
+                  <Col>                    
+                    <div
+                        style={{
+                          float: "left",
+                          margin: "5px",
+                          display: "inline-flex",
+                        }}
+                      >
+                        <Input
+                          type="select"
+                          name="select"
+                          id="selectLimit"
+                          onChange={this.handleChangeLimit}
+                        >
+                          <option value={"10"}>10</option>
+                          <option value={"25"}>25</option>
+                          <option value={"50"}>50</option>
+                          <option value={"100"}>100</option>
+                          <option value={"noPg=1"}>All</option>
+                        </Input>
+                      </div>
+                    <div style={{
+                          float: "right",
+                          margin: "5px",
+                          display: "inline-flex",
+                        }}
+                      >
                     <input
                       className="search-box-material"
                       type="text"
@@ -1017,6 +1066,7 @@ class MaterialStock2 extends React.Component {
                       onChange={this.handleChangeFilter}
                       value={this.state.filter_name}
                     />
+                    </div>                    
                   </Col>
                 </Row>
                 <Row>

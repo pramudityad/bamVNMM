@@ -87,7 +87,7 @@ class MatInboundPlan extends React.Component {
       modalMatStockEdit: false,
       MatStockForm: new Array(6).fill(null),
       createModal: false,
-      sortType: 1,
+      sortType: 0,
       sortField: "",
     };
     this.togglePOForm = this.togglePOForm.bind(this);
@@ -97,6 +97,7 @@ class MatInboundPlan extends React.Component {
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
+    this.handleChangeLimit = this.handleChangeLimit.bind(this);
     this.toggleEdit = this.toggleEdit.bind(this);
     this.saveNew = this.saveNew.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
@@ -397,6 +398,32 @@ class MatInboundPlan extends React.Component {
     document.title = "Material Inbound Plan | BAM";
   }
 
+  handleChangeLimit(e) {
+    let limitpg = e.currentTarget.value;
+    let sortType = this.state.sortType;
+    switch (sortType) {
+      case 1:
+        this.setState({ perPage: limitpg }, () => {
+          this.getListSort();
+        });
+        break;
+      case -1:
+        this.setState({ perPage: limitpg }, () => {
+          this.getListSort();
+        });
+        break;
+      case 0:
+        this.setState({ perPage: limitpg }, () => {
+          this.getWHInboundListNext();
+        });
+        break;
+      default:
+        // nothing
+        break;
+    }
+  }
+
+
   handlePageChange(pageNumber) {
     let sortType = this.state.sortType;
     // console.log("page handle sort ", sortType);
@@ -411,10 +438,13 @@ class MatInboundPlan extends React.Component {
           this.getListSort();
         });
         break;
-      default:
+      case 0:
         this.setState({ activePage: pageNumber }, () => {
           this.getWHInboundListNext();
         });
+        break;
+      default:
+        // nothing
         break;
     }
   }
@@ -890,7 +920,32 @@ class MatInboundPlan extends React.Component {
               <CardBody>
                 <Row>
                   <Col>
-                    <div style={{ marginBottom: "10px" }}></div>
+                  <div
+                        style={{
+                          float: "left",
+                          margin: "5px",
+                          display: "inline-flex",
+                        }}
+                      >
+                        <Input
+                          type="select"
+                          name="select"
+                          id="selectLimit"
+                          onChange={this.handleChangeLimit}
+                        >
+                          <option value={"10"}>10</option>
+                          <option value={"25"}>25</option>
+                          <option value={"50"}>50</option>
+                          <option value={"100"}>100</option>
+                          <option value={"noPg=1"}>All</option>
+                        </Input>
+                      </div>
+                    <div style={{
+                          float: "right",
+                          margin: "5px",
+                          display: "inline-flex",
+                        }}
+                      >
                     <input
                       className="search-box-material"
                       type="text"
@@ -900,6 +955,7 @@ class MatInboundPlan extends React.Component {
                       onChange={this.handleChangeFilter}
                       value={this.state.filter_name}
                     />
+                    </div>  
                   </Col>
                 </Row>
                 <Row>

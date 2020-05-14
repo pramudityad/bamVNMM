@@ -91,7 +91,7 @@ class WHManagement extends React.Component {
       selected_id: "",
       selected_wh_name: "",
       selected_wh_id: "",
-      sortType: 1,
+      sortType: 0,
       sortField: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
@@ -109,6 +109,8 @@ class WHManagement extends React.Component {
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
     this.requestSort = this.requestSort.bind(this);
+    this.handleChangeLimit = this.handleChangeLimit.bind(this);
+
   }
 
   toggle(i) {
@@ -486,6 +488,31 @@ class WHManagement extends React.Component {
     }
   }
 
+  handleChangeLimit(e) {
+    let limitpg = e.currentTarget.value;
+    let sortType = this.state.sortType;
+    switch (sortType) {
+      case 1:
+        this.setState({ perPage: limitpg }, () => {
+          this.getListSort();
+        });
+        break;
+      case -1:
+        this.setState({ perPage: limitpg }, () => {
+          this.getListSort();
+        });
+        break;
+      case 0:
+        this.setState({ perPage: limitpg }, () => {
+          this.getWHStockList();
+        });
+        break;
+      default:
+        // nothing
+        break;
+    }
+  }
+
   handlePageChange(pageNumber) {
     let sortType = this.state.sortType;
     // console.log("page handle sort ", sortType);
@@ -500,10 +527,13 @@ class WHManagement extends React.Component {
           this.getListSort();
         });
         break;
-      default:
+      case 0:
         this.setState({ activePage: pageNumber }, () => {
           this.getWHStockList();
         });
+        break;
+      default:
+        // nothing
         break;
     }
   }
@@ -768,22 +798,21 @@ class WHManagement extends React.Component {
 
   requestSort(e) {
     let sortType = this.state.sortType;
-    // console.log('sortType atas', this.state.sortType)
+    if (sortType === 0) {
+      sortType = 1;
+    }
     let sort = e;
     const ascending = 1;
     const descending = -1;
     if (sortType === -1) {
       this.setState({ sortType: ascending, sortField: sort }, () => {
-        // console.log('sortType 1 ', this.state.sortType)
         this.getListSort();
       });
     } else {
       this.setState({ sortType: descending, sortField: sort }, () => {
-        // console.log('sortType -1 ', this.state.sortType)
         this.getListSort();
       });
     }
-    
   }
 
   render() {
@@ -876,9 +905,26 @@ class WHManagement extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                      {/* <span style={{ fontSize: "20px", fontWeight: "500" }}>
-                        WH Management List
-                      </span> */}
+                    <div
+                        style={{
+                          float: "left",
+                          margin: "5px",
+                          display: "inline-flex",
+                        }}
+                      >
+                        <Input
+                          type="select"
+                          name="select"
+                          id="selectLimit"
+                          onChange={this.handleChangeLimit}
+                        >
+                          <option value={"10"}>10</option>
+                          <option value={"25"}>25</option>
+                          <option value={"50"}>50</option>
+                          <option value={"100"}>100</option>
+                          <option value={"noPg=1"}>All</option>
+                        </Input>
+                      </div>
                       <div
                         style={{
                           float: "left",
@@ -1101,19 +1147,24 @@ class WHManagement extends React.Component {
                 <FormGroup>
                   <Label htmlFor="owner">Owner</Label>
                   <Input
-                    type="text"
+                    type="select"
                     name="4"
                     placeholder=""
                     value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
-                  ></Input>
+                  >
+                    {this.state.asp_data.map((asp) => (
+                      <option value={asp.Vendor_Code}>{asp.Name}</option>
+                    ))}
+                    <option value="Internal">Internal</option>
+                  </Input>
                 </FormGroup>
               </Col>
             </Row>
           </ModalBody>
           <ModalFooter>
             <Button color="success" onClick={this.saveNew}>
-              Submit
+              Create
             </Button>
           </ModalFooter>
         </Modal>
@@ -1179,7 +1230,7 @@ class WHManagement extends React.Component {
                     onChange={this.handleChangeForm}
                   >
                     {this.state.asp_data.map((asp) => (
-                      <option value={asp.Name}>{asp.Name}</option>
+                      <option value={asp.Vendor_Code}>{asp.Name}</option>
                     ))}
                     <option value="Internal">Internal</option>
                   </Input>
