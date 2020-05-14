@@ -26,8 +26,9 @@ import * as XLSX from "xlsx";
 
 import "../MatStyle.css";
 
-import ModalDelete from '../../components/ModalDelete';
-
+import ModalCreateNew from "../../components/ModalCreateNew";
+import ModalDelete from "../../components/ModalDelete";
+import Loading from "../../components/Loading";
 
 const Checkbox = ({
   type = "checkbox",
@@ -63,7 +64,7 @@ class MatInboundPlan extends React.Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      search: null,
+      filter_name: null,
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -86,11 +87,13 @@ class MatInboundPlan extends React.Component {
       modalMatStockEdit: false,
       MatStockForm: new Array(6).fill(null),
       createModal: false,
+      sortType: 1,
+      sortField: "",
     };
     this.togglePOForm = this.togglePOForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterDebounce = debounce(this.changeFilterName, 500);
+    this.changeFilterName = debounce(this.changeFilterName, 500);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
@@ -101,6 +104,7 @@ class MatInboundPlan extends React.Component {
     this.toggleDelete = this.toggleDelete.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
+    this.requestSort = this.requestSort.bind(this);
   }
 
   toggle(i) {
@@ -224,18 +228,13 @@ class MatInboundPlan extends React.Component {
       });
     }
     this.setState((prevState) => ({
-      modalDelete:!prevState.modalDelete,
+      modalDelete: !prevState.modalDelete,
     }));
   }
 
   changeFilterName(value) {
-    this.getWHInboundList();
+    this.getWHInboundListNext();
   }
-
-  SearchFilter = (e) => {
-    let keyword = e.target.value;
-    this.setState({ search: keyword });
-  };
 
   handleChangeFilter = (e) => {
     let value = e.target.value;
@@ -243,14 +242,23 @@ class MatInboundPlan extends React.Component {
       value = null;
     }
     this.setState({ filter_name: value }, () => {
-      this.changeFilterDebounce(value);
+      this.changeFilterName(value);
     });
   };
 
   getWHInboundListNext() {
     this.toggleLoading();
     // let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    let getbyWH = '{"wh_id":"' + this.props.match.params.slug + '"}';
+    let filter_sku =
+      this.state.filter_name === null
+        ? '{"$exists" : 1}'
+        : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    let getbyWH =
+      '{"wh_id":"' +
+      this.props.match.params.slug +
+      '","sku":' +
+      filter_sku +
+      "}";
     this.getDatafromAPINODE(
       "/whInboundPlan/getWhInboundPlan?q=" +
         getbyWH +
@@ -281,10 +289,14 @@ class MatInboundPlan extends React.Component {
 
   getWHManagementID() {
     // let _id = new URLSearchParams(window.location.search).get("_id");
-    this.getDatafromAPINODE('/whManagement/warehouse?q={"wh_id":"' + this.props.match.params.slug + '"}').then((res) => {
+    this.getDatafromAPINODE(
+      '/whManagement/warehouse?q={"wh_id":"' +
+        this.props.match.params.slug +
+        '"}'
+    ).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
-        if(res.data.data !== undefined){
+        if (res.data.data !== undefined) {
           this.setState({ wh_data: res.data.data[0] });
         }
       } else {
@@ -386,9 +398,25 @@ class MatInboundPlan extends React.Component {
   }
 
   handlePageChange(pageNumber) {
-    this.setState({ activePage: pageNumber }, () => {
-      this.getWHInboundListNext();
-    });
+    let sortType = this.state.sortType;
+    // console.log("page handle sort ", sortType);
+    switch (sortType) {
+      case 1:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getListSort();
+        });
+        break;
+      case -1:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getListSort();
+        });
+        break;
+      default:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getWHInboundListNext();
+        });
+        break;
+    }
   }
 
   toggleEdit(e) {
@@ -415,62 +443,6 @@ class MatInboundPlan extends React.Component {
     this.setState((prevState) => ({
       modalMatStockForm: !prevState.modalMatStockForm,
     }));
-  }
-
-  async getMatInboundFormat(dataImport) {
-    const dataHeader = dataImport[0];
-    const onlyParent = dataImport
-      .map((e) => e)
-      .filter((e) =>
-        this.checkValuetoString(e[this.getIndex(dataHeader, "po_number")])
-      );
-    let cpo_array = [];
-    if (onlyParent !== undefined && onlyParent.length !== 0) {
-      for (let i = 1; i < onlyParent.length; i++) {
-        const cpo = {
-          po_number: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "po_number")]
-          ),
-          date: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "date")]
-          ),
-          currency: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "currency")]
-          ),
-          payment_terms: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "payment_terms")]
-          ),
-          shipping_terms: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "shipping_terms")]
-          ),
-          contract: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "contract")]
-          ),
-          contact: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "contact")]
-          ),
-        };
-        if (cpo.po_number !== undefined && cpo.po_number !== null) {
-          cpo["po_number"] = cpo.po_number.toString();
-        }
-        if (cpo.year !== undefined && cpo.year !== null) {
-          cpo["po_year"] = cpo.year.toString();
-        }
-        if (cpo.currency !== undefined && cpo.currency !== null) {
-          cpo["currency"] = cpo.currency.toString();
-        }
-        cpo_array.push(cpo);
-      }
-      // console.log(JSON.stringify(cpo_array));
-      return cpo_array;
-    } else {
-      this.setState(
-        { action_status: "failed", action_message: "Please check your format" },
-        () => {
-          this.toggleLoading();
-        }
-      );
-    }
   }
 
   saveCPOBulk = async () => {
@@ -523,19 +495,19 @@ class MatInboundPlan extends React.Component {
     this.setState({ MatStockForm: dataForm });
   }
 
-  convertDateFormat(jsondate){
+  convertDateFormat(jsondate) {
     let date = new Date(jsondate);
     let year = date.getFullYear();
-    let month = date.getMonth()+1;
+    let month = date.getMonth() + 1;
     let dt = date.getDate();
 
     if (dt < 10) {
-      dt = '0' + dt;
+      dt = "0" + dt;
     }
     if (month < 10) {
-      month = '0' + month;
+      month = "0" + month;
     }
-    return year+'-' + month + '-'+dt;
+    return year + "-" + month + "-" + dt;
   }
 
   async saveUpdate() {
@@ -623,7 +595,7 @@ class MatInboundPlan extends React.Component {
   async downloadAll() {
     let download_all = [];
     let getAll_nonpage = await this.getDatafromAPINODE(
-      "/whInboundPlan/getWhInboundPlan"
+      "/whInboundPlan/getWhInboundPlan?noPg=1"
     );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
@@ -677,7 +649,7 @@ class MatInboundPlan extends React.Component {
   }
 
   DeleteData = async () => {
-    const objData = this.state.selected_id
+    const objData = this.state.selected_id;
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
@@ -686,7 +658,7 @@ class MatInboundPlan extends React.Component {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getWHInboundListNext();
-        this.toggleLoading();        
+        this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
           this.toggleLoading();
@@ -746,6 +718,57 @@ class MatInboundPlan extends React.Component {
     saveAs(new Blob([PPFormat]), "Material Inbound Template.xlsx");
   };
 
+  getListSort() {
+    this.toggleLoading();
+    this.getDatafromAPINODE(
+      "/whInboundPlan/getWhInboundPlan?srt=" +
+        this.state.sortField +
+        ":" +
+        this.state.sortType +
+        "&lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
+    ).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+          // sortType: -1
+        });
+        this.toggleLoading();
+      } else {
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
+        this.toggleLoading();
+      }
+    });
+  }
+
+  requestSort(e) {
+    let sortType = this.state.sortType;
+    // console.log('sortType atas', this.state.sortType)
+    let sort = e;
+    const ascending = 1;
+    const descending = -1;
+    if (sortType === -1) {
+      this.setState({ sortType: ascending, sortField: sort }, () => {
+        // console.log('sortType 1 ', this.state.sortType)
+        this.getListSort();
+      });
+    } else {
+      this.setState({ sortType: descending, sortField: sort }, () => {
+        // console.log('sortType -1 ', this.state.sortType)
+        this.getListSort();
+      });
+    }
+    
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -803,18 +826,31 @@ class MatInboundPlan extends React.Component {
                     </Button>
                   </div>
                   &nbsp;&nbsp;&nbsp;
-                  <div>
-                    <Button
-                      onClick={this.downloadAll}
-                      block
-                      color="ghost-warning"
+                  <div style={{ marginRight: "10px" }}>
+                    <Dropdown
+                      isOpen={this.state.dropdownOpen[1]}
+                      toggle={() => {
+                        this.toggle(1);
+                      }}
                     >
-                      <i className="fa fa-download" aria-hidden="true">
-                        {" "}
-                        &nbsp;{" "}
-                      </i>{" "}
-                      Export
-                    </Button>
+                      <DropdownToggle block color="ghost-warning">
+                        <i className="fa fa-download" aria-hidden="true">
+                          {" "}
+                          &nbsp;{" "}
+                        </i>{" "}
+                        Export
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem header>Uploader Template</DropdownItem>
+                        <DropdownItem onClick={this.exportMatInbound}>
+                          {" "}
+                          Material Inbound Template
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>
+                          > Download All{" "}
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
                   </div>
                 </div>
               </CardHeader>
@@ -859,8 +895,10 @@ class MatInboundPlan extends React.Component {
                       className="search-box-material"
                       type="text"
                       name="filter"
-                      placeholder="Search"
-                      onChange={(e) => this.SearchFilter(e)}
+                      placeholder="Search SKU"
+                      // onChange={(e) => this.SearchFilter(e)}
+                      onChange={this.handleChangeFilter}
+                      value={this.state.filter_name}
                     />
                   </Col>
                 </Row>
@@ -891,94 +929,65 @@ class MatInboundPlan extends React.Component {
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.all_data
-                            .filter((e) => {
-                              if (this.state.search === null) {
-                                return e;
-                              } else if (
-                                e.owner_id
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.po_number
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.project_name
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase())
-                                //   ||
-                                // e.serial_number
-                                //   .toLowerCase()
-                                //   .includes(this.state.search.toLowerCase()) ||
-                                // e.box_number
-                                //   .toLowerCase()
-                                //   .includes(this.state.search.toLowerCase())
-                              ) {
-                                return e;
-                              }
-                            })
-                            .map((e) => (
-                              <React.Fragment key={e._id + "frag"}>
-                                <tr
-                                  style={{ backgroundColor: "#d3d9e7" }}
-                                  className="fixbody"
-                                  key={e._id}
-                                >
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.owner_id}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.wh_id}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.po_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.project_name}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
+                          {this.state.all_data.map((e) => (
+                            <React.Fragment key={e._id + "frag"}>
+                              <tr
+                                style={{ backgroundColor: "#d3d9e7" }}
+                                className="fixbody"
+                                key={e._id}
+                              >
+                                <td style={{ textAlign: "center" }}>
+                                  {e.owner_id}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.wh_id}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.po_number}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.project_name}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
                                   {this.convertDateFormat(e.arrival_date)}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku_description}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.qty}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.ageing}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.serial_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.box_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.condition}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.notes}
-                                  </td>
-                                  <td>
-                                    <Button
-                                      size="sm"
-                                      color="danger"
-                                      value={e._id}
-                                      onClick={this.toggleDelete}
-                                      title="Delete"
-                                    >
-                                      <i
-                                        className="fa fa-trash"
-                                        aria-hidden="true"
-                                      ></i>
-                                    </Button>
-                                  </td>
-                                </tr>
-                              </React.Fragment>
-                            ))}
+                                </td>
+                                <td style={{ textAlign: "center" }}>{e.sku}</td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.sku_description}
+                                </td>
+                                <td style={{ textAlign: "center" }}>{e.qty}</td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.ageing}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.serial_number}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.box_number}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.condition}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.notes}
+                                </td>
+                                <td>
+                                  <Button
+                                    size="sm"
+                                    color="danger"
+                                    value={e._id}
+                                    onClick={this.toggleDelete}
+                                    title="Delete"
+                                  >
+                                    <i
+                                      className="fa fa-trash"
+                                      aria-hidden="true"
+                                    ></i>
+                                  </Button>
+                                </td>
+                              </tr>
+                            </React.Fragment>
+                          ))}
                         </tbody>
                       </Table>
                     </div>
@@ -1003,57 +1012,55 @@ class MatInboundPlan extends React.Component {
         </Row>
 
         {/* Modal confirmation delete */}
-        <ModalDelete  isOpen={this.state.danger}
+        <ModalDelete
+          isOpen={this.state.danger}
           toggle={this.toggleDelete}
-          className={"modal-danger " + this.props.className} title="Delete Inbound">
-        <Button color="danger" onClick={this.DeleteData}>
-              Delete
-            </Button>
-            <Button color="secondary" onClick={this.toggleDelete}>
-              Cancel
-            </Button>
+          className={"modal-danger " + this.props.className}
+          title="Delete Inbound"
+        >
+          <Button color="danger" onClick={this.DeleteData}>
+            Delete
+          </Button>
+          <Button color="secondary" onClick={this.toggleDelete}>
+            Cancel
+          </Button>
         </ModalDelete>
 
         {/* Modal create New */}
-        <Modal
+        <ModalCreateNew
           isOpen={this.state.createModal}
           toggle={this.togglecreateModal}
           className={this.props.className}
           onClosed={this.resettogglecreateModal}
+          title="Create Plan"
         >
-          <ModalHeader toggle={this.togglecreateModal}>
-            Create New Plan
-          </ModalHeader>
-          <ModalBody>
-            <CardBody>
-              <div>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Upload File</td>
-                      <td>:</td>
-                      <td>
-                        <input
-                          type="file"
-                          onChange={this.fileHandlerMaterial.bind(this)}
-                          style={{ padding: "10px", visiblity: "hidden" }}
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </CardBody>
-          </ModalBody>
+          <div>
+            <table>
+              <tbody>
+                <tr>
+                  <td>Upload File</td>
+                  <td>:</td>
+                  <td>
+                    <input
+                      type="file"
+                      onChange={this.fileHandlerMaterial.bind(this)}
+                      style={{ padding: "10px", visiblity: "hidden" }}
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <ModalFooter>
-            <Button
+            {/* <Button
               block
               color="link"
               className="btn-pill"
               onClick={this.exportMatInbound}
+              size="sm"
             >
               Download Template
-            </Button>{" "}
+            </Button>{" "} */}
             <Button
               block
               color="success"
@@ -1073,7 +1080,7 @@ class MatInboundPlan extends React.Component {
               Truncate
             </Button>
           </ModalFooter>
-        </Modal>
+        </ModalCreateNew>
 
         {/* Modal New PO */}
         <Modal
@@ -1218,29 +1225,11 @@ class MatInboundPlan extends React.Component {
         {/*  Modal Edit PP*/}
 
         {/* Modal Loading */}
-        <Modal
+        <Loading
           isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
           className={"modal-sm modal--loading "}
-        >
-          <ModalBody>
-            <div style={{ textAlign: "center" }}>
-              <div className="lds-ring">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-              </div>
-            </div>
-            <div style={{ textAlign: "center" }}>Loading ...</div>
-            <div style={{ textAlign: "center" }}>System is processing ...</div>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="secondary" onClick={this.toggleLoading}>
-              Close
-            </Button>
-          </ModalFooter>
-        </Modal>
+        ></Loading>
         {/* end Modal Loading */}
       </div>
     );

@@ -58,11 +58,11 @@ class Widget extends Component {
     }
 
     return (
-      <Card className={classes} {...attributes} style={{height:"195px"}}>
+      <Card className={classes} {...attributes} style={{ height: "195px", borderRadius: "10px" }}>
         <CardBody>
-          <Row style={{paddingLeft: "16px", paddingRight: "16px"}}>
+          <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
             <Col lg="3" style={verticalCenterIcon}>
-              <center><i className={imageSource} style={{fontSize: "36px"}}></i></center>
+              <center><i className={imageSource} style={{ fontSize: "36px" }}></i></center>
             </Col>
             <Col lg="9" style={verticalCenterText}>
               <div>

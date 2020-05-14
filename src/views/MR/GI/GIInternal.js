@@ -24,7 +24,9 @@ import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import queryString from "query-string";
+
 import ModalCreateNew from "../../components/ModalCreateNew";
+import ModalDelete from "../../components/ModalDelete";
 
 import "../MatStyle.css";
 
@@ -94,6 +96,9 @@ class GIInternal extends React.Component {
       activeItemName: "",
       activeItemId: null,
       createModal: false,
+      selected_id: "",
+      sortType: 1,
+      sortField: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -109,6 +114,7 @@ class GIInternal extends React.Component {
     this.downloadAll = this.downloadAll.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
+    this.requestSort = this.requestSort.bind(this);
   }
 
   toggle(i) {
@@ -138,9 +144,20 @@ class GIInternal extends React.Component {
 
   toggleDelete(e) {
     const modalDelete = this.state.danger;
-    this.setState({
-      danger: !this.state.danger,
-    });
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      this.setState({
+        danger: !this.state.danger,
+        selected_id: _id,
+      });
+    } else {
+      this.setState({
+        danger: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete: !prevState.modalDelete,
+    }));
   }
 
   toggleLoading() {
@@ -471,62 +488,24 @@ class GIInternal extends React.Component {
   }
 
   handlePageChange(pageNumber) {
-    this.setState({ activePage: pageNumber }, () => {
-      this.getWHStockListNext();
-    });
-  }
-
-  async getMatStockFormat(dataImport) {
-    const dataHeader = dataImport[0];
-    const onlyParent = dataImport
-      .map((e) => e)
-      .filter((e) =>
-        this.checkValuetoString(e[this.getIndex(dataHeader, "owner_id")])
-      );
-    let data_array = [];
-    if (onlyParent !== undefined && onlyParent.length !== 0) {
-      for (let i = 1; i < onlyParent.length; i++) {
-        const aa = {
-          owner_id: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "owner_id")]
-          ),
-          po_number: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "po_number")]
-          ),
-          arrival_date: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "arrival_date")]
-          ),
-          id_project_doc: this.checkValue(
-            onlyParent[i][this.getIndex(dataHeader, "id_project_doc")]
-          ),
-          sku: this.checkValue(onlyParent[i][this.getIndex(dataHeader, "sku")]),
-        };
-        if (aa.owner_id !== undefined && aa.owner_id !== null) {
-          aa["owner_id"] = aa.owner_id.toString();
-        }
-        if (aa.po_number !== undefined && aa.po_number !== null) {
-          aa["po_number"] = aa.po_number.toString();
-        }
-        if (aa.arrival_date !== undefined && aa.arrival_date !== null) {
-          aa["arrival_date"] = aa.arrival_date.toString();
-        }
-        if (aa.id_project_doc !== undefined && aa.id_project_doc !== null) {
-          aa["id_project_doc"] = aa.id_project_doc.toString();
-        }
-        if (aa.sku !== undefined && aa.sku !== null) {
-          aa["sku"] = aa.sku.toString();
-        }
-        data_array.push(aa);
-      }
-      // console.log(JSON.stringify(data_array));
-      return data_array;
-    } else {
-      this.setState(
-        { action_status: "failed", action_message: "Please check your format" },
-        () => {
-          this.toggleLoading();
-        }
-      );
+    let sortType = this.state.sortType;
+    // console.log("page handle sort ", sortType);
+    switch (sortType) {
+      case 1:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getListSort();
+        });
+        break;
+      case -1:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getListSort();
+        });
+        break;
+      default:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getWHStockListNext();
+        });
+        break;
     }
   }
 
@@ -672,7 +651,9 @@ class GIInternal extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE("/whStock/getWhStock");
+    let getAll_nonpage = await this.getDatafromAPINODE(
+      "/whStock/getWhStock?noPg=1"
+    );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -725,7 +706,7 @@ class GIInternal extends React.Component {
   }
 
   DeleteData = async () => {
-    const objData = this.state.all_data.find((e) => e._id);
+    const objData = this.state.selected_id;
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
@@ -733,6 +714,7 @@ class GIInternal extends React.Component {
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
+        this.getWHStockListNext();
         this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
@@ -795,6 +777,62 @@ class GIInternal extends React.Component {
     saveAs(new Blob([PPFormat]), "GI Internal Template.xlsx");
   };
 
+  getListSort() {
+    this.toggleLoading();
+    let getbyWH =
+      '{"wh_id":"' +
+      this.props.match.params.slug +
+      '","transaction_type":"Outbond"}';
+    this.getDatafromAPINODE(
+      "/whStock/getWhStock?srt=" +
+        this.state.sortField +
+        ":" +
+        this.state.sortType +
+        "&q=" +
+        getbyWH +
+        "&lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
+    ).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+          // sortType: -1
+        });
+        this.toggleLoading();
+      } else {
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
+        this.toggleLoading();
+      }
+    });
+  }
+
+  requestSort(e) {
+    let sortType = this.state.sortType;
+    // console.log('sortType atas', this.state.sortType)
+    let sort = e;
+    const ascending = 1;
+    const descending = -1;
+    if (sortType === -1) {
+      this.setState({ sortType: ascending, sortField: sort }, () => {
+        // console.log('sortType 1 ', this.state.sortType)
+        this.getListSort();
+      });
+    } else {
+      this.setState({ sortType: descending, sortField: sort }, () => {
+        // console.log('sortType -1 ', this.state.sortType)
+        this.getListSort();
+      });
+    }
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -853,18 +891,31 @@ class GIInternal extends React.Component {
                     </Button>
                   </div>
                   &nbsp;&nbsp;&nbsp;
-                  <div>
-                    <Button
-                      onClick={this.downloadAll}
-                      block
-                      color="ghost-warning"
+                  <div style={{ marginRight: "10px" }}>
+                    <Dropdown
+                      isOpen={this.state.dropdownOpen[1]}
+                      toggle={() => {
+                        this.toggle(1);
+                      }}
                     >
-                      <i className="fa fa-download" aria-hidden="true">
-                        {" "}
-                        &nbsp;{" "}
-                      </i>{" "}
-                      Export
-                    </Button>
+                      <DropdownToggle block color="ghost-warning">
+                        <i className="fa fa-download" aria-hidden="true">
+                          {" "}
+                          &nbsp;{" "}
+                        </i>{" "}
+                        Export
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem header>Uploader Template</DropdownItem>
+                        <DropdownItem onClick={this.exportMatStatus}>
+                          {" "}
+                          GI Template
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>
+                          > Download All{" "}
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
                   </div>
                 </div>
               </CardHeader>
@@ -1163,7 +1214,7 @@ class GIInternal extends React.Component {
             </table>
           </div>
           <ModalFooter>
-            <Button
+            {/* <Button
               block
               color="link"
               className="btn-pill"
@@ -1171,7 +1222,7 @@ class GIInternal extends React.Component {
               size="sm"
             >
               Download Template
-            </Button>{" "}
+            </Button>{" "} */}
             <Button
               block
               color="success"
@@ -1194,89 +1245,21 @@ class GIInternal extends React.Component {
             </Button>
           </ModalFooter>
         </ModalCreateNew>
-
-        {/* <Modal
-          isOpen={this.state.createModal}
-          toggle={this.togglecreateModal}
-          className={this.props.className}
-          onClosed={this.resettogglecreateModal}
-        >
-          <ModalHeader toggle={this.togglecreateModal}>
-            Create New Stock
-          </ModalHeader>
-          <ModalBody>
-            <CardBody>
-              <div>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Upload File</td>
-                      <td>:</td>
-                      <td>
-                        <input
-                          type="file"
-                          onChange={this.fileHandlerMaterial.bind(this)}
-                          style={{ padding: "10px", visiblity: "hidden" }}
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </CardBody>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              block
-              color="link"
-              className="btn-pill"
-              onClick={this.exportMatStatus}
-              size="sm"
-            >
-              Download Template
-            </Button>{" "}
-            <Button
-              block
-              color="success"
-              className="btn-pill"
-              disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveMatStockWHBulk}
-              size="sm"
-            >
-              Save
-            </Button>{" "}
-            <Button
-              block
-              color="secondary"
-              className="btn-pill"
-              disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveTruncateBulk}
-              size="sm"
-            >
-              Truncate
-            </Button>
-          </ModalFooter>
-        </Modal> */}
-
+    
         {/* Modal confirmation delete */}
-        <Modal
+        <ModalDelete
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
+          title="Delete GI"
         >
-          <ModalHeader toggle={this.toggleDelete}>
-            Delete Material Stock Confirmation
-          </ModalHeader>
-          <ModalBody>Are you sure want to delete ?</ModalBody>
-          <ModalFooter>
-            <Button color="danger" onClick={this.DeleteData}>
-              Delete
-            </Button>
-            <Button color="secondary" onClick={this.toggleDelete}>
-              Cancel
-            </Button>
-          </ModalFooter>
-        </Modal>
+          <Button color="danger" onClick={this.DeleteData}>
+            Delete
+          </Button>
+          <Button color="secondary" onClick={this.toggleDelete}>
+            Cancel
+          </Button>
+        </ModalDelete>
 
         {/* Modal Loading */}
         <Modal

@@ -25,8 +25,8 @@ import { Redirect, Route, Switch, Link, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import queryString from "query-string";
 
-import ModalCreateNew from '../../components/ModalCreateNew'
-import ModalDelete from '../../components/ModalDelete';
+import ModalCreateNew from "../../components/ModalCreateNew";
+import ModalDelete from "../../components/ModalDelete";
 
 import "../MatStyle.css";
 
@@ -100,7 +100,7 @@ class MaterialStock2 extends React.Component {
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterDebounce = debounce(this.changeFilterName, 500);
+    this.changeFilterName = debounce(this.changeFilterName, 500);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
@@ -111,6 +111,8 @@ class MaterialStock2 extends React.Component {
     this.downloadAll = this.downloadAll.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
+    this.requestSort = this.requestSort.bind(this);
+
   }
 
   toggle(i) {
@@ -152,7 +154,7 @@ class MaterialStock2 extends React.Component {
       });
     }
     this.setState((prevState) => ({
-      modalDelete:!prevState.modalDelete,
+      modalDelete: !prevState.modalDelete,
     }));
   }
 
@@ -266,7 +268,7 @@ class MaterialStock2 extends React.Component {
   }
 
   changeFilterName(value) {
-    this.getWHStockList();
+    this.getWHStockListNext();
   }
 
   handleChangeFilter = (e) => {
@@ -275,16 +277,30 @@ class MaterialStock2 extends React.Component {
       value = null;
     }
     this.setState({ filter_name: value }, () => {
-      this.changeFilterDebounce(value);
+      this.changeFilterName(value);
     });
   };
 
   getWHStockListNext() {
     this.toggleLoading();
     // let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
-    // console.log("wh id ", get_wh_id);
-    let getbyWH = '{"wh_id":"' + this.props.match.params.slug + '"}';
-    this.getDatafromAPINODE("/whStock/getWhStock?q=" +getbyWH +"&lmt=" +this.state.perPage +"&pg=" +this.state.activePage
+    let filter_sku =
+      this.state.filter_name === null
+        ? '{"$exists" : 1}'
+        : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    let getbyWH =
+      '{"wh_id":"' +
+      this.props.match.params.slug +
+      '","sku":' +
+      filter_sku +
+      "}";
+    this.getDatafromAPINODE(
+      "/whStock/getWhStock?q=" +
+        getbyWH +
+        "&lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
     ).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
@@ -309,10 +325,14 @@ class MaterialStock2 extends React.Component {
   getWHManagementID() {
     // let _id = new URLSearchParams(window.location.search).get("_id");
     // let getbyWH = '{"wh_id":"' + this.props.match.params.slug + '"}';
-    this.getDatafromAPINODE('/whManagement/warehouse?q={"wh_id":"' + this.props.match.params.slug + '"}').then((res) => {
+    this.getDatafromAPINODE(
+      '/whManagement/warehouse?q={"wh_id":"' +
+        this.props.match.params.slug +
+        '"}'
+    ).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
-        if(res.data.data !== undefined){
+        if (res.data.data !== undefined) {
           this.setState({ wh_data: res.data.data[0] });
         }
       } else {
@@ -432,19 +452,19 @@ class MaterialStock2 extends React.Component {
     }));
   }
 
-  convertDateFormat(jsondate){
+  convertDateFormat(jsondate) {
     let date = new Date(jsondate);
     let year = date.getFullYear();
-    let month = date.getMonth()+1;
+    let month = date.getMonth() + 1;
     let dt = date.getDate();
 
     if (dt < 10) {
-      dt = '0' + dt;
+      dt = "0" + dt;
     }
     if (month < 10) {
-      month = '0' + month;
+      month = "0" + month;
     }
-    return year+'-' + month + '-'+dt;
+    return year + "-" + month + "-" + dt;
   }
 
   handleChangeChecklistAll(e) {
@@ -471,9 +491,25 @@ class MaterialStock2 extends React.Component {
   }
 
   handlePageChange(pageNumber) {
-    this.setState({ activePage: pageNumber }, () => {
-      this.getWHStockListNext();
-    });
+    let sortType = this.state.sortType;
+    // console.log("page handle sort ", sortType);
+    switch (sortType) {
+      case 1:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getListSort();
+        });
+        break;
+      case -1:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getListSort();
+        });
+        break;
+      default:
+        this.setState({ activePage: pageNumber }, () => {
+          this.getWHStockListNext();
+        });
+        break;
+    }
   }
 
   async getMatStockFormat(dataImport) {
@@ -577,10 +613,10 @@ class MaterialStock2 extends React.Component {
     this.setState({ MatStockForm: dataForm });
   }
 
-  SearchFilter = (e) => {
-    let keyword = e.target.value;
-    this.setState({ search: keyword });
-  };
+  // SearchFilter = (e) => {
+  //   let keyword = e.target.value;
+  //   this.setState({ search: keyword });
+  // };
 
   async saveUpdate() {
     let respondSaveEdit = undefined;
@@ -672,7 +708,9 @@ class MaterialStock2 extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE("/whStock/getWhStock");
+    let getAll_nonpage = await this.getDatafromAPINODE(
+      "/whStock/getWhStock?noPg=1"
+    );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -725,7 +763,7 @@ class MaterialStock2 extends React.Component {
   }
 
   DeleteData = async () => {
-    const objData = this.state.selected_id
+    const objData = this.state.selected_id;
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
@@ -734,7 +772,7 @@ class MaterialStock2 extends React.Component {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getWHStockListNext();
-        this.toggleLoading();        
+        this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
           this.toggleLoading();
@@ -797,6 +835,56 @@ class MaterialStock2 extends React.Component {
     saveAs(new Blob([PPFormat]), "Material Stock Template.xlsx");
   };
 
+  getListSort() {
+    this.toggleLoading();
+    this.getDatafromAPINODE(
+      "/whStock/getWhStock?srt=" +
+        this.state.sortField +
+        ":" +
+        this.state.sortType +
+        "&lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
+    ).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+          // sortType: -1
+        });
+        this.toggleLoading();
+      } else {
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
+        this.toggleLoading();
+      }
+    });
+  }
+
+  requestSort(e) {
+    let sortType = this.state.sortType;
+    // console.log('sortType atas', this.state.sortType)
+    let sort = e;
+    const ascending = 1;
+    const descending = -1;
+    if (sortType === -1) {
+      this.setState({ sortType: ascending, sortField: sort }, () => {
+        // console.log('sortType 1 ', this.state.sortType)
+        this.getListSort();
+      });
+    } else {
+      this.setState({ sortType: descending, sortField: sort }, () => {
+        // console.log('sortType -1 ', this.state.sortType)
+        this.getListSort();
+      });
+    }
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -855,18 +943,31 @@ class MaterialStock2 extends React.Component {
                     </Button>
                   </div>
                   &nbsp;&nbsp;&nbsp;
-                  <div>
-                    <Button
-                      onClick={this.downloadAll}
-                      block
-                      color="ghost-warning"
+                  <div style={{ marginRight: "10px" }}>
+                    <Dropdown
+                      isOpen={this.state.dropdownOpen[1]}
+                      toggle={() => {
+                        this.toggle(1);
+                      }}
                     >
-                      <i className="fa fa-download" aria-hidden="true">
-                        {" "}
-                        &nbsp;{" "}
-                      </i>{" "}
-                      Export
-                    </Button>
+                      <DropdownToggle block color="ghost-warning">
+                        <i className="fa fa-download" aria-hidden="true">
+                          {" "}
+                          &nbsp;{" "}
+                        </i>{" "}
+                        Export
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem header>Uploader Template</DropdownItem>
+                        <DropdownItem onClick={this.exportMatStatus}>
+                          {" "}
+                          Material Stock Template
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>
+                          > Download All{" "}
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
                   </div>
                 </div>
               </CardHeader>
@@ -911,8 +1012,10 @@ class MaterialStock2 extends React.Component {
                       className="search-box-material"
                       type="text"
                       name="filter"
-                      placeholder="Search"
-                      onChange={(e) => this.SearchFilter(e)}
+                      placeholder="Search SKU"
+                      // onChange={(e) => this.SearchFilter(e)}
+                      onChange={this.handleChangeFilter}
+                      value={this.state.filter_name}
                     />
                   </Col>
                 </Row>
@@ -943,97 +1046,68 @@ class MaterialStock2 extends React.Component {
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.all_data
-                            .filter((e) => {
-                              if (this.state.search === null) {
-                                return e;
-                              } else if (
-                                e.owner_id
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.po_number
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase()) ||
-                                e.project_name
-                                  .toLowerCase()
-                                  .includes(this.state.search.toLowerCase())
-                                //   ||
-                                // e.serial_number
-                                //   .toLowerCase()
-                                //   .includes(this.state.search.toLowerCase()) ||
-                                // e.box_number
-                                //   .toLowerCase()
-                                //   .includes(this.state.search.toLowerCase())
-                              ) {
-                                return e;
-                              }
-                            })
-                            .map((e) => (
-                              <React.Fragment key={e._id + "frag"}>
-                                <tr
-                                  style={{ backgroundColor: "#d3d9e7" }}
-                                  className="fixbody"
-                                  key={e._id}
-                                >
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.owner_id}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.wh_id}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.po_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.project_name}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {this.convertDateFormat(e.arrival_date)}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.sku_description}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.qty}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.ageing}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.serial_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.box_number}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.condition}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.notes}
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    {e.transaction_type}
-                                  </td>
-                                  <td>
-                                    <Button
-                                      size="sm"
-                                      color="danger"
-                                      value={e._id}
-                                      onClick={this.toggleDelete}
-                                      title="Delete"
-                                    >
-                                      <i
-                                        className="fa fa-trash"
-                                        aria-hidden="true"
-                                      ></i>
-                                    </Button>
-                                  </td>
-                                </tr>
-                              </React.Fragment>
-                            ))}
+                          {this.state.all_data.map((e) => (
+                            <React.Fragment key={e._id + "frag"}>
+                              <tr
+                                style={{ backgroundColor: "#d3d9e7" }}
+                                className="fixbody"
+                                key={e._id}
+                              >
+                                <td style={{ textAlign: "center" }}>
+                                  {e.owner_id}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.wh_id}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.po_number}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.project_name}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {this.convertDateFormat(e.arrival_date)}
+                                </td>
+                                <td style={{ textAlign: "center" }}>{e.sku}</td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.sku_description}
+                                </td>
+                                <td style={{ textAlign: "center" }}>{e.qty}</td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.ageing}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.serial_number}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.box_number}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.condition}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.notes}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.transaction_type}
+                                </td>
+                                <td>
+                                  <Button
+                                    size="sm"
+                                    color="danger"
+                                    value={e._id}
+                                    onClick={this.toggleDelete}
+                                    title="Delete"
+                                  >
+                                    <i
+                                      className="fa fa-trash"
+                                      aria-hidden="true"
+                                    ></i>
+                                  </Button>
+                                </td>
+                              </tr>
+                            </React.Fragment>
+                          ))}
                         </tbody>
                       </Table>
                     </div>
@@ -1141,31 +1215,31 @@ class MaterialStock2 extends React.Component {
 
         {/* Modal create New */}
         <ModalCreateNew
-        isOpen={this.state.createModal}
-        toggle={this.togglecreateModal}
-        className={this.props.className}
-        onClosed={this.resettogglecreateModal}
-        title='Create Material Stock'
+          isOpen={this.state.createModal}
+          toggle={this.togglecreateModal}
+          className={this.props.className}
+          onClosed={this.resettogglecreateModal}
+          title="Create Material Stock"
         >
-              <div>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Upload File</td>
-                      <td>:</td>
-                      <td>
-                        <input
-                          type="file"
-                          onChange={this.fileHandlerMaterial.bind(this)}
-                          style={{ padding: "10px", visiblity: "hidden" }}
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <ModalFooter>
-              <Button
+          <div>
+            <table>
+              <tbody>
+                <tr>
+                  <td>Upload File</td>
+                  <td>:</td>
+                  <td>
+                    <input
+                      type="file"
+                      onChange={this.fileHandlerMaterial.bind(this)}
+                      style={{ padding: "10px", visiblity: "hidden" }}
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ModalFooter>
+            {/* <Button
               block
               color="link"
               className="btn-pill"
@@ -1173,7 +1247,7 @@ class MaterialStock2 extends React.Component {
               size="sm"
             >
               Download Template
-            </Button>{" "}
+            </Button>{" "} */}
             <Button
               block
               color="success"
@@ -1197,79 +1271,19 @@ class MaterialStock2 extends React.Component {
           </ModalFooter>
         </ModalCreateNew>
 
-        {/* <Modal
-          isOpen={this.state.createModal}
-          toggle={this.togglecreateModal}
-          className={this.props.className}
-          onClosed={this.resettogglecreateModal}
-        >
-          <ModalHeader toggle={this.togglecreateModal}>
-            Create New Stock
-          </ModalHeader>
-          <ModalBody>
-            <CardBody>
-              <div>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Upload File</td>
-                      <td>:</td>
-                      <td>
-                        <input
-                          type="file"
-                          onChange={this.fileHandlerMaterial.bind(this)}
-                          style={{ padding: "10px", visiblity: "hidden" }}
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </CardBody>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              block
-              color="link"
-              className="btn-pill"
-              onClick={this.exportMatStatus}
-              size="sm"
-            >
-              Download Template
-            </Button>{" "}
-            <Button
-              block
-              color="success"
-              className="btn-pill"
-              disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveMatStockWHBulk}
-              size="sm"
-            >
-              Save
-            </Button>{" "}
-            <Button
-              block
-              color="secondary"
-              className="btn-pill"
-              disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveTruncateBulk}
-              size="sm"
-            >
-              Truncate
-            </Button>
-          </ModalFooter>
-        </Modal> */}
-
         {/* Modal confirmation delete */}
-        <ModalDelete  isOpen={this.state.danger}
+        <ModalDelete
+          isOpen={this.state.danger}
           toggle={this.toggleDelete}
-          className={"modal-danger " + this.props.className} title="Delete Stock">
-        <Button color="danger" onClick={this.DeleteData}>
-              Delete
-            </Button>
-            <Button color="secondary" onClick={this.toggleDelete}>
-              Cancel
-            </Button>
+          className={"modal-danger " + this.props.className}
+          title="Delete Stock"
+        >
+          <Button color="danger" onClick={this.DeleteData}>
+            Delete
+          </Button>
+          <Button color="secondary" onClick={this.toggleDelete}>
+            Cancel
+          </Button>
         </ModalDelete>
 
         {/* Modal Loading */}
