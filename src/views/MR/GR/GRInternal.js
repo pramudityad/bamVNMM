@@ -97,7 +97,7 @@ class GRInternal extends React.Component {
       activeItemId: null,
       createModal: false,
       selected_id: "",
-      sortType: 1,
+      sortType: 0,
       sortField: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
@@ -115,6 +115,8 @@ class GRInternal extends React.Component {
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
     this.requestSort = this.requestSort.bind(this);
+    this.handleChangeLimit = this.handleChangeLimit.bind(this);
+
   }
 
   toggle(i) {
@@ -487,6 +489,31 @@ class GRInternal extends React.Component {
     }
   }
 
+  handleChangeLimit(e) {
+    let limitpg = e.currentTarget.value;
+    let sortType = this.state.sortType;
+    switch (sortType) {
+      case 1:
+        this.setState({ perPage: limitpg }, () => {
+          this.getListSort();
+        });
+        break;
+      case -1:
+        this.setState({ perPage: limitpg }, () => {
+          this.getListSort();
+        });
+        break;
+      case 0:
+        this.setState({ perPage: limitpg }, () => {
+          this.getWHStockListNext();
+        });
+        break;
+      default:
+        // nothing
+        break;
+    }
+  }
+
   handlePageChange(pageNumber) {
     let sortType = this.state.sortType;
     // console.log("page handle sort ", sortType);
@@ -501,10 +528,13 @@ class GRInternal extends React.Component {
           this.getListSort();
         });
         break;
-      default:
+      case 0:
         this.setState({ activePage: pageNumber }, () => {
           this.getWHStockListNext();
         });
+        break;
+      default:
+        // nothing
         break;
     }
   }
@@ -788,7 +818,8 @@ class GRInternal extends React.Component {
         this.state.sortField +
         ":" +
         this.state.sortType +
-        "&q="+ getbyWH+
+        "&q=" +
+        getbyWH +
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
@@ -829,7 +860,7 @@ class GRInternal extends React.Component {
         // console.log('sortType -1 ', this.state.sortType)
         this.getListSort();
       });
-    }    
+    }
   }
 
   render() {
@@ -954,14 +985,43 @@ class GRInternal extends React.Component {
               <CardBody>
                 <Row>
                   <Col>
-                    <div style={{ marginBottom: "10px" }}></div>
-                    <input
-                      className="search-box-material"
-                      type="text"
-                      name="filter"
-                      placeholder="Search"
-                      onChange={(e) => this.SearchFilter(e)}
-                    />
+                    <div style={{ marginBottom: "10px" }}>
+                      <div
+                        style={{
+                          float: "left",
+                          margin: "5px",
+                          display: "inline-flex",
+                        }}
+                      >
+                        <Input
+                          type="select"
+                          name="select"
+                          id="selectLimit"
+                          onChange={this.handleChangeLimit}
+                        >
+                          <option value={"10"}>10</option>
+                          <option value={"25"}>25</option>
+                          <option value={"50"}>50</option>
+                          <option value={"100"}>100</option>
+                          <option value={"noPg=1"}>All</option>
+                        </Input>
+                      </div>
+                      <div
+                        style={{
+                          float: "right",
+                          margin: "5px",
+                          display: "inline-flex",
+                        }}
+                      >
+                        <input
+                          className="search-box-material"
+                          type="text"
+                          name="filter"
+                          placeholder="Search"
+                          onChange={(e) => this.SearchFilter(e)}
+                        />
+                      </div>
+                    </div>
                   </Col>
                 </Row>
                 <Row>

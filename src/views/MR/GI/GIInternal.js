@@ -97,7 +97,7 @@ class GIInternal extends React.Component {
       activeItemId: null,
       createModal: false,
       selected_id: "",
-      sortType: 1,
+      sortType: 0,
       sortField: "",
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
@@ -107,6 +107,7 @@ class GIInternal extends React.Component {
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
+    this.handleChangeLimit = this.handleChangeLimit.bind(this);
     this.toggleEdit = this.toggleEdit.bind(this);
     this.saveNew = this.saveNew.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
@@ -487,6 +488,31 @@ class GIInternal extends React.Component {
     }
   }
 
+  handleChangeLimit(e) {
+    let limitpg = e.currentTarget.value;
+    let sortType = this.state.sortType;
+    switch (sortType) {
+      case 1:
+        this.setState({ perPage: limitpg }, () => {
+          this.getListSort();
+        });
+        break;
+      case -1:
+        this.setState({ perPage: limitpg }, () => {
+          this.getListSort();
+        });
+        break;
+      case 0:
+        this.setState({ perPage: limitpg }, () => {
+          this.getWHStockListNext();
+        });
+        break;
+      default:
+        // nothing
+        break;
+    }
+  }
+
   handlePageChange(pageNumber) {
     let sortType = this.state.sortType;
     // console.log("page handle sort ", sortType);
@@ -501,10 +527,13 @@ class GIInternal extends React.Component {
           this.getListSort();
         });
         break;
-      default:
+      case 0:
         this.setState({ activePage: pageNumber }, () => {
           this.getWHStockListNext();
         });
+        break;
+      default:
+        // nothing
         break;
     }
   }
@@ -816,18 +845,18 @@ class GIInternal extends React.Component {
 
   requestSort(e) {
     let sortType = this.state.sortType;
-    // console.log('sortType atas', this.state.sortType)
+    if (sortType === 0) {
+      sortType = 1;
+    }
     let sort = e;
     const ascending = 1;
     const descending = -1;
     if (sortType === -1) {
       this.setState({ sortType: ascending, sortField: sort }, () => {
-        // console.log('sortType 1 ', this.state.sortType)
         this.getListSort();
       });
     } else {
       this.setState({ sortType: descending, sortField: sort }, () => {
-        // console.log('sortType -1 ', this.state.sortType)
         this.getListSort();
       });
     }
@@ -955,14 +984,43 @@ class GIInternal extends React.Component {
               <CardBody>
                 <Row>
                   <Col>
-                    <div style={{ marginBottom: "10px" }}></div>
-                    <input
-                      className="search-box-material"
-                      type="text"
-                      name="filter"
-                      placeholder="Search"
-                      onChange={(e) => this.SearchFilter(e)}
-                    />
+                    <div style={{ marginBottom: "10px" }}>
+                      <div
+                        style={{
+                          float: "left",
+                          margin: "5px",
+                          display: "inline-flex",
+                        }}
+                      >
+                        <Input
+                          type="select"
+                          name="select"
+                          id="selectLimit"
+                          onChange={this.handleChangeLimit}
+                        >
+                          <option value={"10"}>10</option>
+                          <option value={"25"}>25</option>
+                          <option value={"50"}>50</option>
+                          <option value={"100"}>100</option>
+                          <option value={"noPg=1"}>All</option>
+                        </Input>
+                      </div>
+                      <div
+                        style={{
+                          float: "right",
+                          margin: "5px",
+                          display: "inline-flex",
+                        }}
+                      >
+                        <input
+                          className="search-box-material"
+                          type="text"
+                          name="filter"
+                          placeholder="Search"
+                          onChange={(e) => this.SearchFilter(e)}
+                        />
+                      </div>
+                    </div>
                   </Col>
                 </Row>
                 <Row>
@@ -1245,7 +1303,7 @@ class GIInternal extends React.Component {
             </Button>
           </ModalFooter>
         </ModalCreateNew>
-    
+
         {/* Modal confirmation delete */}
         <ModalDelete
           isOpen={this.state.danger}

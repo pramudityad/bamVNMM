@@ -194,7 +194,7 @@ class WarehouseDashboardExt extends Component {
 
   getWHStockList() {
     this.toggleLoading();
-    this.getDatafromAPINODE('/whManagement/warehouse?q={"$or" : [{"wh_type":{"$regex" : "asp", "$options" : "i"}}, {"wh_type":{"$regex" : "dsp", "$options" : "i"}} ]}').then((res) => {
+    this.getDatafromAPINODE('/whManagement/warehouse?noPg=1&q={"$or" : [{"wh_type":{"$regex" : "asp", "$options" : "i"}}, {"wh_type":{"$regex" : "dsp", "$options" : "i"}} ]}').then((res) => {
       console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({
@@ -280,7 +280,7 @@ class WarehouseDashboardExt extends Component {
                       <Link
                         to={{
                           pathname:
-                            "/wh-dashboard-eid/" +
+                            "/wh-dashboard-ext/wh-dashboard-ext-det/" +
                             e.wh_id
                         }}
                       >
@@ -316,46 +316,12 @@ class WarehouseDashboardExt extends Component {
                         <p>{e.owner}</p>
                       </CardBody>
                       <CardFooter>
-                        <Row className="align-items-center">
-                          {/* <Col col="2" xl className="mb-3 mb-xl-0">
-                            <Link
-                              to={{
-                                pathname:"/material-stock2/" +e.wh_id,
-                              }}
-                            >
-                              <Button
-                                block
-                                color="primary"
-                                size="sm"
-                                className="btn-pill"
-                              >
-                                Stock
-                              </Button>
-                            </Link>
-                          </Col>
-
-                          <Col col="2" xl className="mb-3 mb-xl-0">
-                            <Link
-                              to={{
-                                pathname:"/material-inbound-plan2/" +e.wh_id,
-                              }}
-                            >
-                              <Button
-                                block
-                                color="secondary"
-                                size="sm"
-                                className="btn-pill"
-                              >
-                                Plan
-                              </Button>
-                            </Link>
-                          </Col> */}
-
+                        <Row className="align-items-center">           
                           <Col col="2" xl className="mb-3 mb-xl-0">
                           <Link
                               to={{
                                 // pathname:"/wh-gr-eid/" +e.wh_id,
-                                pathname: "/wh-gr-ext-per-wh/"+e.wh_id
+                                pathname: "wh-dashboard-ext/wh-gr-ext-per-wh/"+e.wh_id
                               }}>
                             <Button
                               block
@@ -372,7 +338,7 @@ class WarehouseDashboardExt extends Component {
                           <Link
                               to={{
                                 // pathname:"/wh-gi-eid/" +e.wh_id,
-                                pathname: "/wh-gi-ext-per-wh/"+e.wh_id
+                                pathname: "wh-dashboard-ext/wh-gi-ext-per-wh/"+e.wh_id
                               }}>
                             <Button
                               block

@@ -244,20 +244,22 @@ const routes = [
 
   { path: '/shipment-list', exact: true, name: 'Shipment List', component: ShipmentList },
 
-  { path: '/material-stock2/:slug', exact: true, name: 'Material Stock', component: MaterialStock },
-  { path: '/material-inbound-plan2/:slug', exact: true, name: 'Material Inbound Plan', component: MaterialInboundPlan },
   { path: '/wh-management', exact: true, name: 'Warehouse Management', component: WHManagement },
   { path: '/mat-library', exact: true, name: 'Material Library', component: MatLibrary },
 
   { path: '/mr-dashboard-global', exact: true, name: 'Material Request Dashboard', component: MRDashboardGlob },
 
-  { path: '/wh-dashboard-eid', exact: true, name: 'Warehouse Dashboard Internal', component: WHDashboard },
-  { path: '/wh-dashboard-eid/:slug', exact: true, name: 'Warehouse Internal Detail', component: WHDashboardDet },
-  { path: '/wh-gr-eid/:slug', exact: true, name: 'GR Internal Detail', component: GRInternalDet },
-  { path: '/wh-gi-eid/:slug', exact: true, name: 'GI Internal Detail', component: GIInternalDet },
+  { path: '/wh-dashboard-eid', exact: true, name: 'Warehouse Internal', component: WHDashboard },
+  { path: '/wh-dashboard-eid/wh-dashboard-eid-det/:slug', exact: true, name: 'Dashboard Internal', component: WHDashboardDet },
+  { path: '/wh-dashboard-eid/wh-gr-eid/:slug', exact: true, name: 'GR Internal Detail', component: GRInternalDet },
+  { path: '/wh-dashboard-eid/wh-gi-eid/:slug', exact: true, name: 'GI Internal Detail', component: GIInternalDet },
+  { path: '/wh-dashboard-eid/material-stock2/:slug', exact: true, name: 'Material Stock', component: MaterialStock },
+  { path: '/wh-dashboard-eid/material-inbound-plan2/:slug', exact: true, name: 'Material Inbound Plan', component: MaterialInboundPlan },
 
-  { path: '/wh-dashboard-ext', exact: true, name: 'Warehouse Dashboard External', component: WHDashboardExt },
-  { path: '/wh-dashboard-ext/:slug', exact: true, name: 'Warehouse External Detail', component: WHDashboardExtDet },
+  { path: '/wh-dashboard-ext', exact: true, name: 'Warehouse External', component: WHDashboardExt },
+  { path: '/wh-dashboard-ext/wh-dashboard-ext-det/:slug', exact: true, name: 'Warehouse Dashboard External Detail', component: WHDashboardExtDet },
+  { path: '/wh-dashboard-ext/wh-gr-ext-per-wh/:whid', exact: true, name: 'GR External Detail', component: GR },
+  { path: '/wh-dashboard-ext/wh-gi-ext-per-wh/:whid', exact: true, name: 'GI External Detail', component: GI },
 
   { path: '/drm-detail', exact: true, name: 'DRM Detail', component: DRMDetail },
 
@@ -267,10 +269,7 @@ const routes = [
   { path: '/joint-check-per-wh/:whid', exact: true, name: 'Joint Check', component: JointCheck },
   { path: '/loading-process-per-wh/:whid', exact: true, name: 'Loading Process', component: LoadingProcess },
   { path: '/material-dispatch-per-wh/:whid', exact: true, name: 'Material Dispatch', component: MaterialDispatch },
-  { path: '/wh-gr-ext-per-wh/:whid', exact: true, name: 'GR External Detail', component: GR },
-  { path: '/wh-gi-ext-per-wh/:whid', exact: true, name: 'GI External Detail', component: GI },
-  { path: '/wh-gr-ext', exact: true, name: 'GR External Detail', component: GR },
-  { path: '/wh-gi-ext', exact: true, name: 'GI External Detail', component: GI },
+
 ];
 
 export default routes;
