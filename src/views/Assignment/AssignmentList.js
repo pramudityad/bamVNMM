@@ -19,35 +19,39 @@ class AssignmentList extends Component {
     super(props);
 
     this.state = {
-      userRole : this.props.dataLogin.role,
-      userId : this.props.dataLogin._id,
-      userName : this.props.dataLogin.userName,
-      userEmail : this.props.dataLogin.email,
-      tokenUser : this.props.dataLogin.token,
-      assignment_list : [],
-      prevPage : 0,
-      activePage : 1,
-      totalData : 0,
-      perPage : 10,
+      userRole: this.props.dataLogin.role,
+      userId: this.props.dataLogin._id,
+      userName: this.props.dataLogin.userName,
+      userEmail: this.props.dataLogin.email,
+      tokenUser: this.props.dataLogin.token,
+      assignment_list: [],
+      prevPage: 0,
+      activePage: 1,
+      totalData: 0,
+      perPage: 10,
+      filter_list: new Array(8).fill(""),
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.getAssignmentList = this.getAssignmentList.bind(this);
     this.downloadASGList = this.downloadASGList.bind(this);
+    this.handleFilterList = this.handleFilterList.bind(this);
+    this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
+    this.getAssignmentList = this.getAssignmentList.bind(this);
   }
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE+url, {
-        headers : {
-          'Content-Type':'application/json',
-          'Authorization': 'Bearer '+this.state.tokenUser
+      let respond = await axios.get(API_URL_NODE + url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.state.tokenUser
         },
       });
-      if(respond.status >= 200 && respond.status < 300) {
+      if (respond.status >= 200 && respond.status < 300) {
         console.log("respond data", respond);
       }
       return respond;
-    } catch(err) {
+    } catch (err) {
       let respond = err;
       console.log("respond data", err);
       return respond;
@@ -56,18 +60,18 @@ class AssignmentList extends Component {
 
   async getDataFromAPI(url) {
     try {
-      let respond = await axios.get(API_URL_tsel+url, {
-        headers: {'Content-Type':'application/json'},
+      let respond = await axios.get(API_URL_tsel + url, {
+        headers: { 'Content-Type': 'application/json' },
         auth: {
           username: username_tsel,
           password: password_tsel
         }
       });
-      if(respond.status >= 200 && respond.status < 300) {
+      if (respond.status >= 200 && respond.status < 300) {
         console.log("respond data", respond);
       }
       return respond;
-    } catch(err) {
+    } catch (err) {
       let respond = err;
       console.log("respond data", err);
       return respond;
@@ -77,11 +81,20 @@ class AssignmentList extends Component {
   getAssignmentList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPINODE('/aspAssignment/aspassign?lmt='+maxPage+'&pg='+page).then(res => {
-      if(res.data !== undefined) {
+    let filter_array = [];
+    this.state.filter_list[0] !== "" && (filter_array.push('"Assignment_No":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
+    this.state.filter_list[1] !== "" && (filter_array.push('"Account_Name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
+    this.state.filter_list[2] !== "" && (filter_array.push('"Project":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
+    this.state.filter_list[3] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
+    this.state.filter_list[4] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+    this.state.filter_list[5] !== "" && (filter_array.push('"Current_Status":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
+    this.state.filter_list[6] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
+    let whereAnd = '{' + filter_array.join(',') + '}';
+    this.getDataFromAPINODE('/aspAssignment/aspassign?q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
+      if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
-        this.setState({assignment_list : items, totalData : totalData});
+        this.setState({ assignment_list: items, totalData: totalData });
       }
     })
   }
@@ -92,15 +105,32 @@ class AssignmentList extends Component {
   }
 
   handlePageChange(pageNumber) {
-    this.setState({activePage: pageNumber}, () => {
+    this.setState({ activePage: pageNumber }, () => {
       this.getAssignmentList();
     });
+  }
+
+  handleFilterList(e) {
+    const index = e.target.name;
+    let value = e.target.value;
+    if (value !== "" && value.length === 0) {
+      value = "";
+    }
+    let dataFilter = this.state.filter_list;
+    dataFilter[parseInt(index)] = value;
+    this.setState({ filter_list: dataFilter, activePage: 1 }, () => {
+      this.onChangeDebounced(e);
+    })
+  }
+
+  onChangeDebounced(e) {
+    this.getAssignmentList();
   }
 
   async downloadASGList() {
     let listASGAll = [];
     let getASG = await this.getDataFromAPI('/asp_assignment_sorted_non_page');
-    if(getASG.data !== undefined){
+    if (getASG.data !== undefined) {
       listASGAll = getASG.data._items;
     }
     const wb = new Excel.Workbook();
@@ -109,13 +139,32 @@ class AssignmentList extends Component {
     let headerRow = ["Assignment ID", "Account Name", " Project Name", " SOW Type", " NW  NW Activity Terms of Payment", " Item Status Work Status"];
     ws.addRow(headerRow);
 
-    for(let i = 0; i < listASGAll.length; i++){
+    for (let i = 0; i < listASGAll.length; i++) {
       let list = listASGAll[i];
       ws.addRow([list.Assignment_No, list.Account_Name, list.Project, list.SOW_Type, list.NW, list.NW_Activity, list.Payment_Terms, list.Item_Status, list.Work_Status])
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
     saveAs(new Blob([allocexport]), 'Assignment List.xlsx');
+  }
+
+  loopSearchBar = () => {
+    let searchBar = [];
+    for (let i = 0; i < 7; i++) {
+      searchBar.push(
+        <td>
+          <div className="controls" style={{ width: '150px' }}>
+            <InputGroup className="input-prepend">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[i]} name={i} size="sm" />
+            </InputGroup>
+          </div>
+        </td>
+      )
+    }
+    return searchBar;
   }
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
@@ -126,28 +175,24 @@ class AssignmentList extends Component {
       marginRight: '10px'
     }
 
-    const tableWidth = {
-      width: '150px'
-    }
-
     return (
       <div className="animated fadeIn">
         <Row>
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Assignment List
+                <span style={{ lineHeight: '2' }}>
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> Assignment List
                 </span>
-                <Link to={'/assignment-creation'}><Button color="success" style={{float : 'right'}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create Assignment</Button></Link>
-                <Link to={'/bulk-assignment-creation'}><Button color="success" style={{float : 'right', marginRight: "8px"}} size="sm"><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create Assignment Bulk</Button></Link>
-                <Button style={downloadAssignment} outline color="success" onClick={this.downloadASGList} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment List</Button>
+                <Link to={'/assignment-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment</Button></Link>
+                <Link to={'/bulk-assignment-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment Bulk</Button></Link>
+                <Button style={downloadAssignment} outline color="success" onClick={this.downloadASGList} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2" style={{verticalAlign : "middle"}}>Action</th>
+                      <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
                       <th>Assignment ID</th>
                       <th>Account Name</th>
                       <th>Project Name</th>
@@ -156,78 +201,9 @@ class AssignmentList extends Component {
                       <th>Assignment Status</th>
                       <th>Work Status</th>
                     </tr>
-                    {/* }<tr>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={0} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={1} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={2} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={3} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={4} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={5} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={6} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                    </tr> */}
+                    <tr>
+                      {this.loopSearchBar()}
+                    </tr>
                   </thead>
                   <tbody>
                     {this.state.assignment_list.length === 0 && (
@@ -238,8 +214,8 @@ class AssignmentList extends Component {
                     {this.state.assignment_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
-                          <Link to={'/assignment-detail/'+list._id}>
-                            <Button style={{width: "90px"}} outline color="info" size="sm">Detail</Button>
+                          <Link to={'/assignment-detail/' + list._id}>
+                            <Button style={{ width: "90px" }} outline color="info" size="sm">Detail</Button>
                           </Link>
                         </td>
                         <td>{list.Assignment_No}</td>
@@ -273,8 +249,8 @@ class AssignmentList extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    dataLogin : state.loginData,
-    SidebarMinimize : state.minimizeSidebar
+    dataLogin: state.loginData,
+    SidebarMinimize: state.minimizeSidebar
   }
 }
 
