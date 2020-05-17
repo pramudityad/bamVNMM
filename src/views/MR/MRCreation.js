@@ -655,7 +655,7 @@ class MRCreation extends Component {
               <Row form>
                 <Col md={6}>
                   <FormGroup>
-                    <Label>DSP Company</Label>
+                    <Label>Delivery Company</Label>
                     <Input type="select" name="7" value={this.state.create_mr_form[7]} onChange={this.handleChangeFormMRCreation}>
                       <option value="" disabled selected hidden>Select DSP Company</option>
                       {this.state.dsp_list.map(e =>

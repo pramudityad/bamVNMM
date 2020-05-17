@@ -30,7 +30,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const status_can_edit_material = ["PLANTSPEC NOT ASSIGNED", "PLANTSPEC ASSIGNED", "PLANTSPEC UPDATED", "MR REQUESTED", "MR CANCELED", "MR APPROVED", "MR REJECTED", "MR UPDATED", "ORDER PROCESSING START"]
+const status_can_edit_material = [ "PLANTSPEC ASSIGNED", "PLANTSPEC UPDATED", "MR REQUESTED", "MR CANCELED", "MR APPROVED", "MR REJECTED", "MR UPDATED", "ORDER PROCESSING START", "MR NEED REVISION"]
 
 class MRDetail extends Component {
   constructor(props) {
@@ -72,6 +72,7 @@ class MRDetail extends Component {
     this.downloadMaterialMRUpload = this.downloadMaterialMRUpload.bind(this);
     this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
     this.downloadMaterialMRReport = this.downloadMaterialMRReport.bind(this);
+    this.needReviseMR = this.needReviseMR.bind(this);
   }
 
   checkValue(props){
@@ -313,18 +314,18 @@ class MRDetail extends Component {
   prepareView(){
     const mr_data = this.state.data_mr;
     const data_pp = this.state.mr_pp;
-    let list_mr_id_item = [...new Set(data_pp.map(({ pp_id}) => pp_id))];
+    // let list_mr_id_item = [...new Set(data_pp.map(({ pp_id}) => pp_id))];
     let list_mr_item = [];
     let site_NE = undefined;
     let site_FE = undefined;
-    const data_pp_uniq = [...new Set(data_pp.map(({ id_pp_doc}) => id_pp_doc))];
-    for(let i = 0; i < list_mr_id_item.length; i++){
-      let idxItem = data_pp.find(e => e.pp_id === list_mr_id_item[i]);
-      if(idxItem !== undefined){
-        list_mr_item.push(idxItem);
-      }
-    }
-    this.setState({list_mr_item : list_mr_item});
+    // const data_pp_uniq = [...new Set(data_pp.map(({ id_pp_doc}) => id_pp_doc))];
+    // for(let i = 0; i < list_mr_id_item.length; i++){
+    //   let idxItem = data_pp.find(e => e.pp_id === list_mr_id_item[i]);
+    //   if(idxItem !== undefined){
+    //     list_mr_item.push(idxItem);
+    //   }
+    // }
+    this.setState({list_mr_item : data_pp});
     if(mr_data.site_info.length !== 0){
       site_NE = mr_data.site_info.find( e => e.site_title === "NE");
       site_FE = mr_data.site_info.find( e => e.site_title === "FE");
@@ -527,7 +528,7 @@ class MRDetail extends Component {
     //   ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category]);
     // }
 
-    let headerRow = ["bundle_id", "bundle_name", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "unit", "qty", "stock_warehouse", "inbound_warehouse", "availability"];
+    let headerRow = ["bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "unit", "qty", "stock_warehouse", "inbound_warehouse", "availability"];
     ws.addRow(headerRow);
     let list_material_id = [];
     for(let i = 0; i < dataItemMR.length; i++){
@@ -538,7 +539,7 @@ class MRDetail extends Component {
         let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
         qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
-        ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id), qty_wh, qty_inbound, (this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id)) < qty_wh ? "OK":"NOK"]);
+        ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name, dataItemMR[i].program, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, dataMatIdx.qty, qty_wh, qty_inbound, (dataMatIdx.qty) < qty_wh ? "OK":"NOK"]);
       }
     }
 
@@ -604,11 +605,11 @@ class MRDetail extends Component {
       ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name]);
       for(let j = 0; j < dataItemMR[i].materials.length; j++){
         let dataMatIdx = dataItemMR[i].materials[j];
-        let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
-        let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
-        qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
-        qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
-        ws.addRow([null, null, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id), qty_wh, qty_inbound, (this.getQtyMRMDNE(dataItemMR[i].pp_id, dataMatIdx.material_id)) < qty_wh ? "OK":"NOK"]);
+        // let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
+        // let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
+        // qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
+        // qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
+        ws.addRow([null, null, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, dataMatIdx.qty]);
       }
     }
 
@@ -619,7 +620,7 @@ class MRDetail extends Component {
   async saveUpdateMaterial(){
     const dataXLS = this.state.rowsXLS;
     const dataMR = this.state.data_mr;
-    let patchDataMat = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataMR._id, {"data" : dataXLS});
+    let patchDataMat = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataMR._id, {"identifier" : "MR" ,"data" : dataXLS});
     if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
       this.setState({ action_status : 'success'});
     } else{
@@ -628,6 +629,24 @@ class MRDetail extends Component {
           this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error.message });
         }else{
           this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
+  async needReviseMR(){
+    const dataMR = this.state.data_mr;
+    let patchDataMR = await this.patchDatatoAPINODE('/matreq/needReviseMRFromWH/'+dataMR._id);
+    if(patchDataMR.data !== undefined && patchDataMR.status >= 200 && patchDataMR.status <= 300 ) {
+      this.setState({ action_status : 'success'});
+    } else{
+      if(patchDataMR.response !== undefined && patchDataMR.response.data !== undefined && patchDataMR.response.data.error !== undefined){
+        if(patchDataMR.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMR.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: patchDataMR.response.data.error });
         }
       }else{
         this.setState({ action_status: 'failed' });
@@ -956,6 +975,7 @@ class MRDetail extends Component {
                     <tr>
                       <th rowSpan="2" className="fixedhead" style={{width : '250px', verticalAlign : 'middle'}}>PP / Material Code</th>
                       <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
+                      <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Program</th>
                       <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
                       <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
                       {this.state.data_mr !== null && status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
@@ -983,8 +1003,9 @@ class MRDetail extends Component {
                           <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                             <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                             <td>{pp.product_name}</td>
-                            <td>{pp.unit}</td>
-                            <td align='center' colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{this.getQtyMRPPNE(pp.pp_id).toFixed(2)}</td>
+                            <td>{pp.program}</td>
+                            <td>{pp.uom}</td>
+                            <td align='center' colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{pp.qty}</td>
                             {this.state.mr_site_FE !== null ? (
                               <td align='center'>{this.getQtyMRPPFE(pp.pp_id)}</td>
                             ):(<Fragment></Fragment>)}
@@ -996,14 +1017,15 @@ class MRDetail extends Component {
                             <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
                               <td style={{textAlign : 'right'}}>{material.material_id}</td>
                               <td style={{textAlign : 'left'}}>{material.material_name}</td>
-                              <td>{material.material_unit}</td>
-                              <td align='center' colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{this.getQtyMRMDNE(pp.pp_id, material.material_id).toFixed(2)}</td>
+                              <td></td>
+                              <td>{material.uom}</td>
+                              <td align='center' colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{material.qty}</td>
                               {this.state.mr_site_FE !== null ? (
                                 <td align='center'>{this.getQtyMRMDFE(pp.pp_id, material.material_id)}</td>
                               ):(<Fragment></Fragment>)}
                               <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                               <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
-                              <td align='center'>{(this.getQtyMRMDNE(pp.pp_id, material.material_id)) < qty_wh ? "OK":"NOK"}</td>
+                              <td align='center'>{(material.qty) < qty_wh ? "OK":"NOK"}</td>
                             </tr>
                           )}
                         </Fragment>
@@ -1022,8 +1044,9 @@ class MRDetail extends Component {
                         <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                           <td>{pp.product_name}</td>
-                          <td>{pp.unit}</td>
-                          <td align='center'>{this.getQtyMRPPNE(pp.pp_id)}</td>
+                          <td>{pp.program}</td>
+                          <td>{pp.uom}</td>
+                          <td align='center'>{pp.qty}</td>
                           {this.state.mr_site_FE !== null ? (
                             <td align='center'>{this.getQtyMRPPFE(pp.pp_id)}</td>
                           ):(<Fragment></Fragment>)}
@@ -1032,8 +1055,9 @@ class MRDetail extends Component {
                           <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
                             <td style={{textAlign : 'right'}}>{material.material_id}</td>
                             <td style={{textAlign : 'left'}}>{material.material_name}</td>
-                            <td>{material.material_unit}</td>
-                            <td align='center'>{this.getQtyMRMDNE(pp.pp_id, material.material_id)}</td>
+                            <td></td>
+                            <td>{material.uom}</td>
+                            <td align='center'>{material.qty}</td>
                             {this.state.mr_site_FE !== null ? (
                               <td align='center'>{this.getQtyMRMDFE(pp.pp_id, material.material_id)}</td>
                             ):(<Fragment></Fragment>)}
@@ -1113,12 +1137,13 @@ class MRDetail extends Component {
           <CardFooter>
             {this.state.data_mr !== null && (
               <div>
-                {this.state.data_mr.current_mr_status === "PLANTSPEC ASSIGNED" ? (
+                {(this.state.data_mr.current_mr_status === "PLANTSPEC ASSIGNED" || this.state.data_mr.current_mr_status === "PLANTSPEC UPDATED") ? (
                   <Button color='success' style={{float : 'right'}} onClick={this.requestForApproval}> Send Request</Button>
                 ) : (<div></div>)}
                 {this.state.data_mr.current_mr_status === "MR REQUESTED" ? (
                   <Button color='success' style={{float : 'right'}} onClick={this.ApproveMR}>Approve</Button>
                 ) : (<div></div>)}
+                <Button color='warning' style={{float : 'left'}} size="sm" onClick={this.needReviseMR}>Need Revise</Button>
               </div>
             )}
           </CardFooter>

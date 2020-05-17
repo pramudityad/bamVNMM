@@ -175,6 +175,16 @@ class AssignmentList extends Component {
       marginRight: '10px'
     }
 
+    const tableWidth = {
+      width: '150px'
+    }
+
+    // yang belom bisa :
+    // 1. Technical BOQ Vertical format uploader
+    // 2. SAP Desc effect to Config
+    // 3. TSSR BOQ Horizontal
+
+
     return (
       <div className="animated fadeIn">
         <Row>

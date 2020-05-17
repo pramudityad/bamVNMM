@@ -95,7 +95,7 @@ class DetailTssr extends Component {
         waiting_status : null,
         action_status : null,
         action_message : null,
-        tssrData : [],
+        tssrData : null,
         material_wh : [],
         material_inbound : []
     };
@@ -107,6 +107,7 @@ class DetailTssr extends Component {
     this.exportFormatTSSR = this.exportFormatTSSR.bind(this);
     this.handleChangeTechRef = this.handleChangeTechRef.bind(this);
     this.referenceWithTechBoq = this.referenceWithTechBoq.bind(this);
+    this.submitTSSR = this.submitTSSR.bind(this);
   }
 
   async getDatafromAPIBMS(url){
@@ -271,6 +272,26 @@ class DetailTssr extends Component {
     } catch (err) {
       let respond = err;
       console.log("respond post data", err.response);
+      return respond;
+    }
+  }
+
+  async patchDatatoAPINODE(url, data){
+    try {
+      let respond = await axios.patch(API_URL_NODE +url, data, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+      console.log("respond Post Data", err);
       return respond;
     }
   }
@@ -555,9 +576,9 @@ class DetailTssr extends Component {
   }
 
   getDataTssr(_id_tssr) {
-    this.getDataFromAPINODE('/tssrdata/'+_id_tssr).then( res => {
+    this.getDataFromAPINODE('/plantspec/'+_id_tssr).then( res => {
       if(res.data !== undefined){
-        this.setState({ tssrData : res.data.data.siteList[0].site_items }, () => {
+        this.setState({ tssrData : res.data.data }, () => {
           this.getDataWarehouse();
           this.getDataInbound();
         })
@@ -569,7 +590,7 @@ class DetailTssr extends Component {
   async getDataWarehouse() {
     let listSku = [];
     if(this.state.tssrData !== undefined) {
-      this.state.tssrData.map(pp => pp.material_detail.map(material => listSku.push(material.material_id)));
+      this.state.tssrData.packages.map(pp => pp.materials.map(material => listSku.push(material.material_id)));
       listSku = [...new Set(listSku)];
       let skuData = {
         "sku" : listSku
@@ -586,7 +607,7 @@ class DetailTssr extends Component {
   async getDataInbound() {
     let listSku = [];
     if(this.state.tssrData !== undefined) {
-      this.state.tssrData.map(pp => pp.material_detail.map(material => listSku.push(material.material_id)));
+      this.state.tssrData.packages.map(pp => pp.materials.map(material => listSku.push(material.material_id)));
       listSku = [...new Set(listSku)];
       let skuData = {
         "sku" : listSku
@@ -1152,6 +1173,16 @@ class DetailTssr extends Component {
     }
   }
 
+  submitTSSR(){
+    this.patchDatatoAPINODE('/plantspec/submitPlantspec/'+this.props.match.params.id).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+      }else{
+        this.setState({ action_status : "failed" });
+      }
+    })
+  }
+
   render() {
     console.log("Excel Render revUpload", this.state.data_tssr_sites);
     let qty_wh = undefined, qty_inbound = undefined;
@@ -1163,7 +1194,12 @@ class DetailTssr extends Component {
           <Card>
             <CardHeader>
               <span style={{lineHeight :'2', fontSize : '15px'}} >Detail Plant Spec</span>
-              <Button style={{marginRight : '8px', float : 'right', display: 'none'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download PS Format</Button>
+              {this.state.tssrData !== null && this.state.tssrData.submission_status !== "SUBMITTED" ? (
+                <Button style={{marginRight : '8px', float : 'right'}} color="success" onClick={this.submitTSSR} size="sm">Submit</Button>
+              ) : (
+                <Fragment></Fragment>
+              )}
+              {/* }<Button style={{marginRight : '8px', float : 'right', display: 'none'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download PS Format</Button> */}
             </CardHeader>
             <CardBody>
             <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden","display":"none"}}/>
@@ -1200,13 +1236,16 @@ class DetailTssr extends Component {
                   <tr>
                     <td colSpan="4" style={{textAlign : 'center', color : 'rgba(59,134,134,1)', fontSize : '21px'}}>Plant Spec DETAIL</td>
                   </tr>
-                  {this.state.data_tssr !== null && (
+                  {this.state.tssrData !== null && (
                     <Fragment>
                     <tr>
-                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Plant Spec ID : {this.state.data_tssr.no_tssr_boq}</td>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Plant Spec ID : {this.state.tssrData.no_plantspec}</td>
                     </tr>
                     <tr>
-                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Project Name : {this.state.data_tssr.project_name}</td>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Project Name : {this.state.tssrData.project_name}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Site ID : {this.state.tssrData.site_info[0].site_id}</td>
                     </tr>
                     </Fragment>
                   )}
@@ -1306,6 +1345,7 @@ class DetailTssr extends Component {
                       <tr>
                         <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
                         <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
+                        <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Program</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
                         <th colSpan="3" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Availability</th>
@@ -1317,27 +1357,29 @@ class DetailTssr extends Component {
                       </tr>
                     </thead>
                     <tbody>
-                      {Array.isArray(this.state.tssrData) && (
-                        this.state.tssrData.map(pp =>
+                      {this.state.tssrData !== null && Array.isArray(this.state.tssrData.packages) && (
+                        this.state.tssrData.packages.map(pp =>
                           <Fragment>
                             <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
-                              <td style={{textAlign : 'left'}}>{pp.product_packages.pp_id}</td>
-                              <td>{pp.product_packages.product_name}</td>
-                              <td>{pp.product_packages.uom}</td>
-                              <td align='center'>{pp.product_packages.qty.toFixed(2)}</td>
+                              <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
+                              <td>{pp.product_name}</td>
+                              <td>{pp.program}</td>
+                              <td>{pp.uom}</td>
+                              <td align='center'>{pp.qty.toFixed(2)}</td>
                               <td align='center'></td>
                               <td align='center'></td>
                               <td align='center'></td>
                             </tr>
-                            {pp.material_detail.map(material =>
+                            {pp.materials.map(material =>
                               <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
                                 <td style={{textAlign : 'right'}}>{material.material_id}</td>
                                 <td style={{textAlign : 'left'}}>{material.material_name}</td>
+                                <td style={{textAlign : 'left'}}></td>
                                 <td>{material.uom}</td>
-                                <td align='center'>{(pp.product_packages.qty*material.qty).toFixed(2)}</td>
+                                <td align='center'>{(pp.qty*material.qty).toFixed(2)}</td>
                                 <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                                 <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
-                                <td align='center'>{pp.product_packages.qty*material.qty < qty_wh ? "OK":"NOK"}</td>
+                                <td align='center'>{pp.qty*material.qty < qty_wh ? "OK":"NOK"}</td>
                               </tr>
                             )}
                           </Fragment>

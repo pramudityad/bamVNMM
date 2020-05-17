@@ -73,7 +73,7 @@ class BulkAssignment extends Component {
         action_message : null,
         redirectSign : false,
         asp_list : [],
-        uploadan_type : "With SSOW",
+        uploadan_type : "Predefined SSOW",
     };
     this.saveDataAssignmentBulk = this.saveDataAssignmentBulk.bind(this);
     this.exportFormatBulkAssignment = this.exportFormatBulkAssignment.bind(this);
@@ -269,7 +269,7 @@ class BulkAssignment extends Component {
     this.setState({waiting_status : true});
     let wp_invalid = [];
     const dataXLSASG = {
-      "includeSsow" : this.state.uploadan_type === "With SSOW" ? true : false,
+      "includeSsow" : this.state.uploadan_type === "Predefined SSOW" ? true : false,
       "data" : dataXLS
     }
     const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', dataXLSASG);
@@ -324,7 +324,7 @@ class BulkAssignment extends Component {
   async saveDataAssignmentBulk(){
     const dataChecking = this.state.assignment_ssow_upload;
     const dataCheckingASG = {
-      "includeSsow" : this.state.uploadan_type === "With SSOW" ? true : false,
+      "includeSsow" : this.state.uploadan_type === "Predefined SSOW" ? true : false,
       "data" : dataChecking
     }
     const respondSaveASG = await this.postDatatoAPINODE('/aspAssignment/createAspAssign', dataCheckingASG);
@@ -353,7 +353,7 @@ class BulkAssignment extends Component {
       indexSSOW = 5;
     }
     let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
-    if(this.state.uploadan_type === "With SSOW"){
+    if(this.state.uploadan_type === "Predefined SSOW"){
       let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
       if(sow_type === "RBSTRM"){
         for(let idx = 1; idx <= indexSSOW; idx++){
@@ -401,8 +401,8 @@ class BulkAssignment extends Component {
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}} >ASP Assignment Bulk </span>
             <select type="select" onChange={this.handleChangeUploadType} value={this.state.uploadan_type} disabled={this.state.rowsXLS.length !== 0}>
-              <option value="With SSOW">With SSOW</option>
-              <option value="Without SSOW">Without SSOW</option>
+              <option value="Predefined SSOW">Predefined SSOW</option>
+              <option value="no Predefined SSOW">no Predefined SSOW</option>
             </select>
             <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkAssignment} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment Format</Button>
             {/* }<select type="select" onChange={this.handleChangeSOWType} value={this.state.sow_type_selected} style={{marginRight : '8px', marginTop :'3px', float : 'right', width : '100px'}}>
@@ -434,7 +434,7 @@ class BulkAssignment extends Component {
                   <td colSpan="4" style={{textAlign : 'center'}}>BULK ASP ASSIGNMENT PREVIEW  {this.state.uploadan_type}</td>
                 </tr>
                 <tr>
-                  <td colSpan="4" style={{textAlign : 'center', fontSize : '15px', color : 'red'}}>{this.state.uploadan_type === "With SSOW" ? "It will need approval from authoried": "SSOW List get from default mapping of SSOW to CD ID" }</td>
+                  <td colSpan="4" style={{textAlign : 'center', fontSize : '15px', color : 'red'}}>{this.state.uploadan_type === "Predefined SSOW" ? "It will need approval from authoried": "SSOW List get from default mapping of SSOW to CD ID" }</td>
                 </tr>
               </tbody>
             </table>
