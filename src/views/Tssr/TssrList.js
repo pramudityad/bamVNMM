@@ -77,11 +77,12 @@ class TssrList extends Component {
 
   getTssrList(){
     const page = this.state.activePage;
-    // this.getDataFromAPINODE('//tssrall?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
-    this.getDataFromAPIBAM('/tssr_sorted?'+'max_results='+this.state.perPage+'&page='+page).then(res => {
+    // this.getDataFromAPINODE('/tssrall?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
+    this.getDataFromAPINODE('/plantspec').then(res => {
+    // this.getDataFromAPIBAM('/tssr_sorted?'+'max_results='+this.state.perPage+'&page='+page).then(res => {
       if(res.data !== undefined){
-        const totalData = res.data._meta;
-        this.setState({tssr_list : res.data._items, totalData : totalData})
+        const totalData = res.data.totalResults;
+        this.setState({tssr_list : res.data.data, totalData : totalData})
       }
     })
   }
@@ -148,7 +149,7 @@ class TssrList extends Component {
                   <tbody>
                     {this.state.tssr_list.map((list, i) =>
                       <tr key={list._id}>
-                        <td>{list.no_tssr_boq}</td>
+                        <td>{list.no_plantspec}</td>
                         <td>{list.project_name}</td>
                         <td></td>
                         <td>
@@ -163,7 +164,7 @@ class TssrList extends Component {
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData.total}
+                  totalItemsCount={this.state.totalData}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"
