@@ -546,7 +546,7 @@ class MRDetail extends Component {
     let listMatId = [...new Set(list_material_id)];
     let matIdData = {
       "list_material_id" : listMatId
-    }
+    }    
 
     const getMaterialVariant = await this.postDatatoAPINODE('/variants/materialId', matIdData);
     if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
@@ -556,10 +556,28 @@ class MRDetail extends Component {
     dataMaterialVariant = this.CompareArrayObject(dataMaterialVariant, "description");
 
     // dataMaterialVariant.sort(function(a, b){return a.description.toLowerCase() - b.description.toLowerCase()});
-
-    ws2.addRow(["Origin","Material ID","Material Name","Description", "Category"]);
+    let sku_list = [];
     for(let j = 0; j < dataMaterialVariant.length; j++){
-      ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category]);
+      sku_list.push(dataMaterialVariant[j].material_id);
+    }
+    const list_qtySKU = [];
+    const getQtyfromWHbySKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', {"sku": sku_list }).then((res) => {
+      if(res.data !== undefined && res.status >= 200 && res.status < 400){
+        const dataSKU = res.data.data;        
+        // console.log('dataSKU ', dataSKU);
+        for (let i = 0; i < dataSKU.length; i++) {
+          if (dataSKU[i][0] === undefined){
+            list_qtySKU.push(0);
+          } else {
+            list_qtySKU.push(dataSKU[i][0].qty_sku);
+          }      
+        }            
+      }      
+    });
+
+    ws2.addRow(["Origin","Material ID","Material Name","Description", "Category", "QTY"]);
+    for(let j = 0; j < dataMaterialVariant.length; j++){
+      ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category, list_qtySKU[j]]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
