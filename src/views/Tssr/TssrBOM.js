@@ -769,7 +769,6 @@ class TssrBOM extends Component {
                     <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
                   </tr>
                   <tr>
-                    <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Qty BOM</th>
                     <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Qty PS</th>
                   </tr>
                 </thead>
@@ -783,7 +782,6 @@ class TssrBOM extends Component {
                           <td>{pp.program}</td>
                           <td>{pp.uom}</td>
                           <td align='center'>{pp.qty}</td>
-                          <td align='center'><Input type="number" name={pp.pp_id} value={(this.state.change_qty_ps.has(pp.pp_id) ? this.state.change_qty_ps.get(pp.pp_id) : pp.qty)} max={pp.qty} onChange={this.handleChangeQtyPS}/></td>
                         </tr>
                         {pp.list_material.map(material =>
                           <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
@@ -792,7 +790,6 @@ class TssrBOM extends Component {
                             <td></td>
                             <td>{material.uom}</td>
                             <td align='center'>{pp.qty*material.qty}</td>
-                            <td align='center'>{(this.state.change_qty_ps.has(pp.pp_id) ? this.state.change_qty_ps.get(pp.pp_id) : pp.qty)*material.qty}</td>
                           </tr>
                         )}
                         </Fragment>

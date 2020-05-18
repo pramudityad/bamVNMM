@@ -234,7 +234,7 @@ class MRCreation extends Component {
     //     "mr_delivery_type": dataForm[4],
     console.log("this.selectedDatetoFormat(dataForm[5])", this.selectedDatetoFormat(dataForm[5]));
     let dataXLS = [
-      ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "dsp_company", "mr_comment_project", "sent_mr_request", "created_based", "identifier"],
+      ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "mr_comment_project", "sent_mr_request", "created_based", "identifier"],
       ["new", this.state.project_name_selected, this.selectMRType(dataForm[3]), this.selectDeliveryType(dataForm[4]), dataForm[8], this.selectedDatetoFormat(dataForm[5]), this.selectedDatetoFormat(dataForm[6]), dataForm[7], "", "", this.state.identifier_by, this.state.tower_selected_id]
     ]
     const respondCheckingMR = await this.postDatatoAPINODE('/matreq/matreqByActivity', {"data" : dataXLS});
@@ -344,7 +344,7 @@ class MRCreation extends Component {
   }
 
   getDSPList() {
-    this.getDatafromAPIXL('/vendor_data_non_page?where={"Type":"DSP"}').then(res => {
+    this.getDatafromAPIXL('/vendor_data_non_page?where={"Type":"ASP"}').then(res => {
       if(res.data !== undefined) {
         const items = res.data._items;
         this.setState({dsp_list : items});
@@ -658,10 +658,16 @@ class MRCreation extends Component {
                     <Label>Delivery Company</Label>
                     <Input type="select" name="7" value={this.state.create_mr_form[7]} onChange={this.handleChangeFormMRCreation}>
                       <option value="" disabled selected hidden>Select DSP Company</option>
+                      <option value="DSP">DSP</option>
                       {this.state.dsp_list.map(e =>
                         <option value={e.Vendor_Code}>{e.Name}</option>
                       )}
                     </Input>
+                    {this.state.create_mr_form[7] === "DSP" && (
+                      <FormText color="muted" style={{fontSize : '12px', paddingLeft : '5px', marginTop : '5px'}}>
+                        LDM will choose the DSP company
+                      </FormText>
+                    ) }
                   </FormGroup>
                 </Col>
               </Row>
