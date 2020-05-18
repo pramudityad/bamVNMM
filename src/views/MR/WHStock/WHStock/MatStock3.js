@@ -22,7 +22,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
 
 const DefaultNotif = React.lazy(() => import('../../DefaultView/DefaultNotif'));
 
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+
 const usernameBAM = 'adminbamidsuper';
 const passwordBAM = 'F760qbAg2sml';
 

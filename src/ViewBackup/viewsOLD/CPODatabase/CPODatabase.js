@@ -16,7 +16,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
 );
 
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+
 const usernameBAM = 'adminbamidsuper';
 const passwordBAM = 'F760qbAg2sml';
 
@@ -72,7 +72,7 @@ class CPODatabase extends React.Component {
 
   async getDatatoAPIEXEL(url) {
     try {
-      let respond = await axios.get(API_URL_XL+url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_XL+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
           username: usernameBAM,
@@ -92,7 +92,7 @@ class CPODatabase extends React.Component {
 
   async postDatatoAPIEXEL(url, data) {
     try {
-      let respond = await axios.post(API_URL_XL+url, data, {
+      let respond = await axios.post(process.env.REACT_APP_API_URL_XL+url, data, {
         headers: {'Content-Type':'application/json'},
         auth: {
           username: usernameBAM,

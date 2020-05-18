@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+
 const usernameBAM = 'adminbamidsuper';
 const passwordBAM = 'F760qbAg2sml';
 

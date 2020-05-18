@@ -24,9 +24,9 @@ const API_URL_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const usernameTsel = 'adminbamidsuper';
 const passwordTsel = 'F760qbAg2sml';
 
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
-const usernameXL = 'adminbamidsuper';
-const passwordXL = 'F760qbAg2sml';
+
+
+
 
 
 
@@ -241,11 +241,11 @@ class DetailCPOBoq extends Component {
 
   async getDataFromAPIEXEL(url) {
     try {
-      let respond = await axios.get(API_URL_XL + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_XL + url, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
-          username: usernameXL,
-          password: passwordXL
+          username: process.env.REACT_APP_usernameXL,
+          password: process.env.REACT_APP_passwordXL
         }
       });
       if (respond.status >= 200 && respond.status < 300) {

@@ -17,9 +17,9 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
-const usernameXL = 'adminbamidsuper';
-const passwordXL = 'F760qbAg2sml';
+
+
+
 
 
 
@@ -107,11 +107,11 @@ class MRCreation extends Component {
 
   async getDatafromAPIXL(url){
     try {
-      let respond = await axios.get(API_URL_XL +url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_XL +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernameXL,
-          password: passwordXL
+          username: process.env.REACT_APP_usernameXL,
+          password: process.env.REACT_APP_passwordXL
         },
       })
       if(respond.status >= 200 && respond.status < 300){
