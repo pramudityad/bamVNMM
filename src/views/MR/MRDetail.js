@@ -30,7 +30,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const status_can_edit_material = [ "PLANTSPEC ASSIGNED", "PLANTSPEC UPDATED", "MR REQUESTED", "MR CANCELED", "MR APPROVED", "MR REJECTED", "MR UPDATED", "ORDER PROCESSING START", "MR NEED REVISION"]
+const status_can_edit_material = [ "PLANTSPEC ASSIGNED", "PLANTSPEC UPDATED", "MR REQUESTED", "MR CANCELED", "MR APPROVED", "MR REJECTED", "MR UPDATED", "ORDER PROCESSING START", "MR NEED REVISION", "PS NEED REVISION"]
 
 class MRDetail extends Component {
   constructor(props) {
@@ -546,7 +546,7 @@ class MRDetail extends Component {
     let listMatId = [...new Set(list_material_id)];
     let matIdData = {
       "list_material_id" : listMatId
-    }    
+    }
 
     const getMaterialVariant = await this.postDatatoAPINODE('/variants/materialId', matIdData);
     if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
@@ -563,16 +563,16 @@ class MRDetail extends Component {
     const list_qtySKU = [];
     const getQtyfromWHbySKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', {"sku": sku_list }).then((res) => {
       if(res.data !== undefined && res.status >= 200 && res.status < 400){
-        const dataSKU = res.data.data;        
+        const dataSKU = res.data.data;
         // console.log('dataSKU ', dataSKU);
         for (let i = 0; i < dataSKU.length; i++) {
           if (dataSKU[i][0] === undefined){
             list_qtySKU.push(0);
           } else {
             list_qtySKU.push(dataSKU[i][0].qty_sku);
-          }      
-        }            
-      }      
+          }
+        }
+      }
     });
 
     ws2.addRow(["Origin","Material ID","Material Name","Description", "Category", "QTY"]);
@@ -1137,7 +1137,7 @@ class MRDetail extends Component {
           <CardFooter>
             {this.state.data_mr !== null && (
               <div>
-                {(this.state.data_mr.current_mr_status === "PLANTSPEC ASSIGNED" || this.state.data_mr.current_mr_status === "PLANTSPEC UPDATED") ? (
+                {(this.state.data_mr.current_mr_status === "PLANTSPEC ASSIGNED" || this.state.data_mr.current_mr_status === "PLANTSPEC UPDATED" || this.state.data_mr.current_mr_status === "PS NEED REVISION") ? (
                   <Button color='success' style={{float : 'right'}} onClick={this.requestForApproval}> Send Request</Button>
                 ) : (<div></div>)}
                 {this.state.data_mr.current_mr_status === "MR REQUESTED" ? (
