@@ -229,7 +229,7 @@ class OrderProcessing extends Component {
     if (res !== undefined) {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" }, () => {
-          setTimeout(function () { window.location.reload(); }, 2000);
+          setTimeout(function () { this.getMRList(); }.bind(this), 2000);
         });
       } else {
         if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {

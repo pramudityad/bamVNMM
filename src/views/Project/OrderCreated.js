@@ -21,6 +21,7 @@ import debounce from "lodash.debounce";
 import Excel from "exceljs";
 import { saveAs } from "file-saver";
 import { connect } from "react-redux";
+import './project_css.css'
 
 import ModalForm from "../components/ModalForm";
 
@@ -870,7 +871,7 @@ class OrderCreated extends Component {
         <ModalForm
           isOpen={this.state.modal_approve_ldm}
           toggle={this.toggleModalapprove}
-          className={"modal-sm modal--box-input"}
+          className={"modal-sm modal--box-input modal__delivery--ldm-approve"}
         >
           <Col>
             {this.state.data_mr_selected !== null &&
