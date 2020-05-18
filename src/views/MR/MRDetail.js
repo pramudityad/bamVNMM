@@ -1885,6 +1885,7 @@ class MRDetail extends Component {
         <ModalForm
           isOpen={this.state.modal_approve_ldm}
           toggle={this.toggleModalapprove}
+          className={'modal-sm modal--box-input'}
         >
           <Col>
           {this.state.data_mr !== null && this.state.data_mr !== undefined && this.state.data_mr.dsp_company !== null ? (
@@ -1914,9 +1915,15 @@ class MRDetail extends Component {
             </FormGroup>
           )}
           </Col>
-          <Button block color="success" onClick={this.ApproveMR}>
-            Approve
-          </Button>
+          <div style={{ justifyContent: "center", alignSelf: "center" }}>
+            <Button
+              color="success"
+              onClick={this.ApproveMR}
+              className="btn-pill"
+            >
+              <i className="icon-check icons"></i> Approve
+            </Button>
+          </div>
         </ModalForm>
       </div>
     );
