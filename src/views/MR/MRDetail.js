@@ -119,7 +119,6 @@ class MRDetail extends Component {
   }
 
   toggleModalapprove(e) {
-    this.getASPList();
     // const id_doc = e.currentTarget.id;
     // this.setState({ id_mr_selected: id_doc });
     this.setState((prevState) => ({
@@ -150,7 +149,7 @@ class MRDetail extends Component {
   getASPList() {
     // switch (this.props.dataLogin.account_id) {
     //   case "xl":
-    this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
+    this.getDatafromAPIEXEL('/vendor_data_non_page?where={"Type":"DSP"}').then((res) => {
       // console.log("asp data ", res.data);
       if (res.data !== undefined) {
         this.setState({ asp_data: res.data._items });
@@ -370,6 +369,9 @@ class MRDetail extends Component {
   getDataMR(_id_MR) {
     this.getDataFromAPINODE("/matreq/" + _id_MR).then((resMR) => {
       if (resMR.data !== undefined) {
+        if(resMR.data.dsp_company === null){
+          this.getASPList();
+        }
         this.setState({ data_mr: resMR.data }, () => {
           this.setState(
             { mr_pp: resMR.data.packages.filter((e) => e.qty !== 0) },
@@ -597,6 +599,16 @@ class MRDetail extends Component {
   //   }
   // }
 
+  submitTSSR(_id_ps){
+    this.patchDatatoAPINODE('/plantspec/submitPlantspec/'+_id_ps).then(res => {
+      if(res.data !== undefined){
+        // this.setState({ action_status : "success" });
+      }else{
+        // this.setState({ action_status : "failed" });
+      }
+    })
+  }
+
   requestForApproval() {
     let dataMR = this.state.data_mr;
     this.patchDatatoAPINODE("/matreq/requestMatreq/" + dataMR._id).then(
@@ -612,16 +624,27 @@ class MRDetail extends Component {
 
   ApproveMR(e) {
     const _id = this.props.match.params.id;
-    const body = this.state.selected_dsp;
+    let body = this.state.selected_dsp;
+    if(this.state.data_mr.dsp_company !== null && this.state.data_mr.dsp_company !== undefined){
+      body = {"dsp_company_code" : this.state.data_mr.dsp_company_code, "dsp_company": this.state.data_mr.dsp_company}
+    }
     // console.log('_id ',_id);
     // console.log('body ',body);
-    this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id, { body }).then(
+    this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id,  body ).then(
       (res) => {
         if (res.data !== undefined) {
           this.setState({ action_status: "success" });
           this.toggleModalapprove();
         } else {
-          this.setState({ action_status: "failed" });
+          if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+            if (res.response.data.error.message !== undefined) {
+              this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+            } else {
+              this.setState({ action_status: 'failed', action_message: res.response.data.error });
+            }
+          } else {
+            this.setState({ action_status: 'failed' });
+          }
           this.toggleModalapprove();
         }
       }
@@ -877,6 +900,9 @@ class MRDetail extends Component {
       "/matreq/updatePlantSpecWithVariant/" + dataMR._id,
       { identifier: "MR", data: dataXLS }
     );
+    if(dataMR.id_plantspec_doc !== undefined){
+      let submitPS = this.submitTSSR(dataMR.id_plantspec_doc);
+    }
     if (
       patchDataMat.data !== undefined &&
       patchDataMat.status >= 200 &&
@@ -1389,6 +1415,7 @@ class MRDetail extends Component {
                       </Col>
                     </Row>
                     <hr className="upload-line-ordering"></hr>
+                    <div>PlantSpec No : {this.state.data_mr !== null ? this.state.data_mr.no_plantspec : ""}</div>
                     <div className="divtable2">
                       <Table hover bordered striped responsive size="sm">
                         <thead
@@ -1510,9 +1537,7 @@ class MRDetail extends Component {
                           )}
                         </thead>
                         {this.state.data_mr !== null &&
-                        status_can_edit_material.includes(
-                          this.state.data_mr.current_mr_status
-                        ) ? (
+                        status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
                           <tbody>
                             {this.state.mr_site_NE !== null &&
                               this.state.list_mr_item.map((pp) => (
@@ -1861,19 +1886,34 @@ class MRDetail extends Component {
           isOpen={this.state.modal_approve_ldm}
           toggle={this.toggleModalapprove}
         >
-          <FormGroup>
-            <Label htmlFor="total_box">DSP Company</Label>
-            <Input
-              type="select"
-              className=""
-              placeholder=""
-              onChange={this.handleLDMapprove}
-            >
-              {this.state.asp_data.map((asp) => (
-                <option value={asp.Vendor_Code}>{asp.Name}</option>
-              ))}
-            </Input>
-          </FormGroup>
+          <Col>
+          {this.state.data_mr !== null && this.state.data_mr !== undefined && this.state.data_mr.dsp_company !== null ? (
+            <FormGroup>
+              <Label htmlFor="total_box">Delivery Company</Label>
+              <Input
+                type="text"
+                className=""
+                placeholder=""
+                value={this.state.data_mr.dsp_company}
+                readOnly
+              />
+            </FormGroup>
+          ) : (
+            <FormGroup>
+              <Label htmlFor="total_box">DSP Company</Label>
+              <Input
+                type="select"
+                className=""
+                placeholder=""
+                onChange={this.handleLDMapprove}
+              >
+                {this.state.asp_data.map((asp) => (
+                  <option value={asp.Vendor_Code}>{asp.Name}</option>
+                ))}
+              </Input>
+            </FormGroup>
+          )}
+          </Col>
           <Button block color="success" onClick={this.ApproveMR}>
             Approve
           </Button>

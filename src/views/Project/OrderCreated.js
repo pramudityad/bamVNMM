@@ -61,6 +61,7 @@ class OrderCreated extends Component {
       modal_approve_ldm: false,
       id_mr_selected: null,
       selected_dsp: "",
+      data_mr_selected : null,
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -158,8 +159,16 @@ class OrderCreated extends Component {
 
   toggleModalapprove(e) {
     this.getASPList();
-    // const id_doc = e.currentTarget.id;
-    // this.setState({ id_mr_selected: id_doc });
+    if(e !== undefined){
+      const id_doc = e.currentTarget.id;
+      const dataMR = this.state.mr_list.find(e => e._id === id_doc);
+      if(dataMR !== undefined && dataMR.dsp_company !== null && dataMR.dsp_company !== undefined){
+        this.setState({selected_dsp : {"dsp_company_code" : dataMR.dsp_company_code, "dsp_company": dataMR.dsp_company} });
+      }
+      this.setState({ id_mr_selected: id_doc, data_mr_selected : dataMR });
+    }else{
+      this.setState({ id_mr_selected: null, data_mr_selected : null });
+    }
     this.setState((prevState) => ({
       modal_approve_ldm: !prevState.modal_approve_ldm,
     }));
@@ -168,7 +177,7 @@ class OrderCreated extends Component {
   getASPList() {
     // switch (this.props.dataLogin.account_id) {
     //   case "xl":
-    this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
+    this.getDatafromAPIEXEL('/vendor_data_non_page?where={"Type":"DSP"}').then((res) => {
       console.log("asp data ", res.data);
       if (res.data !== undefined) {
         this.setState({ asp_data: res.data._items });
@@ -190,7 +199,6 @@ class OrderCreated extends Component {
       dsp_company_code: value,
       dsp_company: name,
     };
-    console.log("bodymrApprove ", bodymrApprove);
     if (value !== 0) {
       this.setState({ selected_dsp: bodymrApprove });
     }
@@ -525,14 +533,22 @@ class OrderCreated extends Component {
     const body = this.state.selected_dsp;
     // console.log('_id ',_id);
     // console.log('body ',body);
-    this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id, { body }).then(
+    this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id, body ).then(
       (res) => {
         if (res.data !== undefined) {
           this.setState({ action_status: "success" });
           this.getMRList();
           this.toggleModalapprove();
         } else {
-          this.setState({ action_status: "failed" });
+          if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+            if (res.response.data.error.message !== undefined) {
+              this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+            } else {
+              this.setState({ action_status: 'failed', action_message: res.response.data.error });
+            }
+          } else {
+            this.setState({ action_status: 'failed' });
+          }
           this.toggleModalapprove();
         }
       }
@@ -834,20 +850,36 @@ class OrderCreated extends Component {
           isOpen={this.state.modal_approve_ldm}
           toggle={this.toggleModalapprove}
         >
-          <FormGroup>
-            <Label htmlFor="total_box">DSP Company</Label>
-            <Input
-              type="select"
-              className=""
-              placeholder=""
-              onChange={this.handleLDMapprove}
-              name={this.state.id_mr_selected}
-            >
-              {this.state.asp_data.map((asp) => (
-                <option value={asp.Vendor_Code}>{asp.Name}</option>
-              ))}
-            </Input>
-          </FormGroup>
+          <Col>
+            {this.state.data_mr_selected !== null && this.state.data_mr_selected !== undefined && this.state.data_mr_selected.dsp_company !== null ? (
+              <FormGroup>
+                <Label htmlFor="total_box">Delivery Company</Label>
+                <Input
+                  type="text"
+                  className=""
+                  placeholder=""
+                  value={this.state.data_mr_selected.dsp_company}
+                  readOnly
+                />
+              </FormGroup>
+            ) : (
+              <FormGroup>
+                <Label htmlFor="total_box">DSP Company</Label>
+                <Input
+                  type="select"
+                  className=""
+                  placeholder=""
+                  onChange={this.handleLDMapprove}
+                  name={this.state.id_mr_selected}
+                >
+                  {this.state.asp_data.map((asp) => (
+                    <option value={asp.Vendor_Code}>{asp.Name}</option>
+                  ))}
+                </Input>
+              </FormGroup>
+            )}
+
+          </Col>
           <Button block color="success" onClick={this.ApproveMR}>
             Approve
           </Button>

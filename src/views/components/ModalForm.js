@@ -1,5 +1,5 @@
 import React from "react";
-import { ModalBody, ModalHeader, Modal, ModalFooter, Row } from "reactstrap";
+import { ModalBody, ModalHeader, Modal, ModalFooter, Row, Col } from "reactstrap";
 
 const ModalForm = ({ isOpen, toggle, className, title, children }) => {
   return (
