@@ -7,9 +7,9 @@ import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 
-const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const username = 'bamidadmin@e-dpm.com';
-const password = 'F760qbAg2sml';
+
+
+
 
 class MaterialDispatch extends Component {
   constructor(props) {
@@ -34,11 +34,11 @@ class MaterialDispatch extends Component {
 
   async getDataFromAPI(url) {
     try {
-      let respond = await axios.get(API_URL+url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
-          username: username,
-          password: password
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         }
       });
       if(respond.status >= 200 && respond.status < 300) {

@@ -6,7 +6,7 @@ import axios from 'axios';
 import Pagination from "react-js-pagination";
 import { connect } from 'react-redux';
 
-const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
+const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
@@ -30,7 +30,7 @@ class ListOrdering extends Component {
 
     getListOrdering(){
         const page = this.state.activePage;
-        axios.get(API_URL +'/ordering_sorted?where={"deleted" : 0}&max_results='+this.state.perPage+'&page='+page, {
+        axios.get(process.env.REACT_APP_API_URL +'/ordering_sorted?where={"deleted" : 0}&max_results='+this.state.perPage+'&page='+page, {
             headers : {'Content-Type':'application/json'},
             auth: {
                 username: usernamePhilApi,

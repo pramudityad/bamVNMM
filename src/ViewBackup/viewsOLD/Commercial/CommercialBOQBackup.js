@@ -20,13 +20,13 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
-const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
+const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
 const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
-const passwordBAM = 'F760qbAg2sml';
+
 
 class CommercialBoq extends Component {
     constructor(props) {
@@ -238,7 +238,7 @@ class CommercialBoq extends Component {
 
     async getDatafromAPI(url){
       try {
-        let respond = await axios.get(API_URL +url, {
+        let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
           headers : {'Content-Type':'application/json'},
           auth: {
             username: usernamePhilApi,
@@ -260,7 +260,7 @@ class CommercialBoq extends Component {
     async postDatatoAPI(url, data){
       console.log("respond Post Data", JSON.stringify(data));
       try {
-        let respond = await axios.post(API_URL +url, data, {
+        let respond = await axios.post(process.env.REACT_APP_API_URL +url, data, {
           headers : {'Content-Type':'application/json'},
           auth: {
             username: usernamePhilApi,
@@ -282,7 +282,7 @@ class CommercialBoq extends Component {
 
     async patchDatatoAPI(url, data, _etag){
       try {
-        let respond = await axios.patch(API_URL +url, data, {
+        let respond = await axios.patch(process.env.REACT_APP_API_URL +url, data, {
           headers : {'Content-Type':'application/json'},
           auth: {
             username: usernamePhilApi,

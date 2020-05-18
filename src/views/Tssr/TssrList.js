@@ -9,9 +9,9 @@ import { saveAs } from 'file-saver';
 import {connect} from 'react-redux';
 import ActionType from '../../redux/reducer/globalActionType';
 
-const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const username = 'bamidadmin@e-dpm.com';
-const password = 'F760qbAg2sml';
+
+
+
 
 
 
@@ -38,11 +38,11 @@ class TssrList extends Component {
 
   async getDataFromAPIBAM(url) {
     try {
-      let respond = await axios.get(API_URL+url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
-          username: username,
-          password: password
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         }
       });
       if(respond.status >= 200 && respond.status < 300) {

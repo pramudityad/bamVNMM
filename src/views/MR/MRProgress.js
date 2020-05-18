@@ -6,13 +6,13 @@ import debounce from 'lodash.debounce';
 import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
 import 'react-vertical-timeline-component/style.min.css';
 
-const API_URL = 'https://api.smart.pdb.e-dpm.com/smartapi';
+const process.env.REACT_APP_API_URL = 'https://api.smart.pdb.e-dpm.com/smartapi';
 const username = 'usermitt';
 const password = 'Z4icVgFQp3D1';
 
 const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
-const passwordBAM = 'F760qbAg2sml';
+
 
 class MRProgress extends Component {
   constructor(props) {
@@ -26,11 +26,11 @@ class MRProgress extends Component {
 
   async getDataFromAPI(url) {
     try {
-      let response = await axios.get(API_URL+url, {
+      let response = await axios.get(process.env.REACT_APP_API_URL+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
-          username: username,
-          password: password
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         }
       });
 

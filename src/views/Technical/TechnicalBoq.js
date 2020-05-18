@@ -13,13 +13,13 @@ import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import jsonData from './TechnicalNewFormat.js';
 
 const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
-const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
+const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
 const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
-const passwordBAM = 'F760qbAg2sml';
+
 
 const API_URL_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const usernameTsel = 'adminbamidsuper';
@@ -392,7 +392,7 @@ class TechnicalBoq extends Component {
 
   async getDatafromAPI(url){
     try {
-      let respond = await axios.get(API_URL +url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -413,7 +413,7 @@ class TechnicalBoq extends Component {
 
   async postDatatoAPI(url, data){
     try {
-      let respond = await axios.post(API_URL +url, data, {
+      let respond = await axios.post(process.env.REACT_APP_API_URL +url, data, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -437,7 +437,7 @@ class TechnicalBoq extends Component {
 
   async patchDatatoAPI(url, data, _etag){
     try {
-      let respond = await axios.patch(API_URL +url, data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL +url, data, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -1141,7 +1141,7 @@ class TechnicalBoq extends Component {
 
   async updateAmount(data, _etag){
     try {
-      let respond = await axios.patch(API_URL+'/amountboqtech/5d24454a951c58496433be19', data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL+'/amountboqtech/5d24454a951c58496433be19', data, {
         auth: {
           username: usernamePhilApi,
           password: passwordPhilApi,
@@ -1178,7 +1178,7 @@ class TechnicalBoq extends Component {
       "updated_on" : DateNow.toString()
     }
     // console.log("noq_tech_op", JSON.stringify(BOQTech));
-    axios.post(API_URL+'/boq_tech_op', BOQTech ,{
+    axios.post(process.env.REACT_APP_API_URL+'/boq_tech_op', BOQTech ,{
       headers : {'Content-Type':'application/json'},
       auth: {
         username: usernamePhilApi,
@@ -1260,7 +1260,7 @@ class TechnicalBoq extends Component {
       dataSites[i]["updated_on"] = DateNow.toString();
     }
     console.log("dataSites save", JSON.stringify(dataSites));
-    axios.post(API_URL+'/boq_tech_sites_op', dataSites ,{
+    axios.post(process.env.REACT_APP_API_URL+'/boq_tech_sites_op', dataSites ,{
       headers : {'Content-Type':'application/json'},
       auth: {
         username: usernamePhilApi,
@@ -1294,7 +1294,7 @@ class TechnicalBoq extends Component {
   updateTechToDB(data, _id_Tech, _etag_Tech, verNumber){
     data["version"] = verNumber.toString();
     console.log("data updateTech", JSON.stringify(data));
-    axios.patch(API_URL+'/boq_tech_op/'+_id_Tech, data, {
+    axios.patch(process.env.REACT_APP_API_URL+'/boq_tech_op/'+_id_Tech, data, {
       headers : {'Content-Type':'application/json'},
       auth: {
         username: usernamePhilApi,
@@ -1505,7 +1505,7 @@ class TechnicalBoq extends Component {
         "deleted" : 0
     }
     try {
-      let respond = await axios.patch(API_URL+'/boq_tech_sites_op/'+_id_sites, dataSiteSave,{
+      let respond = await axios.patch(process.env.REACT_APP_API_URL+'/boq_tech_sites_op/'+_id_sites, dataSiteSave,{
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -1560,7 +1560,7 @@ class TechnicalBoq extends Component {
     }
     try {
       console.log("DATASITES NEW REVI", JSON.stringify(dataSites));
-      let respond = await axios.post(API_URL+'/boq_tech_sites_op', dataSites ,{
+      let respond = await axios.post(process.env.REACT_APP_API_URL+'/boq_tech_sites_op', dataSites ,{
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -1581,7 +1581,7 @@ class TechnicalBoq extends Component {
   async patchBoqTechToAPI(data, _id_Tech, _etag_Tech, verNumber){
     data["version"] = verNumber.toString();
     try {
-      let respond = await axios.patch(API_URL+'/boq_tech_op/'+_id_Tech, data,{
+      let respond = await axios.patch(process.env.REACT_APP_API_URL+'/boq_tech_op/'+_id_Tech, data,{
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,

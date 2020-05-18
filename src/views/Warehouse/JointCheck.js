@@ -10,9 +10,9 @@ import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
 import './wh_css.css'
 
-const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const username = 'bamidadmin@e-dpm.com';
-const password = 'F760qbAg2sml';
+
+
+
 
 
 
@@ -62,11 +62,11 @@ class JointCheck extends Component {
 
   async getDataFromAPI(url) {
     try {
-      let respond = await axios.get(API_URL + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL + url, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
-          username: username,
-          password: password
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         }
       });
       if (respond.status >= 200 && respond.status < 300) {
@@ -82,14 +82,14 @@ class JointCheck extends Component {
 
   async patchDataToAPI(url, data, _etag) {
     try {
-      let respond = await axios.patch(API_URL + url, data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL + url, data, {
         headers: {
           'Content-Type': 'application/json',
           'If-Match': _etag
         },
         auth: {
-          username: username,
-          password: password
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         }
       })
       if (respond.status >= 200 && respond.status < 300) {
@@ -248,14 +248,14 @@ class JointCheck extends Component {
 
   async patchDataToAPI(url, data, _etag) {
     try {
-      let respond = await axios.patch(API_URL + url, data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL + url, data, {
         headers: {
           'Content-Type': 'application/json',
           'If-Match': _etag
         },
         auth: {
-          username: username,
-          password: password
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         }
       })
       if (respond.status >= 200 && respond.status < 300) {

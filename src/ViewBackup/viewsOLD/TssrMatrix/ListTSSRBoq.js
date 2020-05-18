@@ -7,7 +7,7 @@ import Pagination from "react-js-pagination";
 import debounce from 'lodash.debounce';
 import { connect } from 'react-redux';
 
-const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
+const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
@@ -43,7 +43,7 @@ class ListTSSRBoq extends Component {
 
   async getDatafromAPI(url){
     try {
-      let respond = await axios.get(API_URL +url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -87,7 +87,7 @@ class ListTSSRBoq extends Component {
       }
     }
     let where = 'where={"deleted" : 0, '+filter_no_tech+', '+filter_project+', '+filter_no_tssr+', '+filter_created_by+'}';
-    axios.get(API_URL +'/tssr_boq_matrix_sorted?'+where+'&max_results='+this.state.perPage+'&page='+page+'&embedded={"created_by" :1}&projection={"list_of_id_site" : 0}', {
+    axios.get(process.env.REACT_APP_API_URL +'/tssr_boq_matrix_sorted?'+where+'&max_results='+this.state.perPage+'&page='+page+'&embedded={"created_by" :1}&projection={"list_of_id_site" : 0}', {
         headers : {'Content-Type':'application/json'},
         auth: {
             username: usernamePhilApi,
@@ -107,7 +107,7 @@ class ListTSSRBoq extends Component {
       console.log(this.state.filter_list[3]);
       let filter_getName = this.state.filter_list[3] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
       let where = 'where={"$or" : [{"email" : '+filter_getName+'}, {"username" : '+filter_getName+'}] }';
-      axios.get(API_URL +'/user_all?'+where, {
+      axios.get(process.env.REACT_APP_API_URL +'/user_all?'+where, {
         headers : {'Content-Type':'application/json'},
         auth: {
             username: usernamePhilApi,

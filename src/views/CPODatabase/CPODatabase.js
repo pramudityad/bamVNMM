@@ -17,8 +17,8 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
 );
 
 
-const usernameBAM = 'adminbamidsuper';
-const passwordBAM = 'F760qbAg2sml';
+
+
 
 
 class CPODatabase extends React.Component {

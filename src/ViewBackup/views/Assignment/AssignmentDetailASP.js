@@ -9,9 +9,9 @@ import './assignment.css';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
-const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
-const username_tsel = 'adminbamidsuper';
-const password_tsel = 'F760qbAg2sml';
+
+
+
 
 
 
@@ -40,11 +40,11 @@ class AssignmentDetailASP extends Component {
 
   async getDataFromAPI(url) {
     try {
-      let respond = await axios.get(API_URL_tsel+url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_tsel+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
-          username: username_tsel,
-          password: password_tsel
+          username: process.env.REACT_APP_username_tsel,
+          password: process.env.REACT_APP_password_tsel
         }
       });
       if(respond.status >= 200 && respond.status < 300) {
@@ -98,14 +98,14 @@ class AssignmentDetailASP extends Component {
 
   async patchDataToAPI(url, data, _etag) {
     try {
-      let respond = await axios.patch(API_URL_tsel+url, data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL_tsel+url, data, {
         headers: {
           'Content-Type':'application/json',
           'If-Match': _etag
         },
         auth: {
-          username: username_tsel,
-          password: password_tsel
+          username: process.env.REACT_APP_username_tsel,
+          password: process.env.REACT_APP_password_tsel
         }
       })
       if(respond.status >= 200 && respond.status < 300) {

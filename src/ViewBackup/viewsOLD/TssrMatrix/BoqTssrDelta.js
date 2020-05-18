@@ -18,7 +18,7 @@ const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
-const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
+const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
@@ -73,7 +73,7 @@ class BoqTssrDelta extends Component {
 
   async getDatafromAPI(url){
     try {
-      let respond = await axios.get(API_URL +url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -94,7 +94,7 @@ class BoqTssrDelta extends Component {
 
   async postDatatoAPI(url, data){
     try {
-      let respond = await axios.post(API_URL +url, data, {
+      let respond = await axios.post(process.env.REACT_APP_API_URL +url, data, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -115,7 +115,7 @@ class BoqTssrDelta extends Component {
 
   async patchDatatoAPI(url, data, _etag){
     try {
-      let respond = await axios.patch(API_URL +url, data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL +url, data, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -172,7 +172,7 @@ class BoqTssrDelta extends Component {
 
   getListBOQ(){
     const page = this.state.activePage;
-    axios.get(API_URL +'/boq_tech_sorted?where={"deleted" : 0}&max_results='+this.state.perPage+'&page='+page+'&where={"id_project_doc" : "'+this.state.project_select+'"}', {
+    axios.get(process.env.REACT_APP_API_URL +'/boq_tech_sorted?where={"deleted" : 0}&max_results='+this.state.perPage+'&page='+page+'&where={"id_project_doc" : "'+this.state.project_select+'"}', {
         headers : {'Content-Type':'application/json'},
         auth: {
             username: usernamePhilApi,

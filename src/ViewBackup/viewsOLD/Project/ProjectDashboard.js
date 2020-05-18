@@ -4,9 +4,9 @@ import Widget from './Widget';
 import './project_css.css';
 import axios from 'axios';
 
-const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const username = 'bamidadmin@e-dpm.com';
-const password = 'F760qbAg2sml';
+
+
+
 
 class ProjectDashboard extends Component {
   constructor(props) {

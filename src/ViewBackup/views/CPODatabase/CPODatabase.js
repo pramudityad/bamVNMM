@@ -18,13 +18,13 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
 );
 
-// const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
+// const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 // const usernamePhilApi = 'pdbdash';
 // const passwordPhilApi = 'rtkO6EZLkxL1';
 
 const API_URL_BAM = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
-const usernameBAM = 'adminbamidsuper';
-const passwordBAM = 'F760qbAg2sml';
+
+
 
 
 class CPODatabase extends React.Component {

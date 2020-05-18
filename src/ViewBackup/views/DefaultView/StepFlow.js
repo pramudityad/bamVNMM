@@ -6,7 +6,7 @@ import classNames from 'classnames';
 
 import './defaultview.css';
 
-const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
+const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
@@ -41,7 +41,7 @@ class StepFlow extends Component {
 
       async getDatafromAPI(url){
         try {
-          let respond = await axios.get(API_URL +url, {
+          let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
             headers : {'Content-Type':'application/json'},
             auth: {
               username: usernamePhilApi,

@@ -11,8 +11,8 @@ import * as XLSX from 'xlsx';
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 
-const usernameBAM = 'adminbamidsuper';
-const passwordBAM = 'F760qbAg2sml';
+
+
 
 
 
