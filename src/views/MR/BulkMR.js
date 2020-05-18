@@ -28,7 +28,7 @@ const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
 const usernameXL = 'adminbamidsuper';
 const passwordXL = 'F760qbAg2sml';
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
@@ -120,7 +120,7 @@ class BulkMR extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE+url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE+url, {
         headers : {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser
@@ -139,7 +139,7 @@ class BulkMR extends Component {
 
   async postDatatoAPINODE(url, data){
     try {
-      let respond = await axios.post(API_URL_NODE +url, data, {
+      let respond = await axios.post(process.env.REACT_APP_API_URL_NODE +url, data, {
         headers : {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser

@@ -16,7 +16,7 @@ const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
 const passwordPhilApi = 'rtkO6EZLkxL1';
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 
 class ListTechnical extends Component {
   constructor(props) {
@@ -48,7 +48,7 @@ class ListTechnical extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE+url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE+url, {
         headers : {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser
@@ -67,7 +67,7 @@ class ListTechnical extends Component {
 
   async deleteDataFromAPINODE(url) {
     try {
-      let respond = await axios.delete(API_URL_NODE+url, {
+      let respond = await axios.delete(process.env.REACT_APP_API_URL_NODE+url, {
         headers : {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser

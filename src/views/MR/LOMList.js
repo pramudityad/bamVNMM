@@ -12,7 +12,7 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 
 class LOMList extends Component {
   constructor(props) {
@@ -66,7 +66,7 @@ class LOMList extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + this.state.tokenUser
@@ -194,7 +194,7 @@ class LOMList extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL_NODE + url, data, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + this.state.tokenUser

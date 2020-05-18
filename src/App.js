@@ -37,6 +37,7 @@ class App extends Component {
 
   render() {
     console.log("LOGIN SUKSES", this.props.authenticated);
+    console.log('env ', process.env.NODE_ENV);
     return (
       <BrowserRouter>
           <React.Suspense fallback={loading()}>
