@@ -851,7 +851,7 @@ class PSUpload extends Component {
             <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
             <Fragment>
             <Row>
-            {this.state.data_tssr !== null && (
+            {(this.state.data_tssr !== null && this.state.data_mr !== null )&& (
               <Fragment>
                 <Col md="4">
                 <table className="table-header">
