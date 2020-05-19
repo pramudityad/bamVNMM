@@ -427,10 +427,14 @@ class ShipmentList extends Component {
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                Shipment Detail{" "}
-                {this.state.shipment_detail.no_shipment !== undefined
-                  ? "(" + this.state.shipment_detail.no_shipment + ")"
-                  : ""}
+                <span>Shipment Detail{" "}
+                {this.state.shipment_detail.no_shipment !== undefined ? "(" + this.state.shipment_detail.no_shipment + ")" : ""}
+                </span>
+                  {this.state.shipment_detail.no_shipment !== undefined && (
+                    <Button color="danger" size="sm" value={this.state.shipment_detail._id} onClick={this.toggleDelete} style={{float : 'right'}}>
+                      <i className="icon-ban icons "> &nbsp; </i> Cancel Shipment
+                    </Button>
+                  )}
               </CardHeader>
               <CardBody>
                 <Row>
@@ -584,15 +588,6 @@ class ShipmentList extends Component {
                     </Col>
                     <Row xs="1" sm="2" md="4" className="align-items-center">
                       <Col col="6" sm="4" md="2" xl className="mb-3 mb-xl-0">
-                        <Button
-                          block
-                          color="danger"
-                          value={this.state.shipment_detail._id}
-                          onClick={this.toggleDelete}
-                        >
-                          <i className="icon-ban icons "> &nbsp; </i> Cancel
-                          Shipment
-                        </Button>
                       </Col>
                     </Row>
                   </Row>
@@ -671,7 +666,7 @@ class ShipmentList extends Component {
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
-          title={"Cancel Shipment " + this.state.shipment_detail.shipment_id}
+          title={"Cancel Shipment " + this.state.shipment_detail.no_shipment}
         >
           <Button color="danger" onClick={this.cancelShipment}>
             Cancel Shipment

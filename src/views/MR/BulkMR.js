@@ -326,7 +326,7 @@ class BulkMR extends Component {
   }
 
   getASPList() {
-    this.getDataFromAPIEXEL('/vendor_data_non_page?where={"Type":"DSP"}').then(res => {
+    this.getDataFromAPIEXEL('/vendor_data_non_page?where={"Type":"ASP"}').then(res => {
       if(res.data !== undefined) {
         const items = res.data._items;
         this.setState({asp_list : items});
@@ -583,15 +583,15 @@ class BulkMR extends Component {
       "origin_warehouse",
       "etd",
       "eta",
-      "dsp_company",
+      "deliver_by",
       "mr_comment_project",
       "sent_mr_request",
       "created_based",
       "identifier"
     ]);
 
-    ws.addRow(["new", "XL BAM DEMO 2020",	"1",	"1",	"JKT1",	"2020-04-19",	"2020-04-21",	"20001TEST1", null, null, "tower_id", "JAW-JT-BBS-0001"]);
-    ws.addRow(["new", "XL BAM DEMO 2020",	"1",	"1",	"JKT1",	"2020-04-19",	"YYYY-MM-DD",	"20001TEST3", null, null, "cd_id", "X2660930"]);
+    ws.addRow(["new", "XL BAM DEMO 2020",	"1",	"1",	"JKT1",	"2020-04-19",	"2020-04-21",	"2000057356", null, null, "tower_id", "JAW-JT-BBS-0001"]);
+    ws.addRow(["new", "XL BAM DEMO 2020",	"1",	"1",	"JKT1",	"2020-04-19",	"YYYY-MM-DD",	"DSP", null, null, "cd_id", "X2660930"]);
 
     const MRFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MRFormat]), 'MR Uploader Template.xlsx');

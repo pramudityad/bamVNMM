@@ -226,7 +226,7 @@ class PSUpload extends Component {
   }
 
   getListTssrAll(){
-    this.getDataFromAPINODE('/plantspec?q={"id_mr_doc" : null}').then( res => {
+    this.getDataFromAPINODE('/plantspec?q={"id_mr_doc" : null, "submission_status" : "SUBMITTED" }').then( res => {
     // this.getDatafromAPIBAM('/tssr_sorted_nonpage?projection={"project_name" : 1, "no_tssr_boq" : 1, "_id" : 1, "version" : 1 }').then( res => {
       if(res.data !== undefined){
         const items = res.data.data;

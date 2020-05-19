@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input } from 'reactstrap';
+import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input, Collapse, Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap';
 import { Form, FormGroup, Label } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
@@ -97,7 +97,9 @@ class DetailTssr extends Component {
         action_message : null,
         tssrData : null,
         material_wh : [],
-        material_inbound : []
+        material_inbound : [],
+        collapseUpload : false,
+        dropdownOpen: new Array(1).fill(false),
     };
     this.handleChangeProject = this.handleChangeProject.bind(this);
     this.handleChangeVersion = this.handleChangeVersion.bind(this);
@@ -108,6 +110,22 @@ class DetailTssr extends Component {
     this.handleChangeTechRef = this.handleChangeTechRef.bind(this);
     this.referenceWithTechBoq = this.referenceWithTechBoq.bind(this);
     this.submitTSSR = this.submitTSSR.bind(this);
+    this.toggleUpload = this.toggleUpload.bind(this);
+    this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
+    this.downloadMaterialTSSRUpload = this.downloadMaterialTSSRUpload.bind(this);
+  }
+
+  toggleUpload() {
+    this.setState({ collapseUpload: !this.state.collapseUpload });
+  }
+
+  toggleDropdown(i) {
+    const newArray = this.state.dropdownOpen.map((element, index) => {
+      return (index === i ? !element : false);
+    });
+    this.setState({
+      dropdownOpen: newArray,
+    });
   }
 
   async getDatafromAPIBMS(url){
@@ -351,7 +369,7 @@ class DetailTssr extends Component {
     }
   }
 
-  fileHandlerMaterial = (event) => {
+  fileHandlerTSSR = (event) => {
     let fileObj = event.target.files[0];
     if(fileObj !== undefined){
       ExcelRenderer(fileObj, (err, rest) => {
@@ -382,7 +400,6 @@ class DetailTssr extends Component {
     this.setState({
       rowsXLS: newDataXLS
     });
-    this.formatDataTSSR(newDataXLS);
   }
 
   formatDataTSSR = async(dataXLS) => {
@@ -1183,8 +1200,99 @@ class DetailTssr extends Component {
     })
   }
 
+  CompareArrayObject(arr, prop) {
+    return arr.sort(function (a, b) {
+        var nameA = a[prop].toLowerCase(),
+            nameB = b[prop].toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
+  }
+
+  async downloadMaterialTSSRUpload() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataTSSR = this.state.tssrData;
+    const dataItemTSSR = this.state.tssrData.packages;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    let headerRow = ["bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "unit", "qty", "stock_warehouse", "inbound_warehouse", "availability"];
+    ws.addRow(headerRow);
+    let list_material_id = [];
+    for(let i = 0; i < dataItemTSSR.length; i++){
+      for(let j = 0; j < dataItemTSSR[i].materials.length; j++){
+        let dataMatIdx = dataItemTSSR[i].materials[j];
+        list_material_id.push(dataMatIdx.material_id);
+        let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
+        let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
+        qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
+        qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
+        ws.addRow([dataItemTSSR[i].pp_id, dataItemTSSR[i].product_name, dataItemTSSR[i].program, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, dataMatIdx.qty, qty_wh, qty_inbound, (dataMatIdx.qty) < qty_wh ? "OK":"NOK"]);
+      }
+    }
+
+    let listMatId = [...new Set(list_material_id)];
+    let matIdData = {
+      "list_material_id" : listMatId
+    }
+
+    const getMaterialVariant = await this.postDatatoAPINODE('/variants/materialId', matIdData);
+    if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
+      dataMaterialVariant = getMaterialVariant.data.data;
+    }
+
+    dataMaterialVariant = this.CompareArrayObject(dataMaterialVariant, "description");
+
+    let sku_list = [];
+    for(let j = 0; j < dataMaterialVariant.length; j++){
+      sku_list.push(dataMaterialVariant[j].material_id);
+    }
+    const list_qtySKU = [];
+    const getQtyfromWHbySKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', {"sku": sku_list }).then((res) => {
+      if(res.data !== undefined && res.status >= 200 && res.status < 400){
+        const dataSKU = res.data.data;
+        for (let i = 0; i < dataSKU.length; i++) {
+          if (dataSKU[i][0] === undefined){
+            list_qtySKU.push(0);
+          } else {
+            list_qtySKU.push(dataSKU[i][0].qty_sku);
+          }
+        }
+      }
+    });
+
+    ws2.addRow(["Origin","Material ID","Material Name","Description", "Category", "QTY"]);
+    for(let j = 0; j < dataMaterialVariant.length; j++){
+      ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category, list_qtySKU[j]]);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' uploader.xlsx');
+  }
+
+  async saveUpdateMaterial(){
+    const dataXLS = this.state.rowsXLS;
+    const dataTSSR = this.state.tssrData;
+    let patchDataMat = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataTSSR._id, {"identifier" : "PS" ,"data" : dataXLS});
+    if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
+      this.setState({ action_status : 'success'});
+    } else{
+      if(patchDataMat.response !== undefined && patchDataMat.response.data !== undefined && patchDataMat.response.data.error !== undefined){
+        if(patchDataMat.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
   render() {
-    console.log("Excel Render revUpload", this.state.data_tssr_sites);
     let qty_wh = undefined, qty_inbound = undefined;
     return (
       <div>
@@ -1199,10 +1307,43 @@ class DetailTssr extends Component {
               ) : (
                 <Fragment></Fragment>
               )}
+              <Button style={{marginRight : '8px', float : 'right'}} color="primary" onClick={this.toggleUpload} size="sm">Edit</Button>
+              <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
+                <DropdownToggle caret color="secondary">
+                  <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
+                </DropdownToggle>
+                <DropdownMenu>
+                  <DropdownItem header>TSSR File</DropdownItem>
+                  <DropdownItem onClick={this.downloadMaterialTSSRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
               {/* }<Button style={{marginRight : '8px', float : 'right', display: 'none'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download PS Format</Button> */}
             </CardHeader>
+            <Collapse isOpen={this.state.collapseUpload}>
+              <Card style={{ margin: '10px 10px 5px 10px' }}>
+                <CardBody>
+                  <div>
+                    <Row>
+                      <Col md="12">
+                      {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
+                        <React.Fragment>
+                        <div style={{display : 'flex', "align-items": "baseline"}}>
+                          <input type="file" onChange={this.fileHandlerTSSR.bind(this)} style={{"padding":"10px"}}/>
+                          <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
+                            <i className="fa fa-paste">&nbsp;&nbsp;</i>
+                            Save
+                          </Button>
+                        </div>
+                        </React.Fragment>
+                      )}
+                      </Col>
+                    </Row>
+                  </div>
+                </CardBody>
+              </Card>
+            </Collapse>
             <CardBody>
-            <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden","display":"none"}}/>
+            <input type="file" onChange={this.fileHandlerTSSR.bind(this)} style={{"padding":"10px","visiblity":"hidden","display":"none"}}/>
             <Button color="warning" onClick={this.prepareEdit} style={{float : 'right', display : 'none'}} >Edit</Button>
             <Button color="success" onClick={this.prepareRevision} style={{float : 'right', marginRight : '8px', display : 'none'}} >Revision</Button>
             {this.state.data_tssr !== null ?

@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input } from 'reactstrap';
+import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input, Spinner } from 'reactstrap';
 import { Form, FormGroup, Label } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
@@ -92,6 +92,7 @@ class TssrBOM extends Component {
     this.handleChangeQtyPS = this.handleChangeQtyPS.bind(this);
     this.loadOptions = this.loadOptions.bind(this);
     this.previewTSSRtoPS = this.previewTSSRtoPS.bind(this);
+    this.removeSiteTSSR = this.removeSiteTSSR.bind(this);
   }
 
   async getDataFromAPINODEWithParams(url) {
@@ -369,6 +370,14 @@ class TssrBOM extends Component {
     this.setState({list_site_selected : value, list_site_tech_boq_selected : list_site_idx.id_tech_boq_doc, list_tssr_selected : dataArrayTssr }, () => {
       // this.getDataTech();
     });
+  }
+
+  removeSiteTSSR(_id_site){
+    // const _id_site = e.target.value;
+    console.log("_id_site", _id_site);
+    let dataArrayTssr = this.state.list_tssr_selected;
+    dataArrayTssr = dataArrayTssr.filter(e => e.site_selected != _id_site);
+    this.setState({list_tssr_selected : dataArrayTssr});
   }
 
   formatDataTSSR = async(dataXLS) => {
@@ -704,7 +713,7 @@ class TssrBOM extends Component {
                     :
                   </td>
                   <td>
-                    <Input style={{marginTop : '10px'}} name="project" type="select" onChange={this.handleChangeProject} value={this.state.project_selected}>
+                    <Input style={{marginTop : '10px', marginBottom : '10px'}} name="project" type="select" onChange={this.handleChangeProject} value={this.state.project_selected}>
                       <option value={null} selected disabled hidden></option>
                       {this.state.list_project.map( project =>
                         <option value={project._id}>{project.Project}</option>
@@ -723,28 +732,34 @@ class TssrBOM extends Component {
                     {this.state.list_tssr_selected.map(e =>
                       <tr>
                         <td>
-                          {e.label}
+                          {e.label} <i className="fa fa-trash" style={{ marginLeft: "8px", color : '#ef5350' }} value={e.site_selected} onClick={() => this.removeSiteTSSR(e.site_selected)}></i>
                         </td>
                       </tr>
                     )}
                     <tr>
-                      <td style={{width : '300px'}}>
-                      <AsyncSelect
-                        cacheOptions
-                        loadOptions={debounce(this.loadOptions, 500)}
-                        defaultOptions
-                        onChange={this.handleChangeSiteTSSR}
-                        isDisabled={this.state.list_site.length === 0}
-                      />
-                      </td>
+                      {this.state.list_site.length === 0 ? this.state.project_selected !== null && (
+                        <td style={{paddingTop : '10px'}}><Spinner type="grow" color="primary" size="sm"/> Loading ... </td>
+                      ) : (
+                        <td style={{width : '300px'}}>
+                        <AsyncSelect
+                          cacheOptions
+                          loadOptions={debounce(this.loadOptions, 500)}
+                          defaultOptions
+                          onChange={this.handleChangeSiteTSSR}
+                          isDisabled={this.state.list_site.length === 0 || this.state.list_tssr_selected.length >= 2}
+                        />
+                        </td>
+                      )}
                     </tr>
-                    <tr>
-                      <td>
-                        <Button onClick={this.previewTSSRtoPS} size="sm" color="success">
-                          Preview
-                        </Button>
-                      </td>
-                    </tr>
+                    {(this.state.list_site.length !== 0 && this.state.project_selected !== null) && (
+                      <tr>
+                        <td>
+                          <Button onClick={this.previewTSSRtoPS} size="sm" color="success">
+                            Preview
+                          </Button>
+                        </td>
+                      </tr>
+                    )}
                   </td>
                 </tr>
               </tbody>
@@ -769,7 +784,6 @@ class TssrBOM extends Component {
                     <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
                   </tr>
                   <tr>
-                    <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Qty BOM</th>
                     <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Qty PS</th>
                   </tr>
                 </thead>
@@ -783,7 +797,6 @@ class TssrBOM extends Component {
                           <td>{pp.program}</td>
                           <td>{pp.uom}</td>
                           <td align='center'>{pp.qty}</td>
-                          <td align='center'><Input type="number" name={pp.pp_id} value={(this.state.change_qty_ps.has(pp.pp_id) ? this.state.change_qty_ps.get(pp.pp_id) : pp.qty)} max={pp.qty} onChange={this.handleChangeQtyPS}/></td>
                         </tr>
                         {pp.list_material.map(material =>
                           <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
@@ -792,7 +805,6 @@ class TssrBOM extends Component {
                             <td></td>
                             <td>{material.uom}</td>
                             <td align='center'>{pp.qty*material.qty}</td>
-                            <td align='center'>{(this.state.change_qty_ps.has(pp.pp_id) ? this.state.change_qty_ps.get(pp.pp_id) : pp.qty)*material.qty}</td>
                           </tr>
                         )}
                         </Fragment>
