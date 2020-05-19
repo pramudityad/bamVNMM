@@ -8,6 +8,8 @@ import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
 import ActionType from '../../redux/reducer/globalActionType';
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
+
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -444,10 +446,10 @@ class ListBulkApproval extends Component {
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
-                        <td>{list.eta}</td>
+                        <td>{convertDateFormat(list.eta)}</td>
                         <td></td>
-                        <td>{list.updated_on}</td>
-                        <td>{list.created_on}</td>
+                        <td>{convertDateFormatfull(list.updated_on)}</td>
+                        <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
                     )}
                   </tbody>
