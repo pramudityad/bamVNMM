@@ -40,6 +40,7 @@ export const convertDateFormat = (jsondate) => {
   return year + "-" + month + "-" + dt;
 };
 
+// full dateformat hh:mm:ss
 export const convertDateFormatfull = (jsondate) => {
   let date = new Date(jsondate);
   let year = date.getFullYear();
@@ -56,4 +57,17 @@ export const convertDateFormatfull = (jsondate) => {
     month = "0" + month;
   }
   return year + "-" + month + "-" + dt + " " + hh + ":" + mm + ":" + ss;
+};
+
+// for export all
+export const numToSSColumn = (num) => {
+  var s = "",
+    t;
+
+  while (num > 0) {
+    t = (num - 1) % 26;
+    s = String.fromCharCode(65 + t) + s;
+    num = ((num - t) / 26) | 0;
+  }
+  return s || undefined;
 };
