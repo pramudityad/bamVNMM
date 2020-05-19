@@ -6,9 +6,9 @@ import classNames from 'classnames';
 
 import './defaultview.css';
 
-const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
+
+
+
 
 const propTypes = {
     materialSign : PropTypes.bool,
@@ -44,8 +44,8 @@ class StepFlow extends Component {
           let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
             headers : {'Content-Type':'application/json'},
             auth: {
-              username: usernamePhilApi,
-              password: passwordPhilApi
+              username: process.env.REACT_APP_usernamePhilApi,
+              password: process.env.REACT_APP_passwordPhilApi
             },
           })
           if(respond.status >= 200 && respond.status < 300){

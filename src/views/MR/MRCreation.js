@@ -11,11 +11,11 @@ import Select from 'react-select';
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const API_URL_BMS_Phil = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
 
-const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const usernameBAM = 'bamidadmin@e-dpm.com';
+
+
+
+
 
 
 
@@ -103,8 +103,8 @@ class MRCreation extends Component {
       let respond = await axios.get(API_URL_BMS_Phil +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi
         },
       })
       if(respond.status >= 200 && respond.status < 300){

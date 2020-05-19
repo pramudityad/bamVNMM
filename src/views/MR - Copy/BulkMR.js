@@ -13,16 +13,16 @@ import * as XLSX from 'xlsx';
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const API_URL_BMS_Phil = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
-
-const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const usernameBAM = 'bamidadmin@e-dpm.com';
 
 
-const API_URL_PDB_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
-const usernameTselApi = 'adminbamidsuper';
-const passwordTselApi = 'F760qbAg2sml';
+
+
+
+
+
+
+
+
 
 
 
@@ -114,11 +114,11 @@ class BulkMR extends Component {
 
       async getDatafromAPITSEL(url){
         try {
-          let respond = await axios.get(API_URL_PDB_TSEL +url, {
+          let respond = await axios.get(process.env.REACT_APP_API_URL_tsel +url, {
             headers : {'Content-Type':'application/json'},
             auth: {
-              username: usernameTselApi,
-              password: passwordTselApi
+              username: process.env.REACT_APP_username_tsel,
+              password: process.env.REACT_APP_password_tsel
             },
           })
           if(respond.status >= 200 && respond.status < 300){
@@ -137,8 +137,8 @@ class BulkMR extends Component {
         let respond = await axios.get(API_URL_BMS_Phil +url, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: process.env.REACT_APP_usernamePhilApi,
+            password: process.env.REACT_APP_passwordPhilApi
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -154,11 +154,11 @@ class BulkMR extends Component {
 
     async getDatafromAPIBAM(url){
       try {
-        let respond = await axios.get(API_URL_BAM +url, {
+        let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernameBAM,
-            password: passwordBAM
+            username: process.env.REACT_APP_username,
+            password: process.env.REACT_APP_password
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -174,11 +174,11 @@ class BulkMR extends Component {
 
     async postDatatoAPIBAM(url, data){
       try {
-        let respond = await axios.post(API_URL_BAM +url, data, {
+        let respond = await axios.post(process.env.REACT_APP_API_URL +url, data, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernameBAM,
-            password: passwordBAM
+            username: process.env.REACT_APP_username,
+            password: process.env.REACT_APP_password
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -194,11 +194,11 @@ class BulkMR extends Component {
 
     async patchDatatoAPIBAM(url, data, _etag){
       try {
-        let respond = await axios.patch(API_URL_BAM +url, data, {
+        let respond = await axios.patch(process.env.REACT_APP_API_URL +url, data, {
           headers : {'Content-Type':'application/json', "If-Match" : _etag},
           auth: {
-            username: usernameBAM,
-            password: passwordBAM
+            username: process.env.REACT_APP_username,
+            password: process.env.REACT_APP_password
           },
         })
         if(respond.status >= 200 && respond.status < 300){

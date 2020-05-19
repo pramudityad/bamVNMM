@@ -7,9 +7,9 @@ import Pagination from "react-js-pagination";
 import debounce from 'lodash.debounce';
 import { connect } from 'react-redux';
 
-const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
+
+
+
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
@@ -46,8 +46,8 @@ class ListTSSRBoq extends Component {
       let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi
         },
       })
       if(respond.status >= 200 && respond.status < 300){
@@ -90,8 +90,8 @@ class ListTSSRBoq extends Component {
     axios.get(process.env.REACT_APP_API_URL +'/tssr_boq_matrix_sorted?'+where+'&max_results='+this.state.perPage+'&page='+page+'&embedded={"created_by" :1}&projection={"list_of_id_site" : 0}', {
         headers : {'Content-Type':'application/json'},
         auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: process.env.REACT_APP_usernamePhilApi,
+            password: process.env.REACT_APP_passwordPhilApi
         },
     })
     .then(res => {
@@ -110,8 +110,8 @@ class ListTSSRBoq extends Component {
       axios.get(process.env.REACT_APP_API_URL +'/user_all?'+where, {
         headers : {'Content-Type':'application/json'},
         auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: process.env.REACT_APP_usernamePhilApi,
+            password: process.env.REACT_APP_passwordPhilApi
         },
       })
       .then(res => {

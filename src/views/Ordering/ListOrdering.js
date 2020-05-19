@@ -6,9 +6,9 @@ import axios from 'axios';
 import Pagination from "react-js-pagination";
 import { connect } from 'react-redux';
 
-const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
+
+
+
 
 class ListOrdering extends Component {
     constructor(props) {
@@ -33,8 +33,8 @@ class ListOrdering extends Component {
         axios.get(process.env.REACT_APP_API_URL +'/ordering_sorted?where={"deleted" : 0}&max_results='+this.state.perPage+'&page='+page, {
             headers : {'Content-Type':'application/json'},
             auth: {
-                username: usernamePhilApi,
-                password: passwordPhilApi
+                username: process.env.REACT_APP_usernamePhilApi,
+                password: process.env.REACT_APP_passwordPhilApi
             },
         })
         .then(res => {

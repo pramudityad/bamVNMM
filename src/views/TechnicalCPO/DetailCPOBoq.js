@@ -12,12 +12,12 @@ import { Redirect, Link } from 'react-router-dom';
 import { Modal, ModalBody, ModalHeader, ModalFooter } from 'reactstrap';
 
 const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
-const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
 
-const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const usernameBAM = 'bamidadmin@e-dpm.com';
+
+
+
+
+
 
 
 const API_URL_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
@@ -281,11 +281,11 @@ class DetailCPOBoq extends Component {
 
   async getDatafromAPIBAM(url) {
     try {
-      let respond = await axios.get(API_URL_BAM + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL + url, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
-          username: usernameBAM,
-          password: passwordBAM
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
@@ -304,8 +304,8 @@ class DetailCPOBoq extends Component {
       let respond = await axios.get(process.env.REACT_APP_API_URL + url, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
@@ -325,8 +325,8 @@ class DetailCPOBoq extends Component {
       let respond = await axios.post(process.env.REACT_APP_API_URL + url, data, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
@@ -349,8 +349,8 @@ class DetailCPOBoq extends Component {
       let respond = await axios.patch(process.env.REACT_APP_API_URL + url, data, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi
         },
         headers: {
           "If-Match": _etag
@@ -1226,8 +1226,8 @@ class DetailCPOBoq extends Component {
     try {
       let respond = await axios.patch(process.env.REACT_APP_API_URL + '/amountboqtech/5d24454a951c58496433be19', data, {
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi,
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi,
         },
         headers: {
           "If-Match": _etag
@@ -1264,8 +1264,8 @@ class DetailCPOBoq extends Component {
     axios.post(process.env.REACT_APP_API_URL + '/boq_tech_op', BOQTech, {
       headers: { 'Content-Type': 'application/json' },
       auth: {
-        username: usernamePhilApi,
-        password: passwordPhilApi
+        username: process.env.REACT_APP_usernamePhilApi,
+        password: process.env.REACT_APP_passwordPhilApi
       },
     }).then(res => {
       if (res !== undefined) {
@@ -1346,8 +1346,8 @@ class DetailCPOBoq extends Component {
     axios.post(process.env.REACT_APP_API_URL + '/boq_tech_sites_op', dataSites, {
       headers: { 'Content-Type': 'application/json' },
       auth: {
-        username: usernamePhilApi,
-        password: passwordPhilApi
+        username: process.env.REACT_APP_usernamePhilApi,
+        password: process.env.REACT_APP_passwordPhilApi
       },
     }).then(res => {
       if (res.data !== undefined) {
@@ -1380,8 +1380,8 @@ class DetailCPOBoq extends Component {
     axios.patch(process.env.REACT_APP_API_URL + '/boq_tech_op/' + _id_Tech, data, {
       headers: { 'Content-Type': 'application/json' },
       auth: {
-        username: usernamePhilApi,
-        password: passwordPhilApi,
+        username: process.env.REACT_APP_usernamePhilApi,
+        password: process.env.REACT_APP_passwordPhilApi,
       },
       headers: {
         "If-Match": _etag_Tech
@@ -1591,8 +1591,8 @@ class DetailCPOBoq extends Component {
       let respond = await axios.patch(process.env.REACT_APP_API_URL + '/boq_tech_sites_op/' + _id_sites, dataSiteSave, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi,
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi,
         },
         headers: {
           "If-Match": _etag_sites
@@ -1646,8 +1646,8 @@ class DetailCPOBoq extends Component {
       let respond = await axios.post(process.env.REACT_APP_API_URL + '/boq_tech_sites_op', dataSites, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
@@ -1667,8 +1667,8 @@ class DetailCPOBoq extends Component {
       let respond = await axios.patch(process.env.REACT_APP_API_URL + '/boq_tech_op/' + _id_Tech, data, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi,
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi,
         },
         headers: {
           "If-Match": _etag_Tech

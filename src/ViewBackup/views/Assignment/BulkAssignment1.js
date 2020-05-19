@@ -15,8 +15,8 @@ const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNot
 
 
 
-const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const usernameBAM = 'bamidadmin@e-dpm.com';
+
+
 
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
@@ -103,11 +103,11 @@ class BulkAssignment extends Component {
 
     async getDatafromAPIBAM(url){
       try {
-        let respond = await axios.get(API_URL_BAM +url, {
+        let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernameBAM,
-            password: passwordBAM
+            username: process.env.REACT_APP_username,
+            password: process.env.REACT_APP_password
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -123,11 +123,11 @@ class BulkAssignment extends Component {
 
     async postDatatoAPIBAM(url, data){
       try {
-        let respond = await axios.post(API_URL_BAM +url, data, {
+        let respond = await axios.post(process.env.REACT_APP_API_URL +url, data, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernameBAM,
-            password: passwordBAM
+            username: process.env.REACT_APP_username,
+            password: process.env.REACT_APP_password
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -143,11 +143,11 @@ class BulkAssignment extends Component {
 
     async patchDatatoAPIBAM(url, data, _etag){
       try {
-        let respond = await axios.patch(API_URL_BAM +url, data, {
+        let respond = await axios.patch(process.env.REACT_APP_API_URL +url, data, {
           headers : {'Content-Type':'application/json', "If-Match" : _etag},
           auth: {
-            username: usernameBAM,
-            password: passwordBAM
+            username: process.env.REACT_APP_username,
+            password: process.env.REACT_APP_password
           },
         })
         if(respond.status >= 200 && respond.status < 300){

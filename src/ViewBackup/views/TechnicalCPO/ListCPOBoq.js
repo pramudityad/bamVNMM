@@ -12,9 +12,9 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
 );
 
-const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
+
+
+
 
 
 
@@ -122,8 +122,8 @@ class ListCPOBoq extends Component {
     axios.get(process.env.REACT_APP_API_URL +'/boq_tech_audit?'+where+'&max_results='+this.state.perPage+'&page='+page+'&embedded={"created_by" :1}', {
         headers : {'Content-Type':'application/json'},
         auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: process.env.REACT_APP_usernamePhilApi,
+            password: process.env.REACT_APP_passwordPhilApi
         },
     })
     .then(res => {
@@ -142,8 +142,8 @@ class ListCPOBoq extends Component {
       axios.get(process.env.REACT_APP_API_URL +'/user_all?'+where, {
         headers : {'Content-Type':'application/json'},
         auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: process.env.REACT_APP_usernamePhilApi,
+            password: process.env.REACT_APP_passwordPhilApi
         },
       })
       .then(res => {

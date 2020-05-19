@@ -10,11 +10,11 @@ import Select from 'react-select';
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const API_URL_BMS_Phil = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
 
-const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const usernameBAM = 'bamidadmin@e-dpm.com';
+
+
+
+
 
 
 
@@ -92,8 +92,8 @@ class PSUpload extends Component {
       let respond = await axios.get(API_URL_BMS_Phil +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi
         },
       })
       if(respond.status >= 200 && respond.status < 300){
@@ -109,11 +109,11 @@ class PSUpload extends Component {
 
   async getDatafromAPIBAM(url){
     try {
-      let respond = await axios.get(API_URL_BAM +url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernameBAM,
-          password: passwordBAM
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         },
       })
       if(respond.status >= 200 && respond.status < 300){
@@ -129,11 +129,11 @@ class PSUpload extends Component {
 
   async postDatatoAPIBAM(url, data){
     try {
-      let respond = await axios.post(API_URL_BAM +url, data, {
+      let respond = await axios.post(process.env.REACT_APP_API_URL +url, data, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernameBAM,
-          password: passwordBAM
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         },
       })
       if(respond.status >= 200 && respond.status < 300){
@@ -149,11 +149,11 @@ class PSUpload extends Component {
 
   async patchDatatoAPIBAM(url, data, _etag){
     try {
-      let respond = await axios.patch(API_URL_BAM +url, data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL +url, data, {
         headers : {'Content-Type':'application/json', "If-Match" : _etag},
         auth: {
-          username: usernameBAM,
-          password: passwordBAM
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         },
       })
       if(respond.status >= 200 && respond.status < 300){

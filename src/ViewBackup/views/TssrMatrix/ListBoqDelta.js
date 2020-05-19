@@ -10,9 +10,9 @@ import './boqtssr.css';
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
-const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
+
+
+
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
@@ -48,8 +48,8 @@ class ListBoqDelta extends Component {
     axios.get(process.env.REACT_APP_API_URL +'/boq_tech_sorted?where={"deleted" : 0, "delta_rev" : {"$exists" : 1}}&max_results='+this.state.perPage+'&page='+page, {
         headers : {'Content-Type':'application/json'},
         auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: process.env.REACT_APP_usernamePhilApi,
+            password: process.env.REACT_APP_passwordPhilApi
         },
     })
     .then(res => {

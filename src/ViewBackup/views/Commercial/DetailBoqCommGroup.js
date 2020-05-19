@@ -19,9 +19,9 @@ const StepFlow = React.lazy(() => import('../../views/Defaultview/StepFlow'));
 
 //const process.env.REACT_APP_API_URL = 'http://localhost:5000/smartapi';
 //const process.env.REACT_APP_API_URL = 'http://api-dev.smart.pdb.e-dpm.com/smartapi';
-const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
+
+
+
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
@@ -146,8 +146,8 @@ class DetailBoqCommGroup extends Component {
         let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: process.env.REACT_APP_usernamePhilApi,
+            password: process.env.REACT_APP_passwordPhilApi
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -168,8 +168,8 @@ class DetailBoqCommGroup extends Component {
         let respond = await axios.post(process.env.REACT_APP_API_URL +url, data, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: process.env.REACT_APP_usernamePhilApi,
+            password: process.env.REACT_APP_passwordPhilApi
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -190,8 +190,8 @@ class DetailBoqCommGroup extends Component {
         let respond = await axios.patch(process.env.REACT_APP_API_URL +url, data, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: process.env.REACT_APP_usernamePhilApi,
+            password: process.env.REACT_APP_passwordPhilApi
           },
           headers : {
             "If-Match" : _etag

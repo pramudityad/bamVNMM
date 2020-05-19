@@ -21,7 +21,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
 );
 
 
-const usernameBAM = 'bamidadmin@e-dpm.com';
+
 
 
 const Config_group_type_DEFAULT = ["HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "SERVICE", "SERVICE", "SERVICE", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME"]
@@ -192,8 +192,8 @@ class ConfigUpload extends React.Component {
       let respond = await axios.patch(process.env.REACT_APP_API_URL_NODE + url, data, {
         headers: { 'Content-Type': 'application/json', "If-Match": _etag },
         auth: {
-          username: usernameBAM,
-          password: passwordBAM
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         },
       })
       if (respond.status >= 200 && respond.status < 300) {

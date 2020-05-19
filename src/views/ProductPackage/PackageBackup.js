@@ -18,9 +18,9 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash"/>
 );
 
-const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
+
+
+
 
 class PackageUpload extends React.Component {
 
@@ -126,8 +126,8 @@ class PackageUpload extends React.Component {
         let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: process.env.REACT_APP_usernamePhilApi,
+            password: process.env.REACT_APP_passwordPhilApi
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -146,8 +146,8 @@ class PackageUpload extends React.Component {
         let respond = await axios.post(process.env.REACT_APP_API_URL +url, data, {
           headers : {'Content-Type':'application/json'},
           auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: process.env.REACT_APP_usernamePhilApi,
+            password: process.env.REACT_APP_passwordPhilApi
           },
         })
         if(respond.status >= 200 && respond.status < 300){
@@ -166,8 +166,8 @@ class PackageUpload extends React.Component {
         let respond = await axios.patch(process.env.REACT_APP_API_URL +url, data, {
           headers : {'Content-Type':'application/json', "If-Match" : _etag},
           auth: {
-            username: usernamePhilApi,
-            password: passwordPhilApi
+            username: process.env.REACT_APP_usernamePhilApi,
+            password: process.env.REACT_APP_passwordPhilApi
           },
         })
         if(respond.status >= 200 && respond.status < 300){

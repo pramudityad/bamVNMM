@@ -12,10 +12,10 @@ import debounce from 'lodash.debounce';
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 //const process.env.REACT_APP_API_URL = 'http://localhost:5000/smartapi';
-const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-//const process.env.REACT_APP_API_URL = 'https://api.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
+
+//
+
+
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
@@ -104,8 +104,8 @@ class ListCommercial extends Component {
       let respond = await axios.get(process.env.REACT_APP_API_URL + url, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi
         },
       })
       if(respond.status >= 200 && respond.status < 300){
@@ -124,8 +124,8 @@ class ListCommercial extends Component {
       let respond = await axios.patch(process.env.REACT_APP_API_URL +url, data, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi
         },
         headers : {
           "If-Match" : _etag

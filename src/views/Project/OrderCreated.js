@@ -24,9 +24,9 @@ import { connect } from "react-redux";
 
 import ModalForm from "../components/ModalForm";
 
-const process.env.REACT_APP_API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
-const username = "bamidadmin@e-dpm.com";
-const password = "F760qbAg2sml";
+
+
+
 
 
 

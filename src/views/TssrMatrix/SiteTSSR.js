@@ -19,9 +19,9 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
 );
 
 const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
-const process.env.REACT_APP_API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
+
+
+
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
@@ -89,8 +89,8 @@ class SiteTSSR extends Component {
       let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi
         },
       })
       if(respond.status >= 200 && respond.status < 300){
@@ -109,8 +109,8 @@ class SiteTSSR extends Component {
       let respond = await axios.post(process.env.REACT_APP_API_URL +url, data, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi
         },
       })
       if(respond.status >= 200 && respond.status < 300){
@@ -129,8 +129,8 @@ class SiteTSSR extends Component {
       let respond = await axios.patch(process.env.REACT_APP_API_URL +url, data, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
+          username: process.env.REACT_APP_usernamePhilApi,
+          password: process.env.REACT_APP_passwordPhilApi
         },
         headers : {
           "If-Match" : _etag

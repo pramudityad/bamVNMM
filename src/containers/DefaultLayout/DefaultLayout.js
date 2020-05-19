@@ -27,7 +27,7 @@ const DefaultAside = React.lazy(() => import('./DefaultAside'));
 const DefaultFooter = React.lazy(() => import('./DefaultFooter'));
 const DefaultHeader = React.lazy(() => import('./DefaultHeader'));
 
-const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 
 class DefaultLayout extends Component {
 
@@ -55,7 +55,7 @@ class DefaultLayout extends Component {
 
   async postDatatoAPILogout(){
     try {
-      let respond = await axios.post(API_URL_BAM+'/logoutUser', {}, {
+      let respond = await axios.post(process.env.REACT_APP_API_URL+'/logoutUser', {}, {
         headers : {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.props.dataLogin.token,

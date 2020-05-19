@@ -6,12 +6,12 @@ import debounce from 'lodash.debounce';
 import { VerticalTimeline, VerticalTimelineElement }  from 'react-vertical-timeline-component';
 import 'react-vertical-timeline-component/style.min.css';
 
-const process.env.REACT_APP_API_URL = 'https://api.smart.pdb.e-dpm.com/smartapi';
+
 const username = 'usermitt';
 const password = 'Z4icVgFQp3D1';
 
-const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const usernameBAM = 'bamidadmin@e-dpm.com';
+
+
 
 
 class MRProgress extends Component {
@@ -42,11 +42,11 @@ class MRProgress extends Component {
 
   async getDatafromAPIBAM(url){
     try {
-      let respond = await axios.get(API_URL_BAM +url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernameBAM,
-          password: passwordBAM
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         },
       })
       if(respond.status >= 200 && respond.status < 300){

@@ -75,8 +75,8 @@ class CPODatabase extends React.Component {
       let respond = await axios.get(process.env.REACT_APP_API_URL_XL+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
-          username: usernameBAM,
-          password: passwordBAM
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         }
       });
       if(respond.status >= 200 && respond.status < 300) {
@@ -95,8 +95,8 @@ class CPODatabase extends React.Component {
       let respond = await axios.post(process.env.REACT_APP_API_URL_XL+url, data, {
         headers: {'Content-Type':'application/json'},
         auth: {
-          username: usernameBAM,
-          password: passwordBAM
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password
         }
       });
       if(respond.status >= 200 && respond.status < 300) {

@@ -25,9 +25,9 @@ import { connect } from "react-redux";
 import Loading from "../../views/components/Loading";
 import ModalDelete from "../../views/components/ModalDelete";
 
-const process.env.REACT_APP_API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
-const username = "bamidadmin@e-dpm.com";
-const password = "F760qbAg2sml";
+
+
+
 
 
 

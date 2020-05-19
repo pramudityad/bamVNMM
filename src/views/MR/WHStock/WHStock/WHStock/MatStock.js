@@ -46,8 +46,8 @@ const Checkbox = ({
 const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
 
-const usernameBAM = "adminbamidsuper";
-const passwordBAM = "F760qbAg2sml";
+
+
 
 
 
