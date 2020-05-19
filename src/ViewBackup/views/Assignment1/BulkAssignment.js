@@ -11,7 +11,7 @@ import { Link, Redirect } from 'react-router-dom';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
-const API_URL_BMS_Phil = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
+
 
 
 

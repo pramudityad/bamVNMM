@@ -15,7 +15,7 @@ import {ExcelRenderer} from 'react-excel-renderer';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
-const API_URL_BMS_Phil = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
+
 
 
 
@@ -84,7 +84,7 @@ class MRDetail extends Component {
 
   async getDatafromAPIBMS(url){
     try {
-      let respond = await axios.get(API_URL_BMS_Phil +url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_PhilApi +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: process.env.REACT_APP_usernamePhilApi,
