@@ -31,6 +31,8 @@ import { ExcelRenderer } from "react-excel-renderer";
 import "./MatStyle.css";
 import ModalForm from "../components/ModalForm";
 
+import {convertDateFormatfull} from '../../helper/basicFunction'
+
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
@@ -566,7 +568,7 @@ class MRDetail extends Component {
     return (
       <VerticalTimelineElement
         className="vertical-timeline-element--work"
-        date={ms_date}
+        date={convertDateFormatfull(ms_date)}
         iconStyle={{ background: "rgb(33, 150, 243)", color: "#fff" }}
       >
         <h3 className="vertical-timeline-element-title">

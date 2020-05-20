@@ -26,6 +26,7 @@ import * as XLSX from "xlsx";
 
 import ModalDelete from "../../components/ModalDelete";
 import Loading from '../../components/Loading'
+import {getDatafromAPIEXEL ,getDatafromAPINODE, postDatatoAPINODE, patchDatatoAPINODE, deleteDataFromAPINODE} from '../../../helper/asyncFunction'
 
 import "../MatStyle.css";
 
@@ -186,102 +187,6 @@ class WHManagement extends React.Component {
     }));
   }
 
-  async getDatafromAPIEXEL(url) {
-    try {
-      let respond = await axios.get(process.env.REACT_APP_API_URL_XL + url, {
-        headers: { "Content-Type": "application/json" },
-        auth: {
-          username: process.env.REACT_APP_usernameXL,
-          password: process.env.REACT_APP_passwordXL,
-        },
-      });
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond Get Data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      console.log("respond Get Data", err);
-      return respond;
-    }
-  }
-
-  async getDatafromAPINODE(url) {
-    try {
-      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond Post Data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      console.log("respond Post Data err", err);
-      return respond;
-    }
-  }
-
-  async postDatatoAPINODE(url, data) {
-    try {
-      let respond = await axios.post(process.env.REACT_APP_API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
-      if (respond.status >= 200 && respond.status < 300) {
-        // console.log("respond Post Data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      // console.log("respond Post Data err", err);
-      return respond;
-    }
-  }
-
-  async patchDatatoAPINODE(url, data) {
-    try {
-      let respond = await axios.patch(process.env.REACT_APP_API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond patch Data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      console.log("respond patch Data err", err);
-      return respond;
-    }
-  }
-
-  async deleteDataFromAPINODE(url) {
-    try {
-      let respond = await axios.delete(process.env.REACT_APP_API_URL_NODE + url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond delete Data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      console.log("respond delete Data err", err);
-      return respond;
-    }
-  }
-
   togglecreateModal() {
     this.setState({
       createModal: !this.state.createModal,
@@ -309,13 +214,13 @@ class WHManagement extends React.Component {
         ? '{"$exists" : 1}'
         : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
     let whereAnd = '{"wh_name": ' + filter_wh_name + "}";
-    this.getDatafromAPINODE(
+    getDatafromAPINODE(
       "/whManagement/warehouse?q=" +
         whereAnd +
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
-        this.state.activePage
+        this.state.activePage, this.props.dataLogin.token
     ).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
@@ -339,7 +244,7 @@ class WHManagement extends React.Component {
   getASPList() {
     // switch (this.props.dataLogin.account_id) {
     //   case "xl":
-    this.getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
+    getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
       // console.log("asp data ", res.data);
       if (res.data !== undefined) {
         this.setState({ asp_data: res.data._items });
@@ -441,6 +346,7 @@ class WHManagement extends React.Component {
 
   componentDidMount() {
     // console.log("here ur dataLogin", this.props.dataLogin);
+    // console.log('token from asycn ', this.props.dataLogin.token);
     this.getWHStockList();
     // change this
     document.title = "Warehouse Management | BAM";
@@ -544,9 +450,9 @@ class WHManagement extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     console.log("xlsx data", JSON.stringify(BulkXLSX));
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE("/whManagement/createWarehouse", {
+    const res = await postDatatoAPINODE("/whManagement/createWarehouse", {
       managementData: BulkXLSX,
-    });
+    }, this.props.dataLogin.token);
     console.log("res bulk ", res.data);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
@@ -564,11 +470,11 @@ class WHManagement extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     console.log("xlsx data", JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE(
+    const res = await postDatatoAPINODE(
       "/whManagement/createWhManagementTruncate",
       {
         managementData: BulkXLSX,
-      }
+      }, this.props.dataLogin.token
     );
     console.log("res bulk ", res);
     if (res.data !== undefined) {
@@ -606,9 +512,9 @@ class WHManagement extends React.Component {
     };
     this.toggleLoading();
     this.toggleEdit();
-    let patchData = await this.patchDatatoAPINODE(
+    let patchData = await patchDatatoAPINODE(
       "/whManagement/UpdateOneWarehouse/" + objData,
-      { data: pp }
+      { data: pp }, this.props.dataLogin.token
     );
     console.log("patch data ", pp);
     if (patchData === undefined) {
@@ -646,11 +552,11 @@ class WHManagement extends React.Component {
     };
     poData.push(pp);
     console.log("post data ", pp);
-    let postData = await this.postDatatoAPINODE(
+    let postData = await postDatatoAPINODE(
       "/whManagement/createOneWarehouse",
       {
         managementData: pp,
-      }
+      }, this.props.dataLogin.token
     ).then((res) => {
       console.log("res save one ", res);
       if (res.data !== undefined) {
@@ -680,8 +586,8 @@ class WHManagement extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE(
-      "/whManagement/warehouse?noPg=1"
+    let getAll_nonpage = await getDatafromAPINODE(
+      "/whManagement/warehouse?noPg=1", this.props.dataLogin.token
     );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
@@ -728,8 +634,8 @@ class WHManagement extends React.Component {
     const objData = this.state.selected_id;
     this.toggleLoading();
     this.toggleDelete();
-    const DelData = this.deleteDataFromAPINODE(
-      "/whManagement/deleteWarehouse/" + objData
+    const DelData = deleteDataFromAPINODE(
+      "/whManagement/deleteWarehouse/" + objData, this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
@@ -767,7 +673,7 @@ class WHManagement extends React.Component {
 
   getListSort() {
     this.toggleLoading();
-    this.getDatafromAPINODE(
+    getDatafromAPINODE(
       "/whManagement/warehouse?srt=" +
         this.state.sortField +
         ":" +
@@ -775,7 +681,7 @@ class WHManagement extends React.Component {
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
-        this.state.activePage
+        this.state.activePage, this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
