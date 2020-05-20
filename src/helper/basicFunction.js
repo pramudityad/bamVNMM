@@ -25,6 +25,10 @@ export function checkValue(props) {
   }
 }
 
+/**
+ * return date format yyyy-mm-dd
+ * @param {*} jsondate 
+ */
 export const convertDateFormat = (jsondate) => {
   let date = new Date(jsondate);
   let year = date.getFullYear();
@@ -40,7 +44,10 @@ export const convertDateFormat = (jsondate) => {
   return year + "-" + month + "-" + dt;
 };
 
-// full dateformat hh:mm:ss
+/**
+ * return date format yyyy-mm-dd hh:mm:ss
+ * @param {*} jsondate 
+ */
 export const convertDateFormatfull = (jsondate) => {
   let date = new Date(jsondate);
   let year = date.getFullYear();
