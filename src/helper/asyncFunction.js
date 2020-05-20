@@ -1,19 +1,14 @@
 import axios from "axios";
-import React from "react";
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
-const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
-const usernameXL = "adminbamidsuper";
-const passwordXL = "F760qbAg2sml";
 
 // EXCEL
 export const getDatafromAPIEXEL = async (url) => {
     try {
-      let respond = await axios.get(API_URL_XL + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_XL + url, {
         headers: { "Content-Type": "application/json" },
         auth: {
-          username: usernameXL,
-          password: passwordXL,
+          username: process.env.REACT_APP_usernameXL,
+          password: process.env.REACT_APP_passwordXL,
         },
       });
       if (respond.status >= 200 && respond.status < 300) {
@@ -29,7 +24,7 @@ export const getDatafromAPIEXEL = async (url) => {
 
 export const getDatafromAPINODE = async (url, props) => {
   try {
-    let respond = await axios.get(API_URL_NODE + url, {
+    let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + props,
@@ -48,7 +43,7 @@ export const getDatafromAPINODE = async (url, props) => {
 
 export const postDatatoAPINODE = async (url, data, props) => {
   try {
-    let respond = await axios.post(API_URL_NODE + url, data, {
+    let respond = await axios.post(process.env.REACT_APP_API_URL_NODE + url, data, {
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + props,
@@ -67,7 +62,7 @@ export const postDatatoAPINODE = async (url, data, props) => {
 
 export const patchDatatoAPINODE = async (url, data, props) => {
   try {
-    let respond = await axios.patch(API_URL_NODE + url, data, {
+    let respond = await axios.patch(process.env.REACT_APP_API_URL_NODE + url, data, {
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + props,
@@ -86,7 +81,7 @@ export const patchDatatoAPINODE = async (url, data, props) => {
 
 export const deleteDataFromAPINODE = async (url, props) => {
   try {
-    let respond = await axios.delete(API_URL_NODE + url, {
+    let respond = await axios.delete(process.env.REACT_APP_API_URL_NODE + url, {
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + props,
