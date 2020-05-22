@@ -65,7 +65,7 @@
 /* Use position: sticky to have it stick to the edge
  * and top, right, or left to choose which edge to stick to: */
 
-.fixed th {
+.fixed-conf th {
   position: -webkit-sticky; /* for Safari */
   position: sticky;
   background: rgb(69, 140, 173);
