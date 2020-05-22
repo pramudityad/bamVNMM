@@ -71,7 +71,10 @@ class ShipmentList extends Component {
       mr_data_selected: [],
       shipment_detail: {},
       danger: false,
+      warning: false,
       selected_id: "",
+      selected_mr:[],
+      selected_mr_id:[],
       modal_loading: false,
     };
     this.handlePageChange = this.handlePageChange.bind(this);
@@ -85,8 +88,10 @@ class ShipmentList extends Component {
     );
     this.getShipmentDetail = this.getShipmentDetail.bind(this);
     this.cancelShipment = this.cancelShipment.bind(this);
+    this.TakeoutMR = this.TakeoutMR.bind(this);
     this.toggleDelete = this.toggleDelete.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
+    this.toggleTakeOut = this.toggleTakeOut.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -166,6 +171,26 @@ class ShipmentList extends Component {
     }
   }
 
+  async deleteDataFromAPINODE2(url, data) {
+    try {
+      let respond = await axios.delete(API_URL_NODE + url,{
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + this.state.tokenUser,
+        },
+        data
+      });
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond delete Data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond delete Data err", err);
+      return respond;
+    }
+  }
+
   toggleLoading() {
     this.setState((prevState) => ({
       modal_loading: !prevState.modal_loading,
@@ -184,6 +209,28 @@ class ShipmentList extends Component {
     } else {
       this.setState({
         danger: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete: !prevState.modalDelete,
+    }));
+  }
+
+  toggleTakeOut(e) {
+    // console.log('mr id ', this.state.shipment_detail.mr_list.map((mr) =>mr.mr_id);
+    const modalDelete = this.state.warning;
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      // console.log("_id ", _id);
+      this.setState({
+        warning: !this.state.warning,
+        selected_id: _id,
+        selected_mr: this.state.shipment_detail.mr_list.map((mr) =>mr._id),
+        selected_mr_id: this.state.shipment_detail.mr_list.map((mr) =>mr.mr_id),
+      });
+    } else {
+      this.setState({
+        warning: false,
       });
     }
     this.setState((prevState) => ({
@@ -226,6 +273,28 @@ class ShipmentList extends Component {
       this.deleteDataFromAPINODE("/matreqShipment/cancelShipment/" + _id).then(
         (res) => {
           console.log("/matreqShipment/cancelShipment/ ", res);
+          if (res.data !== undefined) {
+            this.setState({ action_status: "success" });
+            this.getShipmentList();
+            this.toggleLoading();
+          } else {
+            this.setState({ action_status: "failed" });
+            this.getShipmentList();
+            this.toggleLoading();
+          }
+        }
+      );
+    }
+  }
+
+  TakeoutMR(e) {
+    const _id = this.state.selected_id;
+    if (e !== undefined) {
+      this.toggleLoading();
+      this.toggleTakeOut();
+      this.deleteDataFromAPINODE2("/matreqShipment/takeOutMR/" + _id, {"mrList" : this.state.selected_mr}).then(
+        (res) => {
+          console.log("matreqShipment/takeOutMR/ ", res);
           if (res.data !== undefined) {
             this.setState({ action_status: "success" });
             this.getShipmentList();
@@ -431,9 +500,16 @@ class ShipmentList extends Component {
                 {this.state.shipment_detail.no_shipment !== undefined ? "(" + this.state.shipment_detail.no_shipment + ")" : ""}
                 </span>
                   {this.state.shipment_detail.no_shipment !== undefined && (
-                    <Button color="danger" size="sm" value={this.state.shipment_detail._id} onClick={this.toggleDelete} style={{float : 'right'}}>
+                    <div>
+                    <Button color="danger" size="sm" value={this.state.shipment_detail._id} onClick={this.toggleDelete} style={{float : 'right', marginRight: "6px"}}>
                       <i className="icon-ban icons "> &nbsp; </i> Cancel Shipment
-                    </Button>
+                    </Button>                    
+                    &nbsp;&nbsp;&nbsp;
+                    &nbsp;&nbsp;&nbsp;
+                    <Button color="warning" size="sm" value={this.state.shipment_detail._id} onClick={this.toggleTakeOut} style={{float : 'right', marginRight:"6px"}}>
+                    <i className="icon-action-undo icons "> &nbsp; </i> Takeout MR
+                  </Button></div>
+                    
                   )}
               </CardHeader>
               <CardBody>
@@ -672,6 +748,23 @@ class ShipmentList extends Component {
             Cancel Shipment
           </Button>
           <Button color="secondary" onClick={this.toggleDelete}>
+            Close
+          </Button>
+        </ModalDelete>
+
+        {/* Modal confirmation takeoutMR */}
+        <ModalDelete        
+          isOpen={this.state.warning}
+          toggle={this.toggleTakeOut}
+          className={"modal-warning " + this.props.className}
+          title={"Takeout MR " + this.state.selected_mr_id}
+          // title={"Takeout MR "}
+        >
+          <Button color="warning" onClick={this.TakeoutMR}>
+            Take Out MR
+          </Button>
+          &nbsp;&nbsp;&nbsp;
+          <Button color="secondary" onClick={this.toggleTakeOut}>
             Close
           </Button>
         </ModalDelete>

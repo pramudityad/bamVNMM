@@ -9,6 +9,7 @@ import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
 import './wh_css.css'
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -487,10 +488,10 @@ class JointCheck extends Component {
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
-                        <td>{list.eta}</td>
+                        <td>{convertDateFormat(list.eta)}</td>
                         <td></td>
-                        <td>{list.updated_on}</td>
-                        <td>{list.created_on}</td>
+                        <td>{convertDateFormatfull(list.updated_on)}</td>
+                        <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
                     )}
                   </tbody>

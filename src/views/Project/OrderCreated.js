@@ -24,6 +24,7 @@ import { connect } from "react-redux";
 import './project_css.css'
 
 import ModalForm from "../components/ModalForm";
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
 
 const API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
 const username = "bamidadmin@e-dpm.com";
@@ -842,10 +843,10 @@ class OrderCreated extends Component {
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
-                        <td>{list.eta}</td>
+                        <td>{convertDateFormat(list.eta)}</td>
                         <td></td>
-                        <td>{list.updated_on}</td>
-                        <td>{list.created_on}</td>
+                        <td>{convertDateFormatfull(list.updated_on)}</td>
+                        <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
                     ))}
                   </tbody>

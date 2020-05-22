@@ -176,7 +176,7 @@ const routes = [
   { path: '/ps-bom', exact: true, name: 'Plant Spec BOM', component: TssrBOM },
   { path: '/ps-bom/:id', name: 'Plant Spec BOM', component: TssrBOMDetail },
   { path: '/mr-list', exact: true, name: 'MR List', component: MRList },
-  { path: '/mr-na-list', exact: true, name: 'MR List', component: MRNAList },
+  { path: '/mr-na-list', exact: true, name: 'MR List Not Assign', component: MRNAList },
   { path: '/mr-creation', exact: true, name: 'Create MR', component: MRCreation },
   { path: '/mr-detail/:id', exact: true, name: 'MR Detail', component: MRDetail },
   { path: '/bulk-mr-creation', name: 'Bulk MR Creation', component: BulkMRCreation },
