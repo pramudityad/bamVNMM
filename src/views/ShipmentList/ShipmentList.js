@@ -217,7 +217,7 @@ class ShipmentList extends Component {
   }
 
   toggleTakeOut(e) {
-    // console.log('mr id ', this.state.shipment_detail.mr_list.map((mr) =>mr.mr_id);
+    console.log('mr id ', this.state.shipment_detail.mr_list.map((mr) =>mr.mr_id));
     const modalDelete = this.state.warning;
     if (modalDelete === false) {
       const _id = e.currentTarget.value;
@@ -292,7 +292,7 @@ class ShipmentList extends Component {
     if (e !== undefined) {
       this.toggleLoading();
       this.toggleTakeOut();
-      this.deleteDataFromAPINODE2("/matreqShipment/takeOutMR/" + _id, {"mrList" : this.state.selected_mr}).then(
+      this.patchDatatoAPINODE("/matreqShipment/takeOutMR/" + _id, {"mrList" : this.state.selected_mr}).then(
         (res) => {
           console.log("matreqShipment/takeOutMR/ ", res);
           if (res.data !== undefined) {
