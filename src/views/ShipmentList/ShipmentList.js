@@ -173,7 +173,7 @@ class ShipmentList extends Component {
 
   async deleteDataFromAPINODE2(url, data) {
     try {
-      let respond = await axios.delete(API_URL_NODE + url,{
+      let respond = await axios.delete(process.env.REACT_APP_API_URL_NODE + url,{
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
