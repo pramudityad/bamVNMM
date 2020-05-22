@@ -65,7 +65,7 @@ class WHManagement extends React.Component {
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
       search: null,
-      filter_name: null,
+      filter_name: "",
       perPage: 10,
       prevPage: 1,
       activePage: 1,

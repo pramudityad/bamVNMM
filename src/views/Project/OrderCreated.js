@@ -656,7 +656,7 @@ class OrderCreated extends Component {
     let searchBar = [];
     for (let i = 0; i < 12; i++) {
       searchBar.push(
-        <td>
+        <td key={i}>
           <div className="controls" style={{ width: "150px" }}>
             <InputGroup className="input-prepend">
               <InputGroupAddon addonType="prepend">

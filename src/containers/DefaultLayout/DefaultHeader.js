@@ -117,7 +117,7 @@ class DefaultHeader extends Component {
               {
                 this.state.order_created.length === 0 ?
                 (<DropdownItem><center><i className="fa fa-check" style={{color:"green"}}></i>No Order Created</center></DropdownItem>) :
-                this.state.order_created.map((list, i) => <Link to={'/order-created'}><DropdownItem><i className="fa fa-exclamation" style={{color:"red"}}></i>{list.mr_id} - {list.project_name}</DropdownItem></Link>)
+                this.state.order_created.map((list, i) => <Link key={i} to={'/order-created'}><DropdownItem><i className="fa fa-exclamation" style={{color:"red"}}></i>{list.mr_id} - {list.project_name}</DropdownItem></Link>)
               }
             </DropdownMenu>
           </UncontrolledDropdown>
@@ -130,7 +130,7 @@ class DefaultHeader extends Component {
               {
                 this.state.rtd.length === 0 ?
                 (<DropdownItem><center><i className="fa fa-check" style={{color:"green"}}></i>No Requested RTD</center></DropdownItem>) :
-                this.state.rtd.map((list, i) => <Link to={'/ready-to-deliver'}><DropdownItem><i className="fa fa-exclamation" style={{color:"red"}}></i>{list.mr_id} - {list.project_name}</DropdownItem></Link>)
+                this.state.rtd.map((list, i) => <Link key ={i} to={'/ready-to-deliver'}><DropdownItem><i className="fa fa-exclamation" style={{color:"red"}}></i>{list.mr_id} - {list.project_name}</DropdownItem></Link>)
               }
             </DropdownMenu>
           </UncontrolledDropdown>
