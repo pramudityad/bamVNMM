@@ -85,6 +85,7 @@ class MatLibrary extends React.Component {
       activeItemId: null,
       createModal: false,
       selected_id: "",
+      selected_name: "",
       sortType: 0,
       sortField: "",
     };
@@ -121,9 +122,11 @@ class MatLibrary extends React.Component {
     const modalDelete = this.state.danger;
     if (modalDelete === false) {
       const _id = e.currentTarget.value;
+      const name = e.currentTarget.name;
       this.setState({
         danger: !this.state.danger,
         selected_id: _id,
+        selected_name: name,
       });
     } else {
       this.setState({
@@ -771,7 +774,7 @@ class MatLibrary extends React.Component {
                       <Table responsive bordered>
                         <thead
                           style={{ backgroundColor: "#73818f" }}
-                          className="fixed"
+                          className="fixed-matlib"
                         >
                           <tr align="center">
                             <th>
@@ -779,7 +782,7 @@ class MatLibrary extends React.Component {
                                 color="ghost-dark"
                                 onClick={() => this.requestSort("origin")}
                               >
-                                Origin
+                                <b>Origin</b>
                               </Button>
                             </th>
                             <th>
@@ -787,7 +790,7 @@ class MatLibrary extends React.Component {
                                 color="ghost-dark"
                                 onClick={() => this.requestSort("material_id")}
                               >
-                                Material ID
+                                <b>Material ID</b>
                               </Button>
                             </th>
                             <th>
@@ -797,7 +800,7 @@ class MatLibrary extends React.Component {
                                   this.requestSort("material_name")
                                 }
                               >
-                                Material Name
+                                <b>Material Name</b>
                               </Button>
                             </th>
                             <th>Description</th>
@@ -850,6 +853,7 @@ class MatLibrary extends React.Component {
                                     size="sm"
                                     color="danger"
                                     value={e._id}
+                                    name={e.material_id}
                                     onClick={this.toggleDelete}
                                     title="Delete"
                                   >
@@ -1061,7 +1065,7 @@ class MatLibrary extends React.Component {
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
-          title="Delete Material Library"
+          title={"Delete Material "+ this.state.selected_name}
         >
           <Button color="danger" onClick={this.DeleteData}>
             Delete

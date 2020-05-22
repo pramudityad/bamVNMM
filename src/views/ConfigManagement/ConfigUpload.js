@@ -836,7 +836,7 @@ class ConfigUpload extends React.Component {
                   <Col>
                     <div className='divtable'>
                       <table hover bordered responsive size="sm" width='100%'>
-                        <thead style={{ backgroundColor: '#73818f' }} className='fixed'>
+                        <thead style={{ backgroundColor: '#73818f' }} className='fixed-conf'>
                           <tr align="center">
                             <th>
                               {/* }<Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} /> */}

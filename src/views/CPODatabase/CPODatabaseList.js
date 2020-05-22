@@ -467,8 +467,8 @@ class CPODatabase extends React.Component {
                 <Row>
                   <Col>
                     <div className='divtable'>
-                      <table hover bordered responsive size="sm" width='100%'>
-                        <thead style={{ backgroundColor: '#73818f' }} className='fixed'>
+                      <Table hover bordered responsive size="sm" width='100%'>
+                        <thead style={{ backgroundColor: '#73818f' }} className='fixed-cpo'>
                           <tr align="center">
                             <th style={{ minWidth: '150px' }}>PO Number</th>
                             <th>Date</th>
@@ -500,7 +500,7 @@ class CPODatabase extends React.Component {
                             </React.Fragment>
                           )}
                         </tbody>
-                      </table>
+                      </Table>
                     </div>
                   </Col>
                 </Row>

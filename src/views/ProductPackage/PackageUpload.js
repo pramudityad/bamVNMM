@@ -876,7 +876,7 @@ class PackageUpload extends React.Component {
                   <Col>
                     <div className='divtable'>
                       <table hover bordered responsive size="sm" width='100%'>
-                        <thead style={{ backgroundColor: '#c6f569' }} className='fixed'>
+                        <thead style={{ backgroundColor: '#c6f569' }} className='fixed-pp'>
                           <tr align="center">
                             <th>
                               {/* <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} /> */}
