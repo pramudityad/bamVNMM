@@ -720,6 +720,7 @@ class WHManagement extends React.Component {
   }
 
   render() {
+    const {all_data} = this.state;
     return (
       <div className="animated fadeIn">
         <DefaultNotif
@@ -849,10 +850,10 @@ class WHManagement extends React.Component {
                 </Row>
                 <Row>
                   <Col>
-                    <div className="divtable">
-                      <Table responsive size="sm">
+                    <div >
+                      <Table striped borderless hover size="md">
                         <thead
-                          style={{ backgroundColor: "#73818f" }}
+                          // style={{ backgroundColor: "#73818f" }}
                           className="fixed-whman"
                         >
                           <tr align="center">
@@ -877,7 +878,7 @@ class WHManagement extends React.Component {
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.all_data
+                          {all_data
                             .map((e) => (
                               <React.Fragment key={e._id + "frag"}>
                                 <tr
@@ -1070,7 +1071,7 @@ class WHManagement extends React.Component {
             </Row>
           </ModalBody>
           <ModalFooter>
-            <Button color="success" onClick={this.saveNew}>
+            <Button color="success" onClick={this.saveNew} disabled={!this.state.DataForm}>
               Create
             </Button>
           </ModalFooter>
