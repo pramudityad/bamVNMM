@@ -426,7 +426,7 @@ class ListCommercial extends Component {
                               </Link> */}
                               <Link to={'/submission-commercial/'+boq._id}>
                                 <Button size="sm" color="secondary" style={{marginRight : '10px'}}>
-                                  <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; Submission
+                                  <i className="far fa-check-square" aria-hidden="true"></i>&nbsp; Submission
                                 </Button>
                               </Link>
                             </td>
