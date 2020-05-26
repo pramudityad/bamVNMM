@@ -12,16 +12,13 @@ import {
   Collapse,
 } from "reactstrap";
 import { Col, FormGroup, Label, Row, Table, Input } from "reactstrap";
-import { ExcelRenderer } from "react-excel-renderer";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 import axios from "axios";
 import Pagination from "react-js-pagination";
 import debounce from "lodash.debounce";
-import Select from "react-select";
 import { saveAs } from "file-saver";
 import Excel from "exceljs";
 import { connect } from "react-redux";
-import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
 import Loading from "../../components/Loading";
@@ -843,7 +840,7 @@ class MatLibrary extends React.Component {
                                     title="Edit"
                                   >
                                     <i
-                                      className="fa fa-pencil"
+                                      className="fas fa-edit"
                                       aria-hidden="true"
                                     ></i>
                                   </Button>

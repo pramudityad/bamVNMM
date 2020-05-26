@@ -860,7 +860,7 @@ class WHManagement extends React.Component {
                                     title="Edit"
                                   >
                                     <i
-                                      className="fa fa-pencil"
+                                      className="fas fa-edit"
                                       aria-hidden="true"
                                     ></i>
                                   </Button>

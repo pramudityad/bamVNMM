@@ -906,7 +906,7 @@ class PackageUpload extends React.Component {
                                 <td style={{ textAlign: 'center' }}>{pp.product_type}</td>
                                 <td>
                                   <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
-                                    <i className="fa fa-pencil" aria-hidden="true"></i>
+                                    <i className="fas fa-edit" aria-hidden="true"></i>
                                   </Button>
                                 </td>
                               </tr>

@@ -359,7 +359,7 @@ class ListBoqComm extends Component {
                                 { this.state.userRole.includes('PDB-Dash')|| this.state.userRole.includes('Admin') || this.state.userRole.includes('Flow-Commercial') ? (
                                   <Link to={'/Boq/Commercial/PO/'+boq._id}>
                                     <Button size="sm" color="secondary" style={{marginRight : '10px'}}>
-                                      <i className="fa fa-pencil-square-o" aria-hidden="true"></i>&nbsp; PO Assign
+                                      <i className="fas fa-edit-square-o" aria-hidden="true"></i>&nbsp; PO Assign
                                     </Button>
                                   </Link>
                                 ) : (<React.Fragment></React.Fragment>)}

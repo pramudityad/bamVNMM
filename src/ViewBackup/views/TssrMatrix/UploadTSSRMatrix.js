@@ -2063,7 +2063,7 @@ class UploadTSSRMatrix extends Component {
                       {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
                         <div>
                           <Button block color="primary" onClick={this.toggleUpload} id="toggleCollapse1">
-                              <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Edit
+                              <i className="fas fa-edit" aria-hidden="true"> </i> &nbsp;Edit
                           </Button>
                         </div>
                       ) : ("")}
@@ -2113,7 +2113,7 @@ class UploadTSSRMatrix extends Component {
                                   <Button style={{'float' : 'right', marginRight : '10px'}} color="success" onClick={this.revisionTssr} id="toggleCollapse1" disabled={this.state.action_status === 'failed' || this.state.data_format.length === 0}>
                                       <i className="fa fa-paste">&nbsp;&nbsp;</i>
                                       {this.state.tssr_API.no_tssr_boq !== null && this.state.API_TSSR_Sites.length === 0 ? 'Loading..' : this.state.rowsTssr.length == 0 ? 'Revision' : this.state.data_format.length !== 0 ? 'Revision' : 'Loading..'}
-                                      {/* <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Revision */}
+                                      {/* <i className="fas fa-edit" aria-hidden="true"> </i> &nbsp;Revision */}
                                   </Button>
                                 </React.Fragment>
                               </div>
@@ -2136,7 +2136,7 @@ class UploadTSSRMatrix extends Component {
                                     <Button style={{'float' : 'right', marginRight : '10px', marginTop : '10px'}} color="success" onClick={this.saveProjectToDB} id="toggleCollapse1" disabled={this.state.project_select === null}>
                                         <i className="fa fa-save">&nbsp;&nbsp;</i>
                                         save
-                                        {/* <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Revision */}
+                                        {/* <i className="fas fa-edit" aria-hidden="true"> </i> &nbsp;Revision */}
                                     </Button>
                                   </React.Fragment>
                                 </div>
