@@ -39,6 +39,7 @@ class AssignmentDetail extends Component {
       can_edit_asp : false,
       asp_list : [],
       asp_selected : {},
+      asp_note_not_approve : {},
     }
     this.notifyASP = this.notifyASP.bind(this);
     this.saveBastNumber = this.saveBastNumber.bind(this);
@@ -60,6 +61,7 @@ class AssignmentDetail extends Component {
     this.deleteSSOW = this.deleteSSOW.bind(this);
     this.addSSOW = this.addSSOW.bind(this);
     this.convertTOP = this.convertTOP.bind(this);
+    // this.handleChangeNotApprove = this.handleChangeNotApprove.bind(this);
   }
 
   async getDataFromAPIXL(url) {
