@@ -100,7 +100,7 @@ export default {
     },
     {
       name: 'Material Request',
-      icon: 'icon-note',
+      icon: "fas fa-tools",
       children: [
         {
           name: 'MR Dashboard',
@@ -136,22 +136,22 @@ export default {
     },
     {
       name: 'Warehouse',
-      icon: 'icon-list',
+      icon: 'fas fa-boxes',
       children: [
         {
-          name: 'WH Dashboard EID',
+          name: 'Dashboard EID',
           url: '/wh-dashboard-eid',
           icon: 'icon-speedometer',
         },
         {
-          name: 'WH Dashboard ASP/DSP',
+          name: 'Dashboard ASP/DSP',
           url: '/wh-dashboard-ext',
           icon: 'icon-speedometer',
         },
         {
-          name: 'WH Management',
+          name: 'Warehouse Management',
           url: '/wh-management',
-          icon: 'icon-list',
+          icon: 'fas fa-pallet',
         },
         // {
         //   name: 'WH Stock',

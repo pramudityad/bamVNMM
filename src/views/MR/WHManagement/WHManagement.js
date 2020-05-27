@@ -12,16 +12,12 @@ import {
   Collapse,
 } from "reactstrap";
 import { Col, FormGroup, Label, Row, Table, Input } from "reactstrap";
-import { ExcelRenderer } from "react-excel-renderer";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
-import axios from "axios";
 import Pagination from "react-js-pagination";
 import debounce from "lodash.debounce";
-import Select from "react-select";
 import { saveAs } from "file-saver";
 import Excel from "exceljs";
 import { connect } from "react-redux";
-import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
 import ModalDelete from "../../components/ModalDelete";
@@ -131,9 +127,11 @@ class WHManagement extends React.Component {
     const modalDelete = this.state.danger;
     if (modalDelete === false) {
       const _id = e.currentTarget.value;
+      const name = e.currentTarget.name;
       this.setState({
         danger: !this.state.danger,
         selected_id: _id,
+        selected_wh_id: name,
       });
     } else {
       this.setState({
@@ -722,6 +720,7 @@ class WHManagement extends React.Component {
   }
 
   render() {
+    const {all_data} = this.state;
     return (
       <div className="animated fadeIn">
         <DefaultNotif
@@ -851,22 +850,22 @@ class WHManagement extends React.Component {
                 </Row>
                 <Row>
                   <Col>
-                    <div className="divtable">
-                      <Table responsive size="sm">
+                    <div >
+                      <Table striped borderless hover size="md">
                         <thead
-                          style={{ backgroundColor: "#73818f" }}
-                          className="fixed"
+                          // style={{ backgroundColor: "#73818f" }}
+                          className="fixed-whman"
                         >
                           <tr align="center">
                           <th><Button color="ghost-dark"
                                 onClick={() => this.requestSort('wh_name')}
                               >
-                                Warehouse Name
+                                <b>Warehouse Name</b>
                               </Button></th>
                               <th><Button color="ghost-dark"
                                 onClick={() => this.requestSort('wh_id')}
                               >
-                                Warehouse ID
+                                <b>Warehouse ID</b>
                               </Button></th>
                             <th>WH Manager</th>
                             <th>Address</th>
@@ -879,7 +878,7 @@ class WHManagement extends React.Component {
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.all_data
+                          {all_data
                             .map((e) => (
                               <React.Fragment key={e._id + "frag"}>
                                 <tr
@@ -920,7 +919,7 @@ class WHManagement extends React.Component {
                                       onClick={this.toggleEdit}
                                       title="Edit"
                                     >
-                                      <i className="icon-pencil icons"></i>
+                                      <i className="fas fa-edit"></i>
                                     </Button>
                                   </td>
                                   <td>
@@ -928,6 +927,7 @@ class WHManagement extends React.Component {
                                       size="sm"
                                       color="danger"
                                       value={e._id}
+                                      name={e.wh_id}
                                       onClick={this.toggleDelete}
                                       title="Delete"
                                     >
@@ -979,7 +979,7 @@ class WHManagement extends React.Component {
                   <Input
                     type="text"
                     name="0"
-                    placeholder=""
+                    placeholder="Warehouse Name"
                     value={this.state.DataForm[0]}
                     onChange={this.handleChangeForm}
                   />
@@ -989,7 +989,7 @@ class WHManagement extends React.Component {
                   <Input
                     type="text"
                     name="1"
-                    placeholder=""
+                    placeholder="Warehouse ID"
                     value={this.state.DataForm[1]}
                     onChange={this.handleChangeForm}
                   />
@@ -999,7 +999,7 @@ class WHManagement extends React.Component {
                   <Input
                     type="text"
                     name="2"
-                    placeholder=""
+                    placeholder="WH Manager"
                     value={this.state.DataForm[2]}
                     onChange={this.handleChangeForm}
                   />
@@ -1009,7 +1009,7 @@ class WHManagement extends React.Component {
                   <Input
                     type="text"
                     name="3"
-                    placeholder=""
+                    placeholder="Address"
                     value={this.state.DataForm[3]}
                     onChange={this.handleChangeForm}
                   />
@@ -1020,7 +1020,7 @@ class WHManagement extends React.Component {
                     type="number"
                     step="0.1"
                     name="6"
-                    placeholder=""
+                    placeholder="Latitude"
                     value={this.state.DataForm[6]}
                     onChange={this.handleChangeForm}
                   />
@@ -1031,7 +1031,7 @@ class WHManagement extends React.Component {
                     type="number"
                     step="0.1"
                     name="7"
-                    placeholder=""
+                    placeholder="Longitude"
                     value={this.state.DataForm[7]}
                     onChange={this.handleChangeForm}
                   />
@@ -1045,6 +1045,7 @@ class WHManagement extends React.Component {
                     value={this.state.DataForm[5]}
                     onChange={this.handleChangeForm}
                   >
+                    <option selected="true" disabled="disabled">Select Owner Type</option>
                     <option value="ASP">ASP</option>
                     <option value="DSP">DSP</option>
                     <option value="Internal">Internal</option>
@@ -1059,6 +1060,7 @@ class WHManagement extends React.Component {
                     value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
                   >
+                    <option selected="true" disabled="disabled">Select Owner</option>    
                     {this.state.asp_data.map((asp) => (
                       <option value={asp.Vendor_Code}>{asp.Name}</option>
                     ))}
@@ -1069,7 +1071,7 @@ class WHManagement extends React.Component {
             </Row>
           </ModalBody>
           <ModalFooter>
-            <Button color="success" onClick={this.saveNew}>
+            <Button color="success" onClick={this.saveNew} disabled={!this.state.DataForm}>
               Create
             </Button>
           </ModalFooter>
@@ -1218,7 +1220,7 @@ class WHManagement extends React.Component {
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
-          title="Delete WH"
+          title={"Delete WH "+ this.state.selected_wh_id}
         >
           <Button color="danger" onClick={this.DeleteData}>
             Delete

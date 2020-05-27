@@ -57,6 +57,22 @@
   top: 0;
 }
 
+.fixed-matlib th {
+  position: -webkit-sticky; /* for Safari */
+  position: sticky;
+  background: #f5f5f5;
+  padding : 10px;
+  top: 0;
+}
+
+.fixed-whman th {
+  position: -webkit-sticky; /* for Safari */
+  position: sticky;
+  background: #f5f5f5;
+  padding : 10px;
+  top: 0;
+}
+
 .fixbody {
   padding:10px;
   border-top: 2px solid #ebebeb;

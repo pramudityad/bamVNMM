@@ -12,16 +12,13 @@ import {
   Collapse,
 } from "reactstrap";
 import { Col, FormGroup, Label, Row, Table, Input } from "reactstrap";
-import { ExcelRenderer } from "react-excel-renderer";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 import axios from "axios";
 import Pagination from "react-js-pagination";
 import debounce from "lodash.debounce";
-import Select from "react-select";
 import { saveAs } from "file-saver";
 import Excel from "exceljs";
 import { connect } from "react-redux";
-import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
 import Loading from "../../components/Loading";
@@ -85,6 +82,7 @@ class MatLibrary extends React.Component {
       activeItemId: null,
       createModal: false,
       selected_id: "",
+      selected_name: "",
       sortType: 0,
       sortField: "",
     };
@@ -121,9 +119,11 @@ class MatLibrary extends React.Component {
     const modalDelete = this.state.danger;
     if (modalDelete === false) {
       const _id = e.currentTarget.value;
+      const name = e.currentTarget.name;
       this.setState({
         danger: !this.state.danger,
         selected_id: _id,
+        selected_name: name,
       });
     } else {
       this.setState({
@@ -771,7 +771,7 @@ class MatLibrary extends React.Component {
                       <Table responsive bordered>
                         <thead
                           style={{ backgroundColor: "#73818f" }}
-                          className="fixed"
+                          className="fixed-matlib"
                         >
                           <tr align="center">
                             <th>
@@ -779,7 +779,7 @@ class MatLibrary extends React.Component {
                                 color="ghost-dark"
                                 onClick={() => this.requestSort("origin")}
                               >
-                                Origin
+                                <b>Origin</b>
                               </Button>
                             </th>
                             <th>
@@ -787,7 +787,7 @@ class MatLibrary extends React.Component {
                                 color="ghost-dark"
                                 onClick={() => this.requestSort("material_id")}
                               >
-                                Material ID
+                                <b>Material ID</b>
                               </Button>
                             </th>
                             <th>
@@ -797,7 +797,7 @@ class MatLibrary extends React.Component {
                                   this.requestSort("material_name")
                                 }
                               >
-                                Material Name
+                                <b>Material Name</b>
                               </Button>
                             </th>
                             <th>Description</th>
@@ -840,7 +840,7 @@ class MatLibrary extends React.Component {
                                     title="Edit"
                                   >
                                     <i
-                                      className="fa fa-pencil"
+                                      className="fas fa-edit"
                                       aria-hidden="true"
                                     ></i>
                                   </Button>
@@ -850,6 +850,7 @@ class MatLibrary extends React.Component {
                                     size="sm"
                                     color="danger"
                                     value={e._id}
+                                    name={e.material_id}
                                     onClick={this.toggleDelete}
                                     title="Delete"
                                   >
@@ -1061,7 +1062,7 @@ class MatLibrary extends React.Component {
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
-          title="Delete Material Library"
+          title={"Delete Material "+ this.state.selected_name}
         >
           <Button color="danger" onClick={this.DeleteData}>
             Delete
