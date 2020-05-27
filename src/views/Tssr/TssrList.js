@@ -77,8 +77,9 @@ class TssrList extends Component {
 
   getTssrList(){
     const page = this.state.activePage;
+    const maxPage = this.state.perPage
     // this.getDataFromAPINODE('/tssrall?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
-    this.getDataFromAPINODE('/plantspec').then(res => {
+    this.getDataFromAPINODE('/plantspec?srt=_id:-1&lmt=' + maxPage + '&pg=' + page).then(res => {
     // this.getDataFromAPIBAM('/tssr_sorted?'+'max_results='+this.state.perPage+'&page='+page).then(res => {
       if(res.data !== undefined){
         const totalData = res.data.totalResults;
