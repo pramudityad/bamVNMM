@@ -184,7 +184,7 @@ class AssignmentList extends Component {
     ws.addRow(headerRow);
 
     for (let i = 0; i < allAssignmentList.length; i++) {
-      let rowAdded = [allAssignmentList[i].Assignment_No, allAssignmentList[i].Project, allAssignmentList[i].Assignment_No, allAssignmentList[i].SOW_Type, "", allAssignmentList[i].Vendor_Code_Number, allAssignmentList[i].Payment_Terms, ""];
+      let rowAdded = [allAssignmentList[i].Assignment_No, allAssignmentList[i].Project, allAssignmentList[i].SOW_Type, "tower_id", allAssignmentList[i].Vendor_Code_Number, allAssignmentList[i].Vendor_Name, allAssignmentList[i].Payment_Terms, allAssignmentList[i].Site_ID];
       let rbs_ssow = allAssignmentList[i].SSOW_List.filter(item => item.sow_type === "RBS");
       for (let j = 0; j < rbs_ssow.length; j++) {
         rowAdded.push(rbs_ssow[j].ssow_id, rbs_ssow[j].ssow_activity_number, rbs_ssow[j].ssow_unit, rbs_ssow[j].ssow_qty);
