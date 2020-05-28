@@ -510,10 +510,6 @@ class LoadingProcess extends Component {
                             {this.state.asp_list.map((list, i) =>
                               <option value={list.Vendor_Code}>{list.Name}</option>
                             )}
-                            <option value={"PT BMS Delivery"}>PT BMS Delivery</option>
-                            <option value={"PT MITT Delivery"}>PT MITT Delivery</option>
-                            <option value={"PT IXT Delivery"}>PT IXT Delivery</option>
-                            <option value={"PT ARA Delivery"}>PT ARA Delivery</option>
                           </Input>
                           {this.state.validation_form.truck_number === false && (
                             <i class="fa fa-exclamation-triangle" aria-hidden="true" style={{ color: "rgba(255,61,0 ,1)", paddingLeft: '10px' }}></i>

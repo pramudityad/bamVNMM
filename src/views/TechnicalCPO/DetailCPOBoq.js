@@ -129,6 +129,7 @@ class DetailCPOBoq extends Component {
     this.updateCPOBOQ = this.updateCPOBOQ.bind(this);
     this.handleChangeSubmissionNumber = this.handleChangeSubmissionNumber.bind(this);
     this.compareWithSubmission = this.compareWithSubmission.bind(this);
+    this.assignSubmissionToCPO = this.assignSubmissionToCPO.bind(this);
   }
 
   numberToAlphabet(number) {
@@ -2008,6 +2009,16 @@ class DetailCPOBoq extends Component {
     this.toggleLoading();
   }
 
+  async assignSubmissionToCPO(){
+    this.toggleLoading();
+    let cpoNumber =  this.state.data_cpo_boq[0].cpo_number;
+    let submission_id = this.state.submission_number_selected;
+    let postData = await this.patchDatatoAPINODE('/cpoBoq/assignCpoToCommBoqSubmission/'+cpoNumber+'/commBoq/'+submission_id);
+    if(postData.data !== undefined){
+
+    }
+    this.toggleLoading();
+  }
   exportFormatCPO = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -2151,7 +2162,7 @@ class DetailCPOBoq extends Component {
                           <div>
                             <Button block color="warning" size="sm" onClick={this.toggleCollapseCompare} id="toggleCollapse1">
                               Compare
-                              </Button>
+                            </Button>
                           </div>
                         </div>
                         </React.Fragment>
@@ -2192,7 +2203,12 @@ class DetailCPOBoq extends Component {
                             <Button size="sm" onClick={this.compareWithSubmission} style={{marginLeft : '15px'}}>
                               Compare
                             </Button>
-                           </td>
+                          </td>
+                          <td style={{marginLeft : "20px"}}>
+                            <Button size="sm" color="success" onClick={this.assignSubmissionToCPO} style={{marginLeft : '15px'}}>
+                              Assign
+                            </Button>
+                          </td>
                         </tr>
                       </tbody>
                     </table>
