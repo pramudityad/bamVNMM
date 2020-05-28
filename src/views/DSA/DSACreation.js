@@ -5,14 +5,17 @@ import axios from 'axios';
 import { connect } from 'react-redux';
 import AsyncSelect from 'react-select/async';
 import { Redirect } from 'react-router-dom';
+import debounce from "debounce-promise";
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
-const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
-const username_tsel = 'adminbamidsuper';
-const password_tsel = 'F760qbAg2sml';
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
+
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 class DSACreation extends Component {
   constructor(props) {
@@ -23,6 +26,7 @@ class DSACreation extends Component {
       userId : this.props.dataLogin._id,
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
+      tokenUser : this.props.dataLogin.token,
       list_mr_selection: [],
       list_mr_selected : null,
       create_dsa_form : new Array(200).fill(null),
@@ -60,13 +64,13 @@ class DSACreation extends Component {
     }
   }
 
-  async getDataFromAPI_tsel(url) {
+  async getDataFromAPIXL(url) {
     try {
-      let respond = await axios.get(API_URL_tsel+url, {
+      let respond = await axios.get(API_URL_XL+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
-          username: username_tsel,
-          password: password_tsel
+          username: usernameXL,
+          password: passwordXL
         }
       });
       if(respond.status >= 200 && respond.status < 300) {
@@ -80,16 +84,35 @@ class DSACreation extends Component {
     }
   }
 
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios.get(API_URL_NODE+url, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data node", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      console.log("respond data node", err);
+      return respond;
+    }
+  }
+
   async loadOptionsMR(inputValue) {
     if(!inputValue) {
       this.setState({list_mr_selection : []});
       return [];
     } else {
       let mr_list = [];
-      const getMR = await this.getDataFromAPI('/mr_sorted?where={"mr_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      const getMR = await this.getDataFromAPINODE('/matreq?srt=_id:-1&q={"mr_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
       if(getMR !== undefined && getMR.data !== undefined) {
-        this.setState({list_mr_selection : getMR.data._items}, () =>
-        getMR.data._items.map(mr =>
+        this.setState({list_mr_selection : getMR.data.data}, () =>
+        getMR.data.data.map(mr =>
           mr_list.push({'label' : mr.mr_id !== undefined ? mr.mr_id : null, 'value' :mr._id})))
       }
       return mr_list;
@@ -98,14 +121,16 @@ class DSACreation extends Component {
 
   handleChangeMR = async (newValue) => {
     let dataMR = this.state.list_mr_selection.find(e => e._id === newValue.value);
+    console.log("dataMR", dataMR);
     this.setState({list_mr_selected : dataMR});
     if(dataMR.mr_type === "Return" || dataMR.mr_type === "Relocation") {
       this.setState({destination : dataMR.destination.value});
     } else {
       this.setState({destination : dataMR.site_info[0].site_id});
     }
-    const getNN = await this.getDataFromAPI_tsel('/custdel_sorted_non_page?where={"WP_ID":"'+dataMR.cd_id+'"}');
-    this.setState({network_number : getNN.data._items[0].CD_Info_Network_Number});
+    // const getNN = await this.getDataFromAPIXL('/custdel_sorted_non_page?where={"WP_ID":"'+dataMR.cd_id+'"}');
+    // this.setState({network_number : getNN.data._items[0].CD_Info_Network_Number});
+    this.setState({network_number : "test1234971"});
     let dataForm = this.state.create_dsa_form;
     dataForm[0] = dataMR.mr_id+"D";
     dataForm[1] = dataMR.project_name;
@@ -117,7 +142,7 @@ class DSACreation extends Component {
     // dataForm[7] = balanced value;
     // dataForm[8] = % utilization;
     // dataForm[9] = status;
-    dataForm[14] = dataMR.origin_warehouse.address;
+    dataForm[14] = dataMR.origin.value;
     this.setState({create_dsa_form : dataForm}, () => {
       console.log("DSA Form", this.state.create_dsa_form);
     });
@@ -129,7 +154,7 @@ class DSACreation extends Component {
       return [];
     } else {
       let dsa_list = [];
-      const getDSA = await this.getDataFromAPI_tsel('/dsa_price_sorted?where={"dsa_price_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      const getDSA = await this.getDataFromAPIXL('/dsa_price_sorted?where={"dsa_price_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
       if(getDSA !== undefined && getDSA.data !== undefined) {
         this.setState({list_dsa_selection : getDSA.data._items}, () =>
         getDSA.data._items.map(dsa =>
@@ -214,7 +239,7 @@ class DSACreation extends Component {
             <Label>Service Master</Label>
             <AsyncSelect
               cacheOptions
-              loadOptions={this.loadOptionsDSA}
+              loadOptions={debounce(this.loadOptionsDSA, 500)}
               defaultOptions
               onChange={this.handleChangeDSA}
               name="16"
@@ -290,7 +315,7 @@ class DSACreation extends Component {
             <FormGroup>
               <AsyncSelect
                 cacheOptions
-                loadOptions={this.loadOptionsDSA}
+                loadOptions={debounce(this.loadOptionsDSA, 500)}
                 defaultOptions
                 onChange={this.handleChangeDSA}
                 name={i+22}
@@ -335,7 +360,7 @@ class DSACreation extends Component {
           <FormGroup>
             <AsyncSelect
               cacheOptions
-              loadOptions={this.loadOptionsDSA}
+              loadOptions={debounce(this.loadOptionsDSA, 500)}
               defaultOptions
               onChange={this.handleChangeDSA}
               name="52"
@@ -424,7 +449,7 @@ class DSACreation extends Component {
               {label2}
               <AsyncSelect
                 cacheOptions
-                loadOptions={this.loadOptionsDSA}
+                loadOptions={debounce(this.loadOptionsDSA, 500)}
                 defaultOptions
                 onChange={this.handleChangeDSA}
                 name={i+1}
@@ -687,7 +712,7 @@ class DSACreation extends Component {
                           <Label>MR ID</Label>
                           <AsyncSelect
                             cacheOptions
-                            loadOptions={this.loadOptionsMR}
+                            loadOptions={debounce(this.loadOptionsMR, 500)}
                             defaultOptions
                             onChange={this.handleChangeMR}
                           />
@@ -756,7 +781,7 @@ class DSACreation extends Component {
                         <h6>Destination</h6>
                         <FormGroup style={{paddingLeft: "16px"}}>
                           <Label>From</Label>
-                          <Input type="text" name="10" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.origin_warehouse.value : ""} onChange={this.handleChangeForm} readOnly />
+                          <Input type="text" name="10" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.origin.title + " " + this.state.list_mr_selected.origin.value : ""} onChange={this.handleChangeForm} readOnly />
                         </FormGroup>
                         <FormGroup style={{paddingLeft: "16px"}}>
                           <Label>To {this.state.list_mr_selected !== null && (this.state.list_mr_selected.mr_type === "New" || this.state.list_mr_selected.mr_type === null) ? "(Site NE)" : "(Warehouse)"}</Label>
@@ -778,14 +803,6 @@ class DSACreation extends Component {
                         <FormGroup style={{paddingLeft: "16px"}}>
                           <Label>Weight (Kg)</Label>
                           <Input type="number" name="13" onChange={this.handleChangeForm} />
-                        </FormGroup>
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col md="6">
-                        <FormGroup style={{paddingLeft: "16px"}}>
-                          <Label>Address</Label>
-                          <Input type="textarea" name="14" rows="3" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.origin_warehouse.address : null} onChange={this.handleChangeForm} />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -829,7 +846,7 @@ class DSACreation extends Component {
                           <Label>Service Master</Label>
                           <AsyncSelect
                             cacheOptions
-                            loadOptions={this.loadOptionsDSA}
+                            loadOptions={debounce(this.loadOptionsDSA, 500)}
                             defaultOptions
                             onChange={this.handleChangeDSA}
                             name={183}
@@ -877,7 +894,7 @@ class DSACreation extends Component {
                         <FormGroup>
                         <AsyncSelect
                           cacheOptions
-                          loadOptions={this.loadOptionsDSA}
+                          loadOptions={debounce(this.loadOptionsDSA, 500)}
                           defaultOptions
                           onChange={this.handleChangeDSA}
                           name={190}

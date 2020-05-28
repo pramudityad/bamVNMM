@@ -127,6 +127,8 @@ const DRMDetail = React.lazy(() => import('./views/DRM/DRMDetail'));
 const GR  = React.lazy(() => import('./views/Warehouse/GR'));
 const GI  = React.lazy(() => import('./views/Warehouse/GI'));
 
+const LoaderPage = React.lazy(() => import('./views/DefaultView/LoaderPage'));
+
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -269,6 +271,7 @@ const routes = [
   { path: '/joint-check-per-wh/:whid', exact: true, name: 'Joint Check', component: JointCheck },
   { path: '/loading-process-per-wh/:whid', exact: true, name: 'Loading Process', component: LoadingProcess },
   { path: '/material-dispatch-per-wh/:whid', exact: true, name: 'Material Dispatch', component: MaterialDispatch },
+  { path: '/loader-page', exact: true, name: 'Material Dispatch', component: LoaderPage },
 
 ];
 

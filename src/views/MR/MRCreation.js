@@ -43,6 +43,7 @@ class MRCreation extends Component {
       list_tower_selection : [],
       list_project_selection : [],
       list_warehouse : [],
+      form_checking : {},
         create_mr_form : new Array(9).fill(null),
         create_mr_name_form : new Array(9).fill(null),
         list_cd_id : [],
