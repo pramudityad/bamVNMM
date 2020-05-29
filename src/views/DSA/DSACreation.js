@@ -103,6 +103,25 @@ class DSACreation extends Component {
     }
   }
 
+  async patchDatatoAPINODE(url, data) {
+    try {
+      let respond = await axios.patch(API_URL_NODE + url, data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.state.tokenUser
+        },
+      })
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond Patch data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond Patch data", err.response);
+      return respond;
+    }
+  }
+
   async loadOptionsMR(inputValue) {
     if (!inputValue) {
       this.setState({ list_mr_selection: [] });
@@ -675,7 +694,7 @@ class DSACreation extends Component {
       ]
     };
     console.log('to be posted', JSON.stringify(updateDSA));
-    let res = await this.patchDataToAPI('/mr_op/' + _id, updateDSA, _etag);
+    let res = await this.patchDatatoAPINODE('/matreq/dsaCreation/' + _id, { "account_id": "2", "data": updateDSA });
     if (res !== undefined) {
       if (res.data !== undefined) {
         successUpdate.push(res.data);
@@ -685,6 +704,9 @@ class DSACreation extends Component {
       alert('New DSA has been created!');
       this.setState({ action_status: "success", action_message: 'New DSA has been created!' });
       setTimeout(function () { window.location.reload(); }, 2000);
+    } else {
+      alert('Failed to create DSA, please try again!');
+      this.setState({ action_status: "error", action_message: 'Failed to create DSA, please try again!' });
     }
   }
 
