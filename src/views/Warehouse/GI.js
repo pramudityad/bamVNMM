@@ -235,7 +235,7 @@ class GI extends Component {
       );
     this.props.match.params.whid !== undefined &&
       filter_array.push(
-        '"origin.value" : "' + this.props.match.params.whid + '"'
+        '"dsp_handover.location_id" : "' + this.props.match.params.whid + '"'
       );
     filter_array.push('"asp_material_gi" : {"$ne" : null}');
     let whereAnd = "{" + filter_array.join(",") + "}";

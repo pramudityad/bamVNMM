@@ -103,6 +103,30 @@ class DSACreation extends Component {
     }
   }
 
+  async patchDatatoAPINODE(url, data) {
+    try {
+      let respond = await axios.patch(API_URL_NODE + url, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + this.state.tokenUser,
+        },
+      });
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      this.setState({
+        action_status: "failed",
+        action_message:
+          "Sorry, There is something error, please refresh page and try again",
+      });
+      console.log("respond Post Data", err);
+      return respond;
+    }
+  }
+
   async loadOptionsMR(inputValue) {
     if (!inputValue) {
       this.setState({ list_mr_selection: [] });
@@ -675,7 +699,7 @@ class DSACreation extends Component {
       ]
     };
     console.log('to be posted', JSON.stringify(updateDSA));
-    let res = await this.patchDataToAPI('/mr_op/' + _id, updateDSA, _etag);
+    let res = await this.patchDatatoAPINODE('/matreq/dsaCreation/' + _id, {"data" : updateDSA} );
     if (res !== undefined) {
       if (res.data !== undefined) {
         successUpdate.push(res.data);
