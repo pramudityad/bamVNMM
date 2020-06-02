@@ -295,9 +295,9 @@ class CPODatabase extends React.Component {
     if(modalEdit === false){
       const value = e.currentTarget.value;
       const aEdit = this.state.po_op_data.find((e) => e._id === value);
-      console.log('aEdit ',aEdit);
+      // console.log('aEdit ',aEdit);
       const dataForm = this.state.DataForm;
-      console.log('dataForm ',dataForm);
+      // console.log('dataForm ',dataForm);
       dataForm[0] = aEdit.po_number;
       dataForm[1] = convertDateFormat(aEdit.date);
       dataForm[2] = aEdit.currency;
@@ -306,7 +306,7 @@ class CPODatabase extends React.Component {
       dataForm[5] = aEdit.contract;
       dataForm[6] = aEdit.contact;
       this.setState({ DataForm: dataForm, selected_id: value });
-      console.log('state dataForm ',this.state.DataForm);
+      // console.log('state dataForm ',this.state.DataForm);
     } else {
       this.setState({ DataForm: new Array(7).fill(null) });
     }
