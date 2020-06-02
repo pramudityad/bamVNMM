@@ -686,7 +686,7 @@ class TssrBOM extends Component {
       const getSiteTSSR = await this.getDataFromAPINODE('/plantspec/getTechnicalByProjectId/'+this.state.project_selected+'?siteId='+inputValue);
       if(getSiteTSSR !== undefined && getSiteTSSR.data !== undefined) {
         getSiteTSSR.data.data.map(site =>
-          site_tssr_list.push({'value' : site._id, 'label' : site.site_id +" ("+site.no_tech_boq+") ("+site.program+")", 'id_tech_boq_doc' : site.id_tech_boq_doc })
+          site_tssr_list.push({'value' : site._id, 'label' : "PS "+site.no_tech_boq+"-"+site.site_id +" ("+site.program+")", 'id_tech_boq_doc' : site.id_tech_boq_doc })
         );
       }
       console.log("site_tssr_list", site_tssr_list);
@@ -738,7 +738,7 @@ class TssrBOM extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}} >Plant Spec </span>
+            <span style={{lineHeight :'2', fontSize : '17px'}} >Plant Spec Group</span>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <table style={{marginBottom : '20px'}}>
@@ -806,7 +806,7 @@ class TssrBOM extends Component {
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>
-                  <td colSpan="4" style={{textAlign : 'center'}}>PLANT SPEC PREVIEW</td>
+                  <td colSpan="4" style={{textAlign : 'center'}}>PLANT SPEC GROUP PREVIEW</td>
                 </tr>
               </tbody>
             </table>

@@ -236,7 +236,7 @@ class GR extends Component {
       );
     this.props.match.params.whid !== undefined &&
       filter_array.push(
-        '"origin.value" : "' + this.props.match.params.whid + '"'
+        '"dsp_handover.location_id" : "' + this.props.match.params.whid + '"'
       );
     filter_array.push(
       '"dsp_handover.location":"warehouse", "asp_material_gi" : null'
@@ -325,7 +325,7 @@ class GR extends Component {
       );
     this.props.match.params.whid !== undefined &&
       filter_array.push(
-        '"origin.value" : "' + this.props.match.params.whid + '"'
+        '"dsp_handover.location_id" : "' + this.props.match.params.whid + '"'
       );
     filter_array.push(
       '"dsp_handover.location":"warehouse", "asp_material_gi" : null'
@@ -753,7 +753,6 @@ class GR extends Component {
                       <th>DSP</th>
                       <th>ASP</th>
                       <th>ETA</th>
-                      <th>Created By</th>
                       <th>Updated On</th>
                       <th>Created On</th>
                     </tr>

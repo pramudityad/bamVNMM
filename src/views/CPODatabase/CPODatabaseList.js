@@ -333,12 +333,19 @@ class CPODatabase extends React.Component {
     const cpoData = await this.getCPOFormat(cpobulkXLS);
     const res = await this.postDatatoAPINODE('/cpodb/createCpoDb', { 'poData': cpobulkXLS });
     if (res.data !== undefined) {
-      this.setState({ action_status: 'success' });
+      this.setState({ action_status: 'success', action_message : null });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: 'failed' }, () => {
-        this.toggleLoading();
-      });
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
     }
   }
 

@@ -914,6 +914,7 @@ class PSUpload extends Component {
                 <Table hover bordered striped responsive size="sm">
                   <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
                     <tr>
+                      <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Tech No. (Program)</th>
                       <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
                       <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
                       <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>Program</th>
@@ -939,6 +940,7 @@ class PSUpload extends Component {
                       {this.state.data_tssr.packages.map( pp =>
                         <Fragment>
                           <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                            <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site +" ("+ pp.program +")"}</td>
                             <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                             <td>{pp.product_name}</td>
                             <td>{pp.program}</td>
@@ -950,6 +952,7 @@ class PSUpload extends Component {
                           </tr>
                           {pp.materials.map(material =>
                             <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                              <td style={{textAlign : 'right'}}></td>
                               <td style={{textAlign : 'right'}}>{material.material_id}</td>
                               <td style={{textAlign : 'left'}}>{material.material_name}</td>
                               <td></td>

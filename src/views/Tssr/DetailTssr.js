@@ -1219,7 +1219,7 @@ class DetailTssr extends Component {
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
 
-    let headerRow = ["bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "unit", "qty", "stock_warehouse", "inbound_warehouse", "availability"];
+    let headerRow = ["bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "stock_warehouse", "inbound_warehouse", "availability", "source_material"];
     ws.addRow(headerRow);
     let list_material_id = [];
     for(let i = 0; i < dataItemTSSR.length; i++){
@@ -1301,13 +1301,15 @@ class DetailTssr extends Component {
           <Col xl="12">
           <Card>
             <CardHeader>
-              <span style={{lineHeight :'2', fontSize : '15px'}} >Detail Plant Spec</span>
+              <span style={{lineHeight :'2', fontSize : '15px'}} >Detail Plant Spec Group</span>
               {this.state.tssrData !== null && this.state.tssrData.submission_status !== "SUBMITTED" ? (
                 <Button style={{marginRight : '8px', float : 'right'}} color="success" onClick={this.submitTSSR} size="sm">Submit</Button>
               ) : (
                 <Fragment></Fragment>
               )}
-              <Button style={{marginRight : '8px', float : 'right'}} color="primary" onClick={this.toggleUpload} size="sm">Edit</Button>
+              {this.state.tssrData !== null && this.state.tssrData.locked === false ? (
+                <Button style={{marginRight : '8px', float : 'right'}} color="primary" onClick={this.toggleUpload} size="sm">Edit</Button>
+              ) : (<Fragment></Fragment>)}
               <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
                 <DropdownToggle caret color="secondary">
                   <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
@@ -1375,12 +1377,12 @@ class DetailTssr extends Component {
               <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
                 <tbody>
                   <tr>
-                    <td colSpan="4" style={{textAlign : 'center', color : 'rgba(59,134,134,1)', fontSize : '21px'}}>Plant Spec DETAIL</td>
+                    <td colSpan="4" style={{textAlign : 'center', color : 'rgba(59,134,134,1)', fontSize : '21px'}}>Plant Spec Group DETAIL</td>
                   </tr>
                   {this.state.tssrData !== null && (
                     <Fragment>
                     <tr>
-                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Plant Spec ID : {this.state.tssrData.no_plantspec}</td>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Plant Spec  Group ID : {this.state.tssrData.no_plantspec}</td>
                     </tr>
                     <tr>
                       <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Project Name : {this.state.tssrData.project_name}</td>
@@ -1484,6 +1486,7 @@ class DetailTssr extends Component {
                   <Table hover bordered striped responsive size="sm">
                     <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
                       <tr>
+                        <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Tech No. (Program) / Source Material</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
                         <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Program</th>
@@ -1502,6 +1505,7 @@ class DetailTssr extends Component {
                         this.state.tssrData.packages.map(pp =>
                           <Fragment>
                             <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                              <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site +" ("+pp.program+")"}</td>
                               <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                               <td>{pp.product_name}</td>
                               <td>{pp.program}</td>
@@ -1513,6 +1517,7 @@ class DetailTssr extends Component {
                             </tr>
                             {pp.materials.map(material =>
                               <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                                <td>{material.source_material}</td>
                                 <td style={{textAlign : 'right'}}>{material.material_id}</td>
                                 <td style={{textAlign : 'left'}}>{material.material_name}</td>
                                 <td style={{textAlign : 'left'}}></td>

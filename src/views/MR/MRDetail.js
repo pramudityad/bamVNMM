@@ -102,6 +102,8 @@ class MRDetail extends Component {
       id_mr_selected: null,
       selected_dsp: "",
       asp_data: [],
+      modal_revision: false,
+      revision_note: "",
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
@@ -118,6 +120,8 @@ class MRDetail extends Component {
     this.downloadMaterialMRReport = this.downloadMaterialMRReport.bind(this);
     this.needReviseMR = this.needReviseMR.bind(this);
     this.toggleModalapprove = this.toggleModalapprove.bind(this);
+    this.toggleModalRevision = this.toggleModalRevision.bind(this);
+    this.handleRevisionNote = this.handleRevisionNote.bind(this);
   }
 
   toggleModalapprove(e) {
@@ -126,6 +130,17 @@ class MRDetail extends Component {
     this.setState((prevState) => ({
       modal_approve_ldm: !prevState.modal_approve_ldm,
     }));
+  }
+
+  toggleModalRevision(e) {
+    this.setState((prevState) => ({
+      modal_revision: !prevState.modal_revision
+    }));
+  }
+
+  handleRevisionNote(e) {
+    let value = e.target.value;
+    this.setState({ revision_note: value })
   }
 
   async getDatafromAPIEXEL(url) {
@@ -937,14 +952,14 @@ class MRDetail extends Component {
   async needReviseMR() {
     const dataMR = this.state.data_mr;
     let patchDataMR = await this.patchDatatoAPINODE(
-      "/matreq/needReviseMRFromWH/" + dataMR._id
+      "/matreq/needReviseMRFromWH/" + dataMR._id, {"note_value" : this.state.revision_note}
     );
     if (
       patchDataMR.data !== undefined &&
       patchDataMR.status >= 200 &&
       patchDataMR.status <= 300
     ) {
-      this.setState({ action_status: "success" });
+      this.setState({ action_status: "success", modal_revision : false });
     } else {
       if (
         patchDataMR.response !== undefined &&
@@ -960,6 +975,7 @@ class MRDetail extends Component {
           this.setState({
             action_status: "failed",
             action_message: patchDataMR.response.data.error,
+            modal_revision : false
           });
         }
       } else {
@@ -1180,7 +1196,7 @@ class MRDetail extends Component {
                         <div className="mr-detail__body--flex">
                           <div>
                             <div className="mr-detail__body--header-detail">
-                              <span>DSP Company</span>
+                              <span>Delivery Company</span>
                             </div>
                             <div>{this.state.data_mr.dsp_company}</div>
                           </div>
@@ -1194,6 +1210,14 @@ class MRDetail extends Component {
                                   " " +
                                   this.state.data_mr.origin.value
                                 : ""}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="mr-detail__body--header-detail">
+                              <span>Shipment ID</span>
+                            </div>
+                            <div>
+                              {this.state.data_mr.no_shipment}
                             </div>
                           </div>
                         </div>
@@ -1505,6 +1529,13 @@ class MRDetail extends Component {
                             ) : (
                               <Fragment></Fragment>
                             )}
+                            <th
+                              rowSpan="2"
+                              className="fixedhead"
+                              style={{ width: "75px", verticalAlign: "middle" }}
+                            >
+                              CPO Number
+                            </th>
                           </tr>
                           {this.state.data_mr !== null &&
                           this.state.data_mr.mr_type !== "Relocation" &&
@@ -1572,6 +1603,7 @@ class MRDetail extends Component {
                                     <td></td>
                                     <td></td>
                                     <td></td>
+                                    <td>{pp.cpo_number}</td>
                                   </tr>
                                   {pp.materials.map((material) => (
                                     <tr
@@ -1644,6 +1676,7 @@ class MRDetail extends Component {
                                       <td align="center">
                                         {material.qty < qty_wh ? "OK" : "NOK"}
                                       </td>
+                                      <td>{material.cpo_number}</td>
                                     </tr>
                                   ))}
                                 </Fragment>
@@ -1653,8 +1686,7 @@ class MRDetail extends Component {
                                 <td colSpan="5">Loading...</td>
                               </tr>
                             ) : (
-                              this.state.data_mr.current_mr_status ===
-                                "NOT ASSIGNED" && (
+                              this.state.data_mr.current_mr_status === "NOT ASSIGNED" && (
                                 <tr>
                                   <td colSpan="5">PS not Assigned</td>
                                 </tr>
@@ -1676,7 +1708,7 @@ class MRDetail extends Component {
                                     <td>{pp.product_name}</td>
                                     <td>{pp.program}</td>
                                     <td>{pp.uom}</td>
-                                    <td align="center">{pp.qty}</td>
+                                    <td align="center" colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{pp.qty}</td>
                                     {this.state.mr_site_FE !== null ? (
                                       <td align="center">
                                         {this.getQtyMRPPFE(pp.pp_id)}
@@ -1684,6 +1716,7 @@ class MRDetail extends Component {
                                     ) : (
                                       <Fragment></Fragment>
                                     )}
+                                    <td>{pp.cpo_number}</td>
                                   </tr>
                                   {pp.materials.map((material) => (
                                     <tr
@@ -1701,7 +1734,7 @@ class MRDetail extends Component {
                                       </td>
                                       <td></td>
                                       <td>{material.uom}</td>
-                                      <td align="center">{material.qty}</td>
+                                      <td align="center" colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{material.qty}</td>
                                       {this.state.mr_site_FE !== null ? (
                                         <td align="center">
                                           {this.getQtyMRMDFE(
@@ -1712,6 +1745,7 @@ class MRDetail extends Component {
                                       ) : (
                                         <Fragment></Fragment>
                                       )}
+                                      <td>{material.cpo_number}</td>
                                     </tr>
                                   ))}
                                 </Fragment>
@@ -1846,7 +1880,7 @@ class MRDetail extends Component {
                       color="warning"
                       style={{ float: "left" }}
                       size="sm"
-                      onClick={this.needReviseMR}
+                      onClick={this.toggleModalRevision}
                     >
                       Need Revise
                     </Button>
@@ -1882,6 +1916,17 @@ class MRDetail extends Component {
           </ModalFooter>
         </Modal>
         {/* end Modal Loading */}
+
+        <Modal isOpen={this.state.modal_revision} toggle={this.toggleModalRevision} className={"modal-sm"}>
+          <ModalHeader>Note for Revision</ModalHeader>
+          <ModalBody>
+            <Input type="textarea" rows="9" placeholder="Note..." onChange={this.handleRevisionNote} value={this.state.revision_note} />
+          </ModalBody>
+          <ModalFooter>
+            <Button color="warning" style={{ float: "right", marginRight: "8px" }} onClick={this.needReviseMR}><i className="fa fa-edit" style={{ marginRight: "8px" }}></i> Need Revision</Button>
+            <Button color="secondary" onClick={this.toggleModalRevision}>Cancel</Button>
+          </ModalFooter>
+        </Modal>
 
         {/* modal form approve */}
         <ModalForm
