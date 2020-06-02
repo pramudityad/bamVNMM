@@ -218,9 +218,9 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Activity Code</Label>
                         <Col sm={10}>
                           <Input
-                            type="select"
+                            type="text"
                             placeholder="Activity Code"
-                            name={"approvalBy"}
+                            name={""}
                             value={Dataform.approvalBy}
                             onChange={this.handleInput}
                           />
@@ -258,9 +258,9 @@ class CreatePRPO extends Component {
                             <option value="" disabled selected hidden>
                               Select Currency
                             </option>
-                            <option value="">New Assignment</option>
-                            <option value="">Revise Assignment</option>
-                            <option value="">Cancel Assignment</option>
+                            <option value="">IDR</option>
+                            <option value="">USD</option>
+                            <option value="">EUR</option>
                           </Input>
                         </Col>
                       </FormGroup>
@@ -425,90 +425,84 @@ class CreatePRPO extends Component {
                     <h5>PR Status</h5>
                     <Form>
                       <FormGroup row>
-                        <Label sm={2}>Site ID</Label>
+                        <Label sm={2}>PR Number</Label>
                         <Col sm={10}>
                           <Input
                             type="text"
-                            placeholder="Site ID"
-                            name={"siteID"}
+                            placeholder="PR Number"
+                            name={""}
                             value={Dataform.siteID}
                             onChange={this.handleInput}
                           />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Site Name</Label>
+                        <Label sm={2}>PR Date</Label>
                         <Col sm={10}>
                           <Input
-                            type="text"
-                            placeholder="Site Name"
-                            name={"siteName"}
+                            type="date"
+                            placeholder="PR Date"
+                            name={""}
                             value={Dataform.siteName}
                             onChange={this.handleInput}
                           />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Quotation Number</Label>
+                        <Label sm={2}>PR Inserted By</Label>
                         <Col sm={10}>
                           <Input
                             type="text"
-                            placeholder="Quotation Number"
-                            name={"siteName"}
+                            placeholder="PR Inserted By"
+                            name={""}
                             value={Dataform.siteName}
                             onChange={this.handleInput}
                           />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Signum PM</Label>
+                        <Label sm={2}>PO Number</Label>
                         <Col sm={10}>
                           <Input
                             type="text"
-                            placeholder="Signum PM"
-                            name={"siteName"}
+                            placeholder="PO Number"
+                            name={""}
                             value={Dataform.siteName}
                             onChange={this.handleInput}
                           />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Approval By</Label>
+                        <Label sm={2}>PO Date</Label>
                         <Col sm={10}>
                           <Input
-                            type="select"
-                            placeholder="Select Approval by"
-                            name={"approvalBy"}
+                            type="date"
+                            placeholder="PO Date"
+                            name={""}
                             value={Dataform.approvalBy}
                             onChange={this.handleInput}
-                          >
-                            <option value="" disabled selected hidden>
-                              Select Approval by
-                            </option>
-                            <option value="user1">user1</option>
-                            <option value="user2">user2</option>
-                          </Input>
+                          />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Project Name</Label>
+                        <Label sm={2}>PO Inserted By</Label>
                         <Col sm={10}>
                           <Input
                             type="text"
-                            placeholder="Project Name"
-                            name={"projectName"}
+                            placeholder="PO Inserted By"
+                            name={""}
                             value={Dataform.projectName}
                             onChange={this.handleInput}
                           />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Area</Label>
+                        <Label sm={2}>PO Item</Label>
                         <Col sm={10}>
                           <Input
                             type="text"
-                            placeholder="Area"
-                            name={"qty1"}
+                            placeholder="PO Item"
+                            name={""}
                             value={Dataform.qty1}
                             onChange={this.handleInput}
                           />
@@ -521,65 +515,59 @@ class CreatePRPO extends Component {
                     <h5>GR Information</h5>
                     <Form>
                       <FormGroup row>
-                        <Label sm={2}>Purchase Group</Label>
+                        <Label sm={2}>BAST No DP</Label>
                         <Col sm={10}>
                           <Input
                             type="text"
-                            placeholder="Site ID"
-                            name={"siteID"}
+                            placeholder="BAST No DP"
+                            name={""}
                             value={Dataform.siteID}
                             onChange={this.handleInput}
                           />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>ASP Name</Label>
+                        <Label sm={2}>Req GR DP</Label>
                         <Col sm={10}>
                           <Input
-                            type="text"
-                            placeholder="ASP Name"
-                            name={"siteName"}
+                            type="checkbox"
+                            placeholder="Req GR DP"
+                            name={""}
                             value={Dataform.siteName}
                             onChange={this.handleInput}
                           />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Term of Payment</Label>
+                        <Label sm={2}>Req GR by DP</Label>
                         <Col sm={10}>
                           <Input
-                            type="select"
+                            type="text"
                             placeholder=""
-                            name={"siteName"}
-                            value={Dataform.siteName}
-                            onChange={this.handleInput}
-                          >
-                            <option value="" disabled selected hidden>
-                              Select TOP
-                            </option>
-                            <option value=""></option>
-                            <option value=""></option>
-                          </Input>
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Network Number</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="Network Number"
-                            name={"siteName"}
+                            name={""}
                             value={Dataform.siteName}
                             onChange={this.handleInput}
                           />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Activity Code</Label>
+                        <Label sm={2}>Req GR Date DP</Label>
                         <Col sm={10}>
                           <Input
-                            type="select"
-                            placeholder="Activity Code"
+                            type="date"
+                            placeholder="Req GR Date DP"
+                            name={""}
+                            value={Dataform.siteName}
+                            onChange={this.handleInput}
+                          />
+                        </Col>
+                      </FormGroup>
+                      <FormGroup row>
+                        <Label sm={2}>Req Revision DP</Label>
+                        <Col sm={10}>
+                          <Input
+                            type="checkbox"
+                            placeholder="Req Revision DP"
                             name={"approvalBy"}
                             value={Dataform.approvalBy}
                             onChange={this.handleInput}
@@ -587,41 +575,27 @@ class CreatePRPO extends Component {
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Action Point</Label>
+                        <Label sm={2}>Revision Done DP</Label>
                         <Col sm={10}>
                           <Input
-                            type="select"
-                            placeholder="Project Name"
-                            name={"projectName"}
+                            type="checkbox"
+                            placeholder="Revision Done DP"
+                            name={""}
                             value={Dataform.projectName}
                             onChange={this.handleInput}
-                          >
-                            <option value="" disabled selected hidden>
-                              Select Action Point
-                            </option>
-                            <option value="">New Assignment</option>
-                            <option value="">Revise Assignment</option>
-                            <option value="">Cancel Assignment</option>
-                          </Input>
+                          />                          
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Currency</Label>
+                        <Label sm={2}>BAST No Final</Label>
                         <Col sm={10}>
                           <Input
-                            type="select"
-                            placeholder="Area"
-                            name={"qty1"}
+                            type="text"
+                            placeholder="BAST No Final"
+                            name={""}
                             value={Dataform.qty1}
                             onChange={this.handleInput}
-                          >
-                            <option value="" disabled selected hidden>
-                              Select Currency
-                            </option>
-                            <option value="">New Assignment</option>
-                            <option value="">Revise Assignment</option>
-                            <option value="">Cancel Assignment</option>
-                          </Input>
+                          />  
                         </Col>
                       </FormGroup>
                     </Form>
@@ -630,14 +604,14 @@ class CreatePRPO extends Component {
                 {/* gr information */}
                 <Row>
                   <Col>
-                    <h5>GR Information</h5>
+                    {/* <h5>GR Information</h5> */}
                     <Form>
                       <FormGroup row>
-                        <Label sm={2}>Purchase Group</Label>
+                        <Label sm={2}>Req GR Final</Label>
                         <Col sm={10}>
                           <Input
-                            type="text"
-                            placeholder="Site ID"
+                            type="checkbox"
+                            placeholder="Req GR Final"
                             name={"siteID"}
                             value={Dataform.siteID}
                             onChange={this.handleInput}
@@ -645,76 +619,39 @@ class CreatePRPO extends Component {
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>ASP Name</Label>
+                        <Label sm={2}>Req GR by Final</Label>
                         <Col sm={10}>
                           <Input
                             type="text"
-                            placeholder="ASP Name"
-                            name={"siteName"}
+                            placeholder="Req GR by Final"
+                            name={""}
                             value={Dataform.siteName}
                             onChange={this.handleInput}
                           />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Term of Payment</Label>
+                        <Label sm={2}>Req GR Date Final</Label>
                         <Col sm={10}>
                           <Input
-                            type="select"
+                            type="date"
                             placeholder=""
-                            name={"siteName"}
+                            name={""}
                             value={Dataform.siteName}
                             onChange={this.handleInput}
-                          >
-                            <option value="" disabled selected hidden>
-                              Select TOP
-                            </option>
-                            <option value=""></option>
-                            <option value=""></option>
-                          </Input>
+                          />                           
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Network Number</Label>
+                        <Label sm={2}>Req Revision Final</Label>
                         <Col sm={10}>
                           <Input
-                            type="text"
-                            placeholder="Network Number"
-                            name={"siteName"}
+                            type="checkbox"
+                            placeholder="Req Revision Final"
+                            name={""}
                             value={Dataform.siteName}
                             onChange={this.handleInput}
                           />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Activity Code</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="select"
-                            placeholder="Activity Code"
-                            name={"approvalBy"}
-                            value={Dataform.approvalBy}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Action Point</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="select"
-                            placeholder="Project Name"
-                            name={"projectName"}
-                            value={Dataform.projectName}
-                            onChange={this.handleInput}
-                          >
-                            <option value="" disabled selected hidden>
-                              Select Action Point
-                            </option>
-                            <option value="">New Assignment</option>
-                            <option value="">Revise Assignment</option>
-                            <option value="">Cancel Assignment</option>
-                          </Input>
                         </Col>
                       </FormGroup>
                       <FormGroup row>
