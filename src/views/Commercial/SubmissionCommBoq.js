@@ -2013,7 +2013,7 @@ class SubmissionCommBoq extends Component {
                             <td>Submission No </td>
                             <td> : </td>
                             <td>
-                              <select onChange={this.handleChangeSubmissionNumber} value={this.state.submission_number_selected}>
+                              <Input type="select" onChange={this.handleChangeSubmissionNumber} value={this.state.submission_number_selected}>
                                 <option value="all">All</option>
                                 {this.state.data_comm_boq !== null && (
                                   this.state.data_comm_boq.comm_boq_submission_doc.map(e =>
@@ -2025,7 +2025,7 @@ class SubmissionCommBoq extends Component {
                                   )
                                 )}
                                 <option value="na">Not Assign</option>
-                              </select>
+                              </Input>
                             </td>
                           </tr>
                         </tbody>
@@ -2116,6 +2116,7 @@ class SubmissionCommBoq extends Component {
                           <th>Unit Price after Incentive (IDR)</th>
                           <th>Total Price after Incentive (USD)</th>
                           <th>Total Price after Incentive (IDR)</th>
+                          <th>CPO BOQ Ref.</th>
                         </tr>
                       </thead>
                       {this.state.data_view_submission_items.map(site =>
@@ -2132,6 +2133,7 @@ class SubmissionCommBoq extends Component {
                               <td>{item.net_price_incentive}</td>
                               <td>{item.total_price_incentive_usd.toFixed(2)}</td>
                               <td>{item.total_price_incentive.toFixed(2)}</td>
+                              <td>{item.cpo_boq}</td>
                             </tr>
                           )}
                         </tbody>

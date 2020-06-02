@@ -753,7 +753,6 @@ class GR extends Component {
                       <th>DSP</th>
                       <th>ASP</th>
                       <th>ETA</th>
-                      <th>Created By</th>
                       <th>Updated On</th>
                       <th>Created On</th>
                     </tr>

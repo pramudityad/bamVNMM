@@ -42,21 +42,25 @@ export const convertDateFormat = (jsondate) => {
 
 // full dateformat hh:mm:ss
 export const convertDateFormatfull = (jsondate) => {
-  let date = new Date(jsondate);
-  let year = date.getFullYear();
-  let month = date.getMonth() + 1;
-  let dt = date.getDate();
-  let hh = date.getHours();
-  let mm = date.getMinutes();
-  let ss = date.getSeconds();
+  if(jsondate !== undefined && jsondate !== null){
+    let date = new Date(jsondate);
+    let year = date.getFullYear();
+    let month = date.getMonth() + 1;
+    let dt = date.getDate();
+    let hh = date.getHours();
+    let mm = date.getMinutes();
+    let ss = date.getSeconds();
 
-  if (dt < 10) {
-    dt = "0" + dt;
+    if (dt < 10) {
+      dt = "0" + dt;
+    }
+    if (month < 10) {
+      month = "0" + month;
+    }
+    return year + "-" + month + "-" + dt + " " + hh + ":" + mm + ":" + ss;
+  }else{
+    return null
   }
-  if (month < 10) {
-    month = "0" + month;
-  }
-  return year + "-" + month + "-" + dt + " " + hh + ":" + mm + ":" + ss;
 };
 
 // for export all

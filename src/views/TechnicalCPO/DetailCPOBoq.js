@@ -97,6 +97,7 @@ class DetailCPOBoq extends Component {
       progress_failed: 0,
       submission_number_selected : null,
       list_submission : [],
+      data_updateSap : null,
     };
     this.toggleLoading = this.toggleLoading.bind(this);
     this.selectProject = this.selectProject.bind(this);
@@ -335,9 +336,6 @@ class DetailCPOBoq extends Component {
       }
       return respond;
     } catch (err) {
-      // if(this.state.modal_loading === true){
-      //   this.toggleLoading();
-      // }
       let respond = undefined;
       this.setState({ action_status: 'failed', action_message: 'Sorry, There is something error, please refresh page and try again' })
       console.log("respond Post Data", err);
@@ -390,12 +388,9 @@ class DetailCPOBoq extends Component {
     this.getDataFromAPINODE('/techBoq/' + _id_tech).then(res => {
       if (res.data !== undefined) {
         const dataTech = res.data;
-        console.log("res.data", res.data.data);
         this.setState({ data_cpo_boq: dataTech.data });
         if (res.data.data !== undefined) {
-          console.log("res.data sites", dataTech.data.techBoqSite);
           this.setState({ data_cpo_boq_sites: dataTech.data.techBoqSite, list_version: new Array(parseInt(dataTech.data.version) + 1).fill("0") }, () => {
-            console.log("res.data version", this.state.list_version);
             this.viewTechBoqData(dataTech.data.techBoqSite);
           });
         }
@@ -451,7 +446,6 @@ class DetailCPOBoq extends Component {
   }
 
   getVersionTechBoqData(_id_tech, ver) {
-    console.log()
     this.getDataFromAPINODE('/techBoq/' + _id_tech + '/ver/' + ver).then(res => {
       if (res.data !== undefined) {
         const dataTech = res.data;
@@ -482,7 +476,6 @@ class DetailCPOBoq extends Component {
 
   filterPOData = (inputValue) => {
     const list = [];
-    console.log("list_po_data 2", this.state.list_po_data);
     this.state.list_po_data.map(i =>
       list.push({ 'label': i.po_number, 'value': i._id })
     )
@@ -530,6 +523,8 @@ class DetailCPOBoq extends Component {
         "tower_count": xlsRow[this.getIndex(dataXLS[0], 'tower_count')],
         "part": xlsRow[this.getIndex(dataXLS[0], 'part')],
         "config": xlsRow[this.getIndex(dataXLS[0], 'config')],
+        "sap" : xlsRow[this.getIndex(dataXLS[0], 'sap')],
+        "sap_description" : xlsRow[this.getIndex(dataXLS[0], 'sap_description')],
         "qty": xlsRow[this.getIndex(dataXLS[0], 'qty')],
         "boq_part": xlsRow[this.getIndex(dataXLS[0], 'boq_part')],
         "category": xlsRow[this.getIndex(dataXLS[0], 'category')],
@@ -784,7 +779,6 @@ class DetailCPOBoq extends Component {
       if (res !== undefined) {
         if (res.data !== undefined) {
           this.setState({ list_commercial_tech: res.data.list_of_id_boq_comm }, () => {
-            console.log("list_commercial_tech", this.state.list_commercial_tech);
           })
         }
       }
@@ -892,7 +886,6 @@ class DetailCPOBoq extends Component {
         const dataCPO = res.data;
         if(dataCPO.data !== undefined){
           const dataListSubmission = dataCPO.data.map(value => value.comm_boq_submission_doc.filter(e => e.submission_status !== "CANCELED").map(child => child)).reduce((l, n) => l.concat(n), []);
-          console.log("dataListSubmission", dataListSubmission);
           this.setState({ list_submission: dataListSubmission});
         }
       }
@@ -974,7 +967,6 @@ class DetailCPOBoq extends Component {
       "sites_data": dataChecked.tech_data,
       "configList": dataChecked.configList
     }
-    console.log("dataPost", JSON.stringify(dataPost));
     let postTech = await this.postDatatoAPINODE('/techBoq/createTechBoqData', dataPost);
     if (postTech.data !== undefined) {
       this.setState({ action_status: 'success' }, () => {
@@ -1065,8 +1057,6 @@ class DetailCPOBoq extends Component {
           data_duplicated.push(idXLSIndex);
         }
       }
-
-      console.log("Data PP ID", get_id_PP);
     }
     if (data_undefined.length !== 0) {
       actionStatus = "failed";
@@ -1162,8 +1152,6 @@ class DetailCPOBoq extends Component {
     if (actionStatus === 'failed') {
       this.setState({ action_status: "failed", action_message: action_message });
     }
-    // console.log("SitesOfBOQTech", JSON.stringify(SitesOfBOQTech));
-    console.log("SitesOfBOQTech length", SitesOfBOQTech.length);
     this.setState({ data_format: SitesOfBOQTech });
     return SitesOfBOQTech;
   }
@@ -1200,7 +1188,6 @@ class DetailCPOBoq extends Component {
 
   compareDatewithNow(input) {
     const dateIn = input + ' GMT+0000';
-    console.log("nO_BOQ_TECH dATE", dateIn)
     const date = new Date(dateIn);
     const DateNow = date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDate();
     const NowDate = new Date();
@@ -1270,7 +1257,6 @@ class DetailCPOBoq extends Component {
       },
     }).then(res => {
       if (res !== undefined) {
-        console.log("noq_tech_op", res);
         this.loopsaveTechtoDB(dataSites, ID_Tech, res.data._id, res.data._etag);
       } else {
         this.setState({ action_status: 'failed', action_message: "" }, () => { this.toggleLoading() });
@@ -1295,11 +1281,9 @@ class DetailCPOBoq extends Component {
     let loopNow = 0;
     let perPage = 100;
     let totalLoop = Math.ceil(dataSites.length / perPage);
-    console.log("data Center", totalLoop);
     let RespondPostData = [];
     let countperLoop = 60 / totalLoop;
     let countNow = countperLoop + 30;
-    console.time("loop save");
     if (dataSites.length > 1) {
       for (let i = 0; i < totalLoop; i++) {
         let dataTechSitesPageLoop = dataSites.slice(i * perPage, (i + 1) * perPage);
@@ -1321,7 +1305,6 @@ class DetailCPOBoq extends Component {
         }
       }
     }
-    console.timeEnd("loop save");
     if (RespondPostData.length !== 0) {
       let dataUpdateTech = {
         "list_of_id_site": RespondPostData
@@ -1343,7 +1326,6 @@ class DetailCPOBoq extends Component {
       dataSites[i]["created_on"] = DateNow.toString();
       dataSites[i]["updated_on"] = DateNow.toString();
     }
-    console.log("dataSites save", JSON.stringify(dataSites));
     axios.post(API_URL + '/boq_tech_sites_op', dataSites, {
       headers: { 'Content-Type': 'application/json' },
       auth: {
@@ -1377,7 +1359,6 @@ class DetailCPOBoq extends Component {
 
   updateTechToDB(data, _id_Tech, _etag_Tech, verNumber) {
     data["version"] = verNumber.toString();
-    console.log("data updateTech", JSON.stringify(data));
     axios.patch(API_URL + '/boq_tech_op/' + _id_Tech, data, {
       headers: { 'Content-Type': 'application/json' },
       auth: {
@@ -1388,7 +1369,6 @@ class DetailCPOBoq extends Component {
         "If-Match": _etag_Tech
       },
     }).then(res => {
-      console.log("respond Tech update", res);
       if (res !== undefined) {
         if (res.data._id !== undefined || res.data._id !== null) {
           // this.getBOQTechAPI(res.data._id);
@@ -1600,18 +1580,15 @@ class DetailCPOBoq extends Component {
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond PUT Sites", respond);
       }
       return respond;
     } catch (err) {
       let respond = undefined;
-      console.log("respond PUT Sites", err);
       return respond;
     }
   }
 
   async postSitesToAPI(dataSites, _id_Tech, id_tech) {
-    console.log("DATASITES NEW REVI", "MASUK POST SITES NEW");
     const date = new Date();
     const DateNow = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
     let getSites = await this.getAllSites(dataSites.map(e => e.site_id));
@@ -1643,7 +1620,6 @@ class DetailCPOBoq extends Component {
       dataSites[i]["no_boq_tech"] = id_tech;
     }
     try {
-      console.log("DATASITES NEW REVI", JSON.stringify(dataSites));
       let respond = await axios.post(API_URL + '/boq_tech_sites_op', dataSites, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
@@ -1651,13 +1627,9 @@ class DetailCPOBoq extends Component {
           password: passwordPhilApi
         },
       })
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond POST Sites", respond);
-      }
       return respond;
     } catch (err) {
       let respond = undefined;
-      console.log("respond POST Sites", err);
       return respond;
     }
   }
@@ -1706,7 +1678,6 @@ class DetailCPOBoq extends Component {
       const dataIDPP = dataAPI[0].list_of_site_items.map(e => e.pp_id);
       const dataUnit = dataAPI[0].list_of_site_items.map(e => e.unit);
       let dataSummaryQTY = new Array(dataHeaderID.length + 1).join('0').split('').map(parseFloat);
-      console.log("dataSummaryQTY", dataSummaryQTY);
       for (let i = 0; i < dataAPI.length; i++) {
         let arrayItem = new Array(dataHeaderID.length).join('0').split('').map(parseFloat);
         for (let j = 0; j < dataAPI[i].list_of_site_items.length; j++) {
@@ -1820,7 +1791,6 @@ class DetailCPOBoq extends Component {
     // const arraySites = '"'+id_Sites.join('", "')+'"';
     const where_id_Sites = 'where={"id_boq_tech_doc" : "' + id_boq_tech_doc + '" , "version" : "' + version + '"}';
     this.getDatafromAPI('/boq_tech_sites_rev_all?' + where_id_Sites).then(res => {
-      console.log("data_format Rev Res", res);
       this.formatDataRev(res.data._items);
       this.viewTech(res.data._items);
     })
@@ -1840,7 +1810,6 @@ class DetailCPOBoq extends Component {
       delete dataStoreRevIndex.updated_on;
       dataStoreRev.push(dataStoreRevIndex);
     }
-    console.log("data_format Rev", dataStoreRev);
     this.setState({ data_format: dataStoreRev });
     // return dataStoreRev;
   }
@@ -1924,7 +1893,6 @@ class DetailCPOBoq extends Component {
         }
       }
     }
-    console.log("updateNote", updateNote);
     return updateNote;
   }
 
@@ -2004,18 +1972,20 @@ class DetailCPOBoq extends Component {
     let submission_id = this.state.submission_number_selected;
     let postData = await this.getDataFromAPINODE('/cpoBoq/compareWithCommBoqSubmission/'+cpoNumber+'/commBoq/'+submission_id);
     if(postData.data !== undefined){
-      this.setState({data_cpo_boq : postData.data.data})
+      this.setState({data_cpo_boq : postData.data.data, data_updateSap : postData.data.updateSap})
     }
     this.toggleLoading();
   }
 
   async assignSubmissionToCPO(){
+    // alert("Success");
     this.toggleLoading();
     let cpoNumber =  this.state.data_cpo_boq[0].cpo_number;
     let submission_id = this.state.submission_number_selected;
-    let postData = await this.patchDatatoAPINODE('/cpoBoq/assignCpoToCommBoqSubmission/'+cpoNumber+'/commBoq/'+submission_id);
+    let postData = await this.patchDatatoAPINODE('/cpoBoq/assignCpoToCommBoqSubmission/'+cpoNumber+'/commBoq/'+submission_id, {"updateSap" : this.state.data_updateSap});
     if(postData.data !== undefined){
-
+      alert("Success");
+      console.log("berhasil");
     }
     this.toggleLoading();
   }
@@ -2023,9 +1993,9 @@ class DetailCPOBoq extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const ppIdRow = ["po_number", "prodef", "wbs", "project_code", "program_priority", "program_type", "tower_id_plan", "tower_id_actual", "working_on", "main_sow", "combined_scope", "tower_count", "part", "config", "qty", "boq_part", "category", "source", "coupa_catalogue_item", "coupa_unit_price", "coupa_total_price", "currency", "coupa_requisition_title", "coupa_network_id", "pr_number", "as_number", "Pcode 2961-NRO %", "Pcode 6967-PNDT Design-Tuning", "Pcode 6967-CoS %", "Pcode1 Total Value (2961-NRO)", "Pcode2 Total Value (6967-PNDT) Design-Tuning", "Pcode4 Total Value (6967-CoS)", "HW- 2460", "LCM - 2110", "EAB HWAC - 2491", "Pcode HW- 2460 Total Value", "Pcode LCM - 2110 Total Value", "Pcode EAB HWAC - 2491 Total Value"];
+    const ppIdRow = ["po_number", "prodef", "wbs", "project_code", "program_priority", "program_type", "tower_id_plan", "tower_id_actual", "working_on", "main_sow", "combined_scope", "tower_count", "part", "config", "sap", "sap_description", "qty", "boq_part", "category", "source", "coupa_catalogue_item", "coupa_unit_price", "coupa_total_price", "currency", "coupa_requisition_title", "coupa_network_id", "pr_number", "as_number", "Pcode 2961-NRO %", "Pcode 6967-PNDT Design-Tuning", "Pcode 6967-CoS %", "Pcode1 Total Value (2961-NRO)", "Pcode2 Total Value (6967-PNDT) Design-Tuning", "Pcode4 Total Value (6967-CoS)", "HW- 2460", "LCM - 2110", "EAB HWAC - 2491", "Pcode HW- 2460 Total Value", "Pcode LCM - 2110 Total Value", "Pcode EAB HWAC - 2491 Total Value"];
     ws.addRow(ppIdRow);
-    ws.addRow(["PO0001", "SL/H313", "SL/H313/B001 -R3", "2020CUP", "P1", "Capacity", "JAW-JK-GGP-0614", "JAW-JK-GGP-0614", "Existing Tower", "Improvement", "Improvement L1800", 1, "RAN Hardware", "Cov_2020_Config-1D", 2, "RAN", "Service", "New PO Coupa", "3416315 |  INSTALL:CONFIG SERVICE 11_1105A  | YYYY:2019 | MM:12", 280000, 280000, "IDR", "EID-2020CUP_RAN_Service_ERICSSON_1_Central", "2020CUP_RAN_3416315_ERICSSON_1_Central", 1490, "AS#0223", "100%", "0%", "0%", 280000, "", "", "0%", "0%", "0%", "0.00", "0.00", "0.00"]);
+    ws.addRow(["EXAMPLE PO0001", "SL/H313", "SL/H313/B001 -R3", "2020CUP", "P1", "Capacity", "JAW-JK-GGP-0614", "JAW-JK-GGP-0614", "Existing Tower", "Improvement", "Improvement L1800", 1, "RAN Hardware", "Cov_2020_Config-1D", "SAP", "SAP DESC", 2, "RAN", "Service", "New PO Coupa", "3416315 |  INSTALL:CONFIG SERVICE 11_1105A  | YYYY:2019 | MM:12", 280000, 280000, "IDR", "EID-2020CUP_RAN_Service_ERICSSON_1_Central", "2020CUP_RAN_3416315_ERICSSON_1_Central", 1490, "AS#0223", "100%", "0%", "0%", 280000, "", "", "0%", "0%", "0%", "0.00", "0.00", "0.00"]);
 
     const MRFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MRFormat]), 'CPO BOQ Uploader Template.xlsx');
@@ -2042,7 +2012,7 @@ class DetailCPOBoq extends Component {
 
     const dataCPO = this.state.data_cpo_boq;
 
-    let ppIdRow = ["PO Number", "PRODEF", "WBS", "Project Code", "Program Priority", "Program Type", "Tower ID Plan", "Tower ID Actual", "Working on", "Main SOW", "Combined Scope", "Tower Count", "Part", "Config", "Qty", "BOQ Part", "Category", "Source", "COUPA Catalogue Item", "Coupa Unit Price", "Coupa Total Price", "Curr", "COUPA Requisition Title", "COUPA Network ID", "PR#", "AS Number", "Pcode 2961-NRO %", "Pcode 6967-PNDT Design-Tuning", "Pcode 6967-CoS %", "Pcode1 Total Value (2961-NRO)", "Pcode2 Total Value (6967-PNDT) Design-Tuning", "Pcode4 Total Value (6967-CoS)", "HW- 2460", "LCM - 2110", "EAB HWAC - 2491", "Pcode HW- 2460 Total Value", "Pcode LCM - 2110 Total Value", "Pcode EAB HWAC - 2491 Total Value"];
+    let ppIdRow = ["PO Number", "PRODEF", "WBS", "Project Code", "Program Priority", "Program Type", "Tower ID Plan", "Tower ID Actual", "Working on", "Main SOW", "Combined Scope", "Tower Count", "Part", "Config", "sap", "sap_description", "Qty", "BOQ Part", "Category", "Source", "COUPA Catalogue Item", "Coupa Unit Price", "Coupa Total Price", "Curr", "COUPA Requisition Title", "COUPA Network ID", "PR#", "AS Number", "Pcode 2961-NRO %", "Pcode 6967-PNDT Design-Tuning", "Pcode 6967-CoS %", "Pcode1 Total Value (2961-NRO)", "Pcode2 Total Value (6967-PNDT) Design-Tuning", "Pcode4 Total Value (6967-CoS)", "HW- 2460", "LCM - 2110", "EAB HWAC - 2491", "Pcode HW- 2460 Total Value", "Pcode LCM - 2110 Total Value", "Pcode EAB HWAC - 2491 Total Value"];
     if(this.state.submission_number_selected !== null){
       ppIdRow.push("Match Status");
     }
@@ -2050,7 +2020,7 @@ class DetailCPOBoq extends Component {
 
     for(let i = 0; i < dataCPO.length ; i++){
       let row = dataCPO[i];
-      let rowBody = [row.cpo_number, row.prodef, row.wbs, row.project_code, row.program, row.program_type, row.tower_id_plan, row.tower_id_actual, row.working_on, row.main_sow, row.combined_scope, row.tower_count, row.part, row.config, row.qty, row.boq_part, row.category, row.source, row.coupa_catalogue_item, row.coupa_unit_price, row.coupa_total_price, row.currency, row.coupa_requisition_title, row.coupa_network_id, row.pr_number, row.as_number, row.pcode_2961_nro, row.pcode_6967_pndt_design_tuning, row.pcode_6967_cos, row.pcode_2961_nro_total_value, row.pcode_6967_pndt_design_tuning_total_value, row.pcode_6967_cos_total_value, row.hw_2460, row.lcm_2110, row.eab_hwac_2491, row.pcode_hw_2460_total_value, row.pcode_lcm_2110_total_value, row.pcode_eab_hwac_2491_total_value];
+      let rowBody = [row.cpo_number, row.prodef, row.wbs, row.project_code, row.program, row.program_type, row.tower_id_plan, row.tower_id_actual, row.working_on, row.main_sow, row.combined_scope, row.tower_count, row.part, row.config, row.sap, row.sap_description, row.qty, row.boq_part, row.category, row.source, row.coupa_catalogue_item, row.coupa_unit_price, row.coupa_total_price, row.currency, row.coupa_requisition_title, row.coupa_network_id, row.pr_number, row.as_number, row.pcode_2961_nro, row.pcode_6967_pndt_design_tuning, row.pcode_6967_cos, row.pcode_2961_nro_total_value, row.pcode_6967_pndt_design_tuning_total_value, row.pcode_6967_cos_total_value, row.hw_2460, row.lcm_2110, row.eab_hwac_2491, row.pcode_hw_2460_total_value, row.pcode_lcm_2110_total_value, row.pcode_eab_hwac_2491_total_value];
       if(this.state.submission_number_selected !== null){
         rowBody.push(row.match_status);
       }
@@ -2067,7 +2037,7 @@ class DetailCPOBoq extends Component {
 
     const dataCPO = this.state.data_cpo_boq;
 
-    const ppIdRow = ["po_number", "prodef", "wbs", "project_code", "program_priority", "program_type", "tower_id_plan", "tower_id_actual", "working_on", "main_sow", "combined_scope", "tower_count", "part", "config", "qty", "boq_part", "category", "source", "coupa_catalogue_item", "coupa_unit_price", "coupa_total_price", "currency", "coupa_requisition_title", "coupa_network_id", "pr_number", "as_number", "Pcode 2961-NRO %", "Pcode 6967-PNDT Design-Tuning", "Pcode 6967-CoS %", "Pcode1 Total Value (2961-NRO)", "Pcode2 Total Value (6967-PNDT) Design-Tuning", "Pcode4 Total Value (6967-CoS)", "HW- 2460", "LCM - 2110", "EAB HWAC - 2491", "Pcode HW- 2460 Total Value", "Pcode LCM - 2110 Total Value", "Pcode EAB HWAC - 2491 Total Value"];
+    const ppIdRow = ["po_number", "prodef", "wbs", "project_code", "program_priority", "program_type", "tower_id_plan", "tower_id_actual", "working_on", "main_sow", "combined_scope", "tower_count", "part", "config", "sap", "sap_description", "qty", "boq_part", "category", "source", "coupa_catalogue_item", "coupa_unit_price", "coupa_total_price", "currency", "coupa_requisition_title", "coupa_network_id", "pr_number", "as_number", "Pcode 2961-NRO %", "Pcode 6967-PNDT Design-Tuning", "Pcode 6967-CoS %", "Pcode1 Total Value (2961-NRO)", "Pcode2 Total Value (6967-PNDT) Design-Tuning", "Pcode4 Total Value (6967-CoS)", "HW- 2460", "LCM - 2110", "EAB HWAC - 2491", "Pcode HW- 2460 Total Value", "Pcode LCM - 2110 Total Value", "Pcode EAB HWAC - 2491 Total Value"];
     if(this.state.submission_number_selected !== null){
       ppIdRow.push("Match Status");
     }
@@ -2075,7 +2045,7 @@ class DetailCPOBoq extends Component {
 
     for(let i = 0; i < dataCPO.length ; i++){
       let row = dataCPO[i];
-      let rowBody = [row.cpo_number, row.prodef, row.wbs, row.project_code, row.program, row.program_type, row.tower_id_plan, row.tower_id_actual, row.working_on, row.main_sow, row.combined_scope, row.tower_count, row.part, row.config, row.qty, row.boq_part, row.category, row.source, row.coupa_catalogue_item, row.coupa_unit_price, row.coupa_total_price, row.currency, row.coupa_requisition_title, row.coupa_network_id, row.pr_number, row.as_number, row.pcode_2961_nro, row.pcode_6967_pndt_design_tuning, row.pcode_6967_cos, row.pcode_2961_nro_total_value, row.pcode_6967_pndt_design_tuning_total_value, row.pcode_6967_cos_total_value, row.hw_2460, row.lcm_2110, row.eab_hwac_2491, row.pcode_hw_2460_total_value, row.pcode_lcm_2110_total_value, row.pcode_eab_hwac_2491_total_value];
+      let rowBody = [row.cpo_number, row.prodef, row.wbs, row.project_code, row.program, row.program_type, row.tower_id_plan, row.tower_id_actual, row.working_on, row.main_sow, row.combined_scope, row.tower_count, row.part, row.config, row.sap, row.sap_description, row.qty, row.boq_part, row.category, row.source, row.coupa_catalogue_item, row.coupa_unit_price, row.coupa_total_price, row.currency, row.coupa_requisition_title, row.coupa_network_id, row.pr_number, row.as_number, row.pcode_2961_nro, row.pcode_6967_pndt_design_tuning, row.pcode_6967_cos, row.pcode_2961_nro_total_value, row.pcode_6967_pndt_design_tuning_total_value, row.pcode_6967_cos_total_value, row.hw_2460, row.lcm_2110, row.eab_hwac_2491, row.pcode_hw_2460_total_value, row.pcode_lcm_2110_total_value, row.pcode_eab_hwac_2491_total_value];
       if(this.state.submission_number_selected !== null){
         rowBody.push(row.match_status);
       }
@@ -2192,23 +2162,25 @@ class DetailCPOBoq extends Component {
                           <td>Compare With Submission </td>
                           <td> : </td>
                           <td>
-                            <select onChange={this.handleChangeSubmissionNumber} value={this.state.submission_number_selected}>
+                            <Input type="select" onChange={this.handleChangeSubmissionNumber} value={this.state.submission_number_selected}>
                                 <option value=""></option>
                                 {this.state.list_submission.map(e =>
                                   <option value={e.submission_id}>{e.submission_id}</option>
                                 )}
-                            </select>
+                            </Input>
                           </td>
                           <td style={{marginLeft : "20px"}}>
                             <Button size="sm" onClick={this.compareWithSubmission} style={{marginLeft : '15px'}}>
                               Compare
                             </Button>
                           </td>
-                          <td style={{marginLeft : "20px"}}>
-                            <Button size="sm" color="success" onClick={this.assignSubmissionToCPO} style={{marginLeft : '15px'}}>
-                              Assign
-                            </Button>
-                          </td>
+                          {this.state.data_updateSap !== null && (
+                            <td style={{marginLeft : "20px"}}>
+                              <Button size="sm" color="success" onClick={this.assignSubmissionToCPO} style={{marginLeft : '15px'}}>
+                                Assign
+                              </Button>
+                            </td>
+                          )}
                         </tr>
                       </tbody>
                     </table>
@@ -2285,6 +2257,8 @@ class DetailCPOBoq extends Component {
                         <th>Tower Count</th>
                         <th>Part</th>
                         <th>Config</th>
+                        <th>SAP</th>
+                        <th>SAP Desc</th>
                         <th>Qty</th>
                         <th>BOQ Part</th>
                         <th>Category</th>
@@ -2350,8 +2324,8 @@ class DetailCPOBoq extends Component {
                             <td>{row.fas_id}</td> */}
                           <td>{row.part}</td>
                           <td>{row.config}</td>
-                          {/* <td>{row.sap}</td>
-                            <td>{row.sap_description}</td> */}
+                          <td>{row.sap}</td>
+                          <td>{row.sap_description}</td>
                           <td>{row.qty}</td>
                           <td>{row.boq_part}</td>
                           <td>{row.category}</td>
