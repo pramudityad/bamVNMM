@@ -14,7 +14,7 @@ import { connect } from 'react-redux';
 import { Redirect, Route, Switch, Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
-import {convertDateFormatfull} from '../../helper/basicFunction'
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
@@ -299,7 +299,7 @@ class CPODatabase extends React.Component {
       const dataForm = this.state.DataForm;
       console.log('dataForm ',dataForm);
       dataForm[0] = aEdit.po_number;
-      dataForm[1] = convertDateFormatfull(aEdit.date);
+      dataForm[1] = convertDateFormat(aEdit.date);
       dataForm[2] = aEdit.currency;
       dataForm[3] = aEdit.payment_terms;
       dataForm[4] = aEdit.shipping_terms;
@@ -553,8 +553,8 @@ class CPODatabase extends React.Component {
                             <th>Shipping Terms</th>
                             <th>Contract</th>
                             <th>Contact</th>
-                            <th></th>
-                            <th></th>
+                            <th colspan="2"></th>
+                            {/* <th></th> */}
                           </tr>
                         </thead>
                         <tbody>
@@ -562,7 +562,7 @@ class CPODatabase extends React.Component {
                             <React.Fragment key={po._id + "frag"}>
                               <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={po._id}>
                                 <td style={{ textAlign: 'center' }}>{po.po_number}</td>
-                                <td style={{ textAlign: 'center' }}>{convertDateFormatfull(po.date)}</td>
+                                <td style={{ textAlign: 'center' }}>{convertDateFormat(po.date)}</td>
                                 <td style={{ textAlign: 'center' }}>{po.currency}</td>
                                 <td style={{ textAlign: 'center' }}>{po.payment_terms}</td>
                                 <td style={{ textAlign: 'center' }}>{po.shipping_terms}</td>
