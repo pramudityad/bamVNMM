@@ -9,7 +9,8 @@ import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
 import AsyncSelect from 'react-select/async';
-import debounce from 'lodash.debounce';
+// import debounce from 'lodash.debounce';
+import debounce from "debounce-promise";
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -349,7 +350,7 @@ class TssrBOM extends Component {
     const index = e.target.selectedIndex;
     const text = e.target[index].text;
     this.setState({project_selected : value, project_name_selected : text}, () => {
-      this.getListSiteTechforPS(value);
+      // this.getListSiteTechforPS(value);
     });
   }
 
@@ -366,8 +367,8 @@ class TssrBOM extends Component {
     const text = e.label;
     const list_site_idx = this.state.list_site.find(e => e._id === value);
     let dataArrayTssr = this.state.list_tssr_selected;
-    dataArrayTssr.push({"site_selected" : value, "tech_selected" : list_site_idx.id_tech_boq_doc, "label" : text});
-    this.setState({list_site_selected : value, list_site_tech_boq_selected : list_site_idx.id_tech_boq_doc, list_tssr_selected : dataArrayTssr }, () => {
+    dataArrayTssr.push({"site_selected" : value, "tech_selected" : e.id_tech_boq_doc, "label" : text});
+    this.setState({list_site_selected : value, list_site_tech_boq_selected : e.id_tech_boq_doc, list_tssr_selected : dataArrayTssr }, () => {
       // this.getDataTech();
     });
   }
@@ -633,9 +634,11 @@ class TssrBOM extends Component {
   // }
 
   async saveTssrBOM(){
+    // setTimeout(function () { this.setState({redirectSign : "5ec2d5bb5ac433f42df7401a"}); }.bind(this), 2000);
     const respondSaveTSSR = await this.postDatatoAPINODE('/plantspec/createPlantspec', {"psData" : this.state.data_tssr_selected});
     if(respondSaveTSSR.data !== undefined && respondSaveTSSR.status >= 200 && respondSaveTSSR.status <= 300 ){
       this.setState({ action_status : 'success', action_message : 'PS has been saved successfully!' });
+      setTimeout(function () { this.setState({redirectSign : respondSaveTSSR.data.objMrPs._id}); }.bind(this), 2000);
     } else{
       this.setState({ action_status : 'failed' });
     }
@@ -661,16 +664,42 @@ class TssrBOM extends Component {
     );
   };
 
-  loadOptions = (inputValue, callback) => {
-    // this.filterSiteTSSR(inputValue)
-    if(inputValue !== null && inputValue.length > 2){
-      setTimeout(() => {
-        callback(this.filterSiteTSSR(inputValue));
-      }, 1000);
+  // filterSiteTSSR = (inputValue) => {
+  //   const list = [];
+  //   let list_site_api = this.state.list_site.filter(i =>
+  //     i.site_id.toLowerCase().includes(inputValue.toLowerCase()) || i.no_tech_boq.toLowerCase().includes(inputValue.toLowerCase())
+  //   )
+  //   list_site_api.map(site =>
+  //       list.push({'value' : site._id, 'label' : site.site_id +" ("+site.no_tech_boq+")"})
+  //   )
+  //   this.setState({list_site_selection : list});
+  //   return this.state.list_site_selection.filter(i =>
+  //     i.label.toLowerCase().includes(inputValue.toLowerCase())
+  //   );
+  // };
+
+  filterSiteTSSR = async(inputValue) => {
+    if(!inputValue || inputValue.length < 3 ) {
+      return [];
+    } else {
+      let site_tssr_list = [];
+      const getSiteTSSR = await this.getDataFromAPINODE('/plantspec/getTechnicalByProjectId/'+this.state.project_selected+'?siteId='+inputValue);
+      if(getSiteTSSR !== undefined && getSiteTSSR.data !== undefined) {
+        getSiteTSSR.data.data.map(site =>
+          site_tssr_list.push({'value' : site._id, 'label' : "PS "+site.no_tech_boq+"-"+site.site_id +" ("+site.program+")", 'id_tech_boq_doc' : site.id_tech_boq_doc })
+        );
+      }
+      console.log("site_tssr_list", site_tssr_list);
+      return site_tssr_list;
     }
   };
 
+  loadOptions = async(inputValue, callback) => {
+    return this.filterSiteTSSR(inputValue);
+  };
+
   async previewTSSRtoPS(){
+    this.setState({ action_status: null, action_message: null });
     let tssrSelected = this.state.list_tssr_selected;
     let dataTSSRforGet = [];
     tssrSelected.map( e =>
@@ -681,18 +710,27 @@ class TssrBOM extends Component {
         }
       )
     );
-    console.log("dataTSSRforGet", dataTSSRforGet);
     this.postDatatoAPINODE('/plantspec/getTssrData', {"data" : dataTSSRforGet}).then(res => {
       if(res.data !== undefined){
         this.setState({data_tssr_selected : res.data.psData})
+      }else{
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
       }
     });
   }
 
   render() {
-    // if(this.state.redirectSign !== false){
-    //   return (<Redirect to={'/ps-bom/'+this.state.redirectSign} />);
-    // }
+    if(this.state.redirectSign !== false){
+      return (<Redirect to={'/ps-bom/'+this.state.redirectSign} />);
+    }
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -700,7 +738,7 @@ class TssrBOM extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}} >Plant Spec </span>
+            <span style={{lineHeight :'2', fontSize : '17px'}} >Plant Spec Group</span>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <table style={{marginBottom : '20px'}}>
@@ -728,30 +766,30 @@ class TssrBOM extends Component {
                   <td style={{paddingTop : '10px', paddingRight : '10px'}}>
                     :
                   </td>
-                  <td style={{width : '300px'}}>
+                  <td style={{width : '400px'}}>
                     {this.state.list_tssr_selected.map(e =>
                       <tr>
                         <td>
-                          {e.label} <i className="fa fa-trash" style={{ marginLeft: "8px", color : '#ef5350' }} value={e.site_selected} onClick={() => this.removeSiteTSSR(e.site_selected)}></i>
+                          {e.label} <i className="fa fa-window-close" style={{ marginLeft: "8px", color : '#ef5350' }} value={e.site_selected} onClick={() => this.removeSiteTSSR(e.site_selected)}></i>
                         </td>
                       </tr>
                     )}
                     <tr>
-                      {this.state.list_site.length === 0 ? this.state.project_selected !== null && (
-                        <td style={{paddingTop : '10px'}}><Spinner type="grow" color="primary" size="sm"/> Loading ... </td>
+                      {this.state.project_selected === null ? (
+                        <td style={{paddingTop : '10px'}}></td>
                       ) : (
-                        <td style={{width : '300px'}}>
+                        <td style={{width : '400px'}}>
                         <AsyncSelect
                           cacheOptions
                           loadOptions={debounce(this.loadOptions, 500)}
                           defaultOptions
                           onChange={this.handleChangeSiteTSSR}
-                          isDisabled={this.state.list_site.length === 0 || this.state.list_tssr_selected.length >= 2}
+                          isDisabled={this.state.list_tssr_selected.length >= 2}
                         />
                         </td>
                       )}
                     </tr>
-                    {(this.state.list_site.length !== 0 && this.state.project_selected !== null) && (
+                    {(this.state.project_selected !== null) && (
                       <tr>
                         <td>
                           <Button onClick={this.previewTSSRtoPS} size="sm" color="success">
@@ -768,7 +806,7 @@ class TssrBOM extends Component {
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>
-                  <td colSpan="4" style={{textAlign : 'center'}}>PLANT SPEC PREVIEW</td>
+                  <td colSpan="4" style={{textAlign : 'center'}}>PLANT SPEC GROUP PREVIEW</td>
                 </tr>
               </tbody>
             </table>
@@ -777,11 +815,13 @@ class TssrBOM extends Component {
               <Table hover bordered striped responsive size="sm">
                 <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
                   <tr>
-                    <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
-                    <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
+                    <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Tech No.</th>
+                    <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Bundle / Material Code</th>
+                    <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>Bundle / Material Name</th>
+                    <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Config ID</th>
                     <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>Program</th>
                     <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
-                    <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
+                    <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty</th>
                   </tr>
                   <tr>
                     <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Qty PS</th>
@@ -792,16 +832,20 @@ class TssrBOM extends Component {
                       tssr.listOfPackage.map( pp =>
                         <Fragment>
                         <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                          <td>{tssr.no_tech_boq}</td>
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                           <td>{pp.product_name}</td>
+                          <td>{pp.config_id}</td>
                           <td>{pp.program}</td>
                           <td>{pp.uom}</td>
                           <td align='center'>{pp.qty}</td>
                         </tr>
                         {pp.list_material.map(material =>
                           <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                            <td></td>
                             <td style={{textAlign : 'right'}}>{material.material_id}</td>
                             <td style={{textAlign : 'left'}}>{material.material_name}</td>
+                            <td></td>
                             <td></td>
                             <td>{material.uom}</td>
                             <td align='center'>{pp.qty*material.qty}</td>

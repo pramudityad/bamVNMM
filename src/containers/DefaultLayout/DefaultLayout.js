@@ -26,6 +26,7 @@ import routes from '../../routes';
 const DefaultAside = React.lazy(() => import('./DefaultAside'));
 const DefaultFooter = React.lazy(() => import('./DefaultFooter'));
 const DefaultHeader = React.lazy(() => import('./DefaultHeader'));
+const LoaderPage = React.lazy(() => import('../../views/DefaultView/LoaderPage'));
 
 const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -39,6 +40,7 @@ class DefaultLayout extends Component {
     }
   }
 
+  loadingPage = () => <LoaderPage />
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   signOut(e) {
@@ -116,7 +118,7 @@ class DefaultLayout extends Component {
           <main className="main">
             <AppBreadcrumb appRoutes={routes} router={router} className="breadcrumb--xl"/>
             <Container fluid>
-              <Suspense fallback={this.loading()}>
+              <Suspense fallback={this.loadingPage()}>
                 <Switch>
                   {routes.map((route, idx) => {
                     return route.component ? (

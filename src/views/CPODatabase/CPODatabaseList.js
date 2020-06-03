@@ -14,7 +14,7 @@ import { connect } from 'react-redux';
 import { Redirect, Route, Switch, Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
-import {convertDateFormatfull} from '../../helper/basicFunction'
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
@@ -52,9 +52,12 @@ class CPODatabase extends React.Component {
       data_PO: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
+      DataForm: new Array(7).fill(false),
       modalPOForm: false,
+      modalEdit:false,
       POForm: new Array(5).fill(null),
       collapse: false,
+      selected_id: "",
     }
     this.togglePOForm = this.togglePOForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -64,6 +67,9 @@ class CPODatabase extends React.Component {
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
     this.saveNewPO = this.saveNewPO.bind(this);
+    this.toggleEdit = this.toggleEdit.bind(this);
+    this.saveUpdate = this.saveUpdate.bind(this);
+
   }
 
   toggle(i) {
@@ -284,12 +290,75 @@ class CPODatabase extends React.Component {
     }));
   }
 
+  toggleEdit(e){
+    const modalEdit = this.state.modalEdit;
+    if(modalEdit === false){
+      const value = e.currentTarget.value;
+      const aEdit = this.state.po_op_data.find((e) => e._id === value);
+      // console.log('aEdit ',aEdit);
+      const dataForm = this.state.DataForm;
+      // console.log('dataForm ',dataForm);
+      dataForm[0] = aEdit.po_number;
+      dataForm[1] = convertDateFormat(aEdit.date);
+      dataForm[2] = aEdit.currency;
+      dataForm[3] = aEdit.payment_terms;
+      dataForm[4] = aEdit.shipping_terms;
+      dataForm[5] = aEdit.contract;
+      dataForm[6] = aEdit.contact;
+      this.setState({ DataForm: dataForm, selected_id: value });
+      // console.log('state dataForm ',this.state.DataForm);
+    } else {
+      this.setState({ DataForm: new Array(7).fill(null) });
+    }
+    this.setState((prevState) => ({
+      modalEdit: !prevState.modalEdit,
+    }));
+  }
+
   handleChangeForm(e) {
     const value = e.target.value;
     const index = e.target.name;
-    let dataForm = this.state.POForm;
+    console.log("value ", value, index);
+    let dataForm = this.state.DataForm;
     dataForm[parseInt(index)] = value;
-    this.setState({ POForm: dataForm });
+    this.setState({ DataForm: dataForm });
+  }
+
+  async saveUpdate() {
+    const dataPPEdit = this.state.DataForm;
+    const objData = this.state.selected_id;
+    // console.log('obj data ', objData);
+    let pp = {
+      po_number: dataPPEdit[0],
+      date: dataPPEdit[1],
+      currency: dataPPEdit[2],
+      payment_terms: dataPPEdit[3],
+      shipping_terms: dataPPEdit[4],
+      contract: dataPPEdit[5],
+      contact: dataPPEdit[6],
+    };
+    this.toggleLoading();
+    this.toggleEdit();
+    let patchData = await this.patchDatatoAPINODE(
+      "/cpodb/UpdateOneCpoDb/" + objData,
+      { data: pp }
+    );
+    console.log("patch data ", pp);
+    if (patchData === undefined) {
+      patchData = {};
+      patchData["data"] = undefined;
+    }
+    if (patchData.data !== undefined) {
+      this.setState({ action_status: "success" }, () => {
+        this.toggleLoading();
+        setTimeout(function () {
+          window.location.reload();
+        }, 2000);
+      });
+    } else {
+      this.toggleLoading();
+      this.setState({ action_status: "failed" });
+    }
   }
 
   async getCPOFormat(dataImport) {
@@ -333,12 +402,19 @@ class CPODatabase extends React.Component {
     const cpoData = await this.getCPOFormat(cpobulkXLS);
     const res = await this.postDatatoAPINODE('/cpodb/createCpoDb', { 'poData': cpobulkXLS });
     if (res.data !== undefined) {
-      this.setState({ action_status: 'success' });
+      this.setState({ action_status: 'success', action_message : null });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: 'failed' }, () => {
-        this.toggleLoading();
-      });
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
     }
   }
 
@@ -477,7 +553,8 @@ class CPODatabase extends React.Component {
                             <th>Shipping Terms</th>
                             <th>Contract</th>
                             <th>Contact</th>
-                            <th></th>
+                            <th colspan="2"></th>
+                            {/* <th></th> */}
                           </tr>
                         </thead>
                         <tbody>
@@ -485,7 +562,7 @@ class CPODatabase extends React.Component {
                             <React.Fragment key={po._id + "frag"}>
                               <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={po._id}>
                                 <td style={{ textAlign: 'center' }}>{po.po_number}</td>
-                                <td style={{ textAlign: 'center' }}>{convertDateFormatfull(po.date)}</td>
+                                <td style={{ textAlign: 'center' }}>{convertDateFormat(po.date)}</td>
                                 <td style={{ textAlign: 'center' }}>{po.currency}</td>
                                 <td style={{ textAlign: 'center' }}>{po.payment_terms}</td>
                                 <td style={{ textAlign: 'center' }}>{po.shipping_terms}</td>
@@ -495,6 +572,17 @@ class CPODatabase extends React.Component {
                                   <Link to={'/detail-list-cpo-database/' + po._id}>
                                     <Button color="primary" size="sm" style={{ marginRight: '10px' }}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                                   </Link>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                <Button
+                                      size="sm"
+                                      color="secondary"
+                                      value={po._id}
+                                      onClick={this.toggleEdit}
+                                      title="Edit"
+                                    >
+                                      <i className="fas fa-edit"></i>
+                                      </Button>
                                 </td>
                               </tr>
                             </React.Fragment>
@@ -556,6 +644,97 @@ class CPODatabase extends React.Component {
           </ModalFooter>
         </Modal>
         {/*  Modal New PO*/}
+
+        {/* Modal Edit PP */}
+        <Modal
+          isOpen={this.state.modalEdit}
+          toggle={this.toggleEdit}
+          className="modal--form"
+        >
+          <ModalHeader>Form Update CPO Database</ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col sm="12">
+                <FormGroup>
+                  <Label htmlFor="po_number">PO Number</Label>
+                  <Input
+                    type="text"
+                    name="0"
+                    placeholder=""
+                    value={this.state.DataForm[0]}
+                    disabled
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="data">Date</Label>
+                  <Input
+                    type="text"
+                    name="1"
+                    placeholder=""
+                    value={this.state.DataForm[1]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="currency">Currency</Label>
+                  <Input
+                    type="text"
+                    name="2"
+                    placeholder=""
+                    value={this.state.DataForm[2]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="payment_terms">Payment Terms</Label>
+                  <Input
+                    type="text"
+                    name="3"
+                    placeholder=""
+                    value={this.state.DataForm[3]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="shipping_terms">Shipping Terms</Label>
+                  <Input
+                    type="text"
+                    name="4"
+                    placeholder=""
+                    value={this.state.DataForm[4]}
+                    onChange={this.handleChangeForm}
+                  />                    
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="contract">Contract</Label>
+                  <Input
+                    type="text"
+                    name="5"
+                    placeholder=""
+                    value={this.state.DataForm[5]}
+                    onChange={this.handleChangeForm}
+                  />                    
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="contact">Contact</Label>
+                  <Input
+                    type="text"
+                    name="6"
+                    placeholder=""
+                    value={this.state.DataForm[6]}
+                    onChange={this.handleChangeForm}
+                  />                    
+                </FormGroup>
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="success" onClick={this.saveUpdate}>
+              Update
+            </Button>
+          </ModalFooter>
+        </Modal>
 
         {/* Modal Loading */}
         <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm modal--loading '}>

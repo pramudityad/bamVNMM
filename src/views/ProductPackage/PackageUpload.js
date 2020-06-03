@@ -765,7 +765,7 @@ class PackageUpload extends React.Component {
     const dataPrint = this.state.packageSelected;
     console.log('pp selected', dataPrint);
 
-    let confArray = ["2020_Config-1D", "Coverage", "Cov_2020_Config-4_0610", "Cov_2020_Config-4_06", "2515914", "RBS:COV_2020_CONFIG-4DC", "Service", "Add 1x Radio 2219 B3+ 1xRadio 2217 B1 + Ant 45 degree_Radio2219ExDismantle"];
+    let confArray = ["2020_Config-1D EXAMPLE", "Coverage", "Cov_2020_Config-4_0610", "Cov_2020_Config-4_06", "2515914", "RBS:COV_2020_CONFIG-4DC", "SVC", "EXAMPLE"];
     let typeArray = ["config_name","program","config_id", "config_customer_name", "sap_number","sap_description","config_type", "description"]
 
     // ws.addRow(["config_id", "sap_number", "pp_id", "qty", "price", "currency", "config_description", "config_type", "qty_commercial"]);

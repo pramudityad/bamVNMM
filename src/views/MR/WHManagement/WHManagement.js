@@ -851,7 +851,7 @@ class WHManagement extends React.Component {
                 <Row>
                   <Col>
                     <div >
-                      <Table striped borderless hover size="md">
+                      <Table size="sm">
                         <thead
                           // style={{ backgroundColor: "#73818f" }}
                           className="fixed-whman"
@@ -873,8 +873,8 @@ class WHManagement extends React.Component {
                             <th>Longitude</th>
                             <th>Owner</th>
                             <th>WH Type</th>
-                            <th></th>
-                            <th></th>
+                            <th colspan="2"></th>
+                            {/* <th></th> */}
                           </tr>
                         </thead>
                         <tbody>

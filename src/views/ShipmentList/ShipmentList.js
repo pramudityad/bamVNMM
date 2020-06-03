@@ -217,7 +217,7 @@ class ShipmentList extends Component {
   }
 
   toggleTakeOut(e) {
-    console.log('mr id ', this.state.shipment_detail.mr_list.map((mr) =>mr.mr_id));
+    // console.log('mr id ', this.state.shipment_detail.mr_list.map((mr) =>mr.mr_id));
     const modalDelete = this.state.warning;
     if (modalDelete === false) {
       const _id = e.currentTarget.value;
@@ -225,8 +225,8 @@ class ShipmentList extends Component {
       this.setState({
         warning: !this.state.warning,
         selected_id: _id,
-        selected_mr: this.state.shipment_detail.mr_list.map((mr) =>mr._id),
-        selected_mr_id: this.state.shipment_detail.mr_list.map((mr) =>mr.mr_id),
+        // selected_mr: this.state.shipment_detail.mr_list.map((mr) =>mr._id),
+        // selected_mr_id: this.state.shipment_detail.mr_list.map((mr) =>mr.mr_id),
       });
     } else {
       this.setState({
@@ -258,6 +258,7 @@ class ShipmentList extends Component {
       this.getDataFromAPINODE("/matreqShipment/" + e.target.value).then(
         (res) => {
           if (res.data !== undefined) {
+            console.log('matreqShipment ', res.data.data)
             this.setState({ shipment_detail: res.data.data });
           }
         }
@@ -289,10 +290,12 @@ class ShipmentList extends Component {
 
   TakeoutMR(e) {
     const _id = this.state.selected_id;
+    const mr_takeout = this.state.mr_data_selected.map(mr=>mr._id);
+    console.log('mr_takeout ',mr_takeout)
     if (e !== undefined) {
       this.toggleLoading();
       this.toggleTakeOut();
-      this.patchDatatoAPINODE("/matreqShipment/takeOutMR/" + _id, {"mrList" : this.state.selected_mr}).then(
+      this.patchDatatoAPINODE("/matreqShipment/takeOutMR/" + _id, {"mrList" : mr_takeout}).then(
         (res) => {
           console.log("matreqShipment/takeOutMR/ ", res);
           if (res.data !== undefined) {
@@ -435,14 +438,16 @@ class ShipmentList extends Component {
     const dataMR = this.state.shipment_list;
     let MRSelected = this.state.mr_data_selected;
     if (isChecked === true) {
-      const getMR = dataMR.find((mr) => mr._id === item);
-      MRSelected.push(getMR);
+      const getMR = this.state.shipment_detail.mr_list.find((mr) =>mr._id === item)
+      MRSelected.push(getMR);      
     } else {
-      MRSelected = MRSelected.filter(function (mr) {
-        return mr._id !== item;
+      MRSelected = MRSelected.filter(function (e) {
+        return e._id !== item;
       });
     }
     this.setState({ mr_data_selected: MRSelected });
+    // console.log('MRSelected ', this.state.mr_data_selected)
+    // console.log('MRSelected id ', this.state.mr_data_selected.map(mr=> mr._id))
     this.setState((prevState) => ({
       mr_checked: prevState.mr_checked.set(item, isChecked),
     }));
@@ -495,18 +500,18 @@ class ShipmentList extends Component {
         <Row>
           <Col xs="12" lg="12">
             <Card>
-              <CardHeader>
+              <CardHeader style={{display: "inline-flex"}}>
                 <span>Shipment Detail{" "}
                 {this.state.shipment_detail.no_shipment !== undefined ? "(" + this.state.shipment_detail.no_shipment + ")" : ""}
                 </span>
                   {this.state.shipment_detail.no_shipment !== undefined && (
-                    <div>
+                    <div style={{ marginLeft: "auto", float: "right" }}>
                     <Button color="danger" size="sm" value={this.state.shipment_detail._id} onClick={this.toggleDelete} style={{float : 'right', marginRight: "6px"}}>
                       <i className="icon-ban icons "> &nbsp; </i> Cancel Shipment
                     </Button>                    
                     &nbsp;&nbsp;&nbsp;
                     &nbsp;&nbsp;&nbsp;
-                    <Button color="warning" size="sm" value={this.state.shipment_detail._id} onClick={this.toggleTakeOut} style={{float : 'right', marginRight:"6px"}}>
+                    <Button color="warning" size="sm" disabled={this.state.mr_data_selected.length === 0} value={this.state.shipment_detail._id} onClick={this.toggleTakeOut} style={{float : 'right', marginRight:"6px"}}>
                     <i className="icon-action-undo icons "> &nbsp; </i> Takeout MR
                   </Button></div>
                     
@@ -648,14 +653,16 @@ class ShipmentList extends Component {
                       <Table responsive striped bordered size="sm">
                         <thead>
                           <tr>
-                            <th>MR ID</th>
-                            <th>Total Box</th>
+                            <th style={{width: '60px'}}></th>
+                            <th style={{width: '150px'}}>MR ID</th>
+                            <th style={{width: '80px'}}>Total Box</th>
                           </tr>
                         </thead>
                         <tbody>
                           {this.state.shipment_detail.mr_list.map((mr) => (
                             <tr>
-                              <td style={{ textAlign: "left" }}>{mr.mr_id}</td>
+                              <td style={{ textAlign: 'center' }}><Checkbox name={mr._id} checked={this.state.mr_checked.get(mr._id)} onChange={this.handleChangeChecklist} value={mr} /></td>
+                              <td>{mr.mr_id}</td>
                               <td>{mr.total_boxes}</td>
                             </tr>
                           ))}
@@ -757,7 +764,8 @@ class ShipmentList extends Component {
           isOpen={this.state.warning}
           toggle={this.toggleTakeOut}
           className={"modal-warning " + this.props.className}
-          title={"Takeout MR " + this.state.selected_mr_id}
+          title={"Takeout MR from Shipment " + this.state.shipment_detail.no_shipment}
+          body={"want takeout " + this.state.mr_data_selected.map(mr=>mr.mr_id)}
           // title={"Takeout MR "}
         >
           <Button color="warning" onClick={this.TakeoutMR}>

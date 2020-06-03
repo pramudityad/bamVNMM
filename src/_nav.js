@@ -122,16 +122,16 @@ export default {
           url: '/bulk-mr-request',
           icon: 'icon-plus',
         },
-        {
-          name: 'Bulk MR Approval Changes',
-          url: '/bulk-mr-change-approval',
-          icon: 'icon-list',
-        },
-        {
-          name: 'Bulk MR Approval',
-          url: '/bulk-mr-approval',
-          icon: 'icon-check',
-        }
+        // {
+        //   name: 'Bulk MR Approval Changes',
+        //   url: '/bulk-mr-change-approval',
+        //   icon: 'icon-list',
+        // },
+        // {
+        //   name: 'Bulk MR Approval',
+        //   url: '/bulk-mr-approval',
+        //   icon: 'icon-check',
+        // }
       ]
     },
     {
