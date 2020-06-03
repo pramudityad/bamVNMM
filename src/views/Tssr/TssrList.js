@@ -144,6 +144,7 @@ class TssrList extends Component {
                       <th>No PS Group</th>
                       <th>Project</th>
                       <th>Status</th>
+                      <th>MR Related</th>
                       <th>Action</th>
                     </tr>
                   </thead>
@@ -153,6 +154,7 @@ class TssrList extends Component {
                         <td>{list.no_plantspec}</td>
                         <td>{list.project_name}</td>
                         <td>{list.submission_status}</td>
+                        <td>{list.mr_id}</td>
                         <td>
                           <Link to={'/ps-bom/'+list._id}>
                             <Button color="info" size="sm" outline>Detail</Button>

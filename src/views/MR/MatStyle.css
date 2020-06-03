@@ -104,6 +104,29 @@ Table thead th:first-child {
   z-index: 1;
 }
 
+.mr-detail__body--flex-long {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.mr-detail__body--flex-long > div{
+  width: 100%;
+  margin: 0px 10px 25px 10px;
+}
+
+.mr-detail__body--flex-long .mr-detail__body--header-detail{
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.mr-detail__body--flex-long .mr-detail__body--header-detail > span{
+  padding-bottom: 1.5px;
+  border-bottom: 1px solid;
+  border-bottom-color: rgba(100,181,246 ,1);
+}
+
 .mr-detail__body--flex {
   display: flex;
   flex-wrap: wrap;
