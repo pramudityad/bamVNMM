@@ -39,7 +39,7 @@ class ConfigUpload extends React.Component {
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
       pp_all: [],
-      filter_name: null,
+      filter_name: "",
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -69,7 +69,7 @@ class ConfigUpload extends React.Component {
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterDebounce = debounce(this.changeFilterName, 1000);
+    this.changeFilterName = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.toggleUpdateBulk = this.toggleUpdateBulk.bind(this);
@@ -212,14 +212,22 @@ class ConfigUpload extends React.Component {
   }
 
   handleChangeFilter = (e) => {
-    const value = e.target.value;
+    let value = e.target.value;
+    if(value.length === 0){
+      value = "";
+    }
     this.setState({ filter_name: value }, () => {
-      this.changeFilterDebounce(value);
+      this.changeFilterName(value);
     });
   }
 
   getConfigDataAPI(){
-    this.getDatatoAPINode('/packageconfig?lmt='+this.state.perPage+'&pg='+this.state.activePage)
+    let filter = '{"$regex" : "", "$options" : "i"}';
+    if (this.state.filter_name !== ""){
+      filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    } 
+    let whereOr = '{"$or" : [{"config_id": ' + filter + '}, {"config_name": ' + filter + '}, {"program": ' + filter + '}, {"config_type": ' + filter + '}]}';
+    this.getDatatoAPINode('/packageconfig?q='+whereOr+'&lmt='+this.state.perPage+'&pg='+this.state.activePage)
     .then(res =>{
       if(res.data !== undefined){
         this.setState({ config_package : res.data.data, prevPage : this.state.activePage, total_dataConfig : res.data.totalResults })

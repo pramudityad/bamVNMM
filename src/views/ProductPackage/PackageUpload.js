@@ -56,7 +56,7 @@ class PackageUpload extends React.Component {
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterDebounce = debounce(this.changeFilterName, 1000);
+    this.changeFilterName = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.onEntering = this.onEntering.bind(this);
@@ -156,16 +156,16 @@ class PackageUpload extends React.Component {
   }
 
   changeFilterName(value) {
-    this.getPackageDataAPI(value, this.state.project_filter);
+    this.getPackageDataAPI();
   }
 
   handleChangeFilter = (e) => {
     let value = e.target.value;
     if(value.length === 0){
-      value = null;
+      value = "";
     }
     this.setState({ filter_name: value }, () => {
-      this.changeFilterDebounce(value);
+      this.changeFilterName(value);
     });
   }
 
@@ -176,7 +176,14 @@ class PackageUpload extends React.Component {
   }
 
   getPackageDataAPI() {
-    this.getDatafromAPINODE('/productpackage?lmt='+this.state.perPage+'&pg='+this.state.activePage)
+    let filter = '{"$regex" : "", "$options" : "i"}';
+    if (this.state.filter_name !== ""){
+      filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    } 
+    // let filter = this.state.filter_name === ""  ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    let whereOr = '{"$or" : [{"product_name": ' + filter + '}, {"pp_cust_number": ' + filter + '}, {"physical_group": ' + filter + '}]}';
+    // let whereOr = '{"$or" : [{"product_name": ' + filter + '}]}';
+    this.getDatafromAPINODE('/productpackage?q='+whereOr+'&lmt='+this.state.perPage+'&pg='+this.state.activePage)
       .then(res => {
         if (res.data !== undefined) {
           this.setState({ product_package: res.data.data, prevPage: this.state.activePage, total_dataParent : res.data.totalResults });
