@@ -825,7 +825,7 @@ class MRDetail extends Component {
       "Material Name",
       "Description",
       "Category",
-      "QTY",
+      "Qty Available",
     ]);
     for (let j = 0; j < dataMaterialVariant.length; j++) {
       ws2.addRow([
