@@ -723,7 +723,25 @@ class ConfigUpload extends React.Component {
     dataConfigSelected.map(e => ws2.addRow([e.config_id, e.config_name]));
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Horizontal Template.xlsx');
+  }
+
+  exportTechnicalVerticalFormat = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let HeaderRow1 = ["tower_id", "program", "sow", "config_group", "config_id", "config_group_type", "qty"];
+
+    ws.addRow(HeaderRow1);
+
+    const ws2 = wb.addWorksheet();
+
+    ws2.addRow(["config_id", "config_name"]);
+    const dataConfigSelected = this.state.config_selected;
+    dataConfigSelected.map(e => ws2.addRow([e.config_id, e.config_name]));
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Vertical Template.xlsx');
   }
 
   // Config Template XLSX bulk upload
@@ -756,7 +774,8 @@ class ConfigUpload extends React.Component {
                         </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>File Template</DropdownItem>
-                        <DropdownItem onClick={this.exportTechnicalFormat}>> Technical BOQ Template</DropdownItem>
+                        <DropdownItem onClick={this.exportTechnicalFormat}>> Technical BOQ Horizontal Template</DropdownItem>
+                        <DropdownItem onClick={this.exportTechnicalVerticalFormat}>> Technical BOQ Vertical Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfigParent}>> Config Update Template Parent</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>

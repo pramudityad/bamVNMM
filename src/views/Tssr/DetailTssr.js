@@ -23,6 +23,10 @@ const API_URL_PDB_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const usernameTselApi = 'adminbamidsuper';
 const passwordTselApi = 'F760qbAg2sml';
 
+const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
+const usernameXL = "adminbamidsuper";
+const passwordXL = "F760qbAg2sml";
+
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
@@ -100,6 +104,7 @@ class DetailTssr extends Component {
         material_inbound : [],
         collapseUpload : false,
         dropdownOpen: new Array(1).fill(false),
+        wbs_cd_id_data : [],
     };
     this.handleChangeProject = this.handleChangeProject.bind(this);
     this.handleChangeVersion = this.handleChangeVersion.bind(this);
@@ -310,6 +315,26 @@ class DetailTssr extends Component {
       let respond = err;
       this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
       console.log("respond Post Data", err);
+      return respond;
+    }
+  }
+
+  async getDatafromAPIXL(url){
+    try {
+      let respond = await axios.get(API_URL_XL +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
       return respond;
     }
   }
@@ -596,12 +621,25 @@ class DetailTssr extends Component {
     this.getDataFromAPINODE('/plantspec/'+_id_tssr).then( res => {
       if(res.data !== undefined){
         this.setState({ tssrData : res.data.data }, () => {
+          if(res.data.data.site_info !== undefined){
+            this.getDataCDID(res.data.data.site_info.filter(fe => fe.cd_id !== null && fe.cd_id !== undefined).map(e => e.cd_id));
+          }
           this.getDataWarehouse();
           this.getDataInbound();
         })
         console.log('tssrData', this.state.tssrData);
       }
     })
+  }
+
+  async getDataCDID(array_cd_id){
+    if(array_cd_id.length !== 0){
+      let array_in_cdid = '"'+array_cd_id.join('", "')+'"';
+      const getWPID = await this.getDatafromAPIXL('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}');
+      if(getWPID !== undefined && getWPID.data !== undefined) {
+        this.setState({ wbs_cd_id_data : getWPID.data._items});
+      }
+    }
   }
 
   async getDataWarehouse() {
@@ -1219,7 +1257,7 @@ class DetailTssr extends Component {
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
 
-    let headerRow = ["bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "stock_warehouse", "inbound_warehouse", "availability", "source_material"];
+    let headerRow = ["bam_id", "bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "stock_warehouse", "inbound_warehouse", "availability", "source_material"];
     ws.addRow(headerRow);
     let list_material_id = [];
     for(let i = 0; i < dataItemTSSR.length; i++){
@@ -1230,7 +1268,7 @@ class DetailTssr extends Component {
         let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
         qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
-        ws.addRow([dataItemTSSR[i].pp_id, dataItemTSSR[i].product_name, dataItemTSSR[i].program, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_unit, dataMatIdx.qty, qty_wh, qty_inbound, (dataMatIdx.qty) < qty_wh ? "OK":"NOK"]);
+        ws.addRow([dataMatIdx._id, dataItemTSSR[i].pp_id, dataItemTSSR[i].product_name, dataItemTSSR[i].program, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.uom, dataMatIdx.qty, qty_wh, qty_inbound, (dataMatIdx.qty) < qty_wh ? "OK":"NOK"]);
       }
     }
 
@@ -1264,7 +1302,7 @@ class DetailTssr extends Component {
       }
     });
 
-    ws2.addRow(["Origin","Material ID","Material Name","Description", "Category", "QTY"]);
+    ws2.addRow(["Origin","Material ID","Material Name","Description", "Category", "Qty Available"]);
     for(let j = 0; j < dataMaterialVariant.length; j++){
       ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category, list_qtySKU[j]]);
     }
@@ -1289,6 +1327,52 @@ class DetailTssr extends Component {
       }else{
         this.setState({ action_status: 'failed' });
       }
+    }
+  }
+
+  tableWBSPlantSpect(site_info){
+    const dataCDWBS = this.state.wbs_cd_id_data;
+    if(site_info.cd_id !== undefined && site_info.cd_id !== null){
+      let dataCDWBSbyCDID = dataCDWBS.find(e => e.WP_ID === site_info.cd_id);
+      if(dataCDWBSbyCDID !== undefined){
+        return (
+          <Fragment>
+            <td>{site_info.cd_id}</td>
+            <td>{dataCDWBSbyCDID.C1003_WBS_HW}</td>
+            <td>{dataCDWBSbyCDID.C1008_WBS_HWAC}</td>
+            <td>{dataCDWBSbyCDID.C1013_WBS_LCM}</td>
+            <td>{dataCDWBSbyCDID.C1018_WBS_PNRO}</td>
+            <td>{dataCDWBSbyCDID.C1024_WBS_PNDO}</td>
+            <td>{dataCDWBSbyCDID.C1032_WBS_HW_Bulk}</td>
+            <td>{dataCDWBSbyCDID.C1033_WBS_LCM_Bulk}</td>
+            <td>{dataCDWBSbyCDID.C1034_WBS_PowHW_Site_Basis}</td>
+            <td>{dataCDWBSbyCDID.C1035_WBS_PowLCM_Site_Basis}</td>
+            <td>{dataCDWBSbyCDID.C1036_WBS_Kathrein}</td>
+          </Fragment>
+        )
+      }else{
+        return(
+          <Fragment>
+            <td>{site_info.cd_id}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </Fragment>
+        )
+      }
+    }else{
+      return(
+        <Fragment>
+          <td colSpan="11">Please Assign PS to MR</td>
+        </Fragment>
+      )
     }
   }
 
@@ -1390,6 +1474,9 @@ class DetailTssr extends Component {
                     <tr>
                       <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Site ID : {this.state.tssrData.site_info[0].site_id}</td>
                     </tr>
+                    <tr>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>MR Related : {this.state.tssrData.mr_id}</td>
+                    </tr>
                     </Fragment>
                   )}
                 </tbody>
@@ -1398,7 +1485,7 @@ class DetailTssr extends Component {
               <Fragment>
                 <Row>
                 {this.state.tssr_site_NE !== null && (
-                <Col style={{marginBottom : '20px'}}>
+                <Col style={{marginBottom : '10px'}}>
                   <table>
                     <tbody>
                       <tr>
@@ -1482,15 +1569,44 @@ class DetailTssr extends Component {
                 )}
                 </Row>
                 <hr className="upload-line-ordering"></hr>
+                <Table responsive striped bordered size="sm">
+                  <thead>
+                    <tr style={{fontSize : '10.5px'}}>
+                      <th>PS No</th>
+                      <th>CD ID</th>
+                      <th>WBS HW</th>
+                      <th>WBS HWAC</th>
+                      <th>WBS LCM</th>
+                      <th>WBS PNRO</th>
+                      <th>WBS PNDO</th>
+                      <th>WBS HW Bulk</th>
+                      <th>WBS LCM Bulk</th>
+                      <th>WBS PowHW Site Basis</th>
+                      <th>WBS PowLCM Site Basis</th>
+                      <th>WBS Kathrein</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {this.state.tssrData !== null ? this.state.tssrData.site_info.map(site =>
+                        <tr style={{fontSize : '10.5px'}}>
+                          <td>
+                            {site.no_tssr_boq_site}
+                          </td>
+                          {this.tableWBSPlantSpect(site)}
+                        </tr>
+                      ) : <Fragment></Fragment>}
+                  </tbody>
+                </Table>
+                <hr className="upload-line-ordering"></hr>
                 <div className='divtable2'>
                   <Table hover bordered striped responsive size="sm">
                     <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
                       <tr>
-                        <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Tech No. (Program) / Source Material</th>
+                        <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PS No. (Program) / Source Material</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
                         <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Program</th>
-                        <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
+                        <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>UOM</th>
                         <th colSpan="3" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Availability</th>
                       </tr>
@@ -1522,10 +1638,10 @@ class DetailTssr extends Component {
                                 <td style={{textAlign : 'left'}}>{material.material_name}</td>
                                 <td style={{textAlign : 'left'}}></td>
                                 <td>{material.uom}</td>
-                                <td align='center'>{(pp.qty*material.qty).toFixed(2)}</td>
+                                <td align='center'>{(material.qty).toFixed(2)}</td>
                                 <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                                 <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
-                                <td align='center'>{pp.qty*material.qty < qty_wh ? "OK":"NOK"}</td>
+                                <td align='center'>{material.qty < qty_wh ? "OK":"NOK"}</td>
                               </tr>
                             )}
                           </Fragment>

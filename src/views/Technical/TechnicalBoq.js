@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { Card, CardHeader, CardBody, CardFooter, Table, Row, Col, Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Collapse, Input} from 'reactstrap';
+import { Card, CardHeader, CardBody, CardFooter, Table, Row, Col, Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Collapse, Input, FormGroup, Label} from 'reactstrap';
 import axios from 'axios';
 import './boqTechnical.css';
 import { saveAs } from 'file-saver';
@@ -75,6 +75,9 @@ class TableTechnicalConfig extends React.Component{
           <th rowSpan="2" style={{verticalAlign : "middle"}}>
             SOW
           </th>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            Priority
+          </th>
           {this.props.configHeader.config_group_type_header.map(type =>
             <Fragment>
               <th>{type}</th>
@@ -99,6 +102,7 @@ class TableTechnicalConfig extends React.Component{
             <td>{site.site_id}</td>
             <td>{site.program}</td>
             <td>{site.sow}</td>
+            <td>{site.priority}</td>
             {(this.props.isVersion === "rollback") ? (
               this.props.configHeader.config_group_header.map((conf,i) =>
                 this.getTechnicalRow(site.siteItemConfigVersion, conf, this.props.configHeader.config_group_type_header[i])
@@ -183,6 +187,7 @@ class TechnicalBoq extends Component {
       update_type : 'revision',
       modal_update_info : false,
       loading_checking : null,
+      format_uploader : null,
     };
     this.toggleUpdateInfo = this.toggleUpdateInfo.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -214,6 +219,7 @@ class TechnicalBoq extends Component {
     this.exportFormatTechnicalVertical = this.exportFormatTechnicalVertical.bind(this);
     this.approvalTechnical = this.approvalTechnical.bind(this);
     this.handleChangeOptionView = this.handleChangeOptionView.bind(this);
+    this.handleChangeFormatUploader = this.handleChangeFormatUploader.bind(this);
     }
 
     numberToAlphabet(number){
@@ -818,7 +824,7 @@ class TechnicalBoq extends Component {
   }
 
   async checkingFormatTech(rowsTech){
-        this.toggleLoading();
+    this.toggleLoading();
     let dataCheck = {
       "techBoqData" : rowsTech
     }
@@ -828,8 +834,11 @@ class TechnicalBoq extends Component {
     if(this.state.update_qty_for.toLowerCase() === 'delivery'){
       dataCheck["updateQtyDelivery"] = true;
     }
-
-    let postCheck = await this.postDatatoAPINODE('/techBoq/checkTechBoqDataXL', dataCheck);
+    let urlCheck = '/techBoq/checkTechBoqDataXL';
+    if(this.state.format_uploader === "Vertical"){
+      urlCheck = '/techBoq/checkTechBoqDataXLVertical'
+    }
+    let postCheck = await this.postDatatoAPINODE(urlCheck, dataCheck);
     if(postCheck.data !== undefined){
       const dataCheck = postCheck.data;
       let siteNew = [];
@@ -876,6 +885,11 @@ class TechnicalBoq extends Component {
       }
     }
     this.setState({loading_checking : null});
+  }
+
+  handleChangeFormatUploader = (e) => {
+    let format = e.target.value;
+    this.setState({ format_uploader : format });
   }
 
   saveTechBoq = async () => {
@@ -2225,6 +2239,72 @@ class TechnicalBoq extends Component {
     saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Horizontal.xlsx');
   }
 
+  exportFormatTechnicalVerticalUploader = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataTech = this.state.data_tech_boq;
+    let dataSites = [];
+    if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+      dataSites = this.state.data_tech_boq_sites_version;
+    }else{
+      dataSites = this.state.data_tech_boq_sites;
+    }
+    const dataHeader = this.state.view_tech_header_table;
+
+    let ppIdRow = ["tower_id", "program", "sow", "config_group", "config_id", "config_group_type", "qty"];
+
+    ws.addRow(ppIdRow);
+    for(let i = 0; i < dataSites.length ; i++){
+      let qtyConfig = []
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        for(let j = 0; j < dataSites[i].siteItemConfigVersion.length; j++ ){
+          ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].siteItemConfigVersion[j].config_group, dataSites[i].siteItemConfigVersion[j].config_id, dataSites[i].siteItemConfigVersion[j].config_group_type, dataSites[i].siteItemConfigVersion[j].qty]);
+        }
+      }else{
+        for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
+          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_group, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].config_group_type, dataSites[i].siteItemConfig[j].qty]);
+        }
+      }
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Vertical Uploader.xlsx');
+  }
+
+  exportFormatTechnicalVerticalUploaderCommercial = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataTech = this.state.data_tech_boq;
+    let dataSites = [];
+    if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+      dataSites = this.state.data_tech_boq_sites_version;
+    }else{
+      dataSites = this.state.data_tech_boq_sites;
+    }
+    const dataHeader = this.state.view_tech_header_table;
+
+    let ppIdRow = ["tower_id", "program", "sow", "config_group", "config_id", "config_group_type", "qty_commercial"];
+
+    ws.addRow(ppIdRow);
+    for(let i = 0; i < dataSites.length ; i++){
+      let qtyConfig = []
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        for(let j = 0; j < dataSites[i].siteItemConfigVersion.length; j++ ){
+          ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].siteItemConfigVersion[j].config_group, dataSites[i].siteItemConfigVersion[j].config_id, dataSites[i].siteItemConfigVersion[j].config_group_type, dataSites[i].siteItemConfigVersion[j].qty_commercial]);
+        }
+      }else{
+        for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
+          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_group, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].config_group_type, dataSites[i].siteItemConfig[j].qty_commercial]);
+        }
+      }
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Vertical Uploader.xlsx');
+  }
+
   exportFormatTechnicalVertical = async () =>{
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -2315,6 +2395,8 @@ class TechnicalBoq extends Component {
                               <DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Report</DropdownItem>
                               <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Horizontal</DropdownItem>
                               <DropdownItem onClick={this.exportFormatTechnicalVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Vertical</DropdownItem>
+                              <DropdownItem onClick={this.exportFormatTechnicalVerticalUploader}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Delivery Vertical Format</DropdownItem>
+                              <DropdownItem onClick={this.exportFormatTechnicalVerticalUploaderCommercial}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Commercial Vertical Format</DropdownItem>
                               <DropdownItem onClick={this.exportFormatTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Delivery Format</DropdownItem>
                               <DropdownItem onClick={this.exportFormatTechnicalCommercial}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Commercial Format</DropdownItem>
                             </DropdownMenu>
@@ -2347,14 +2429,22 @@ class TechnicalBoq extends Component {
                     {this.state.data_item.length === 0 && this.state.API_Tech.no_boq_tech === undefined && this.props.match.params.id == undefined ? (
                       <React.Fragment>
                       <Row></Row>
-                        <input type="file" onChange={this.fileHandlerTechnical.bind(this)} style={{"padding":"10px 10px 5px 10px","visiblity":"hidden"}} />
+                        <div style={{display : 'flex', marginBottom :'10px', marginLeft : '15px'}}>
+                          <span style={{width : '135px', marginTop : '10px'}}>Format Uploader :</span>
+                          <Input style={{width : '125px'}} id="format_uploader" name="format_uploader" type="select" value={this.state.format_uploader} onChange={this.handleChangeFormatUploader}>
+                            <option value={null}></option>
+                            <option value="Horizontal">Horizontal</option>
+                            <option value="Vertical">Vertical</option>
+                          </Input>
+                        </div>
+                        <input type="file" onChange={this.fileHandlerTechnical.bind(this)} style={{"padding":"10px 10px 5px 10px","visiblity":"hidden"}} disable={this.state.format_uploader !== null}/>
                         <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveTechBoq} disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null }>
                           {this.state.rowsTech.length == 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
                         </Button>
                         <Row>
                         <Col md="4">
-                          <div>
-                          Project :
+                          <div style={{display : 'flex', marginTop : '10px'}}>
+                            <span style={{width : '135px', marginTop : '10px'}}>Project :</span>
                             <Input name="project" type="select" onChange={this.selectProject} value={this.state.project_select}>
                                 <option value=""></option>
                                 {this.state.project_all.map( project =>
@@ -2372,8 +2462,16 @@ class TechnicalBoq extends Component {
                         <CardBody style={{padding: '5px'}}>
                           <Row>
                             <Col>
+                              <div style={{display:'inline-flex', marginBottom : '20px'}}>
+                                <span style={{width : '135px', marginTop : '10px'}}>Format Uploader :</span>
+                                <Input style={{width : '125px'}} id="format_uploader" name="format_uploader" type="select" value={this.state.format_uploader} onChange={this.handleChangeFormatUploader}>
+                                  <option value={null}></option>
+                                  <option value="Horizontal">Horizontal</option>
+                                  <option value="Vertical">Vertical</option>
+                                </Input>
+                              </div>
                               <div style={{display:'inline-flex'}}>
-                                <span style={{width : '115px'}}>
+                                <span style={{width : '135px'}}>
                                   Qty {this.state.update_qty_for} :
                                 </span>
                                 <span>
