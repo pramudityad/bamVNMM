@@ -874,7 +874,7 @@ class PackageUpload extends React.Component {
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
                           Select All
                         </span> */}
-                        <input className="search-box-material" type="text" name='filter' placeholder="Search Product Name" onChange={this.handleChangeFilter} value={this.state.filter_name} />
+                        <input className="search-box-material" type="text" name='filter' placeholder="Search" onChange={this.handleChangeFilter} value={this.state.filter_name} />
                       </div>
                     </div>
                   </Col>
