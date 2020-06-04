@@ -74,6 +74,7 @@ const AssignmentDetailASP = React.lazy(() => import('./views/Assignment/Assignme
 const AssignmentListApproval = React.lazy(() => import('./views/Assignment/AssignmentListApproval'));
 
 const PRPOCreation = React.lazy(() => import('./views/PRPO/CreatePRPO'));
+const ListPRPO = React.lazy(() => import('./views/PRPO/ListPRPO'));
 
 const ListTechnical = React.lazy(() => import('./views/Technical/ListTechnical'));
 const DetailTechnical = React.lazy(() => import('./views/Technical/TechnicalBoq'));
@@ -275,7 +276,8 @@ const routes = [
   { path: '/material-dispatch-per-wh/:whid', exact: true, name: 'Material Dispatch', component: MaterialDispatch },
   { path: '/loader-page', exact: true, name: 'Material Dispatch', component: LoaderPage },
 
-  { path: '/prpo-creation', exact: true, name: 'PRPO Creation', component: PRPOCreation },
+  { path: '/prt-creation', exact: true, name: 'PRT Creation', component: PRPOCreation },
+  { path: '/prt-list', exact: true, name: 'PRT List', component: ListPRPO },
 
 ];
 
