@@ -1,3 +1,5 @@
+import CreatePRPO from "./views/PRPO/CreatePRPO";
+
 export default {
   items: [
     {
@@ -173,6 +175,17 @@ export default {
         //   url: '/gi',
         //   icon: 'icon-list',
         // },
+      ]
+    },
+    {
+      name : 'PRT',
+      icon : 'fas fa-scroll',
+      children : [
+        {
+          name: 'PRT List',
+          url: '/prt-list',
+          icon: 'icon-list',
+        }
       ]
     },
     {
