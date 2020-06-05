@@ -168,11 +168,11 @@ class ListPRPO extends Component {
                           </tr>
                         )}
                         {this.state.all_data.map((list, i) =>
-                          <tr key={list._id}>
+                          <tr key={i}>
                             <td>
-                              {/* <Link to={'/assignment-detail/' + list._id}>
+                              <Link to={'/prt-detail/' + list._id}>
                                 <Button style={{ width: "90px" }} outline color="info" size="sm">Detail</Button>
-                              </Link> */}
+                              </Link>
                             </td>
                             <td>{list.prt_id}</td>
                             <td>{list.site_id}</td>
