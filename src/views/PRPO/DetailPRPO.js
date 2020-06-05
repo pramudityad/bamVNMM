@@ -11,250 +11,98 @@ import {
   Form,
   FormGroup,
   Label,
+  Table
 } from "reactstrap";
 import { connect } from "react-redux";
-import Select from "react-select";
+import { Link } from "react-router-dom";
 
-import Loading from '../components/Loading'
-import {
-  postDatatoAPINODE,
-  getDatafromAPIEXEL,
-} from "../../helper/asyncFunction";
+import Loading from "../components/Loading";
+import { getDatafromAPINODE } from "../../helper/asyncFunction";
 
-class CreatePRPO extends Component {
+const DefaultNotif = React.lazy(() =>
+  import("../../views/DefaultView/DefaultNotif")
+);
+
+class DetailPRPO extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      Dataform: {
-        prt_id: "",
-        site_id: "",
-        site_name: "",
-        quotation_number: "",
-        signum_pm: "",
-        approval_by: "",
-        id_project_doc: "",
-        project_name: "",
-        area: "",
-        purchase_group: "",
-        asp_name: "",
-        term_of_payment: "",
-        network_number: "",
-        activity_code: "",
-        action_point: "",
-        currency: "",
-        current_status: "",
-        approval_status: "",
-        approval_date: "",
-        total_price: "",
-        pr_number: "",
-        pr_date: "",
-        pr_inserted_by: "",
-        po_number: "",
-        po_date: "",
-        po_inserted_by: "",
-        po_item: "",
-        bast_no_dp: "",
-        req_gr_dp: "",
-        req_gr_by_dp: "",
-        req_gr_date_dp: "",
-        req_revision_dp: "",
-        revision_done_dp: "",
-        bast_no_final: "",
-        req_gr_final: "",
-        req_gr_by_final: "",
-        req_gr_date_final: "",
-        req_revision_final: "",
-        revision_done_final: "",
-        deleted: "",
-        SSOW_List: [],
-      },
-      list_project: [],
-      list_project_selection: [],
-      creation_ssow_form: [],
-      SSOW_List_out: [
-        {
-          ssow: "",
-          service_code: "",
-          ssow_qty: "",
-        },
-      ],
-      modal_loading: false,
+      all_data: [],
     };
     // bind
-    this.handleInput = this.handleInput.bind(this);
-    this.handleInputProject = this.handleInputProject.bind(this);
-    this.postPRT = this.postPRT.bind(this);
-    this.addSSOW = this.addSSOW.bind(this);
   }
+  // function
 
   componentDidMount() {
-    document.title = "PRT Creation | BAM";
-    this.getDataProject();
+    this.getPRTDetail(this.props.match.params.id);
+    document.title = "PRT Detail | BAM";
   }
 
-  handleInput(e) {
-    const value = e.target.value;
-    const name = e.target.name;
-    this.setState(
-      (prevState) => ({
-        Dataform: {
-          ...prevState.Dataform,
-          [name]: value,
-        },
-      }),
-      () => console.log(this.state.Dataform)
-    );
-  }
-
-  handleInputssow = (idx) => (e) => {
-    const value = e.target.value;
-    const name = e.target.name;
-    const newSSOW = this.state.SSOW_List_out.map((ssow_data, sidx) => {
-      if (idx !== sidx) return ssow_data;
-      // return {...ssow_data, ssow: e.target.value, service_code: e.target.value, ssow_qty:e.target.value}
-      return {...ssow_data, [name]: value, [name]: value, [name]: value}
-    });
-
-    this.setState({
-      SSOW_List_out: newSSOW
-    },
-    () => console.log(this.state.SSOW_List_out)
-    )
-  };
-
-  handleInputProject(e) {
-    const value = e.value;
-    const _id = e._id;
-    // const name = e.name;
-    this.setState(
-      (prevState) => ({
-        Dataform: {
-          ...prevState.Dataform,
-          ["project_name"]: value,
-          ["id_project_doc"]: _id,
-        },
-      }),
-      () => console.log(this.state.Dataform)
-    );
-  }
-
-  getDataProject() {
-    getDatafromAPIEXEL("/project_sorted_non_page").then((resProject) => {
-      if (resProject.data !== undefined) {
-        this.setState({ list_project: resProject.data._items }, () => {
-          this.filterDataProject("");
-        });
+  getPRTDetail(_id) {
+    getDatafromAPINODE("/prt/getPrt/" + _id, this.props.dataLogin.token).then(
+      (res) => {
+        if (res.data !== undefined) {
+          this.setState({ all_data: res.data.data });
+          console.log("getPRTDetail ", this.state.all_data);
+        }
       }
-    });
-  }
-
-  filterDataProject = (inputValue) => {
-    const list = [];
-    this.state.list_project.map((i) =>
-      list.push({ label: i.Project, value: i.Project, _id: i._id })
     );
-    this.setState({ list_project_selection: list });
-    if (inputValue.length === 0) {
-      return list;
-    } else {
-      return this.state.list_project_selection.filter((i) =>
-        i.label.toLowerCase().includes(inputValue.toLowerCase())
-      );
-    }
-  };
-
-  async postPRT() {
-    let prt_data = {
-      prt_id: this.state.Dataform.prt_id,
-      site_id: this.state.Dataform.site_id,
-      site_name: this.state.Dataform.site_name,
-      quotation_number: this.state.Dataform.quotation_number,
-      signum_pm: this.state.Dataform.signum_pm,
-      approval_by: this.state.Dataform.approval_by,
-      id_project_doc: this.state.Dataform.id_project_doc,
-      project_name: this.state.Dataform.project_name,
-      area: this.state.Dataform.area,
-      purchase_group: this.state.Dataform.purchase_group,
-      asp_name: this.state.Dataform.asp_name,
-      term_of_payment: this.state.Dataform.term_of_payment,
-      network_number: this.state.Dataform.network_number,
-      activity_code: this.state.Dataform.activity_code,
-      action_point: this.state.Dataform.action_point,
-      currency: this.state.Dataform.currency,
-      current_status: "PRT CREATED",
-      approval_status: "NOT APPROVED",
-      approval_date: "",
-      total_price: this.state.Dataform.total_price,
-      pr_number: this.state.Dataform.pr_number,
-      pr_date: this.state.Dataform.pr_date,
-      pr_inserted_by: this.state.Dataform.pr_inserted_by,
-      po_number: this.state.Dataform.po_number,
-      po_date: this.state.Dataform.po_date,
-      po_inserted_by: this.state.Dataform.po_inserted_by,
-      po_item: this.state.Dataform.po_item,
-      bast_no_dp: this.state.Dataform.bast_no_dp,
-      req_gr_dp: this.state.Dataform.req_gr_dp,
-      req_gr_by_dp: this.state.Dataform.req_gr_by_dp,
-      req_gr_date_dp: this.state.Dataform.req_gr_date_dp,
-      req_revision_dp: this.state.Dataform.req_revision_dp,
-      revision_done_dp: this.state.Dataform.revision_done_dp,
-      bast_no_final: this.state.Dataform.bast_no_final,
-      req_gr_final: this.state.Dataform.req_gr_by_final,
-      req_gr_by_final: this.state.Dataform.req_gr_by_final,
-      req_gr_date_final: this.state.Dataform.req_gr_date_final,
-      req_revision_final: this.state.Dataform.req_revision_final,
-      revision_done_final: this.state.Dataform.revision_done_final,
-      deleted: 0,
-      SSOW_List: this.state.SSOW_List_out,
-    };
-    console.log("data prt", prt_data);
-    const post = postDatatoAPINODE(
-      "/prt/createOnePrt",
-      { prt_data },
-      this.props.dataLogin.token
-    ).then((res) => {
-      console.log(" res post single ", res);
-      if (res.data !== undefined) {
-        this.setState({ action_status: "success" }, () => {});
-      } else {
-        this.setState({
-          action_status: "failed",
-        });
-      }
-    });
-  }
-
-  addSSOW() {
-    this.setState({
-      SSOW_List_out: this.state.SSOW_List_out.concat([
-        { ssow: "", service_code: "", ssow_qty: "" },
-      ]),
-    });
-  }
-
-  deleteSSOW = idx => () =>{
-    this.setState({
-      SSOW_List_out : this.state.SSOW_List_out.filter((s, sidx) => idx !== sidx)
-    });
   }
 
   render() {
-    const { Dataform, SSOW_List_out } = this.state;
+    const { all_data } = this.state;
     return (
       <div className="animated fadeIn">
+        <Row className="row-alert-fixed">
+          <Col xs="12" lg="12">
+            <DefaultNotif
+              actionMessage={this.state.action_message}
+              actionStatus={this.state.action_status}
+            />
+          </Col>
+        </Row>
         <Row>
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: "2", fontSize: "17px" }}>
-                  <i className="fa fa-edit" style={{ marginRight: "8px" }}></i>
-                  PR/PO Creation
+                  <i
+                    className="fa fa-info-circle"
+                    style={{ marginRight: "8px" }}
+                  ></i>
+                  PRT Detail ({all_data.prt_id})
                 </span>
+                <Link to={'/prt-edit/' + all_data._id}>
+                <Button
+                  style={{ marginRight: "8px", float: "right" }}                  
+                  color="warning"
+                  size="sm"
+                >
+                  <i
+                    className="fas fa-edit"
+                    style={{ marginRight: "8px" }}
+                  ></i>
+                  Edit
+                </Button>
+                </Link>
+                
+                &nbsp;&nbsp;&nbsp;
+                <Button
+                  style={{ marginRight: "8px", float: "right" }}
+                  outline
+                  color="info"
+                  size="sm"
+                >
+                  <i
+                    className="fa fa-download"
+                    style={{ marginRight: "8px" }}
+                  ></i>
+                  PRT Format
+                </Button>
               </CardHeader>
               <CardBody>
                 <Row xs="2">
-                  {/* general info */}
                   <Col>
                     <h5>General Information</h5>
                     <Form>
@@ -262,10 +110,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>PRT ID</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="PRT ID"
                             name={"prt_id"}
-                            value={Dataform.prt_id}
+                            value={all_data.prt_id}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -274,10 +123,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Site ID</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="Site ID"
                             name={"site_id"}
-                            value={Dataform.site_id}
+                            value={all_data.site_id}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -286,10 +136,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Site Name</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="Site Name"
                             name={"site_name"}
-                            value={Dataform.site_name}
+                            value={all_data.site_name}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -298,10 +149,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Quotation Number</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="Quotation Number"
                             name={"quotation_number"}
-                            value={Dataform.quotation_number}
+                            value={all_data.quotation_number}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -310,10 +162,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Signum PM</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="Signum PM"
                             name={"signum_pm"}
-                            value={Dataform.signum_pm}
+                            value={all_data.signum_pm}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -322,34 +175,23 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Approval By</Label>
                         <Col sm={10}>
                           <Input
-                            type="select"
+                          readOnly
+                            type="text"
                             placeholder="Select Approval by"
                             name={"approval_by"}
-                            value={Dataform.approval_by}
-                            onChange={this.handleInput}
-                          >
-                            <option value="" disabled selected hidden>
-                              Select Approval by
-                            </option>
-                            <option value="TPM">TPM</option>
-                            <option value="KAM">KAM</option>
-                            <option value="Head of Finance">
-                              Head of Finance
-                            </option>
-                            <option value="Head Of Cu">Head Of Cu</option>
-                          </Input>
+                            value={all_data.approval_by}
+                          />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
                         <Label sm={2}>Project Name</Label>
                         <Col sm={10}>
-                          <Select
-                            cacheOptions
-                            options={this.state.list_project_selection}
-                            name={"project_name"}
-                            onChange={this.handleInputProject.bind(
-                              "project_name"
-                            )}
+                          <Input
+                          readOnly
+                            type="text"
+                            name="project_name"
+                            readOnly
+                            value={all_data.project_name}
                           />
                         </Col>
                       </FormGroup>
@@ -357,10 +199,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Area</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="Area"
                             name={"area"}
-                            value={Dataform.area}
+                            value={all_data.area}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -375,10 +218,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Purchase Group</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="Purchase Group"
                             name={"purchase_group"}
-                            value={Dataform.purchase_group}
+                            value={all_data.purchase_group}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -387,10 +231,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>ASP Name</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="ASP Name"
                             name={"asp_name"}
-                            value={Dataform.asp_name}
+                            value={all_data.asp_name}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -399,34 +244,24 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Term of Payment</Label>
                         <Col sm={10}>
                           <Input
-                            type="select"
+                          readOnly
+                            type="text"
                             placeholder=""
                             name={"term_of_payment"}
-                            value={Dataform.term_of_payment}
+                            value={all_data.term_of_payment}
                             onChange={this.handleInput}
-                          >
-                            <option value="" disabled hidden>
-                              Select TOP
-                            </option>
-                            <option value="2080">20% - 80%</option>
-                            <option value="3070">30% - 70%</option>
-                            <option value="4060">40% - 60%</option>
-                            <option value="5050">50% - 50%</option>
-                            <option value="100">100% - 0%</option>
-                            <option value="8020">80% - 20%</option>
-                            <option value="7030">70% - 30%</option>
-                            <option value="6040">60% - 40%</option>
-                          </Input>
+                          />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
                         <Label sm={2}>Network Number</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="Network Number"
                             name={"network_number"}
-                            value={Dataform.network_number}
+                            value={all_data.network_number}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -435,10 +270,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Activity Code</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="Activity Code"
                             name={"activity_code"}
-                            value={Dataform.activity_code}
+                            value={all_data.activity_code}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -447,38 +283,26 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Action Point</Label>
                         <Col sm={10}>
                           <Input
-                            type="select"
+                          readOnly
+                            type="text"
                             placeholder="Action Point"
                             name={"action_point"}
-                            value={Dataform.action_point}
+                            value={all_data.action_point}
                             onChange={this.handleInput}
-                          >
-                            <option value="" disabled selected hidden>
-                              Select Action Point
-                            </option>
-                            <option value="">New Assignment</option>
-                            <option value="">Revise Assignment</option>
-                            <option value="">Cancel Assignment</option>
-                          </Input>
+                          />
                         </Col>
                       </FormGroup>
                       <FormGroup row>
                         <Label sm={2}>Currency</Label>
                         <Col sm={10}>
                           <Input
-                            type="select"
+                          readOnly
+                            type="text"
                             placeholder="Currency"
                             name={"currency"}
-                            value={Dataform.currency}
+                            value={all_data.currency}
                             onChange={this.handleInput}
-                          >
-                            <option value="" disabled selected hidden>
-                              Select Currency
-                            </option>
-                            <option value="IDR">IDR</option>
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                          </Input>
+                          />
                         </Col>
                       </FormGroup>
                     </Form>
@@ -486,62 +310,44 @@ class CreatePRPO extends Component {
                 </Row>
                 {/* ssow */}
                 <h5>SSOW Detail</h5>
-                <Button color="primary" size="sm" onClick={this.addSSOW}>
+                {/* <Button color="primary" size="sm" onClick={this.addSSOW}>
                   <i className="fa fa-plus">&nbsp;</i> SSOW
-                </Button>
-                {SSOW_List_out.map((ssow_data, idx) => (
-                  <Row xs="3">
-                    <Col md="6">
-                      SSOW
-                      <Input
-                        type="text"
-                        placeholder={`SSOW #${idx+1}`}
-                        name={"ssow"}
-                        value={ssow_data.ssow}
-                        onChange={this.handleInputssow(idx)}
-                      />
-                    </Col>
-                    <Col md="4">
-                      Service Code
-                      <Input
-                        type="text"
-                        placeholder={`Service Code #${idx+1}`}
-                        name={"service_code"}
-                        value={ssow_data.service_code}
-                        onChange={this.handleInputssow(idx)}
-                      />
-                    </Col>
-                    <Col md="1">
-                      QTY
-                      <Input
-                        type="number"
-                        placeholder={`QTY #${idx+1}`}
-                        name={"ssow_qty"}
-                        value={ssow_data.ssow_qty}
-                        onChange={this.handleInputssow(idx)}
-                      />
-                    </Col>
-                    <div style={{display: "flex"}}>
-                    <Button
-                      onClick={this.deleteSSOW(idx)}
-                      color="danger"
+                </Button> */}
+                <Row>
+                  <Col md="12">
+                    <Table
+                      striped
                       size="sm"
-                      style={{ marginLeft: "5px" }}
+                      className="assignment-list__table--center-non-border"
                     >
-                      <i className="fa fa-trash"></i>
-                    </Button>
-                    </div>
-                    
-                  </Row>
-                ))}
+                      <thead>
+                        <tr>
+                          <th>SSOW</th>
+                          <th>Service Code</th>
+                          <th>Qty</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      {all_data.SSOW_List !== undefined && all_data.SSOW_List.map((ssow_data, idx) => (
+                          <tr key={ssow_data._id}>
+                          <td>{ssow_data.ssow}</td>
+                          <td>{ssow_data.service_code}</td>
+                          <td>{ssow_data.ssow_qty}</td>
+                          </tr>
+                      ))}
+                      </tbody>
+                    </Table>
+                  </Col>
+                </Row>
                 <FormGroup row>
                   <Label sm={2}>Total Price</Label>
                   <Col sm={10}>
                     <Input
+                    readOnly
                       type="text"
                       placeholder="Total Price"
                       name={"total_price"}
-                      value={Dataform.total_price}
+                      value={all_data.total_price}
                       onChange={this.handleInput}
                     />
                   </Col>
@@ -555,10 +361,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>PR Number</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="PR Number"
                             name={"pr_number"}
-                            value={Dataform.pr_number}
+                            value={all_data.pr_number}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -567,10 +374,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>PR Date</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="date"
                             placeholder="PR Date"
                             name={"pr_date"}
-                            value={Dataform.pr_date}
+                            value={all_data.pr_date}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -579,10 +387,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>PR Inserted By</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="PR Inserted By"
                             name={"pr_inserted_by"}
-                            value={Dataform.pr_inserted_by}
+                            value={all_data.pr_inserted_by}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -591,10 +400,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>PO Number</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="PO Number"
                             name={"po_number"}
-                            value={Dataform.po_number}
+                            value={all_data.po_number}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -603,10 +413,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>PO Date</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="date"
                             placeholder="PO Date"
                             name={"po_date"}
-                            value={Dataform.po_date}
+                            value={all_data.po_date}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -615,10 +426,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>PO Inserted By</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="PO Inserted By"
                             name={"po_inserted_by"}
-                            value={Dataform.po_inserted_by}
+                            value={all_data.po_inserted_by}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -627,10 +439,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>PO Item</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="PO Item"
                             name={"po_item"}
-                            value={Dataform.po_item}
+                            value={all_data.po_item}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -645,10 +458,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>BAST No DP</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="BAST No DP"
                             name={"bast_no_dp"}
-                            value={Dataform.bast_no_dp}
+                            value={all_data.bast_no_dp}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -657,10 +471,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Req GR DP</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="checkbox"
                             placeholder="Req GR DP"
                             name={"req_gr_dp"}
-                            value={Dataform.req_gr_dp}
+                            value={all_data.req_gr_dp}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -669,10 +484,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Req GR by DP</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="Req GR by DP"
                             name={"req_gr_by_dp"}
-                            value={Dataform.req_gr_by_dp}
+                            value={all_data.req_gr_by_dp}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -681,10 +497,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Req GR Date DP</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="date"
                             placeholder="Req GR Date DP"
                             name={"req_gr_date_dp"}
-                            value={Dataform.req_gr_date_dp}
+                            value={all_data.req_gr_date_dp}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -693,10 +510,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Req Revision DP</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="checkbox"
                             placeholder="Req Revision DP"
                             name={"req_revision_dp"}
-                            value={Dataform.req_revision_dp}
+                            value={all_data.req_revision_dp}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -705,10 +523,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Revision Done DP</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="checkbox"
                             placeholder="Revision Done DP"
                             name={"revision_done_dp"}
-                            value={Dataform.revision_done_dp}
+                            value={all_data.revision_done_dp}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -717,10 +536,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>BAST No Final</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="BAST No Final"
                             name={"bast_no_final"}
-                            value={Dataform.bast_no_final}
+                            value={all_data.bast_no_final}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -737,10 +557,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Req GR Final</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="checkbox"
                             placeholder="Req GR Final"
                             name={"req_gr_final"}
-                            value={Dataform.req_gr_final}
+                            value={all_data.req_gr_final}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -749,10 +570,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Req GR by Final</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="text"
                             placeholder="Req GR by Final"
                             name={"req_gr_by_final"}
-                            value={Dataform.req_gr_by_final}
+                            value={all_data.req_gr_by_final}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -761,10 +583,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Req GR Date Final</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="date"
                             placeholder=""
                             name={"req_gr_date_final"}
-                            value={Dataform.req_gr_date_final}
+                            value={all_data.req_gr_date_final}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -773,10 +596,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Req Revision Final</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="checkbox"
                             placeholder="Req Revision Final"
                             name={"req_revision_final"}
-                            value={Dataform.req_revision_final}
+                            value={all_data.req_revision_final}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -785,10 +609,11 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Revision Done</Label>
                         <Col sm={10}>
                           <Input
+                          readOnly
                             type="checkbox"
                             placeholder="Area"
                             name={"revision_done_final"}
-                            value={Dataform.revision_done_final}
+                            value={all_data.revision_done_final}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -797,17 +622,7 @@ class CreatePRPO extends Component {
                   </Col>
                 </Row>
               </CardBody>
-              <CardFooter>
-                <Button
-                  type="submit"
-                  color="success"
-                  style={{ float: "right" }}
-                  onClick={this.postPRT}
-                >
-                  <i className="fa fa-plus" style={{ marginRight: "8px" }}></i>{" "}
-                  Create
-                </Button>
-              </CardFooter>
+              <CardFooter></CardFooter>
             </Card>
           </Col>
         </Row>
@@ -823,4 +638,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(CreatePRPO);
+export default connect(mapStateToProps)(DetailPRPO);
