@@ -29,6 +29,7 @@ class CPODatabaseDetail extends Component {
       tokenUser: this.props.dataLogin.token,
       lmr_child_form : {},
       modal_loading : false,
+      modalAddChild : false,
 
       data_cpo : null,
       data_cpo_db : [],
@@ -40,14 +41,15 @@ class CPODatabaseDetail extends Component {
       collapse: false,
       action_message : null,
       action_status : null,
-      collapse_update : false,
+      collapse_add_child : false,
     }
-    this.toggleLoading = this.toggleLoading.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.downloadAllCPO2 = this.downloadAllCPO2.bind(this);
-    this.toggleCollapse = this.toggleCollapse.bind(this);
 
     this.handleChangeFormLMRChild = this.handleChangeFormLMRChild.bind(this);
+    this.toggleAddChild = this.toggleAddChild.bind(this);
+    this.toggleCollapse = this.toggleCollapse.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
   }
 
   toggle(i) {
@@ -64,12 +66,18 @@ class CPODatabaseDetail extends Component {
   }
 
   toggleCollapse() {
-    this.setState({ collapse_update: !this.state.collapse_update });
+    this.setState({ collapse_add_child: !this.state.collapse_add_child });
   }
 
-    toggleLoading() {
+  toggleLoading() {
     this.setState(prevState => ({
       modal_loading: !prevState.modal_loading
+    }));
+  }
+
+  toggleAddChild() {
+    this.setState(prevState => ({
+      modalAddChild: !prevState.modalAddChild
     }));
   }
 
@@ -389,7 +397,7 @@ class CPODatabaseDetail extends Component {
     if (value !== (null && undefined)) {
       value = value.toString();
     }
-    dataShipment[name.toString()] = value;
+    lmr_child_form[name.toString()] = value;
     this.setState({ lmr_child_form: lmr_child_form });
   }
 
@@ -419,11 +427,9 @@ class CPODatabaseDetail extends Component {
                       </DropdownMenu>
                     </Dropdown>
                   </div>
-                  {this.state.data_cpo_db.length !== 0 && (
-                    <Button block color="success" size="sm" onClick={this.toggleCollapse} id="toggleCollapse2">
-                      Update
-                    </Button>
-                  )}
+                  <Button block color="success" size="sm" onClick={this.toggleCollapse} id="toggleCollapse2">
+                    Add Child
+                  </Button>
                   <div>
                     {this.state.data_cpo !== null && this.state.data_cpo_db.length === 0 ? (
                       <div>
@@ -434,21 +440,8 @@ class CPODatabaseDetail extends Component {
                     ) : ("")}
                   </div>
                 </div>
-                {/* {this.state.data_comm_boq !== null && (
-                    <React.Fragment>
-                      <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
-                        <DropdownToggle caret color="secondary">
-                          <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download Commercial File
-                        </DropdownToggle>
-                        <DropdownMenu>
-                          <DropdownItem header> Commercial File</DropdownItem>
-                          <DropdownItem onClick={this.exportCommercial}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Commercial File</DropdownItem>
-                        </DropdownMenu>
-                      </Dropdown>
-                    </React.Fragment>
-                  )} */}
               </CardHeader>
-              <Collapse isOpen={this.state.collapse_update}>
+              <Collapse isOpen={this.state.collapse_add_child}>
                 <Card style={{ margin: '10px 10px 5px 10px' }}>
                   <CardBody>
                     <div>
@@ -466,29 +459,8 @@ class CPODatabaseDetail extends Component {
                     </div>
                   </CardBody>
                   <CardFooter>
-                    <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.updateCPODetailBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;Update </Button>
-                  </CardFooter>
-                </Card>
-              </Collapse>
-              <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>
-                <Card style={{ margin: '10px 10px 5px 10px' }}>
-                  <CardBody>
-                    <div>
-                      <table>
-                        <tbody>
-                          <tr>
-                            <td>Upload File</td>
-                            <td>:</td>
-                            <td>
-                              <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{ "padding": "10px", "visiblity": "hidden" }} />
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardBody>
-                  <CardFooter>
-                    <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveCPO2Bulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
+                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.updateCPODetailBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;Add Child </Button>
+                    <Button color="success" size="sm" style={{float : 'right'}} onClick={this.toggleAddChild}> <i className="fa fa-wpforms" aria-hidden="true"> </i> &nbsp;Form </Button>
                   </CardFooter>
                 </Card>
               </Collapse>
@@ -650,8 +622,8 @@ class CPODatabaseDetail extends Component {
         {/* end Modal Loading */}
 
         {/* Modal Create LMR Child */}
-        <Modal isOpen={this.state.modalEdit} toggle={this.toggleEdit} className={this.props.className} size="lg">
-          <ModalHeader toggle={this.toggleEdit}>Checkout</ModalHeader>
+        <Modal isOpen={this.state.modalAddChild} toggle={this.toggleAddChild} className={this.props.className} size="lg">
+          <ModalHeader toggle={this.toggleAddChild}>LMR Child</ModalHeader>
           <ModalBody>
             <div>
               <Form>
@@ -663,7 +635,7 @@ class CPODatabaseDetail extends Component {
                     </FormGroup>
                   </Col>
                   <Col md={6}>
-                    <FormGroupm>
+                    <FormGroup>
                       <Label>Activity</Label>
                       <Input type="text" name="activity" id="activity" value={this.state.lmr_child_form.activity} onChange={this.handleChangeFormLMRChild}/>
                     </FormGroup>
@@ -686,7 +658,7 @@ class CPODatabaseDetail extends Component {
                   </Col>
                 </Row>
                 <Row form>
-                  <Col md={8}>
+                  <Col md={6}>
                     <FormGroup>
                       <Label>Site ID</Label>
                       <Input type="text" name="site_id" id="site_id" value={this.state.lmr_child_form.site_id} onChange={this.handleChangeFormLMRChild}/>
@@ -694,14 +666,12 @@ class CPODatabaseDetail extends Component {
                   </Col>
                 </Row>
                 <Row form>
-                  <Col md={4}>
+                  <Col md={6}>
                     <FormGroup>
                       <Label>Quantity</Label>
-                      <Input type="text" name="quantity" id="quantity" value={this.state.lmr_child_form.quantity} onChange={this.handleChangeFormLMRChild}/>
+                      <Input type="number" name="quantity" id="quantity" value={this.state.lmr_child_form.quantity} onChange={this.handleChangeFormLMRChild}/>
                     </FormGroup>
                   </Col>
-                </Row>
-                <Row form>
                   <Col md={6}>
                     <FormGroup>
                       <Label>Unit</Label>
@@ -713,7 +683,7 @@ class CPODatabaseDetail extends Component {
                   <Col md={6}>
                     <FormGroup>
                       <Label>Price</Label>
-                      <Input type="text" name="price" id="price" value={this.state.lmr_child_form.price} onChange={this.handleChangeFormLMRChild}/>
+                      <Input type="number" name="price" id="price" value={this.state.lmr_child_form.price} onChange={this.handleChangeFormLMRChild}/>
                     </FormGroup>
                   </Col>
                 </Row>
@@ -759,7 +729,7 @@ class CPODatabaseDetail extends Component {
           <ModalFooter>
             <Button className="btn-success" style={{ 'float': 'right', margin: '8px' }} color="success">
               <i className="fa fa-save">&nbsp;&nbsp;</i>
-                Create
+                Add
             </Button>
           </ModalFooter>
         </Modal>

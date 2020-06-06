@@ -504,7 +504,7 @@ class MYASGCreation extends Component {
     if (value !== (null && undefined)) {
       value = value.toString();
     }
-    dataShipment[name.toString()] = value;
+    lmr_form[name.toString()] = value;
     this.setState({ lmr_form: lmr_form });
   }
 
@@ -533,7 +533,7 @@ class MYASGCreation extends Component {
               </Row>
               <Row form>
                 <Col md={6}>
-                  <FormGroupm>
+                  <FormGroup>
                     <Label>PGr</Label>
                     <Input type="text" name="pgr" id="pgr" value={this.state.lmr_form.pgr} onChange={this.handleChangeFormLMR}/>
                   </FormGroup>
@@ -543,7 +543,7 @@ class MYASGCreation extends Component {
                 <Col md={6}>
                   <FormGroup>
                     <Label>GL Account</Label>
-                    <Input type="text" name="gl_account" id="gl_account" value={this.state.lmr_form.pgr} onChange={this.handleChangeFormLMR}/>
+                    <Input type="text" name="gl_account" id="gl_account" value={this.state.lmr_form.gl_account} onChange={this.handleChangeFormLMR}/>
                   </FormGroup>
                 </Col>
               </Row>

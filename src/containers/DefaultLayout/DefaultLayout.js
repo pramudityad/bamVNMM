@@ -20,8 +20,10 @@ import {
 } from '@coreui/react';
 // sidebar nav config
 import navigation from '../../_nav';
+import navigationIndosat from '../../_navIndosat';
 // routes config
 import routes from '../../routes';
+import routesIndosat from '../../routesIndosat';
 
 const DefaultAside = React.lazy(() => import('./DefaultAside'));
 const DefaultFooter = React.lazy(() => import('./DefaultFooter'));
@@ -30,14 +32,13 @@ const LoaderPage = React.lazy(() => import('../../views/DefaultView/LoaderPage')
 
 const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-
-console.log("this.props roter DL", routes);
 class DefaultLayout extends Component {
 
   constructor(props) {
     super(props);
     this.state = {
-      navMenu : navigation,
+      navMenu : this.props.dataLogin.account_id === "1" ? navigationIndosat : navigation,
+      routes : this.props.dataLogin.account_id === "1" ? routesIndosat : routes,
       minimize : this.props.SidebarMinimize,
     }
   }
@@ -111,18 +112,18 @@ class DefaultLayout extends Component {
               <AppSidebarHeader />
               <AppSidebarForm />
               <Suspense>
-              <AppSidebarNav navConfig={navigation} {...this.props} router={router}/>
+              <AppSidebarNav navConfig={this.state.navMenu} {...this.props} router={router}/>
               </Suspense>
               <AppSidebarFooter />
               <AppSidebarMinimizer />
             </AppSidebar>
           )}
           <main className="main">
-            <AppBreadcrumb appRoutes={routes} router={router} className={"breadcrumb--"+this.props.dataLogin.account_id}/>
+            <AppBreadcrumb appRoutes={this.state.routes} router={router} className={"breadcrumb--"+this.props.dataLogin.account_id}/>
             <Container fluid>
               <Suspense fallback={this.loadingPage()}>
                 <Switch>
-                  {routes.map((route, idx) => {
+                  {this.state.routes.map((route, idx) => {
                     return route.component ? (
                       <Route
                         key={idx}

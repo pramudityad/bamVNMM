@@ -235,67 +235,31 @@ class MYASGList extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: '2' }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MR List
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> LMR List
                 </span>
-                <Link to={'/mr-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR</Button></Link>
-                <Link to={'/bulk-mr-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR Bulk</Button></Link>
-                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download MR List</Button>
+                <Link to={'/lmr-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create LMR</Button></Link>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th>MR ID</th>
+                      <th>Action</th>
+                      <th>LMR ID</th>
+                      <th>GL Account</th>
                       <th>Project Name</th>
-                      <th>CD ID</th>
-                      <th>Site ID</th>
-                      <th>Site Name</th>
-                      <th>Current Status</th>
-                      <th>Current Milestone</th>
-                      <th>DSP</th>
-                      <th>ETA</th>
-                      <th>Created By</th>
-                      <th>Updated On</th>
-                      <th>Created On</th>
-                    </tr>
-                    <tr>
-                      {this.loopSearchBar()}
+                      <th>Vendor Name</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {this.state.mr_list.length === 0 && (
-                      <tr>
-                        <td colSpan="15">No Data Available</td>
-                      </tr>
-                    )}
-                    {this.state.mr_list.map((list, i) =>
-                      <tr key={list._id}>
-                        <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
-                        <td>{list.project_name}</td>
-                        <td>
-                          {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>
-                            j === list.cust_del.length - 1 ? custdel.cd_id : custdel.cd_id + ', '
-                          ))}
-                        </td>
-                        <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_id + ', '
-                          ))}
-                        </td>
-                        <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_name + ', '
-                          ))}
-                        </td>
-                        <td>{list.current_mr_status}</td>
-                        <td>{list.current_milestones}</td>
-                        <td>{list.dsp_company}</td>
-                        <td>{convertDateFormat(list.eta)}</td>
-                        <td></td>
-                        <td>{convertDateFormatfull(list.updated_on)}</td>
-                        <td>{convertDateFormatfull(list.created_on)}</td>
-                      </tr>
-                    )}
+                    <tr>
+                      <th>
+                        <Link to={'/lmr-detail'}><Button color="info" size="sm"><i className="fa fa-info-circle" style={{ marginRight: "8px" }}></i>Detail</Button></Link>
+                      </th>
+                      <th>LMR ID</th>
+                      <th>GL Account</th>
+                      <th>Project Name</th>
+                      <th>Vendor Name</th>
+                    </tr>
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
