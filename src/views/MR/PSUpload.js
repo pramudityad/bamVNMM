@@ -1024,10 +1024,10 @@ class PSUpload extends Component {
                               <td style={{textAlign : 'left'}}>{material.material_name}</td>
                               <td></td>
                               <td>{material.uom}</td>
-                              <td align='center'>{(pp.qty * material.qty).toFixed(2)}</td>
+                              <td align='center'>{(material.qty).toFixed(2)}</td>
                               <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                               <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
-                              <td align='center'>{pp.qty*material.qty < qty_wh ? "OK":"NOK"}</td>
+                              <td align='center'>{material.qty < qty_wh ? "OK":"NOK"}</td>
                             </tr>
                           ) }
                         </Fragment>)}

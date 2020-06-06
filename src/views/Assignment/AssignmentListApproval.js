@@ -215,7 +215,7 @@ class AssignmentListApproval extends Component {
                     {this.state.assignment_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
-                          <Link to={'/assignment-detail-asp/' + list._id}>
+                          <Link to={'/assignment-detail/' + list._id}>
                             <Button style={{ width: "90px" }} outline color="info" size="sm">Detail</Button>
                           </Link>
                         </td>
