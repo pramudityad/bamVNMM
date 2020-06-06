@@ -30,6 +30,8 @@ const LoaderPage = React.lazy(() => import('../../views/DefaultView/LoaderPage')
 
 const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
+
+console.log("this.props roter DL", routes);
 class DefaultLayout extends Component {
 
   constructor(props) {
@@ -45,10 +47,10 @@ class DefaultLayout extends Component {
 
   signOut(e) {
     e.preventDefault();
+    this.props.keycloak.logout();
     localStorage.clear();
     this.props.history.push('/');
     this.postDatatoAPILogout();
-    this.props.keycloak.logout();
   }
 
   componentDidMount(){
@@ -116,7 +118,7 @@ class DefaultLayout extends Component {
             </AppSidebar>
           )}
           <main className="main">
-            <AppBreadcrumb appRoutes={routes} router={router} className="breadcrumb--xl"/>
+            <AppBreadcrumb appRoutes={routes} router={router} className={"breadcrumb--"+this.props.dataLogin.account_id}/>
             <Container fluid>
               <Suspense fallback={this.loadingPage()}>
                 <Switch>
