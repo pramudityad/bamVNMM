@@ -22,6 +22,7 @@ class SSOLogin extends Component {
       dataLogin : null,
       token : null,
       authenticatedLoginBAM : null,
+      authenticatedLoginBAMStatus : null,
     };
   }
 
@@ -74,7 +75,7 @@ class SSOLogin extends Component {
       localStorage.setItem('account_selected', account_id);
       this.setState({ key: this.state.key, authenticated: this.state.authenticated, authenticatedLoginBAM : true  });
     }else{
-        this.setState({ key: this.state.key, authenticated: this.state.authenticated, authenticatedLoginBAM : false });
+        this.setState({ key: this.state.key, authenticated: this.state.authenticated, authenticatedLoginBAM : false, authenticatedLoginBAMStatus : getLogin.response.data.error });
     }
   }
 
@@ -111,7 +112,7 @@ class SSOLogin extends Component {
     this.setState({dataLogin : dataLogin});
     this.setState({ key: keycloak, authenticated: authenticated }, () => {
       if(dataLogin === null){
-        this.setState({authenticatedLoginBAM : false})
+        this.setState({authenticatedLoginBAM : null})
       }else{
         this.setState({authenticatedLoginBAM : true})
       }
@@ -119,17 +120,19 @@ class SSOLogin extends Component {
   }
 
   handleChangeAccount(account_id){
+    this.setState({authenticatedLoginBAM : null});
     this.getDataLogin(this.state.userInfo, account_id);
   }
 
   render() {
+    console.log("authenticatedLoginBAM", this.state.authenticatedLoginBAM,  this.state.authenticatedLoginBAMStatus)
     if(this.state.key !== null && this.state.key !== undefined && this.state.authenticatedLoginBAM === true){
       return(
         <App token={this.state.token} LoginData={this.state.dataLogin} keycloak={this.state.key} authenticatedBAM={this.state.authenticatedLoginBAM}/>
       )
     }
 
-    if(this.state.key !== null && this.state.key !== undefined && this.state.authenticatedLoginBAM === null){
+    if(this.state.key !== null && this.state.key !== undefined && (this.state.authenticatedLoginBAM === null || this.state.authenticatedLoginBAM === false)){
       return (
         <div className="app flex-row align-items-center">
           <Container>
@@ -137,29 +140,36 @@ class SSOLogin extends Component {
               <h4>Welcome to BAM</h4>
             </Row>
             <Row className="justify-content-center">
-              <h3>Please Select Account :</h3>
+              <h3>Please Select Party :</h3>
             </Row>
             <Row className="justify-content-center">
               <Col md="12" lg="12" xl="12">
                 <div className="flex--card-account" >
                   <div className="card-account--telkom" onClick={()=>this.handleChangeAccount("1")}>
                     <div>
-                      <h2>TELKOM</h2>
+                      <h2>PDIP</h2>
                     </div>
                   </div>
                   <div className="card-account--xl" onClick={()=>this.handleChangeAccount("2")}>
                     <div>
-                      <h2>XL AXIATA</h2>
+                      <h2>P Demokrat</h2>
                     </div>
                   </div>
                   <div className="card-account--indosat" onClick={()=>this.handleChangeAccount("3")}>
                     <div>
-                      <h2>INDOSAT</h2>
+                      <h2>PKS</h2>
                     </div>
                   </div>
                 </div>
               </Col>
             </Row>
+            {this.state.authenticatedLoginBAM === false && (
+              <Row className="justify-content-center">
+                <div className="card--error">
+                  <h5>{this.state.authenticatedLoginBAMStatus}</h5>
+                </div>
+              </Row>
+            )}
           </Container>
         </div>
       )

@@ -2263,7 +2263,7 @@ class TechnicalBoq extends Component {
         }
       }else{
         for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
-          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_group, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].config_group_type, dataSites[i].siteItemConfig[j].qty]);
+          ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_group, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].config_group_type, dataSites[i].siteItemConfig[j].qty]);
         }
       }
     }

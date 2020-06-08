@@ -26,7 +26,7 @@ class MYASGList extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      mr_list: [],
+      lmr_list: [],
       prevPage: 0,
       activePage: 1,
       totalData: 0,
@@ -40,26 +40,6 @@ class MYASGList extends Component {
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
-  }
-
-  async getDataFromAPI(url) {
-    try {
-      let respond = await axios.get(API_URL + url, {
-        headers: { 'Content-Type': 'application/json' },
-        auth: {
-          username: username,
-          password: password
-        }
-      });
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      console.log("respond data", err);
-      return respond;
-    }
   }
 
   async getDataFromAPINODE(url) {
@@ -104,7 +84,7 @@ class MYASGList extends Component {
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
-        this.setState({ mr_list: items, totalData: totalData });
+        this.setState({ lmr_list: items, totalData: totalData });
       }
     })
   }
@@ -173,10 +153,6 @@ class MYASGList extends Component {
     document.title = 'MR List | BAM';
   }
 
-  componentWillUnmount() {
-    this.props.SidebarMinimizer(false);
-  }
-
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
       this.getMRList();
@@ -198,7 +174,6 @@ class MYASGList extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
   }
 
   loopSearchBar = () => {
@@ -252,14 +227,25 @@ class MYASGList extends Component {
                   </thead>
                   <tbody>
                     <tr>
-                      <th>
+                      <td>
                         <Link to={'/lmr-detail'}><Button color="info" size="sm"><i className="fa fa-info-circle" style={{ marginRight: "8px" }}></i>Detail</Button></Link>
-                      </th>
-                      <th>LMR ID</th>
-                      <th>GL Account</th>
-                      <th>Project Name</th>
-                      <th>Vendor Name</th>
+                      </td>
+                      <td>LMR ID</td>
+                      <td>GL Account</td>
+                      <td>Project Name</td>
+                      <td>Vendor Name</td>
                     </tr>
+                    {this.state.lmr_list.map(e =>
+                      <tr>
+                        <td>
+                          <Link to={'/lmr-detail/'+e._id}><Button color="info" size="sm"><i className="fa fa-info-circle" style={{ marginRight: "8px" }}></i>Detail</Button></Link>
+                        </td>
+                        <td>{e.lmr_id}</td>
+                        <td>{e.gl_account}</td>
+                        <td>{e.project_name}</td>
+                        <td>{e.vendor_name}</td>
+                      </tr>
+                    )}
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>

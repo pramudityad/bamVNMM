@@ -21,9 +21,11 @@ import {
 // sidebar nav config
 import navigation from '../../_nav';
 import navigationIndosat from '../../_navIndosat';
+import navigationTelkom from '../../_navTelkom';
 // routes config
 import routes from '../../routes';
 import routesIndosat from '../../routesIndosat';
+import routesTelkom from '../../routesTelkom';
 
 const DefaultAside = React.lazy(() => import('./DefaultAside'));
 const DefaultFooter = React.lazy(() => import('./DefaultFooter'));
@@ -37,8 +39,8 @@ class DefaultLayout extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      navMenu : this.props.dataLogin.account_id === "1" ? navigationIndosat : navigation,
-      routes : this.props.dataLogin.account_id === "1" ? routesIndosat : routes,
+      navMenu : this.props.dataLogin.account_id === "3" ? navigationIndosat : this.props.dataLogin.account_id === "1" ? navigationTelkom : navigation,
+      routes : this.props.dataLogin.account_id === "3" ? routesIndosat : this.props.dataLogin.account_id === "1" ? routesTelkom : routes,
       minimize : this.props.SidebarMinimize,
     }
   }

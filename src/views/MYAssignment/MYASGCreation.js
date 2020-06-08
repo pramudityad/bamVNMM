@@ -10,23 +10,47 @@ import Select from 'react-select';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
-const API_URL_BMS_Phil = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
-
-const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const usernameBAM = 'bamidadmin@e-dpm.com';
-const passwordBAM = 'F760qbAg2sml';
-
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
-const usernameXL = 'adminbamidsuper';
-const passwordXL = 'F760qbAg2sml';
+const API_URL_MAS = 'https://api-dev.mas.pdb.e-dpm.com/masapi';
+const usernameMAS = 'mybotprpo';
+const passwordMAS = 'mybotprpo2020';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
+
+const projectList = [
+  {
+    "project_name" : "Project DEMO 1",
+    "_id" : "5dedc5c1280eb4f3d96e0713"
+  },
+  {
+    "project_name" : "Project DEMO 2",
+    "_id" : "5dedc5c1280eb4f3d96e0714"
+  }
+];
+
+const vendorList = [
+        {
+            "_id": "5eb26d332833d19d90055472",
+            "Name": "Bharti",
+            "Vendor_Code": "12",
+            "Email": "",
+            "created_on": "2020-05-06 07:54:27",
+            "updated_on": "2020-05-06 07:54:27",
+            "_etag": "9e63333bd40166971ed8a4e1fd47f9996876edc9"
+        },
+        {
+            "_id": "5eb4f93dfc8e7e571f16d44a",
+            "Name": "VODA",
+            "Vendor_Code": "VIL",
+            "Email": "",
+            "created_on": "2020-05-08 06:16:29",
+            "updated_on": "2020-05-08 06:16:29",
+            "_etag": "58f11185cc2708c5c33ade202691aa0937e8d478"
+        }
+    ]
 
 class MYASGCreation extends Component {
   constructor(props) {
@@ -40,15 +64,13 @@ class MYASGCreation extends Component {
       tokenUser : this.props.dataLogin.token,
       lmr_form : {},
       modal_loading : false,
+      list_project : [],
 
       list_tower : [],
-      list_project : [],
       list_tower_selection : [],
       list_project_selection : [],
       list_warehouse : [],
       form_checking : {},
-        create_mr_form : new Array(9).fill(null),
-        create_mr_name_form : new Array(9).fill(null),
         list_cd_id : [],
         cd_id_selected : null,
         data_cd_id_selected : null,
@@ -67,10 +89,9 @@ class MYASGCreation extends Component {
         toggle_display : "new",
         identifier_by : "tower_id",
         tower_selected_id : null,
-        dsp_list : [],
+        vendor_list : [],
         validation_form : {},
     };
-    this.saveMRtoAPI = this.saveMRtoAPI.bind(this);
     this.handleChangeFormMRCreation = this.handleChangeFormMRCreation.bind(this);
     this.handleChangeMRType = this.handleChangeMRType.bind(this);
     this.handleChangeProject = this.handleChangeProject.bind(this);
@@ -84,6 +105,8 @@ class MYASGCreation extends Component {
 
     this.handleChangeFormLMR = this.handleChangeFormLMR.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
+    this.createLMR = this.createLMR.bind(this);
+    this.handleChangeVendor = this.handleChangeVendor.bind(this);
   }
 
   toggleLoading() {
@@ -112,33 +135,13 @@ class MYASGCreation extends Component {
     }
   }
 
-  async getDatafromAPIBMS(url){
-    try {
-      let respond = await axios.get(API_URL_BMS_Phil +url, {
-        headers : {'Content-Type':'application/json'},
-        auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
-        },
-      })
-      if(respond.status >= 200 && respond.status < 300){
-        console.log("respond Get Data", respond);
-      }
-      return respond;
-    }catch (err) {
-      let respond = err;
-      console.log("respond Get Data", err);
-      return respond;
-    }
-  }
-
   async getDatafromAPIXL(url){
     try {
-      let respond = await axios.get(API_URL_XL +url, {
+      let respond = await axios.get(API_URL_MAS +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernameXL,
-          password: passwordXL
+          username: usernameMAS,
+          password: passwordMAS
         },
       })
       if(respond.status >= 200 && respond.status < 300){
@@ -257,67 +260,20 @@ class MYASGCreation extends Component {
     }
   }
 
-  async saveMRtoAPI(){
-    this.setState({action_status : null, action_message : null});
-    const dataCD = this.state.data_cd_id_selected;
-    const dataForm = this.state.create_mr_form;
-    const dataFormName = this.state.create_mr_name_form;
-    const dataValidation = await this.handleCheckingForm();
-    if(dataValidation !== true){
-      const numberingMR = this.preparingDataMR();
-      const newDate = new Date();
-      const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-      let list_site = [];
-      let dataXLS = [
-        ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "mr_comment_project", "sent_mr_request", "created_based", "identifier"],
-        ["new", this.state.project_name_selected, this.selectMRType(dataForm[3]), this.selectDeliveryType(dataForm[4]), dataForm[8], this.selectedDatetoFormat(dataForm[5]), this.selectedDatetoFormat(dataForm[6]), dataForm[7], "", "", this.state.identifier_by, this.state.tower_selected_id]
-      ]
-      const respondCheckingMR = await this.postDatatoAPINODE('/matreq/matreqByActivity', {"data" : dataXLS});
-      if(respondCheckingMR.data !== undefined && respondCheckingMR.status >= 200 && respondCheckingMR.status <= 300 ) {
-        const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', {"data" : respondCheckingMR.data.data });
-        if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
-          this.setState({ action_status : 'success' });
-        } else{
-          if(respondSaveMR.response !== undefined && respondSaveMR.response.data !== undefined && respondSaveMR.response.data.error !== undefined){
-            if(respondSaveMR.response.data.error.message !== undefined){
-              this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error.message });
-            }else{
-              this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error });
-            }
-          }else{
-            this.setState({ action_status: 'failed' });
-          }
-        }
-      }else{
-        if(respondCheckingMR.response !== undefined && respondCheckingMR.response.data !== undefined && respondCheckingMR.response.data.error !== undefined){
-          if(respondCheckingMR.response.data.error.message !== undefined){
-            this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error.message });
-          }else{
-            this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error });
-          }
-        }else{
-          this.setState({ action_status: 'failed' });
-        }
-      }
-    }
-  }
-
   componentDidMount(){
-    // this.getDataCD();
-    // this.getDataTower();
-    this.getDSPList();
+    this.getVendorList();
     this.getDataProject();
-    this.getDataWarehouse();
-    document.title = "MR Creation | BAM"
+    document.title = "LMR Creation | BAM"
   }
 
-  getDSPList() {
-    this.getDatafromAPIXL('/vendor_data_non_page?where={"Type":"ASP"}').then(res => {
-      if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({dsp_list : items});
-      }
-    })
+  getVendorList() {
+    // this.getDatafromAPIXL('/vendor_data').then(res => {
+    //   if(res.data !== undefined) {
+    //     const items = res.data._items;
+    //     this.setState({vendor_list : items});
+    //   }
+    // })
+    this.setState({vendor_list : vendorList});
   }
 
   getDataTower(){
@@ -330,22 +286,15 @@ class MYASGCreation extends Component {
     })
   }
 
-  getDataWarehouse(){
-    this.getDataFromAPINODE('/whManagement/warehouse?q={"wh_type":{"$regex" : "internal", "$options" : "i"}}').then( resWH => {
-      if(resWH.data !== undefined){
-        this.setState({ list_warehouse : resWH.data.data })
-      }
-    })
-  }
-
   getDataProject(){
-    this.getDatafromAPIXL('/project_sorted_non_page').then( resProject => {
-      if(resProject.data !== undefined){
-        this.setState({ list_project : resProject.data._items }, () => {
-          this.filterDataProject("");
-        })
-      }
-    })
+    // this.getDatafromAPIXL('/project_sorted_non_page').then( resProject => {
+    //   if(resProject.data !== undefined){
+    //     this.setState({ list_project : resProject.data._items }, () => {
+    //       this.filterDataProject("");
+    //     })
+    //   }
+    // })
+    this.setState({list_project : projectList})
   }
 
   filterDataTower = (inputValue) => {
@@ -383,20 +332,25 @@ class MYASGCreation extends Component {
     return e;
   }
 
-  // handleChangeTowerXL(e){
-  //   let dataForm = this.state.create_mr_form;
-  //   let dataFormName = this.state.create_mr_name_form;
-  //   dataForm[1] = e.value;
-  //   dataFormName[1] = e.label;
-  //   this.setState({create_mr_form : dataForm, create_mr_name_form : dataFormName });
-  //   return e
-  // }
-
   handleChangeProject(e){
     const value = e.target.value;
     const index = e.target.selectedIndex;
     const text = e.target[index].text;
-    this.setState({project_selected : value, project_name_selected : text});
+    let lmr_form = this.state.lmr_form;
+    lmr_form["project_name"] = text;
+    lmr_form["id_project_doc"] = value;
+    this.setState({lmr_form : lmr_form});
+    console.log("lmr_form", lmr_form);
+  }
+
+  handleChangeVendor(e){
+    const value = e.target.value;
+    let lmr_form = this.state.lmr_form;
+    let dataVendor = this.state.vendor_list.find(e => e.Vendor_Code === value)
+    lmr_form["vendor_code"] = dataVendor.Vendor_Code;
+    lmr_form["vendor_name"] = dataVendor.Name;
+    lmr_form["vendor_address"] = dataVendor.vendor_address;
+    this.setState({lmr_form : lmr_form});
   }
 
   handleChangeCD(e){
@@ -508,6 +462,26 @@ class MYASGCreation extends Component {
     this.setState({ lmr_form: lmr_form });
   }
 
+  createLMR(){
+    const dataForm = this.state.lmr_form;
+    const dataLMR = {
+      "lmr_issued_by": this.state.lmr_form.lmr_issued_by,
+      "pgr": this.state.lmr_form.pgr,
+      "gl_account": this.state.lmr_form.gl_account,
+      "project_name": this.state.lmr_form.project_name,
+      "id_project_doc": this.state.lmr_form.id_project_doc === undefined ? null : this.state.lmr_form.id_project_doc,
+      "header_text": this.state.lmr_form.header_text,
+      "payment_term": this.state.lmr_form.payment_term,
+      "vendor_code": this.state.lmr_form.vendor_code,
+      "vendor_name": this.state.lmr_form.vendor_name,
+      "vendor_address": this.state.lmr_form.vendor_address,
+      "l1_approver": this.state.lmr_form.l1_approver,
+      "l2_approver": this.state.lmr_form.l2_approver,
+      "l3_approver": this.state.lmr_form.l3_approver
+    }
+    console.log("dataLMR", dataLMR);
+  }
+
   render() {
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);
@@ -551,7 +525,12 @@ class MYASGCreation extends Component {
                 <Col md={6}>
                   <FormGroup>
                     <Label>Project Name</Label>
-                    <Input type="text" name="project_name" id="project_name" value={this.state.lmr_form.project_name} onChange={this.handleChangeFormLMR}/>
+                    <Input type="select" name="project_name" id="project_name" value={this.state.lmr_form.id_project_doc} onChange={this.handleChangeProject} >
+                      <option value={null}></option>
+                      {this.state.list_project.map(e =>
+                        <option value={e._id}>{e.project_name}</option>
+                      )}
+                    </Input>
                   </FormGroup>
                 </Col>
               </Row>
@@ -572,22 +551,27 @@ class MYASGCreation extends Component {
               <Row form>
                 <Col md={6}>
                   <FormGroup>
-                    <Label>Vendor Code</Label>
-                    <Input type="text" name="vendor_code" id="vendor_code" value={this.state.lmr_form.vendor_code} onChange={this.handleChangeFormLMR}/>
+                    <Label>Vendor Name</Label>
+                    <Input type="select" name="vendor_name" id="vendor_name" value={this.state.lmr_form.vendor_code} onChange={this.handleChangeVendor} >
+                      <option value={null}></option>
+                      {this.state.vendor_list.map(e =>
+                        <option value={e.Vendor_Code}>{e.Name}</option>
+                      )}
+                    </Input>
                   </FormGroup>
                 </Col>
                 <Col md={6}>
                   <FormGroup>
-                    <Label>Vendor Name</Label>
-                    <Input type="text" name="vendor_name" id="vendor_name" value={this.state.lmr_form.vendor_name} onChange={this.handleChangeFormLMR}/>
+                    <Label>Vendor Code</Label>
+                    <Input type="text" name="vendor_code" id="vendor_code" value={this.state.lmr_form.vendor_code} onChange={this.handleChangeFormLMR} readOnly/>
                   </FormGroup>
                 </Col>
               </Row>
               <Row form>
-                <Col md={6}>
+                <Col md={12}>
                   <FormGroup>
                     <Label>Vendor Address</Label>
-                    <Input type="text" name="vendor_address" id="vendor_address" value={this.state.lmr_form.vendor_address} onChange={this.handleChangeFormLMR}/>
+                    <Input type="textarea" name="vendor_address" id="vendor_address" value={this.state.lmr_form.vendor_address} onChange={this.handleChangeFormLMR}/>
                   </FormGroup>
                 </Col>
               </Row>
@@ -618,7 +602,7 @@ class MYASGCreation extends Component {
             </Form>
           </CardBody>
           <CardFooter>
-            <Button color='success' style={{float : 'right'}} onClick={this.saveMRtoAPI}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create MR</Button>
+            <Button color='success' size="sm" style={{float : 'right'}} onClick={this.createLMR}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create LMR ASG</Button>
           </CardFooter>
         </Card>
         </Col>
