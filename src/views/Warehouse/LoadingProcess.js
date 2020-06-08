@@ -294,6 +294,7 @@ class LoadingProcess extends Component {
         checkerror.push(false);
       }
     }
+    console.log("checkerror", checkerror);
     if (checkerror.length !== 0) {
       this.setState({ validation_form: dataValidate });
     } else {

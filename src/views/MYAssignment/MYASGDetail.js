@@ -45,8 +45,8 @@ class CPODatabaseDetail extends Component {
     }
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.downloadAllCPO2 = this.downloadAllCPO2.bind(this);
-
     this.handleChangeFormLMRChild = this.handleChangeFormLMRChild.bind(this);
+
     this.toggleAddChild = this.toggleAddChild.bind(this);
     this.toggleCollapse = this.toggleCollapse.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -146,21 +146,6 @@ class CPODatabaseDetail extends Component {
       return respond;
     }
   }
-
-  // fileHandlerMaterial = (event) => {
-  //   // this.toggleLoading();
-  //   let fileObj = event.target.files[0];
-  //   if (fileObj !== undefined) {
-  //     ExcelRenderer(fileObj, (err, rest) => {
-  //       if (err) {
-  //         console.log(err);
-  //       }
-  //       else {
-  //         this.setState({ rowsXLS: rest.rows })
-  //       }
-  //     });
-  //   }
-  // }
 
   fileHandlerMaterial = (input) => {
     const file = input.target.files[0];
@@ -387,7 +372,7 @@ class CPODatabaseDetail extends Component {
     } else {
       this.getPODataList(this.props.match.params.id);
     }
-    document.title = 'CPO Database Detail | BAM';
+    document.title = 'LMR Detail | BAM';
   }
 
   handleChangeFormLMRChild(e) {
@@ -420,25 +405,12 @@ class CPODatabaseDetail extends Component {
                       <DropdownMenu>
                         <DropdownItem header>File</DropdownItem>
                         <DropdownItem> LMR Child Format</DropdownItem>
-                        {this.state.data_cpo !== null && this.state.data_cpo_db.length === 0 ? (
-                          <DropdownItem onClick={this.exportFormatCPO_level2}> CPO Level 2 Template</DropdownItem>
-                        ) : ("")}
-                        {/* }<DropdownItem onClick={this.exportFormatCPO_level2Update}> CPO Level 2 Template Update</DropdownItem> */}
                       </DropdownMenu>
                     </Dropdown>
                   </div>
                   <Button block color="success" size="sm" onClick={this.toggleCollapse} id="toggleCollapse2">
                     Add Child
                   </Button>
-                  <div>
-                    {this.state.data_cpo !== null && this.state.data_cpo_db.length === 0 ? (
-                      <div>
-                        <Button block color="success" onClick={this.toggleAddNew} id="toggleCollapse1">
-                          <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> New
-                          </Button>
-                      </div>
-                    ) : ("")}
-                  </div>
                 </div>
               </CardHeader>
               <Collapse isOpen={this.state.collapse_add_child}>
@@ -471,7 +443,7 @@ class CPODatabaseDetail extends Component {
                       <tbody>
                         <tr style={{ fontWeight: '425', fontSize: '23px' }}>
                           <td colSpan="2" style={{ textAlign: 'center', marginBottom: '10px', fontWeight: '500' }}>
-                            {this.props.match.params.id === undefined ? "CREATE" : ""} CPO Database
+                            LMR Detail
                           </td>
                         </tr>
                         {this.state.data_cpo !== null && (
@@ -486,17 +458,14 @@ class CPODatabaseDetail extends Component {
                     <hr style={{ borderStyle: 'double', borderWidth: '0px 0px 3px 0px', borderColor: ' rgba(174,213,129 ,1)', marginTop: '5px' }}></hr>
                   </Col>
                 </Row>
-                {/* Display CPO detail information  */}
                 <div style={{ padding: "10px", fontSize: '15px' }}>
-                  {/* {this.state.data_comm_boq !== null && ( */}
-                  {/* <React.Fragment> */}
                   {this.state.data_cpo !== null && (
                     <Row>
                       <Col sm="6" md="6">
                         <table className="table-header">
                           <tbody>
                             <tr style={{ fontWeight: '425', fontSize: '15px' }}>
-                              <td colSpan="4" style={{ textAlign: 'center', marginBottom: '10px', fontWeight: '500' }}>CPO INFORMATION</td>
+                              <td colSpan="4" style={{ textAlign: 'center', marginBottom: '10px', fontWeight: '500' }}>LMR INFORMATION</td>
                             </tr>
                             <tr style={{ fontWeight: '425', fontSize: '15px' }}>
                               <td style={{ width: '150px' }}>Payment Terms </td>
@@ -523,8 +492,6 @@ class CPODatabaseDetail extends Component {
                       </Col>
                     </Row>
                   )}
-                  {/* </React.Fragment> */}
-                  {/* )} */}
                 </div>
 
                 <div class='divtable'>
@@ -568,7 +535,6 @@ class CPODatabaseDetail extends Component {
                         <td>PR</td>
                         <td>PO</td>
                         <td>Item</td>
-
                       </tr>
                     )}
                     </tbody>
