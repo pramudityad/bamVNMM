@@ -26,7 +26,7 @@ class MYASGList extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      mr_list: [],
+      lmr_list: [],
       prevPage: 0,
       activePage: 1,
       totalData: 0,
@@ -84,7 +84,7 @@ class MYASGList extends Component {
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
-        this.setState({ mr_list: items, totalData: totalData });
+        this.setState({ lmr_list: items, totalData: totalData });
       }
     })
   }
@@ -235,6 +235,17 @@ class MYASGList extends Component {
                       <td>Project Name</td>
                       <td>Vendor Name</td>
                     </tr>
+                    {this.state.lmr_list.map(e =>
+                      <tr>
+                        <td>
+                          <Link to={'/lmr-detail/'+e._id}><Button color="info" size="sm"><i className="fa fa-info-circle" style={{ marginRight: "8px" }}></i>Detail</Button></Link>
+                        </td>
+                        <td>{e.lmr_id}</td>
+                        <td>{e.gl_account}</td>
+                        <td>{e.project_name}</td>
+                        <td>{e.vendor_name}</td>
+                      </tr>
+                    )}
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>

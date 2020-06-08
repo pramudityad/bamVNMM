@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from "react";
+import React, { Component } from "react";
 import { Form, FormGroup, Label, FormText, Card, CardHeader, CardBody, CardFooter, Table, Row, Col, Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Collapse, Input } from 'reactstrap';
 import axios from 'axios';
 import { saveAs } from 'file-saver';
@@ -16,7 +16,7 @@ const passwordBAM = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class MYASGDetail extends Component {
+class MYASGDetailDummy extends Component {
   constructor(props) {
     super(props);
 
@@ -30,7 +30,6 @@ class MYASGDetail extends Component {
       lmr_child_form : {},
       modal_loading : false,
       modalAddChild : false,
-      lmr_detail : {},
 
       data_cpo : null,
       data_cpo_db : [],
@@ -453,11 +452,6 @@ class MYASGDetail extends Component {
                             LMR Detail
                           </td>
                         </tr>
-                        <tr style={{ fontWeight: '425', fontSize: '15px' }}>
-                          <td colSpan="2" style={{ textAlign: 'center', marginBottom: '10px', fontWeight: '500' }}>
-                            LMR ID : {this.state.lmr_detail.lmr_id}
-                          </td>
-                        </tr>
                         {this.state.data_cpo !== null && (
                           <tr style={{ fontWeight: '425', fontSize: '15px' }}>
                             <td colSpan="2" style={{ textAlign: 'center', marginBottom: '10px', fontWeight: '500' }}>
@@ -471,37 +465,39 @@ class MYASGDetail extends Component {
                   </Col>
                 </Row>
                 <div style={{ padding: "10px", fontSize: '15px' }}>
-                  <Row>
-                    <Col sm="6" md="6">
-                      <table className="table-header">
-                        <tbody>
-                          <tr style={{ fontWeight: '425', fontSize: '15px' }}>
-                            <td colSpan="4" style={{ textAlign: 'center', marginBottom: '10px', fontWeight: '500' }}>LMR INFORMATION</td>
-                          </tr>
-                          <tr style={{ fontWeight: '425', fontSize: '15px' }}>
-                            <td style={{ width: '150px' }}>Payment Terms </td>
-                            <td>:</td>
-                            <td>{this.state.lmr_detail.payment_terms}</td>
-                          </tr>
-                          <tr style={{ fontWeight: '425', fontSize: '15px' }}>
-                            <td>Currency</td>
-                            <td>:</td>
-                            <td>{this.state.lmr_detail.currency}</td>
-                          </tr>
-                          <tr style={{ fontWeight: '425', fontSize: '15px' }}>
-                            <td>Vendor</td>
-                            <td>:</td>
-                            <td>{this.state.lmr_detail.vendor_name}</td>
-                          </tr>
-                          <tr style={{ fontWeight: '425', fontSize: '15px' }}>
-                            <td>Project</td>
-                            <td>:</td>
-                            <td>{this.state.lmr_detail.project_name}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </Col>
-                  </Row>
+                  {this.state.data_cpo !== null && (
+                    <Row>
+                      <Col sm="6" md="6">
+                        <table className="table-header">
+                          <tbody>
+                            <tr style={{ fontWeight: '425', fontSize: '15px' }}>
+                              <td colSpan="4" style={{ textAlign: 'center', marginBottom: '10px', fontWeight: '500' }}>LMR INFORMATION</td>
+                            </tr>
+                            <tr style={{ fontWeight: '425', fontSize: '15px' }}>
+                              <td style={{ width: '150px' }}>Payment Terms </td>
+                              <td>:</td>
+                              <td>{this.state.data_cpo.payment_terms}</td>
+                            </tr>
+                            <tr style={{ fontWeight: '425', fontSize: '15px' }}>
+                              <td>Currency</td>
+                              <td>:</td>
+                              <td>{this.state.data_cpo.currency}</td>
+                            </tr>
+                            <tr style={{ fontWeight: '425', fontSize: '15px' }}>
+                              <td>Contract</td>
+                              <td>:</td>
+                              <td>{this.state.data_cpo.contract}</td>
+                            </tr>
+                            <tr style={{ fontWeight: '425', fontSize: '15px' }}>
+                              <td>Contact</td>
+                              <td>:</td>
+                              <td>{this.state.data_cpo.contact}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </Col>
+                    </Row>
+                  )}
                 </div>
 
                 <div class='divtable'>
@@ -514,6 +510,7 @@ class MYASGDetail extends Component {
                         <th>Description</th>
                         <th>Site ID</th>
                         <th>Quantity</th>
+                        <th>Unit</th>
                         <th>Price</th>
                         <th>Tax Code</th>
                         <th>Delivery Date</th>
@@ -526,26 +523,26 @@ class MYASGDetail extends Component {
                       </tr>
                     </thead>
                     <tbody>
-                    {this.state.lmr_detail.detail !== undefined ?
-                      this.state.lmr_detail.detail.map(e =>
-                        <tr>
-                          <td>{e.nw}</td>
-                          <td>{e.activity}</td>
-                          <td>{e.material}</td>
-                          <td>{e.description}</td>
-                          <td>{e.site_id}</td>
-                          <td>{e.qty}</td>
-                          <td>{e.unit_price}</td>
-                          <td>{e.tax_code}</td>
-                          <td>{e.delivery_date}</td>
-                          <td>{e.total_price}</td>
-                          <td>{e.total_value}</td>
-                          <td>{e.currency}</td>
-                          <td>{e.pr}</td>
-                          <td>{e.po}</td>
-                          <td>{e.item}</td>
-                        </tr>
-                      ) : (<Fragment></Fragment>)}
+                    {this.state.data_cpo_db.map(e =>
+                      <tr>
+                        <td>SO # /NW #</td>
+                        <td>Activity</td>
+                        <td>Material #</td>
+                        <td>Description</td>
+                        <td>Site ID</td>
+                        <td>Quantity</td>
+                        <td>Unit</td>
+                        <td>Price</td>
+                        <td>Tax Code</td>
+                        <td>Delivery Date</td>
+                        <td>Total price</td>
+                        <td>Total Value</td>
+                        <td>Currency</td>
+                        <td>PR</td>
+                        <td>PO</td>
+                        <td>Item</td>
+                      </tr>
+                    )}
                     </tbody>
                   </Table>
                 </div>
@@ -720,4 +717,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(MYASGDetail);
+export default connect(mapStateToProps)(MYASGDetailDummy);
