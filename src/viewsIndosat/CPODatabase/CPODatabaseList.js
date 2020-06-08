@@ -199,32 +199,6 @@ class CPODatabase extends React.Component {
     }
   }
 
-  checkValueReturn(value1, value2) {
-    // if value undefined or null return Value2
-    if (typeof value1 !== 'undefined' && value1 !== null) {
-      return value1;
-    } else {
-      return value2;
-    }
-  }
-
-  // check Package Config
-  // fileHandlerMaterial = (event) => {
-  //   // this.toggleLoading();
-  //   let fileObj = event.target.files[0];
-  //   if (fileObj !== undefined) {
-  //     ExcelRenderer(fileObj, (err, rest) => {
-  //       if (err) {
-  //         console.log(err);
-  //       }
-  //       else {
-  //         console.log('excel arr ', rest.rows)
-  //         this.setState({ rowsXLS: rest.rows })
-  //       }
-  //     });
-  //   }
-  // }
-
   fileHandlerMaterial = (input) => {
     const file = input.target.files[0];
     const reader = new FileReader();
@@ -445,16 +419,6 @@ class CPODatabase extends React.Component {
       });
   }
 
-  numToSSColumn(num) {
-    var s = '', t;
-
-    while (num > 0) {
-      t = (num - 1) % 26;
-      s = String.fromCharCode(65 + t) + s;
-      num = (num - t) / 26 | 0;
-    }
-    return s || undefined;
-  }
 
   exportFormatCPO_level1 = async () => {
     const wb = new Excel.Workbook();

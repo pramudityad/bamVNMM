@@ -52,8 +52,6 @@ class ListCommercial extends Component {
 
     };
     this.toggleLoading = this.toggleLoading.bind(this);
-    this.toggleDelete = this.toggleDelete.bind(this);
-    this.deleteBOQCOMM = this.deleteBOQCOMM.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
@@ -82,21 +80,6 @@ class ListCommercial extends Component {
     this.setState(prevState => ({
       modal_loading: !prevState.modal_loading
     }));
-  }
-
-  toggleDelete(e){
-    let value = null;
-    this.setState(prevState => ({
-      modal_delete: !prevState.modal_delete
-    }));
-    if(e !== undefined){
-      if(e.currentTarget.value === undefined){
-        value = e.target.value;
-      }else{
-        value = e.currentTarget.value;
-      }
-    }
-    this.setState({modal_delete_noBOQ : value})
   }
 
   async getDatafromAPI(url){
@@ -221,64 +204,6 @@ class ListCommercial extends Component {
     });
   }
 
-  deleteBOQCOMM = async () => {
-    this.toggleDelete();
-    this.toggleLoading();
-    const no_com = this.state.modal_delete_noBOQ;
-    let indexCOM = this.state.boq_comm_all.find(e => e.no_boq_comm === no_com);
-    const projection = 'projection={"_etag" : 1}';
-    let getItemComm = await this.getDatafromAPI('/boq_comm_items_non_page?where={"id_boq_comm_doc" : "'+indexCOM._id+'"}'+'&'+projection);
-    let dataItemsComm = [];
-    if(getItemComm !== undefined){
-      if(getItemComm.data !== undefined){
-        dataItemsComm = getItemComm.data._items;
-      }
-    }
-    if(indexCOM !== undefined){
-      const dataTech = await this.getDatafromAPI('/boq_tech_op/'+indexCOM.id_boq_tech_doc);
-      if(dataTech !== undefined){
-        if(dataTech.data !== undefined){
-          const updateTech = {
-            "list_of_id_boq_comm" : dataTech.data.list_of_id_boq_comm.filter(id => id !== indexCOM._id)
-          }
-          const patchDataTech = await this.patchDatatoAPI('/boq_tech_op/'+dataTech.data._id, updateTech, dataTech.data._etag);
-          if(patchDataTech !== undefined){
-            if(patchDataTech.data !== undefined){
-              const updateComm = {
-                "deleted" : 1
-              }
-              for(let x = 0; x < dataItemsComm.length; x++){
-                const itemsUpdate = await this.patchDatatoAPI('/boq_comm_items_op/'+dataItemsComm[x]._id, updateComm, dataItemsComm[x]._etag);
-              }
-              const patchComm = await this.patchDatatoAPI('/boq_comm_op/'+indexCOM._id, updateComm, indexCOM._etag);
-                if(patchComm !== undefined){
-                  if(patchComm.data !== undefined){
-                    this.setState({action_status : 'success', action_message : 'Commercial BOQ '+no_com+' has been deleted'})
-                    this.toggleLoading();
-                    setTimeout(function(){ window.location.reload(); }, 1500);
-                  }
-                }else{
-                  this.setState({action_status : 'failed', action_message : ''})
-                  this.toggleLoading();
-                }
-            }
-          }else{
-            this.setState({action_status : 'failed', action_message : ''})
-            this.toggleLoading();
-          }
-        }else{
-          this.setState({action_status : 'failed', action_message : ''})
-          this.toggleLoading();
-        }
-      }else{
-        this.setState({action_status : 'failed', action_message : ''})
-        this.toggleLoading();
-      }
-    }else{
-      this.setState({action_status : 'failed', action_message : ''})
-      this.toggleLoading();
-    }
-  }
 
   handleFilterList(e){
     const index = e.target.name;
@@ -470,23 +395,6 @@ class ListCommercial extends Component {
             </ModalFooter>
           </Modal>
           {/* end Modal Loading */}
-
-          {/* Modal Delete */}
-          <Modal isOpen={this.state.modal_delete} toggle={this.toggleDelete} className={'modal-sm ' + this.props.className}>
-            <ModalBody>
-              <div style={{textAlign : 'center', margin : '15px 0 20px 0'}}>
-                <span style={{fontWeight : '500', fontSize : '15px'}}>Are You Sure wanna Delete </span>
-              </div>
-              <div style={{textAlign : 'center'}}>
-                {this.state.modal_delete_noBOQ}
-              </div>
-            </ModalBody>
-            <ModalFooter>
-              <Button color="danger" onClick={this.deleteBOQCOMM}>Delete</Button>
-              <Button color="secondary" onClick={this.toggleDelete}>Close</Button>
-            </ModalFooter>
-          </Modal>
-          {/* end Modal Delete */}
 
       </div>
 
