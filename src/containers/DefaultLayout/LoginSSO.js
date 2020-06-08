@@ -140,24 +140,24 @@ class SSOLogin extends Component {
               <h4>Welcome to BAM</h4>
             </Row>
             <Row className="justify-content-center">
-              <h3>Please Select Account :</h3>
+              <h3>Please Select Party :</h3>
             </Row>
             <Row className="justify-content-center">
               <Col md="12" lg="12" xl="12">
                 <div className="flex--card-account" >
                   <div className="card-account--telkom" onClick={()=>this.handleChangeAccount("1")}>
                     <div>
-                      <h2>TELKOM</h2>
+                      <h2>PDIP</h2>
                     </div>
                   </div>
                   <div className="card-account--xl" onClick={()=>this.handleChangeAccount("2")}>
                     <div>
-                      <h2>XL AXIATA</h2>
+                      <h2>P Demokrat</h2>
                     </div>
                   </div>
                   <div className="card-account--indosat" onClick={()=>this.handleChangeAccount("3")}>
                     <div>
-                      <h2>INDOSAT</h2>
+                      <h2>PKS</h2>
                     </div>
                   </div>
                 </div>
