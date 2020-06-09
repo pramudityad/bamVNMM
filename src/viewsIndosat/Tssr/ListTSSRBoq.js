@@ -196,7 +196,7 @@ class ListTSSRBoq extends Component {
                             <td style={{verticalAlign : 'middle'}}>{boq.version}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.tssr_approval_status}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              <Link to={'/detail-tssr-boq/'+boq._id}>
+                              <Link to={'/list-tssr-boq/'+boq._id}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                               </Link>
                               {/*<Button  size="sm" color="danger" style={{color : "white"}} value={boq._id} onClick={e => this.deleteTechBoq(e, "value")}>

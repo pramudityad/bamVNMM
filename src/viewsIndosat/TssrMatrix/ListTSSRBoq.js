@@ -207,7 +207,7 @@ class ListTSSRBoq extends Component {
             <React.Fragment>
               <span style={{'position':'absolute',marginTop:'8px'}}>TSSR BOQ List</span>
               <div className="card-header-actions" style={{marginRight:'5px'}}>
-                <Link to='/tssr-matix-creation'>
+                <Link to='/list-tssr-matix/creation'>
                 <Button color="success"><i className="fa fa-plus" aria-hidden="true"></i>&nbsp; New</Button>
                 </Link>
               </div>
@@ -268,7 +268,7 @@ class ListTSSRBoq extends Component {
                             <td style={{verticalAlign : 'middle'}}>{tssr.project_name}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>{tssr.no_boq_tech}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              <Link to={'/detail-tssr-matix/'+tssr._id}>
+                              <Link to={'/list-tssr-matix/'+tssr._id}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                               </Link>
                             </td>
