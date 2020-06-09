@@ -262,7 +262,7 @@ class ListCommercial extends Component {
             <React.Fragment>
               <span style={{position:'absolute',marginTop:'8px'}}>Commercial BOQ List</span>
               <div className="card-header-actions" style={{marginRight:'5px'}}>
-                <Link to='/commercial-creation'>
+                <Link to='/list-commercial/creation'>
                 <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
                 </Link>
               </div>
@@ -339,7 +339,7 @@ class ListCommercial extends Component {
                               )}
                             </td> */}
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              <Link to={'/detail-commercial/'+boq._id}>
+                              <Link to={'/list-commercial/detail/'+boq._id}>
                                 <Button className="btn-primary" size="sm" color="primary" style={{marginRight : '10px'}}>
                                   <i className="fas fa-edit" aria-hidden="true"></i>&nbsp; Edit
                                 </Button>
