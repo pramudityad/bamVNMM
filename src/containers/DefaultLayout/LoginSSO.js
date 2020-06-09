@@ -147,7 +147,7 @@ class SSOLogin extends Component {
                 <div className="flex--card-account" >
                   <div className="card-account--telkom" onClick={()=>this.handleChangeAccount("1")}>
                     <div>
-                      <h2>PDIP</h2>
+                      <h2>PSI</h2>
                     </div>
                   </div>
                   <div className="card-account--xl" onClick={()=>this.handleChangeAccount("2")}>
