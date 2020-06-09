@@ -10,6 +10,7 @@ const ProductPackage = React.lazy(() => import('./viewsIndosat/ProductPackage/Pa
 
 const ListCommercial = React.lazy(() => import('./viewsIndosat/Commercial/ListCommercial'));
 const DetailCommercial = React.lazy(() => import('./viewsIndosat/Commercial/CommercialBoq'));
+const DetailCommercialPO = React.lazy(() => import('./viewsIndosat/Commercial/CommercialBoqPO'));
 const ApprovalCommercial = React.lazy(() => import('./viewsIndosat/Commercial/CommercialBoqApproval'));
 const SubmissionCommBoq = React.lazy(() => import('./viewsIndosat/Commercial/SubmissionCommBoq'));
 
@@ -37,6 +38,7 @@ const routes = [
   { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
   { path: '/commercial-creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
   { path: '/detail-commercial/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
+  { path: '/detail-commercialpo/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercialPO },
   { path: '/approval-commercial/:id', exact: true, name: 'Approval for Commercial BOQ', component: ApprovalCommercial },
   { path: '/submission-commercial/:id', exact: true, name: 'Submission Commercial BOQ', component: SubmissionCommBoq },
 
