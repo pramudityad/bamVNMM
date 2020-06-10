@@ -12,7 +12,7 @@ const routes = [
 
   { path: '/lmr-list', exact: true, name: 'Assignment LMR List', component: LMRList },
   { path: '/lmr-creation', exact: true, name: 'Assignment LMR Creation', component: LMRCreation },
-  { path: '/lmr-detail', exact: true, name: 'Assignment LMR Detail', component: LMRDetailDummy },
+  { path: '/lmr-detail/:id', exact: true, name: 'Assignment LMR Detail', component: LMRDetailDummy },
 ];
 
 export default routes;

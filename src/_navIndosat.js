@@ -16,6 +16,11 @@ export default {
       icon: 'icon-folder-alt',
       children: [
         {
+          name: 'Technical BOQ',
+          url: '/list-technical',
+          icon: 'icon-docs',
+        },
+        {
           name: 'Commercial BOQ ',
           url: '/list-commercial',
           icon: 'icon-tag',
