@@ -15,7 +15,8 @@ import {
 } from "reactstrap";
 import { connect } from "react-redux";
 import { Link } from "react-router-dom";
-
+import Excel from 'exceljs';
+import { saveAs } from 'file-saver';
 import Loading from "../components/Loading";
 import { getDatafromAPINODE } from "../../helper/asyncFunction";
 
@@ -48,6 +49,27 @@ class DetailPRPO extends Component {
         }
       }
     );
+  }
+
+  exportPRT = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const data_assingment = this.state.all_data;
+    let indexSSOW = 7;
+
+    let headerRow = ["prt_id", "site_id", "site_name", "quotation_number", "signum_pm", "approval_by", "id_project_doc", "project_name", "area", "purchase_group","asp_name","term_of_payment","network_number","activity_code","action_point","currency","current_status","approval_status","approval_date","total_price","pr_number","pr_date", "pr_inserted_by", "po_number","po_date","po_inserted_by","po_item","bast_no_dp","req_gr_dp","req_gr_by_dp","req_gr_date_dp","req_revision_dp","revision_done_dp", "bast_no_final", "req_gr_final", "req_gr_by_final", "req_gr_date_final","req_revision_final","revision_done_final", "SSOW_List"];
+
+    // data_assingment.SSOW_List.map((e, idx) => headerRow.push("ssow_" + (e.sow_type.toLowerCase()) + "_id_" + (idx + 1).toString(), "ssow_" + (e.sow_type.toLowerCase()) + "_activity_number_" + (idx + 1).toString(), "ssow_" + (e.sow_type.toLowerCase()) + "_unit_" + (idx + 1).toString(), "ssow_" + (e.sow_type.toLowerCase()) + "_quantity_" + (idx + 1).toString()));
+
+    // let dataPRT = [data_assingment.Assignment_No, data_assingment.Project, data_assingment.SOW_Type, "cd_id", data_assingment.Vendor_Code_Number, data_assingment.Vendor_Name, this.convertTOP(data_assingment.Payment_Terms), data_assingment.Site_ID];
+    // data_assingment.SSOW_List.map(e => dataPRT.push(e.ssow_id, e.ssow_activity_number, e.ssow_unit, e.ssow_qty));
+
+    ws.addRow(headerRow);
+    // ws.addRow(dataPRT);
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Assignment ' + data_assingment.prt_id + ' Template.xlsx');
   }
 
   render() {
@@ -93,6 +115,7 @@ class DetailPRPO extends Component {
                   outline
                   color="info"
                   size="sm"
+                  onClick={this.exportPRT}
                 >
                   <i
                     className="fa fa-download"
@@ -102,9 +125,9 @@ class DetailPRPO extends Component {
                 </Button>
               </CardHeader>
               <CardBody>
-                <Row xs="2">
+                <Row >
                   <Col>
-                    <h5>General Information</h5>
+                    <h5><b>General Information</b></h5>
                     <Form>
                       <FormGroup row>
                         <Label sm={2}>PRT ID</Label>
@@ -189,8 +212,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            name="project_name"
-                            readOnly
+                            name="project_name"                            
                             value={all_data.project_name}
                           />
                         </Col>
@@ -210,9 +232,11 @@ class DetailPRPO extends Component {
                       </FormGroup>
                     </Form>
                   </Col>
+                  </Row>
                   {/* prpo info */}
+                  <Row>
                   <Col>
-                    <h5>PRPO Information</h5>
+                    <h5><b>PRPO Information</b></h5>
                     <Form>
                       <FormGroup row>
                         <Label sm={2}>Purchase Group</Label>
@@ -309,7 +333,7 @@ class DetailPRPO extends Component {
                   </Col>
                 </Row>
                 {/* ssow */}
-                <h5>SSOW Detail</h5>
+                <h5><b>SSOW Detail</b></h5>
                 {/* <Button color="primary" size="sm" onClick={this.addSSOW}>
                   <i className="fa fa-plus">&nbsp;</i> SSOW
                 </Button> */}
@@ -353,9 +377,9 @@ class DetailPRPO extends Component {
                   </Col>
                 </FormGroup>
                 {/* pr status */}
-                <Row xs="2">
+                <Row>
                   <Col>
-                    <h5>PR Status</h5>
+                    <h5><b>PR Status</b></h5>
                     <Form>
                       <FormGroup row>
                         <Label sm={2}>PR Number</Label>
@@ -450,9 +474,11 @@ class DetailPRPO extends Component {
                       </FormGroup>
                     </Form>
                   </Col>
+                  </Row>
                   {/* prpo info */}
+                  <Row>
                   <Col>
-                    <h5>GR Information</h5>
+                    <h5><b>GR Information</b></h5>
                     <Form>
                       <FormGroup row>
                         <Label sm={2}>BAST No DP</Label>

@@ -14,7 +14,8 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import Pagination from "react-js-pagination";
-
+import Excel from 'exceljs';
+import { saveAs } from 'file-saver';
 import { connect } from "react-redux";
 import { getDatafromAPINODE } from "../../helper/asyncFunction";
 
@@ -84,6 +85,35 @@ class ListPRPO extends Component {
     return searchBar;
   };
 
+  downloadAll= async () => {
+    let allAssignmentList = this.state.all_data;
+
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let headerRow = ["assignment_id", "project", "sow_type", "created_based", "vendor_code", "vendor_name", "payment_terms", "identifier", "ssow_rbs_id_1", "ssow_rbs_activity_number_1", "ssow_rbs_unit_1", "ssow_rbs_quantity_1", "ssow_rbs_id_2", "ssow_rbs_activity_number_2", "ssow_rbs_unit_2", "ssow_rbs_quantity_2", "ssow_rbs_id_3", "ssow_rbs_activity_number_3", "ssow_rbs_unit_3", "ssow_rbs_quantity_3", "ssow_rbs_id_4", "ssow_rbs_activity_number_4", "ssow_rbs_unit_4", "ssow_rbs_quantity_4", "ssow_rbs_id_5", "ssow_rbs_activity_number_5", "ssow_rbs_unit_5", "ssow_rbs_quantity_5", "ssow_trm_id_1", "ssow_trm_activity_number_1", "ssow_trm_unit_1", "ssow_trm_quantity_1", "ssow_trm_id_2", "ssow_trm_activity_number_2", "ssow_trm_unit_2", "ssow_trm_quantity_2", "ssow_trm_id_3", "ssow_trm_activity_number_3", "ssow_trm_unit_3", "ssow_trm_quantity_3", "ssow_trm_id_4", "ssow_trm_activity_number_4", "ssow_trm_unit_4", "ssow_trm_quantity_4", "ssow_trm_id_5", "ssow_trm_activity_number_5", "ssow_trm_unit_5", "ssow_trm_quantity_5"];
+    ws.addRow(headerRow);
+
+    // for (let i = 0; i < allAssignmentList.length; i++) {
+    //   let rowAdded = [allAssignmentList[i].Assignment_No, allAssignmentList[i].Project, allAssignmentList[i].SOW_Type, "tower_id", allAssignmentList[i].Vendor_Code_Number, allAssignmentList[i].Vendor_Name, allAssignmentList[i].Payment_Terms, allAssignmentList[i].Site_ID];
+    //   let rbs_ssow = allAssignmentList[i].SSOW_List.filter(item => item.sow_type === "RBS");
+    //   for (let j = 0; j < rbs_ssow.length; j++) {
+    //     rowAdded.push(rbs_ssow[j].ssow_id, rbs_ssow[j].ssow_activity_number, rbs_ssow[j].ssow_unit, rbs_ssow[j].ssow_qty);
+    //   }
+    //   for (let k = 0; k < 5 - rbs_ssow.length; k++) {
+    //     rowAdded.push("", "", "", "");
+    //   }
+    //   let trm_ssow = allAssignmentList[i].SSOW_List.filter(item => item.sow_type === "TRM");
+    //   for (let j = 0; j < trm_ssow.length; j++) {
+    //     rowAdded.push(trm_ssow[j].ssow_id, trm_ssow[j].ssow_activity_number, trm_ssow[j].ssow_unit, trm_ssow[j].ssow_qty);
+    //   }
+    //   ws.addRow(rowAdded);
+    // }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'PRT List.xlsx');
+  }
+
   loading = () => (
     <div className="animated fadeIn pt-1 text-center">Loading...</div>
   );
@@ -116,7 +146,7 @@ class ListPRPO extends Component {
                     Create PRT
                   </Button>
                 </Link>
-                <Link to={"/bulk-assignment-creation"}>
+                {/* <Link to={"/bulk-assignment-creation"}>
                   <Button
                     color="success"
                     style={{ float: "right", marginRight: "8px" }}
@@ -128,12 +158,13 @@ class ListPRPO extends Component {
                     ></i>
                     Create PRT Bulk
                   </Button>
-                </Link>
+                </Link> */}
                 <Button
                   style={downloadAssignment}
                   outline
                   color="success"
                   size="sm"
+                  onClick={this.downloadAll}
                 >
                   <i
                     className="fa fa-download"
