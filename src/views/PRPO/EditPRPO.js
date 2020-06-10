@@ -105,8 +105,8 @@ class EditPRPO extends Component {
     getDatafromAPINODE("/prt/getPrt/" + _id, this.props.dataLogin.token).then(
       (res) => {
         if (res.data !== undefined) {
-          this.setState({ all_data: res.data.data });
-          console.log("getPRTDetail ", this.state.all_data);
+          this.setState({ all_data: res.data.data, Dataform: res.data.data });
+          console.log("state Dataform ", this.state.Dataform);
         }
       }
     );
@@ -185,7 +185,7 @@ class EditPRPO extends Component {
   };
 
   async updatePRT() {
-	let prt_data = {
+	let data = {
 	  prt_id: this.state.Dataform.prt_id,
 	  site_id: this.state.Dataform.site_id,
 	  site_name: this.state.Dataform.site_name,
@@ -228,10 +228,10 @@ class EditPRPO extends Component {
 	  deleted: 0,
 	  SSOW_List: this.state.SSOW_List_out,
 	};
-	console.log("data prt", prt_data);
+	console.log("data prt", data);
 	const patch = patchDatatoAPINODE(
-	  "/prt/createOnePrt",
-	  { prt_data },
+	  "/prt/UpdatePrt/"+this.props.match.params.id,
+	  { data },
 	  this.props.dataLogin.token
 	).then((res) => {
 	  console.log(" res patch single ", res);
@@ -273,10 +273,10 @@ class EditPRPO extends Component {
 				</span>
 			  </CardHeader>
 			  <CardBody>
-				<Row xs="2">
+				<Row>
 				  {/* general info */}
 				  <Col>
-					<h5>General Information</h5>
+					<h5><b>General Information</b></h5>
 					<Form>
 					  <FormGroup row>
 						<Label sm={2}>PRT ID</Label>
@@ -346,7 +346,7 @@ class EditPRPO extends Component {
 							type="select"
 							placeholder="Select Approval by"
 							name={"approval_by"}
-							defaultValue={all_data.approval_by}
+							value={all_data.approval_by}
 							onChange={this.handleInput}
 						  >
 							<option value="" disabled selected hidden>
@@ -365,8 +365,8 @@ class EditPRPO extends Component {
 						<Label sm={2}>Project Name</Label>
 						<Col sm={10}>
 						  <Select
-							cacheOptions
-							value={all_data.project_name}
+							// cacheOptions
+							value={this.state.list_project_selection.filter(option=> option.label === all_data.project_name)}
 							options={this.state.list_project_selection}
 							name={"project_name"}
 							onChange={this.handleInputProject.bind(
@@ -389,9 +389,11 @@ class EditPRPO extends Component {
 					  </FormGroup>
 					</Form>
 				  </Col>
+				  </Row>
 				  {/* prpo info */}
+				  <Row>
 				  <Col>
-					<h5>PRPO Information</h5>
+					<h5><b>PRPO Information</b></h5>
 					<Form>
 					  <FormGroup row>
 						<Label sm={2}>Purchase Group</Label>
@@ -507,13 +509,13 @@ class EditPRPO extends Component {
 				  </Col>
 				</Row>
 				{/* ssow */}
-				<h5>SSOW Detail</h5>
+				<h5><b>SSOW Detail</b></h5>
 				<Button color="primary" size="sm" onClick={this.addSSOW}>
 				  <i className="fa fa-plus">&nbsp;</i> SSOW
 				</Button>
 				{all_data.SSOW_List !== undefined && all_data.SSOW_List.map((ssow_data, idx) => (
-				  <Row xs="3">
-					<Col md="6">
+				  <Row xs="4">
+					<Col md="4">
 					  SSOW
 					  <Input
 						type="text"
@@ -533,7 +535,7 @@ class EditPRPO extends Component {
 						onChange={this.handleInputssow(idx)}
 					  />
 					</Col>
-					<Col md="1">
+					<Col md="2">
 					  QTY
 					  <Input
 						type="number"
@@ -543,34 +545,47 @@ class EditPRPO extends Component {
 						onChange={this.handleInputssow(idx)}
 					  />
 					</Col>
-					<div style={{ display: "flex" }}>
-					  <Button
-						onClick={this.deleteSSOW(idx)}
-						color="danger"
-						size="sm"
-						style={{ marginLeft: "5px" }}
-					  >
-						<i className="fa fa-trash"></i>
-					  </Button>
+					<Col>
+					<div >
+					<Button
+                          onClick={this.deleteSSOW(idx)}
+                          color="danger"
+                          size="sm"
+                          style={{
+                            marginLeft: "5px",
+                            marginTop: "5px",
+                            display: "inline-block",
+                          }}
+                        >
+                          <i className="fa fa-trash"></i>
+                        </Button>
 					</div>
+					</Col>
 				  </Row>
 				))}
-				<FormGroup row>
-				  <Label sm={2}>Total Price</Label>
-				  <Col sm={10}>
-					<Input
-					  type="text"
-					  placeholder="Total Price"
-					  name={"total_price"}
-					  defaultValue={all_data.total_price}
-					  onChange={this.handleInput}
-					/>
-				  </Col>
-				</FormGroup>
+				&nbsp;&nbsp;&nbsp;
+				<Row>
+                  <Col>
+                    <Form>
+                      <FormGroup row>
+                        <Label sm={2}>Total Price</Label>
+                        <Col sm={6}>
+                          <Input
+                            type="text"
+                            placeholder="Total Price"
+                            name={"total_price"}
+                            value={all_data.total_price}
+                            onChange={this.handleInput}
+                          />
+                        </Col>
+                      </FormGroup>
+                    </Form>
+                  </Col>
+                </Row>
 				{/* pr status */}
-				<Row xs="2">
+				<Row>
 				  <Col>
-					<h5>PR Status</h5>
+					<h5><b>PR Status</b></h5>
 					<Form>
 					  <FormGroup row>
 						<Label sm={2}>PR Number</Label>
@@ -658,9 +673,11 @@ class EditPRPO extends Component {
 					  </FormGroup>
 					</Form>
 				  </Col>
+				  </Row>
 				  {/* prpo info */}
+				  <Row>
 				  <Col>
-					<h5>GR Information</h5>
+					<h5><b>GR Information</b></h5>
 					<Form>
 					  <FormGroup row>
 						<Label sm={2}>BAST No DP</Label>
