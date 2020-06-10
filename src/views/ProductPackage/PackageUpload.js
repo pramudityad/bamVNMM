@@ -41,6 +41,7 @@ class PackageUpload extends React.Component {
       action_status: null,
       action_message: null,
       product_package: [],
+      product_package_all: [],
       dataParent: [],
       modalCheckout: false,
       packageSelected: [],
@@ -51,10 +52,12 @@ class PackageUpload extends React.Component {
       PPForm: new Array(9).fill(null),
       collapse: false,
       modalPPFedit: false,
+      packageChecked_all: false
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
+    this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.changeFilterName = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
@@ -161,7 +164,7 @@ class PackageUpload extends React.Component {
 
   handleChangeFilter = (e) => {
     let value = e.target.value;
-    if(value.length === 0){
+    if (value.length === 0) {
       value = "";
     }
     this.setState({ filter_name: value }, () => {
@@ -177,18 +180,29 @@ class PackageUpload extends React.Component {
 
   getPackageDataAPI() {
     let filter = '{"$regex" : "", "$options" : "i"}';
-    if (this.state.filter_name !== ""){
+    if (this.state.filter_name !== "") {
       filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
-    } 
+    }
     // let filter = this.state.filter_name === ""  ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
     let whereOr = '{"$or" : [{"product_name": ' + filter + '}, {"pp_cust_number": ' + filter + '}, {"physical_group": ' + filter + '}]}';
     // let whereOr = '{"$or" : [{"product_name": ' + filter + '}]}';
-    this.getDatafromAPINODE('/productpackage?q='+whereOr+'&lmt='+this.state.perPage+'&pg='+this.state.activePage)
+    this.getDatafromAPINODE('/productpackage?q=' + whereOr + '&lmt=' + this.state.perPage + '&pg=' + this.state.activePage)
       .then(res => {
         if (res.data !== undefined) {
-          this.setState({ product_package: res.data.data, prevPage: this.state.activePage, total_dataParent : res.data.totalResults });
+          this.setState({ product_package: res.data.data, prevPage: this.state.activePage, total_dataParent: res.data.totalResults });
         } else {
           this.setState({ product_package: [], total_dataParent: 0, prevPage: this.state.activePage });
+        }
+      })
+  }
+
+  getPackageDataAPI_all() {
+    this.getDatafromAPINODE('/productpackage?noPg=1')
+      .then(res => {
+        if (res.data !== undefined) {
+          this.setState({ product_package_all: res.data.data });
+        } else {
+          this.setState({ product_package_all: [] });
         }
       })
   }
@@ -256,11 +270,11 @@ class PackageUpload extends React.Component {
     }
   }
 
-  checkFormatMaterial(dataXLSHeader){
+  checkFormatMaterial(dataXLSHeader) {
     // cek the import data is for Material or Not
-    if(this.getIndex(dataXLSHeader,'PP / Material') !== -1 && this.getIndex(dataXLSHeader,'bundle_id') !== -1 && this.getIndex(dataXLSHeader,'material_id') !== -1 && (this.getIndex(dataXLSHeader,'material_name') !== -1 || this.getIndex(dataXLSHeader,'quantity') !== -1 || this.getIndex(dataXLSHeader,'uom') !== -1)){
+    if (this.getIndex(dataXLSHeader, 'PP / Material') !== -1 && this.getIndex(dataXLSHeader, 'bundle_id') !== -1 && this.getIndex(dataXLSHeader, 'material_id') !== -1 && (this.getIndex(dataXLSHeader, 'material_name') !== -1 || this.getIndex(dataXLSHeader, 'quantity') !== -1 || this.getIndex(dataXLSHeader, 'uom') !== -1)) {
       return true;
-    }else{
+    } else {
       return false;
     }
   }
@@ -275,74 +289,74 @@ class PackageUpload extends React.Component {
       const postPackage = await this.postDatatoAPINODE('/productpackage/manyProductPackage', { "ppData": ppData })
         .then(res => {
           if (res.data !== undefined) {
-            this.setState({ action_status : 'success' });
+            this.setState({ action_status: 'success' });
             this.toggleLoading();
           } else {
-            if(res.response !== undefined){
-              if(res.response.data !== undefined){
-                if(res.response.data.error !== undefined){
-                  if(res.response.data.error.message !== undefined){
+            if (res.response !== undefined) {
+              if (res.response.data !== undefined) {
+                if (res.response.data.error !== undefined) {
+                  if (res.response.data.error.message !== undefined) {
                     this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
                       this.toggleLoading();
                     });
-                  }else{
+                  } else {
                     this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
                       this.toggleLoading();
                     });
                   }
-                }else{
-                  this.setState({ action_status: 'failed'}, () => {
+                } else {
+                  this.setState({ action_status: 'failed' }, () => {
                     this.toggleLoading();
                   });
                 }
-              }else{
-                this.setState({ action_status: 'failed'}, () => {
+              } else {
+                this.setState({ action_status: 'failed' }, () => {
                   this.toggleLoading();
                 });
               }
-            }else{
-              this.setState({ action_status: 'failed'}, () => {
+            } else {
+              this.setState({ action_status: 'failed' }, () => {
                 this.toggleLoading();
               });
             }
           }
         })
-    } else if (isMaterial === true){
+    } else if (isMaterial === true) {
       let dataMat = await this.getMaterialFormat(productPackageXLS);
       const postMaterial = await this.postDatatoAPINODE('/materialcatalogue/manyMaterialCatalogue', { "mcData": dataMat });
-      if(postMaterial.data !== undefined){
-        this.setState({ action_status : 'success' });
+      if (postMaterial.data !== undefined) {
+        this.setState({ action_status: 'success' });
         this.toggleLoading();
-      }else{
-        if(postMaterial.response !== undefined){
-          if(postMaterial.response.data !== undefined){
-            if(postMaterial.response.data.error !== undefined){
-              if(postMaterial.response.data.error.message !== undefined){
+      } else {
+        if (postMaterial.response !== undefined) {
+          if (postMaterial.response.data !== undefined) {
+            if (postMaterial.response.data.error !== undefined) {
+              if (postMaterial.response.data.error.message !== undefined) {
                 this.setState({ action_status: 'failed', action_message: postMaterial.response.data.error.message }, () => {
                   this.toggleLoading();
                 });
-              }else{
+              } else {
                 this.setState({ action_status: 'failed', action_message: postMaterial.response.data.error }, () => {
                   this.toggleLoading();
                 });
               }
-            }else{
-              this.setState({ action_status: 'failed'}, () => {
+            } else {
+              this.setState({ action_status: 'failed' }, () => {
                 this.toggleLoading();
               });
             }
-          }else{
-            this.setState({ action_status: 'failed'}, () => {
+          } else {
+            this.setState({ action_status: 'failed' }, () => {
               this.toggleLoading();
             });
           }
-        }else{
-          this.setState({ action_status: 'failed'}, () => {
+        } else {
+          this.setState({ action_status: 'failed' }, () => {
             this.toggleLoading();
           });
         }
       }
-    }else{
+    } else {
       this.setState({ action_status: 'failed', action_message: 'Please check your format' }, () => {
         this.toggleLoading();
       });
@@ -354,7 +368,7 @@ class PackageUpload extends React.Component {
     let productPackageXLS = this.state.rowsXLS;
     let isPackage = true;
     let headerRow = [];
-    for(let i = 0; i < productPackageXLS[0].length; i++){
+    for (let i = 0; i < productPackageXLS[0].length; i++) {
       let value = productPackageXLS[0][i];
       value = value.replace("bundle_id", "pp_id");
       value = value.replace("bundle_name", "product_name");
@@ -368,39 +382,39 @@ class PackageUpload extends React.Component {
       const postPackage = await this.postDatatoAPINODE('/productpackage/packageWithMaterial', { "data": productPackageXLS })
         .then(res => {
           if (res.data !== undefined) {
-            this.setState({ action_status : 'success' });
+            this.setState({ action_status: 'success' });
             this.toggleLoading();
           } else {
-            if(res.response !== undefined){
-              if(res.response.data !== undefined){
-                if(res.response.data.error !== undefined){
-                  if(res.response.data.error.message !== undefined){
+            if (res.response !== undefined) {
+              if (res.response.data !== undefined) {
+                if (res.response.data.error !== undefined) {
+                  if (res.response.data.error.message !== undefined) {
                     this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
                       this.toggleLoading();
                     });
-                  }else{
+                  } else {
                     this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
                       this.toggleLoading();
                     });
                   }
-                }else{
-                  this.setState({ action_status: 'failed'}, () => {
+                } else {
+                  this.setState({ action_status: 'failed' }, () => {
                     this.toggleLoading();
                   });
                 }
-              }else{
-                this.setState({ action_status: 'failed'}, () => {
+              } else {
+                this.setState({ action_status: 'failed' }, () => {
                   this.toggleLoading();
                 });
               }
-            }else{
-              this.setState({ action_status: 'failed'}, () => {
+            } else {
+              this.setState({ action_status: 'failed' }, () => {
                 this.toggleLoading();
               });
             }
           }
         })
-    }else{
+    } else {
       this.setState({ action_status: 'failed', action_message: 'Please check your format' }, () => {
         this.toggleLoading();
       });
@@ -448,7 +462,7 @@ class PackageUpload extends React.Component {
     }
   }
 
-  getMaterialFormat(dataImport){
+  getMaterialFormat(dataImport) {
     const dataHeader = dataImport[0];
     const onlyMaterial = dataImport.map(e => e).filter(e => (this.checkValuetoString(e[this.getIndex(dataHeader, 'PP / Material')])).toLowerCase() === "material");
     let materialList = [];
@@ -465,7 +479,7 @@ class PackageUpload extends React.Component {
         "material_type": this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'material_type')]),
         "uom": this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'uom')]),
         "qty": this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'quantity')]),
-        "material_origin" : this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'material_origin')]),
+        "material_origin": this.checkValue(onlyMaterial[i][this.getIndex(dataHeader, 'material_origin')]),
         "po_number": ""
       }
       if (matIdx.material_id !== undefined && matIdx.material_id !== null) {
@@ -480,9 +494,9 @@ class PackageUpload extends React.Component {
       if (matIdx.pp_id === null || matIdx.pp_id === undefined) {
         matIdx["pp_id"] = matIdx.pp_id;
       }
-      if(pp_id !== null && mat_id !== null){
+      if (pp_id !== null && mat_id !== null) {
         materialList.push(matIdx);
-      }else{
+      } else {
         matErr.push(i);
       }
     }
@@ -491,6 +505,7 @@ class PackageUpload extends React.Component {
 
   componentDidMount() {
     this.getPackageDataAPI();
+    this.getPackageDataAPI_all();
     document.title = 'Product Package | BAM';
   }
 
@@ -511,8 +526,28 @@ class PackageUpload extends React.Component {
     this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(item, isChecked) }));
   }
 
+  handleChangeChecklistAll(e) {
+    const isChecked = e.target.checked;
+    let packageSelected = this.state.packageSelected;
+    const getMaterial = this.state.product_package_all;
+    if (isChecked) {
+      for (let x = 0; x < getMaterial.length; x++) {
+        packageSelected.push(getMaterial[x]);
+        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(getMaterial[x]._id, isChecked) }));
+      }
+      this.setState({ packageSelected: packageSelected });
+    } else {
+      for (let x = 0; x < getMaterial.length; x++) {
+        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(getMaterial[x]._id, isChecked) }));
+      }
+      packageSelected.length = 0;
+      this.setState({ packageSelected: packageSelected });
+    }
+    this.setState(prevState => ({ packageChecked_all: !prevState.packageChecked_all }))
+  }
+
   handlePageChange(pageNumber) {
-    this.setState({ activePage: pageNumber}, () => {
+    this.setState({ activePage: pageNumber }, () => {
       this.getPackageDataAPI();
     });
   }
@@ -544,9 +579,9 @@ class PackageUpload extends React.Component {
       dataForm[6] = ppEdit.pp_group;
       dataForm[7] = ppEdit.notes;
       dataForm[8] = ppEdit.price;
-      this.setState({ PPForm: dataForm});
+      this.setState({ PPForm: dataForm });
     } else {
-      this.setState({ PPForm: new Array(9).fill(null)});
+      this.setState({ PPForm: new Array(9).fill(null) });
     }
     this.setState(prevState => ({
       modalPPFedit: !prevState.modalPPFedit
@@ -566,15 +601,15 @@ class PackageUpload extends React.Component {
     const dataPPEdit = this.state.PPForm;
     const dataPP = this.state.product_package.find(e => e.pp_id === dataPPEdit[0]);
     let pp = {
-			"pp_id": dataPPEdit[0],
-			"product_name" : dataPPEdit[1],
-			"product_type": dataPPEdit[3],
-			"physical_group": dataPPEdit[4],
-			"uom": dataPPEdit[2],
-			"qty": 0,
-			"pp_cust_number" : this.checkValue(dataPPEdit[5]),
-			"pp_group" : this.checkValue(dataPPEdit[6])
-		}
+      "pp_id": dataPPEdit[0],
+      "product_name": dataPPEdit[1],
+      "product_type": dataPPEdit[3],
+      "physical_group": dataPPEdit[4],
+      "uom": dataPPEdit[2],
+      "qty": 0,
+      "pp_cust_number": this.checkValue(dataPPEdit[5]),
+      "pp_group": this.checkValue(dataPPEdit[6])
+    }
     this.toggleLoading();
     this.togglePPedit();
     if (pp.pp_group === undefined || pp.pp_group === null) {
@@ -591,14 +626,14 @@ class PackageUpload extends React.Component {
         pp["pp_cust_number"] = pp.pp_id;
       }
     }
-    let patchData = await this.patchDatatoAPINODE('/productpackage/updateManyProductPackage', {"ppData" : [pp]});
+    let patchData = await this.patchDatatoAPINODE('/productpackage/updateManyProductPackage', { "ppData": [pp] });
     if (patchData === undefined) { patchData = {}; patchData["data"] = undefined }
     if (patchData.data !== undefined) {
       this.setState({ action_status: 'success' }, () => {
         this.toggleLoading();
         setTimeout(function () { window.location.reload(); }, 2000);
       });
-    }else{
+    } else {
       this.toggleLoading();
       this.setState({ action_status: 'failed' });
     }
@@ -638,17 +673,17 @@ class PackageUpload extends React.Component {
       }
     }
     ppData.push(pp);
-    let postData = await this.postDatatoAPINODE('/productpackage/manyProductPackage', {"ppData" : ppData})
+    let postData = await this.postDatatoAPINODE('/productpackage/manyProductPackage', { "ppData": ppData })
       .then(res => {
         console.log('response postData', res);
-        if(res.data !== undefined){
+        if (res.data !== undefined) {
           this.toggleLoading();
           console.log('single PP success created');
-        }else{
+        } else {
           this.setState({ action_status: 'failed', action_message: res.response.data.error });
           this.toggleLoading();
         }
-    });
+      });
   }
 
   numToSSColumn(num) {
@@ -745,18 +780,18 @@ class PackageUpload extends React.Component {
 
     const dataPrint = this.state.packageSelected;
 
-    ws.addRow(["PP / Material", "material_id", "material_name", "quantity", "uom", "material_type","material_origin", "bundle_id", "bundle_name"]);
+    ws.addRow(["PP / Material", "material_id", "material_name", "quantity", "uom", "material_type", "material_origin", "bundle_id", "bundle_name"]);
 
     for (let i = 0; i < dataPrint.length; i++) {
-      if(dataPrint[i].materials !== undefined){
-        if(dataPrint[i].materials.length !== 0){
-          for(let j = 0; j < dataPrint[i].materials.length; j++){
+      if (dataPrint[i].materials !== undefined) {
+        if (dataPrint[i].materials.length !== 0) {
+          for (let j = 0; j < dataPrint[i].materials.length; j++) {
             ws.addRow(["Material", dataPrint[i].materials[j].material_id, dataPrint[i].materials[j].material_name, dataPrint[i].materials[j].qty, dataPrint[i].materials[j].uom, "", dataPrint[i].materials[j].material_origin, dataPrint[i].pp_id, dataPrint[i].product_name]);
           }
-        }else{
+        } else {
           ws.addRow(["Material", "child id", "child Name", "3", "pc", "active", "EAB", dataPrint[i].pp_id, dataPrint[i].product_name]);
         }
-      }else{
+      } else {
         ws.addRow(["Material", "child id", "child Name", "3", "pc", "active", "EAB", dataPrint[i].pp_id, dataPrint[i].product_name]);
       }
     }
@@ -773,7 +808,7 @@ class PackageUpload extends React.Component {
     console.log('pp selected', dataPrint);
 
     let confArray = ["2020_Config-1D EXAMPLE", "Coverage", "Cov_2020_Config-4_0610", "Cov_2020_Config-4_06", "2515914", "RBS:COV_2020_CONFIG-4DC", "SVC", "EXAMPLE"];
-    let typeArray = ["config_name","program","config_id", "config_customer_name", "sap_number","sap_description","config_type", "description"]
+    let typeArray = ["config_name", "program", "config_id", "config_customer_name", "sap_number", "sap_description", "config_type", "description"]
 
     // ws.addRow(["config_id", "sap_number", "pp_id", "qty", "price", "currency", "config_description", "config_type", "qty_commercial"]);
     typeArray = typeArray.concat(dataPrint.map(pp => pp.pp_id + " /// " + pp.product_name));
@@ -790,7 +825,7 @@ class PackageUpload extends React.Component {
     saveAs(new Blob([MaterialFormat]), 'Config Uploader Template.xlsx');
   }
 
-  async exportFormatBundleMaterial(){
+  async exportFormatBundleMaterial() {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
@@ -826,7 +861,7 @@ class PackageUpload extends React.Component {
                         <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatBundleMaterial}>> Bundle Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfig} disabled={this.state.packageChecked.length === 0}>> Config Template</DropdownItem>
-                        <DropdownItem onClick={this.exportTSSRFormat} disabled={this.state.packageChecked.length === 0}>> PS Tempalate</DropdownItem>
+                        <DropdownItem onClick={this.exportTSSRFormat} disabled={this.state.packageChecked.length === 0}>> PS Template</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
@@ -858,7 +893,7 @@ class PackageUpload extends React.Component {
                     </div>
                   </CardBody>
                   <CardFooter>
-                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackageOneShot}  style={{marginRight : '10px'}}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE</Button>
+                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackageOneShot} style={{ marginRight: '10px' }}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE</Button>
                     <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage}> <i className="fa fa-refresh" aria-hidden="true"> </i> &nbsp;Update </Button>
                     <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>
                   </CardFooter>
@@ -886,7 +921,7 @@ class PackageUpload extends React.Component {
                         <thead style={{ backgroundColor: '#c6f569' }} className='fixed-pp'>
                           <tr align="center">
                             <th>
-                              {/* <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} /> */}
+                              <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />
                             </th>
                             <th style={{ minWidth: '150px' }}>Bundle Name</th>
                             <th>Material Name</th>
@@ -1041,7 +1076,7 @@ class PackageUpload extends React.Component {
               <Col sm="12">
                 <FormGroup>
                   <Label htmlFor="pp_key">Package ID</Label>
-                  <Input type="text" name="0" placeholder="" value={this.state.PPForm[0]} onChange={this.handleChangeForm} disabled/>
+                  <Input type="text" name="0" placeholder="" value={this.state.PPForm[0]} onChange={this.handleChangeForm} disabled />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="package_name" >Name</Label>
