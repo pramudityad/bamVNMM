@@ -6,8 +6,9 @@ import Pagination from 'react-js-pagination';
 import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 import ActionType from '../../redux/reducer/globalActionType';
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -15,8 +16,10 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
-  <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash"/>
+  <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
 );
 
 class ListChangeApproval extends Component {
@@ -24,18 +27,23 @@ class ListChangeApproval extends Component {
     super(props);
 
     this.state = {
-      action_message : null,
-      action_status : null,
-      mr_list : [],
-      prevPage : 0,
-      activePage : 1,
-      totalData : 0,
-      perPage : 10,
-      mr_checked : new Map(),
-      mr_checked_all : false,
-      data_mr_checked : [],
-      filter_list : new Array(14).fill(""),
-      mr_all : []
+      userRole: this.props.dataLogin.role,
+      userId: this.props.dataLogin._id,
+      userName: this.props.dataLogin.userName,
+      userEmail: this.props.dataLogin.email,
+      tokenUser: this.props.dataLogin.token,
+      action_message: null,
+      action_status: null,
+      mr_list: [],
+      prevPage: 0,
+      activePage: 1,
+      totalData: 0,
+      perPage: 10,
+      mr_checked: new Map(),
+      mr_checked_all: false,
+      data_mr_checked: [],
+      filter_list: new Array(14).fill(""),
+      mr_all: []
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -50,38 +58,57 @@ class ListChangeApproval extends Component {
 
   async getDataFromAPI(url) {
     try {
-      let respond = await axios.get(API_URL_BAM+url, {
-        headers: {'Content-Type':'application/json'},
+      let respond = await axios.get(API_URL_BAM + url, {
+        headers: { 'Content-Type': 'application/json' },
         auth: {
           username: usernameBAM,
           password: passwordBAM
         }
       });
-      if(respond.status >= 200 && respond.status < 300) {
+      if (respond.status >= 200 && respond.status < 300) {
         console.log("respond data", respond);
       }
       return respond;
-    } catch(err) {
+    } catch (err) {
       let respond = err;
       console.log("respond data", err);
       return respond;
     }
   }
 
-  async patchDatatoAPIBAM(url, data, _etag){
+  async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.patch(API_URL_BAM +url, data, {
-        headers : {'Content-Type':'application/json', "If-Match" : _etag},
+      let respond = await axios.get(API_URL_NODE + url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.state.tokenUser
+        },
+      });
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async patchDatatoAPIBAM(url, data, _etag) {
+    try {
+      let respond = await axios.patch(API_URL_BAM + url, data, {
+        headers: { 'Content-Type': 'application/json', "If-Match": _etag },
         auth: {
           username: usernameBAM,
           password: passwordBAM
         },
       })
-      if(respond.status >= 200 && respond.status < 300){
+      if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Patch data", respond);
       }
       return respond;
-    }catch (err) {
+    } catch (err) {
       let respond = err;
       console.log("respond Patch data", err);
       return respond;
@@ -91,65 +118,63 @@ class ListChangeApproval extends Component {
   getMRList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    let filter_mr_id = this.state.filter_list[0] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[0]+'", "$options" : "i"}';
-    let filter_implementation_id = this.state.filter_list[1] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
-    let filter_project_name = this.state.filter_list[2] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
-    let filter_cd_id = this.state.filter_list[3] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
-    let filter_site_id = this.state.filter_list[4] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
-    let filter_site_name = this.state.filter_list[5] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
-    let filter_current_status = this.state.filter_list[6] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[6]+'", "$options" : "i"}';
-    let filter_current_milestones = this.state.filter_list[7] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[7]+'", "$options" : "i"}';
-    let filter_dsp = this.state.filter_list[8] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[8]+'", "$options" : "i"}';
-    let filter_asp = this.state.filter_list[9] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[9]+'", "$options" : "i"}';
-    let filter_eta = this.state.filter_list[10] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[10]+'", "$options" : "i"}';
-    let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
-    let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
-    let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"current_mr_status" : "MR UPDATED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    this.getDataFromAPI('/mr_sorted?where='+whereAnd+'&max_results='+maxPage+'&page='+page).then(res => {
+    let filter_array = [];
+    this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
+    this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
+    this.state.filter_list[2] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
+    this.state.filter_list[3] !== "" && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
+    this.state.filter_list[4] !== "" && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+    filter_array.push('"current_mr_status":"MR UPDATED"');
+    this.state.filter_list[6] !== "" && (filter_array.push('"current_milestones":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
+    this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
+    this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
+    this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
+    this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
+    let whereAnd = '{' + filter_array.join(',') + '}';
+    this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       console.log("MR List Sorted", res);
-      if(res.data !== undefined) {
-        const items = res.data._items;
-        const totalData = res.data._meta;
-        this.setState({mr_list : items, totalData: totalData});
+      if (res.data !== undefined) {
+        const items = res.data.data;
+        const totalData = res.data.totalResults;
+        this.setState({ mr_list: items, totalData: totalData });
       }
     })
   }
 
   getAllMR() {
-    let filter_mr_id = this.state.filter_list[0] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[0]+'", "$options" : "i"}';
-    let filter_implementation_id = this.state.filter_list[1] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
-    let filter_project_name = this.state.filter_list[2] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
-    let filter_cd_id = this.state.filter_list[3] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
-    let filter_site_id = this.state.filter_list[4] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
-    let filter_site_name = this.state.filter_list[5] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
-    let filter_current_status = this.state.filter_list[6] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[6]+'", "$options" : "i"}';
-    let filter_current_milestones = this.state.filter_list[7] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[7]+'", "$options" : "i"}';
-    let filter_dsp = this.state.filter_list[8] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[8]+'", "$options" : "i"}';
-    let filter_asp = this.state.filter_list[9] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[9]+'", "$options" : "i"}';
-    let filter_eta = this.state.filter_list[10] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[10]+'", "$options" : "i"}';
-    let filter_created_by = this.state.filter_list[11] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[11]+'", "$options" : "i"}';
-    let filter_updated_on = this.state.filter_list[12] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[12]+'", "$options" : "i"}';
-    let filter_created_on = this.state.filter_list[13] === "" ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[13]+'", "$options" : "i"}';
-    // let whereAnd = '{"mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "cd_id": '+filter_cd_id+', "site_id": '+filter_site_id+', "site_name": '+filter_site_name+', "current_mr_status": '+filter_current_status+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "asp_company": '+filter_asp+', "eta": '+filter_eta+', "created_by": '+filter_created_by+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    let whereAnd = '{"current_mr_status" : "MR UPDATED", "mr_id": '+filter_mr_id+', "implementation_id": '+filter_implementation_id+', "project_name":'+filter_project_name+', "cd_id": '+filter_cd_id+', "current_milestones": '+filter_current_milestones+', "dsp_company": '+filter_dsp+', "eta": '+filter_eta+', "updated_on": '+filter_updated_on+', "created_on": '+filter_created_on+'}';
-    this.getDataFromAPI('/mr_sorted_nonpage?where='+whereAnd).then(res => {
+    let filter_array = [];
+    this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
+    this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
+    this.state.filter_list[2] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
+    this.state.filter_list[3] !== "" && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
+    this.state.filter_list[4] !== "" && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+    filter_array.push('"current_mr_status":"MR UPDATED"');
+    this.state.filter_list[6] !== "" && (filter_array.push('"current_milestones":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
+    this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
+    this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
+    this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
+    this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
+    let whereAnd = '{' + filter_array.join(',') + '}';
+    this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
       console.log("MR List All", res);
-      if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({mr_all : items});
+      if (res.data !== undefined) {
+        const items = res.data.data;
+        this.setState({ mr_all: items });
       }
     })
   }
 
-  numToSSColumn(num){
+  numToSSColumn(num) {
     var s = '', t;
 
     while (num > 0) {
       t = (num - 1) % 26;
       s = String.fromCharCode(65 + t) + s;
-      num = (num - t)/26 | 0;
+      num = (num - t) / 26 | 0;
     }
     return s || undefined;
   }
@@ -160,15 +185,15 @@ class ListChangeApproval extends Component {
 
     const allMR = this.state.mr_all;
 
-    let headerRow = ["MR ID", "Implementation ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ASP", "ETA", "Created By", "Updated On", "Created On"];
+    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Created By", "Updated On", "Created On"];
     ws.addRow(headerRow);
 
-    for(let i = 1; i < headerRow.length+1; i++){
-      ws.getCell(this.numToSSColumn(i)+'1').font  = { size: 11, bold : true };
+    for (let i = 1; i < headerRow.length + 1; i++) {
+      ws.getCell(this.numToSSColumn(i) + '1').font = { size: 11, bold: true };
     }
 
-    for(let i = 0; i < allMR.length; i++){
-      ws.addRow([allMR[i].mr_id, allMR[i].implementation_id, allMR[i].project_name, allMR[i].cd_id, "", "", allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, "", allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
+    for (let i = 0; i < allMR.length; i++) {
+      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0].site_id, allMR[i].site_info[0].site_name, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -182,12 +207,12 @@ class ListChangeApproval extends Component {
     document.title = 'MR PS Not Assigned | BAM';
   }
 
-  componentWillUnmount(){
+  componentWillUnmount() {
     this.props.SidebarMinimizer(false);
   }
 
   handlePageChange(pageNumber) {
-    this.setState({activePage: pageNumber}, () => {
+    this.setState({ activePage: pageNumber }, () => {
       this.getMRList();
     });
   }
@@ -195,57 +220,57 @@ class ListChangeApproval extends Component {
   handleFilterList(e) {
     const index = e.target.name;
     let value = e.target.value;
-    if(value !== "" && value.length === 0) {
+    if (value !== "" && value.length === 0) {
       value = "";
     }
     let dataFilter = this.state.filter_list;
     dataFilter[parseInt(index)] = value;
-    this.setState({filter_list : dataFilter, activePage: 1}, () => {
+    this.setState({ filter_list: dataFilter, activePage: 1 }, () => {
       this.onChangeDebounced(e);
     })
   }
 
-  handleChangeChecklist(e){
+  handleChangeChecklist(e) {
     const item = e.target.name;
     const isChecked = e.target.checked;
     const mrList = this.state.mr_all;
     let dataMRChecked = this.state.data_mr_checked;
-    if(isChecked === true){
+    if (isChecked === true) {
       const getMR = mrList.find(e => e._id === item);
       dataMRChecked.push(getMR);
-    }else{
-      dataMRChecked = dataMRChecked.filter(function( e ) {
+    } else {
+      dataMRChecked = dataMRChecked.filter(function (e) {
         return e._id !== item;
       });
     }
-    this.setState({ data_mr_checked : dataMRChecked});
+    this.setState({ data_mr_checked: dataMRChecked });
     this.setState(prevState => ({ mr_checked: prevState.mr_checked.set(item, isChecked) }));
   }
 
-  handleChangeChecklistAll(e){
+  handleChangeChecklistAll(e) {
     const isChecked = e.target.checked;
     const mrList = this.state.mr_all;
     let dataMRChecked = this.state.data_mr_checked;
-    if(isChecked === true){
-      for(let i = 0; i < mrList.length; i++){
-        if(this.state.mr_checked.get(mrList[i]._id) !== true){
+    if (isChecked === true) {
+      for (let i = 0; i < mrList.length; i++) {
+        if (this.state.mr_checked.get(mrList[i]._id) !== true) {
           dataMRChecked.push(mrList[i]);
         }
         this.setState(prevState => ({ mr_checked: prevState.mr_checked.set(mrList[i]._id, true) }));
       }
-      this.setState({ data_mr_checked : dataMRChecked, mr_checked_all : isChecked });
-    }else{
-      this.setState({mr_checked : new Map(), data_mr_checked : [] });
-      this.setState({mr_checked_all : isChecked });
+      this.setState({ data_mr_checked: dataMRChecked, mr_checked_all: isChecked });
+    } else {
+      this.setState({ mr_checked: new Map(), data_mr_checked: [] });
+      this.setState({ mr_checked_all: isChecked });
     }
   }
 
-  async ApprovalBulk(){
+  async ApprovalBulk() {
     const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
     let dataMRChecked = this.state.data_mr_checked;
     let sucPatch = [];
-    for(let i = 0; i < dataMRChecked.length; i++){
+    for (let i = 0; i < dataMRChecked.length; i++) {
       let dataMR = dataMRChecked[i];
       const statusAprv = [{
         "mr_status_name": "MATERIAL_REQUEST",
@@ -254,11 +279,11 @@ class ListChangeApproval extends Component {
         "mr_status_updater": this.state.userEmail,
         "mr_status_updater_id": this.state.userId,
       }];
-      const statusRecent = dataMR.mr_status[dataMR.mr_status.findIndex(e => e.mr_status_value === "UPDATED" && e.mr_status_name === "MATERIAL_REQUEST")-1];
+      const statusRecent = dataMR.mr_status[dataMR.mr_status.findIndex(e => e.mr_status_value === "UPDATED" && e.mr_status_name === "MATERIAL_REQUEST") - 1];
       let aprvMR = {};
       let firstStat = "";
       let lastStat = "";
-      switch(statusRecent.mr_status_name) {
+      switch (statusRecent.mr_status_name) {
         case "MATERIAL_REQUEST":
           firstStat = "MR";
           break;
@@ -271,7 +296,7 @@ class ListChangeApproval extends Component {
         default:
           firstStat = statusRecent.mr_status_name;
       }
-      switch(statusRecent.mr_status_value) {
+      switch (statusRecent.mr_status_value) {
         case "YES":
           lastStat = "";
           break;
@@ -282,7 +307,7 @@ class ListChangeApproval extends Component {
           lastStat = " (WAIT FOR COMPLETION)";
           break;
         default:
-          lastStat = " "+statusRecent.mr_status_value;
+          lastStat = " " + statusRecent.mr_status_value;
       }
       const statusNow = lastStat.length !== 0 ? firstStat + lastStat : firstStat;
       aprvMR['current_mr_status'] = statusNow;
@@ -290,23 +315,42 @@ class ListChangeApproval extends Component {
       aprvMR['mr_status'] = dataMR.mr_status.concat(statusRecent);
       console.log("dataMR", dataMR);
       console.log("aprvMR", aprvMR);
-      const patchData = await this.patchDatatoAPIBAM('/mr_op/'+dataMR._id, aprvMR, dataMR._etag)
-      if(patchData.data !== undefined){
+      const patchData = await this.patchDatatoAPIBAM('/mr_op/' + dataMR._id, aprvMR, dataMR._etag)
+      if (patchData.data !== undefined) {
         sucPatch.push(patchData.data._id);
       }
     }
-    if(sucPatch.length === dataMRChecked.length){
-      this.setState({action_status : 'success'}, () => {
-        setTimeout(function(){ window.location.reload(); }, 3000);
+    if (sucPatch.length === dataMRChecked.length) {
+      this.setState({ action_status: 'success' }, () => {
+        setTimeout(function () { window.location.reload(); }, 3000);
       });
-    }else{
-      this.setState({action_status : 'failed'});
+    } else {
+      this.setState({ action_status: 'failed' });
     }
   }
 
   onChangeDebounced(e) {
     this.getMRList();
     this.getAllMR();
+  }
+
+  loopSearchBar = () => {
+    let searchBar = [];
+    for (let i = 0; i < 12; i++) {
+      searchBar.push(
+        <td>
+          <div className="controls" style={{ width: '150px' }}>
+            <InputGroup className="input-prepend">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[i]} name={i} size="sm" />
+            </InputGroup>
+          </div>
+        </td>
+      )
+    }
+    return searchBar;
   }
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
@@ -317,10 +361,6 @@ class ListChangeApproval extends Component {
       marginRight: '10px'
     }
 
-    const tableWidth = {
-      width: '150px'
-    }
-
     return (
       <div className="animated fadeIn">
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -328,132 +368,35 @@ class ListChangeApproval extends Component {
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> MR List
+                <span style={{ lineHeight: '2' }}>
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MR List
                 </span>
-                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR List</Button>
-                <div style={{float : 'right', marginRight : '20px', display:'inline-flex', marginTop : '5px'}}>
-                  <Checkbox checked={this.state.mr_checked_all} onChange={this.handleChangeChecklistAll} style={{float : 'right', marginRight: "8px"}}/>
-                  <span style={{marginTop : '1px'}}>Select All</span>
+                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download MR List</Button>
+                <div style={{ float: 'right', marginRight: '20px', display: 'inline-flex', marginTop: '5px' }}>
+                  <Checkbox checked={this.state.mr_checked_all} onChange={this.handleChangeChecklistAll} style={{ float: 'right', marginRight: "8px" }} />
+                  <span style={{ marginTop: '1px' }}>Select All</span>
                 </div>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2" style={{verticalAlign : "middle"}}></th>
+                      <th rowSpan="2" style={{ verticalAlign: "middle" }}></th>
                       <th>MR ID</th>
-                      <th>Implementation ID</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
+                      <th>Site ID</th>
+                      <th>Site Name</th>
                       <th>Current Status</th>
+                      <th>Current Milestone</th>
                       <th>DSP</th>
-                      <th>ASP</th>
                       <th>ETA</th>
                       <th>Created By</th>
+                      <th>Updated On</th>
                       <th>Created On</th>
                     </tr>
                     <tr>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[0]} name={0} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[1]} name={1} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[2]} name={2} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[3]} name={3} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" disabled onChange={this.handleFilterList} value={this.state.filter_list[6]} name={6} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[8]} name={8} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[9]} name={9} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[10]} name={10} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[11]} name={11} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[13]} name={13} size="sm"/>
-                          </InputGroup>
-                        </div>
-                      </td>
+                      {this.loopSearchBar()}
                     </tr>
                   </thead>
                   <tbody>
@@ -465,26 +408,43 @@ class ListChangeApproval extends Component {
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
-                          <Checkbox name={list._id} checked={this.state.mr_checked.get(list._id)} onChange={this.handleChangeChecklist}/>
+                          <Checkbox name={list._id} checked={this.state.mr_checked.get(list._id)} onChange={this.handleChangeChecklist} />
                         </td>
-                        <td>{list.mr_id}</td>
-                        <td>{list.implementation_id}</td>
+                        <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
-                        <td>{list.cd_id}</td>
+                        <td>
+                          {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>
+                            j === list.cust_del.length - 1 ? custdel.cd_id : custdel.cd_id + ', '
+                          ))}
+                        </td>
+                        <td>
+                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
+                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_id + ', '
+                          ))}
+                        </td>
+                        <td>
+                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
+                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_name + ', '
+                          ))}
+                        </td>
                         <td>{list.current_mr_status}</td>
+                        <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
+                        <td>{convertDateFormat(list.eta)}</td>
                         <td></td>
-                        <td>{list.eta}</td>
-                        <td></td>
-                        <td>{list.created_on}</td>
+                        <td>{convertDateFormatfull(list.updated_on)}</td>
+                        <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
                     )}
                   </tbody>
                 </Table>
+                <div style={{ margin: "8px 0px" }}>
+                  <small>Showing {this.state.mr_all.length} entries</small>
+                </div>
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData.total}
+                  totalItemsCount={this.state.totalData}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"
@@ -494,7 +454,7 @@ class ListChangeApproval extends Component {
               <CardFooter>
                 {this.state.data_mr_checked.length !== 0 && (
                   <div>
-                    <Button color='success' style={{float : 'right'}} onClick={this.ApprovalBulk}>Approve Changes</Button>
+                    <Button color='success' style={{ float: 'right' }} onClick={this.ApprovalBulk}>Approve Changes</Button>
                   </div>
                 )}
               </CardFooter>
@@ -508,14 +468,14 @@ class ListChangeApproval extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    dataLogin : state.loginData,
-    SidebarMinimize : state.minimizeSidebar
+    dataLogin: state.loginData,
+    SidebarMinimize: state.minimizeSidebar
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    SidebarMinimizer : (minimize) => dispatch({type : ActionType.MINIMIZE_SIDEBAR, minimize_sidebar : minimize }),
+    SidebarMinimizer: (minimize) => dispatch({ type: ActionType.MINIMIZE_SIDEBAR, minimize_sidebar: minimize }),
   }
 }
 

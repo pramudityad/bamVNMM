@@ -286,24 +286,9 @@ class TssrBOM extends Component {
   getDataTech() {
     this.getDataFromAPINODEWithParams('/plantspec/tssrBom/'+this.state.list_site_tech_boq_selected+'/siteId/'+this.state.list_site_selected).then( resTech => {
       if(resTech.data !== undefined){
-        this.setState({ dataTech : resTech.data.data });
-        this.prepareView(resTech.data.data);
+        this.setState({ dataTech : resTech.data.data })
       }
     })
-  }
-
-  prepareView(dataSiteTech){
-    let dataTech = dataSiteTech;
-    let dataPackage = dataTech.listOfPackage;
-    let dataPackageUniqID = [...new Set(dataPackage.map(({ pp_id}) => pp_id))];
-    let dataPackageUniqSum = [];
-    for(let i = 0; i < dataPackageUniqID.length; i++){
-      let dataPackageId = dataPackage.filter(e => e.pp_id === dataPackageUniqID[i]);
-      dataPackageId[0]["qty"] = dataPackageId.reduce((a,b) => a + b.qty, 0);
-      dataPackageUniqSum.push(dataPackageId[0]);
-    }
-    dataTech["listOfPackage"] = dataPackageUniqSum;
-    this.setState({dataTech :dataTech });
   }
 
   fileHandlerMaterial = (event) => {
@@ -730,7 +715,7 @@ class TssrBOM extends Component {
                           <td>{pp.product_name}</td>
                           <td>{pp.uom}</td>
                           <td align='center'>{pp.qty}</td>
-                          <td align='center'><Input type="number" name={pp.pp_id} value={(this.state.change_qty_ps.has(pp.pp_id) ? this.state.change_qty_ps.get(pp.pp_id) : pp.qty)} max={pp.qty} onChange={this.handleChangeQtyPS}/></td>
+                          <td align='center'><Input type="number" name={pp.pp_id} defaultValue={pp.qty} max={pp.qty} onChange={this.handleChangeQtyPS}/></td>
                         </tr>
                         {pp.list_material.map(material =>
                           <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">

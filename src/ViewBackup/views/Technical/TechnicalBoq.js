@@ -182,7 +182,6 @@ class TechnicalBoq extends Component {
       update_qty_for : 'new',
       update_type : 'revision',
       modal_update_info : false,
-      loading_checking : null,
     };
     this.toggleUpdateInfo = this.toggleUpdateInfo.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -783,7 +782,6 @@ class TechnicalBoq extends Component {
 
 
   fileHandlerTechnical = (event) => {
-    this.setState({loading_checking : 'Checking'});
     this.setState({waiting_status : 'loading'});
     let fileObj = event.target.files[0];
     const date = new Date();
@@ -791,7 +789,6 @@ class TechnicalBoq extends Component {
     if(fileObj !== undefined){
       ExcelRenderer(fileObj, (err, rest) => {
         if(err){
-          this.setState({loading_checking : null});
           console.log(err);
         }
         else{
@@ -818,7 +815,7 @@ class TechnicalBoq extends Component {
   }
 
   async checkingFormatTech(rowsTech){
-        this.toggleLoading();
+    this.toggleLoading();
     let dataCheck = {
       "techBoqData" : rowsTech
     }
@@ -875,7 +872,6 @@ class TechnicalBoq extends Component {
         });
       }
     }
-    this.setState({loading_checking : null});
   }
 
   saveTechBoq = async () => {
@@ -2327,10 +2323,10 @@ class TechnicalBoq extends Component {
                             </DropdownToggle>
                             <DropdownMenu>
                               <DropdownItem onClick={this.toggleUpload} value="Delivery" id="toggleCollapse1">
-                                <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Qty Delivery
+                                <i className="fas fa-edit" aria-hidden="true"> </i> &nbsp;Qty Delivery
                               </DropdownItem>
                               <DropdownItem onClick={this.toggleUpload} value="Commercial" id="toggleCollapse1">
-                                <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Qty Commercial
+                                <i className="fas fa-edit" aria-hidden="true"> </i> &nbsp;Qty Commercial
                               </DropdownItem>
                             </DropdownMenu>
                           </Dropdown>
@@ -2656,10 +2652,10 @@ class TechnicalBoq extends Component {
                 <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
               </div>
               <div style={{textAlign : 'center'}}>
-                {this.state.loading_checking !== null ? this.state.loading_checking : "Loading..."}
+                Loading ...
               </div>
               <div style={{textAlign : 'center'}}>
-                System is {this.state.loading_checking !== null ? "checking your upload file" : "processing ..."} 
+                System is processing ...
               </div>
               <div style={{textAlign : 'center'}}>
                 {this.state.progress_count} / {this.state.progress_data}

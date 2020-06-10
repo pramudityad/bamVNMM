@@ -39,7 +39,7 @@ class ConfigUpload extends React.Component {
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
       pp_all: [],
-      filter_name: null,
+      filter_name: "",
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -69,7 +69,7 @@ class ConfigUpload extends React.Component {
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterDebounce = debounce(this.changeFilterName, 1000);
+    this.changeFilterName = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.toggleUpdateBulk = this.toggleUpdateBulk.bind(this);
@@ -212,14 +212,22 @@ class ConfigUpload extends React.Component {
   }
 
   handleChangeFilter = (e) => {
-    const value = e.target.value;
+    let value = e.target.value;
+    if(value.length === 0){
+      value = "";
+    }
     this.setState({ filter_name: value }, () => {
-      this.changeFilterDebounce(value);
+      this.changeFilterName(value);
     });
   }
 
   getConfigDataAPI(){
-    this.getDatatoAPINode('/packageconfig?lmt='+this.state.perPage+'&pg='+this.state.activePage)
+    let filter = '{"$regex" : "", "$options" : "i"}';
+    if (this.state.filter_name !== ""){
+      filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    } 
+    let whereOr = '{"$or" : [{"config_id": ' + filter + '}, {"config_name": ' + filter + '}, {"program": ' + filter + '}, {"config_type": ' + filter + '}]}';
+    this.getDatatoAPINode('/packageconfig?q='+whereOr+'&lmt='+this.state.perPage+'&pg='+this.state.activePage)
     .then(res =>{
       if(res.data !== undefined){
         this.setState({ config_package : res.data.data, prevPage : this.state.activePage, total_dataConfig : res.data.totalResults })
@@ -707,8 +715,8 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let HeaderRow1 = ["General Info", "General Info", "General Info"];
-    let HeaderRow2 = ["tower_id","program","sow"];
+    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
+    let HeaderRow2 = ["tower_id","program", "sow", "priority"];
 
     Config_group_type_DEFAULT.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
     Config_group_DEFAULT.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
@@ -723,7 +731,25 @@ class ConfigUpload extends React.Component {
     dataConfigSelected.map(e => ws2.addRow([e.config_id, e.config_name]));
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Horizontal Template.xlsx');
+  }
+
+  exportTechnicalVerticalFormat = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let HeaderRow1 = ["tower_id", "program", "sow", "config_group", "config_id", "config_group_type", "qty"];
+
+    ws.addRow(HeaderRow1);
+
+    const ws2 = wb.addWorksheet();
+
+    ws2.addRow(["config_id", "config_name"]);
+    const dataConfigSelected = this.state.config_selected;
+    dataConfigSelected.map(e => ws2.addRow([e.config_id, e.config_name]));
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Vertical Template.xlsx');
   }
 
   // Config Template XLSX bulk upload
@@ -756,7 +782,8 @@ class ConfigUpload extends React.Component {
                         </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>File Template</DropdownItem>
-                        <DropdownItem onClick={this.exportTechnicalFormat}>> Technical BOQ Template</DropdownItem>
+                        <DropdownItem onClick={this.exportTechnicalFormat}>> Technical BOQ Horizontal Template</DropdownItem>
+                        <DropdownItem onClick={this.exportTechnicalVerticalFormat}>> Technical BOQ Vertical Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfigParent}>> Config Update Template Parent</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
@@ -827,7 +854,7 @@ class ConfigUpload extends React.Component {
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
                           Select All
                         </span> */}
-                        <input className="search-box-material" type="text" name='filter' placeholder="Search Config Name" onChange={this.handleChangeFilter} value={this.state.filter_name} />
+                        <input className="search-box-material" type="text" name='filter' placeholder="Search" onChange={this.handleChangeFilter} value={this.state.filter_name} />
                       </div>
                     </div>
                   </Col>
@@ -836,7 +863,7 @@ class ConfigUpload extends React.Component {
                   <Col>
                     <div className='divtable'>
                       <table hover bordered responsive size="sm" width='100%'>
-                        <thead style={{ backgroundColor: '#73818f' }} className='fixed'>
+                        <thead style={{ backgroundColor: '#73818f' }} className='fixed-conf'>
                           <tr align="center">
                             <th>
                               {/* }<Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} /> */}
@@ -845,8 +872,8 @@ class ConfigUpload extends React.Component {
                             <th>Config Name</th>
                             <th>SAP</th>
                             <th>Program</th>
-                            <th>Product ID</th>
-                            <th>Product Name</th>
+                            <th>Bundle ID</th>
+                            <th>Bundle Name</th>
                             <th>Qty</th>
                             <th>Config Cust Name</th>
                           </tr>
@@ -902,7 +929,7 @@ class ConfigUpload extends React.Component {
                 <Row>
                   <Col>
                     <div>
-                      <span style={{ color: 'red' }}>*</span><span>NOTE : Please select Product Package first, before download Technical Format or Material Template.</span>
+                      <span style={{ color: 'red' }}>*</span><span>NOTE : Please select Bundle first, before download Technical Format or Material Template.</span>
                     </div>
                   </Col>
                 </Row>

@@ -1,0 +1,45 @@
+.table-bordered th {
+    vertical-align: middle;
+    text-align: center;
+    /* background-color: rgba(76, 175, 80,0.7); */
+}
+
+.upload-line-ordering {
+    border: 1px solid rgba(174,213,129 ,1);
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+
+.table-bordered th, .table-bordered td {
+    vertical-align: middle;
+    text-align: center;
+}
+
+.table-header td {
+    text-align: left;
+  }
+
+  .modal.show .modal-dialog {
+    margin-top: 200px;
+  }
+
+  .loading-modal .modal-content {
+    width: 200px;
+  }
+
+  .modal-content {
+    width: 300px;
+  }
+
+  .table-header td {
+    text-align: left;
+  }
+
+  .allocated-table thead td {
+    border-bottom-width: 1px;
+  }
+
+  .allocated-table thead tr:last-child td {
+    border-bottom-width: 2.5px;
+  }

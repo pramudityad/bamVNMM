@@ -33,15 +33,15 @@ const Checkbox = ({
   onChange,
   value,
 }) => (
-  <input
-    type={type}
-    name={name}
-    checked={checked}
-    onChange={onChange}
-    value={value}
-    className="checkmark-dash"
-  />
-);
+    <input
+      type={type}
+      name={name}
+      checked={checked}
+      onChange={onChange}
+      value={value}
+      className="checkmark-dash"
+    />
+  );
 
 const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
@@ -57,7 +57,7 @@ class MatLibrary extends React.Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      filter_name: null,
+      search: null,
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -79,6 +79,7 @@ class MatLibrary extends React.Component {
       danger: false,
       activeItemName: "",
       activeItemId: null,
+      createModal: false,
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -90,8 +91,9 @@ class MatLibrary extends React.Component {
     this.toggleEdit = this.toggleEdit.bind(this);
     this.saveNew = this.saveNew.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
-    this.toggleDanger = this.toggleDanger.bind(this);
+    this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
+    this.togglecreateModal = this.togglecreateModal.bind(this);
   }
 
   toggle(i) {
@@ -107,15 +109,10 @@ class MatLibrary extends React.Component {
     this.setState({ collapse: !this.state.collapse });
   }
 
-  toggleDanger(e) {
-    const value = e.currentTarget.value;
-    const aEdit = this.state.all_data.find((e) => e.owner_id === value);
-    const Dataid = aEdit.owner_id;
-    const Datapo = aEdit.po_number;
+  toggleDelete(e) {
+    const modalDelete = this.state.danger;
     this.setState({
       danger: !this.state.danger,
-      // activeItemId: e._id,
-      // activeItemName: e.owner_id,
     });
   }
 
@@ -151,6 +148,13 @@ class MatLibrary extends React.Component {
       modalMatStockForm: !prevState.modalMatStockForm,
     }));
   }
+
+  togglecreateModal() {
+    this.setState({
+      createModal: !this.state.createModal,
+    });
+  }
+
 
   async getDatafromAPINODE(url) {
     try {
@@ -242,13 +246,22 @@ class MatLibrary extends React.Component {
     });
   };
 
+  SearchFilter = (e) => {
+    let keyword = e.target.value;
+    this.setState({ search: keyword });
+  };
+
+
   getWHStockList() {
-    this.getDatafromAPINODE("/variants/variants?noPg=1").then((res) => {
-      // console.log("all data ", res.data);
+    this.getDatafromAPINODE("/variants/variants?lmt=" + this.state.perPage + '&pg=' + this.state.activePage).then((res) => {
       if (res.data !== undefined) {
-        this.setState({ all_data: res.data.data });
+        this.setState({
+          all_data: res.data.data,
+          prevPage: this.state.activePage,
+          total_dataParent: res.data.totalResults,
+        });
       } else {
-        this.setState({ all_data: [] });
+        this.setState({ all_data: [], total_dataParent: 0, prevPage: this.state.activePage });
       }
     });
   }
@@ -448,6 +461,7 @@ class MatLibrary extends React.Component {
 
   saveMatStockWHBulk = async () => {
     this.toggleLoading();
+    this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     const res = await this.postDatatoAPINODE("/variants/createVariants", {
@@ -466,6 +480,7 @@ class MatLibrary extends React.Component {
 
   saveTruncateBulk = async () => {
     this.toggleLoading();
+    this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     // console.log('xlsx data', JSON.stringify(BulkXLSX));
@@ -514,20 +529,6 @@ class MatLibrary extends React.Component {
     console.log("patch data ", pp);
     this.toggleLoading();
     this.toggleEdit();
-    // if (pp.owner_id === undefined || pp.owner_id === null) {
-    //   pp["owner_id"] = pp.product_name;
-    // } else {
-    //   if (pp.pp_group.length === 0) {
-    //     pp["pp_group"] = pp.product_name;
-    //   }
-    // }
-    // if (pp.pp_cust_number === null || pp.pp_cust_number === undefined) {
-    //   pp["pp_cust_number"] = pp.pp_id;
-    // } else {
-    //   if (pp.pp_cust_number.length === 0) {
-    //     pp["pp_cust_number"] = pp.pp_id;
-    //   }
-    // }
     let patchData = await this.patchDatatoAPINODE(
       "/whStock/updateOneWhStockwithDelete/" + objData._id,
       { data: [pp] }
@@ -596,7 +597,7 @@ class MatLibrary extends React.Component {
   async downloadAll() {
     let download_all = [];
     let getAll_nonpage = await this.getDatafromAPINODE('/variants/variants');
-    if(getAll_nonpage.data !== undefined){
+    if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
 
@@ -626,18 +627,19 @@ class MatLibrary extends React.Component {
     saveAs(new Blob([allocexport]), "All Material Library.xlsx");
   }
 
-  DeleteData(r) {
-    // this.toggleDanger();
-    const _idData = r.currentTarget.value;
+  DeleteData = async () => {
+    const objData = this.state.all_data.find((e) => e._id);
+    this.toggleLoading();
+    this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/variants/deleteVariants/" + _idData
+      "/variants/deleteVariants/" + objData._id
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
-        // this.toggleLoading();
+        this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
-          // this.toggleLoading();
+          this.toggleLoading();
         });
       }
     });
@@ -647,9 +649,9 @@ class MatLibrary extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["origin","material_name","material_id","description","category"]);
-    ws.addRow(["LCM","Mat A","EID-42020500040","Optic Cable 2F LC-LC SM, 20M for RRUS01 (RPM2533512/20)"," Optic"]);
-    ws.addRow(["LCM","Mat B","RL2LC-SM20000","Optic Cable 2F LC-LC SM, 20M for RRUS01 (RPM2533512/20)"," Optic"]);
+    ws.addRow(["origin", "material_name", "material_id", "description", "category"]);
+    ws.addRow(["LCM", "Mat A", "EID-42020500040", "Optic Cable 2F LC-LC SM, 20M for RRUS01 (RPM2533512/20)", " Optic"]);
+    ws.addRow(["LCM", "Mat B", "RL2LC-SM20000", "Optic Cable 2F LC-LC SM, 20M for RRUS01 (RPM2533512/20)", " Optic"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "Material Library Template.xlsx");
@@ -674,7 +676,7 @@ class MatLibrary extends React.Component {
                   className="card-header-actions"
                   style={{ display: "inline-flex" }}
                 >
-                  <div style={{ marginRight: "10px" }}>
+                  {/* <div style={{ marginRight: "10px" }}>
                     <Dropdown
                       isOpen={this.state.dropdownOpen[0]}
                       toggle={() => {
@@ -695,27 +697,34 @@ class MatLibrary extends React.Component {
                         </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
-                  </div>
+                  </div> */}
                   <div>
                     {this.state.userRole.includes("Flow-PublicInternal") !==
-                    true ? (
-                      <div>
-                        <Button
-                          block
-                          color="success"
-                          onClick={this.toggleAddNew}
-                          id="toggleCollapse1"
-                        >
-                          <i className="fa fa-plus-square" aria-hidden="true">
-                            {" "}
+                      true ? (
+                        <div>
+                          <Button
+                            block
+                            color="success"
+                            onClick={this.togglecreateModal}
+                            // id="toggleCollapse1"
+                          >
+                            <i className="fa fa-plus-square" aria-hidden="true">
+                              {" "}
                             &nbsp;{" "}
-                          </i>{" "}
+                            </i>{" "}
                           New
                         </Button>
-                      </div>
-                    ) : (
-                      ""
-                    )}
+                        </div>
+                      ) : (
+                        ""
+                      )}
+                  </div>
+                  &nbsp;&nbsp;&nbsp;
+                  <div>
+                    <Button onClick={this.downloadAll} block color="ghost-warning"><i className="fa fa-download" aria-hidden="true">
+                      {" "}
+                            &nbsp;{" "}
+                    </i>{" "}Export</Button>
                   </div>
                 </div>
                 {/* <div>
@@ -783,9 +792,9 @@ class MatLibrary extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                      <span style={{ fontSize: "20px", fontWeight: "500" }}>
+                      {/* <span style={{ fontSize: "20px", fontWeight: "500" }}>
                         Material Library
-                      </span>
+                      </span> */}
                       <div
                         style={{
                           float: "right",
@@ -797,9 +806,8 @@ class MatLibrary extends React.Component {
                           className="search-box-material"
                           type="text"
                           name="filter"
-                          placeholder="Search Material"
-                          onChange={this.handleChangeFilter}
-                          value={this.state.filter_name}
+                          placeholder="Search"
+                          onChange={(e) => this.SearchFilter(e)}
                         />
                       </div>
                     </div>
@@ -808,7 +816,7 @@ class MatLibrary extends React.Component {
                 <Row>
                   <Col>
                     <div className="divtable">
-                      <table hover bordered responsive size="sm" width="100%">
+                      <Table responsive bordered>
                         <thead
                           style={{ backgroundColor: "#73818f" }}
                           className="fixed"
@@ -824,29 +832,53 @@ class MatLibrary extends React.Component {
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.all_data.map((e) => (
-                            <React.Fragment key={e._id + "frag"}>
-                              <tr
-                                style={{ backgroundColor: "#d3d9e7" }}
-                                className="fixbody"
-                                key={e._id}
-                              >
-                                {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
-                                <td style={{ textAlign: "center" }}>
-                                  {e.origin}
-                                </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.material_id}
-                                </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.material_name}
-                                </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.description}
-                                </td>
-                                <td style={{ textAlign: "center" }}>{e.category}</td>
+                          {this.state.all_data
+                            .filter((e) => {
+                              if (this.state.search === null) {
+                                return e;
+                              } else if (
+                                e.origin
+                                  .toLowerCase()
+                                  .includes(this.state.search.toLowerCase()) ||
+                                e.material_id
+                                  .toLowerCase()
+                                  .includes(this.state.search.toLowerCase()) ||
+                                e.material_name
+                                  .toLowerCase()
+                                  .includes(this.state.search.toLowerCase()) ||
+                                e.description
+                                  .toLowerCase()
+                                  .includes(this.state.search.toLowerCase()) ||
+                                e.category
+                                  .toLowerCase()
+                                  .includes(this.state.search.toLowerCase())
+                              ) {
+                                return e;
+                              }
+                            })
+                            .map((e) => (
+                              <React.Fragment key={e._id + "frag"}>
+                                <tr
+                                  style={{ backgroundColor: "#d3d9e7" }}
+                                  className="fixbody"
+                                  key={e._id}
+                                >
+                                  {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.origin}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.material_id}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.material_name}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.description}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>{e.category}</td>
 
-                                {/* <td>
+                                  {/* <td>
                                   <Button
                                     size="sm"
                                     color="secondary"
@@ -855,30 +887,30 @@ class MatLibrary extends React.Component {
                                     title="Edit"
                                   >
                                     <i
-                                      className="fa fa-pencil"
+                                      className="fas fa-edit"
                                       aria-hidden="true"
                                     ></i>
                                   </Button>
                                 </td> */}
-                                <td>
-                                  <Button
-                                    size="sm"
-                                    color="danger"
-                                    value={e._id}
-                                    onClick={(r) => { if (window.confirm('Are you sure you wish to delete this item?')) this.DeleteData(r, "value")}}
-                                    title="Delete"
-                                  >
-                                    <i
-                                      className="fa fa-trash"
-                                      aria-hidden="true"
-                                    ></i>
-                                  </Button>
-                                </td>
-                              </tr>
-                            </React.Fragment>
-                          ))}
+                                  <td>
+                                    <Button
+                                      size="sm"
+                                      color="danger"
+                                      value={e._id}
+                                      onClick={this.toggleDelete}
+                                      title="Delete"
+                                    >
+                                      <i
+                                        className="fa fa-trash"
+                                        aria-hidden="true"
+                                      ></i>
+                                    </Button>
+                                  </td>
+                                </tr>
+                              </React.Fragment>
+                            ))}
                         </tbody>
-                      </table>
+                      </Table>
                     </div>
                   </Col>
                 </Row>
@@ -887,7 +919,7 @@ class MatLibrary extends React.Component {
                     <Pagination
                       activePage={this.state.activePage}
                       itemsCountPerPage={this.state.perPage}
-                      totalItemsCount={this.state.total_data_PO}
+                      totalItemsCount={this.state.total_dataParent}
                       pageRangeDisplayed={5}
                       onChange={this.handlePageChange}
                       itemClass="page-item"
@@ -1074,10 +1106,10 @@ class MatLibrary extends React.Component {
         {/* Modal confirmation delete */}
         <Modal
           isOpen={this.state.danger}
-          toggle={this.toggleDanger}
+          toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
         >
-          <ModalHeader toggle={this.toggleDanger}>
+          <ModalHeader toggle={this.toggleDelete}>
             Delete Material Library Confirmation
           </ModalHeader>
           <ModalBody>Are you sure want to delete ?</ModalBody>
@@ -1085,15 +1117,47 @@ class MatLibrary extends React.Component {
             <Button
               color="danger"
               // value={e._id}
-              onClick={(r) => this.DeleteData(r, "value")}
+              onClick={this.DeleteData}
             >
               Delete
             </Button>
-            <Button color="secondary" onClick={this.toggleDanger}>
+            <Button color="secondary" onClick={this.toggleDelete}>
               Cancel
             </Button>
           </ModalFooter>
         </Modal>
+
+         {/* Modal create New */}
+         <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
+         <ModalHeader toggle={this.togglecreateModal}>Create New Material Library</ModalHeader>
+         <ModalBody>
+           <CardBody>
+             <div>
+               <table>
+                 <tbody>
+                   <tr>
+                     <td>Upload File</td>
+                     <td>:</td>
+                     <td>
+                       <input
+                         type="file"
+                         onChange={this.fileHandlerMaterial.bind(this)}
+                         style={{ padding: "10px", visiblity: "hidden" }}
+                       />
+                     </td>
+                   </tr>
+                 </tbody>
+               </table>
+             </div>
+           </CardBody>
+         </ModalBody>
+         <ModalFooter>
+           <Button block color="link" className="btn-pill" onClick={this.exportMatStatus}>Download Template</Button>{' '}
+           <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveMatStockWHBulk}>Save</Button>{' '}
+           <Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button>
+         </ModalFooter>
+       </Modal>
+
 
         {/* Modal Loading */}
         <Modal

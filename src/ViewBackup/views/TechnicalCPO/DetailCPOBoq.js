@@ -901,6 +901,7 @@ class DetailCPOBoq extends Component {
   fileHandlerCPO = (event) => {
     this.setState({ waiting_status: 'loading' });
     let fileObj = event.target.files[0];
+    console.log('file xlsx, ', fileObj);
     const date = new Date();
     const DateNow = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
     if (fileObj !== undefined) {
@@ -934,6 +935,7 @@ class DetailCPOBoq extends Component {
 
   async checkingFormatTech(rowsCPO) {
     let postCheck = await this.postDatatoAPINODE('/techBoq/checkTechBoqData', { "techBoqData": rowsCPO });
+    console.log("postCheck", JSON.stringify(postCheck));
     if (postCheck.data !== undefined) {
       const dataCheck = postCheck.data;
       let siteNew = [];

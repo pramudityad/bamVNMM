@@ -77,11 +77,13 @@ class TssrList extends Component {
 
   getTssrList(){
     const page = this.state.activePage;
-    // this.getDataFromAPINODE('//tssrall?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
-    this.getDataFromAPIBAM('/tssr_sorted?'+'max_results='+this.state.perPage+'&page='+page).then(res => {
+    const maxPage = this.state.perPage
+    // this.getDataFromAPINODE('/tssrall?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
+    this.getDataFromAPINODE('/plantspec?srt=_id:-1&lmt=' + maxPage + '&pg=' + page).then(res => {
+    // this.getDataFromAPIBAM('/tssr_sorted?'+'max_results='+this.state.perPage+'&page='+page).then(res => {
       if(res.data !== undefined){
-        const totalData = res.data._meta;
-        this.setState({tssr_list : res.data._items, totalData : totalData})
+        const totalData = res.data.totalResults;
+        this.setState({tssr_list : res.data.data, totalData : totalData})
       }
     })
   }
@@ -131,7 +133,7 @@ class TssrList extends Component {
             <Card>
               <CardHeader>
                 <span style={{lineHeight :'2'}}>
-                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Plant Spec List
+                  <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Plant Spec Group List
                 </span>
                 <Link to={'/ps-bom'}><Button color="success" style={{float : 'right'}} size="sm">Create PS</Button></Link>
               </CardHeader>
@@ -139,18 +141,20 @@ class TssrList extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th>No PS</th>
+                      <th>No PS Group</th>
                       <th>Project</th>
-                      <th>Site</th>
+                      <th>Status</th>
+                      <th>MR Related</th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {this.state.tssr_list.map((list, i) =>
                       <tr key={list._id}>
-                        <td>{list.no_tssr_boq}</td>
+                        <td>{list.no_plantspec}</td>
                         <td>{list.project_name}</td>
-                        <td></td>
+                        <td>{list.submission_status}</td>
+                        <td>{list.mr_id}</td>
                         <td>
                           <Link to={'/ps-bom/'+list._id}>
                             <Button color="info" size="sm" outline>Detail</Button>
@@ -163,7 +167,7 @@ class TssrList extends Component {
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData.total}
+                  totalItemsCount={this.state.totalData}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"

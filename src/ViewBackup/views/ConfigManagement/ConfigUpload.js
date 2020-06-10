@@ -707,8 +707,8 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let HeaderRow1 = ["General Info", "General Info", "General Info"];
-    let HeaderRow2 = ["tower_id","program","sow"];
+    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
+    let HeaderRow2 = ["tower_id","program", "priority", "sow"];
 
     Config_group_type_DEFAULT.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
     Config_group_DEFAULT.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
@@ -845,8 +845,8 @@ class ConfigUpload extends React.Component {
                             <th>Config Name</th>
                             <th>SAP</th>
                             <th>Program</th>
-                            <th>Product ID</th>
-                            <th>Product Name</th>
+                            <th>Bundle ID</th>
+                            <th>Bundle Name</th>
                             <th>Qty</th>
                             <th>Config Cust Name</th>
                           </tr>
@@ -902,7 +902,7 @@ class ConfigUpload extends React.Component {
                 <Row>
                   <Col>
                     <div>
-                      <span style={{ color: 'red' }}>*</span><span>NOTE : Please select Product Package first, before download Technical Format or Material Template.</span>
+                      <span style={{ color: 'red' }}>*</span><span>NOTE : Please select Bundle first, before download Technical Format or Material Template.</span>
                     </div>
                   </Col>
                 </Row>

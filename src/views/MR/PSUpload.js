@@ -51,6 +51,11 @@ class PSUpload extends Component {
         action_message : null,
         material_wh : [],
         material_inbound : [],
+        cd_id_to_tssr_selected : new Map(),
+        cd_id_to_tssr : [],
+        list_tssr_from_ps : [],
+        list_cd_id_mr : [],
+        modal_assign_ps : false,
     };
     this.handleChangeTSSR = this.handleChangeTSSR.bind(this);
     this.getQtyTssrPPNE = this.getQtyTssrPPNE.bind(this);
@@ -61,6 +66,8 @@ class PSUpload extends Component {
     this.connectPlantSpectoTSSR = this.connectPlantSpectoTSSR.bind(this);
     this.getDataWarehouse = this.getDataWarehouse.bind(this);
     this.getDataInbound = this.getDataInbound.bind(this);
+    this.handleChangeCDIDtoTSSR = this.handleChangeCDIDtoTSSR.bind(this);
+    this.toggleAssign = this.toggleAssign.bind(this);
   }
 
   async getDataFromAPINODEWithParams(url) {
@@ -225,11 +232,17 @@ class PSUpload extends Component {
     }
   }
 
+  toggleAssign(e) {
+    this.setState((prevState) => ({
+      modal_assign_ps: !prevState.modal_assign_ps,
+    }));
+  }
+
   getListTssrAll(){
-    this.getDataFromAPINODE('/tssrall').then( res => {
+    this.getDataFromAPINODE('/plantspec?q={"id_mr_doc" : null, "submission_status" : "SUBMITTED" }').then( res => {
     // this.getDatafromAPIBAM('/tssr_sorted_nonpage?projection={"project_name" : 1, "no_tssr_boq" : 1, "_id" : 1, "version" : 1 }').then( res => {
       if(res.data !== undefined){
-        const items = res.data;
+        const items = res.data.data;
         this.setState({ list_tssr : items }, () => {
           this.prepareSelectionTSSR(items);
         });
@@ -241,10 +254,10 @@ class PSUpload extends Component {
     //Make list tssr from API to format for "Select" from React-select
     const list_tssr_selection = [];
     const list_tssr_filter = list_tssr.filter(i =>
-      i.no_tssr_boq.toLowerCase().includes(("TSSR").toLowerCase())
+      i.no_plantspec.toLowerCase().includes(("PS").toLowerCase())
     )
     list_tssr_filter.map(tssr =>
-        list_tssr_selection.push({'label' : tssr.no_tssr_boq, 'value' : tssr._id})
+        list_tssr_selection.push({'label' : tssr.no_plantspec, 'value' : tssr._id})
     )
     this.setState({ list_tssr_for_selection : list_tssr_selection});
   }
@@ -257,15 +270,22 @@ class PSUpload extends Component {
   }
 
   getDataMR(_id_MR){
-    this.getDatafromAPIBAM('/mr_op/'+_id_MR).then(resMR => {
+    this.getDataFromAPINODE('/matreq/' + _id_MR).then(resMR => {
       if(resMR.data !== undefined){
-        this.setState({ data_mr : resMR.data });
+        this.setState({ data_mr : resMR.data }, () => {
+          if(resMR.data.cust_del !== undefined){
+            console.log("resMR.data.cust_del", resMR.data.cust_del);
+            this.setState({list_cd_id_mr : resMR.data.cust_del })
+          }else{
+            this.setState({list_cd_id_mr : [] })
+          }
+        });
       }
     })
   }
 
   getDataTssr(_id_tssr){
-    this.getDataFromAPINODE('/tssrdata/'+_id_tssr).then( resTssr => {
+    this.getDataFromAPINODE('/plantspec/'+_id_tssr).then( resTssr => {
       if(resTssr.data !== undefined){
         this.setState({ data_tssr : resTssr.data.data });
         this.prepareView(resTssr.data.data)
@@ -275,17 +295,24 @@ class PSUpload extends Component {
 
   prepareView(dataTSSR){
     const dataMR = this.state.data_mr;
+    let listSku = [];
+    const dataTSSRMaterial = dataTSSR.packages.map(pp => pp.materials.map(material => listSku.push(material.material_id)));
+    let dataTechUniq = [];
+    dataTSSR.packages.map(pp =>
+      dataTechUniq.find(e => e.id_tssr_boq_site_doc === pp.id_tssr_boq_site_doc) === undefined ? dataTechUniq.push({"id_tssr_boq_site_doc" : pp.id_tssr_boq_site_doc, "no_tssr_boq_site" : pp.no_tssr_boq_site}) : null
+    )
+    console.log("dataTechUniq", dataTechUniq);
+    this.setState({list_tssr_from_ps : dataTechUniq});
+    listSku = [...new Set(listSku)];
     let site_mr_NE = dataMR.site_info.find(e => e.site_title === "NE");
     let site_mr_FE = dataMR.site_info.find(e => e.site_title === "FE");
     let site_NE;
     let site_FE;
     if(site_mr_NE !== undefined){
-      site_NE = dataTSSR.siteList.find(e => e.site_info.site_id === site_mr_NE.site_id);
-      console.log("site_NE", site_NE);
+      site_NE = dataTSSR.site_info.find(e => e.site_id === site_mr_NE.site_id);
     }
     if(site_mr_FE !== undefined){
-      site_FE = dataTSSR.siteList.find(e => e.site_info.site_id === site_mr_FE.site_id);
-      console.log("site_FE", site_FE);
+      site_FE = dataTSSR.site_info.find(e => e.site_id === site_mr_FE.site_id);
     }
     if(site_NE !== undefined){
       this.setState({tssr_site_NE : site_NE})
@@ -293,15 +320,12 @@ class PSUpload extends Component {
     if(site_FE !== undefined){
       this.setState({tssr_site_FE : site_FE})
     }
-    this.getDataWarehouse(dataTSSR.siteList[0].site_items);
-    this.getDataInbound(dataTSSR.siteList[0].site_items);
+    this.getDataWarehouse(listSku);
+    this.getDataInbound(listSku);
   }
 
-  async getDataWarehouse(data_tssr) {
-    let listSku = [];
-    if(data_tssr !== null && data_tssr !== undefined) {
-      data_tssr.map(pp => pp.material_detail.map(material => listSku.push(material.material_id)));
-      listSku = [...new Set(listSku)];
+  async getDataWarehouse(listSku) {
+    if(listSku !== null && listSku !== undefined) {
       let skuData = {
         "sku" : listSku
       }
@@ -314,11 +338,11 @@ class PSUpload extends Component {
     }
   }
 
-  async getDataInbound(data_tssr) {
-    let listSku = [];
-    if(data_tssr !== null && data_tssr !== undefined) {
-      data_tssr.map(pp => pp.material_detail.map(material => listSku.push(material.material_id)));
-      listSku = [...new Set(listSku)];
+  async getDataInbound(listSku) {
+    // let listSku = [];
+    if(listSku !== null && listSku !== undefined) {
+      // data_tssr.map(pp => pp.material_detail.map(material => listSku.push(material.material_id)));
+      // listSku = [...new Set(listSku)];
       let skuData = {
         "sku" : listSku
       }
@@ -661,107 +685,133 @@ class PSUpload extends Component {
   //   }
   // }
 
+  // async connectPlantSpectoTSSR(){
+  //   const dataMRParent = this.state.data_mr;
+  //   const dataTSSRParent = this.state.data_tssr;
+  //   const dataTSSRBOMNE = this.state.tssr_site_NE;
+  //   const dataTSSRBOMFE = this.state.tssr_site_FE;
+  //   const dataTSSRItems = this.state.data_tssr_sites_item;
+  //   const dataPP = this.state.list_pp_material_tssr;
+  //   console.log("dataTSSRBOMNE", dataTSSRBOMNE);
+  //   console.log("dataTSSRParent", dataTSSRParent);
+  //   const dataTssrHeader = {
+  //     "id_tssr_doc": dataTSSRParent._id,
+  //     "tssr_id": dataTSSRParent.no_tssr_boq,
+  //     "tssr_version": dataTSSRParent.version,
+  //   }
+  //   const site_info_ne = {
+  //     "id_tssr_boq_site_doc": dataTSSRBOMNE.site_info.id_tssr_boq_doc,
+  //     "no_tssr_boq_site": dataTSSRBOMNE.site_info.no_tssr_boq_site,
+  //     "id_site_doc": null,
+  //     "site_id": dataTSSRBOMNE.site_info.site_id,
+  //     "site_name": dataTSSRBOMNE.site_info.site_name,
+  //     "tssr_version": dataTSSRBOMNE.site_info.version
+  //   }
+  //   let dataPPNE = [];
+  //   const dataTSSRItemsNE = dataTSSRBOMNE.site_items;
+  //   for(let i = 0; i < dataTSSRItemsNE.length; i++){
+  //     let itemIdx = Object.assign({}, dataTSSRItemsNE[i].product_packages);
+  //     if(itemIdx._etag !== undefined){
+  //       delete itemIdx._etag;
+  //     }
+  //     let dataMatPPIdx = [];
+  //     let dataPPIdx = dataTSSRItemsNE[i];
+  //     if(dataPPIdx !== undefined){
+  //       for(let j = 0; j < dataPPIdx.material_detail.length; j++){
+  //         let dataMatIdx = Object.assign({}, dataPPIdx.material_detail[j]);
+  //         dataMatIdx["__v"] = dataMatIdx.version;
+  //         // dataMatIdx["qty"] = itemIdx.qty * dataMatIdx.qty;
+  //         dataMatIdx["deleted"] = 0;
+  //         if(dataMatIdx._etag !== undefined){
+  //           delete dataMatIdx._etag;
+  //         }
+  //         dataMatPPIdx.push(dataMatIdx);
+  //       }
+  //     }
+  //     dataPPNE.push({"product_packages" : itemIdx, "material_detail" : dataMatPPIdx});
+  //   }
+  //   const dataNE = {
+  //     "site_info_ne" : site_info_ne,
+  //     "mr_ne_items" : dataPPNE,
+  //   }
+  //   const dataTSSRConnectMR = {
+  //     "tssr_info" : dataTssrHeader,
+  //     "mr_site_ne" : dataNE,
+  //   }
+  //   if(dataMRParent.sow_type === "TRM"){
+  //     const site_info_fe = {
+  //       "id_tssr_boq_site_doc": dataTSSRBOMFE.id_tssr_boq_doc,
+  //       "no_tssr_boq_site": dataTSSRBOMFE.no_tssr_boq_site,
+  //       "id_site_doc": null,
+  //       "site_id": dataTSSRBOMFE.site_id,
+  //       "site_name": dataTSSRBOMFE.site_name,
+  //       "tssr_version": dataTSSRBOMFE.version === undefined ? 0 : dataTSSRBOMFE.version
+  //     }
+  //     let dataPPFE = [];
+  //     const dataTSSRItemsFE = dataTSSRBOMFE.site_items;
+  //     for(let i = 0; i < dataTSSRItemsFE.length; i++){
+  //       let itemIdx = Object.assign({}, dataTSSRItemsFE[i].product_packages);
+  //       itemIdx["__v"] = itemIdx.version;
+  //       itemIdx["deleted"] = 0;
+  //       if(itemIdx._etag !== undefined){
+  //         delete itemIdx._etag;
+  //       }
+  //       let dataMatPPIdx = [];
+  //       let dataPPIdx = dataTSSRItemsFE[i];;
+  //       if(dataPPIdx !== undefined){
+  //         for(let j = 0; j < dataPPIdx.material_detail.length; j++){
+  //           let dataMatIdx = Object.assign({}, dataPPIdx.material_detail[i]);
+  //           dataMatIdx["__v"] = dataMatIdx.version;
+  //           dataMatIdx["deleted"] = 0;
+  //           if(dataMatIdx._etag !== undefined){
+  //             delete dataMatIdx._etag;
+  //           }
+  //           dataMatPPIdx.push(dataMatIdx);
+  //         }
+  //       }
+  //       dataPPNE.push({"product_packages" : itemIdx, "material_detail" : dataMatPPIdx});
+  //     }
+  //     const dataFE = {
+  //       "site_info_fe" : site_info_fe,
+  //       "mr_fe_items" : dataPPFE,
+  //     }
+  //     dataTSSRConnectMR["mr_site_fe"] = dataFE;
+  //   }
+  //   this.patchDatatoAPINODE('/matreq/updatePlantSpecByTssr/'+dataMRParent._id, dataTSSRConnectMR).then(res => {
+  //     if(res.data !== undefined){
+  //       this.setState({ action_status : "success" });
+  //     }else{
+  //       this.setState({ action_status : "failed" });
+  //     }
+  //   })
+  //   // console.log("dataTSSRConnectMR JSON", JSON.stringify(dataTSSRConnectMR));
+  //   // console.log("dataTSSRConnectMR", dataTSSRConnectMR);
+  // }
+
   async connectPlantSpectoTSSR(){
     const dataMRParent = this.state.data_mr;
-    const dataTSSRParent = this.state.data_tssr;
-    const dataTSSRBOMNE = this.state.tssr_site_NE;
-    const dataTSSRBOMFE = this.state.tssr_site_FE;
-    const dataTSSRItems = this.state.data_tssr_sites_item;
-    const dataPP = this.state.list_pp_material_tssr;
-    console.log("dataTSSRBOMNE", dataTSSRBOMNE);
-    console.log("dataTSSRParent", dataTSSRParent);
-    const dataTssrHeader = {
-      "id_tssr_doc": dataTSSRParent._id,
-      "tssr_id": dataTSSRParent.no_tssr_boq,
-      "tssr_version": dataTSSRParent.version,
-    }
-    const site_info_ne = {
-      "id_tssr_boq_site_doc": dataTSSRBOMNE.site_info.id_tssr_boq_doc,
-      "no_tssr_boq_site": dataTSSRBOMNE.site_info.no_tssr_boq_site,
-      "id_site_doc": null,
-      "site_id": dataTSSRBOMNE.site_info.site_id,
-      "site_name": dataTSSRBOMNE.site_info.site_name,
-      "tssr_version": dataTSSRBOMNE.site_info.version
-    }
-    let dataPPNE = [];
-    const dataTSSRItemsNE = dataTSSRBOMNE.site_items;
-    for(let i = 0; i < dataTSSRItemsNE.length; i++){
-      let itemIdx = Object.assign({}, dataTSSRItemsNE[i].product_packages);
-      if(itemIdx._etag !== undefined){
-        delete itemIdx._etag;
+    this.setState({modal_assign_ps : false})
+    let dataTSSR = {};
+    if(this.state.cd_id_to_tssr.length !== 0){
+      dataTSSR = {
+        "data" : this.state.cd_id_to_tssr
       }
-      let dataMatPPIdx = [];
-      let dataPPIdx = dataTSSRItemsNE[i];
-      if(dataPPIdx !== undefined){
-        for(let j = 0; j < dataPPIdx.material_detail.length; j++){
-          let dataMatIdx = Object.assign({}, dataPPIdx.material_detail[j]);
-          dataMatIdx["__v"] = dataMatIdx.version;
-          // dataMatIdx["qty"] = itemIdx.qty * dataMatIdx.qty;
-          dataMatIdx["deleted"] = 0;
-          if(dataMatIdx._etag !== undefined){
-            delete dataMatIdx._etag;
-          }
-          dataMatPPIdx.push(dataMatIdx);
-        }
-      }
-      dataPPNE.push({"product_packages" : itemIdx, "material_detail" : dataMatPPIdx});
     }
-    const dataNE = {
-      "site_info_ne" : site_info_ne,
-      "mr_ne_items" : dataPPNE,
-    }
-    const dataTSSRConnectMR = {
-      "tssr_info" : dataTssrHeader,
-      "mr_site_ne" : dataNE,
-    }
-    if(dataMRParent.sow_type === "TRM"){
-      const site_info_fe = {
-        "id_tssr_boq_site_doc": dataTSSRBOMFE.id_tssr_boq_doc,
-        "no_tssr_boq_site": dataTSSRBOMFE.no_tssr_boq_site,
-        "id_site_doc": null,
-        "site_id": dataTSSRBOMFE.site_id,
-        "site_name": dataTSSRBOMFE.site_name,
-        "tssr_version": dataTSSRBOMFE.version === undefined ? 0 : dataTSSRBOMFE.version
-      }
-      let dataPPFE = [];
-      const dataTSSRItemsFE = dataTSSRBOMFE.site_items;
-      for(let i = 0; i < dataTSSRItemsFE.length; i++){
-        let itemIdx = Object.assign({}, dataTSSRItemsFE[i].product_packages);
-        itemIdx["__v"] = itemIdx.version;
-        itemIdx["deleted"] = 0;
-        if(itemIdx._etag !== undefined){
-          delete itemIdx._etag;
-        }
-        let dataMatPPIdx = [];
-        let dataPPIdx = dataTSSRItemsFE[i];;
-        if(dataPPIdx !== undefined){
-          for(let j = 0; j < dataPPIdx.material_detail.length; j++){
-            let dataMatIdx = Object.assign({}, dataPPIdx.material_detail[i]);
-            dataMatIdx["__v"] = dataMatIdx.version;
-            dataMatIdx["deleted"] = 0;
-            if(dataMatIdx._etag !== undefined){
-              delete dataMatIdx._etag;
-            }
-            dataMatPPIdx.push(dataMatIdx);
-          }
-        }
-        dataPPNE.push({"product_packages" : itemIdx, "material_detail" : dataMatPPIdx});
-      }
-      const dataFE = {
-        "site_info_fe" : site_info_fe,
-        "mr_fe_items" : dataPPFE,
-      }
-      dataTSSRConnectMR["mr_site_fe"] = dataFE;
-    }
-    this.patchDatatoAPINODE('/matreq/updatePlantSpecByTssr/'+dataMRParent._id, dataTSSRConnectMR).then(res => {
+    this.patchDatatoAPINODE('/matreq/assignPlantSpecByTssr/'+dataMRParent._id+'/ps/'+this.state.id_tssr_selected, dataTSSR).then(res => {
       if(res.data !== undefined){
         this.setState({ action_status : "success" });
       }else{
-        this.setState({ action_status : "failed" });
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
       }
     })
-    // console.log("dataTSSRConnectMR JSON", JSON.stringify(dataTSSRConnectMR));
-    // console.log("dataTSSRConnectMR", dataTSSRConnectMR);
   }
 
   editQtyNE = (e) => {
@@ -781,8 +831,33 @@ class PSUpload extends Component {
     this.getListTssrAll();
   }
 
+  handleChangeCDIDtoTSSR(e){
+    const name = e.target.name;
+    const value = e.target.value;
+    let dataCDSelected = this.state.list_cd_id_mr.find(e => e.id_cd_doc === value)
+    let cd_id_to_tssr = this.state.cd_id_to_tssr;
+    let indexCurrent = cd_id_to_tssr.findIndex(e => e.id_tssr_boq_site_doc === name);
+    if( indexCurrent === -1){
+      cd_id_to_tssr.push({
+  			"id_tssr_boq_site_doc" : name,
+  			"id_cd_doc" : dataCDSelected.id_cd_doc,
+  			"cd_id" : dataCDSelected.cd_id
+  		})
+    }else{
+      cd_id_to_tssr[indexCurrent] = {
+  			"id_tssr_boq_site_doc" : name,
+  			"id_cd_doc" : dataCDSelected.id_cd_doc,
+  			"cd_id" : dataCDSelected.cd_id
+  		}
+    }
+    console.log("cd_id_to_tssr", cd_id_to_tssr);
+    this.setState({cd_id_to_tssr : cd_id_to_tssr})
+    this.setState((prevState) => ({
+      cd_id_to_tssr_selected: prevState.cd_id_to_tssr_selected.set(name, value),
+    }));
+  }
+
   render() {
-    console.log("this.state.data_tssr", this.state.data_tssr);
     if(this.state.data_tssr !== null){
       console.log("this.state.data_tssr stei list", this.state.data_tssr.siteList);
     }
@@ -798,13 +873,14 @@ class PSUpload extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}} >Assign PS</span>
-            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.connectPlantSpectoTSSR}>Assign</Button>
+            connectPlantSpectoTSSR
+            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.toggleAssign}>Assign</Button>
           </CardHeader>
           <CardBody>
             <table>
               <tbody>
                 <tr>
-                  <td style={{width : '150px'}}>PlantSpec</td>
+                  <td style={{width : '150px'}}>PlantSpec Group</td>
                   <td>:</td>
                   <td style={{width : '300px'}}>
                     <Select
@@ -842,7 +918,7 @@ class PSUpload extends Component {
             <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
             <Fragment>
             <Row>
-            {this.state.data_tssr !== null && (
+            {(this.state.data_tssr !== null && this.state.data_mr !== null )&& (
               <Fragment>
                 <Col md="4">
                 <table className="table-header">
@@ -905,8 +981,10 @@ class PSUpload extends Component {
                 <Table hover bordered striped responsive size="sm">
                   <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
                     <tr>
+                      <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PS No. (Program)</th>
                       <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
                       <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
+                      <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>Program</th>
                       <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
                       <th colSpan="3" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
                       <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Availability</th>
@@ -924,60 +1002,37 @@ class PSUpload extends Component {
                       ) : <Fragment></Fragment> : <Fragment></Fragment>}
                   </thead>
                   <tbody>
-                  {this.state.tssr_site_NE !== null ? (
+                  {this.state.data_tssr !== null ? (
                     <Fragment>
-                      {this.state.tssr_site_NE.site_items !== null && this.state.tssr_site_NE.site_items !== null ? this.state.tssr_site_NE.site_items.map( pp =>
+                      {this.state.data_tssr.packages.map( pp =>
                         <Fragment>
                           <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
-                            <td style={{textAlign : 'left'}}>{pp.product_packages.pp_id}</td>
-                            <td>{pp.product_packages.product_name}</td>
-                            <td>{pp.product_packages.uom}</td>
-                            <td>{pp.product_packages.qty.toFixed(2)}</td>
+                            <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site +" ("+ pp.program +")"}</td>
+                            <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
+                            <td>{pp.product_name}</td>
+                            <td>{pp.program}</td>
+                            <td>{pp.uom}</td>
+                            <td>{pp.qty.toFixed(2)}</td>
                             <td></td>
                             <td></td>
                             <td></td>
                           </tr>
-                          {pp.material_detail.map(material =>
+                          {pp.materials.map(material =>
                             <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                              <td style={{textAlign : 'right'}}></td>
                               <td style={{textAlign : 'right'}}>{material.material_id}</td>
                               <td style={{textAlign : 'left'}}>{material.material_name}</td>
+                              <td></td>
                               <td>{material.uom}</td>
-                              <td align='center'>{(pp.product_packages.qty * material.qty).toFixed(2)}</td>
+                              <td align='center'>{(material.qty).toFixed(2)}</td>
                               <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                               <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
-                              <td align='center'>{pp.product_packages.qty*material.qty < qty_wh ? "OK":"NOK"}</td>
+                              <td align='center'>{material.qty < qty_wh ? "OK":"NOK"}</td>
                             </tr>
                           ) }
-                        </Fragment>
-                      ): (<Fragment></Fragment>)}
+                        </Fragment>)}
                     </Fragment>
                   ): (<Fragment></Fragment>)}
-                    {this.state.list_pp_material_tssr.map( pp =>
-                      <Fragment>
-                        <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
-                          <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
-                          <td>{pp.product_name}</td>
-                          <td>{pp.uom}</td>
-                          <td>{this.getQtyTssrPPNE(pp.pp_id)}</td>
-                          {this.state.tssr_site_FE !== null ? (
-                            <Fragment>
-                            <td>{this.getQtyTssrPPFE(pp.pp_id)}</td>
-                            </Fragment>
-                          ):(<Fragment></Fragment>)}
-                        </tr>
-                        {pp.list_of_material.map(material =>
-                          <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
-                            <td style={{textAlign : 'right'}}>{material.material_id}</td>
-                            <td style={{textAlign : 'left'}}>{material.material_name}</td>
-                            <td>{material.uom}</td>
-                            <td align='center'>{(!this.state.qty_ne.has(pp.pp_id) ? this.getQtyTssrPPNE(pp.pp_id) : this.state.qty_ne.get(pp.pp_id))*material.qty}</td>
-                            {this.state.tssr_site_FE !== null ? (
-                              <td align='center'>{(!this.state.qty_fe.has(pp.pp_id) ? this.getQtyTssrPPFE(pp.pp_id) : this.state.qty_fe.get(pp.pp_id))*material.qty}</td>
-                            ):(<Fragment></Fragment>)}
-                          </tr>
-                        )}
-                      </Fragment>
-                    )}
                   </tbody>
                 </Table>
               </div>
@@ -1004,6 +1059,43 @@ class PSUpload extends Component {
           </ModalFooter>
         </Modal>
         {/* end Modal Loading */}
+        {/* Modal Assign */}
+        <Modal isOpen={this.state.modal_assign_ps} toggle={this.toggleAssign} className={'modal-md ' + this.props.className}>
+          <ModalBody>
+            <div>
+              <Table responsive striped bordered size="sm">
+                <thead>
+                  <tr>
+                    <th>PS No.</th>
+                    <th>CD ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {this.state.list_tssr_from_ps.map(tssr =>
+                    <tr>
+                      <td style={{paddingTop : '10px'}}>
+                        {tssr.no_tssr_boq_site}
+                      </td>
+                      <td>
+                        <Input type="select" name={tssr.id_tssr_boq_site_doc} value={this.state.cd_id_to_tssr_selected.get(tssr.id_tssr_boq_site_doc)} onChange={this.handleChangeCDIDtoTSSR}>
+                          <option></option>
+                          {this.state.list_cd_id_mr.map(e =>
+                            <option value={e.id_cd_doc}>{e.cd_id}</option>
+                          )}
+                        </Input>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="secondary" onClick={this.toggleLoading}>Close</Button>
+            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.connectPlantSpectoTSSR}>Assign</Button>
+          </ModalFooter>
+        </Modal>
+        {/* end Modal Assign */}
       </div>
 
     );

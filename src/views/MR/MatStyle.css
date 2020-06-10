@@ -57,6 +57,22 @@
   top: 0;
 }
 
+.fixed-matlib th {
+  position: -webkit-sticky; /* for Safari */
+  position: sticky;
+  background: #f5f5f5;
+  padding : 10px;
+  top: 0;
+}
+
+.fixed-whman th {
+  position: -webkit-sticky; /* for Safari */
+  position: sticky;
+  background: #f5f5f5;
+  padding : 10px;
+  top: 0;
+}
+
 .fixbody {
   padding:10px;
   border-top: 2px solid #ebebeb;
@@ -86,6 +102,29 @@ Table tbody th {
 Table thead th:first-child {
   left: 0;
   z-index: 1;
+}
+
+.mr-detail__body--flex-long {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.mr-detail__body--flex-long > div{
+  width: 100%;
+  margin: 0px 10px 25px 10px;
+}
+
+.mr-detail__body--flex-long .mr-detail__body--header-detail{
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.mr-detail__body--flex-long .mr-detail__body--header-detail > span{
+  padding-bottom: 1.5px;
+  border-bottom: 1px solid;
+  border-bottom-color: rgba(100,181,246 ,1);
 }
 
 .mr-detail__body--flex {

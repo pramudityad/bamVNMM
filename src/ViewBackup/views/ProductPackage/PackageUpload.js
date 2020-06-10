@@ -344,8 +344,19 @@ class PackageUpload extends React.Component {
 
   saveProductPackageOneShot = async () => {
     this.toggleLoading();
-    const productPackageXLS = this.state.rowsXLS;
+    let productPackageXLS = this.state.rowsXLS;
     let isPackage = true;
+    let headerRow = [];
+    for(let i = 0; i < productPackageXLS[0].length; i++){
+      let value = productPackageXLS[0][i];
+      value = value.replace("bundle_id", "pp_id");
+      value = value.replace("bundle_name", "product_name");
+      value = value.replace("bundle_type", "product_type");
+      value = value.replace("bundle_unit", "package_unit");
+      value = value.replace("bundle_group", "pp_group");
+      headerRow.push(value);
+    }
+    productPackageXLS[0] = headerRow;
     if (isPackage === true) {
       const postPackage = await this.postDatatoAPINODE('/productpackage/packageWithMaterial', { "data": productPackageXLS })
         .then(res => {
@@ -776,7 +787,8 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["pp_id", "product_name", "product_type", "physical_group", "package_unit", "pp_group", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
+    // ws.addRow(["pp_id", "product_name", "product_type", "physical_group", "package_unit", "pp_group", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
+    ws.addRow(["bundle_id", "bundle_name", "bundle_type", "physical_group", "bundle_unit", "bundle_group", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
     ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "MDID002", "Material 2", "active_material", "EAB", "pc", 1]);
     ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "MDID003", "Material 3", "active_material", "EAB", "meter", 100.5]);
     ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "MDID006", "Material 6", "active_material", "EAB", "pc", 100]);
@@ -794,7 +806,7 @@ class PackageUpload extends React.Component {
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{ marginTop: '8px', position: 'absolute' }}>Product Package / Material</span>
+                <span style={{ marginTop: '8px', position: 'absolute' }}>Bundle / Material</span>
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
@@ -839,8 +851,8 @@ class PackageUpload extends React.Component {
                     </div>
                   </CardBody>
                   <CardFooter>
-                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage} style={{marginRight : '10px'}}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
-                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackageOneShot}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE One Shot</Button>
+                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackageOneShot}  style={{marginRight : '10px'}}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE</Button>
+                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage}> <i className="fa fa-refresh" aria-hidden="true"> </i> &nbsp;Update </Button>
                     <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>
                   </CardFooter>
                 </Card>
@@ -849,7 +861,7 @@ class PackageUpload extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: '10px' }}>
-                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Product List</span>
+                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Bundle List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                         {/* <span style={{ marginRight: '10px' }}>
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
@@ -876,7 +888,7 @@ class PackageUpload extends React.Component {
                             <th>Qty</th>
                             {/* <th>Product Package</th> */}
                             <th>Physical Group</th>
-                            <th>Product Type/ Material Origin</th>
+                            <th>Bundle Type/ Material Origin</th>
                             <th></th>
                           </tr>
                         </thead>
@@ -894,7 +906,7 @@ class PackageUpload extends React.Component {
                                 <td style={{ textAlign: 'center' }}>{pp.product_type}</td>
                                 <td>
                                   <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
-                                    <i className="fa fa-pencil" aria-hidden="true"></i>
+                                    <i className="fas fa-edit" aria-hidden="true"></i>
                                   </Button>
                                 </td>
                               </tr>

@@ -804,7 +804,7 @@ class AssignmentDetail extends Component {
                           <Table striped size="sm" className="assignment-list__table--center-non-border">
                             <thead>
                               <tr>
-                                <th>SSOW ID</th><th>Activity Number</th><th style={{width : '400px'}}>Description</th><th>SSOW Type</th><th>Unit</th><th>Qty</th><th>Status</th>
+                                <th>SSOW ID</th><th>Activity Number</th><th style={{width : '400px'}}>Description</th><th>SSOW Type</th><th>Unit</th><th>Qty</th><th>Total Price</th><th>Status</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -816,6 +816,7 @@ class AssignmentDetail extends Component {
                                   <td>{ssow.sow_type}</td>
                                   <td>{ssow.ssow_unit}</td>
                                   <td>{ssow.ssow_qty}</td>
+                                  <td>{ssow.ssow_total_price}</td>
                                   <td>{ssow.ssow_status[(ssow.ssow_status.length-1)].status}</td>
                                 </tr>
                               )}

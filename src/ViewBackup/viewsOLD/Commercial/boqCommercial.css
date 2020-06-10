@@ -1,0 +1,122 @@
+.upload-line-BOQ-Comm {
+    border: 1px solid rgba(0,0,0,0.1);
+    margin-top: 0px;
+    margin-bottom: 15px;
+  }
+
+  .modal.show .modal-dialog {
+    margin-top: 200px;
+  }
+
+  .loading-modal .modal-content {
+    width: 200px;
+  }
+
+  .modal-content {
+    width: 300px;
+  }
+
+.table-bordered td {
+    vertical-align: middle;
+    text-align: center;
+}
+
+.table-bordered thead th, {
+  vertical-align: middle !important;
+  display: table-cell !important;
+}
+
+.boq-tech-status-PA {
+  padding-left : 10px;
+  padding-right: 10px;
+  background-color: rgba(229,115,115 ,1);
+  font-size: 10px;
+  font-weight: 500;
+  color:rgba(238,238,238 ,1);
+  border-radius: 7px;
+  margin:1px;
+}
+
+.boq-tech-status-WA {
+  padding-left : 10px;
+  padding-right: 10px;
+  background-color: rgba(255,160,0 ,1);
+  font-size: 10px;
+  font-weight: 500;
+  color:rgba(238,238,238 ,1);
+  border-radius: 7px;
+  margin:1px;
+}
+
+.boq-tech-status-A {
+  padding-left : 10px;
+  padding-right: 10px;
+  background-color: rgba(129,199,132 ,1);
+  font-size: 10px;
+  font-weight: 500;
+  color:rgba(238,238,238 ,1);
+  border-radius: 7px;
+  margin:1px;
+}
+
+.table-header td {
+  text-align: left;
+}
+
+.table-footer td {
+  text-align: left;
+}
+
+
+.divtable {
+  overflow-y: scroll;
+  /* overflow-y: scroll; */
+  width:100%;
+  height:auto;
+  max-height: 600px;
+  margin-bottom:10px;
+}
+
+.divtable2 {
+  /* overflow-y: scroll; */
+  /* overflow-y: scroll; */
+  width:100%;
+  height:auto;
+  max-height: 600px;
+  margin-bottom:10px;
+}
+
+/* Use position: sticky to have it stick to the edge
+ * and top, right, or left to choose which edge to stick to: */
+
+.table-commercial__header--fixed th {
+  position: -webkit-sticky; /* for Safari */
+  position: sticky;
+  background: rgba(69, 140, 173, 1);
+  padding : 10px;
+  text-align: center;
+  vertical-align: middle;
+  top: 0;
+}
+
+.fixed2 tr td {
+  position: -webkit-sticky; /* for Safari */
+  position: sticky;
+  background: #eeeeee;
+  padding : 10px;
+  text-align: center;
+  bottom: 0;
+}
+
+.fixbody tr {
+  border-top: 2px solid #ebebeb;
+}
+
+.fixbody td {
+  padding : 10px;
+}
+
+.inputNumber{
+  width : 100%;
+  max-width : 35% ;
+}

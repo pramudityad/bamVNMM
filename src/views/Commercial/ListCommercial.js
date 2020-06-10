@@ -416,7 +416,7 @@ class ListCommercial extends Component {
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
                               <Link to={'/detail-commercial/'+boq._id}>
                                 <Button className="btn-primary" size="sm" color="primary" style={{marginRight : '10px'}}>
-                                  <i className="fa fa-pencil" aria-hidden="true"></i>&nbsp; Edit
+                                  <i className="fas fa-edit" aria-hidden="true"></i>&nbsp; Edit
                                 </Button>
                               </Link>
                               {/* }<Link to={'/approval-commercial/'+boq._id}>
@@ -426,7 +426,7 @@ class ListCommercial extends Component {
                               </Link> */}
                               <Link to={'/submission-commercial/'+boq._id}>
                                 <Button size="sm" color="secondary" style={{marginRight : '10px'}}>
-                                  <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; Submission
+                                  <i className="far fa-check-square" aria-hidden="true"></i>&nbsp; Submission
                                 </Button>
                               </Link>
                             </td>

@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input } from 'reactstrap';
+import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input, Collapse, Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap';
 import { Form, FormGroup, Label } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
@@ -22,6 +22,10 @@ const passwordBAM = 'F760qbAg2sml';
 const API_URL_PDB_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const usernameTselApi = 'adminbamidsuper';
 const passwordTselApi = 'F760qbAg2sml';
+
+const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
+const usernameXL = "adminbamidsuper";
+const passwordXL = "F760qbAg2sml";
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -95,9 +99,12 @@ class DetailTssr extends Component {
         waiting_status : null,
         action_status : null,
         action_message : null,
-        tssrData : [],
+        tssrData : null,
         material_wh : [],
-        material_inbound : []
+        material_inbound : [],
+        collapseUpload : false,
+        dropdownOpen: new Array(1).fill(false),
+        wbs_cd_id_data : [],
     };
     this.handleChangeProject = this.handleChangeProject.bind(this);
     this.handleChangeVersion = this.handleChangeVersion.bind(this);
@@ -107,6 +114,23 @@ class DetailTssr extends Component {
     this.exportFormatTSSR = this.exportFormatTSSR.bind(this);
     this.handleChangeTechRef = this.handleChangeTechRef.bind(this);
     this.referenceWithTechBoq = this.referenceWithTechBoq.bind(this);
+    this.submitTSSR = this.submitTSSR.bind(this);
+    this.toggleUpload = this.toggleUpload.bind(this);
+    this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
+    this.downloadMaterialTSSRUpload = this.downloadMaterialTSSRUpload.bind(this);
+  }
+
+  toggleUpload() {
+    this.setState({ collapseUpload: !this.state.collapseUpload });
+  }
+
+  toggleDropdown(i) {
+    const newArray = this.state.dropdownOpen.map((element, index) => {
+      return (index === i ? !element : false);
+    });
+    this.setState({
+      dropdownOpen: newArray,
+    });
   }
 
   async getDatafromAPIBMS(url){
@@ -275,6 +299,46 @@ class DetailTssr extends Component {
     }
   }
 
+  async patchDatatoAPINODE(url, data){
+    try {
+      let respond = await axios.patch(API_URL_NODE +url, data, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
+      console.log("respond Post Data", err);
+      return respond;
+    }
+  }
+
+  async getDatafromAPIXL(url){
+    try {
+      let respond = await axios.get(API_URL_XL +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
+    }
+  }
+
   checkValue(props){
     //Swap undefined to null
     if( typeof props === 'undefined' ) {
@@ -330,7 +394,7 @@ class DetailTssr extends Component {
     }
   }
 
-  fileHandlerMaterial = (event) => {
+  fileHandlerTSSR = (event) => {
     let fileObj = event.target.files[0];
     if(fileObj !== undefined){
       ExcelRenderer(fileObj, (err, rest) => {
@@ -361,7 +425,6 @@ class DetailTssr extends Component {
     this.setState({
       rowsXLS: newDataXLS
     });
-    this.formatDataTSSR(newDataXLS);
   }
 
   formatDataTSSR = async(dataXLS) => {
@@ -555,9 +618,12 @@ class DetailTssr extends Component {
   }
 
   getDataTssr(_id_tssr) {
-    this.getDataFromAPINODE('/tssrdata/'+_id_tssr).then( res => {
+    this.getDataFromAPINODE('/plantspec/'+_id_tssr).then( res => {
       if(res.data !== undefined){
-        this.setState({ tssrData : res.data.data.siteList[0].site_items }, () => {
+        this.setState({ tssrData : res.data.data }, () => {
+          if(res.data.data.site_info !== undefined){
+            this.getDataCDID(res.data.data.site_info.filter(fe => fe.cd_id !== null && fe.cd_id !== undefined).map(e => e.cd_id));
+          }
           this.getDataWarehouse();
           this.getDataInbound();
         })
@@ -566,10 +632,20 @@ class DetailTssr extends Component {
     })
   }
 
+  async getDataCDID(array_cd_id){
+    if(array_cd_id.length !== 0){
+      let array_in_cdid = '"'+array_cd_id.join('", "')+'"';
+      const getWPID = await this.getDatafromAPIXL('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}');
+      if(getWPID !== undefined && getWPID.data !== undefined) {
+        this.setState({ wbs_cd_id_data : getWPID.data._items});
+      }
+    }
+  }
+
   async getDataWarehouse() {
     let listSku = [];
     if(this.state.tssrData !== undefined) {
-      this.state.tssrData.map(pp => pp.material_detail.map(material => listSku.push(material.material_id)));
+      this.state.tssrData.packages.map(pp => pp.materials.map(material => listSku.push(material.material_id)));
       listSku = [...new Set(listSku)];
       let skuData = {
         "sku" : listSku
@@ -586,7 +662,7 @@ class DetailTssr extends Component {
   async getDataInbound() {
     let listSku = [];
     if(this.state.tssrData !== undefined) {
-      this.state.tssrData.map(pp => pp.material_detail.map(material => listSku.push(material.material_id)));
+      this.state.tssrData.packages.map(pp => pp.materials.map(material => listSku.push(material.material_id)));
       listSku = [...new Set(listSku)];
       let skuData = {
         "sku" : listSku
@@ -1152,8 +1228,155 @@ class DetailTssr extends Component {
     }
   }
 
+  submitTSSR(){
+    this.patchDatatoAPINODE('/plantspec/submitPlantspec/'+this.props.match.params.id).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+      }else{
+        this.setState({ action_status : "failed" });
+      }
+    })
+  }
+
+  CompareArrayObject(arr, prop) {
+    return arr.sort(function (a, b) {
+        var nameA = a[prop].toLowerCase(),
+            nameB = b[prop].toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
+  }
+
+  async downloadMaterialTSSRUpload() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataTSSR = this.state.tssrData;
+    const dataItemTSSR = this.state.tssrData.packages;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    let headerRow = ["bam_id", "bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "stock_warehouse", "inbound_warehouse", "availability", "source_material"];
+    ws.addRow(headerRow);
+    let list_material_id = [];
+    for(let i = 0; i < dataItemTSSR.length; i++){
+      for(let j = 0; j < dataItemTSSR[i].materials.length; j++){
+        let dataMatIdx = dataItemTSSR[i].materials[j];
+        list_material_id.push(dataMatIdx.material_id);
+        let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
+        let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
+        qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
+        qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
+        ws.addRow([dataMatIdx._id, dataItemTSSR[i].pp_id, dataItemTSSR[i].product_name, dataItemTSSR[i].program, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.uom, dataMatIdx.qty, qty_wh, qty_inbound, (dataMatIdx.qty) < qty_wh ? "OK":"NOK"]);
+      }
+    }
+
+    let listMatId = [...new Set(list_material_id)];
+    let matIdData = {
+      "list_material_id" : listMatId
+    }
+
+    const getMaterialVariant = await this.postDatatoAPINODE('/variants/materialId', matIdData);
+    if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
+      dataMaterialVariant = getMaterialVariant.data.data;
+    }
+
+    dataMaterialVariant = this.CompareArrayObject(dataMaterialVariant, "description");
+
+    let sku_list = [];
+    for(let j = 0; j < dataMaterialVariant.length; j++){
+      sku_list.push(dataMaterialVariant[j].material_id);
+    }
+    const list_qtySKU = [];
+    const getQtyfromWHbySKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', {"sku": sku_list }).then((res) => {
+      if(res.data !== undefined && res.status >= 200 && res.status < 400){
+        const dataSKU = res.data.data;
+        for (let i = 0; i < dataSKU.length; i++) {
+          if (dataSKU[i][0] === undefined){
+            list_qtySKU.push(0);
+          } else {
+            list_qtySKU.push(dataSKU[i][0].qty_sku);
+          }
+        }
+      }
+    });
+
+    ws2.addRow(["Origin","Material ID","Material Name","Description", "Category", "Qty Available"]);
+    for(let j = 0; j < dataMaterialVariant.length; j++){
+      ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category, list_qtySKU[j]]);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' uploader.xlsx');
+  }
+
+  async saveUpdateMaterial(){
+    const dataXLS = this.state.rowsXLS;
+    const dataTSSR = this.state.tssrData;
+    let patchDataMat = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataTSSR._id, {"identifier" : "PS" ,"data" : dataXLS});
+    if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
+      this.setState({ action_status : 'success'});
+    } else{
+      if(patchDataMat.response !== undefined && patchDataMat.response.data !== undefined && patchDataMat.response.data.error !== undefined){
+        if(patchDataMat.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
+  tableWBSPlantSpect(site_info){
+    const dataCDWBS = this.state.wbs_cd_id_data;
+    if(site_info.cd_id !== undefined && site_info.cd_id !== null){
+      let dataCDWBSbyCDID = dataCDWBS.find(e => e.WP_ID === site_info.cd_id);
+      if(dataCDWBSbyCDID !== undefined){
+        return (
+          <Fragment>
+            <td>{site_info.cd_id}</td>
+            <td>{dataCDWBSbyCDID.C1003_WBS_HW}</td>
+            <td>{dataCDWBSbyCDID.C1008_WBS_HWAC}</td>
+            <td>{dataCDWBSbyCDID.C1013_WBS_LCM}</td>
+            <td>{dataCDWBSbyCDID.C1018_WBS_PNRO}</td>
+            <td>{dataCDWBSbyCDID.C1024_WBS_PNDO}</td>
+            <td>{dataCDWBSbyCDID.C1032_WBS_HW_Bulk}</td>
+            <td>{dataCDWBSbyCDID.C1033_WBS_LCM_Bulk}</td>
+            <td>{dataCDWBSbyCDID.C1034_WBS_PowHW_Site_Basis}</td>
+            <td>{dataCDWBSbyCDID.C1035_WBS_PowLCM_Site_Basis}</td>
+            <td>{dataCDWBSbyCDID.C1036_WBS_Kathrein}</td>
+          </Fragment>
+        )
+      }else{
+        return(
+          <Fragment>
+            <td>{site_info.cd_id}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </Fragment>
+        )
+      }
+    }else{
+      return(
+        <Fragment>
+          <td colSpan="11">Please Assign PS to MR</td>
+        </Fragment>
+      )
+    }
+  }
+
   render() {
-    console.log("Excel Render revUpload", this.state.data_tssr_sites);
     let qty_wh = undefined, qty_inbound = undefined;
     return (
       <div>
@@ -1162,11 +1385,51 @@ class DetailTssr extends Component {
           <Col xl="12">
           <Card>
             <CardHeader>
-              <span style={{lineHeight :'2', fontSize : '15px'}} >Detail Plant Spec</span>
-              <Button style={{marginRight : '8px', float : 'right', display: 'none'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download PS Format</Button>
+              <span style={{lineHeight :'2', fontSize : '15px'}} >Detail Plant Spec Group</span>
+              {this.state.tssrData !== null && this.state.tssrData.submission_status !== "SUBMITTED" ? (
+                <Button style={{marginRight : '8px', float : 'right'}} color="success" onClick={this.submitTSSR} size="sm">Submit</Button>
+              ) : (
+                <Fragment></Fragment>
+              )}
+              {this.state.tssrData !== null && this.state.tssrData.locked === false ? (
+                <Button style={{marginRight : '8px', float : 'right'}} color="primary" onClick={this.toggleUpload} size="sm">Edit</Button>
+              ) : (<Fragment></Fragment>)}
+              <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
+                <DropdownToggle caret color="secondary">
+                  <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
+                </DropdownToggle>
+                <DropdownMenu>
+                  <DropdownItem header>TSSR File</DropdownItem>
+                  <DropdownItem onClick={this.downloadMaterialTSSRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+              {/* }<Button style={{marginRight : '8px', float : 'right', display: 'none'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download PS Format</Button> */}
             </CardHeader>
+            <Collapse isOpen={this.state.collapseUpload}>
+              <Card style={{ margin: '10px 10px 5px 10px' }}>
+                <CardBody>
+                  <div>
+                    <Row>
+                      <Col md="12">
+                      {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
+                        <React.Fragment>
+                        <div style={{display : 'flex', "align-items": "baseline"}}>
+                          <input type="file" onChange={this.fileHandlerTSSR.bind(this)} style={{"padding":"10px"}}/>
+                          <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
+                            <i className="fa fa-paste">&nbsp;&nbsp;</i>
+                            Save
+                          </Button>
+                        </div>
+                        </React.Fragment>
+                      )}
+                      </Col>
+                    </Row>
+                  </div>
+                </CardBody>
+              </Card>
+            </Collapse>
             <CardBody>
-            <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden","display":"none"}}/>
+            <input type="file" onChange={this.fileHandlerTSSR.bind(this)} style={{"padding":"10px","visiblity":"hidden","display":"none"}}/>
             <Button color="warning" onClick={this.prepareEdit} style={{float : 'right', display : 'none'}} >Edit</Button>
             <Button color="success" onClick={this.prepareRevision} style={{float : 'right', marginRight : '8px', display : 'none'}} >Revision</Button>
             {this.state.data_tssr !== null ?
@@ -1198,15 +1461,21 @@ class DetailTssr extends Component {
               <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
                 <tbody>
                   <tr>
-                    <td colSpan="4" style={{textAlign : 'center', color : 'rgba(59,134,134,1)', fontSize : '21px'}}>Plant Spec DETAIL</td>
+                    <td colSpan="4" style={{textAlign : 'center', color : 'rgba(59,134,134,1)', fontSize : '21px'}}>Plant Spec Group DETAIL</td>
                   </tr>
-                  {this.state.data_tssr !== null && (
+                  {this.state.tssrData !== null && (
                     <Fragment>
                     <tr>
-                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Plant Spec ID : {this.state.data_tssr.no_tssr_boq}</td>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Plant Spec  Group ID : {this.state.tssrData.no_plantspec}</td>
                     </tr>
                     <tr>
-                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Project Name : {this.state.data_tssr.project_name}</td>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Project Name : {this.state.tssrData.project_name}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Site ID : {this.state.tssrData.site_info[0].site_id}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>MR Related : {this.state.tssrData.mr_id}</td>
                     </tr>
                     </Fragment>
                   )}
@@ -1216,7 +1485,7 @@ class DetailTssr extends Component {
               <Fragment>
                 <Row>
                 {this.state.tssr_site_NE !== null && (
-                <Col style={{marginBottom : '20px'}}>
+                <Col style={{marginBottom : '10px'}}>
                   <table>
                     <tbody>
                       <tr>
@@ -1300,13 +1569,44 @@ class DetailTssr extends Component {
                 )}
                 </Row>
                 <hr className="upload-line-ordering"></hr>
+                <Table responsive striped bordered size="sm">
+                  <thead>
+                    <tr style={{fontSize : '10.5px'}}>
+                      <th>PS No</th>
+                      <th>CD ID</th>
+                      <th>WBS HW</th>
+                      <th>WBS HWAC</th>
+                      <th>WBS LCM</th>
+                      <th>WBS PNRO</th>
+                      <th>WBS PNDO</th>
+                      <th>WBS HW Bulk</th>
+                      <th>WBS LCM Bulk</th>
+                      <th>WBS PowHW Site Basis</th>
+                      <th>WBS PowLCM Site Basis</th>
+                      <th>WBS Kathrein</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {this.state.tssrData !== null ? this.state.tssrData.site_info.map(site =>
+                        <tr style={{fontSize : '10.5px'}}>
+                          <td>
+                            {site.no_tssr_boq_site}
+                          </td>
+                          {this.tableWBSPlantSpect(site)}
+                        </tr>
+                      ) : <Fragment></Fragment>}
+                  </tbody>
+                </Table>
+                <hr className="upload-line-ordering"></hr>
                 <div className='divtable2'>
                   <Table hover bordered striped responsive size="sm">
                     <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
                       <tr>
+                        <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PS No. (Program) / Source Material</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
                         <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
-                        <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
+                        <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Program</th>
+                        <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>UOM</th>
                         <th colSpan="3" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Availability</th>
                       </tr>
@@ -1317,27 +1617,31 @@ class DetailTssr extends Component {
                       </tr>
                     </thead>
                     <tbody>
-                      {Array.isArray(this.state.tssrData) && (
-                        this.state.tssrData.map(pp =>
+                      {this.state.tssrData !== null && Array.isArray(this.state.tssrData.packages) && (
+                        this.state.tssrData.packages.map(pp =>
                           <Fragment>
                             <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
-                              <td style={{textAlign : 'left'}}>{pp.product_packages.pp_id}</td>
-                              <td>{pp.product_packages.product_name}</td>
-                              <td>{pp.product_packages.uom}</td>
-                              <td align='center'>{pp.product_packages.qty.toFixed(2)}</td>
+                              <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site +" ("+pp.program+")"}</td>
+                              <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
+                              <td>{pp.product_name}</td>
+                              <td>{pp.program}</td>
+                              <td>{pp.uom}</td>
+                              <td align='center'>{pp.qty.toFixed(2)}</td>
                               <td align='center'></td>
                               <td align='center'></td>
                               <td align='center'></td>
                             </tr>
-                            {pp.material_detail.map(material =>
+                            {pp.materials.map(material =>
                               <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                                <td>{material.source_material}</td>
                                 <td style={{textAlign : 'right'}}>{material.material_id}</td>
                                 <td style={{textAlign : 'left'}}>{material.material_name}</td>
+                                <td style={{textAlign : 'left'}}></td>
                                 <td>{material.uom}</td>
-                                <td align='center'>{(pp.product_packages.qty*material.qty).toFixed(2)}</td>
+                                <td align='center'>{(material.qty).toFixed(2)}</td>
                                 <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                                 <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
-                                <td align='center'>{pp.product_packages.qty*material.qty < qty_wh ? "OK":"NOK"}</td>
+                                <td align='center'>{material.qty < qty_wh ? "OK":"NOK"}</td>
                               </tr>
                             )}
                           </Fragment>

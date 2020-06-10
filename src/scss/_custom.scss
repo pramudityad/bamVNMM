@@ -154,62 +154,62 @@ body {
 }
 
 // breadcrumb XL
-.breadcrumb--xl .breadcrumb{
+.breadcrumb--2 .breadcrumb{
   background-color: #1976D2;
 }
 
-.breadcrumb--xl .breadcrumb a {
+.breadcrumb--2 .breadcrumb a {
   color: #FFF;
 }
 
-.breadcrumb--xl .breadcrumb-item + .breadcrumb-item::before {
+.breadcrumb--2 .breadcrumb-item + .breadcrumb-item::before {
     display: inline-block;
     padding-right: 0.5rem;
     color: #FFF;
     content: "/";
 }
 
-.breadcrumb--xl .breadcrumb-item.active {
+.breadcrumb--2 .breadcrumb-item.active {
     color: #FFF;
 }
 
 // breadcrumb Telkom
-.breadcrumb--tsel .breadcrumb{
+.breadcrumb--1 .breadcrumb{
   background-color: #ef5350;
 }
 
-.breadcrumb--tsel .breadcrumb a {
+.breadcrumb--1 .breadcrumb a {
   color: #FFF;
 }
 
-.breadcrumb--tsel .breadcrumb-item + .breadcrumb-item::before {
+.breadcrumb--1 .breadcrumb-item + .breadcrumb-item::before {
     display: inline-block;
     padding-right: 0.5rem;
     color: #FFF;
     content: "/";
 }
 
-.breadcrumb--tsel .breadcrumb-item.active {
+.breadcrumb--1 .breadcrumb-item.active {
     color: #FFF;
 }
 
 // breadcrumb indosat
-.breadcrumb--indosat .breadcrumb{
+.breadcrumb--3 .breadcrumb{
   background-color: #fcd401;
 }
 
-.breadcrumb--indosat .breadcrumb a {
+.breadcrumb--3 .breadcrumb a {
   color: #424242;
 }
 
-.breadcrumb--indosat .breadcrumb-item + .breadcrumb-item::before {
+.breadcrumb--3 .breadcrumb-item + .breadcrumb-item::before {
     display: inline-block;
     padding-right: 0.5rem;
     color: #424242;
     content: "/";
 }
 
-.breadcrumb--indosat .breadcrumb-item.active {
+.breadcrumb--3 .breadcrumb-item.active {
     color: #424242;
 }
 

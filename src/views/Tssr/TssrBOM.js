@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input } from 'reactstrap';
+import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input, Spinner } from 'reactstrap';
 import { Form, FormGroup, Label } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
@@ -9,7 +9,8 @@ import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
 import AsyncSelect from 'react-select/async';
-import debounce from 'lodash.debounce';
+// import debounce from 'lodash.debounce';
+import debounce from "debounce-promise";
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -83,12 +84,16 @@ class TssrBOM extends Component {
       list_site_selection : [],
       dataTech : [],
       change_qty_ps : new Map(),
+      list_tssr_selected : [],
+      data_tssr_selected : [],
     };
     this.saveTssrBOM = this.saveTssrBOM.bind(this);
     this.handleChangeProject = this.handleChangeProject.bind(this);
     this.handleChangeSiteTSSR = this.handleChangeSiteTSSR.bind(this);
     this.handleChangeQtyPS = this.handleChangeQtyPS.bind(this);
     this.loadOptions = this.loadOptions.bind(this);
+    this.previewTSSRtoPS = this.previewTSSRtoPS.bind(this);
+    this.removeSiteTSSR = this.removeSiteTSSR.bind(this);
   }
 
   async getDataFromAPINODEWithParams(url) {
@@ -175,7 +180,7 @@ class TssrBOM extends Component {
     }
   }
 
-  async postDatatoAPINode(url, data) {
+  async postDatatoAPINODE(url, data) {
     try {
       let respond = await axios.post(API_URL_NODE+url, data, {
         headers: {
@@ -345,7 +350,7 @@ class TssrBOM extends Component {
     const index = e.target.selectedIndex;
     const text = e.target[index].text;
     this.setState({project_selected : value, project_name_selected : text}, () => {
-      this.getListSiteTechforPS(value);
+      // this.getListSiteTechforPS(value);
     });
   }
 
@@ -361,9 +366,19 @@ class TssrBOM extends Component {
     const value = e.value;
     const text = e.label;
     const list_site_idx = this.state.list_site.find(e => e._id === value);
-    this.setState({list_site_selected : value, list_site_tech_boq_selected : list_site_idx.id_tech_boq_doc}, () => {
-      this.getDataTech();
+    let dataArrayTssr = this.state.list_tssr_selected;
+    dataArrayTssr.push({"site_selected" : value, "tech_selected" : e.id_tech_boq_doc, "label" : text});
+    this.setState({list_site_selected : value, list_site_tech_boq_selected : e.id_tech_boq_doc, list_tssr_selected : dataArrayTssr }, () => {
+      // this.getDataTech();
     });
+  }
+
+  removeSiteTSSR(_id_site){
+    // const _id_site = e.target.value;
+    console.log("_id_site", _id_site);
+    let dataArrayTssr = this.state.list_tssr_selected;
+    dataArrayTssr = dataArrayTssr.filter(e => e.site_selected != _id_site);
+    this.setState({list_tssr_selected : dataArrayTssr});
   }
 
   formatDataTSSR = async(dataXLS) => {
@@ -574,45 +589,56 @@ class TssrBOM extends Component {
     return numberTSSR;
   }
 
+  // async saveTssrBOM(){
+  //   let site_items = [], each_site_item = {};
+  //   this.state.dataTech.listOfPackage.map(pp => {
+  //     each_site_item = {
+  //       "id_pp_doc": pp.id_pp_doc,
+  //       "pp_id": pp.pp_id,
+  //       "product_name": pp.product_name,
+  //       "pp_group": pp.product_name,
+  //       "pp_cust_number": pp.pp_id,
+  //       "physical_group": pp.physical_group,
+  //       "product_type": pp.product_type,
+  //       "uom": pp.uom,
+  //       "qty": !this.state.change_qty_ps.has(pp.pp_id) ? pp.qty : this.state.change_qty_ps.get(pp.pp_id).length === 0 ? 0 : this.state.change_qty_ps.get(pp.pp_id),
+  //     }
+  //     site_items.push(each_site_item);
+  //   })
+  //   let tssrData = {
+  //     "tssr_info" : {
+  //       "no_tssr_boq": "",
+  //       "id_boq_tech_doc" : this.state.dataTech.id_tech_boq_doc,
+  //       "no_boq_tech" : this.state.dataTech.no_tech_boq,
+  //       "id_project_doc" : this.state.dataTech.id_project_doc,
+  //       "project_name" : this.state.dataTech.project_name
+  //     },
+  //     "sites_data" : [
+  //       {
+  //         "site_info" : {
+  //           "site_title" : "NE",
+  //           "site_id" : this.state.dataTech.site_id,
+  //           "site_name" : this.state.dataTech.site_name,
+  //           "id_site_doc" : "5e99545b8c02d7501b1ae8bf"
+  //         },
+  //         "site_items" : site_items
+  //       }
+  //     ]
+  //   }
+  //   const respondSaveTSSR = await this.postDatatoAPINODE('/createTssrData', tssrData);
+  //   if(respondSaveTSSR.data !== undefined && respondSaveTSSR.status >= 200 && respondSaveTSSR.status <= 300 ){
+  //     this.setState({ action_status : 'success', action_message : 'PS has been saved successfully!' });
+  //   } else{
+  //     this.setState({ action_status : 'failed' });
+  //   }
+  // }
+
   async saveTssrBOM(){
-    let site_items = [], each_site_item = {};
-    this.state.dataTech.listOfPackage.map(pp => {
-      each_site_item = {
-        "id_pp_doc": pp.id_pp_doc,
-        "pp_id": pp.pp_id,
-        "product_name": pp.product_name,
-        "pp_group": pp.product_name,
-        "pp_cust_number": pp.pp_id,
-        "physical_group": pp.physical_group,
-        "product_type": pp.product_type,
-        "uom": pp.uom,
-        "qty": !this.state.change_qty_ps.has(pp.pp_id) ? pp.qty : this.state.change_qty_ps.get(pp.pp_id).length === 0 ? 0 : this.state.change_qty_ps.get(pp.pp_id),
-      }
-      site_items.push(each_site_item);
-    })
-    let tssrData = {
-      "tssr_info" : {
-        "no_tssr_boq": "",
-        "id_boq_tech_doc" : this.state.dataTech.id_tech_boq_doc,
-        "no_boq_tech" : this.state.dataTech.no_tech_boq,
-        "id_project_doc" : this.state.dataTech.id_project_doc,
-        "project_name" : this.state.dataTech.project_name
-      },
-      "sites_data" : [
-        {
-          "site_info" : {
-            "site_title" : "NE",
-            "site_id" : this.state.dataTech.site_id,
-            "site_name" : this.state.dataTech.site_name,
-            "id_site_doc" : "5e99545b8c02d7501b1ae8bf"
-          },
-          "site_items" : site_items
-        }
-      ]
-    }
-    const respondSaveTSSR = await this.postDatatoAPINode('/createTssrData', tssrData);
+    // setTimeout(function () { this.setState({redirectSign : "5ec2d5bb5ac433f42df7401a"}); }.bind(this), 2000);
+    const respondSaveTSSR = await this.postDatatoAPINODE('/plantspec/createPlantspec', {"psData" : this.state.data_tssr_selected});
     if(respondSaveTSSR.data !== undefined && respondSaveTSSR.status >= 200 && respondSaveTSSR.status <= 300 ){
       this.setState({ action_status : 'success', action_message : 'PS has been saved successfully!' });
+      setTimeout(function () { this.setState({redirectSign : respondSaveTSSR.data.objMrPs._id}); }.bind(this), 2000);
     } else{
       this.setState({ action_status : 'failed' });
     }
@@ -638,19 +664,73 @@ class TssrBOM extends Component {
     );
   };
 
-  loadOptions = (inputValue, callback) => {
-    // this.filterSiteTSSR(inputValue)
-    if(inputValue !== null && inputValue.length > 2){
-      setTimeout(() => {
-        callback(this.filterSiteTSSR(inputValue));
-      }, 1000);
+  // filterSiteTSSR = (inputValue) => {
+  //   const list = [];
+  //   let list_site_api = this.state.list_site.filter(i =>
+  //     i.site_id.toLowerCase().includes(inputValue.toLowerCase()) || i.no_tech_boq.toLowerCase().includes(inputValue.toLowerCase())
+  //   )
+  //   list_site_api.map(site =>
+  //       list.push({'value' : site._id, 'label' : site.site_id +" ("+site.no_tech_boq+")"})
+  //   )
+  //   this.setState({list_site_selection : list});
+  //   return this.state.list_site_selection.filter(i =>
+  //     i.label.toLowerCase().includes(inputValue.toLowerCase())
+  //   );
+  // };
+
+  filterSiteTSSR = async(inputValue) => {
+    if(!inputValue || inputValue.length < 3 ) {
+      return [];
+    } else {
+      let site_tssr_list = [];
+      const getSiteTSSR = await this.getDataFromAPINODE('/plantspec/getTechnicalByProjectId/'+this.state.project_selected+'?siteId='+inputValue);
+      if(getSiteTSSR !== undefined && getSiteTSSR.data !== undefined) {
+        getSiteTSSR.data.data.map(site =>
+          site_tssr_list.push({'value' : site._id, 'label' : "PS "+site.no_tech_boq+"-"+site.site_id +" ("+site.program+")", 'id_tech_boq_doc' : site.id_tech_boq_doc })
+        );
+      }
+      console.log("site_tssr_list", site_tssr_list);
+      return site_tssr_list;
     }
   };
 
+  loadOptions = async(inputValue, callback) => {
+    return this.filterSiteTSSR(inputValue);
+  };
+
+  async previewTSSRtoPS(){
+    this.setState({ action_status: null, action_message: null });
+    let tssrSelected = this.state.list_tssr_selected;
+    let dataTSSRforGet = [];
+    tssrSelected.map( e =>
+      dataTSSRforGet.push(
+        {
+          "techBoqId": e.tech_selected,
+          "siteId": e.site_selected
+        }
+      )
+    );
+    this.postDatatoAPINODE('/plantspec/getTssrData', {"data" : dataTSSRforGet}).then(res => {
+      if(res.data !== undefined){
+        this.setState({data_tssr_selected : res.data.psData})
+      }else{
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
+      }
+    });
+  }
+
   render() {
-    // if(this.state.redirectSign !== false){
-    //   return (<Redirect to={'/ps-bom/'+this.state.redirectSign} />);
-    // }
+    if(this.state.redirectSign !== false){
+      return (<Redirect to={'/ps-bom/'+this.state.redirectSign} />);
+    }
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -658,7 +738,7 @@ class TssrBOM extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}} >Plant Spec </span>
+            <span style={{lineHeight :'2', fontSize : '17px'}} >Plant Spec Group</span>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <table style={{marginBottom : '20px'}}>
@@ -671,7 +751,7 @@ class TssrBOM extends Component {
                     :
                   </td>
                   <td>
-                    <Input style={{marginTop : '10px'}} name="project" type="select" onChange={this.handleChangeProject} value={this.state.project_selected}>
+                    <Input style={{marginTop : '10px', marginBottom : '10px'}} name="project" type="select" onChange={this.handleChangeProject} value={this.state.project_selected}>
                       <option value={null} selected disabled hidden></option>
                       {this.state.list_project.map( project =>
                         <option value={project._id}>{project.Project}</option>
@@ -686,23 +766,47 @@ class TssrBOM extends Component {
                   <td style={{paddingTop : '10px', paddingRight : '10px'}}>
                     :
                   </td>
-                  <td>
-                    <AsyncSelect
-                      cacheOptions
-                      loadOptions={debounce(this.loadOptions, 500)}
-                      defaultOptions
-                      onChange={this.handleChangeSiteTSSR}
-                      isDisabled={this.state.list_site.length === 0}
-                    />
+                  <td style={{width : '400px'}}>
+                    {this.state.list_tssr_selected.map(e =>
+                      <tr>
+                        <td>
+                          {e.label} <i className="fa fa-window-close" style={{ marginLeft: "8px", color : '#ef5350' }} value={e.site_selected} onClick={() => this.removeSiteTSSR(e.site_selected)}></i>
+                        </td>
+                      </tr>
+                    )}
+                    <tr>
+                      {this.state.project_selected === null ? (
+                        <td style={{paddingTop : '10px'}}></td>
+                      ) : (
+                        <td style={{width : '400px'}}>
+                        <AsyncSelect
+                          cacheOptions
+                          loadOptions={debounce(this.loadOptions, 500)}
+                          defaultOptions
+                          onChange={this.handleChangeSiteTSSR}
+                          isDisabled={this.state.list_tssr_selected.length >= 2}
+                        />
+                        </td>
+                      )}
+                    </tr>
+                    {(this.state.project_selected !== null) && (
+                      <tr>
+                        <td>
+                          <Button onClick={this.previewTSSRtoPS} size="sm" color="success">
+                            Preview
+                          </Button>
+                        </td>
+                      </tr>
+                    )}
                   </td>
                 </tr>
               </tbody>
             </table>
-            <Button color="success" onClick={this.saveTssrBOM} style={{float : 'right'}} >Save</Button>
+            <Button color="success" onClick={this.saveTssrBOM} style={{float : 'right'}} disabled={this.state.data_tssr_selected.length === 0}>Save</Button>
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>
-                  <td colSpan="4" style={{textAlign : 'center'}}>PLANT SPEC PREVIEW</td>
+                  <td colSpan="4" style={{textAlign : 'center'}}>PLANT SPEC GROUP PREVIEW</td>
                 </tr>
               </tbody>
             </table>
@@ -711,17 +815,47 @@ class TssrBOM extends Component {
               <Table hover bordered striped responsive size="sm">
                 <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
                   <tr>
-                    <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
-                    <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
+                    <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Tech No.</th>
+                    <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Bundle / Material Code</th>
+                    <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>Bundle / Material Name</th>
+                    <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Config ID</th>
+                    <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>Program</th>
                     <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
-                    <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
+                    <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty</th>
                   </tr>
                   <tr>
-                    <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Qty BOM</th>
                     <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Qty PS</th>
                   </tr>
                 </thead>
                 <tbody>
+                  {this.state.data_tssr_selected.map( tssr =>
+                      tssr.listOfPackage.map( pp =>
+                        <Fragment>
+                        <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                          <td>{tssr.no_tech_boq}</td>
+                          <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
+                          <td>{pp.product_name}</td>
+                          <td>{pp.config_id}</td>
+                          <td>{pp.program}</td>
+                          <td>{pp.uom}</td>
+                          <td align='center'>{pp.qty}</td>
+                        </tr>
+                        {pp.list_material.map(material =>
+                          <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                            <td></td>
+                            <td style={{textAlign : 'right'}}>{material.material_id}</td>
+                            <td style={{textAlign : 'left'}}>{material.material_name}</td>
+                            <td></td>
+                            <td></td>
+                            <td>{material.uom}</td>
+                            <td align='center'>{pp.qty*material.qty}</td>
+                          </tr>
+                        )}
+                        </Fragment>
+                      )
+                  )}
+                </tbody>
+                {/* <tbody>
                   {Array.isArray(this.state.dataTech.listOfPackage) && (
                     this.state.dataTech.listOfPackage.map(pp =>
                       <Fragment>
@@ -744,7 +878,7 @@ class TssrBOM extends Component {
                       </Fragment>
                     )
                   )}
-                </tbody>
+                </tbody> */}
               </Table>
             </div>
           </CardBody>
