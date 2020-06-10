@@ -23,7 +23,7 @@ import navigation from '../../_nav';
 import navigationIndosat from '../../_navIndosat';
 import navigationTelkom from '../../_navTelkom';
 // routes config
-import routes from '../../routes';
+import routes from '../../routesXL';
 import routesIndosat from '../../routesIndosat';
 import routesTelkom from '../../routesTelkom';
 
