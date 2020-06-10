@@ -19,11 +19,11 @@ import {
   AppSidebarNav2 as AppSidebarNav,
 } from '@coreui/react';
 // sidebar nav config
-import navigation from '../../_nav';
+import navigationXL from '../../_navXL';
 import navigationIndosat from '../../_navIndosat';
 import navigationTelkom from '../../_navTelkom';
 // routes config
-import routes from '../../routes';
+import routesXL from '../../routesXL';
 import routesIndosat from '../../routesIndosat';
 import routesTelkom from '../../routesTelkom';
 
@@ -39,8 +39,8 @@ class DefaultLayout extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      navMenu : this.props.dataLogin.account_id === "3" ? navigationIndosat : this.props.dataLogin.account_id === "1" ? navigationTelkom : navigation,
-      routes : this.props.dataLogin.account_id === "3" ? routesIndosat : this.props.dataLogin.account_id === "1" ? routesTelkom : routes,
+      navMenu : this.props.dataLogin.account_id === "3" ? navigationIndosat : this.props.dataLogin.account_id === "1" ? navigationTelkom : navigationXL,
+      routes : this.props.dataLogin.account_id === "3" ? routesIndosat : this.props.dataLogin.account_id === "1" ? routesTelkom : routesXL,
       userRole : this.props.dataLogin.role,
       minimize : this.props.SidebarMinimize,
     }
