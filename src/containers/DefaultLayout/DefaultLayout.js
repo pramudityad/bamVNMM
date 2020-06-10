@@ -81,7 +81,7 @@ class DefaultLayout extends Component {
   }
 
   showMenuByRole(){
-    console.log("showMenuByRole", this.state.navMenu);
+    // console.log("showMenuByRole", this.state.navMenu);
     let rolesUser = this.props.dataLogin.role;
     let dataMenu = this.state.navMenu.items;
     let dataMenuRoles = [];
@@ -109,8 +109,6 @@ class DefaultLayout extends Component {
         }
       }
       this.setState({navMenu : {items : dataMenuRoles}});
-      console.log("this.state.navMenu", dataMenu);
-      console.log("this.state.navMenu New", dataMenuRoles);
     }
   }
 

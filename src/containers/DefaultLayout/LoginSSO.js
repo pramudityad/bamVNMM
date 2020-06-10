@@ -7,6 +7,10 @@ import ActionType from '../../redux/reducer/globalActionType';
 import App from '../../App';
 import './LoginSSO.css';
 import { Button, Card, CardBody, CardFooter, Col, Container, Form, Input, InputGroup, InputGroupAddon, InputGroupText, Row } from 'reactstrap';
+import psi from '../../assets/img/customer/psi.jpeg'
+import demokrat from '../../assets/img/customer/DEMOKRAT.png'
+import pks from '../../assets/img/customer/PKS.png'
+
 
 const loading = () => <div className="animated fadeIn pt-3 text-center">Loading...</div>;
 

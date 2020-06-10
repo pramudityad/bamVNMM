@@ -40,6 +40,11 @@ export default {
          url: '/list-tssr-matix',
          icon: 'icon-drawer',
        },
+       {
+        name: 'Plant Spec List',
+        url: '/ps-list',
+        icon: 'icon-menu',
+      },
       ]
     }
   ],
