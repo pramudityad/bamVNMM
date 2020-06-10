@@ -15,7 +15,7 @@ import {
 import { connect } from "react-redux";
 import Select from "react-select";
 
-import Loading from '../components/Loading'
+import Loading from "../components/Loading";
 import {
   postDatatoAPINODE,
   getDatafromAPIEXEL,
@@ -113,14 +113,15 @@ class CreatePRPO extends Component {
     const newSSOW = this.state.SSOW_List_out.map((ssow_data, sidx) => {
       if (idx !== sidx) return ssow_data;
       // return {...ssow_data, ssow: e.target.value, service_code: e.target.value, ssow_qty:e.target.value}
-      return {...ssow_data, [name]: value, [name]: value, [name]: value}
+      return { ...ssow_data, [name]: value, [name]: value, [name]: value };
     });
 
-    this.setState({
-      SSOW_List_out: newSSOW
-    },
-    () => console.log(this.state.SSOW_List_out)
-    )
+    this.setState(
+      {
+        SSOW_List_out: newSSOW,
+      },
+      () => console.log(this.state.SSOW_List_out)
+    );
   };
 
   handleInputProject(e) {
@@ -233,11 +234,11 @@ class CreatePRPO extends Component {
     });
   }
 
-  deleteSSOW = idx => () =>{
+  deleteSSOW = (idx) => () => {
     this.setState({
-      SSOW_List_out : this.state.SSOW_List_out.filter((s, sidx) => idx !== sidx)
+      SSOW_List_out: this.state.SSOW_List_out.filter((s, sidx) => idx !== sidx),
     });
-  }
+  };
 
   render() {
     const { Dataform, SSOW_List_out } = this.state;
@@ -253,10 +254,12 @@ class CreatePRPO extends Component {
                 </span>
               </CardHeader>
               <CardBody>
-                <Row xs="2">
+                <Row>
                   {/* general info */}
                   <Col>
-                    <h5>General Information</h5>
+                    <h5>
+                      <b>General Information</b>
+                    </h5>
                     <Form>
                       <FormGroup row>
                         <Label sm={2}>PRT ID</Label>
@@ -367,9 +370,13 @@ class CreatePRPO extends Component {
                       </FormGroup>
                     </Form>
                   </Col>
-                  {/* prpo info */}
+                </Row>
+                {/* prpo info */}
+                <Row>
                   <Col>
-                    <h5>PRPO Information</h5>
+                    <h5>
+                      <b>PRPO Information</b>
+                    </h5>
                     <Form>
                       <FormGroup row>
                         <Label sm={2}>Purchase Group</Label>
@@ -485,17 +492,19 @@ class CreatePRPO extends Component {
                   </Col>
                 </Row>
                 {/* ssow */}
-                <h5>SSOW Detail</h5>
+                <h5>
+                  <b>SSOW Detail</b>
+                </h5>
                 <Button color="primary" size="sm" onClick={this.addSSOW}>
                   <i className="fa fa-plus">&nbsp;</i> SSOW
                 </Button>
                 {SSOW_List_out.map((ssow_data, idx) => (
-                  <Row xs="3">
-                    <Col md="6">
+                  <Row xs="4">
+                    <Col md="4">
                       SSOW
                       <Input
                         type="text"
-                        placeholder={`SSOW #${idx+1}`}
+                        placeholder={`SSOW #${idx + 1}`}
                         name={"ssow"}
                         value={ssow_data.ssow}
                         onChange={this.handleInputssow(idx)}
@@ -505,51 +514,65 @@ class CreatePRPO extends Component {
                       Service Code
                       <Input
                         type="text"
-                        placeholder={`Service Code #${idx+1}`}
+                        placeholder={`Service Code #${idx + 1}`}
                         name={"service_code"}
                         value={ssow_data.service_code}
                         onChange={this.handleInputssow(idx)}
                       />
                     </Col>
-                    <Col md="1">
+                    <Col md="2">
                       QTY
                       <Input
                         type="number"
-                        placeholder={`QTY #${idx+1}`}
+                        placeholder={`QTY #${idx + 1}`}
                         name={"ssow_qty"}
                         value={ssow_data.ssow_qty}
                         onChange={this.handleInputssow(idx)}
                       />
                     </Col>
-                    <div style={{display: "flex"}}>
-                    <Button
-                      onClick={this.deleteSSOW(idx)}
-                      color="danger"
-                      size="sm"
-                      style={{ marginLeft: "5px" }}
-                    >
-                      <i className="fa fa-trash"></i>
-                    </Button>
-                    </div>
-                    
+                    <Col>
+                      <div>
+                        <Button
+                          onClick={this.deleteSSOW(idx)}
+                          color="danger"
+                          size="sm"
+                          style={{
+                            marginLeft: "5px",
+                            marginTop: "5px",
+                            display: "inline-block",
+                          }}
+                        >
+                          <i className="fa fa-trash"></i>
+                        </Button>
+                      </div>
+                    </Col>
                   </Row>
                 ))}
-                <FormGroup row>
-                  <Label sm={2}>Total Price</Label>
-                  <Col sm={10}>
-                    <Input
-                      type="text"
-                      placeholder="Total Price"
-                      name={"total_price"}
-                      value={Dataform.total_price}
-                      onChange={this.handleInput}
-                    />
-                  </Col>
-                </FormGroup>
-                {/* pr status */}
-                <Row xs="2">
+                &nbsp;&nbsp;&nbsp;
+                <Row>
                   <Col>
-                    <h5>PR Status</h5>
+                    <Form>
+                      <FormGroup row>
+                        <Label sm={2}>Total Price</Label>
+                        <Col sm={6}>
+                          <Input
+                            type="text"
+                            placeholder="Total Price"
+                            name={"total_price"}
+                            value={Dataform.total_price}
+                            onChange={this.handleInput}
+                          />
+                        </Col>
+                      </FormGroup>
+                    </Form>
+                  </Col>
+                </Row>
+                {/* pr status */}
+                <Row>
+                  <Col>
+                    <h5>
+                      <b>PR Status</b>
+                    </h5>
                     <Form>
                       <FormGroup row>
                         <Label sm={2}>PR Number</Label>
@@ -637,9 +660,13 @@ class CreatePRPO extends Component {
                       </FormGroup>
                     </Form>
                   </Col>
-                  {/* prpo info */}
+                </Row>
+                {/* prpo info */}
+                <Row>
                   <Col>
-                    <h5>GR Information</h5>
+                    <h5>
+                      <b>GR Information</b>
+                    </h5>
                     <Form>
                       <FormGroup row>
                         <Label sm={2}>BAST No DP</Label>
