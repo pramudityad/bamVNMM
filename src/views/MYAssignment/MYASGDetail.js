@@ -14,7 +14,11 @@ const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
 const usernameBAM = 'adminbamidsuper';
 const passwordBAM = 'F760qbAg2sml';
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+// const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
+const API_URL_NODE = 'http://localhost:5012/bammyapi';
+
+const BearerToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYXNfaWQiOiI1MmVhNTZhMS0zNDMxLTRlMmQtYWExZS1hNTc3ODQzMTMxYzEiLCJyb2xlcyI6WyJCQU0tU3VwZXJBZG1pbiJdLCJhY2NvdW50IjoiMSIsImlhdCI6MTU5MTY5MTE4MH0.FpbzlssSQyaAbJOzNf3KLqHPnYo_ccBtBWu6n87h1RQ';
 
 class MYASGDetail extends Component {
   constructor(props) {
@@ -26,7 +30,8 @@ class MYASGDetail extends Component {
       userId: this.props.dataLogin._id,
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
-      tokenUser: this.props.dataLogin.token,
+      // tokenUser: this.props.dataLogin.token,
+      tokenUser : BearerToken,
       lmr_child_form : {},
       modal_loading : false,
       modalAddChild : false,
@@ -51,6 +56,7 @@ class MYASGDetail extends Component {
     this.toggleAddChild = this.toggleAddChild.bind(this);
     this.toggleCollapse = this.toggleCollapse.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
+    this.deleteChild = this.deleteChild.bind(this);
   }
 
   toggle(i) {
@@ -148,6 +154,25 @@ class MYASGDetail extends Component {
     }
   }
 
+  async deleteDatafromAPINODE(url) {
+    try {
+      let respond = await axios.delete(API_URL_NODE + url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.state.tokenUser
+        },
+      })
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond Post Data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond Post Data err", err);
+      return respond;
+    }
+  }
+
   fileHandlerMaterial = (input) => {
     const file = input.target.files[0];
     const reader = new FileReader();
@@ -183,6 +208,11 @@ class MYASGDetail extends Component {
           col.push(this.checkValue(dataXLS[i][j]));
         }
       }
+      if(i === 0){
+        col.push("id_lmr_doc");
+      }else{
+        col.push(this.props.match.params.id);
+      }
       newDataXLS.push(col);
     }
     this.setState({
@@ -190,14 +220,13 @@ class MYASGDetail extends Component {
     });
   }
 
-  getPODataList(_id) {
-    this.getDatafromAPINODE('/cpodb/getCpoDb/'+_id)
+  getLMRDetailData(_id) {
+    this.getDatafromAPINODE('/aspassignment/getAspAssignment/'+_id)
       .then(res => {
       // console.log('cpo db id', res.data.data.cpoDetail)
       if (res.data !== undefined) {
-        const dataCPO = res.data.data;
-        const dataCPOdet = res.data.data.cpoDetail;
-        this.setState({ data_cpo_db: dataCPOdet, data_cpo: dataCPO});
+        const dataLMRDetail = res.data.data;
+        this.setState({ lmr_detail: dataLMRDetail});
       }
     })
   }
@@ -257,26 +286,25 @@ class MYASGDetail extends Component {
     }
   }
 
-  updateCPODetailBulk = async () => {
+  addLMRChildBulk = async () => {
     this.toggleLoading();
-    const cpobulkXLS = this.state.rowsXLS;
+    const childbulkXLS = this.state.rowsXLS;
     const _id = this.props.match.params.id;
-    const res = await this.patchDatatoAPINODE('/cpodb/UpdateCpoDbDetail/'+_id, { 'data': cpobulkXLS })
-    if (res.data !== undefined) {
-      this.setState({ action_status: 'success', action_message : null });
-      this.toggleLoading();
-    } else {
-      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
-        if (res.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-        } else {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+    const respondSaveLMRChild = await this.postDatatoAPINODE('/aspassignment/createChild', { 'asp_data': childbulkXLS });
+    if(respondSaveLMRChild.data !== undefined && respondSaveLMRChild.status >= 200 && respondSaveLMRChild.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      if(respondSaveLMRChild.response !== undefined && respondSaveLMRChild.response.data !== undefined && respondSaveLMRChild.response.data.error !== undefined){
+        if(respondSaveLMRChild.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveLMRChild.response.data.error.message) });
+        }else{
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveLMRChild.response.data.error) });
         }
-      } else {
+      }else{
         this.setState({ action_status: 'failed' });
       }
-      this.toggleLoading();
     }
+    this.toggleLoading();
   }
 
   exportCPODetail = async () => {
@@ -340,24 +368,37 @@ class MYASGDetail extends Component {
     saveAs(new Blob([PPFormat]), 'CPO Level 2 Template.xlsx');
   }
 
-  addLMRChildForm(){
+  async addLMRChildForm(){
     const dataChildForm = this.state.lmr_child_form;
     const dataChild = {
-            "nw": dataChildForm.so_or_nw,
-            "activity": dataChildForm.activity,
-            "material": dataChildForm.material,
-            "description": dataChildForm.description,
-            "site_id": dataChildForm.site_id,
-            "qty": dataChildForm.quantity,
-            "unit_price": dataChildForm.price,
-            "tax_code": dataChildForm.tax_code,
-            "delivery_date": dataChildForm.delivery_date,
-            "total_price": dataChildForm.total_price,
-            "total_value": dataChildForm.total_value,
-            "currency": dataChildForm.currency,
-            "item": dataChildForm.item,
-        }
+        "nw": dataChildForm.so_or_nw,
+        "activity": dataChildForm.activity,
+        "material": dataChildForm.material,
+        "description": dataChildForm.description,
+        "site_id": dataChildForm.site_id,
+        "qty": dataChildForm.quantity,
+        "unit_price": dataChildForm.price,
+        "tax_code": dataChildForm.tax_code,
+        "delivery_date": dataChildForm.delivery_date,
+        "total_price": dataChildForm.total_price,
+        "total_value": dataChildForm.total_value,
+        "currency": dataChildForm.currency,
+    }
     console.log("dataChild", dataChild);
+    const respondSaveLMRChild = await this.postDatatoAPINODE('/aspassignment/createOneChild/'+this.props.match.params.id, {"asp_data" : dataChild });
+    if(respondSaveLMRChild.data !== undefined && respondSaveLMRChild.status >= 200 && respondSaveLMRChild.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      if(respondSaveLMRChild.response !== undefined && respondSaveLMRChild.response.data !== undefined && respondSaveLMRChild.response.data.error !== undefined){
+        if(respondSaveLMRChild.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveLMRChild.response.data.error.message) });
+        }else{
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveLMRChild.response.data.error) });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
   }
 
   downloadFormatNewChild= async () => {
@@ -366,7 +407,7 @@ class MYASGDetail extends Component {
 
     const dataCPO = this.state.cpo_all;
 
-    let headerRow = ["nw","activity","material","description","site_id","qty","unit_price","tax_code", "delivery_date", "total_price", "total_value", "currency", "item"];
+    let headerRow = ["nw","activity","material","description","site_id","qty","unit_price","tax_code", "delivery_date", "total_price", "total_value", "currency"];
     ws.addRow(headerRow);
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -375,9 +416,9 @@ class MYASGDetail extends Component {
 
   componentDidMount() {
     if (this.props.match.params.id === undefined) {
-      this.getPODataList();
+      this.getLMRDetailData();
     } else {
-      // this.getPODataList(this.props.match.params.id);
+      this.getLMRDetailData(this.props.match.params.id);
     }
     document.title = 'LMR Detail | BAM';
   }
@@ -391,6 +432,26 @@ class MYASGDetail extends Component {
     }
     lmr_child_form[name.toString()] = value;
     this.setState({ lmr_child_form: lmr_child_form });
+  }
+
+  async deleteChild(e){
+    this.toggleLoading();
+    const value = e.currentTarget.value;
+    const respondDelLMRChild = await this.deleteDatafromAPINODE('/aspassignment/deleteChild/'+value);
+    if(respondDelLMRChild.data !== undefined && respondDelLMRChild.status >= 200 && respondDelLMRChild.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      if(respondDelLMRChild.response !== undefined && respondDelLMRChild.response.data !== undefined && respondDelLMRChild.response.data.error !== undefined){
+        if(respondDelLMRChild.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondDelLMRChild.response.data.error.message) });
+        }else{
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondDelLMRChild.response.data.error) });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
   }
 
   render() {
@@ -438,7 +499,7 @@ class MYASGDetail extends Component {
                     </div>
                   </CardBody>
                   <CardFooter>
-                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.updateCPODetailBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;Add Child </Button>
+                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.addLMRChildBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;Add Child </Button>
                     <Button color="success" size="sm" style={{float : 'right'}} onClick={this.toggleAddChild}> <i className="fa fa-wpforms" aria-hidden="true"> </i> &nbsp;Form </Button>
                   </CardFooter>
                 </Card>
@@ -481,12 +542,12 @@ class MYASGDetail extends Component {
                           <tr style={{ fontWeight: '425', fontSize: '15px' }}>
                             <td style={{ width: '150px' }}>Payment Terms </td>
                             <td>:</td>
-                            <td>{this.state.lmr_detail.payment_terms}</td>
+                            <td>{this.state.lmr_detail.payment_term}</td>
                           </tr>
                           <tr style={{ fontWeight: '425', fontSize: '15px' }}>
-                            <td>Currency</td>
+                            <td>GL Account</td>
                             <td>:</td>
-                            <td>{this.state.lmr_detail.currency}</td>
+                            <td>{this.state.lmr_detail.gl_account}</td>
                           </tr>
                           <tr style={{ fontWeight: '425', fontSize: '15px' }}>
                             <td>Vendor</td>
@@ -520,9 +581,10 @@ class MYASGDetail extends Component {
                         <th>Total price</th>
                         <th>Total Value</th>
                         <th>Currency</th>
-                        <th>PR</th>
+                        <th></th>
+                        {/* }<th>PR</th>
                         <th>PO</th>
-                        <th>Item</th>
+                        <th>PO Item</th> */}
                       </tr>
                     </thead>
                     <tbody>
@@ -541,9 +603,12 @@ class MYASGDetail extends Component {
                           <td>{e.total_price}</td>
                           <td>{e.total_value}</td>
                           <td>{e.currency}</td>
-                          <td>{e.pr}</td>
+                          <td>
+                            <Button color="danger" size="sm" value={e._id} onClick={this.deleteChild}><i className="fa fa-eraser"></i></Button>
+                          </td>
+                          {/*}<td>{e.pr}</td>
                           <td>{e.po}</td>
-                          <td>{e.item}</td>
+                          <td>{e.item}</td>*/}
                         </tr>
                       ) : (<Fragment></Fragment>)}
                     </tbody>
@@ -647,12 +712,12 @@ class MYASGDetail extends Component {
                       <Input type="number" name="quantity" id="quantity" value={this.state.lmr_child_form.quantity} onChange={this.handleChangeFormLMRChild}/>
                     </FormGroup>
                   </Col>
-                  <Col md={6}>
+                  {/*}<Col md={6}>
                     <FormGroup>
                       <Label>Unit</Label>
                       <Input type="text" name="item" id="item" value={this.state.lmr_child_form.item} onChange={this.handleChangeFormLMRChild}/>
                     </FormGroup>
-                  </Col>
+                  </Col> */}
                 </Row>
                 <Row form>
                   <Col md={6}>
@@ -674,7 +739,7 @@ class MYASGDetail extends Component {
                   <Col md={6}>
                     <FormGroup>
                       <Label>Delivery Date</Label>
-                      <Input type="text" name="delivery_date" id="delivery_date" value={this.state.lmr_child_form.delivery_date} onChange={this.handleChangeFormLMRChild}/>
+                      <Input type="date" name="delivery_date" id="delivery_date" value={this.state.lmr_child_form.delivery_date} onChange={this.handleChangeFormLMRChild}/>
                     </FormGroup>
                   </Col>
                 </Row>

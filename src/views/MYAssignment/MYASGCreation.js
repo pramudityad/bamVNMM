@@ -14,7 +14,11 @@ const API_URL_MAS = 'https://api-dev.mas.pdb.e-dpm.com/masapi';
 const usernameMAS = 'mybotprpo';
 const passwordMAS = 'mybotprpo2020';
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+// const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
+const API_URL_NODE = 'http://localhost:5012/bammyapi';
+
+const BearerToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYXNfaWQiOiI1MmVhNTZhMS0zNDMxLTRlMmQtYWExZS1hNTc3ODQzMTMxYzEiLCJyb2xlcyI6WyJCQU0tU3VwZXJBZG1pbiJdLCJhY2NvdW50IjoiMSIsImlhdCI6MTU5MTY5MTE4MH0.FpbzlssSQyaAbJOzNf3KLqHPnYo_ccBtBWu6n87h1RQ';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
@@ -33,7 +37,7 @@ const projectList = [
 
 const vendorList = [
         {
-            "_id": "5eb26d332833d19d90055472",
+            "_id": "5edf4b3836c2b6fd90858d26",
             "Name": "Bharti",
             "Vendor_Code": "12",
             "Email": "",
@@ -61,7 +65,8 @@ class MYASGCreation extends Component {
       userId : this.props.dataLogin._id,
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
-      tokenUser : this.props.dataLogin.token,
+      // tokenUser: this.props.dataLogin.token,
+      tokenUser : BearerToken,
       lmr_form : {},
       modal_loading : false,
       list_project : [],
@@ -462,7 +467,7 @@ class MYASGCreation extends Component {
     this.setState({ lmr_form: lmr_form });
   }
 
-  createLMR(){
+  async createLMR(){
     const dataForm = this.state.lmr_form;
     const dataLMR = {
       "lmr_issued_by": this.state.lmr_form.lmr_issued_by,
@@ -480,6 +485,20 @@ class MYASGCreation extends Component {
       "l3_approver": this.state.lmr_form.l3_approver
     }
     console.log("dataLMR", dataLMR);
+    const respondSaveLMR = await this.postDatatoAPINODE('/aspassignment/createOneHeader', {"asp_data" : dataLMR });
+    if(respondSaveLMR.data !== undefined && respondSaveLMR.status >= 200 && respondSaveLMR.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      if(respondSaveLMR.response !== undefined && respondSaveLMR.response.data !== undefined && respondSaveLMR.response.data.error !== undefined){
+        if(respondSaveLMR.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: respondSaveLMR.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: respondSaveLMR.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
   }
 
   render() {
@@ -525,12 +544,7 @@ class MYASGCreation extends Component {
                 <Col md={6}>
                   <FormGroup>
                     <Label>Project Name</Label>
-                    <Input type="select" name="project_name" id="project_name" value={this.state.lmr_form.id_project_doc} onChange={this.handleChangeProject} >
-                      <option value={null}></option>
-                      {this.state.list_project.map(e =>
-                        <option value={e._id}>{e.project_name}</option>
-                      )}
-                    </Input>
+                    <Input type="text" name="project_name" id="project_name" value={this.state.lmr_form.project_name} onChange={this.handleChangeFormLMR} />
                   </FormGroup>
                 </Col>
               </Row>

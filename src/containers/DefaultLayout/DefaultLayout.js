@@ -23,7 +23,7 @@ import navigation from '../../_nav';
 import navigationIndosat from '../../_navIndosat';
 import navigationTelkom from '../../_navTelkom';
 // routes config
-import routesXL from '../../routesXL';
+import routes from '../../routes';
 import routesIndosat from '../../routesIndosat';
 import routesTelkom from '../../routesTelkom';
 
@@ -40,7 +40,8 @@ class DefaultLayout extends Component {
     super(props);
     this.state = {
       navMenu : this.props.dataLogin.account_id === "3" ? navigationIndosat : this.props.dataLogin.account_id === "1" ? navigationTelkom : navigation,
-      routes : this.props.dataLogin.account_id === "3" ? routesIndosat : this.props.dataLogin.account_id === "1" ? routesTelkom : routesXL,
+      routes : this.props.dataLogin.account_id === "3" ? routesIndosat : this.props.dataLogin.account_id === "1" ? routesTelkom : routes,
+      userRole : this.props.dataLogin.role,
       minimize : this.props.SidebarMinimize,
     }
   }
@@ -80,7 +81,35 @@ class DefaultLayout extends Component {
   }
 
   showMenuByRole(){
-    console.log("showMenuByRole", navigation);
+    // console.log("showMenuByRole", this.state.navMenu);
+    let rolesUser = this.props.dataLogin.role;
+    let dataMenu = this.state.navMenu.items;
+    let dataMenuRoles = [];
+    if(dataMenu !== undefined && dataMenu.length !== 0 && rolesUser.indexOf("Admin") === -1){
+      for(let i = 0; i < dataMenu.length; i++){
+        let dataMenuIndex = Object.assign({}, dataMenu[i])
+        if(dataMenu[i].roles !== undefined){
+          let allowed = dataMenu[i].roles.some(e => rolesUser.includes(e));
+          if(allowed === false){
+            // dataMenuIndex.splice(i,1);
+          }else{
+            dataMenuRoles.push(dataMenuIndex);
+            if(dataMenu[i].children !== undefined && dataMenu[i].children.length > 0){
+              for(let j = 0; j < dataMenu[i].children.length; j++){
+                if(dataMenu[i].children[j].roles !== undefined){
+                  let allowedChild = dataMenu[i].children[j].roles.some(e => rolesUser.includes(e));
+                  if(allowedChild === false){
+                    // dataMenuIndex.children.splice(j,1);
+                    dataMenuIndex.children = dataMenuIndex.children.filter(e => e.name !== dataMenu[i].children[j].name);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      this.setState({navMenu : {items : dataMenuRoles}});
+    }
   }
 
   componentDidUpdate(){

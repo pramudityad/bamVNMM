@@ -14,7 +14,11 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+// const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
+const API_URL_NODE = 'http://localhost:5012/bammyapi';
+
+const BearerToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYXNfaWQiOiI1MmVhNTZhMS0zNDMxLTRlMmQtYWExZS1hNTc3ODQzMTMxYzEiLCJyb2xlcyI6WyJCQU0tU3VwZXJBZG1pbiJdLCJhY2NvdW50IjoiMSIsImlhdCI6MTU5MTY5MTE4MH0.FpbzlssSQyaAbJOzNf3KLqHPnYo_ccBtBWu6n87h1RQ';
 
 class MYASGList extends Component {
   constructor(props) {
@@ -25,7 +29,8 @@ class MYASGList extends Component {
       userId: this.props.dataLogin._id,
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
-      tokenUser: this.props.dataLogin.token,
+      // tokenUser: this.props.dataLogin.token,
+      tokenUser : BearerToken,
       lmr_list: [],
       prevPage: 0,
       activePage: 1,
@@ -79,7 +84,7 @@ class MYASGList extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
+    this.getDataFromAPINODE('/aspassignment/getAspAssignment?srt=_id:-1&lmt=' + maxPage + '&pg=' + page).then(res => {
       console.log("MR List Sorted", res);
       if (res.data !== undefined) {
         const items = res.data.data;
@@ -226,15 +231,6 @@ class MYASGList extends Component {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>
-                        <Link to={'/lmr-detail'}><Button color="info" size="sm"><i className="fa fa-info-circle" style={{ marginRight: "8px" }}></i>Detail</Button></Link>
-                      </td>
-                      <td>LMR ID</td>
-                      <td>GL Account</td>
-                      <td>Project Name</td>
-                      <td>Vendor Name</td>
-                    </tr>
                     {this.state.lmr_list.map(e =>
                       <tr>
                         <td>
