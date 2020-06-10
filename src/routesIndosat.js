@@ -8,6 +8,9 @@ const LMRList = React.lazy(() => import('./views/MYAssignment/MYASGList'));
 
 const ProductPackage = React.lazy(() => import('./viewsIndosat/ProductPackage/PackageUpload'));
 
+const ListTechnical = React.lazy(() => import('./viewsIndosat/Technical/ListTechnical'));
+const DetailTechnical = React.lazy(() => import('./viewsIndosat/Technical/TechnicalBoq'));
+
 const ListCommercial = React.lazy(() => import('./viewsIndosat/Commercial/ListCommercial'));
 const DetailCommercial = React.lazy(() => import('./viewsIndosat/Commercial/CommercialBoq'));
 const ApprovalCommercial = React.lazy(() => import('./viewsIndosat/Commercial/CommercialBoqApproval'));
@@ -33,6 +36,10 @@ const routes = [
   { path: '/lmr-detail', exact: true, name: 'Assignment LMR Detail', component: LMRDetail },
 
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
+
+  { path: '/list-technical', exact: true, name: 'List Technical BOQ', component: ListTechnical },
+  { path: '/detail-technical/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+  { path: '/new-technical', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
 
   { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
   { path: '/commercial-creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
