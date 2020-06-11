@@ -14,12 +14,13 @@ import {
 } from "reactstrap";
 import { connect } from "react-redux";
 import Select from "react-select";
-
-import Loading from "../components/Loading";
 import {
   postDatatoAPINODE,
   getDatafromAPIEXEL,
 } from "../../helper/asyncFunction";
+const DefaultNotif = React.lazy(() =>
+  import("../../views/DefaultView/DefaultNotif")
+);
 
 class CreatePRPO extends Component {
   constructor(props) {
@@ -244,6 +245,10 @@ class CreatePRPO extends Component {
     const { Dataform, SSOW_List_out } = this.state;
     return (
       <div className="animated fadeIn">
+        <DefaultNotif
+          actionMessage={this.state.action_message}
+          actionStatus={this.state.action_status}
+        />
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -556,7 +561,7 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Total Price</Label>
                         <Col sm={6}>
                           <Input
-                            type="text"
+                            type="number"
                             placeholder="Total Price"
                             name={"total_price"}
                             value={Dataform.total_price}

@@ -95,8 +95,16 @@ class EditPRPO extends Component {
     this.handleInputProject = this.handleInputProject.bind(this);
     this.updatePRT = this.updatePRT.bind(this);
     this.addSSOW = this.addSSOW.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+
   }
   // function
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
+  }
+
   componentDidMount() {
     document.title = "PRT Edit | BAM";
     this.getDataProject();
@@ -104,14 +112,16 @@ class EditPRPO extends Component {
   }
 
   getPRTDetail(_id) {
+    this.toggleLoading();
     getDatafromAPINODE("/prt/getPrt/" + _id, this.props.dataLogin.token).then(
       (res) => {
         if (res.data !== undefined) {
           this.setState({ all_data: res.data.data, Dataform: res.data.data , SSOW_List_out: res.data.data.SSOW_List});
-          console.log("SSOW_List_out ", this.state.SSOW_List_out);
+          // console.log("SSOW_List_out ", this.state.SSOW_List_out);
         }
       }
     );
+    this.toggleLoading();
   }
 
   handleInput(e) {
@@ -187,6 +197,7 @@ class EditPRPO extends Component {
   };
 
   async updatePRT() {
+    this.toggleLoading();
     let data = {
       prt_id: this.state.Dataform.prt_id,
       site_id: this.state.Dataform.site_id,
@@ -238,11 +249,13 @@ class EditPRPO extends Component {
     ).then((res) => {
       console.log(" res patch single ", res);
       if (res.data !== undefined) {
-        this.setState({ action_status: "success" }, () => {});
+        this.setState({ action_status: "success" });
+        this.toggleLoading();
       } else {
         this.setState({
           action_status: "failed",
         });
+        this.toggleLoading();
       }
     });
   }
@@ -265,6 +278,10 @@ class EditPRPO extends Component {
 	const { all_data, SSOW_List_out} = this.state;	
     return (
       <div className="animated fadeIn">
+        <DefaultNotif
+          actionMessage={this.state.action_message}
+          actionStatus={this.state.action_status}
+        />
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -528,7 +545,8 @@ class EditPRPO extends Component {
                     <Row xs="4">
                       <Col md="4">
                         SSOW
-                        <Input						
+                        <Input	
+                        key={ssow_data._id}					
                           type="text"
                           placeholder={`SSOW #${idx + 1}`}
                           name={"ssow"}
@@ -539,6 +557,7 @@ class EditPRPO extends Component {
                       <Col md="4">
                         Service Code
                         <Input
+                        key={ssow_data._id}
                           type="text"
                           placeholder={`Service Code #${idx + 1}`}
                           name={"service_code"}
@@ -549,6 +568,7 @@ class EditPRPO extends Component {
                       <Col md="2">
                         QTY
                         <Input
+                        key={ssow_data._id}
                           type="number"
                           placeholder={`QTY #${idx + 1}`}
                           name={"ssow_qty"}
@@ -582,10 +602,10 @@ class EditPRPO extends Component {
                         <Label sm={2}>Total Price</Label>
                         <Col sm={6}>
                           <Input
-                            type="text"
+                            type="number"
                             placeholder="Total Price"
                             name={"total_price"}
-                            value={all_data.total_price}
+                            defaultValue={all_data.total_price}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -864,6 +884,13 @@ class EditPRPO extends Component {
             </Card>
           </Col>
         </Row>
+
+        {/* Modal Loading */}
+        <Loading isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm modal--loading "}>
+        </Loading>
+        {/* end Modal Loading */}
       </div>
     );
   }

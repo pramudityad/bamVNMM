@@ -135,7 +135,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="PRT ID"
+                            //placeholder="PRT ID"
                             name={"prt_id"}
                             value={all_data.prt_id}
                             onChange={this.handleInput}
@@ -148,7 +148,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Site ID"
+                            //placeholder="Site ID"
                             name={"site_id"}
                             value={all_data.site_id}
                             onChange={this.handleInput}
@@ -161,7 +161,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Site Name"
+                            //placeholder="Site Name"
                             name={"site_name"}
                             value={all_data.site_name}
                             onChange={this.handleInput}
@@ -174,7 +174,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Quotation Number"
+                            //placeholder="Quotation Number"
                             name={"quotation_number"}
                             value={all_data.quotation_number}
                             onChange={this.handleInput}
@@ -187,7 +187,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Signum PM"
+                            //placeholder="Signum PM"
                             name={"signum_pm"}
                             value={all_data.signum_pm}
                             onChange={this.handleInput}
@@ -200,7 +200,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Select Approval by"
+                            //placeholder="Select Approval by"
                             name={"approval_by"}
                             value={all_data.approval_by}
                           />
@@ -223,7 +223,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Area"
+                            //placeholder="Area"
                             name={"area"}
                             value={all_data.area}
                             onChange={this.handleInput}
@@ -244,7 +244,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Purchase Group"
+                            //placeholder="Purchase Group"
                             name={"purchase_group"}
                             value={all_data.purchase_group}
                             onChange={this.handleInput}
@@ -257,7 +257,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="ASP Name"
+                            //placeholder="ASP Name"
                             name={"asp_name"}
                             value={all_data.asp_name}
                             onChange={this.handleInput}
@@ -270,7 +270,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder=""
+                            //placeholder=""
                             name={"term_of_payment"}
                             value={all_data.term_of_payment}
                             onChange={this.handleInput}
@@ -283,7 +283,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Network Number"
+                            //placeholder="Network Number"
                             name={"network_number"}
                             value={all_data.network_number}
                             onChange={this.handleInput}
@@ -296,7 +296,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Activity Code"
+                            //placeholder="Activity Code"
                             name={"activity_code"}
                             value={all_data.activity_code}
                             onChange={this.handleInput}
@@ -309,7 +309,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Action Point"
+                            //placeholder="Action Point"
                             name={"action_point"}
                             value={all_data.action_point}
                             onChange={this.handleInput}
@@ -322,7 +322,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Currency"
+                            //placeholder="Currency"
                             name={"currency"}
                             value={all_data.currency}
                             onChange={this.handleInput}
@@ -369,7 +369,7 @@ class DetailPRPO extends Component {
                     <Input
                     readOnly
                       type="text"
-                      placeholder="Total Price"
+                      //placeholder="Total Price"
                       name={"total_price"}
                       value={all_data.total_price}
                       onChange={this.handleInput}
@@ -387,7 +387,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="PR Number"
+                            //placeholder="PR Number"
                             name={"pr_number"}
                             value={all_data.pr_number}
                             onChange={this.handleInput}
@@ -400,7 +400,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="date"
-                            placeholder="PR Date"
+                            //placeholder="PR Date"
                             name={"pr_date"}
                             value={all_data.pr_date}
                             onChange={this.handleInput}
@@ -413,7 +413,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="PR Inserted By"
+                            //placeholder="PR Inserted By"
                             name={"pr_inserted_by"}
                             value={all_data.pr_inserted_by}
                             onChange={this.handleInput}
@@ -426,7 +426,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="PO Number"
+                            //placeholder="PO Number"
                             name={"po_number"}
                             value={all_data.po_number}
                             onChange={this.handleInput}
@@ -439,7 +439,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="date"
-                            placeholder="PO Date"
+                            //placeholder="PO Date"
                             name={"po_date"}
                             value={all_data.po_date}
                             onChange={this.handleInput}
@@ -452,7 +452,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="PO Inserted By"
+                            //placeholder="PO Inserted By"
                             name={"po_inserted_by"}
                             value={all_data.po_inserted_by}
                             onChange={this.handleInput}
@@ -465,7 +465,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="PO Item"
+                            //placeholder="PO Item"
                             name={"po_item"}
                             value={all_data.po_item}
                             onChange={this.handleInput}
@@ -486,7 +486,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="BAST No DP"
+                            //placeholder="BAST No DP"
                             name={"bast_no_dp"}
                             value={all_data.bast_no_dp}
                             onChange={this.handleInput}
@@ -499,7 +499,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="checkbox"
-                            placeholder="Req GR DP"
+                            //placeholder="Req GR DP"
                             name={"req_gr_dp"}
                             value={all_data.req_gr_dp}
                             onChange={this.handleInput}
@@ -512,7 +512,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Req GR by DP"
+                            //placeholder="Req GR by DP"
                             name={"req_gr_by_dp"}
                             value={all_data.req_gr_by_dp}
                             onChange={this.handleInput}
@@ -525,7 +525,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="date"
-                            placeholder="Req GR Date DP"
+                            //placeholder="Req GR Date DP"
                             name={"req_gr_date_dp"}
                             value={all_data.req_gr_date_dp}
                             onChange={this.handleInput}
@@ -538,7 +538,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="checkbox"
-                            placeholder="Req Revision DP"
+                            //placeholder="Req Revision DP"
                             name={"req_revision_dp"}
                             value={all_data.req_revision_dp}
                             onChange={this.handleInput}
@@ -551,7 +551,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="checkbox"
-                            placeholder="Revision Done DP"
+                            //placeholder="Revision Done DP"
                             name={"revision_done_dp"}
                             value={all_data.revision_done_dp}
                             onChange={this.handleInput}
@@ -564,7 +564,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="BAST No Final"
+                            //placeholder="BAST No Final"
                             name={"bast_no_final"}
                             value={all_data.bast_no_final}
                             onChange={this.handleInput}
@@ -585,7 +585,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="checkbox"
-                            placeholder="Req GR Final"
+                            //placeholder="Req GR Final"
                             name={"req_gr_final"}
                             value={all_data.req_gr_final}
                             onChange={this.handleInput}
@@ -598,7 +598,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Req GR by Final"
+                            //placeholder="Req GR by Final"
                             name={"req_gr_by_final"}
                             value={all_data.req_gr_by_final}
                             onChange={this.handleInput}
@@ -611,7 +611,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="date"
-                            placeholder=""
+                            //placeholder=""
                             name={"req_gr_date_final"}
                             value={all_data.req_gr_date_final}
                             onChange={this.handleInput}
@@ -624,7 +624,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="checkbox"
-                            placeholder="Req Revision Final"
+                            //placeholder="Req Revision Final"
                             name={"req_revision_final"}
                             value={all_data.req_revision_final}
                             onChange={this.handleInput}
@@ -637,7 +637,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="checkbox"
-                            placeholder="Area"
+                            //placeholder="Area"
                             name={"revision_done_final"}
                             value={all_data.revision_done_final}
                             onChange={this.handleInput}
