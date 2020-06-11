@@ -65,12 +65,14 @@ class ConfigUpload extends React.Component {
       modalPPFedit: false,
       config_checked: new Map(),
       config_selected: [],
-      config_checked_all: false
+      config_checked_all: false,
+      config_checked_page: false,
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
     this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
+    this.handleChangeChecklistPage = this.handleChangeChecklistPage.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.changeFilterName = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
@@ -547,9 +549,29 @@ class ConfigUpload extends React.Component {
     this.setState(prevState => ({ config_checked_all: !prevState.config_checked_all }))
   }
 
+  handleChangeChecklistPage(e) {
+    const isChecked = e.target.checked;
+    let configSelected = this.state.config_selected;
+    const dataConfig = this.state.config_package;
+    if (isChecked) {
+      for (let x = 0; x < dataConfig.length; x++) {
+        configSelected.push(dataConfig[x]);
+        this.setState(prevState => ({ config_checked: prevState.config_checked.set(dataConfig[x]._id, isChecked) }));
+      }
+      this.setState({ config_selected: configSelected });
+    } else {
+      for (let x = 0; x < dataConfig.length; x++) {
+        this.setState(prevState => ({ config_checked: prevState.config_checked.set(dataConfig[x]._id, isChecked) }));
+      }
+      configSelected.length = 0;
+      this.setState({ config_selected: configSelected });
+    }
+    this.setState(prevState => ({ config_checked_page: !prevState.config_checked_page }))
+  }
+
   handlePageChange(pageNumber) {
-    console.log(`active page ${pageNumber}`)
-    this.setState({ activePage: pageNumber }, () => {
+    // console.log(`active page ${pageNumber}`)
+    this.setState({ activePage: pageNumber, config_checked_page: false }, () => {
       this.getConfigDataAPI();
     });
   }
@@ -723,12 +745,9 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataPP = this.state.conf_all;
-    console.log('data conf all', dataPP);
-    // console.log('data conf map', this.state.conf_all.map(e => e.sap_number));
-
-
-    let headerRow = ["SAP Number", "Config ID", "Account ID", "ID Project Doc", "Project Name", "Total Price", "ID PP Doc", "Qty", "Qty Commercial", "Currency", "Price", "Description", "PP ID", "PP Group"]
+    const dataPP = this.state.config_package;
+ 
+    let headerRow = ['config_id',	'config_name',	'sap_number',	'program',	'config_type',	'pp_id',	'product_name',	'product_type',	'physical_group',	'uom',	'physical_group']
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -736,14 +755,12 @@ class ConfigUpload extends React.Component {
     }
 
     for (let i = 0; i < dataPP.length; i++) {
-      // console.log('data conf sap num', dataPP[0].sap_number)
-      ws.addRow([dataPP[i].sap_number, dataPP[i].config_id, dataPP[i].account_id, dataPP[i].id_project_doc, dataPP[i].project_name, dataPP[i].total_price])
+      ws.addRow([dataPP[i].config_id, dataPP[i].config_name, dataPP[i].sap_number, dataPP[i].program, dataPP[i].config_type])
       // let getlastrow = ws.lastRow._number;
       // ws.mergeCells('B' + getlastrow + ':D' + getlastrow);
       for (let j = 0; j < dataPP[i].package_list.length; j++) {
-        let package_listIndex = dataPP[i].package_list[j];
-        // console.log('data conf qty', package_listIndex.qty)
-        ws.addRow(["", "", "", "", "", "", package_listIndex.id_pp_doc, package_listIndex.qty, package_listIndex.qty_commercial, package_listIndex.currency, package_listIndex.price, package_listIndex.description, package_listIndex.pp_id, package_listIndex.pp_group])
+        let matIndex = dataPP[i].package_list[j].id_pp_doc;
+        ws.addRow(["", "", "", "","", matIndex.pp_id, matIndex.product_name, matIndex.product_type, matIndex.physical_group, matIndex.uom, matIndex.physical_group])
       }
     }
 
@@ -825,6 +842,7 @@ class ConfigUpload extends React.Component {
                         <DropdownItem onClick={this.exportTechnicalFormat}>> Technical BOQ Horizontal Template</DropdownItem>
                         <DropdownItem onClick={this.exportTechnicalVerticalFormat}>> Technical BOQ Vertical Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfigParent}>> Config Update Template Parent</DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>> Download Config All</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -890,6 +908,9 @@ class ConfigUpload extends React.Component {
                     <div style={{ marginBottom: '10px' }}>
                       <span style={{ fontSize: '20px', fontWeight: '500' }}>Config List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
+                      <span style={{marginRight: '10px'}}>
+                        <Checkbox name={"all"} checked={this.state.config_checked_all} onChange={this.handleChangeChecklistAll} />Select All
+                      </span>  
                         {/* <span style={{ marginRight: '10px' }}>
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
                           Select All
@@ -906,7 +927,7 @@ class ConfigUpload extends React.Component {
                         <thead style={{ backgroundColor: '#73818f' }} className='fixed-conf'>
                           <tr align="center">
                             <th>
-                              <Checkbox name={"all"} checked={this.state.config_checked_all} onChange={this.handleChangeChecklistAll} />
+                              <Checkbox name={"all"} checked={this.state.config_checked_page} onChange={this.handleChangeChecklistPage} />
                             </th>
                             <th style={{ minWidth: '150px' }}>Config</th>
                             <th>Config Name</th>
