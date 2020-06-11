@@ -559,6 +559,11 @@ class MYASGDetail extends Component {
                             <td>:</td>
                             <td>{this.state.lmr_detail.project_name}</td>
                           </tr>
+                          <tr style={{ fontWeight: '425', fontSize: '15px' }}>
+                            <td>L1 Approval</td>
+                            <td>:</td>
+                            <td>{this.state.lmr_detail.l1_approver}</td>
+                          </tr>
                         </tbody>
                       </table>
                     </Col>

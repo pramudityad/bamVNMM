@@ -46,9 +46,9 @@ const vendorList = [
             "_etag": "9e63333bd40166971ed8a4e1fd47f9996876edc9"
         },
         {
-            "_id": "5eb4f93dfc8e7e571f16d44a",
-            "Name": "VODA",
-            "Vendor_Code": "VIL",
+            "_id": "5ee084b7bb1141f864a300da",
+            "Name": "Vendor Test 1",
+            "Vendor_Code": "VendorTest1",
             "Email": "",
             "created_on": "2020-05-08 06:16:29",
             "updated_on": "2020-05-08 06:16:29",

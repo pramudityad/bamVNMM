@@ -241,7 +241,12 @@ class ConfigUpload extends React.Component {
   }
 
   getConfigDataAPI_all() {
-    this.getDatatoAPINode('/packageconfig?noPg=1')
+    let filter = '{"$regex" : "", "$options" : "i"}';
+    if (this.state.filter_name !== "") {
+      filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    }
+    let whereOr = '{"$or" : [{"config_id": ' + filter + '}, {"config_name": ' + filter + '}, {"program": ' + filter + '}, {"config_type": ' + filter + '}]}';
+    this.getDatatoAPINode('/packageconfig?noPg=1&q='+whereOr)
       .then(res => {
         if (res.data !== undefined) {
           this.setState({ config_package_all: res.data.data });

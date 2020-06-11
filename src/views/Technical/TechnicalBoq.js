@@ -551,7 +551,33 @@ class TechnicalBoq extends Component {
     if(patchTech.data !== undefined){
       this.setState({action_status : 'success'});
     }else{
-      this.setState({action_status : 'failed'});
+      if(patchTech.response !== undefined){
+        if(patchTech.response.data !== undefined){
+          if(patchTech.response.data.error !== undefined){
+            if(patchTech.response.data.error.message !== undefined){
+              this.setState({ action_status: 'failed', action_message: patchTech.response.data.error.message }, () => {
+
+              });
+            }else{
+              this.setState({ action_status: 'failed', action_message: patchTech.response.data.error }, () => {
+
+              });
+            }
+          }else{
+            this.setState({ action_status: 'failed'}, () => {
+
+            });
+          }
+        }else{
+          this.setState({ action_status: 'failed' }, () => {
+
+          });
+        }
+      }else{
+        this.setState({ action_status: 'failed' }, () => {
+            
+        });
+      }
     }
     this.toggleLoading();
   }
@@ -911,7 +937,30 @@ class TechnicalBoq extends Component {
         setTimeout(function(){ this.setState({ redirectSign : postTech.data.techBoq._id}); }.bind(this), 3000);
       });
     }else{
-      this.setState({action_status : 'failed'});
+      if (postTech.response !== undefined) {
+        if (postTech.response.data !== undefined) {
+          if (postTech.response.data.error !== undefined) {
+            if (postTech.response.data.error.message !== undefined) {
+              this.setState({ action_status: 'failed', action_message: JSON.stringify(postTech.response.data.error.message) }, () => {
+
+              });
+            } else {
+              this.setState({ action_status: 'failed', action_message: JSON.stringify(postTech.response.data.error) }, () => {
+
+              });
+            }
+          } else {
+            this.setState({ action_status: 'failed' }, () => {
+            });
+          }
+        } else {
+          this.setState({ action_status: 'failed' }, () => {
+          });
+        }
+      } else {
+        this.setState({ action_status: 'failed' }, () => {
+        });
+      }
     }
     this.toggleLoading();
   }
