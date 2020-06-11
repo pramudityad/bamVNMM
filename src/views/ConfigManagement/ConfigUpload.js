@@ -26,7 +26,7 @@ const passwordBAM = 'F760qbAg2sml';
 
 const Config_group_type_DEFAULT = ["HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "SERVICE", "SERVICE", "SERVICE", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME"]
 
-const Config_group_DEFAULT = ["Config Cabinet", "Config Add L9", "Config Add L10", "Config Add L18", "Config Add L21", "Config BB 5212 (Reuse)", "Config UPG BW 1800", "Swapped Module/BB", "Config UPG BW 2100", "Config Radio B0 MIMO 2T2R", "Config Kit Radio B1 MIMO 2T2R", "Config Radio B1 MIMO 2T2R", "Config Kit Radio B3 MIMO 2T2R", "Config Radio B3 MIMO 2T2R", "Config Radio B1 MIMO 4T4R", "Config Radio B3 MIMO 4T4R", "Config Radio B1 + B3 DUAL BAND 2T2R" ,"Config Radio B1 + B3 DUAL BAND 4T4R", "Config Multi Sector", "Config Antenna", "Config Service 2", "Config Service 3", "Config Service 4", "Material 1 Power", "Material 2 Power", "Material 3 Power", "Material 4 Power", "Material 5 Power", "Service 1 Power", "Service 2 Power", "Service 3 Power", "Material 1 CME", "Material 2 CME", "Material 3 CME", "Material 4 CME", "Material 5 CME", "Service 1 CME", "Service 2 CME", "Service 3 CME"];
+const Config_group_DEFAULT = ["Config Cabinet", "Config Add L9", "Config Add L10", "Config Add L18", "Config Add L21", "Config BB 5212 (Reuse)", "Config UPG BW 1800", "Swapped Module/BB", "Config UPG BW 2100", "Config Radio B0 MIMO 2T2R", "Config Kit Radio B1 MIMO 2T2R", "Config Radio B1 MIMO 2T2R", "Config Kit Radio B3 MIMO 2T2R", "Config Radio B3 MIMO 2T2R", "Config Radio B1 MIMO 4T4R", "Config Radio B3 MIMO 4T4R", "Config Radio B1 + B3 DUAL BAND 2T2R", "Config Radio B1 + B3 DUAL BAND 4T4R", "Config Multi Sector", "Config Antenna", "Config Service 2", "Config Service 3", "Config Service 4", "Material 1 Power", "Material 2 Power", "Material 3 Power", "Material 4 Power", "Material 5 Power", "Service 1 Power", "Service 2 Power", "Service 3 Power", "Material 1 CME", "Material 2 CME", "Material 3 CME", "Material 4 CME", "Material 5 CME", "Service 1 CME", "Service 2 CME", "Service 3 CME"];
 
 class ConfigUpload extends React.Component {
 
@@ -48,6 +48,7 @@ class ConfigUpload extends React.Component {
       action_message: null,
       product_package: [],
       config_package: [],
+      config_package_all: [],
       check_config_package: [],
       check_config_update: null,
       dataConfig: [],
@@ -59,15 +60,17 @@ class ConfigUpload extends React.Component {
       PPForm: new Array(9).fill(null),
       collapse: false,
       collapseUpdate: false,
-      updateConfigType : true,
+      updateConfigType: true,
       loadprojectdata: [],
       modalPPFedit: false,
       config_checked: new Map(),
       config_selected: [],
+      config_checked_all: false
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
+    this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.changeFilterName = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
@@ -94,24 +97,24 @@ class ConfigUpload extends React.Component {
   }
 
   toggleAddNew() {
-    if(this.state.collapseUpdate === true){
+    if (this.state.collapseUpdate === true) {
       this.toggleUpdateBulk();
     }
     this.setState({ collapse: !this.state.collapse });
   }
 
   toggleUpdateBulk(e) {
-    if(e !== undefined){
-      if(e.target !== undefined){
-        if(e.target.value !== undefined){
-          this.setState({updateConfigType : e.target.value});
+    if (e !== undefined) {
+      if (e.target !== undefined) {
+        if (e.target.value !== undefined) {
+          this.setState({ updateConfigType: e.target.value });
         }
       }
     }
-    if(this.state.collapse === true){
+    if (this.state.collapse === true) {
       this.toggleAddNew();
     }
-    this.setState({ collapseUpdate : !this.state.collapseUpdate });
+    this.setState({ collapseUpdate: !this.state.collapseUpdate });
   }
 
   onEntering() {
@@ -213,7 +216,7 @@ class ConfigUpload extends React.Component {
 
   handleChangeFilter = (e) => {
     let value = e.target.value;
-    if(value.length === 0){
+    if (value.length === 0) {
       value = "";
     }
     this.setState({ filter_name: value }, () => {
@@ -221,20 +224,31 @@ class ConfigUpload extends React.Component {
     });
   }
 
-  getConfigDataAPI(){
+  getConfigDataAPI() {
     let filter = '{"$regex" : "", "$options" : "i"}';
-    if (this.state.filter_name !== ""){
+    if (this.state.filter_name !== "") {
       filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
-    } 
+    }
     let whereOr = '{"$or" : [{"config_id": ' + filter + '}, {"config_name": ' + filter + '}, {"program": ' + filter + '}, {"config_type": ' + filter + '}]}';
-    this.getDatatoAPINode('/packageconfig?q='+whereOr+'&lmt='+this.state.perPage+'&pg='+this.state.activePage)
-    .then(res =>{
-      if(res.data !== undefined){
-        this.setState({ config_package : res.data.data, prevPage : this.state.activePage, total_dataConfig : res.data.totalResults })
-      }else{
-        this.setState({ config_package : [], total_dataConfig : 0, prevPage : this.state.activePage});
-      }
-    })
+    this.getDatatoAPINode('/packageconfig?q=' + whereOr + '&lmt=' + this.state.perPage + '&pg=' + this.state.activePage)
+      .then(res => {
+        if (res.data !== undefined) {
+          this.setState({ config_package: res.data.data, prevPage: this.state.activePage, total_dataConfig: res.data.totalResults })
+        } else {
+          this.setState({ config_package: [], total_dataConfig: 0, prevPage: this.state.activePage });
+        }
+      })
+  }
+
+  getConfigDataAPI_all() {
+    this.getDatatoAPINode('/packageconfig?noPg=1')
+      .then(res => {
+        if (res.data !== undefined) {
+          this.setState({ config_package_all: res.data.data });
+        } else {
+          this.setState({ config_package_all: [] });
+        }
+      })
   }
 
   isSameValue(element, value) {
@@ -288,40 +302,40 @@ class ConfigUpload extends React.Component {
         else {
           console.log("rest.rows", JSON.stringify(rest.rows));
           this.postDatatoAPINODE('/packageConfig/checkPackageConfigXL', { "configData": rest.rows })
-          .then(res => {
-            if (res.data !== undefined) {
-              this.setState({ check_config_package: res.data.configData, rowsXLS: rest.rows })
-              this.toggleLoading();
-            } else {
-              if(res.response !== undefined){
-                if(res.response.data !== undefined){
-                  if(res.response.data.error !== undefined){
-                    if(res.response.data.error.message !== undefined){
-                      this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
-                        this.toggleLoading();
-                      });
-                    }else{
-                      this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
+            .then(res => {
+              if (res.data !== undefined) {
+                this.setState({ check_config_package: res.data.configData, rowsXLS: rest.rows })
+                this.toggleLoading();
+              } else {
+                if (res.response !== undefined) {
+                  if (res.response.data !== undefined) {
+                    if (res.response.data.error !== undefined) {
+                      if (res.response.data.error.message !== undefined) {
+                        this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
+                          this.toggleLoading();
+                        });
+                      } else {
+                        this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
+                          this.toggleLoading();
+                        });
+                      }
+                    } else {
+                      this.setState({ action_status: 'failed' }, () => {
                         this.toggleLoading();
                       });
                     }
-                  }else{
-                    this.setState({ action_status: 'failed'}, () => {
+                  } else {
+                    this.setState({ action_status: 'failed' }, () => {
                       this.toggleLoading();
                     });
                   }
-                }else{
+                } else {
                   this.setState({ action_status: 'failed' }, () => {
                     this.toggleLoading();
                   });
                 }
-              }else{
-                this.setState({ action_status: 'failed' }, () => {
-                    this.toggleLoading();
-                });
               }
-            }
-          })
+            })
         }
       });
     }
@@ -342,43 +356,43 @@ class ConfigUpload extends React.Component {
     }
   }
 
-  checkFormatUpdateConfig(rowsXLS){
-      let dataUpdateConfig = {
-        "updateData" : true,
-      	"parentOnly" : true,
-      	"skipBlank" : true,
-        "configData": rowsXLS
-      }
+  checkFormatUpdateConfig(rowsXLS) {
+    let dataUpdateConfig = {
+      "updateData": true,
+      "parentOnly": true,
+      "skipBlank": true,
+      "configData": rowsXLS
+    }
     this.postDatatoAPINODE('/packageConfig/checkPackageConfigXL', dataUpdateConfig).then(res => {
       if (res.data !== undefined) {
         this.setState({ check_config_update: res.data.configData, rowsXLS: rowsXLS })
         this.toggleLoading();
       } else {
-        if(res.response !== undefined){
-          if(res.response.data !== undefined){
-            if(res.response.data.error !== undefined){
-              if(res.response.data.error.message !== undefined){
+        if (res.response !== undefined) {
+          if (res.response.data !== undefined) {
+            if (res.response.data.error !== undefined) {
+              if (res.response.data.error.message !== undefined) {
                 this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
                   this.toggleLoading();
                 });
-              }else{
+              } else {
                 this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
                   this.toggleLoading();
                 });
               }
-            }else{
-              this.setState({ action_status: 'failed'}, () => {
+            } else {
+              this.setState({ action_status: 'failed' }, () => {
                 this.toggleLoading();
               });
             }
-          }else{
+          } else {
             this.setState({ action_status: 'failed' }, () => {
               this.toggleLoading();
             });
           }
-        }else{
+        } else {
           this.setState({ action_status: 'failed' }, () => {
-              this.toggleLoading();
+            this.toggleLoading();
           });
         }
       }
@@ -400,36 +414,36 @@ class ConfigUpload extends React.Component {
     const isConfig = true;
     if (isConfig === true) {
       const postConfig = await this.postDatatoAPINODE('/packageConfig/saveConfigBulk', { "configData": this.state.check_config_package });
-      if(postConfig.data !== undefined){
+      if (postConfig.data !== undefined) {
         this.setState({ action_status: 'success' }, () => {
           this.toggleLoading();
         });
-      }else{
-        if(postConfig.response !== undefined){
-          if(postConfig.response.data !== undefined){
-            if(postConfig.response.data.error !== undefined){
-              if(postConfig.response.data.error.message !== undefined){
+      } else {
+        if (postConfig.response !== undefined) {
+          if (postConfig.response.data !== undefined) {
+            if (postConfig.response.data.error !== undefined) {
+              if (postConfig.response.data.error.message !== undefined) {
                 this.setState({ action_status: 'failed', action_message: postConfig.response.data.error.message }, () => {
                   this.toggleLoading();
                 });
-              }else{
+              } else {
                 this.setState({ action_status: 'failed', action_message: postConfig.response.data.error }, () => {
                   this.toggleLoading();
                 });
               }
-            }else{
-              this.setState({ action_status: 'failed'}, () => {
+            } else {
+              this.setState({ action_status: 'failed' }, () => {
                 this.toggleLoading();
               });
             }
-          }else{
+          } else {
             this.setState({ action_status: 'failed' }, () => {
               this.toggleLoading();
             });
           }
-        }else{
+        } else {
           this.setState({ action_status: 'failed' }, () => {
-              this.toggleLoading();
+            this.toggleLoading();
           });
         }
       }
@@ -444,37 +458,37 @@ class ConfigUpload extends React.Component {
     this.toggleLoading();
     const isConfig = this.state.check_config_update !== undefined && this.state.check_config_update !== null;
     if (isConfig === true) {
-      const postConfig = await this.patchDatatoAPINODE('/packageConfig/updateConfig', {"configData": this.state.check_config_update});
-      if(postConfig.data !== undefined){
+      const postConfig = await this.patchDatatoAPINODE('/packageConfig/updateConfig', { "configData": this.state.check_config_update });
+      if (postConfig.data !== undefined) {
         this.setState({ action_status: 'success' }, () => {
           this.toggleLoading();
         });
-      }else{
-        if(postConfig.response !== undefined){
-          if(postConfig.response.data !== undefined){
-            if(postConfig.response.data.error !== undefined){
-              if(postConfig.response.data.error.message !== undefined){
+      } else {
+        if (postConfig.response !== undefined) {
+          if (postConfig.response.data !== undefined) {
+            if (postConfig.response.data.error !== undefined) {
+              if (postConfig.response.data.error.message !== undefined) {
                 this.setState({ action_status: 'failed', action_message: postConfig.response.data.error.message }, () => {
                   this.toggleLoading();
                 });
-              }else{
+              } else {
                 this.setState({ action_status: 'failed', action_message: postConfig.response.data.error }, () => {
                   this.toggleLoading();
                 });
               }
-            }else{
-              this.setState({ action_status: 'failed'}, () => {
+            } else {
+              this.setState({ action_status: 'failed' }, () => {
                 this.toggleLoading();
               });
             }
-          }else{
+          } else {
             this.setState({ action_status: 'failed' }, () => {
               this.toggleLoading();
             });
           }
-        }else{
+        } else {
           this.setState({ action_status: 'failed' }, () => {
-              this.toggleLoading();
+            this.toggleLoading();
           });
         }
       }
@@ -487,6 +501,7 @@ class ConfigUpload extends React.Component {
 
   componentDidMount() {
     this.getConfigDataAPI();
+    this.getConfigDataAPI_all();
     document.title = 'Config Manager | BAM';
   }
 
@@ -505,6 +520,26 @@ class ConfigUpload extends React.Component {
     }
     this.setState({ config_selected: configSelected });
     this.setState(prevState => ({ config_checked: prevState.config_checked.set(item, isChecked) }));
+  }
+
+  handleChangeChecklistAll(e) {
+    const isChecked = e.target.checked;
+    let configSelected = this.state.config_selected;
+    const dataConfig = this.state.config_package_all;
+    if (isChecked) {
+      for (let x = 0; x < dataConfig.length; x++) {
+        configSelected.push(dataConfig[x]);
+        this.setState(prevState => ({ config_checked: prevState.config_checked.set(dataConfig[x]._id, isChecked) }));
+      }
+      this.setState({ config_selected: configSelected });
+    } else {
+      for (let x = 0; x < dataConfig.length; x++) {
+        this.setState(prevState => ({ config_checked: prevState.config_checked.set(dataConfig[x]._id, isChecked) }));
+      }
+      configSelected.length = 0;
+      this.setState({ config_selected: configSelected });
+    }
+    this.setState(prevState => ({ config_checked_all: !prevState.config_checked_all }))
   }
 
   handlePageChange(pageNumber) {
@@ -543,7 +578,7 @@ class ConfigUpload extends React.Component {
       dataForm[8] = ppEdit.price;
       this.setState({ PPForm: dataForm });
     } else {
-      this.setState({ PPForm: new Array(9).fill(null)});
+      this.setState({ PPForm: new Array(9).fill(null) });
     }
     this.setState(prevState => ({
       modalPPFedit: !prevState.modalPPFedit
@@ -688,7 +723,7 @@ class ConfigUpload extends React.Component {
     // console.log('data conf map', this.state.conf_all.map(e => e.sap_number));
 
 
-    let headerRow = ["SAP Number", "Config ID",	"Account ID",	"ID Project Doc",	"Project Name",	"Total Price", "ID PP Doc",	"Qty",	"Qty Commercial",	"Currency",	"Price", "Description",	"PP ID",	"PP Group"]
+    let headerRow = ["SAP Number", "Config ID", "Account ID", "ID Project Doc", "Project Name", "Total Price", "ID PP Doc", "Qty", "Qty Commercial", "Currency", "Price", "Description", "PP ID", "PP Group"]
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -716,7 +751,7 @@ class ConfigUpload extends React.Component {
     const ws = wb.addWorksheet();
 
     let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
-    let HeaderRow2 = ["tower_id","program", "sow", "priority"];
+    let HeaderRow2 = ["tower_id", "program", "sow", "priority"];
 
     Config_group_type_DEFAULT.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
     Config_group_DEFAULT.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
@@ -757,7 +792,7 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["config_name","program","config_id", "config_customer_name", "sap_number","sap_description","config_type", "description"]);
+    ws.addRow(["config_name", "program", "config_id", "config_customer_name", "sap_number", "sap_description", "config_type", "description"]);
     const dataConfigSelected = this.state.config_selected;
     dataConfigSelected.map(e => ws.addRow([e.config_name, e.program, e.config_id, e.config_customer_name, e.sap_number, e.sap_description, e.config_type, e.description]));
 
@@ -773,7 +808,7 @@ class ConfigUpload extends React.Component {
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{fontSize:"17px"}}>Config</span>
+                <span style={{ fontSize: "17px" }}>Config</span>
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
@@ -866,7 +901,7 @@ class ConfigUpload extends React.Component {
                         <thead style={{ backgroundColor: '#73818f' }} className='fixed-conf'>
                           <tr align="center">
                             <th>
-                              {/* }<Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} /> */}
+                              <Checkbox name={"all"} checked={this.state.config_checked_all} onChange={this.handleChangeChecklistAll} />
                             </th>
                             <th style={{ minWidth: '150px' }}>Config</th>
                             <th>Config Name</th>
@@ -881,7 +916,7 @@ class ConfigUpload extends React.Component {
                         <tbody>
                           {this.state.config_package.map(pp =>
                             <React.Fragment key={pp._id + "frag"}>
-                              <tr style={{ backgroundColor: '#d3d9e7', fontWeight : 700 }} className='fixbody' key={pp._id}>
+                              <tr style={{ backgroundColor: '#d3d9e7', fontWeight: 700 }} className='fixbody' key={pp._id}>
                                 <td align="center"><Checkbox name={pp._id} checked={this.state.config_checked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_id}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_name}</td>
