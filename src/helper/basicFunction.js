@@ -75,3 +75,23 @@ export const numToSSColumn = (num) => {
   }
   return s || undefined;
 };
+
+export const convertDMSToDD  = (dms) => {
+  let parts = dms.split(/[^\d+(\,\d+)\d+(\.\d+)?\w]+/);
+  let degrees = parseFloat(parts[0]);
+  let minutes = parseFloat(parts[1]);
+  let seconds = parseFloat(parts[2].replace(',','.'));
+  let direction = parts[3];
+
+  // console.log('degrees: '+degrees)
+  // console.log('minutes: '+minutes)
+  // console.log('seconds: '+seconds)
+  // console.log('direction: '+direction)
+
+  let dd = degrees + minutes / 60 + seconds / (60 * 60);
+
+  if (direction == 'S' || direction == 'W') {
+    dd = dd * -1;
+  } // Don't do anything for N or E
+  return dd;
+}
