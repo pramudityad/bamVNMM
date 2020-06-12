@@ -278,10 +278,10 @@ const routes = [
   { path: '/material-dispatch-per-wh/:whid', exact: true, name: 'Material Dispatch', component: MaterialDispatch },
   { path: '/loader-page', exact: true, name: 'Material Dispatch', component: LoaderPage },
 
-  { path: '/prt-creation', exact: true, name: 'PRT Creation', component: PRPOCreation },
+  { path: '/prt-list/creation', exact: true, name: 'PRT Creation', component: PRPOCreation },
   { path: '/prt-list', exact: true, name: 'PRT List', component: ListPRPO },
-  { path: '/prt-detail/:id', exact: true, name: 'PRT Detail', component: DetailPRPO },
-  { path: '/prt-edit/:id', exact: true, name: 'PRT Edit', component: EditPRPO },
+  { path: '/prt-list/detail/:id', exact: true, name: 'PRT Detail', component: DetailPRPO },
+  { path: '/prt-list/edit/:id', exact: true, name: 'PRT Edit', component: EditPRPO },
 
 ];
 

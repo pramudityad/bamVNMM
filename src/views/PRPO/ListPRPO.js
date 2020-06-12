@@ -137,7 +137,7 @@ class ListPRPO extends Component {
                   ></i>{" "}
                   PRT List
                 </span>
-                <Link to={"/prt-creation"}>
+                <Link to={"/prt-list/creation"}>
                   <Button color="success" style={{ float: "right" }} size="sm">
                     <i
                       className="fa fa-plus-square"
@@ -201,7 +201,7 @@ class ListPRPO extends Component {
                         {this.state.all_data.map((list, i) =>
                           <tr key={i}>
                             <td>
-                              <Link to={'/prt-detail/' + list._id}>
+                              <Link to={'/prt-list/detail/' + list._id}>
                                 <Button style={{ width: "90px" }} outline color="info" size="sm">Detail</Button>
                               </Link>
                             </td>

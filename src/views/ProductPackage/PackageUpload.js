@@ -52,12 +52,14 @@ class PackageUpload extends React.Component {
       PPForm: new Array(9).fill(null),
       collapse: false,
       modalPPFedit: false,
-      packageChecked_all: false
+      packageChecked_all: false,
+      packageChecked_page: false
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
     this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
+    this.handleChangeChecklistPage = this.handleChangeChecklistPage.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.changeFilterName = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
@@ -546,8 +548,28 @@ class PackageUpload extends React.Component {
     this.setState(prevState => ({ packageChecked_all: !prevState.packageChecked_all }))
   }
 
+  handleChangeChecklistPage(e) {
+    const isChecked = e.target.checked;
+    let packageSelected = this.state.packageSelected;
+    const getMaterial = this.state.product_package;
+    if (isChecked) {
+      for (let x = 0; x < getMaterial.length; x++) {
+        packageSelected.push(getMaterial[x]);
+        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(getMaterial[x]._id, isChecked) }));
+      }
+      this.setState({ packageSelected: packageSelected });
+    } else {
+      for (let x = 0; x < getMaterial.length; x++) {
+        this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(getMaterial[x]._id, isChecked) }));
+      }
+      packageSelected.length = 0;
+      this.setState({ packageSelected: packageSelected });
+    }
+    this.setState(prevState => ({ packageChecked_page: !prevState.packageChecked_page }))
+  }
+
   handlePageChange(pageNumber) {
-    this.setState({ activePage: pageNumber }, () => {
+    this.setState({ activePage: pageNumber, packageChecked_page: false }, () => {
       this.getPackageDataAPI();
     });
   }
@@ -701,9 +723,9 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataPP = this.state.pp_all;
-
-    let headerRow = ["Product Package Variant Code", "Product Package Variant", "Material Code", "Material Name", "Unit", "Qty", "Price", "Material Type", "Product Package (Customer) Code", "Product Package (Customer)", "Physical Group", "Product Type", "Note"]
+    const dataPP = this.state.product_package;
+ 
+    let headerRow = ['bundle_id',	'bundle_name',	'bundle_type',	'physical_group',	'bundle_unit',	'bundle_group',	'material_id',	'material_name',	'material_type',	'material_origin',	'material_unit',	'material_qty']
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -711,17 +733,17 @@ class PackageUpload extends React.Component {
     }
 
     for (let i = 0; i < dataPP.length; i++) {
-      ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, "", "", dataPP[i].uom, "", "", "", dataPP[i].pp_cust_number, dataPP[i].pp_group, dataPP[i].physical_group, dataPP[i].product_type, dataPP[i].note])
-      let getlastrow = ws.lastRow._number;
-      ws.mergeCells('B' + getlastrow + ':D' + getlastrow);
-      for (let j = 0; j < dataPP[i].list_of_material.length; j++) {
-        let matIndex = dataPP[i].list_of_material[j];
-        ws.addRow(["", "", matIndex.material_id, matIndex.material_name, matIndex.uom, matIndex.qty, matIndex.material_price, matIndex.material_type, "", "", "", "", ""])
+      ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, dataPP[i].product_type, dataPP[i].physical_group, dataPP[i].uom, dataPP[i].pp_group])
+      // let getlastrow = ws.lastRow._number;
+      // ws.mergeCells('B' + getlastrow + ':D' + getlastrow);
+      for (let j = 0; j < dataPP[i].materials.length; j++) {
+        let matIndex = dataPP[i].materials[j];
+        ws.addRow(["", "", "", "","", "",matIndex.material_id, matIndex.material_name, matIndex.material_type, matIndex.material_origin, matIndex.uom, matIndex.qty])
       }
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Product Package.xlsx');
+    saveAs(new Blob([allocexport]), 'Product Package All.xlsx');
   }
 
   exportTechnicalFormat = async () => {
@@ -905,10 +927,14 @@ class PackageUpload extends React.Component {
                     <div style={{ marginBottom: '10px' }}>
                       <span style={{ fontSize: '20px', fontWeight: '500' }}>Bundle List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
+                      <span style={{marginRight: '10px'}}>
+                      <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />Select All
+                      </span>                      
                         {/* <span style={{ marginRight: '10px' }}>
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
                           Select All
                         </span> */}
+                        {/* &nbsp;&nbsp;&nbsp; */}
                         <input className="search-box-material" type="text" name='filter' placeholder="Search" onChange={this.handleChangeFilter} value={this.state.filter_name} />
                       </div>
                     </div>
@@ -921,7 +947,7 @@ class PackageUpload extends React.Component {
                         <thead style={{ backgroundColor: '#c6f569' }} className='fixed-pp'>
                           <tr align="center">
                             <th>
-                              <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />
+                              <Checkbox name={"all"} checked={this.state.packageChecked_page} onChange={this.handleChangeChecklistPage} />
                             </th>
                             <th style={{ minWidth: '150px' }}>Bundle Name</th>
                             <th>Material Name</th>
