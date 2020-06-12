@@ -451,16 +451,22 @@ class WHManagement extends React.Component {
     const res = await postDatatoAPINODE("/whManagement/createWarehouse", {
       managementData: BulkXLSX,
     }, this.props.dataLogin.token);
-    console.log("res bulk ", res.data);
-    if (res.data !== undefined) {
-      this.setState({ action_status: "success" });
-      this.toggleLoading();
-    } else {
-      this.setState({ action_status: "failed" }, () => {
+    console.log("res bulk ", res.response);
+    if (res.response !== undefined && res.response.data !== undefined) {
+      if (res.response.data !== undefined) {
+        this.setState({ action_status: 'failed', action_message: res.response.data + ' please check your format' });
         this.toggleLoading();
-      });
-    }
+      } else {
+        this.setState({ action_status: 'failed' });
+        this.toggleLoading();
+      }
+    } else {
+      this.setState({ action_status: 'success' });
+      this.toggleLoading();
+    } 
+    
   };
+
 
   saveTruncateBulk = async () => {
     this.toggleLoading();
