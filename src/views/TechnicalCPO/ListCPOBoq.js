@@ -31,7 +31,7 @@ class ListCPOBoq extends Component {
       list_cpo_boq : [],
       modal_delete : false,
         Tech_All : [],
-        prevPage : 0,
+        prevPage : 1,
         activePage : 1,
         totalData : 0,
         perPage : 10,
@@ -95,10 +95,16 @@ class ListCPOBoq extends Component {
   }
 
   getCpoBoqList(){
-    this.getDataFromAPINODE('/cpoBoqList?lmt=10&pg=104').then(res => {
+    this.getDataFromAPINODE('/cpoBoqList?lmt='+this.state.perPage +
+    "&pg=" + this.state.activePage).then(res => {
       if(res.data !== undefined){
-        this.setState({list_cpo_boq : res.data.data});
+        this.setState({list_cpo_boq : res.data.data, prevPage: this.state.activePage,
+          totalData: res.data.totalResults});          
+      } else{
+        this.setState({list_cpo_boq : [], prevPage: this.state.activePage,
+          totalData: 0});
       }
+      // console.log('totalData ', this.state.totalData)
     })
   }
 
@@ -289,7 +295,7 @@ class ListCPOBoq extends Component {
                 <Pagination
                     activePage={this.state.activePage}
                     itemsCountPerPage={this.state.perPage}
-                    totalItemsCount={this.state.totalData.total}
+                    totalItemsCount={this.state.totalData}
                     pageRangeDisplayed={5}
                     onChange={this.handlePageChange}
                     itemClass="page-item"
