@@ -534,6 +534,7 @@ class ConfigUpload extends React.Component {
     let configSelected = this.state.config_selected;
     const dataConfig = this.state.config_package_all;
     if (isChecked) {
+      dataConfig = dataConfig.filter(e => configSelected.map(m => m._id).includes(e._id) !== true);
       for (let x = 0; x < dataConfig.length; x++) {
         configSelected.push(dataConfig[x]);
         this.setState(prevState => ({ config_checked: prevState.config_checked.set(dataConfig[x]._id, isChecked) }));
@@ -554,6 +555,7 @@ class ConfigUpload extends React.Component {
     let configSelected = this.state.config_selected;
     const dataConfig = this.state.config_package;
     if (isChecked) {
+      dataConfig = dataConfig.filter(e => configSelected.map(m => m._id).includes(e._id) !== true);
       for (let x = 0; x < dataConfig.length; x++) {
         configSelected.push(dataConfig[x]);
         this.setState(prevState => ({ config_checked: prevState.config_checked.set(dataConfig[x]._id, isChecked) }));
@@ -746,7 +748,7 @@ class ConfigUpload extends React.Component {
     const ws = wb.addWorksheet();
 
     const dataPP = this.state.config_package;
- 
+
     let headerRow = ['config_id',	'config_name',	'sap_number',	'program',	'config_type',	'pp_id',	'product_name',	'product_type',	'physical_group',	'uom',	'physical_group']
     ws.addRow(headerRow);
 
@@ -910,7 +912,7 @@ class ConfigUpload extends React.Component {
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                       <span style={{marginRight: '10px'}}>
                         <Checkbox name={"all"} checked={this.state.config_checked_all} onChange={this.handleChangeChecklistAll} />Select All
-                      </span>  
+                      </span>
                         {/* <span style={{ marginRight: '10px' }}>
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
                           Select All
