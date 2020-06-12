@@ -346,7 +346,7 @@ class WHManagement extends React.Component {
     // console.log("here ur dataLogin", this.props.dataLogin);
     // console.log('token from asycn ', this.props.dataLogin.token);
     this.getWHStockList();
-    // change this
+    this.getASPList();
     document.title = "Warehouse Management | BAM";
   }
 
@@ -655,8 +655,12 @@ class WHManagement extends React.Component {
   };
 
   exportMatStatus = async () => {
+    
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();    
+    const aspData = this.state.asp_data;
+    // console.log('aspData ', aspData);
 
     ws.addRow([
       "wh_name",
@@ -671,6 +675,14 @@ class WHManagement extends React.Component {
     ws.addRow(["Jakarta", "JKT1", "Asep", "Priuk", 0, 0, "EID", "Internal"]);
     ws.addRow(["Jakarta2", "JKT1", "Asep", "Priuk", 0, 0, "2000175941", "dsp"]);
     ws.addRow(["Jakarta3", "JKT1", "Asep", "Priuk", 0, 0, "2000175941", "asp"]);
+
+    ws2.addRow(["Vendor Name", "Vendor Code"]);
+    ws2.addRow(["EID", "Internal"]);
+    for (let i = 0; i < aspData.length; i++) {
+      // const element = aspData[i];
+      ws2.addRow([aspData[i].Name, aspData[i].Vendor_Code]);
+    }
+    
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");

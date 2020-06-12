@@ -160,13 +160,16 @@ class CPODatabase extends React.Component {
   getPODataList() {
     // let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
     // this.getDatatoAPIEXEL('/po_op?max_results=' + this.state.perPage + '&page=' + this.state.activePage + '&where={' + po_number + '}')
-    this.getDatafromAPINODE('/cpodb/getCpoDb')
+    this.getDatafromAPINODE('/cpodb/getCpoDb?lmt='+this.state.perPage +
+    "&pg=" + this.state.activePage)
       .then(res => {
-        console.log('all cpoDB', res.data)
+        // console.log('all cpoDB', res.data)
         if (res.data !== undefined) {
-          this.setState({ po_op_data: res.data.data })
+          this.setState({ po_op_data: res.data.data, prevPage: this.state.activePage,
+            total_data_PO: res.data.totalResults})
         } else {
-          this.setState({ po_op_data: []});
+          this.setState({ po_op_data: [], total_data_PO: 0,
+            prevPage: this.state.activePage,});
         }
       })
   }
