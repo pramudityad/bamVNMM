@@ -415,7 +415,7 @@ class MRDetail extends Component {
             this.getDataCDID(this.state.data_mr.cust_del.map(e => e.cd_id));
           }
           this.setState(
-            { mr_pp: resMR.data.packages.filter((e) => e.qty !== 0) },
+            { mr_pp: resMR.data.packages },
             () => {
               if (
                 status_can_edit_material.includes(resMR.data.current_mr_status)

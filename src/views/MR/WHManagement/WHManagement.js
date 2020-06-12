@@ -456,9 +456,16 @@ class WHManagement extends React.Component {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed" }, () => {
-        this.toggleLoading();
-      });
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
     }
   };
 
@@ -1060,7 +1067,7 @@ class WHManagement extends React.Component {
                     value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
                   >
-                    <option selected="true" disabled="disabled">Select Owner</option>    
+                    <option selected="true" disabled="disabled">Select Owner</option>
                     {this.state.asp_data.map((asp) => (
                       <option value={asp.Vendor_Code}>{asp.Name}</option>
                     ))}
