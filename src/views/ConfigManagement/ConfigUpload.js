@@ -307,45 +307,57 @@ class ConfigUpload extends React.Component {
           console.log(err);
         }
         else {
-          console.log("rest.rows", JSON.stringify(rest.rows));
-          this.postDatatoAPINODE('/packageConfig/checkPackageConfigXL', { "configData": rest.rows })
-            .then(res => {
-              if (res.data !== undefined) {
-                this.setState({ check_config_package: res.data.configData, rowsXLS: rest.rows })
-                this.toggleLoading();
-              } else {
-                if (res.response !== undefined) {
-                  if (res.response.data !== undefined) {
-                    if (res.response.data.error !== undefined) {
-                      if (res.response.data.error.message !== undefined) {
-                        this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
-                          this.toggleLoading();
-                        });
-                      } else {
-                        this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
-                          this.toggleLoading();
-                        });
-                      }
-                    } else {
-                      this.setState({ action_status: 'failed' }, () => {
-                        this.toggleLoading();
-                      });
-                    }
-                  } else {
-                    this.setState({ action_status: 'failed' }, () => {
-                      this.toggleLoading();
-                    });
-                  }
-                } else {
-                  this.setState({ action_status: 'failed' }, () => {
-                    this.toggleLoading();
-                  });
-                }
-              }
-            })
+          this.checkConfigFormatNew(rest.rows);
         }
       });
     }
+  }
+
+  checkConfigFormatNew(newXLS){
+    let rowsXLS = newXLS;
+    let headerRow = [];
+    for (let i = 0; i < rowsXLS[0].length; i++) {
+      let value = rowsXLS[0][i];
+      value = value.replace("bundle_id", "pp_id");
+      value = value.replace("bundle_name", "product_name");
+      headerRow.push(value);
+    }
+    rowsXLS[0] = headerRow;
+    console.log("rest.rows", JSON.stringify(rowsXLS));
+    this.postDatatoAPINODE('/packageconfig/checkPackageConfig', { "configData": rowsXLS }).then(res => {
+      if (res.data !== undefined) {
+        this.setState({ check_config_package: res.data.configData, rowsXLS: newXLS })
+        this.toggleLoading();
+      } else {
+        if (res.response !== undefined) {
+          if (res.response.data !== undefined) {
+            if (res.response.data.error !== undefined) {
+              if (res.response.data.error.message !== undefined) {
+                this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
+                  this.toggleLoading();
+                });
+              } else {
+                this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
+                  this.toggleLoading();
+                });
+              }
+            } else {
+              this.setState({ action_status: 'failed' }, () => {
+                this.toggleLoading();
+              });
+            }
+          } else {
+            this.setState({ action_status: 'failed' }, () => {
+              this.toggleLoading();
+            });
+          }
+        } else {
+          this.setState({ action_status: 'failed' }, () => {
+            this.toggleLoading();
+          });
+        }
+      }
+    })
   }
 
   fileHandlerUpdate = (event) => {
@@ -363,16 +375,25 @@ class ConfigUpload extends React.Component {
     }
   }
 
-  checkFormatUpdateConfig(rowsXLS) {
+  checkFormatUpdateConfig(newXLS) {
+    let rowsXLS = newXLS;
+    let headerRow = [];
+    for (let i = 0; i < rowsXLS[0].length; i++) {
+      let value = rowsXLS[0][i];
+      value = value.replace("bundle_id", "pp_id");
+      value = value.replace("bundle_name", "product_name");
+      headerRow.push(value);
+    }
+    rowsXLS[0] = headerRow;
     let dataUpdateConfig = {
       "updateData": true,
-      "parentOnly": true,
+      "parentOnly": false,
       "skipBlank": true,
       "configData": rowsXLS
     }
-    this.postDatatoAPINODE('/packageConfig/checkPackageConfigXL', dataUpdateConfig).then(res => {
+    this.postDatatoAPINODE('/packageconfig/checkPackageConfig', dataUpdateConfig).then(res => {
       if (res.data !== undefined) {
-        this.setState({ check_config_update: res.data.configData, rowsXLS: rowsXLS })
+        this.setState({ check_config_update: res.data.configData, rowsXLS: newXLS })
         this.toggleLoading();
       } else {
         if (res.response !== undefined) {
@@ -532,7 +553,7 @@ class ConfigUpload extends React.Component {
   handleChangeChecklistAll(e) {
     const isChecked = e.target.checked;
     let configSelected = this.state.config_selected;
-    const dataConfig = this.state.config_package_all;
+    let dataConfig = this.state.config_package_all;
     if (isChecked) {
       dataConfig = dataConfig.filter(e => configSelected.map(m => m._id).includes(e._id) !== true);
       for (let x = 0; x < dataConfig.length; x++) {
@@ -553,7 +574,7 @@ class ConfigUpload extends React.Component {
   handleChangeChecklistPage(e) {
     const isChecked = e.target.checked;
     let configSelected = this.state.config_selected;
-    const dataConfig = this.state.config_package;
+    let dataConfig = this.state.config_package;
     if (isChecked) {
       dataConfig = dataConfig.filter(e => configSelected.map(m => m._id).includes(e._id) !== true);
       for (let x = 0; x < dataConfig.length; x++) {
@@ -747,9 +768,9 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataPP = this.state.config_package;
+    const dataPP = this.state.config_package_all;
 
-    let headerRow = ['config_id',	'config_name',	'sap_number',	'program',	'config_type',	'pp_id',	'product_name',	'product_type',	'physical_group',	'uom',	'physical_group']
+    let headerRow = ['Config ID',	'Config Name',	'Program',	'Config Type', 'SAP Number', 'SAP Description',	'Description', 'Bundle ID',	'Bundle Name', 'UoM',	'Qunatity']
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -757,12 +778,12 @@ class ConfigUpload extends React.Component {
     }
 
     for (let i = 0; i < dataPP.length; i++) {
-      ws.addRow([dataPP[i].config_id, dataPP[i].config_name, dataPP[i].sap_number, dataPP[i].program, dataPP[i].config_type])
+      ws.addRow([dataPP[i].config_id, dataPP[i].config_name, dataPP[i].program, dataPP[i].config_type, dataPP[i].sap_number, dataPP[i].sap_description, dataPP[i].description])
       // let getlastrow = ws.lastRow._number;
       // ws.mergeCells('B' + getlastrow + ':D' + getlastrow);
       for (let j = 0; j < dataPP[i].package_list.length; j++) {
         let matIndex = dataPP[i].package_list[j].id_pp_doc;
-        ws.addRow(["", "", "", "","", matIndex.pp_id, matIndex.product_name, matIndex.product_type, matIndex.physical_group, matIndex.uom, matIndex.physical_group])
+        ws.addRow(["", "", "", "","", "","", matIndex.pp_id, matIndex.product_name, matIndex.uom, dataPP[i].package_list[j].qty])
       }
     }
 
@@ -816,9 +837,10 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["config_name", "program", "config_id", "config_customer_name", "sap_number", "sap_description", "config_type", "description"]);
+    ws.addRow([ "config_id", "config_name", "program","config_customer_name", "sap_number", "sap_description", "config_type", "description", "bundle_id", "bundle_name", "qty"]);
     const dataConfigSelected = this.state.config_selected;
-    dataConfigSelected.map(e => ws.addRow([e.config_name, e.program, e.config_id, e.config_customer_name, e.sap_number, e.sap_description, e.config_type, e.description]));
+    console.log("dataConfigSelected", dataConfigSelected);
+    dataConfigSelected.map(e => e.package_list.map(p => ws.addRow([e.config_id, e.config_name, e.program, e.config_customer_name, e.sap_number, e.sap_description, e.config_type, e.description, p.pp_id, p.id_pp_doc.product_name, p.qty])));
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'Config Update Template Only Parent.xlsx');
@@ -844,7 +866,7 @@ class ConfigUpload extends React.Component {
                         <DropdownItem onClick={this.exportTechnicalFormat}>> Technical BOQ Horizontal Template</DropdownItem>
                         <DropdownItem onClick={this.exportTechnicalVerticalFormat}>> Technical BOQ Vertical Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfigParent}>> Config Update Template Parent</DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>> Download Config All</DropdownItem>
+                        <DropdownItem onClick={this.downloadAll} disabled={this.state.config_package_all.length === 0}>> Download Config All</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -911,7 +933,7 @@ class ConfigUpload extends React.Component {
                       <span style={{ fontSize: '20px', fontWeight: '500' }}>Config List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                       <span style={{marginRight: '10px'}}>
-                        <Checkbox name={"all"} checked={this.state.config_checked_all} onChange={this.handleChangeChecklistAll} />Select All
+                        <Checkbox name={"all"} checked={this.state.config_checked_all} onChange={this.handleChangeChecklistAll} disabled={this.state.config_package_all.length === 0} />Select All
                       </span>
                         {/* <span style={{ marginRight: '10px' }}>
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />

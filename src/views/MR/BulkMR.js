@@ -773,6 +773,10 @@ class BulkMR extends Component {
                       </tr>
                     </thead>
                     <tbody>
+                      <tr>
+                        <td>DSP</td>
+                        <td>(LDM will input DSP Company for delivery)</td>
+                      </tr>
                       {this.state.asp_list.map(e =>
                         <tr>
                           <td>{e.Vendor_Code}</td>
