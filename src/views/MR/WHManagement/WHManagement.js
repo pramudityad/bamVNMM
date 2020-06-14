@@ -23,7 +23,7 @@ import * as XLSX from "xlsx";
 import ModalDelete from "../../components/ModalDelete";
 import Loading from '../../components/Loading'
 import {getDatafromAPIEXEL ,getDatafromAPINODE, postDatatoAPINODE, patchDatatoAPINODE, deleteDataFromAPINODE} from '../../../helper/asyncFunction'
-
+import {convertDMSToDD} from '../../../helper/basicFunction'
 import "../MatStyle.css";
 
 const Checkbox = ({
@@ -324,12 +324,14 @@ class WHManagement extends React.Component {
     let newDataXLS = [];
     for (let i = 0; i < dataXLS.length; i++) {
       let col = [];
+      console.log('col ', col)
       for (let j = 0; j < dataXLS[0].length; j++) {
         if (typeof dataXLS[i][j] === "object") {
           let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
           if (dataObject !== null) {
             dataObject = dataObject.replace(/"/g, "");
           }
+          console.log('dataObject ', dataObject)
           col.push(dataObject);
         } else {
           col.push(this.checkValue(dataXLS[i][j]));
@@ -452,18 +454,21 @@ class WHManagement extends React.Component {
       managementData: BulkXLSX,
     }, this.props.dataLogin.token);
     console.log("res bulk ", res.response);
-    if (res.response !== undefined && res.response.data !== undefined) {
-      if (res.response.data !== undefined) {
-        this.setState({ action_status: 'failed', action_message: res.response.data + ' please check your format' });
-        this.toggleLoading();
+    if (res.data !== undefined) {
+      this.setState({ action_status: "success" });
+      this.toggleLoading();
+    } else {
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
       } else {
         this.setState({ action_status: 'failed' });
-        this.toggleLoading();
       }
-    } else {
-      this.setState({ action_status: 'success' });
       this.toggleLoading();
-    } 
+    }
   };
 
 
@@ -898,7 +903,7 @@ class WHManagement extends React.Component {
                               >
                                 <b>Warehouse ID</b>
                               </Button></th>
-                            <th>WH Manager</th>
+                            <th style={{ width: '100px'}}>WH Manager</th>
                             <th>Address</th>
                             <th>Latitude</th>
                             <th>Longitude</th>
@@ -923,10 +928,10 @@ class WHManagement extends React.Component {
                                   <td style={{ textAlign: "center" }}>
                                     {e.wh_id}
                                   </td>
-                                  <td style={{ textAlign: "center" }}>
+                                  <td >
                                     {e.wh_manager}
                                   </td>
-                                  <td style={{ textAlign: "center" }}>
+                                  <td >
                                     {e.address}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
