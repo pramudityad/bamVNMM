@@ -329,7 +329,7 @@ class WHManagement extends React.Component {
         if (typeof dataXLS[i][j] === "object") {
           let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
           if (dataObject !== null) {
-            dataObject = dataObject.replace(/"/g, "");            
+            dataObject = dataObject.replace(/"/g, "");
           }
           console.log('dataObject ', dataObject)
           col.push(dataObject);
@@ -538,7 +538,15 @@ class WHManagement extends React.Component {
       });
     } else {
       this.toggleLoading();
-      this.setState({ action_status: "failed" });
+      if (patchData.response !== undefined && patchData.response.data !== undefined && patchData.response.data.error !== undefined) {
+        if (patchData.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: patchData.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: patchData.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
     }
   }
 
@@ -572,9 +580,15 @@ class WHManagement extends React.Component {
           this.toggleLoading();
         });
       } else {
-        this.setState({
-          action_status: "failed",
-        });
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
         this.toggleLoading();
       }
     });
@@ -658,10 +672,10 @@ class WHManagement extends React.Component {
   };
 
   exportMatStatus = async () => {
-    
+
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
-    const ws2 = wb.addWorksheet();    
+    const ws2 = wb.addWorksheet();
     const aspData = this.state.asp_data;
     // console.log('aspData ', aspData);
 
@@ -685,7 +699,7 @@ class WHManagement extends React.Component {
       // const element = aspData[i];
       ws2.addRow([aspData[i].Name, aspData[i].Vendor_Code]);
     }
-    
+
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
@@ -1082,7 +1096,7 @@ class WHManagement extends React.Component {
                     value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
                   >
-                    <option selected="true" disabled="disabled">Select Owner</option>    
+                    <option selected="true" disabled="disabled">Select Owner</option>
                     {this.state.asp_data.map((asp) => (
                       <option value={asp.Vendor_Code}>{asp.Name}</option>
                     ))}

@@ -39,7 +39,7 @@ class MRList extends Component {
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
-    this.getAllMR = this.getAllMR.bind(this);
+    // this.getAllMR = this.getAllMR.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -109,7 +109,8 @@ class MRList extends Component {
     })
   }
 
-  getAllMR() {
+  async getAllMR() {
+    let mrList = [];
     let filter_array = [];
     this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
     this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
@@ -125,13 +126,15 @@ class MRList extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
-      console.log("MR List All", res);
-      if (res.data !== undefined) {
-        const items = res.data.data;
-        this.setState({ mr_all: items });
-      }
-    })
+    let res = await this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd)
+    if (res.data !== undefined) {
+      const items = res.data.data;
+      mrList = res.data.data;
+      return mrList;
+      // this.setState({ mr_all: items });
+    }else{
+      return [];
+    }
   }
 
   numToSSColumn(num) {
@@ -149,9 +152,9 @@ class MRList extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const allMR = this.state.mr_all;
+    const allMR = await this.getAllMR();
 
-    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Created By", "Updated On", "Created On"];
+    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Updated On", "Created On"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -159,7 +162,7 @@ class MRList extends Component {
     }
 
     for (let i = 0; i < allMR.length; i++) {
-      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0].site_id, allMR[i].site_info[0].site_name, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
+      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, allMR[i].updated_on, allMR[i].created_on])
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -169,7 +172,7 @@ class MRList extends Component {
   componentDidMount() {
     this.props.SidebarMinimizer(true);
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'MR List | BAM';
   }
 
@@ -198,7 +201,7 @@ class MRList extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {
@@ -299,7 +302,7 @@ class MRList extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries</small>
+                  <small>Showing {this.state.totalData} entries</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}

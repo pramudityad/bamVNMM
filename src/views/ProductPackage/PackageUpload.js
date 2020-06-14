@@ -531,8 +531,9 @@ class PackageUpload extends React.Component {
   handleChangeChecklistAll(e) {
     const isChecked = e.target.checked;
     let packageSelected = this.state.packageSelected;
-    const getMaterial = this.state.product_package_all;
+    let getMaterial = this.state.product_package_all;
     if (isChecked) {
+      getMaterial = getMaterial.filter(e => packageSelected.map(m => m._id).includes(e._id) !== true);
       for (let x = 0; x < getMaterial.length; x++) {
         packageSelected.push(getMaterial[x]);
         this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(getMaterial[x]._id, isChecked) }));
@@ -551,8 +552,9 @@ class PackageUpload extends React.Component {
   handleChangeChecklistPage(e) {
     const isChecked = e.target.checked;
     let packageSelected = this.state.packageSelected;
-    const getMaterial = this.state.product_package;
+    let getMaterial = this.state.product_package;
     if (isChecked) {
+      getMaterial = getMaterial.filter(e => packageSelected.map(m => m._id).includes(e._id) !== true);
       for (let x = 0; x < getMaterial.length; x++) {
         packageSelected.push(getMaterial[x]);
         this.setState(prevState => ({ packageChecked: prevState.packageChecked.set(getMaterial[x]._id, isChecked) }));
@@ -724,8 +726,8 @@ class PackageUpload extends React.Component {
     const ws = wb.addWorksheet();
 
     const dataPP = this.state.product_package;
- 
-    let headerRow = ['bundle_id',	'bundle_name',	'bundle_type',	'physical_group',	'bundle_unit',	'bundle_group',	'material_id',	'material_name',	'material_type',	'material_origin',	'material_unit',	'material_qty']
+
+    let headerRow = ['bundle_id',	'bundle_name',	'bundle_type',	'physical_group',	'bundle_unit',	'bundle_group',	'material_id',	'material_name',	'material_type',	'material_origin',	'material_unit',	'material_qty', "bundle_system_id"]
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -733,7 +735,7 @@ class PackageUpload extends React.Component {
     }
 
     for (let i = 0; i < dataPP.length; i++) {
-      ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, dataPP[i].product_type, dataPP[i].physical_group, dataPP[i].uom, dataPP[i].pp_group])
+      ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, dataPP[i].product_type, dataPP[i].physical_group, dataPP[i].uom, dataPP[i].pp_group, dataPP[i].pp_id +" /// "+ dataPP[i].product_name])
       // let getlastrow = ws.lastRow._number;
       // ws.mergeCells('B' + getlastrow + ':D' + getlastrow);
       for (let j = 0; j < dataPP[i].materials.length; j++) {
@@ -847,6 +849,27 @@ class PackageUpload extends React.Component {
     saveAs(new Blob([MaterialFormat]), 'Config Uploader Template.xlsx');
   }
 
+  exportFormatConfigVertical = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPrint = this.state.packageSelected;
+
+    let confArray = ["2020_Config-1D EXAMPLE", "Coverage", "Cov_2020_Config-4_0610", "Cov_2020_Config-4_06", "2515914", "RBS:COV_2020_CONFIG-4DC", "SVC", "EXAMPLE", "example_bundle_id", "example_bundle_name"];
+    let typeArray = ["config_name", "program", "config_id", "config_customer_name", "sap_number", "sap_description", "config_type", "description", "bundle_id", "bundle_name", "qty"];
+
+    ws.addRow(typeArray);
+    ws.addRow(confArray);
+
+    const ws2 = wb.addWorksheet();
+
+    ws2.addRow(["bundle_id", "bundle_name"]);
+    dataPrint.map(pp => ws2.addRow([pp.pp_id, pp.product_name]));
+
+    const MaterialFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MaterialFormat]), 'Config Uploader Template Vertical.xlsx');
+  }
+
   async exportFormatBundleMaterial() {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -882,7 +905,7 @@ class PackageUpload extends React.Component {
                         <DropdownItem onClick={this.exportFormatPackage}>> Bundle Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatBundleMaterial}>> Bundle Material Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatConfig} disabled={this.state.packageChecked.length === 0}>> Config Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatConfigVertical} disabled={this.state.packageChecked.length === 0}>> Config Template</DropdownItem>
                         <DropdownItem onClick={this.exportTSSRFormat} disabled={this.state.packageChecked.length === 0}>> PS Template</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
                       </DropdownMenu>
@@ -929,7 +952,7 @@ class PackageUpload extends React.Component {
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                       <span style={{marginRight: '10px'}}>
                       <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />Select All
-                      </span>                      
+                      </span>
                         {/* <span style={{ marginRight: '10px' }}>
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
                           Select All
