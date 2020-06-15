@@ -12,6 +12,8 @@ import { Redirect, Link } from 'react-router-dom';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import jsonData from './TechnicalNewFormat.js';
 
+import {convertDateFormatfull} from '../../helper/basicFunction'
+
 const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
 const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
@@ -1840,7 +1842,7 @@ class TechnicalBoq extends Component {
     ws.getCell('A9').border = {bottom: {style:'double'} };
 
     ws.addRow(["Project",": "+dataTech.project_name,"","","","", "", "",""]);
-    ws.addRow(["Created On",": "+dataTech.created_on,"","","","", "Updated On", dataTech.updated_on,""]);
+    ws.addRow(["Created On",": "+convertDateFormatfull(dataTech.created_on),"","","","", "Updated On", convertDateFormatfull(dataTech.updated_on),""]);
     ws.mergeCells('B10:C10');
     ws.mergeCells('B11:C11');
     ws.mergeCells('B12:C12');
@@ -2647,7 +2649,7 @@ class TechnicalBoq extends Component {
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Created On &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.created_on}</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{convertDateFormatfull(this.state.data_tech_boq.created_on)}</td>
                           </tr>
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>&nbsp; </td>
@@ -2671,7 +2673,7 @@ class TechnicalBoq extends Component {
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Updated On </td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.updated_on}</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{convertDateFormatfull(this.state.data_tech_boq.updated_on)}</td>
                           </tr>
                         </tbody>
                       </table>

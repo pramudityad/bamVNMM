@@ -208,10 +208,12 @@ const routes = [
   { path: '/assignment-detail/:id', exact: true, name: 'Assignment Detail', component: AssignmentDetail },
   { path: '/assignment-edit/:id', exact: true, name: 'Assignment Edit', component: AssignmentEdit },
   { path: '/bulk-assignment-notify', exact: true, name: 'Bulk Assignment Notify to ASP', component: BulkNotifytoASP },
+
   { path: '/list-technical', exact: true, name: 'List Technical BOQ', component: ListTechnical },
-  { path: '/detail-technical/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+  { path: '/list-technical/detail/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
   { path: '/approval-technical/:id', exact: true, name: 'Approval Technical BOQ', component: ApprovalTechnical },
-  { path: '/new-technical', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+  { path: '/list-technical/new', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+
   { path: '/dsa-creation', exact: true, name: 'DSA Creation', component: DSACreation },
   { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
   { path: '/commercial-creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
