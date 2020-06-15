@@ -107,6 +107,8 @@ class ListTechnical extends Component {
     this.state.activePage).then(res => {
       if (res.data !== undefined) {
         this.setState({ list_tech_boq: res.data.data,  prevPage: this.state.activePage, totalData: res.data.totalResults});
+      }else{
+        this.setState({ list_tech_boq: [],  prevPage: this.state.activePage, totalData: 0});
       }
     })
   }
