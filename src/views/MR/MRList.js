@@ -10,6 +10,9 @@ import { connect } from 'react-redux';
 import ActionType from '../../redux/reducer/globalActionType';
 import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
 
+import Loading from '../components/Loading'
+
+
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
@@ -32,13 +35,15 @@ class MRList extends Component {
       totalData: 0,
       perPage: 10,
       filter_list: new Array(14).fill(""),
-      mr_all: []
+      mr_all: [],
+      modal_loading: false,
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
     // this.getAllMR = this.getAllMR.bind(this);
   }
 
@@ -79,6 +84,12 @@ class MRList extends Component {
       console.log("respond data", err);
       return respond;
     }
+  }
+
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
   }
 
   getMRList() {
@@ -149,6 +160,7 @@ class MRList extends Component {
   }
 
   async downloadMRlist() {
+    this.toggleLoading();
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
@@ -164,7 +176,7 @@ class MRList extends Component {
     for (let i = 0; i < allMR.length; i++) {
       ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, allMR[i].updated_on, allMR[i].created_on])
     }
-
+    this.toggleLoading();
     const allocexport = await wb.xlsx.writeBuffer();
     saveAs(new Blob([allocexport]), 'MR List.xlsx');
   }
@@ -317,6 +329,13 @@ class MRList extends Component {
             </Card>
           </Col>
         </Row>
+
+                {/* Modal Loading */}
+                <Loading isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm modal--loading "}>
+        </Loading>
+        {/* end Modal Loading */}
       </div>
     );
   }
