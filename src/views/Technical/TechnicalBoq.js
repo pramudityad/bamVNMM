@@ -12,6 +12,7 @@ import { Redirect, Link } from 'react-router-dom';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import jsonData from './TechnicalNewFormat.js';
 
+import ModalDelete from '../components/ModalDelete'
 import {convertDateFormatfull} from '../../helper/basicFunction'
 
 const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
@@ -190,6 +191,9 @@ class TechnicalBoq extends Component {
       modal_update_info : false,
       loading_checking : null,
       format_uploader : null,
+      save_confirmation: false,
+      revise_confirmation: false,
+      selected_id: "",
     };
     this.toggleUpdateInfo = this.toggleUpdateInfo.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -222,6 +226,9 @@ class TechnicalBoq extends Component {
     this.approvalTechnical = this.approvalTechnical.bind(this);
     this.handleChangeOptionView = this.handleChangeOptionView.bind(this);
     this.handleChangeFormatUploader = this.handleChangeFormatUploader.bind(this);
+    this.toggleSave = this.toggleSave.bind(this);
+    this.toggleRevised = this.toggleRevised.bind(this);
+
     }
 
     numberToAlphabet(number){
@@ -233,6 +240,46 @@ class TechnicalBoq extends Component {
         return (num + 9).toString(36).toUpperCase();
       }
     }
+
+  toggleSave(e) {
+    const modalDelete = this.state.save_confirmation;
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      // const name = e.currentTarget.name;
+      this.setState({
+        save_confirmation: !this.state.save_confirmation,
+        selected_id: this.state.data_tech_boq.no_tech_boq,
+        // selected_wh_id: name,
+      });
+    } else {
+      this.setState({
+        save_confirmation: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete: !prevState.modalDelete,
+    }));
+  }
+
+  toggleRevised(e) {
+    const modalDelete = this.state.revise_confirmation;
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      // const name = e.currentTarget.name;
+      this.setState({
+        revise_confirmation: !this.state.revise_confirmation,
+        selected_id: this.state.data_tech_boq.no_tech_boq,
+        // selected_wh_id: name,
+      });
+    } else {
+      this.setState({
+        revise_confirmation: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete: !prevState.modalDelete,
+    }));
+  }
 
   toggleUpload(e) {
     if(e !== undefined){
@@ -582,6 +629,11 @@ class TechnicalBoq extends Component {
       }
     }
     this.toggleLoading();
+    if(revisionType==='save'){
+      this.toggleSave();
+    }else{
+      this.toggleRevised();
+    }    
   }
 
   handleChangeVersion(e){
@@ -2539,7 +2591,7 @@ class TechnicalBoq extends Component {
                                       {this.state.rowsTech.length === 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
                                     </Button>
                                   </React.Fragment>
-                                  <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.toggleUpdateInfo} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
+                                  <Button style={{'float' : 'right',marginRight : '8px'}} color="success" onClick={this.toggleUpdateInfo} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
                                     <i className="fa fa-copy">&nbsp;&nbsp;</i>
                                     {this.state.rowsTech.length === 0 ? 'Revision' : this.state.result_check_tech !== null ? 'Revision' : 'Loading..'}
                                   </Button>
@@ -2549,12 +2601,12 @@ class TechnicalBoq extends Component {
                               <Col>
                                 <div>
                                   <React.Fragment>
-                                    <Button style={{'float' : 'right'}} color="warning" onClick={this.updateTechBoq} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
+                                    <Button style={{'float' : 'right'}} color="warning" onClick={this.toggleSave} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
                                     <i className="fa fa-paste">&nbsp;&nbsp;</i>
                                       {this.state.rowsTech.length === 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
                                     </Button>
                                   </React.Fragment>
-                                  <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.updateTechBoq} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
+                                  <Button style={{'float' : 'right',marginRight : '8px'}} color="success" onClick={this.toggleRevised} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
                                     <i className="fa fa-copy">&nbsp;&nbsp;</i>
                                     {this.state.rowsTech.length === 0 ? 'Revision' : this.state.result_check_tech !== null ? 'Revision' : 'Loading..'}
                                   </Button>
@@ -2839,6 +2891,36 @@ class TechnicalBoq extends Component {
             </ModalFooter>
           </Modal>
           {/* end Modal Loading */}
+
+        {/* Modal confirmation save */}
+        <ModalDelete
+          isOpen={this.state.save_confirmation}
+          toggle={this.toggleSave}
+          className={"modal-warning " + this.props.className}
+          title={"Save and Replace "+ this.state.selected_id}
+        >
+          <Button color="warning" onClick={this.updateTechBoq} value="save">
+            Yes
+          </Button>
+          <Button color="secondary" onClick={this.toggleSave}>
+            Cancel
+          </Button>
+        </ModalDelete>
+
+        {/* Modal confirmation revised */}
+        <ModalDelete
+          isOpen={this.state.revise_confirmation}
+          toggle={this.toggleRevised}
+          className={"modal-success " + this.props.className}
+          title={"Make Revise " + this.state.selected_id}
+        >
+          <Button color="success" onClick={this.updateTechBoq} value="revision">
+            Yes
+          </Button>
+          <Button color="secondary" onClick={this.toggleRevised}>
+            Cancel
+          </Button>
+        </ModalDelete>
 
           {/* Modal Delete */}
           <Modal isOpen={this.state.modal_update_info} toggle={this.toggleUpdateInfo} className={'modal-sm ' + this.props.className}>
