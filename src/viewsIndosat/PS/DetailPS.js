@@ -1569,43 +1569,13 @@ class DetailPS extends Component {
                 )}
                 </Row>
                 <hr className="upload-line-ordering"></hr>
-                <Table responsive striped bordered size="sm">
-                  <thead>
-                    <tr style={{fontSize : '10.5px'}}>
-                      <th>PS No</th>
-                      <th>CD ID</th>
-                      <th>WBS HW</th>
-                      <th>WBS HWAC</th>
-                      <th>WBS LCM</th>
-                      <th>WBS PNRO</th>
-                      <th>WBS PNDO</th>
-                      <th>WBS HW Bulk</th>
-                      <th>WBS LCM Bulk</th>
-                      <th>WBS PowHW Site Basis</th>
-                      <th>WBS PowLCM Site Basis</th>
-                      <th>WBS Kathrein</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {this.state.tssrData !== null ? this.state.tssrData.site_info.map(site =>
-                        <tr style={{fontSize : '10.5px'}}>
-                          <td>
-                            {site.no_tssr_boq_site}
-                          </td>
-                          {this.tableWBSPlantSpect(site)}
-                        </tr>
-                      ) : <Fragment></Fragment>}
-                  </tbody>
-                </Table>
-                <hr className="upload-line-ordering"></hr>
                 <div className='divtable2'>
                   <Table hover bordered striped responsive size="sm">
                     <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
                       <tr>
-                        <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PS No. (Program) / Source Material</th>
+                        <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PS No.</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
                         <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
-                        <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Program</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>UOM</th>
                         <th colSpan="3" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Availability</th>
@@ -1621,10 +1591,9 @@ class DetailPS extends Component {
                         this.state.tssrData.packages.map(pp =>
                           <Fragment>
                             <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
-                              <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site +" ("+pp.program+")"}</td>
+                              <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site}</td>
                               <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                               <td>{pp.product_name}</td>
-                              <td>{pp.program}</td>
                               <td>{pp.uom}</td>
                               <td align='center'>{pp.qty.toFixed(2)}</td>
                               <td align='center'></td>
@@ -1636,7 +1605,6 @@ class DetailPS extends Component {
                                 <td>{material.source_material}</td>
                                 <td style={{textAlign : 'right'}}>{material.material_id}</td>
                                 <td style={{textAlign : 'left'}}>{material.material_name}</td>
-                                <td style={{textAlign : 'left'}}></td>
                                 <td>{material.uom}</td>
                                 <td align='center'>{(material.qty).toFixed(2)}</td>
                                 <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>

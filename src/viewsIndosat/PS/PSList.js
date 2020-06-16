@@ -135,7 +135,7 @@ class PSList extends Component {
                 <span style={{lineHeight :'2'}}>
                   <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Plant Spec Group List
                 </span>
-                <Link to={'/ps-list/bom'}><Button color="success" style={{float : 'right'}} size="sm">Create PS</Button></Link>
+                <Link to={'/ps-creation'}><Button color="success" style={{float : 'right'}} size="sm">Create PS</Button></Link>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -156,7 +156,7 @@ class PSList extends Component {
                         <td>{list.submission_status}</td>
                         <td>{list.mr_id}</td>
                         <td>
-                          <Link to={'/ps-list/'+list._id}>
+                          <Link to={'/ps-detail/'+list._id}>
                             <Button color="info" size="sm" outline>Detail</Button>
                           </Link>
                         </td>

@@ -18,7 +18,7 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
-const API_URL_PDB_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const API_URL_ISAT = 'https://api-dev.isat.pdb.e-dpm.com/isatapi';
 const usernameXLApi = 'adminbamidsuper';
 const passwordXLApi = 'F760qbAg2sml';
 
@@ -57,6 +57,7 @@ Array.prototype.equals = function (array) {
 // Hide method from for-in loops
 Object.defineProperty(Array.prototype, "equals", {enumerable: false});
 
+/// PAGE FOR CREATE PS
 class PSBOM extends Component {
   constructor(props) {
     super(props);
@@ -122,7 +123,7 @@ class PSBOM extends Component {
 
   async getDatafromAPIXL(url) {
     try {
-      let respond = await axios.get(API_URL_PDB_XL +url, {
+      let respond = await axios.get(API_URL_ISAT +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernameXLApi,
@@ -710,7 +711,7 @@ class PSBOM extends Component {
         }
       )
     );
-    this.postDatatoAPINODE('/plantspec/getTssrData', {"data" : dataTSSRforGet}).then(res => {
+    this.postDatatoAPINODE('/plantspec/getTssrData', {"data" : dataTSSRforGet, "itemPackage": true}).then(res => {
       if(res.data !== undefined){
         this.setState({data_tssr_selected : res.data.psData})
       }else{
@@ -816,10 +817,8 @@ class PSBOM extends Component {
                 <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
                   <tr>
                     <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Tech No.</th>
-                    <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Bundle / Material Code</th>
-                    <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>Bundle / Material Name</th>
-                    <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Config ID</th>
-                    <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>Program</th>
+                    <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>Package / Material Code</th>
+                    <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>Package / Material Name</th>
                     <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
                     <th colSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty</th>
                   </tr>
@@ -835,8 +834,6 @@ class PSBOM extends Component {
                           <td>{tssr.no_tech_boq}</td>
                           <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                           <td>{pp.product_name}</td>
-                          <td>{pp.config_id}</td>
-                          <td>{pp.program}</td>
                           <td>{pp.uom}</td>
                           <td align='center'>{pp.qty}</td>
                         </tr>
@@ -845,8 +842,6 @@ class PSBOM extends Component {
                             <td></td>
                             <td style={{textAlign : 'right'}}>{material.material_id}</td>
                             <td style={{textAlign : 'left'}}>{material.material_name}</td>
-                            <td></td>
-                            <td></td>
                             <td>{material.uom}</td>
                             <td align='center'>{pp.qty*material.qty}</td>
                           </tr>

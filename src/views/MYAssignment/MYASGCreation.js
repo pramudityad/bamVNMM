@@ -517,23 +517,19 @@ class MYASGCreation extends Component {
           <CardBody>
             <Form>
               <Row form>
-                <Col md={6}>
+                <Col md={4}>
                   <FormGroup>
                     <Label>LMR Issued By</Label>
                     <Input type="text" name="lmr_issued_by" id="lmr_issued_by" value={this.state.lmr_form.lmr_issued_by} onChange={this.handleChangeFormLMR}/>
                   </FormGroup>
                 </Col>
-              </Row>
-              <Row form>
-                <Col md={6}>
+                <Col md={4}>
                   <FormGroup>
                     <Label>PGr</Label>
                     <Input type="text" name="pgr" id="pgr" value={this.state.lmr_form.pgr} onChange={this.handleChangeFormLMR}/>
                   </FormGroup>
                 </Col>
-              </Row>
-              <Row form>
-                <Col md={6}>
+                <Col md={4}>
                   <FormGroup>
                     <Label>GL Account</Label>
                     <Input type="text" name="gl_account" id="gl_account" value={this.state.lmr_form.gl_account} onChange={this.handleChangeFormLMR}/>
@@ -541,15 +537,13 @@ class MYASGCreation extends Component {
                 </Col>
               </Row>
               <Row form>
-                <Col md={6}>
+                <Col md={4}>
                   <FormGroup>
                     <Label>Project Name</Label>
                     <Input type="text" name="project_name" id="project_name" value={this.state.lmr_form.project_name} onChange={this.handleChangeFormLMR} />
                   </FormGroup>
                 </Col>
-              </Row>
-              <Row form>
-                <Col md={8}>
+                <Col md={4}>
                   <FormGroup>
                     <Label>Header Text</Label>
                     <Input type="text" name="header_text" id="header_text" value={this.state.lmr_form.header_text} onChange={this.handleChangeFormLMR}/>
@@ -563,7 +557,7 @@ class MYASGCreation extends Component {
                 </Col>
               </Row>
               <Row form>
-                <Col md={6}>
+                <Col md={4}>
                   <FormGroup>
                     <Label>Vendor Name</Label>
                     <Input type="select" name="vendor_name" id="vendor_name" value={this.state.lmr_form.vendor_code} onChange={this.handleChangeVendor} >
@@ -574,15 +568,13 @@ class MYASGCreation extends Component {
                     </Input>
                   </FormGroup>
                 </Col>
-                <Col md={6}>
+                <Col md={4}>
                   <FormGroup>
                     <Label>Vendor Code</Label>
                     <Input type="text" name="vendor_code" id="vendor_code" value={this.state.lmr_form.vendor_code} onChange={this.handleChangeFormLMR} readOnly/>
                   </FormGroup>
                 </Col>
-              </Row>
-              <Row form>
-                <Col md={12}>
+                <Col md={4}>
                   <FormGroup>
                     <Label>Vendor Address</Label>
                     <Input type="textarea" name="vendor_address" id="vendor_address" value={this.state.lmr_form.vendor_address} onChange={this.handleChangeFormLMR}/>
@@ -590,30 +582,27 @@ class MYASGCreation extends Component {
                 </Col>
               </Row>
               <Row form>
-                <Col md={6}>
+                <Col md={4}>
                   <FormGroup>
                     <Label>L1 Approver / PM</Label>
                     <Input type="text" name="l1_approver" id="l1_approver" value={this.state.lmr_form.l1_approver} onChange={this.handleChangeFormLMR}/>
                   </FormGroup>
                 </Col>
-              </Row>
-              <Row form>
-                <Col md={6}>
+                <Col md={4}>
                   <FormGroup>
                     <Label>L2 Approver / PM</Label>
                     <Input type="text" name="l2_approver" id="l2_approver" value={this.state.lmr_form.l2_approver} onChange={this.handleChangeFormLMR}/>
                   </FormGroup>
                 </Col>
-              </Row>
-              <Row form>
-                <Col md={6}>
+                <Col md={4}>
                   <FormGroup>
-                    <Label>L1 Approver / PM</Label>
+                    <Label>L3 Approver / PM</Label>
                     <Input type="text" name="l3_approver" id="l3_approver" value={this.state.lmr_form.l3_approver} onChange={this.handleChangeFormLMR}/>
                   </FormGroup>
                 </Col>
               </Row>
             </Form>
+            <h5 style={{marginTop: "16px"}}>LMR Child</h5>
           </CardBody>
           <CardFooter>
             <Button color='success' size="sm" style={{float : 'right'}} onClick={this.createLMR}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Create LMR ASG</Button>

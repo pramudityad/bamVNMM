@@ -335,6 +335,9 @@ class ListTechnical extends Component {
                               <Link to={'/detail-technical/'+boq._id}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                               </Link>
+                              <Link to={'/summary-boq/'+boq._id}>
+                                <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Summary</Button>
+                              </Link>
                               {/*<Link to={'/approval-technical/'+boq._id}>
                                 <Button color="warning" size="sm"> <i className="fa fa-check-circle" aria-hidden="true">&nbsp;</i> Approval</Button>
                               </Link>

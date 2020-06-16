@@ -539,7 +539,15 @@ class BulkMR extends Component {
     if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
       this.setState({ action_status : 'success' });
     } else{
-      this.setState({ action_status : 'failed' });
+      if (respondSaveMR.response !== undefined && respondSaveMR.response.data !== undefined && respondSaveMR.response.data.error !== undefined) {
+        if (respondSaveMR.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error.message.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
     }
   }
 
