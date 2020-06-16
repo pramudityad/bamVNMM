@@ -207,9 +207,14 @@ class ListCommercial extends Component {
     let filter_project = this.state.filter_list[3] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}';
     let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}';
     let where = '&q={' + filter_no_comm + ', ' + filter_project + ', ' + filter_ver + '}';
-    this.getDataFromAPINODE('/commBoq?srt=_id:-1' + where).then(res => {
+    this.getDataFromAPINODE('/commBoq?srt=_id:-1' + where + "&lmt=" +
+    this.state.perPage +
+    "&pg=" +
+    this.state.activePage).then(res => {
       if (res.data !== undefined) {
-        this.setState({ list_comm_boq: res.data.data });
+        this.setState({ list_comm_boq: res.data.data, prevPage: this.state.activePage, totalData: res.data.totalResults });
+      } else {
+        this.setState({ list_tech_boq: [],  prevPage: this.state.activePage, totalData: 0});
       }
     })
   }
@@ -217,7 +222,7 @@ class ListCommercial extends Component {
   handlePageChange(pageNumber) {
     // console.log(`active page is ${pageNumber}`);
     this.setState({ activePage: pageNumber }, () => {
-      this.getListBoQ();
+      this.getCommBoqList();
     });
   }
 
@@ -337,7 +342,7 @@ class ListCommercial extends Component {
                 <React.Fragment>
                   <span style={{ position: 'absolute', marginTop: '8px' }}>Commercial BOQ List</span>
                   <div className="card-header-actions" style={{ marginRight: '5px' }}>
-                    <Link to='/commercial-creation'>
+                    <Link to='/list-commercial/creation'>
                       <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
                     </Link>
                   </div>
@@ -414,7 +419,7 @@ class ListCommercial extends Component {
                               )}
                             </td> */}
                         <td style={{ verticalAlign: 'middle', textAlign: "center" }}>
-                          <Link to={'/detail-commercial/' + boq._id}>
+                          <Link to={'/list-commercial/detail/' + boq._id}>
                             <Button className="btn-primary" size="sm" color="primary" style={{ marginRight: '10px' }}>
                               <i className="fas fa-edit" aria-hidden="true"></i>&nbsp; Edit
                                 </Button>
@@ -439,7 +444,7 @@ class ListCommercial extends Component {
                     <Pagination
                       activePage={this.state.activePage}
                       itemsCountPerPage={this.state.perPage}
-                      totalItemsCount={this.state.totalData.total}
+                      totalItemsCount={this.state.totalData}
                       pageRangeDisplayed={5}
                       onChange={this.handlePageChange}
                       itemClass="page-item"

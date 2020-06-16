@@ -208,14 +208,16 @@ const routes = [
   { path: '/assignment-detail/:id', exact: true, name: 'Assignment Detail', component: AssignmentDetail },
   { path: '/assignment-edit/:id', exact: true, name: 'Assignment Edit', component: AssignmentEdit },
   { path: '/bulk-assignment-notify', exact: true, name: 'Bulk Assignment Notify to ASP', component: BulkNotifytoASP },
+
   { path: '/list-technical', exact: true, name: 'List Technical BOQ', component: ListTechnical },
-  { path: '/detail-technical/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+  { path: '/list-technical/detail/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
   { path: '/approval-technical/:id', exact: true, name: 'Approval Technical BOQ', component: ApprovalTechnical },
-  { path: '/new-technical', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+  { path: '/list-technical/new', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+
   { path: '/dsa-creation', exact: true, name: 'DSA Creation', component: DSACreation },
   { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
-  { path: '/commercial-creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
-  { path: '/detail-commercial/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
+  { path: '/list-commercial/creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
+  { path: '/list-commercial/detail/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
   { path: '/po-assign-commercial/:id', exact: true, name: 'PO Assign Commercial BOQ', component: POAssign },
   { path: '/submission-commercial/:id', exact: true, name: 'Submission Commercial BOQ', component: SubmissionCommBoq },
 
@@ -247,7 +249,7 @@ const routes = [
   { path: '/cpo-boq-creation', exact: true, name: 'CPO BOQ Creation', component: DetailCPOBoq },
 
   { path: '/list-tssr-boq', exact: true, name: 'List TSSR BOQ', component: ListTSSRBoq },
-  { path: '/detail-tssr-boq/:id', exact: true, name: 'CPO TSSR Detail', component: DetailTSSRBoq },
+  { path: '/list-tssr-boq/detail/:id', exact: true, name: 'CPO TSSR Detail', component: DetailTSSRBoq },
 
   { path: '/shipment-list', exact: true, name: 'Shipment List', component: ShipmentList },
 
