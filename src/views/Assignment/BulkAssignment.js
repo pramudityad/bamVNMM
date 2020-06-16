@@ -331,7 +331,15 @@ class BulkAssignment extends Component {
     if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
       this.setState({ action_status : 'success' });
     } else{
-      this.setState({ action_status : 'failed' });
+      if (respondSaveASG.response !== undefined && respondSaveASG.response.data !== undefined && respondSaveASG.response.data.error !== undefined) {
+        if (respondSaveASG.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error.message.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
     }
   }
 

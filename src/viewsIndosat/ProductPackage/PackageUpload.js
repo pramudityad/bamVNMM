@@ -879,14 +879,14 @@ class PackageUpload extends React.Component {
     const ws = wb.addWorksheet();
 
     // ws.addRow(["pp_id", "product_name", "product_type", "physical_group", "package_unit", "pp_group", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
-    ws.addRow(["bundle_id", "bundle_name", "bundle_type", "physical_group", "bundle_unit", "bundle_group", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
-    ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "MDID002", "Material 2", "active_material", "EAB", "pc", 1]);
-    ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "MDID003", "Material 3", "active_material", "EAB", "meter", 100.5]);
-    ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "MDID006", "Material 6", "active_material", "EAB", "pc", 100]);
-    ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "MDID007", "Material 7", "active_material", "EAB", "pc", 4]);
+    ws.addRow(["bundle_id", "bundle_name", "bundle_type", "physical_group", "bundle_unit", "bundle_group", "ordering",	"inf_code", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
+    ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "EAB", "INF CODE 1", "MDID002", "Material 2", "active_material", "EAB", "pc", 1]);
+    ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "EAB", "INF CODE 1", "MDID003", "Material 3", "active_material", "EAB", "meter", 100.5]);
+    ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "EAB", "INF CODE 1", "MDID006", "Material 6", "active_material", "EAB", "pc", 100]);
+    ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "EAB", "INF CODE 1", "MDID007", "Material 7", "active_material", "EAB", "pc", 4]);
 
     const BundleMaterial = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([BundleMaterial]), 'Bundle Material Uploader Template.xlsx');
+    saveAs(new Blob([BundleMaterial]), 'Product Package Material Uploader Template.xlsx');
   }
 
   render() {
@@ -897,7 +897,7 @@ class PackageUpload extends React.Component {
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{ marginTop: '8px', position: 'absolute' }}>Bundle / Material</span>
+                <span style={{ marginTop: '8px', position: 'absolute' }}>Product Package / Material</span>
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
@@ -951,7 +951,7 @@ class PackageUpload extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: '10px' }}>
-                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Bundle List</span>
+                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Product Package List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                       <span style={{marginRight: '10px'}}>
                       <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />Select All
@@ -970,14 +970,15 @@ class PackageUpload extends React.Component {
                             <th>
                               <Checkbox name={"all"} checked={this.state.packageChecked_page} onChange={this.handleChangeChecklistPage} />
                             </th>
-                            <th style={{ minWidth: '150px' }}>Bundle Name</th>
+                            <th style={{ minWidth: '150px' }}>Package Name</th>
                             <th>Material Name</th>
-                            <th>Bundle ID</th>
+                            <th>package ID</th>
                             <th>Unit</th>
                             <th>Qty</th>
-                            {/* <th>Product Package</th> */}
+                            <th>Ordering</th>
+                            <th>INF Code</th>
                             <th>Physical Group</th>
-                            <th>Bundle Type/ Material Origin</th>
+                            <th>Product Type /Material Origin</th>
                             <th></th>
                           </tr>
                         </thead>
@@ -990,6 +991,8 @@ class PackageUpload extends React.Component {
                                 <td style={{ textAlign: 'left' }}>{pp.pp_id}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.uom}</td>
                                 <td style={{ textAlign: 'left' }}></td>
+                                <td style={{ textAlign: 'center' }}>{pp.ordering}</td>
+                                <td style={{ textAlign: 'center' }}>{pp.inf_code}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.physical_group}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.product_type}</td>
                                 <td>
@@ -1006,6 +1009,8 @@ class PackageUpload extends React.Component {
                                   <td style={{ textAlign: 'left' }}>{mat.material_id}</td>
                                   <td style={{ textAlign: 'center' }}>{mat.uom}</td>
                                   <td style={{ textAlign: 'center' }}>{mat.qty}</td>
+                                  <td style={{ textAlign: 'left' }}></td>
+                                  <td style={{ textAlign: 'left' }}></td>
                                   <td style={{ textAlign: 'left' }}></td>
                                   <td style={{ textAlign: 'center' }}>{mat.material_origin}</td>
                                   <td></td>

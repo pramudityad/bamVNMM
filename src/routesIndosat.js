@@ -7,6 +7,7 @@ const ProductPackage = React.lazy(() => import('./viewsIndosat/ProductPackage/Pa
 
 const ListTechnical = React.lazy(() => import('./viewsIndosat/Technical/ListTechnical'));
 const DetailTechnical = React.lazy(() => import('./viewsIndosat/Technical/TechnicalBoq'));
+const SummaryBoq = React.lazy(() => import('./viewsIndosat/Technical/SummaryBoq'));
 
 const ListCommercial = React.lazy(() => import('./viewsIndosat/Commercial/ListCommercial'));
 const DetailCommercial = React.lazy(() => import('./viewsIndosat/Commercial/CommercialBoq'));
@@ -38,6 +39,7 @@ const routes = [
   { path: '/list-technical', exact: true, name: 'List Technical BOQ', component: ListTechnical },
   { path: '/detail-technical/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
   { path: '/new-technical', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+  { path: '/summary-boq/:id', exact: true, name: 'Detail Summary BOQ', component: SummaryBoq },
 
   { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
   { path: '/list-commercial/creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
@@ -55,8 +57,8 @@ const routes = [
   { path: '/cpo-database', exact: true, name: 'CPO Database', component: CPODatabase },
 
   { path: '/ps-list', exact: true, name: 'Plant Spec List', component: PSList },
-  { path: '/ps-list/bom', exact: true, name: 'Plant Spec BOM', component: PSBOM },
-  { path: '/ps-list/:id', name: 'Plant Spec BOM', component: PSBOMDetail },
+  { path: '/ps-creation', exact: true, name: 'Plant Spec BOM', component: PSBOM },
+  { path: '/ps-detail/:id', name: 'Plant Spec BOM', component: PSBOMDetail },
 
 
 ];

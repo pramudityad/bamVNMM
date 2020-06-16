@@ -73,6 +73,7 @@ class PackageUpload extends React.Component {
     this.saveNewPP = this.saveNewPP.bind(this);
     this.togglePPedit = this.togglePPedit.bind(this);
     this.saveUpdatePP = this.saveUpdatePP.bind(this);
+    this.exportFormatBundleMaterial = this.exportFormatBundleMaterial.bind(this);
   }
   toggle(i) {
     const newArray = this.state.dropdownOpen.map((element, index) => {
@@ -874,12 +875,16 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    // ws.addRow(["pp_id", "product_name", "product_type", "physical_group", "package_unit", "pp_group", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
+    const dataPP = this.state.packageSelected;
+
     ws.addRow(["bundle_id", "bundle_name", "bundle_type", "physical_group", "bundle_unit", "bundle_group", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
-    ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "MDID002", "Material 2", "active_material", "EAB", "pc", 1]);
-    ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "MDID003", "Material 3", "active_material", "EAB", "meter", 100.5]);
-    ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "MDID006", "Material 6", "active_material", "EAB", "pc", 100]);
-    ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "MDID007", "Material 7", "active_material", "EAB", "pc", 4]);
+
+    for (let i = 0; i < dataPP.length; i++) {
+      for (let j = 0; j < dataPP[i].materials.length; j++) {
+        let matIndex = dataPP[i].materials[j];
+        ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, dataPP[i].product_type, dataPP[i].physical_group, dataPP[i].uom, dataPP[i].pp_group,matIndex.material_id, matIndex.material_name, matIndex.material_type, matIndex.material_origin, matIndex.uom, matIndex.qty])
+      }
+    }
 
     const BundleMaterial = await wb.xlsx.writeBuffer();
     saveAs(new Blob([BundleMaterial]), 'Bundle Material Uploader Template.xlsx');
