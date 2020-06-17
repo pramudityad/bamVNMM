@@ -52,7 +52,7 @@ const routes = [
   { path: '/list-tssr-matix/creation', exact: true, name: 'TSSR Matrix BOQ Creation', component: NewTssrMatrix },
   { path: '/list-tssr-matix/:id', exact: true, name: 'Detail TSSR Matrix BOQ', component: DetailTssrMatrix },
   { path: '/list-tssr-boq', exact: true, name: 'List TSSR BOQ', component: ListTSSRBoq },
-  { path: '/list-tssr-boq/:id', exact: true, name: 'CPO TSSR Detail', component: DetailTSSRBoq },
+  { path: '/list-tssr-boq/detail/:id', exact: true, name: 'CPO TSSR Detail', component: DetailTSSRBoq },
 
   { path: '/cpo-database', exact: true, name: 'CPO Database', component: CPODatabase },
 
