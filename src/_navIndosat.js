@@ -30,11 +30,11 @@ export default {
       //     url: '/cpo-database',
       //     icon: 'icon-globe',
       //   },
-      //   {
-      //     name: 'TSSR BOQ',
-      //     url: '/list-tssr-boq',
-      //     icon: 'icon-docs',
-      //   },
+        {
+          name: 'TSSR BOQ',
+          url: '/list-tssr-boq',
+          icon: 'icon-docs',
+        },
       // {
       //    name: 'TSSR Matrix BOQ ',
       //    url: '/list-tssr-matix',
