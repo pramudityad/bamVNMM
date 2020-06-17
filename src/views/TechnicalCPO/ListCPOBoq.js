@@ -252,7 +252,7 @@ class ListCPOBoq extends Component {
               <span style={{marginTop:'8px'}}>CPO BOQ List</span>
               {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
                 <div className="card-header-actions" style={{marginRight:'5px'}}>
-                    <Link to='/cpo-boq-creation'>
+                    <Link to='/list-cpo-boq/creation'>
                     <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
                     </Link>
                 </div>
@@ -276,7 +276,7 @@ class ListCPOBoq extends Component {
                             <td style={{verticalAlign : 'middle'}}>{boq.cpo_boq_id}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.creator[0].email}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              <Link to={'/detail-cpo-boq/'+boq.cpo_number}>
+                              <Link to={'/list-cpo-boq/detail/'+boq.cpo_number}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                               </Link>
                               {/* <Link to={'/approval-technical/'+boq._id}>

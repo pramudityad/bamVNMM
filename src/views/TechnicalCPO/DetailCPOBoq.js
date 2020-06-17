@@ -865,19 +865,20 @@ class DetailCPOBoq extends Component {
     if (this.props.match.params.id === undefined) {
       this.getPODataList();
     } else {
+      this.toggleLoading();
       this.getCPOBoqData(this.props.match.params.id);
       this.getSubmissionCommercialListData();
-
+      this.toggleLoading();
     }
   }
 
-  getCPOBoqData(_id_cpo) {
+  getCPOBoqData(_id_cpo) {    
     this.getDataFromAPINODE('/cpoBoq/' + _id_cpo).then(res => {
       if (res.data !== undefined) {
         const dataCPO = res.data;
         this.setState({ data_cpo_boq: dataCPO.data });
       }
-    })
+    })    
   }
 
   getSubmissionCommercialListData() {

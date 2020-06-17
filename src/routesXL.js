@@ -245,8 +245,8 @@ const routes = [
   { path: '/detail-list-cpo-database/:id', exact: true, name: 'CPO Database', component: CPODatabaseDetail },
 
   { path: '/list-cpo-boq', exact: true, name: 'List CPO BOQ', component: ListCPOBoq },
-  { path: '/detail-cpo-boq/:id', exact: true, name: 'CPO BOQ Detail', component: DetailCPOBoq },
-  { path: '/cpo-boq-creation', exact: true, name: 'CPO BOQ Creation', component: DetailCPOBoq },
+  { path: '/list-cpo-boq/detail/:id', exact: true, name: 'CPO BOQ Detail', component: DetailCPOBoq },
+  { path: '/list-cpo-boq/creation', exact: true, name: 'CPO BOQ Creation', component: DetailCPOBoq },
 
   { path: '/list-tssr-boq', exact: true, name: 'List TSSR BOQ', component: ListTSSRBoq },
   { path: '/list-tssr-boq/detail/:id', exact: true, name: 'CPO TSSR Detail', component: DetailTSSRBoq },
