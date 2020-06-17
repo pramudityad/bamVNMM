@@ -1345,6 +1345,7 @@ class MaterialStock2 extends React.Component {
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
           title="Delete Stock"
+          body={"Are you sure ?"}
         >
           <Button color="danger" onClick={this.DeleteData}>
             Delete

@@ -1257,6 +1257,7 @@ class WHManagement extends React.Component {
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
           title={"Delete WH "+ this.state.selected_wh_id}
+          body={"Are you sure ?"}
         >
           <Button color="danger" onClick={this.DeleteData}>
             Delete
