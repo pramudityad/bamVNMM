@@ -750,6 +750,7 @@ class ShipmentList extends Component {
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
           title={"Cancel Shipment " + this.state.shipment_detail.no_shipment}
+          body={"Are you sure ?"}
         >
           <Button color="danger" onClick={this.cancelShipment}>
             Cancel Shipment
@@ -765,7 +766,7 @@ class ShipmentList extends Component {
           toggle={this.toggleTakeOut}
           className={"modal-warning " + this.props.className}
           title={"Takeout MR from Shipment " + this.state.shipment_detail.no_shipment}
-          body={"want takeout " + this.state.mr_data_selected.map(mr=>mr.mr_id)}
+          body={"Are you sure want takeout " + this.state.mr_data_selected.map(mr=>mr.mr_id)}          
           // title={"Takeout MR "}
         >
           <Button color="warning" onClick={this.TakeoutMR}>

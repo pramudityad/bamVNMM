@@ -1063,6 +1063,7 @@ class MatLibrary extends React.Component {
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
           title={"Delete Material "+ this.state.selected_name}
+          body={"Are you sure ?"}
         >
           <Button color="danger" onClick={this.DeleteData}>
             Delete
