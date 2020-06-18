@@ -14,6 +14,8 @@ import Select from 'react-select';
 import { connect } from 'react-redux';
 import jsonData from './jsonData.js';
 import debounce from 'lodash.debounce';
+import ModalDelete from '../components/ModalDelete'
+
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
@@ -104,6 +106,10 @@ class CommercialBoq extends Component {
         TotalPriceUSDChange : new Map(),
         total_comm : {},
         boq_tech_select : {},
+        save_confirmation: false,
+      revise_confirmation: false,
+      selected_id: "",
+      selected_version: null,
       };
       this.toggleLoading = this.toggleLoading.bind(this);
       this.toggleDropdown = this.toggleDropdown.bind(this);
@@ -123,6 +129,8 @@ class CommercialBoq extends Component {
       this.updateCommercial = this.updateCommercial.bind(this);
       this.onChangeDebouncedTotalIDR = debounce(this.onChangeDebouncedTotalIDR, 500);
       this.onChangeDebouncedTotalUSD = debounce(this.onChangeDebouncedTotalUSD, 500);
+      this.toggleSave = this.toggleSave.bind(this);
+    this.toggleRevised = this.toggleRevised.bind(this);
     }
 
     checkValueReturn(value1, value2){
@@ -134,6 +142,46 @@ class CommercialBoq extends Component {
         console.log('value2', value2);
         return value2;
       }
+    }
+
+    toggleSave(e) {
+      const modalDelete = this.state.save_confirmation;
+      if (modalDelete === false) {
+        const _id = e.currentTarget.value;
+        // const name = e.currentTarget.name;
+        this.setState({
+          save_confirmation: !this.state.save_confirmation,
+          selected_id: this.state.data_comm_boq.no_comm_boq,
+          
+        });
+      } else {
+        this.setState({
+          save_confirmation: false,
+        });
+      }
+      this.setState((prevState) => ({
+        modalDelete: !prevState.modalDelete,
+      }));
+    }
+  
+    toggleRevised(e) {
+      const modalDelete = this.state.revise_confirmation;
+      if (modalDelete === false) {
+        const _id = e.currentTarget.value;
+        // const name = e.currentTarget.name;
+        this.setState({
+          revise_confirmation: !this.state.revise_confirmation,
+          selected_id: this.state.data_comm_boq.no_comm_boq,
+          selected_version: parseInt(this.state.data_comm_boq.version)+1
+        });
+      } else {
+        this.setState({
+          revise_confirmation: false,
+        });
+      }
+      this.setState((prevState) => ({
+        modalDelete: !prevState.modalDelete,
+      }));
     }
 
     toggleLoading(){
@@ -899,11 +947,11 @@ class CommercialBoq extends Component {
                         {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
                           <React.Fragment>
                             <input type="file" onChange={this.fileHandlerCommercial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} />
-                              <Button style={{'float' : 'right',margin : '8px'}} color="warning" onClick={this.updateCommercial} value="save">
+                              <Button style={{'float' : 'right',margin : '8px'}} color="warning" onClick={this.toggleSave} value="save">
                                 <i className="fa fa-paste">&nbsp;&nbsp;</i>
                                 Save
                               </Button>
-                              <Button style={{'float' : 'right',margin : '8px'}} color="secondary" onClick={this.updateCommercial} value="revision">
+                              <Button style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.toggleRevised} value="revision">
                                 <i className="fa fa-copy">&nbsp;&nbsp;</i>
                                 Revision
                               </Button>
@@ -1203,6 +1251,38 @@ class CommercialBoq extends Component {
             </ModalFooter>
           </Modal>
           {/* end Modal Loading */}
+
+                  {/* Modal confirmation save */}
+        <ModalDelete
+          isOpen={this.state.save_confirmation}
+          toggle={this.toggleSave}
+          className={"modal-warning " + this.props.className}
+          title={"Save and Replace "}
+          body={"This action will save and replace "+ this.state.selected_id+ ". Are you sure ?"}
+        >
+          <Button color="warning" onClick={this.updateCommercial} value="save">
+            Yes
+          </Button>
+          <Button color="secondary" onClick={this.toggleSave}>
+            Cancel
+          </Button>
+        </ModalDelete>
+
+        {/* Modal confirmation revised */}
+        <ModalDelete
+          isOpen={this.state.revise_confirmation}
+          toggle={this.toggleRevised}
+          className={"modal-success " + this.props.className}
+          title={"Make Revise "}
+          body={"This action will add revision version "+ "'"+this.state.selected_version+"'" +" on "+ this.state.selected_id+" . Are you sure ?"}
+        >
+          <Button color="success" onClick={this.updateCommercial} value="revision">
+            Yes
+          </Button>
+          <Button color="secondary" onClick={this.toggleRevised}>
+            Cancel
+          </Button>
+        </ModalDelete>
 
           {/* Modal Loading */}
           <Modal isOpen={this.state.toggleShowGroup} toggle={this.showGroupToggle} className={'modal-sm ' + this.props.className + ' loading-modal'}>

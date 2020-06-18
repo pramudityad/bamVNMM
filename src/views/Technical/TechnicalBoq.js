@@ -194,6 +194,7 @@ class TechnicalBoq extends Component {
       save_confirmation: false,
       revise_confirmation: false,
       selected_id: "",
+      selected_version: null,
     };
     this.toggleUpdateInfo = this.toggleUpdateInfo.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -249,7 +250,7 @@ class TechnicalBoq extends Component {
       this.setState({
         save_confirmation: !this.state.save_confirmation,
         selected_id: this.state.data_tech_boq.no_tech_boq,
-        // selected_wh_id: name,
+        
       });
     } else {
       this.setState({
@@ -269,7 +270,7 @@ class TechnicalBoq extends Component {
       this.setState({
         revise_confirmation: !this.state.revise_confirmation,
         selected_id: this.state.data_tech_boq.no_tech_boq,
-        // selected_wh_id: name,
+        selected_version: parseInt(this.state.data_tech_boq.version)+1
       });
     } else {
       this.setState({
@@ -865,6 +866,7 @@ class TechnicalBoq extends Component {
       // });
       this.getTechBoqData(this.props.match.params.id);
     }
+    console.log(this.state.version_selected)
   }
 
 
@@ -2897,7 +2899,8 @@ class TechnicalBoq extends Component {
           isOpen={this.state.save_confirmation}
           toggle={this.toggleSave}
           className={"modal-warning " + this.props.className}
-          title={"Save and Replace "+ this.state.selected_id}
+          title={"Save and Replace "}
+          body={"This action will save and replace "+ this.state.selected_id+ ". Are you sure ?"}
         >
           <Button color="warning" onClick={this.updateTechBoq} value="save">
             Yes
@@ -2912,7 +2915,8 @@ class TechnicalBoq extends Component {
           isOpen={this.state.revise_confirmation}
           toggle={this.toggleRevised}
           className={"modal-success " + this.props.className}
-          title={"Make Revise " + this.state.selected_id}
+          title={"Make Revise "}
+          body={"This action will add revision version "+ "'"+this.state.selected_version+"'" +" on "+ this.state.selected_id+" . Are you sure ?"}
         >
           <Button color="success" onClick={this.updateTechBoq} value="revision">
             Yes

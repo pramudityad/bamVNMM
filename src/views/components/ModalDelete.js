@@ -6,7 +6,7 @@ const ModalDelete = ({ isOpen, toggle, className, title, children, body }) => {
     <div>
       <Modal isOpen={isOpen} toggle={toggle} className={className}>
         <ModalHeader toggle={toggle}>{title}</ModalHeader>
-        <ModalBody>Are you sure {body}?</ModalBody>
+        <ModalBody>{body}</ModalBody>
         <ModalFooter>
             {children}
         </ModalFooter>
