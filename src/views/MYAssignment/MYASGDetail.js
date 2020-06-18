@@ -48,6 +48,7 @@ class MYASGDetail extends Component {
       action_message : null,
       action_status : null,
       collapse_add_child : false,
+      creation_lmr_child_form : [],
     }
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeFormLMRChild = this.handleChangeFormLMRChild.bind(this);
@@ -57,6 +58,9 @@ class MYASGDetail extends Component {
     this.toggleCollapse = this.toggleCollapse.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.deleteChild = this.deleteChild.bind(this);
+    this.addLMR = this.addLMR.bind(this);
+    // this.createLMRChild = this.createLMRChild.bind(this);
+    this.handleChangeFormLMRChildMultiple = this.handleChangeFormLMRChildMultiple.bind(this);
   }
 
   toggle(i) {
@@ -454,6 +458,22 @@ class MYASGDetail extends Component {
     this.toggleLoading();
   }
 
+  addLMR(){
+    let dataLMR = this.state.creation_lmr_child_form;
+    dataLMR.push({});
+    this.setState({creation_lmr_child_form : dataLMR});
+  }
+
+  handleChangeFormLMRChildMultiple(e){
+    let dataLMR = this.state.creation_lmr_child_form;
+    let idxField = e.target.name.split(" /// ");
+    let value = e.target.value;
+    let idx = idxField[0];
+    let field = idxField[1];
+    dataLMR[parseInt(idx)][field] = value;
+    this.setState({creation_lmr_child_form : dataLMR})
+  }
+
   render() {
 
     return (
@@ -586,6 +606,8 @@ class MYASGDetail extends Component {
                         <th>Total price</th>
                         <th>Total Value</th>
                         <th>Currency</th>
+                        <th>Item</th>
+                        <th>PR</th>
                         <th></th>
                         {/* }<th>PR</th>
                         <th>PO</th>
@@ -608,6 +630,8 @@ class MYASGDetail extends Component {
                           <td>{e.total_price}</td>
                           <td>{e.total_value}</td>
                           <td>{e.currency}</td>
+                          <td>{e.item}</td>
+                          <td>{e.pr}</td>
                           <td>
                             <Button color="danger" size="sm" value={e._id} onClick={this.deleteChild}><i className="fa fa-eraser"></i></Button>
                           </td>
@@ -616,6 +640,60 @@ class MYASGDetail extends Component {
                           <td>{e.item}</td>*/}
                         </tr>
                       ) : (<Fragment></Fragment>)}
+                      <tr>
+                        <td colSpan="15" style={{textAlign : 'left'}}>
+                          <Button color="primary" size="sm" onClick={this.addLMR}>
+                            <i className="fa fa-plus">&nbsp;</i> LMR
+                          </Button>
+                        </td>
+                      </tr>
+                      {this.state.creation_lmr_child_form.map((lmr,i) =>
+                        <tr>
+                          <td>
+                            <input type="text" name={i+" /// so_or_nw"} id={i+" /// so_or_nw"} value={lmr.so_or_nw} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="text" name={i+" /// activity"} id={i+" /// activity"} value={lmr.activity} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="text" name={i+" /// material"} id={i+" /// material"} value={lmr.material} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="textarea" name={i+" /// description"} id={i+" /// description"} value={lmr.description} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="text" name={i+" /// site_id"} id={i+" /// site_id"} value={lmr.site_id} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="number" name={i+" /// quantity"} id={i+" /// quantity"} value={lmr.quantity} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="number" name={i+" /// price"} id={i+" /// price"} value={lmr.price} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="text" name={i+" /// tax_code"} id={i+" /// tax_code"} value={lmr.tax_code} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="date" name={i+" /// delivery_date"} id={i+" /// delivery_date"} value={lmr.delivery_date} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="number" name={i+" /// total_price"} id={i+" /// total_price"} value={lmr.total_price} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="number" name={i+" /// total_value"} id={i+" /// total_value"} value={lmr.total_value} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="text" name={i+" /// currency"} id={i+" /// currency"} value={lmr.currency} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="number" name={i+" /// item"} id={i+" /// item"} value={lmr.item} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="text" name={i+" /// pr"} id={i+" /// pr"} value={lmr.pr} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td></td>
+                        </tr>
+                      )}
                     </tbody>
                   </Table>
                 </div>
