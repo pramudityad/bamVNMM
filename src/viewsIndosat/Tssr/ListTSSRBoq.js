@@ -134,7 +134,7 @@ class ListTSSRBoq extends Component {
             <Table hover bordered striped responsive size="sm">
               <thead>
                   <tr>
-                    <th>Technical BOQ Origin</th>
+                    <th>TSSR BOQ Origin</th>
                     <th>Project</th>
                     <th>Creator</th>
                     <th>Ver.</th>
