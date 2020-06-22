@@ -726,7 +726,7 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataPP = this.state.product_package;
+    const dataPP = this.state.packageSelected;
 
     let headerRow = ['bundle_id',	'bundle_name',	'bundle_type',	'physical_group',	'bundle_unit',	'bundle_group',	'material_id',	'material_name',	'material_type',	'material_origin',	'material_unit',	'material_qty', "bundle_system_id"]
     ws.addRow(headerRow);
@@ -880,9 +880,13 @@ class PackageUpload extends React.Component {
     ws.addRow(["bundle_id", "bundle_name", "bundle_type", "physical_group", "bundle_unit", "bundle_group", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
 
     for (let i = 0; i < dataPP.length; i++) {
-      for (let j = 0; j < dataPP[i].materials.length; j++) {
-        let matIndex = dataPP[i].materials[j];
-        ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, dataPP[i].product_type, dataPP[i].physical_group, dataPP[i].uom, dataPP[i].pp_group,matIndex.material_id, matIndex.material_name, matIndex.material_type, matIndex.material_origin, matIndex.uom, matIndex.qty])
+      if(dataPP[i].materials.length !== 0){
+        for (let j = 0; j < dataPP[i].materials.length; j++) {
+          let matIndex = dataPP[i].materials[j];
+          ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, dataPP[i].product_type, dataPP[i].physical_group, dataPP[i].uom, dataPP[i].pp_group,matIndex.material_id, matIndex.material_name, matIndex.material_type, matIndex.material_origin, matIndex.uom, matIndex.qty])
+        }
+      }else{
+        ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, dataPP[i].product_type, dataPP[i].physical_group, dataPP[i].uom, dataPP[i].pp_group])
       }
     }
 

@@ -275,6 +275,7 @@ class BulkAssignment extends Component {
     const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', dataXLSASG);
     if(respondCheckingASG.data !== undefined && respondCheckingASG.status >= 200 && respondCheckingASG.status <= 300 ) {
       let dataChecking = respondCheckingASG.data.data;
+      console.log("respondCheckingASG.data.data", JSON.stringify(respondCheckingASG.data.data));
       this.setState({assignment_ssow_upload : dataChecking});
       if(dataChecking.filter(e => e.operation === "INVALID").length !== 0){
         this.setState({ action_status : 'failed', action_message : 'Please check INVALID row in preview' });

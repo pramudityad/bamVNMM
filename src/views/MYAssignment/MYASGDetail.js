@@ -16,10 +16,11 @@ const passwordBAM = 'F760qbAg2sml';
 
 // const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const API_URL_NODE = 'http://localhost:5012/bammyapi';
+// const API_URL_NODE = 'http://localhost:5012/bammyapi';
+const API_URL_NODE = 'https://api-dev.bam-my.e-dpm.com/bammyapi';
 
-const BearerToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYXNfaWQiOiI1MmVhNTZhMS0zNDMxLTRlMmQtYWExZS1hNTc3ODQzMTMxYzEiLCJyb2xlcyI6WyJCQU0tU3VwZXJBZG1pbiJdLCJhY2NvdW50IjoiMSIsImlhdCI6MTU5MTY5MTE4MH0.FpbzlssSQyaAbJOzNf3KLqHPnYo_ccBtBWu6n87h1RQ';
-
+// const BearerToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYXNfaWQiOiI1MmVhNTZhMS0zNDMxLTRlMmQtYWExZS1hNTc3ODQzMTMxYzEiLCJyb2xlcyI6WyJCQU0tU3VwZXJBZG1pbiJdLCJhY2NvdW50IjoiMSIsImlhdCI6MTU5MTY5MTE4MH0.FpbzlssSQyaAbJOzNf3KLqHPnYo_ccBtBWu6n87h1RQ';
+const BearerToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYXNfaWQiOiIxOTM2YmE0Yy0wMjlkLTQ1MzktYWRkOC1mZjc2OTNiMDlmZmUiLCJyb2xlcyI6WyJCQU0tU3VwZXJBZG1pbiJdLCJhY2NvdW50IjoiMSIsImlhdCI6MTU5MjQ3MDI4Mn0.tIJSzHa-ewhqz0Ail7J0maIZx4R9P1aXE2E_49pe4KY';
 class MYASGDetail extends Component {
   constructor(props) {
     super(props);
@@ -59,7 +60,7 @@ class MYASGDetail extends Component {
     this.toggleLoading = this.toggleLoading.bind(this);
     this.deleteChild = this.deleteChild.bind(this);
     this.addLMR = this.addLMR.bind(this);
-    // this.createLMRChild = this.createLMRChild.bind(this);
+    this.createLMRChild = this.createLMRChild.bind(this);
     this.handleChangeFormLMRChildMultiple = this.handleChangeFormLMRChildMultiple.bind(this);
   }
 
@@ -474,6 +475,34 @@ class MYASGDetail extends Component {
     this.setState({creation_lmr_child_form : dataLMR})
   }
 
+  async createLMRChild(){
+    this.toggleLoading();
+    const dataChildForm = this.state.creation_lmr_child_form;
+    let dummryRow = [];
+    let headerRow = ["nw","activity","material","description","site_id","qty","unit_price","tax_code", "delivery_date", "total_price", "total_value", "currency", "pr", "item", "id_lmr_doc"];
+    dummryRow.push(headerRow);
+    for(let i = 0; i < dataChildForm.length; i++){
+      let rowChild = [dataChildForm[i].so_or_nw, dataChildForm[i].activity,dataChildForm[i].material,dataChildForm[i].description,dataChildForm[i].site_id,parseFloat(dataChildForm[i].quantity),parseFloat(dataChildForm[i].price),dataChildForm[i].tax_code,dataChildForm[i].delivery_date,parseFloat(dataChildForm[i].total_price),parseFloat(dataChildForm[i].total_value),dataChildForm[i].currency,dataChildForm[i].pr,parseFloat(dataChildForm[i].item), this.props.match.params.id];
+      dummryRow.push(rowChild);
+    }
+    const respondSaveLMRChild = await this.postDatatoAPINODE('/aspassignment/createChild', { 'asp_data': dummryRow });
+    if(respondSaveLMRChild.data !== undefined && respondSaveLMRChild.status >= 200 && respondSaveLMRChild.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      if(respondSaveLMRChild.response !== undefined && respondSaveLMRChild.response.data !== undefined && respondSaveLMRChild.response.data.error !== undefined){
+        if(respondSaveLMRChild.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveLMRChild.response.data.error.message) });
+        }else{
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveLMRChild.response.data.error) });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+    console.log("dummryRow", JSON.stringify(dummryRow));
+  }
+
   render() {
 
     return (
@@ -643,7 +672,7 @@ class MYASGDetail extends Component {
                       <tr>
                         <td colSpan="15" style={{textAlign : 'left'}}>
                           <Button color="primary" size="sm" onClick={this.addLMR}>
-                            <i className="fa fa-plus">&nbsp;</i> LMR
+                            <i className="fa fa-plus">&nbsp;</i> LMR CHild
                           </Button>
                         </td>
                       </tr>
@@ -693,6 +722,20 @@ class MYASGDetail extends Component {
                           </td>
                           <td></td>
                         </tr>
+                      )}
+                      {this.state.creation_lmr_child_form.length !== 0 && (
+                        <Fragment>
+                        <tr>
+                          <td colSpan="15" style={{textAlign : 'right'}}>
+                            &nbsp;
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colSpan="15" style={{textAlign : 'right'}}>
+                            <Button color='success' size="sm" onClick={this.createLMRChild}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Save LMR Child</Button>
+                          </td>
+                        </tr>
+                        </Fragment>
                       )}
                     </tbody>
                   </Table>

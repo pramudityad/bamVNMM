@@ -392,7 +392,7 @@ class TSSRboq extends Component {
         this.setState({action_status : 'failed'});
       }
     }
-  }   
+  }
 
   saveProjecttoDB(){
     const dataTech = this.state.API_Tech;
@@ -403,7 +403,7 @@ class TSSRboq extends Component {
     this.patchDatatoAPI('/boq_tech_op/'+dataTech._id, data_Project, dataTech._etag).then( res => {
       if(res !== undefined){
         if(res.data !== undefined){
-          this.setState({action_message : "Your project have been assign to Technical BOQ ", action_status : 'success'}, () => {
+          this.setState({action_message : "Your project have been assign to TSSR BOQ ", action_status : 'success'}, () => {
             setTimeout(function(){ window.location.reload(); }, 3000);
           });
         }
@@ -458,7 +458,7 @@ class TSSRboq extends Component {
   }
 
   componentDidMount(){
-    this.getTechBoqData(this.props.match.params.id);    
+    this.getTechBoqData(this.props.match.params.id);
   }
 
 
@@ -692,7 +692,7 @@ class TSSRboq extends Component {
     ws.getCell('H7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
     ws.mergeCells('A9:I9');
-    ws.getCell('A9').value = 'TECHNICAL BOQ';
+    ws.getCell('A9').value = 'TSSR BOQ';
     ws.getCell('A9').font  = { size: 14, bold : true };
     ws.getCell('A9').alignment  = {vertical: 'middle', horizontal: 'center' };
     ws.getCell('A9').border = {bottom: {style:'double'} };
@@ -755,7 +755,7 @@ class TSSRboq extends Component {
     }
 
     const techFormat = await wb.xlsx.writeBuffer()
-    saveAs(new Blob([techFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Report.xlsx')
+    saveAs(new Blob([techFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Report.xlsx')
   }
 
   toggleLoading(){
@@ -861,7 +861,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Uploader Commercial Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Uploader Commercial Template.xlsx');
   }
 
   exportFormatTechnicalNew = async () =>{
@@ -878,7 +878,7 @@ class TSSRboq extends Component {
     ws.addRow(HeaderRow2);
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'TSSR BOQ Uploader Template.xlsx');
   }
 
   exportTechnicalHorizontal = async () =>{
@@ -928,7 +928,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+'.xlsx');
+    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+'.xlsx');
   }
 
   exportFormatTechnicalHorizontal = async () =>{
@@ -978,7 +978,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Format.xlsx');
+    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Format.xlsx');
   }
 
   exportFormatTechnicalVerticalUploader = async () =>{
@@ -1011,7 +1011,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Vertical Uploader.xlsx');
+    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Vertical Uploader.xlsx');
   }
 
   exportFormatTechnicalVerticalUploaderCommercial = async () =>{
@@ -1044,7 +1044,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Vertical Uploader.xlsx');
+    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Vertical Uploader.xlsx');
   }
 
   exportFormatTechnicalVertical = async () =>{
@@ -1077,7 +1077,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Vertical.xlsx');
+    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Vertical.xlsx');
   }
 
     render() {
@@ -1121,7 +1121,7 @@ class TSSRboq extends Component {
                 <CardHeader>
                   {this.state.data_item.length === 0 && this.state.API_Tech.no_boq_tech === undefined && this.props.match.params.id == undefined ? (
                     <React.Fragment>
-                      <span>Create Technical BOQ</span>
+                      <span>Create TSSR BOQ</span>
                     </React.Fragment>
                   ) : (
                     <React.Fragment>
@@ -1130,13 +1130,13 @@ class TSSRboq extends Component {
                         <Col>
                           <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}}>
                             <DropdownToggle caret color="secondary" size="sm">
-                              <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download Technical File
+                              <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download TSSR File
                             </DropdownToggle>
                             <DropdownMenu>
-                              <DropdownItem header> Technical File</DropdownItem>
-                              <DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Report</DropdownItem>
-                              <DropdownItem onClick={this.exportTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Horizontal</DropdownItem>
-                              <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Format</DropdownItem>
+                              <DropdownItem header> TSSR File</DropdownItem>
+                              <DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Report</DropdownItem>
+                              <DropdownItem onClick={this.exportTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Horizontal</DropdownItem>
+                              <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Format</DropdownItem>
                             </DropdownMenu>
                           </Dropdown>
                         </Col>
@@ -1254,7 +1254,7 @@ class TSSRboq extends Component {
                       <table style={{width : '100%', marginBottom : '0px', marginLeft : '10px'}}>
                         <tbody>
                           <tr style={{fontWeight : '425', fontSize : '23px'}}>
-                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>TECHNICAL BOQ</td>
+                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>TSSR BOQ</td>
                           </tr>
                           <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
                             <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.data_tech_boq.no_tech_boq}</td>
@@ -1359,35 +1359,6 @@ class TSSRboq extends Component {
 
                     </CardBody>
                   <CardFooter>
-                    <div style={{display : 'flex'}}>
-                      {this.state.data_tech_boq !== null && (
-                      <Row>
-                        <Col>
-                          <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value={"1"} onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.approval_status !== "PRE APPROVAL"}>
-                              {this.state.data_tech_boq.approval_status === "PRE APPROVAL" ? "Submit" : "Tech Submitted"}
-                          </Button>
-                        </Col>
-                       </Row>
-                      )}
-                      {(this.state.data_tech_boq !== null && (this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" || this.state.data_tech_boq.approval_status === "APPROVED" )) && (
-                      <Row>
-                        <Col>
-                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value={"2"} onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.approval_status !== 'REQUEST FOR APPROVAL'}>
-                              {this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" ? "Approve" : "Tech Approved"}
-                          </Button>
-                        </Col>
-                       </Row>
-                      )}
-                      {this.state.data_tech_boq !== null && (
-                      <Row>
-                        <Col>
-                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.tssr_approval_status !== "NOT SUBMITTED"}>
-                              {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" ? "Submit to TSSR" : "TSSR Submitted"}
-                          </Button>
-                        </Col>
-                       </Row>
-                      )}
-                    </div>
                   </CardFooter>
               </Card>
             </Col>
@@ -1419,7 +1390,7 @@ class TSSRboq extends Component {
           <Modal isOpen={this.state.modal_update_info} toggle={this.toggleUpdateInfo} className={'modal-sm ' + this.props.className}>
             <ModalBody>
               <div style={{textAlign : 'center', margin : '15px 0 20px 0'}}>
-                <span style={{fontWeight : '500', fontSize : '15px'}}>Update this Technical BOQ can delete Commercial BOQ related with this Technical BOQ </span>
+                <span style={{fontWeight : '500', fontSize : '15px'}}>Update this TSSR BOQ can delete Commercial BOQ related with this TSSR BOQ </span>
               </div>
               <div style={{textAlign : 'center', margin : '15px 0 20px 0'}}>
                 <span style={{fontWeight : '500', fontSize : '15px'}}></span>

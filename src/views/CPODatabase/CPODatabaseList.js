@@ -160,7 +160,7 @@ class CPODatabase extends React.Component {
   getPODataList() {
     // let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
     // this.getDatatoAPIEXEL('/po_op?max_results=' + this.state.perPage + '&page=' + this.state.activePage + '&where={' + po_number + '}')
-    this.getDatafromAPINODE('/cpodb/getCpoDb?lmt='+this.state.perPage +
+    this.getDatafromAPINODE('/cpodb/getCpoDb?srt=_id:-1&lmt='+this.state.perPage +
     "&pg=" + this.state.activePage)
       .then(res => {
         // console.log('all cpoDB', res.data)
@@ -403,7 +403,8 @@ class CPODatabase extends React.Component {
     this.toggleLoading();
     const cpobulkXLS = this.state.rowsXLS;
     const cpoData = await this.getCPOFormat(cpobulkXLS);
-    const res = await this.postDatatoAPINODE('/cpodb/createCpoDb', { 'poData': cpobulkXLS });
+    // const res = await this.postDatatoAPINODE('/cpodb/createCpoDb', { 'poData': cpobulkXLS });
+    const res = await this.postDatatoAPINODE('/cpodb/createCpoDbWithDetail', { 'poData': cpobulkXLS });
     if (res.data !== undefined) {
       this.setState({ action_status: 'success', action_message : null });
       this.toggleLoading();
@@ -707,7 +708,7 @@ class CPODatabase extends React.Component {
                     placeholder=""
                     value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
-                  />                    
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="contract">Contract</Label>
@@ -717,7 +718,7 @@ class CPODatabase extends React.Component {
                     placeholder=""
                     value={this.state.DataForm[5]}
                     onChange={this.handleChangeForm}
-                  />                    
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="contact">Contact</Label>
@@ -727,7 +728,7 @@ class CPODatabase extends React.Component {
                     placeholder=""
                     value={this.state.DataForm[6]}
                     onChange={this.handleChangeForm}
-                  />                    
+                  />
                 </FormGroup>
               </Col>
             </Row>

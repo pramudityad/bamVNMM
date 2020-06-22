@@ -160,13 +160,16 @@ class CPODatabase extends React.Component {
   getPODataList() {
     // let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
     // this.getDatatoAPIEXEL('/po_op?max_results=' + this.state.perPage + '&page=' + this.state.activePage + '&where={' + po_number + '}')
-    this.getDatafromAPINODE('/cpodb/getCpoDb')
+    this.getDatafromAPINODE('/cpodb/getCpoDb?lmt='+this.state.perPage +
+    "&pg=" + this.state.activePage)
       .then(res => {
-        console.log('all cpoDB', res.data)
+        // console.log('all cpoDB', res.data)
         if (res.data !== undefined) {
-          this.setState({ po_op_data: res.data.data })
+          this.setState({ po_op_data: res.data.data, prevPage: this.state.activePage,
+            total_data_PO: res.data.totalResults})
         } else {
-          this.setState({ po_op_data: []});
+          this.setState({ po_op_data: [], total_data_PO: 0,
+            prevPage: this.state.activePage,});
         }
       })
   }
@@ -198,6 +201,32 @@ class CPODatabase extends React.Component {
       return props;
     }
   }
+
+  checkValueReturn(value1, value2) {
+    // if value undefined or null return Value2
+    if (typeof value1 !== 'undefined' && value1 !== null) {
+      return value1;
+    } else {
+      return value2;
+    }
+  }
+
+  // check Package Config
+  // fileHandlerMaterial = (event) => {
+  //   // this.toggleLoading();
+  //   let fileObj = event.target.files[0];
+  //   if (fileObj !== undefined) {
+  //     ExcelRenderer(fileObj, (err, rest) => {
+  //       if (err) {
+  //         console.log(err);
+  //       }
+  //       else {
+  //         console.log('excel arr ', rest.rows)
+  //         this.setState({ rowsXLS: rest.rows })
+  //       }
+  //     });
+  //   }
+  // }
 
   fileHandlerMaterial = (input) => {
     const file = input.target.files[0];
@@ -419,6 +448,16 @@ class CPODatabase extends React.Component {
       });
   }
 
+  numToSSColumn(num) {
+    var s = '', t;
+
+    while (num > 0) {
+      t = (num - 1) % 26;
+      s = String.fromCharCode(65 + t) + s;
+      num = (num - t) / 26 | 0;
+    }
+    return s || undefined;
+  }
 
   exportFormatCPO_level1 = async () => {
     const wb = new Excel.Workbook();
@@ -444,9 +483,9 @@ class CPODatabase extends React.Component {
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
-                      {/* <DropdownToggle caret color="light">
+                      <DropdownToggle caret color="light">
                         Download Template
-                        </DropdownToggle> */}
+                        </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatCPO_level1}> CPO Level 1 Template</DropdownItem>
@@ -456,7 +495,7 @@ class CPODatabase extends React.Component {
                   <div>
                     {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
                       <div>
-                        <Button block color="success" onClick={this.togglePOForm} >
+                        <Button block color="success" onClick={this.toggleAddNew} id="toggleCollapse1">
                           <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> New
                           </Button>
                       </div>
@@ -517,7 +556,7 @@ class CPODatabase extends React.Component {
                             <th>Shipping Terms</th>
                             <th>Contract</th>
                             <th>Contact</th>
-                            <th></th>
+                            <th colspan="1"></th>
                             {/* <th></th> */}
                           </tr>
                         </thead>
@@ -532,7 +571,7 @@ class CPODatabase extends React.Component {
                                 <td style={{ textAlign: 'center' }}>{po.shipping_terms}</td>
                                 <td style={{ textAlign: 'center' }}>{po.contract}</td>
                                 <td style={{ textAlign: 'center' }}>{po.contact}</td>
-                                {/* <td style={{ textAlign: 'center' }}>
+                                {/* }<td style={{ textAlign: 'center' }}>
                                   <Link to={'/detail-list-cpo-database/' + po._id}>
                                     <Button color="primary" size="sm" style={{ marginRight: '10px' }}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                                   </Link>
@@ -668,7 +707,7 @@ class CPODatabase extends React.Component {
                     placeholder=""
                     value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
-                  />                    
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="contract">Contract</Label>
@@ -678,7 +717,7 @@ class CPODatabase extends React.Component {
                     placeholder=""
                     value={this.state.DataForm[5]}
                     onChange={this.handleChangeForm}
-                  />                    
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="contact">Contact</Label>
@@ -688,7 +727,7 @@ class CPODatabase extends React.Component {
                     placeholder=""
                     value={this.state.DataForm[6]}
                     onChange={this.handleChangeForm}
-                  />                    
+                  />
                 </FormGroup>
               </Col>
             </Row>

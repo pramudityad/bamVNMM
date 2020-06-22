@@ -95,11 +95,11 @@ class ListCPOBoq extends Component {
   }
 
   getCpoBoqList(){
-    this.getDataFromAPINODE('/cpoBoqList?lmt='+this.state.perPage +
+    this.getDataFromAPINODE('/cpoBoqList?srt=cpo_boq_id:-1&lmt='+this.state.perPage +
     "&pg=" + this.state.activePage).then(res => {
       if(res.data !== undefined){
         this.setState({list_cpo_boq : res.data.data, prevPage: this.state.activePage,
-          totalData: res.data.totalResults});          
+          totalData: res.data.totalResults});
       } else{
         this.setState({list_cpo_boq : [], prevPage: this.state.activePage,
           totalData: 0});
