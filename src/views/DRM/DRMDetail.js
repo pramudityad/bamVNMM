@@ -25,6 +25,7 @@ import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
 import "./DRMcss.css";
+import {convertDateFormat} from '../../helper/basicFunction'
 
 const Checkbox = ({
   type = "checkbox",
@@ -727,6 +728,7 @@ class DRMDetail extends React.Component {
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportDRMTemplate}>{" "}DRM Template</DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>{" "}Download All Filter</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>{" "}Download All</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
@@ -792,8 +794,10 @@ class DRMDetail extends React.Component {
                 <Row>
                   <Col>
                     <div className="divtable">
-                      <Table responsive bordered>
-                        <thead className="fixed table-drm__header--middle">
+                      <Table bordered style={{
+        height: "400px"
+      }}>
+                        <thead className="table-drm__header--middle">
                           <tr align="center">
                             <th>TowerID</th>
                             <th>Project</th>
@@ -917,7 +921,7 @@ class DRMDetail extends React.Component {
                             <td>{drm.system}</td>
                             <td>{drm.optic_rru}</td>
                             <td>{drm.area}</td>
-                            <td>{drm.verification_date}</td>
+                            <td>{convertDateFormat(drm.verification_date)}</td>
                             <td>{drm.verification_status}</td>
                             <td>{drm.verification_pic}</td>
                             <td>{drm.issued_detail}</td>

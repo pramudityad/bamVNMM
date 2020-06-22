@@ -10,7 +10,7 @@ import Excel from 'exceljs';
 import Select from 'react-select';
 import { Redirect, Link } from 'react-router-dom';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
-
+import {convertDateFormatfull} from '../../helper/basicFunction'
 import {getDatafromAPINODE, postDatatoAPINODE, patchDatatoAPINODE} from '../../helper/asyncFunction'
 
 
@@ -698,7 +698,7 @@ class TSSRboq extends Component {
     ws.getCell('A9').border = {bottom: {style:'double'} };
 
     ws.addRow(["Project",": "+dataTech.project_name,"","","","", "", "",""]);
-    ws.addRow(["Created On",": "+dataTech.created_on,"","","","", "Updated On", dataTech.updated_on,""]);
+    ws.addRow(["Created On",": "+convertDateFormatfull(dataTech.created_on),"","","","", "Updated On", convertDateFormatfull(dataTech.updated_on),""]);
     ws.mergeCells('B10:C10');
     ws.mergeCells('B11:C11');
     ws.mergeCells('B12:C12');
@@ -811,7 +811,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Uploader Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Uploader Template.xlsx');
   }
 
   exportFormatTechnicalCommercial = async () =>{
@@ -1083,7 +1083,7 @@ class TSSRboq extends Component {
     render() {
       console.log("length", Config_group_DEFAULT.length, Config_group_type_DEFAULT.length);
       if(this.state.redirectSign !== false){
-        return (<Redirect to={'/detail-technical/'+this.state.redirectSign} />);
+        return (<Redirect to={'/detail-TSSR BOQ/'+this.state.redirectSign} />);
       }
 
       function AlertProcess(props){
@@ -1283,7 +1283,7 @@ class TSSRboq extends Component {
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Created On &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.created_on}</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{convertDateFormatfull(this.state.data_tech_boq.created_on)}</td>
                           </tr>
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>&nbsp; </td>
@@ -1307,7 +1307,7 @@ class TSSRboq extends Component {
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Updated On </td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.updated_on}</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{convertDateFormatfull(this.state.data_tech_boq.updated_on)}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -1358,8 +1358,37 @@ class TSSRboq extends Component {
                     )}
 
                     </CardBody>
-                  <CardFooter>
-                  </CardFooter>
+                  {/* <CardFooter>
+                    <div style={{display : 'flex'}}>
+                      {this.state.data_tech_boq !== null && (
+                      <Row>
+                        <Col>
+                          <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value={"1"} onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.approval_status !== "PRE APPROVAL"}>
+                              {this.state.data_tech_boq.approval_status === "PRE APPROVAL" ? "Submit" : "Tech Submitted"}
+                          </Button>
+                        </Col>
+                       </Row>
+                      )}
+                      {(this.state.data_tech_boq !== null && (this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" || this.state.data_tech_boq.approval_status === "APPROVED" )) && (
+                      <Row>
+                        <Col>
+                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value={"2"} onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.approval_status !== 'REQUEST FOR APPROVAL'}>
+                              {this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" ? "Approve" : "Tech Approved"}
+                          </Button>
+                        </Col>
+                       </Row>
+                      )}
+                      {this.state.data_tech_boq !== null && (
+                      <Row>
+                        <Col>
+                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.tssr_approval_status !== "NOT SUBMITTED"}>
+                              {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" ? "Submit to TSSR" : "TSSR Submitted"}
+                          </Button>
+                        </Col>
+                       </Row>
+                      )}
+                    </div>
+                  </CardFooter> */}
               </Card>
             </Col>
           </Row>
