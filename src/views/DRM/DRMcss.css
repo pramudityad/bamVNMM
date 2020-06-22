@@ -1,5 +1,16 @@
 .table-drm__header--middle th {
   display: table-cell;
   vertical-align: middle !important;
-  background-color: rgba(121,134,203 ,1);
+  background-color: rgb(152, 181, 197);
+}
+
+.fixed-page-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  z-index: 1;
+  width: calc(100% - 17px);
+  height: 75px;
 }
