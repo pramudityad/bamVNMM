@@ -714,6 +714,7 @@ class DRMDetail extends React.Component {
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportDRMTemplate}>{" "}DRM Template</DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>{" "}Download All Filter</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>{" "}Download All</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
