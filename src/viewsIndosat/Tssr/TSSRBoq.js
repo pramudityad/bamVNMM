@@ -392,7 +392,7 @@ class TSSRboq extends Component {
         this.setState({action_status : 'failed'});
       }
     }
-  }   
+  }
 
   saveProjecttoDB(){
     const dataTech = this.state.API_Tech;
@@ -458,7 +458,7 @@ class TSSRboq extends Component {
   }
 
   componentDidMount(){
-    this.getTechBoqData(this.props.match.params.id);    
+    this.getTechBoqData(this.props.match.params.id);
   }
 
 

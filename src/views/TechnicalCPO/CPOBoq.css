@@ -87,3 +87,11 @@
 .page-choose {
   margin-top: 10px;
 }
+
+.status-cpo-boq-row--not-exists {
+  background-color: rgba(229,115,115 ,1);
+}
+
+.status-cpo-boq-row--data-not-match {
+  background-color: rgba(255,213,79 ,1);
+}

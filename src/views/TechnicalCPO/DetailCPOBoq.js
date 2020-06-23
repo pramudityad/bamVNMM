@@ -872,13 +872,13 @@ class DetailCPOBoq extends Component {
     }
   }
 
-  getCPOBoqData(_id_cpo) {    
+  getCPOBoqData(_id_cpo) {
     this.getDataFromAPINODE('/cpoBoq/' + _id_cpo).then(res => {
       if (res.data !== undefined) {
         const dataCPO = res.data;
         this.setState({ data_cpo_boq: dataCPO.data });
       }
-    })    
+    })
   }
 
   getSubmissionCommercialListData() {
@@ -2057,6 +2057,14 @@ class DetailCPOBoq extends Component {
     saveAs(new Blob([MRFormat]), 'CPO BOQ '+dataCPO[0].cpo_number+' Format.xlsx');
   }
 
+  changeToClassname(status){
+    let newStatus = '';
+    if(status !== undefined && status !== null && status.length !== 0){
+      newStatus = status.toLowerCase().replace(/ /g, "-");
+    }
+    return newStatus;
+  }
+
   render() {
 
     function AlertProcess(props) {
@@ -2308,7 +2316,7 @@ class DetailCPOBoq extends Component {
                       {this.state.data_cpo_boq.map(row =>
                         <tr>
                           {this.state.submission_number_selected !== null && (
-                            <td>{row.match_status}</td>
+                            <td className={"status-cpo-boq-row--"+this.changeToClassname(row.match_status)}>{row.match_status}</td>
                           )}
                           <td>{row.prodef}</td>
                           <td>{row.wbs}</td>

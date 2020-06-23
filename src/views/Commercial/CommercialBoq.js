@@ -152,7 +152,7 @@ class CommercialBoq extends Component {
         this.setState({
           save_confirmation: !this.state.save_confirmation,
           selected_id: this.state.data_comm_boq.no_comm_boq,
-          
+
         });
       } else {
         this.setState({
@@ -163,7 +163,7 @@ class CommercialBoq extends Component {
         modalDelete: !prevState.modalDelete,
       }));
     }
-  
+
     toggleRevised(e) {
       const modalDelete = this.state.revise_confirmation;
       if (modalDelete === false) {

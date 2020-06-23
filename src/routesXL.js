@@ -127,6 +127,8 @@ const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'
 const ListTSSRBoq = React.lazy(() => import('./views/Tssr/ListTSSRBoq'));
 const DetailTSSRBoq = React.lazy(() => import('./views/Tssr/TSSRBoq'));
 
+const CRDetail = React.lazy(() => import('./views/CR/CRDetail'));
+
 const DRMDetail = React.lazy(() => import('./views/DRM/DRMDetail'));
 
 const GR  = React.lazy(() => import('./views/Warehouse/GR'));
@@ -271,6 +273,8 @@ const routes = [
   { path: '/wh-dashboard-ext/wh-gi-ext-per-wh/:whid', exact: true, name: 'GI External Detail', component: GI },
 
   { path: '/drm-detail', exact: true, name: 'DRM Detail', component: DRMDetail },
+
+  { path: '/cr-detail', exact: true, name: 'CR Detail', component: CRDetail },
 
   { path: '/order-received-per-wh/:whid', name: 'Order Received', component: OrderReceived },
   { path: '/order-processing-per-wh/:whid', exact: true, name: 'Order Processing', component: OrderProcessing },

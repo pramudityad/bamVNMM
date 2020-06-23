@@ -74,7 +74,7 @@ class ListTSSRBoq extends Component {
     let filter_project = this.state.filter_list[2] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
     let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
     let filter_status = this.state.filter_list[5] === null ? '"approval_status":{"$exists" : 1}' : '"approval_status":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
-    let where = 'q={'+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+'}';
+    let where = 'q={'+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+', "tssr_approval_status" : {"$ne" : "NOT SUBMITTED"}}';
     this.getDataFromAPINODE('/techBoqList?srt=_id:-1&'+where+ "&lmt=" +
     this.state.perPage +
     "&pg=" +

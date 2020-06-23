@@ -66,6 +66,12 @@ export default {
           icon: 'icon-docs',
           roles : ["BAM-Solution", "BAM-Engineering"],
         },
+        {
+          name: 'CR',
+          url: '/cr-detail',
+          icon: 'icon-docs',
+          roles : ["BAM-Solution", "BAM-Engineering"],
+        },
       ]
     },
     {

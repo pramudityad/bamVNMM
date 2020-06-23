@@ -16,10 +16,11 @@ const passwordBAM = 'F760qbAg2sml';
 
 // const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const API_URL_NODE = 'http://localhost:5012/bammyapi';
+// const API_URL_NODE = 'http://localhost:5012/bammyapi';
+const API_URL_NODE = 'https://api-dev.bam-my.e-dpm.com/bammyapi';
 
-const BearerToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYXNfaWQiOiI1MmVhNTZhMS0zNDMxLTRlMmQtYWExZS1hNTc3ODQzMTMxYzEiLCJyb2xlcyI6WyJCQU0tU3VwZXJBZG1pbiJdLCJhY2NvdW50IjoiMSIsImlhdCI6MTU5MTY5MTE4MH0.FpbzlssSQyaAbJOzNf3KLqHPnYo_ccBtBWu6n87h1RQ';
-
+// const BearerToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYXNfaWQiOiI1MmVhNTZhMS0zNDMxLTRlMmQtYWExZS1hNTc3ODQzMTMxYzEiLCJyb2xlcyI6WyJCQU0tU3VwZXJBZG1pbiJdLCJhY2NvdW50IjoiMSIsImlhdCI6MTU5MTY5MTE4MH0.FpbzlssSQyaAbJOzNf3KLqHPnYo_ccBtBWu6n87h1RQ';
+const BearerToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYXNfaWQiOiIxOTM2YmE0Yy0wMjlkLTQ1MzktYWRkOC1mZjc2OTNiMDlmZmUiLCJyb2xlcyI6WyJCQU0tU3VwZXJBZG1pbiJdLCJhY2NvdW50IjoiMSIsImlhdCI6MTU5MjQ3MDI4Mn0.tIJSzHa-ewhqz0Ail7J0maIZx4R9P1aXE2E_49pe4KY';
 class MYASGDetail extends Component {
   constructor(props) {
     super(props);
@@ -48,6 +49,7 @@ class MYASGDetail extends Component {
       action_message : null,
       action_status : null,
       collapse_add_child : false,
+      creation_lmr_child_form : [],
     }
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeFormLMRChild = this.handleChangeFormLMRChild.bind(this);
@@ -57,6 +59,9 @@ class MYASGDetail extends Component {
     this.toggleCollapse = this.toggleCollapse.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.deleteChild = this.deleteChild.bind(this);
+    this.addLMR = this.addLMR.bind(this);
+    this.createLMRChild = this.createLMRChild.bind(this);
+    this.handleChangeFormLMRChildMultiple = this.handleChangeFormLMRChildMultiple.bind(this);
   }
 
   toggle(i) {
@@ -454,6 +459,50 @@ class MYASGDetail extends Component {
     this.toggleLoading();
   }
 
+  addLMR(){
+    let dataLMR = this.state.creation_lmr_child_form;
+    dataLMR.push({});
+    this.setState({creation_lmr_child_form : dataLMR});
+  }
+
+  handleChangeFormLMRChildMultiple(e){
+    let dataLMR = this.state.creation_lmr_child_form;
+    let idxField = e.target.name.split(" /// ");
+    let value = e.target.value;
+    let idx = idxField[0];
+    let field = idxField[1];
+    dataLMR[parseInt(idx)][field] = value;
+    this.setState({creation_lmr_child_form : dataLMR})
+  }
+
+  async createLMRChild(){
+    this.toggleLoading();
+    const dataChildForm = this.state.creation_lmr_child_form;
+    let dummryRow = [];
+    let headerRow = ["nw","activity","material","description","site_id","qty","unit_price","tax_code", "delivery_date", "total_price", "total_value", "currency", "pr", "item", "id_lmr_doc"];
+    dummryRow.push(headerRow);
+    for(let i = 0; i < dataChildForm.length; i++){
+      let rowChild = [dataChildForm[i].so_or_nw, dataChildForm[i].activity,dataChildForm[i].material,dataChildForm[i].description,dataChildForm[i].site_id,parseFloat(dataChildForm[i].quantity),parseFloat(dataChildForm[i].price),dataChildForm[i].tax_code,dataChildForm[i].delivery_date,parseFloat(dataChildForm[i].total_price),parseFloat(dataChildForm[i].total_value),dataChildForm[i].currency,dataChildForm[i].pr,parseFloat(dataChildForm[i].item), this.props.match.params.id];
+      dummryRow.push(rowChild);
+    }
+    const respondSaveLMRChild = await this.postDatatoAPINODE('/aspassignment/createChild', { 'asp_data': dummryRow });
+    if(respondSaveLMRChild.data !== undefined && respondSaveLMRChild.status >= 200 && respondSaveLMRChild.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      if(respondSaveLMRChild.response !== undefined && respondSaveLMRChild.response.data !== undefined && respondSaveLMRChild.response.data.error !== undefined){
+        if(respondSaveLMRChild.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveLMRChild.response.data.error.message) });
+        }else{
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveLMRChild.response.data.error) });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+    console.log("dummryRow", JSON.stringify(dummryRow));
+  }
+
   render() {
 
     return (
@@ -586,6 +635,8 @@ class MYASGDetail extends Component {
                         <th>Total price</th>
                         <th>Total Value</th>
                         <th>Currency</th>
+                        <th>Item</th>
+                        <th>PR</th>
                         <th></th>
                         {/* }<th>PR</th>
                         <th>PO</th>
@@ -608,6 +659,8 @@ class MYASGDetail extends Component {
                           <td>{e.total_price}</td>
                           <td>{e.total_value}</td>
                           <td>{e.currency}</td>
+                          <td>{e.item}</td>
+                          <td>{e.pr}</td>
                           <td>
                             <Button color="danger" size="sm" value={e._id} onClick={this.deleteChild}><i className="fa fa-eraser"></i></Button>
                           </td>
@@ -616,6 +669,74 @@ class MYASGDetail extends Component {
                           <td>{e.item}</td>*/}
                         </tr>
                       ) : (<Fragment></Fragment>)}
+                      <tr>
+                        <td colSpan="15" style={{textAlign : 'left'}}>
+                          <Button color="primary" size="sm" onClick={this.addLMR}>
+                            <i className="fa fa-plus">&nbsp;</i> LMR CHild
+                          </Button>
+                        </td>
+                      </tr>
+                      {this.state.creation_lmr_child_form.map((lmr,i) =>
+                        <tr>
+                          <td>
+                            <input type="text" name={i+" /// so_or_nw"} id={i+" /// so_or_nw"} value={lmr.so_or_nw} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="text" name={i+" /// activity"} id={i+" /// activity"} value={lmr.activity} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="text" name={i+" /// material"} id={i+" /// material"} value={lmr.material} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="textarea" name={i+" /// description"} id={i+" /// description"} value={lmr.description} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="text" name={i+" /// site_id"} id={i+" /// site_id"} value={lmr.site_id} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="number" name={i+" /// quantity"} id={i+" /// quantity"} value={lmr.quantity} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="number" name={i+" /// price"} id={i+" /// price"} value={lmr.price} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="text" name={i+" /// tax_code"} id={i+" /// tax_code"} value={lmr.tax_code} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="date" name={i+" /// delivery_date"} id={i+" /// delivery_date"} value={lmr.delivery_date} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="number" name={i+" /// total_price"} id={i+" /// total_price"} value={lmr.total_price} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="number" name={i+" /// total_value"} id={i+" /// total_value"} value={lmr.total_value} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="text" name={i+" /// currency"} id={i+" /// currency"} value={lmr.currency} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="number" name={i+" /// item"} id={i+" /// item"} value={lmr.item} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td>
+                            <input type="text" name={i+" /// pr"} id={i+" /// pr"} value={lmr.pr} onChange={this.handleChangeFormLMRChildMultiple} style={{width : '100%'}}/>
+                          </td>
+                          <td></td>
+                        </tr>
+                      )}
+                      {this.state.creation_lmr_child_form.length !== 0 && (
+                        <Fragment>
+                        <tr>
+                          <td colSpan="15" style={{textAlign : 'right'}}>
+                            &nbsp;
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colSpan="15" style={{textAlign : 'right'}}>
+                            <Button color='success' size="sm" onClick={this.createLMRChild}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i>Save LMR Child</Button>
+                          </td>
+                        </tr>
+                        </Fragment>
+                      )}
                     </tbody>
                   </Table>
                 </div>

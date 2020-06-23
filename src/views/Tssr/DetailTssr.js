@@ -1257,7 +1257,7 @@ class DetailTssr extends Component {
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
 
-    let headerRow = ["bam_id", "bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "stock_warehouse", "inbound_warehouse", "availability", "source_material"];
+    let headerRow = ["bam_id", "tssr_id", "bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "stock_warehouse", "inbound_warehouse", "availability", "source_material"];
     ws.addRow(headerRow);
     let list_material_id = [];
     for(let i = 0; i < dataItemTSSR.length; i++){
@@ -1268,7 +1268,7 @@ class DetailTssr extends Component {
         let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
         qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
-        ws.addRow([dataMatIdx._id, dataItemTSSR[i].pp_id, dataItemTSSR[i].product_name, dataItemTSSR[i].program, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.uom, dataMatIdx.qty, qty_wh, qty_inbound, (dataMatIdx.qty) < qty_wh ? "OK":"NOK"]);
+        ws.addRow([dataMatIdx._id, dataItemTSSR[i].no_tssr_boq_site, dataItemTSSR[i].pp_id, dataItemTSSR[i].product_name, dataItemTSSR[i].program, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.uom, dataMatIdx.qty, qty_wh, qty_inbound, (dataMatIdx.qty) < qty_wh ? "OK":"NOK"]);
       }
     }
 

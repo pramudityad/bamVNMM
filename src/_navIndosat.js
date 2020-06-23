@@ -20,6 +20,11 @@ export default {
           url: '/list-technical',
           icon: 'icon-docs',
         },
+        {
+          name: 'CPO DB',
+          url: '/cpo-database',
+          icon: 'icon-docs',
+        },
       //   {
       //     name: 'Commercial BOQ ',
       //     url: '/list-commercial',
@@ -35,11 +40,11 @@ export default {
           url: '/list-tssr-boq',
           icon: 'icon-docs',
         },
-      {
-         name: 'TSSR Matrix BOQ ',
-         url: '/list-tssr-matix',
-         icon: 'icon-drawer',
-       },
+      // {
+      //    name: 'TSSR Matrix BOQ ',
+      //    url: '/list-tssr-matix',
+      //    icon: 'icon-drawer',
+      //  },
        {
         name: 'Plant Spec List',
         url: '/ps-list',

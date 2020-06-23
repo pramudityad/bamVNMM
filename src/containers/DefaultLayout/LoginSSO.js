@@ -7,9 +7,11 @@ import ActionType from '../../redux/reducer/globalActionType';
 import App from '../../App';
 import './LoginSSO.css';
 import { Button, Card, CardBody, CardFooter, Col, Container, Form, Input, InputGroup, InputGroupAddon, InputGroupText, Row } from 'reactstrap';
-import psi from '../../assets/img/customer/psi.jpeg'
-import demokrat from '../../assets/img/customer/DEMOKRAT.png'
-import pks from '../../assets/img/customer/PKS.png'
+import telkom from '../../assets/img/customer/logo-telkom-indonesia-transparent-background.png';
+import xl from '../../assets/img/customer/1200px-XL_logo_2016.svg.png';
+import indosat from '../../assets/img/customer/Indosat-Ooredoo-Vector-Logo.png';
+import ericssonLogo from '../../assets/img/brand/ERI_horizontal_RGB_WHITE.svg';
+import ericssonLogoBlack from '../../assets/img/brand/ERI_horizontal_RGB_BLACK.svg';
 
 
 const loading = () => <div className="animated fadeIn pt-3 text-center">Loading...</div>;
@@ -138,10 +140,14 @@ class SSOLogin extends Component {
 
     if(this.state.key !== null && this.state.key !== undefined && (this.state.authenticatedLoginBAM === null || this.state.authenticatedLoginBAM === false)){
       return (
-        <div className="app flex-row align-items-center">
-          <Container>
+        <React.Fragment>
+        <div className="app flex-row align-items-center page--select-account">
+          <Container className="background-container--login-page">
+            <Row className="justify-content-center" style={{display : 'flex', width : 'inherit'}}>
+              <img src={ericssonLogoBlack} alt="Ericsson logo" style={{width : '170px', float : 'right', marginLeft : 'auto'}} />
+            </Row>
             <Row className="justify-content-center">
-              <h4>Welcome to BAM</h4>
+              <span style={{fontWeight : '900', fontSize : '25px'}}>Welcome to BAM</span>
             </Row>
             <Row className="justify-content-center">
               <h3>Please Select Account :</h3>
@@ -151,17 +157,20 @@ class SSOLogin extends Component {
                 <div className="flex--card-account" >
                   <div className="card-account--telkom" onClick={()=>this.handleChangeAccount("1")}>
                     <div>
-                      <h2>TELKOM</h2>
+                      <img src={telkom} alt="telkom logo" style={{width : '80%'}} />
+                      {/* }<h2>TELKOM</h2> */}
                     </div>
                   </div>
                   <div className="card-account--xl" onClick={()=>this.handleChangeAccount("2")}>
                     <div>
-                      <h2>XL AXIATA</h2>
+                      <img src={xl} alt="XL logo" style={{width : '55%', marginTop : '5px'}}/>
+                      {/*<h2>XL AXIATA</h2>*/}
                     </div>
                   </div>
                   <div className="card-account--indosat" onClick={()=>this.handleChangeAccount("3")}>
                     <div>
-                      <h2>INDOSAT</h2>
+                      <img src={indosat} alt="Indosat logo" style={{width : '80%'}}/>
+                      {/*<h2>INDOSAT</h2>*/}
                     </div>
                   </div>
                 </div>
@@ -176,6 +185,7 @@ class SSOLogin extends Component {
             )}
           </Container>
         </div>
+        </React.Fragment>
       )
     }
 

@@ -250,7 +250,7 @@ class TechnicalBoq extends Component {
       this.setState({
         save_confirmation: !this.state.save_confirmation,
         selected_id: this.state.data_tech_boq.no_tech_boq,
-        
+
       });
     } else {
       this.setState({
@@ -265,7 +265,6 @@ class TechnicalBoq extends Component {
   toggleRevised(e) {
     const modalDelete = this.state.revise_confirmation;
     if (modalDelete === false) {
-      const _id = e.currentTarget.value;
       // const name = e.currentTarget.name;
       this.setState({
         revise_confirmation: !this.state.revise_confirmation,
@@ -625,7 +624,7 @@ class TechnicalBoq extends Component {
         }
       }else{
         this.setState({ action_status: 'failed' }, () => {
-            
+
         });
       }
     }
@@ -634,7 +633,7 @@ class TechnicalBoq extends Component {
       this.toggleSave();
     }else{
       this.toggleRevised();
-    }    
+    }
   }
 
   handleChangeVersion(e){
@@ -2859,11 +2858,19 @@ class TechnicalBoq extends Component {
                       )}
                       {this.state.data_tech_boq !== null && (
                       <Row>
-                        <Col>
-                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.tssr_approval_status !== "NOT SUBMITTED"}>
-                              {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" ? "Submit to TSSR" : "TSSR Submitted"}
-                          </Button>
-                        </Col>
+                        {(this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP") ? (
+                          <Col>
+                            <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.approvalTechnical} disabled={false}>
+                                {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP" ? "Submit to TSSR" : "TSSR Submitted"}
+                            </Button>
+                          </Col>
+                        ) : (
+                          <Col>
+                            <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.approvalTechnical} disabled={true}>
+                                {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP" ? "Submit to TSSR" : "TSSR Submitted"}
+                            </Button>
+                          </Col>
+                        )}
                        </Row>
                       )}
                     </div>
