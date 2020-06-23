@@ -26,7 +26,7 @@ const API_URL_ISAT = 'https://api-dev.isat.pdb.e-dpm.com/isatapi';
 const usernameXL = 'adminbamidsuper';
 const passwordXL = 'F760qbAg2sml';
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 
 // const Config_group_type_DEFAULT = ["General Info", "General Info", "General Info", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "SERVICE", "SERVICE", "SERVICE", "SERVICE", "SERVICE", "SERVICE", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME"]
 //
@@ -295,7 +295,7 @@ class SummaryBoq extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE+url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE+url, {
         headers : {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser
@@ -314,7 +314,7 @@ class SummaryBoq extends Component {
 
   async postDatatoAPINODE(url, data){
     try {
-      let respond = await axios.post(API_URL_NODE +url, data, {
+      let respond = await axios.post(process.env.REACT_APP_API_URL_NODE +url, data, {
         headers : {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser
@@ -334,7 +334,7 @@ class SummaryBoq extends Component {
 
   async patchDatatoAPINODE(url, data){
     try {
-      let respond = await axios.patch(API_URL_NODE +url, data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL_NODE +url, data, {
         headers : {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser

@@ -10,7 +10,7 @@ import Pagination from "react-js-pagination";
 import Select from 'react-select';
 import {connect} from 'react-redux';
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -125,7 +125,7 @@ class TechnicalBoqApproval extends Component {
 
     async getDataFromAPINODE(url) {
       try {
-        let respond = await axios.get(API_URL_NODE+url, {
+        let respond = await axios.get(process.env.REACT_APP_API_URL_NODE+url, {
           headers : {
             'Content-Type':'application/json',
             'Authorization': 'Bearer '+this.state.tokenUser
@@ -144,7 +144,7 @@ class TechnicalBoqApproval extends Component {
 
     async patchDatatoAPINODE(url, data){
       try {
-        let respond = await axios.patch(API_URL_NODE +url, data, {
+        let respond = await axios.patch(process.env.REACT_APP_API_URL_NODE +url, data, {
           headers : {
             'Content-Type':'application/json',
             'Authorization': 'Bearer '+this.state.tokenUser
