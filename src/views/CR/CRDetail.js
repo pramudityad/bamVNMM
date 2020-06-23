@@ -95,6 +95,7 @@ class CRDetail extends React.Component {
     this.saveUpdate = this.saveUpdate.bind(this);
     this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
+    this.downloadAllFilter = this.downloadAllFilter.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
@@ -363,7 +364,19 @@ class CRDetail extends React.Component {
   }
 
   getDRMDataList() {
-    this.getDatafromAPINODE("/changeRequest/getCr?srt=_id:-1&lmt=" + this.state.perPage + '&pg=' + this.state.activePage).then((res) => {
+    let cr_system_number = this.state.filter_list.cr_system_number === null || this.state.filter_list.cr_system_number ===  undefined ? '"cr_system_number" : {"$exists" : 1}' : '"cr_system_number" : {"$regex" : "'+this.state.filter_list.cr_system_number+'", "$options" : "i"}';
+    let sub_region_before = this.state.filter_list.sub_region_before === null || this.state.filter_list.sub_region_before ===  undefined ? '"sub_region_before" : {"$exists" : 1}' : '"sub_region_before" : {"$regex" : "'+this.state.filter_list.sub_region_before+'", "$options" : "i"}';
+    let tower_id_before = this.state.filter_list.tower_id_before === null || this.state.filter_list.tower_id_before ===  undefined ? '"tower_id_before" : {"$exists" : 1}' : '"tower_id_before" : {"$regex" : "'+this.state.filter_list.tower_id_before+'", "$options" : "i"}';
+    let site_id_before = this.state.filter_list.site_id_before === null || this.state.filter_list.site_id_before ===  undefined ? '"site_id_before" : {"$exists" : 1}' : '"site_id_before" : {"$regex" : "'+this.state.filter_list.site_id_before+'", "$options" : "i"}';
+    let site_name_before = this.state.filter_list.site_name_before === null || this.state.filter_list.site_name_before ===  undefined ? '"site_name_before" : {"$exists" : 1}' : '"site_name_before" : {"$regex" : "'+this.state.filter_list.site_name_before+'", "$options" : "i"}';
+    let sub_region_after = this.state.filter_list.sub_region_after === null || this.state.filter_list.sub_region_after ===  undefined ? '"sub_region_after" : {"$exists" : 1}' : '"sub_region_after" : {"$regex" : "'+this.state.filter_list.sub_region_after+'", "$options" : "i"}';
+    let tower_id_after = this.state.filter_list.tower_id_after === null || this.state.filter_list.tower_id_after ===  undefined ? '"tower_id_after" : {"$exists" : 1}' : '"tower_id_after" : {"$regex" : "'+this.state.filter_list.tower_id_after+'", "$options" : "i"}';
+    let site_id_after = this.state.filter_list.site_id_after === null || this.state.filter_list.site_id_after ===  undefined ? '"site_id_after" : {"$exists" : 1}' : '"site_id_after" : {"$regex" : "'+this.state.filter_list.site_id_after+'", "$options" : "i"}';
+    let site_name_after = this.state.filter_list.site_name_after === null || this.state.filter_list.site_name_after ===  undefined ? '"site_name_after" : {"$exists" : 1}' : '"site_name_after" : {"$regex" : "'+this.state.filter_list.site_name_after+'", "$options" : "i"}';
+    let remark = this.state.filter_list.remark === null || this.state.filter_list.remark ===  undefined ? '"remark" : {"$exists" : 1}' : '"remark" : {"$regex" : "'+this.state.filter_list.remark+'", "$options" : "i"}';
+    let status = this.state.filter_list.status === null || this.state.filter_list.status ===  undefined ? '"status" : {"$exists" : 1}' : '"status" : {"$regex" : "'+this.state.filter_list.status+'", "$options" : "i"}';
+    let whereAnd = 'q={'+cr_system_number+','+sub_region_before+','+tower_id_before+','+site_id_before+','+site_name_before+','+sub_region_after+','+tower_id_after+','+site_id_after+','+site_name_after+','+remark+','+status+'}';
+    this.getDatafromAPINODE("/changeRequest/getCr?srt=_id:-1&lmt=" + this.state.perPage + '&pg=' + this.state.activePage+'&'+whereAnd).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -648,6 +661,41 @@ class CRDetail extends React.Component {
     this.toggleLoading();
   }
 
+  async downloadAllFilter() {
+    this.toggleLoading();
+    let cr_system_number = this.state.filter_list.cr_system_number === null || this.state.filter_list.cr_system_number ===  undefined ? '"cr_system_number" : {"$exists" : 1}' : '"cr_system_number" : {"$regex" : "'+this.state.filter_list.cr_system_number+'", "$options" : "i"}';
+    let sub_region_before = this.state.filter_list.sub_region_before === null || this.state.filter_list.sub_region_before ===  undefined ? '"sub_region_before" : {"$exists" : 1}' : '"sub_region_before" : {"$regex" : "'+this.state.filter_list.sub_region_before+'", "$options" : "i"}';
+    let tower_id_before = this.state.filter_list.tower_id_before === null || this.state.filter_list.tower_id_before ===  undefined ? '"tower_id_before" : {"$exists" : 1}' : '"tower_id_before" : {"$regex" : "'+this.state.filter_list.tower_id_before+'", "$options" : "i"}';
+    let site_id_before = this.state.filter_list.site_id_before === null || this.state.filter_list.site_id_before ===  undefined ? '"site_id_before" : {"$exists" : 1}' : '"site_id_before" : {"$regex" : "'+this.state.filter_list.site_id_before+'", "$options" : "i"}';
+    let site_name_before = this.state.filter_list.site_name_before === null || this.state.filter_list.site_name_before ===  undefined ? '"site_name_before" : {"$exists" : 1}' : '"site_name_before" : {"$regex" : "'+this.state.filter_list.site_name_before+'", "$options" : "i"}';
+    let sub_region_after = this.state.filter_list.sub_region_after === null || this.state.filter_list.sub_region_after ===  undefined ? '"sub_region_after" : {"$exists" : 1}' : '"sub_region_after" : {"$regex" : "'+this.state.filter_list.sub_region_after+'", "$options" : "i"}';
+    let tower_id_after = this.state.filter_list.tower_id_after === null || this.state.filter_list.tower_id_after ===  undefined ? '"tower_id_after" : {"$exists" : 1}' : '"tower_id_after" : {"$regex" : "'+this.state.filter_list.tower_id_after+'", "$options" : "i"}';
+    let site_id_after = this.state.filter_list.site_id_after === null || this.state.filter_list.site_id_after ===  undefined ? '"site_id_after" : {"$exists" : 1}' : '"site_id_after" : {"$regex" : "'+this.state.filter_list.site_id_after+'", "$options" : "i"}';
+    let site_name_after = this.state.filter_list.site_name_after === null || this.state.filter_list.site_name_after ===  undefined ? '"site_name_after" : {"$exists" : 1}' : '"site_name_after" : {"$regex" : "'+this.state.filter_list.site_name_after+'", "$options" : "i"}';
+    let remark = this.state.filter_list.remark === null || this.state.filter_list.remark ===  undefined ? '"remark" : {"$exists" : 1}' : '"remark" : {"$regex" : "'+this.state.filter_list.remark+'", "$options" : "i"}';
+    let status = this.state.filter_list.status === null || this.state.filter_list.status ===  undefined ? '"status" : {"$exists" : 1}' : '"status" : {"$regex" : "'+this.state.filter_list.status+'", "$options" : "i"}';
+    let whereAnd = 'q={'+cr_system_number+','+sub_region_before+','+tower_id_before+','+site_id_before+','+site_name_before+','+sub_region_after+','+tower_id_after+','+site_id_after+','+site_name_after+','+remark+','+status+'}';
+    let download_all = [];
+    let getAll_nonpage = await this.getDatafromAPINODE('/changeRequest/getCr?noPg=1&'+whereAnd);
+    if (getAll_nonpage.data !== undefined) {
+      download_all = getAll_nonpage.data.data;
+    }
+
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    ws.addRow(["cr_system_number","sub_region_before","project_group","tower_id_before","site_id_before","site_name_before","project_definition_before","municipality_before","sow_before","site_base_type","wbs", "sub_region_after","tower_id_after","site_id_after", "site_name_after", "project_definition_after", "municipality_after", "sow_after", "cr_number","category","reason", "date_submission", "ageing", "duration", "date_approval", "remark","status","pic", "cr_announce_status","final_status","po_completeness"]);
+
+    for (let i = 0; i < download_all.length; i++) {
+      let cr = download_all[i];
+      ws.addRow([cr.cr_system_number, cr.sub_region_before, cr.project_group, cr.tower_id_before, cr.site_id_before, cr.site_name_before, cr.project_definition_before, cr.municipality_before, cr.sow_before, cr.site_base_type, cr.wbs, cr.sub_region_after, cr.tower_id_after, cr.site_id_after, cr.site_name_after, cr.project_definition_after, cr.municipality_after, cr.sow_after, cr.cr_number, cr.category, cr.reason, cr.date_submission, cr.ageing, cr.duration, cr.date_approval, cr.remark, cr.status, cr.pic, cr.cr_announce_status, cr.final_status, cr.po_completeness]);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), "All CR Data Filter.xlsx");
+    this.toggleLoading();
+  }
+
   DeleteData = async () => {
     const objData = this.state.all_data.find((e) => e._id);
     this.toggleLoading();
@@ -724,6 +772,7 @@ class CRDetail extends React.Component {
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportCRTemplate}>{" "}CR Template</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>{" "}Download All</DropdownItem>
+                        <DropdownItem onClick={this.downloadAllFilter}>{" "}Download All Filter</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -788,24 +837,29 @@ class CRDetail extends React.Component {
                 <Row>
                   <Col>
                     <div className="divtable">
-                      <Table responsive bordered>
-                        <thead className="fixed table-drm__header--middle">
+                      <Table bordered style={{
+        height: "400px"
+      }}>
+                        <thead className=" table-drm__header--middle">
                           <tr align="center">
                             <th>CR System Number</th>
                             <th>Sub Region (Before)</th>
-                            <th>Project Group</th>
                             <th>XL Tower ID (before)</th>
                             <th>Site ID (before)</th>
                             <th>Site Name (before)</th>
+                            <th>Sub Region (After)</th>
+                            <th>XL Tower ID (after)</th>
+                            <th>Site ID (after)</th>
+                            <th>Site Name (after)</th>
+                            <th>Remark</th>
+                            <th>Status</th>
+
+                            <th>Project Group</th>
                             <th>Project Definition (before)</th>
                             <th>Municipality (before)</th>
                             <th>SOW (Before)</th>
                             <th>Site Base Type</th>
                             <th>WBS</th>
-                            <th>Sub Region (After)</th>
-                            <th>XL Tower ID (after)</th>
-                            <th>Site ID (after)</th>
-                            <th>Site Name (after)</th>
                             <th>Project Definition (after)</th>
                             <th>Municipality (after)</th>
                             <th>SOW (After)</th>
@@ -815,13 +869,125 @@ class CRDetail extends React.Component {
                             <th>Date Submission</th>
                             <th>Ageing</th>
                             <th>Duration</th>
-                            <th>Date Approval</th>
-                            <th>Remark</th>
-                            <th>Status</th>
+                            <th>Date Approval</th>      
                             <th>PIC</th>
                             <th>CR Announce Status</th>
                             <th>Final Status</th>
                             <th>PO Completeness (Compare TSSR BOQ to CPO of the Site - SOW Code basis)</th>
+                          </tr>
+                          <tr>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.cr_system_number} name="cr_system_number" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.sub_region_before} name="sub_region_before" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '100px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.tower_id_before} name="tower_id_before" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.site_id_before} name="site_id_before" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.site_name_before} name="site_name_before" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '100px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.sub_region_after} name="sub_region_after" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.tower_id_after} name="tower_id_after" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.site_id_after} name="site_id_after" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '100px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.site_name_after} name="site_name_after" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.remark} name="remark" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th>
+                              <div className="controls">
+                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                  <InputGroupAddon addonType="prepend">
+                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                  </InputGroupAddon>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.status} name="status" size="sm"/>
+                                </InputGroup>
+                              </div>
+                            </th>
+                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -829,19 +995,22 @@ class CRDetail extends React.Component {
                           <tr>
                             <td>{cr.cr_system_number}</td>
                             <td>{cr.sub_region_before}</td>
-                            <td>{cr.project_group}</td>
                             <td>{cr.tower_id_before}</td>
                             <td>{cr.site_id_before}</td>
                             <td>{cr.site_name_before}</td>
-                            <td>{cr.project_definition_before}</td>
-                            <td>{cr.municipality_before}</td>
-                            <td>{cr.sow_before}</td>
-                            <td>{cr.site_base_type}</td>
-                            <td>{cr.wbs}</td>
                             <td>{cr.sub_region_after}</td>
                             <td>{cr.tower_id_after}</td>
                             <td>{cr.site_id_after}</td>
                             <td>{cr.site_name_after}</td>
+                            <td>{cr.remark}</td>
+                            <td>{cr.status}</td>
+
+                            <td>{cr.project_group}</td>
+                            <td>{cr.project_definition_before}</td>
+                            <td>{cr.municipality_before}</td>
+                            <td>{cr.sow_before}</td>
+                            <td>{cr.site_base_type}</td>
+                            <td>{cr.wbs}</td> 
                             <td>{cr.project_definition_after}</td>
                             <td>{cr.municipality_after}</td>
                             <td>{cr.sow_after}</td>
@@ -851,9 +1020,7 @@ class CRDetail extends React.Component {
                             <td>{cr.date_submission}</td>
                             <td>{cr.ageing}</td>
                             <td>{cr.duration}</td>
-                            <td>{cr.date_approval}</td>
-                            <td>{cr.remark}</td>
-                            <td>{cr.status}</td>
+                            <td>{cr.date_approval}</td>                            
                             <td>{cr.pic}</td>
                             <td>{cr.cr_announce_status}</td>
                             <td>{cr.final_status}</td>

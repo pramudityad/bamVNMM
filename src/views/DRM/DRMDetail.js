@@ -632,6 +632,7 @@ class DRMDetail extends React.Component {
   }
 
   async downloadAll() {
+    this.toggleLoading();
     let download_all = [];
     let getAll_nonpage = await this.getDatafromAPINODE('/drm/getDrm_not_pagination');
     if (getAll_nonpage.data !== undefined) {
@@ -651,15 +652,17 @@ class DRMDetail extends React.Component {
 
     const allocexport = await wb.xlsx.writeBuffer();
     saveAs(new Blob([allocexport]), "All DRM Data.xlsx");
+    this.toggleLoading();
   }
 
   async downloadAllFilter() {
+    this.toggleLoading();
     let download_all = [];
     let project_name_filter = this.state.filter_list.project_name === null || this.state.filter_list.project_name ===  undefined ? '"project_name" : {"$exists" : 1}' : '"project_name" : {"$regex" : "'+this.state.filter_list.project_name+'", "$options" : "i"}';
     let tower_id_filter = this.state.filter_list.tower_id === null || this.state.filter_list.tower_id ===  undefined ? '"tower_id" : {"$exists" : 1}' : '"tower_id" : {"$regex" : "'+this.state.filter_list.tower_id+'", "$options" : "i"}';
     let program_filter = this.state.filter_list.program === null || this.state.filter_list.program ===  undefined ? '"program" : {"$exists" : 1}' : '"program" : {"$regex" : "'+this.state.filter_list.program+'", "$options" : "i"}';
     let whereAnd = 'q={'+project_name_filter+','+tower_id_filter+','+program_filter+'}'
-    let getAll_nonpage = await this.getDatafromAPINODE('/drm/getDrm?'+whereAnd);
+    let getAll_nonpage = await this.getDatafromAPINODE('/drm/getDrm?noPg=1&'+whereAnd);
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -677,6 +680,7 @@ class DRMDetail extends React.Component {
 
     const allocexport = await wb.xlsx.writeBuffer();
     saveAs(new Blob([allocexport]), "All DRM Data Filter.xlsx");
+    this.toggleLoading();
   }
 
   DeleteData = async () => {
