@@ -1544,30 +1544,6 @@ class SubmissionCommBoq extends Component {
       return newValue;
     };
 
-    // saveNote = (e) => {
-    //   const commAPI = this.state.boq_comm_API;
-    //   const numbNote = e;
-    //   let updateNote = { };
-    //   updateNote["note_"+numbNote.toString()] = this.state.noteChange[parseInt(numbNote)];
-    //   if(this.checkValuetoString(this.state.noteChange[parseInt(numbNote)]).length == 0){
-    //     updateNote["note_"+numbNote.toString()] = this.checkValuetoString(commAPI["note_"+numbNote.toString()]);
-    //   }
-    //   updateNote["note_name_"+numbNote.toString()] = this.state.fieldNoteChange[parseInt(numbNote)];
-    //   if(this.checkValuetoString(this.state.fieldNoteChange[parseInt(numbNote)]).length == 0){
-    //     updateNote["note_name_"+numbNote.toString()] = this.checkValuetoString(commAPI["note_name_"+numbNote.toString()]);
-    //   }
-    //   this.patchDatatoAPI('/boq_comm_op/'+commAPI._id, updateNote, commAPI._etag).then(res => {
-    //     if(res !== undefined){
-    //       if(res.data !== undefined){
-    //         commAPI["note_"+numbNote.toString()] = this.state.noteChange[parseInt(numbNote)];
-    //         commAPI["_etag"] = res.data._etag;
-    //         this.setState({ boq_comm_API : commAPI, action_status : 'success', action_message : 'Your Commercial BOQ Note '+numbNote.toString()+' has been updated'});
-    //       }
-    //     }
-    //   })
-    //   console.log("numbNote", JSON.stringify(updateNote));
-    // }
-
     saveNote = () => {
       const commAPI = this.state.boq_comm_API;
       let updateNote = { };
@@ -1796,7 +1772,13 @@ class SubmissionCommBoq extends Component {
       const ws = wb.addWorksheet();
 
       const dataComm = this.state.data_comm_boq;
-      let dataSites = this.state.data_comm_boq_items;
+      let dataSites = [];
+      if(this.state.submission_number_selected !== "all"){
+        dataSites = this.state.data_comm_boq_items.filter(e => e.submission_id === this.state.submission_number_selected);
+      }else{
+        dataSites = this.state.data_comm_boq_items;
+      }
+
 
       const DatePrint = new Date();
       const DatePrintOnly = DatePrint.getFullYear()+'-'+(DatePrint.getMonth()+1).toString().padStart(2, '0')+'-'+DatePrint.getDay().toString().padStart(2, '0');
@@ -1882,7 +1864,9 @@ class SubmissionCommBoq extends Component {
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         for(let j = 0; j < dataSites[i].items.length; j++ ){
-          ws.addRow([dataSites[i].submission_id, dataSites[i].site_id, dataSites[i].items[j].config_id, dataSites[i].items[j].qty, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive, dataSites[i].items[j].total_price_incentive_usd, dataSites[i].items[j].total_price_incentive]);
+          if(dataSites[i].submission_id === this.state.submission_number_selected){
+            ws.addRow([dataSites[i].submission_id, dataSites[i].site_id, dataSites[i].items[j].config_id, dataSites[i].items[j].qty, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive, dataSites[i].items[j].total_price_incentive_usd, dataSites[i].items[j].total_price_incentive]);
+          }
         }
       }
 
@@ -1918,7 +1902,10 @@ class SubmissionCommBoq extends Component {
       if(arrayPriority.length !== 0){
         let dataSites = dataSites = this.state.data_comm_boq_items;
         let dataSitesNonSubms = this.state.data_comm_boq_items.filter( e => e.submission_id === undefined || e.submission_id === null);
-        let dataPrioritySiteAll = this.state.data_tech_boq_sites.filter(e => arrayPriority.includes(e.priority)).map(e => e.site_id);
+        let dataPrioritySiteAll = this.state.data_tech_boq_sites.filter(e => arrayPriority.includes(e.priority));
+        dataPrioritySiteAll = dataPrioritySiteAll.map(e => e.site_id);
+        console.log("arraySites test", dataPrioritySiteAll, arrayPriority);
+        console.log("arraySites dataSitesNonSubms", dataSitesNonSubms, arrayPriority);
 
         let dataSiteNonSubmsPriority = dataSitesNonSubms.filter(e => dataPrioritySiteAll.includes(e.site_id));
 
@@ -1927,8 +1914,9 @@ class SubmissionCommBoq extends Component {
         arraySites.push(["tower_id"]);
 
         for(let i = 0; i < dataSiteNonSubmsPriority.length ; i++){
-          arraySites.push([dataSites[i].site_id]);
+          arraySites.push([dataSiteNonSubmsPriority[i].site_id]);
         }
+        console.log("arraySites", arraySites, arrayPriority)
         if(arraySites.length === 0){
           this.setState({rowsXLS : arraySites});
         }else{
@@ -2013,7 +2001,7 @@ class SubmissionCommBoq extends Component {
                             <td>Submission No </td>
                             <td> : </td>
                             <td>
-                              <select onChange={this.handleChangeSubmissionNumber} value={this.state.submission_number_selected}>
+                              <Input type="select" onChange={this.handleChangeSubmissionNumber} value={this.state.submission_number_selected}>
                                 <option value="all">All</option>
                                 {this.state.data_comm_boq !== null && (
                                   this.state.data_comm_boq.comm_boq_submission_doc.map(e =>
@@ -2025,7 +2013,7 @@ class SubmissionCommBoq extends Component {
                                   )
                                 )}
                                 <option value="na">Not Assign</option>
-                              </select>
+                              </Input>
                             </td>
                           </tr>
                         </tbody>
@@ -2116,6 +2104,7 @@ class SubmissionCommBoq extends Component {
                           <th>Unit Price after Incentive (IDR)</th>
                           <th>Total Price after Incentive (USD)</th>
                           <th>Total Price after Incentive (IDR)</th>
+                          <th>CPO BOQ Ref.</th>
                         </tr>
                       </thead>
                       {this.state.data_view_submission_items.map(site =>
@@ -2132,6 +2121,7 @@ class SubmissionCommBoq extends Component {
                               <td>{item.net_price_incentive}</td>
                               <td>{item.total_price_incentive_usd.toFixed(2)}</td>
                               <td>{item.total_price_incentive.toFixed(2)}</td>
+                              <td>{item.cpo_boq}</td>
                             </tr>
                           )}
                         </tbody>

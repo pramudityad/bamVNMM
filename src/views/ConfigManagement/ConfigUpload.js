@@ -26,7 +26,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
 
 const Config_group_type_DEFAULT = ["HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "SERVICE", "SERVICE", "SERVICE", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME"]
 
-const Config_group_DEFAULT = ["Config Cabinet", "Config Add L9", "Config Add L10", "Config Add L18", "Config Add L21", "Config BB 5212 (Reuse)", "Config UPG BW 1800", "Swapped Module/BB", "Config UPG BW 2100", "Config Radio B0 MIMO 2T2R", "Config Kit Radio B1 MIMO 2T2R", "Config Radio B1 MIMO 2T2R", "Config Kit Radio B3 MIMO 2T2R", "Config Radio B3 MIMO 2T2R", "Config Radio B1 MIMO 4T4R", "Config Radio B3 MIMO 4T4R", "Config Radio B1 + B3 DUAL BAND 2T2R" ,"Config Radio B1 + B3 DUAL BAND 4T4R", "Config Multi Sector", "Config Antenna", "Config Service 2", "Config Service 3", "Config Service 4", "Material 1 Power", "Material 2 Power", "Material 3 Power", "Material 4 Power", "Material 5 Power", "Service 1 Power", "Service 2 Power", "Service 3 Power", "Material 1 CME", "Material 2 CME", "Material 3 CME", "Material 4 CME", "Material 5 CME", "Service 1 CME", "Service 2 CME", "Service 3 CME"];
+const Config_group_DEFAULT = ["Config Cabinet", "Config Add L9", "Config Add L10", "Config Add L18", "Config Add L21", "Config BB 5212 (Reuse)", "Config UPG BW 1800", "Swapped Module/BB", "Config UPG BW 2100", "Config Radio B0 MIMO 2T2R", "Config Kit Radio B1 MIMO 2T2R", "Config Radio B1 MIMO 2T2R", "Config Kit Radio B3 MIMO 2T2R", "Config Radio B3 MIMO 2T2R", "Config Radio B1 MIMO 4T4R", "Config Radio B3 MIMO 4T4R", "Config Radio B1 + B3 DUAL BAND 2T2R", "Config Radio B1 + B3 DUAL BAND 4T4R", "Config Multi Sector", "Config Antenna", "Config Service 2", "Config Service 3", "Config Service 4", "Material 1 Power", "Material 2 Power", "Material 3 Power", "Material 4 Power", "Material 5 Power", "Service 1 Power", "Service 2 Power", "Service 3 Power", "Material 1 CME", "Material 2 CME", "Material 3 CME", "Material 4 CME", "Material 5 CME", "Service 1 CME", "Service 2 CME", "Service 3 CME"];
 
 class ConfigUpload extends React.Component {
 
@@ -39,7 +39,7 @@ class ConfigUpload extends React.Component {
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
       pp_all: [],
-      filter_name: null,
+      filter_name: "",
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -48,6 +48,7 @@ class ConfigUpload extends React.Component {
       action_message: null,
       product_package: [],
       config_package: [],
+      config_package_all: [],
       check_config_package: [],
       check_config_update: null,
       dataConfig: [],
@@ -59,17 +60,21 @@ class ConfigUpload extends React.Component {
       PPForm: new Array(9).fill(null),
       collapse: false,
       collapseUpdate: false,
-      updateConfigType : true,
+      updateConfigType: true,
       loadprojectdata: [],
       modalPPFedit: false,
       config_checked: new Map(),
       config_selected: [],
+      config_checked_all: false,
+      config_checked_page: false,
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
+    this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
+    this.handleChangeChecklistPage = this.handleChangeChecklistPage.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterDebounce = debounce(this.changeFilterName, 1000);
+    this.changeFilterName = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.toggleUpdateBulk = this.toggleUpdateBulk.bind(this);
@@ -94,24 +99,24 @@ class ConfigUpload extends React.Component {
   }
 
   toggleAddNew() {
-    if(this.state.collapseUpdate === true){
+    if (this.state.collapseUpdate === true) {
       this.toggleUpdateBulk();
     }
     this.setState({ collapse: !this.state.collapse });
   }
 
   toggleUpdateBulk(e) {
-    if(e !== undefined){
-      if(e.target !== undefined){
-        if(e.target.value !== undefined){
-          this.setState({updateConfigType : e.target.value});
+    if (e !== undefined) {
+      if (e.target !== undefined) {
+        if (e.target.value !== undefined) {
+          this.setState({ updateConfigType: e.target.value });
         }
       }
     }
-    if(this.state.collapse === true){
+    if (this.state.collapse === true) {
       this.toggleAddNew();
     }
-    this.setState({ collapseUpdate : !this.state.collapseUpdate });
+    this.setState({ collapseUpdate: !this.state.collapseUpdate });
   }
 
   onEntering() {
@@ -212,21 +217,45 @@ class ConfigUpload extends React.Component {
   }
 
   handleChangeFilter = (e) => {
-    const value = e.target.value;
+    let value = e.target.value;
+    if (value.length === 0) {
+      value = "";
+    }
     this.setState({ filter_name: value }, () => {
-      this.changeFilterDebounce(value);
+      this.changeFilterName(value);
     });
   }
 
-  getConfigDataAPI(){
-    this.getDatatoAPINode('/packageconfig?lmt='+this.state.perPage+'&pg='+this.state.activePage)
-    .then(res =>{
-      if(res.data !== undefined){
-        this.setState({ config_package : res.data.data, prevPage : this.state.activePage, total_dataConfig : res.data.totalResults })
-      }else{
-        this.setState({ config_package : [], total_dataConfig : 0, prevPage : this.state.activePage});
-      }
-    })
+  getConfigDataAPI() {
+    let filter = '{"$regex" : "", "$options" : "i"}';
+    if (this.state.filter_name !== "") {
+      filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    }
+    let whereOr = '{"$or" : [{"config_id": ' + filter + '}, {"config_name": ' + filter + '}, {"program": ' + filter + '}, {"config_type": ' + filter + '}]}';
+    this.getDatatoAPINode('/packageconfig?q=' + whereOr + '&lmt=' + this.state.perPage + '&pg=' + this.state.activePage)
+      .then(res => {
+        if (res.data !== undefined) {
+          this.setState({ config_package: res.data.data, prevPage: this.state.activePage, total_dataConfig: res.data.totalResults })
+        } else {
+          this.setState({ config_package: [], total_dataConfig: 0, prevPage: this.state.activePage });
+        }
+      })
+  }
+
+  getConfigDataAPI_all() {
+    let filter = '{"$regex" : "", "$options" : "i"}';
+    if (this.state.filter_name !== "") {
+      filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    }
+    let whereOr = '{"$or" : [{"config_id": ' + filter + '}, {"config_name": ' + filter + '}, {"program": ' + filter + '}, {"config_type": ' + filter + '}]}';
+    this.getDatatoAPINode('/packageconfig?noPg=1&q='+whereOr)
+      .then(res => {
+        if (res.data !== undefined) {
+          this.setState({ config_package_all: res.data.data });
+        } else {
+          this.setState({ config_package_all: [] });
+        }
+      })
   }
 
   isSameValue(element, value) {
@@ -278,45 +307,57 @@ class ConfigUpload extends React.Component {
           console.log(err);
         }
         else {
-          console.log("rest.rows", JSON.stringify(rest.rows));
-          this.postDatatoAPINODE('/packageConfig/checkPackageConfigXL', { "configData": rest.rows })
-          .then(res => {
-            if (res.data !== undefined) {
-              this.setState({ check_config_package: res.data.configData, rowsXLS: rest.rows })
-              this.toggleLoading();
-            } else {
-              if(res.response !== undefined){
-                if(res.response.data !== undefined){
-                  if(res.response.data.error !== undefined){
-                    if(res.response.data.error.message !== undefined){
-                      this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
-                        this.toggleLoading();
-                      });
-                    }else{
-                      this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
-                        this.toggleLoading();
-                      });
-                    }
-                  }else{
-                    this.setState({ action_status: 'failed'}, () => {
-                      this.toggleLoading();
-                    });
-                  }
-                }else{
-                  this.setState({ action_status: 'failed' }, () => {
-                    this.toggleLoading();
-                  });
-                }
-              }else{
-                this.setState({ action_status: 'failed' }, () => {
-                    this.toggleLoading();
-                });
-              }
-            }
-          })
+          this.checkConfigFormatNew(rest.rows);
         }
       });
     }
+  }
+
+  checkConfigFormatNew(newXLS){
+    let rowsXLS = newXLS;
+    let headerRow = [];
+    for (let i = 0; i < rowsXLS[0].length; i++) {
+      let value = rowsXLS[0][i];
+      value = value.replace("bundle_id", "pp_id");
+      value = value.replace("bundle_name", "product_name");
+      headerRow.push(value);
+    }
+    rowsXLS[0] = headerRow;
+    console.log("rest.rows", JSON.stringify(rowsXLS));
+    this.postDatatoAPINODE('/packageconfig/checkPackageConfig', { "configData": rowsXLS }).then(res => {
+      if (res.data !== undefined) {
+        this.setState({ check_config_package: res.data.configData, rowsXLS: newXLS })
+        this.toggleLoading();
+      } else {
+        if (res.response !== undefined) {
+          if (res.response.data !== undefined) {
+            if (res.response.data.error !== undefined) {
+              if (res.response.data.error.message !== undefined) {
+                this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
+                  this.toggleLoading();
+                });
+              } else {
+                this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
+                  this.toggleLoading();
+                });
+              }
+            } else {
+              this.setState({ action_status: 'failed' }, () => {
+                this.toggleLoading();
+              });
+            }
+          } else {
+            this.setState({ action_status: 'failed' }, () => {
+              this.toggleLoading();
+            });
+          }
+        } else {
+          this.setState({ action_status: 'failed' }, () => {
+            this.toggleLoading();
+          });
+        }
+      }
+    })
   }
 
   fileHandlerUpdate = (event) => {
@@ -334,43 +375,52 @@ class ConfigUpload extends React.Component {
     }
   }
 
-  checkFormatUpdateConfig(rowsXLS){
-      let dataUpdateConfig = {
-        "updateData" : true,
-      	"parentOnly" : true,
-      	"skipBlank" : true,
-        "configData": rowsXLS
-      }
-    this.postDatatoAPINODE('/packageConfig/checkPackageConfigXL', dataUpdateConfig).then(res => {
+  checkFormatUpdateConfig(newXLS) {
+    let rowsXLS = newXLS;
+    let headerRow = [];
+    for (let i = 0; i < rowsXLS[0].length; i++) {
+      let value = rowsXLS[0][i];
+      value = value.replace("bundle_id", "pp_id");
+      value = value.replace("bundle_name", "product_name");
+      headerRow.push(value);
+    }
+    rowsXLS[0] = headerRow;
+    let dataUpdateConfig = {
+      "updateData": true,
+      "parentOnly": false,
+      "skipBlank": true,
+      "configData": rowsXLS
+    }
+    this.postDatatoAPINODE('/packageconfig/checkPackageConfig', dataUpdateConfig).then(res => {
       if (res.data !== undefined) {
-        this.setState({ check_config_update: res.data.configData, rowsXLS: rowsXLS })
+        this.setState({ check_config_update: res.data.configData, rowsXLS: newXLS })
         this.toggleLoading();
       } else {
-        if(res.response !== undefined){
-          if(res.response.data !== undefined){
-            if(res.response.data.error !== undefined){
-              if(res.response.data.error.message !== undefined){
+        if (res.response !== undefined) {
+          if (res.response.data !== undefined) {
+            if (res.response.data.error !== undefined) {
+              if (res.response.data.error.message !== undefined) {
                 this.setState({ action_status: 'failed', action_message: res.response.data.error.message }, () => {
                   this.toggleLoading();
                 });
-              }else{
+              } else {
                 this.setState({ action_status: 'failed', action_message: res.response.data.error }, () => {
                   this.toggleLoading();
                 });
               }
-            }else{
-              this.setState({ action_status: 'failed'}, () => {
+            } else {
+              this.setState({ action_status: 'failed' }, () => {
                 this.toggleLoading();
               });
             }
-          }else{
+          } else {
             this.setState({ action_status: 'failed' }, () => {
               this.toggleLoading();
             });
           }
-        }else{
+        } else {
           this.setState({ action_status: 'failed' }, () => {
-              this.toggleLoading();
+            this.toggleLoading();
           });
         }
       }
@@ -392,36 +442,36 @@ class ConfigUpload extends React.Component {
     const isConfig = true;
     if (isConfig === true) {
       const postConfig = await this.postDatatoAPINODE('/packageConfig/saveConfigBulk', { "configData": this.state.check_config_package });
-      if(postConfig.data !== undefined){
+      if (postConfig.data !== undefined) {
         this.setState({ action_status: 'success' }, () => {
           this.toggleLoading();
         });
-      }else{
-        if(postConfig.response !== undefined){
-          if(postConfig.response.data !== undefined){
-            if(postConfig.response.data.error !== undefined){
-              if(postConfig.response.data.error.message !== undefined){
+      } else {
+        if (postConfig.response !== undefined) {
+          if (postConfig.response.data !== undefined) {
+            if (postConfig.response.data.error !== undefined) {
+              if (postConfig.response.data.error.message !== undefined) {
                 this.setState({ action_status: 'failed', action_message: postConfig.response.data.error.message }, () => {
                   this.toggleLoading();
                 });
-              }else{
+              } else {
                 this.setState({ action_status: 'failed', action_message: postConfig.response.data.error }, () => {
                   this.toggleLoading();
                 });
               }
-            }else{
-              this.setState({ action_status: 'failed'}, () => {
+            } else {
+              this.setState({ action_status: 'failed' }, () => {
                 this.toggleLoading();
               });
             }
-          }else{
+          } else {
             this.setState({ action_status: 'failed' }, () => {
               this.toggleLoading();
             });
           }
-        }else{
+        } else {
           this.setState({ action_status: 'failed' }, () => {
-              this.toggleLoading();
+            this.toggleLoading();
           });
         }
       }
@@ -436,37 +486,37 @@ class ConfigUpload extends React.Component {
     this.toggleLoading();
     const isConfig = this.state.check_config_update !== undefined && this.state.check_config_update !== null;
     if (isConfig === true) {
-      const postConfig = await this.patchDatatoAPINODE('/packageConfig/updateConfig', {"configData": this.state.check_config_update});
-      if(postConfig.data !== undefined){
+      const postConfig = await this.patchDatatoAPINODE('/packageConfig/updateConfig', { "configData": this.state.check_config_update });
+      if (postConfig.data !== undefined) {
         this.setState({ action_status: 'success' }, () => {
           this.toggleLoading();
         });
-      }else{
-        if(postConfig.response !== undefined){
-          if(postConfig.response.data !== undefined){
-            if(postConfig.response.data.error !== undefined){
-              if(postConfig.response.data.error.message !== undefined){
+      } else {
+        if (postConfig.response !== undefined) {
+          if (postConfig.response.data !== undefined) {
+            if (postConfig.response.data.error !== undefined) {
+              if (postConfig.response.data.error.message !== undefined) {
                 this.setState({ action_status: 'failed', action_message: postConfig.response.data.error.message }, () => {
                   this.toggleLoading();
                 });
-              }else{
+              } else {
                 this.setState({ action_status: 'failed', action_message: postConfig.response.data.error }, () => {
                   this.toggleLoading();
                 });
               }
-            }else{
-              this.setState({ action_status: 'failed'}, () => {
+            } else {
+              this.setState({ action_status: 'failed' }, () => {
                 this.toggleLoading();
               });
             }
-          }else{
+          } else {
             this.setState({ action_status: 'failed' }, () => {
               this.toggleLoading();
             });
           }
-        }else{
+        } else {
           this.setState({ action_status: 'failed' }, () => {
-              this.toggleLoading();
+            this.toggleLoading();
           });
         }
       }
@@ -479,6 +529,7 @@ class ConfigUpload extends React.Component {
 
   componentDidMount() {
     this.getConfigDataAPI();
+    this.getConfigDataAPI_all();
     document.title = 'Config Manager | BAM';
   }
 
@@ -499,9 +550,51 @@ class ConfigUpload extends React.Component {
     this.setState(prevState => ({ config_checked: prevState.config_checked.set(item, isChecked) }));
   }
 
+  handleChangeChecklistAll(e) {
+    const isChecked = e.target.checked;
+    let configSelected = this.state.config_selected;
+    let dataConfig = this.state.config_package_all;
+    if (isChecked) {
+      dataConfig = dataConfig.filter(e => configSelected.map(m => m._id).includes(e._id) !== true);
+      for (let x = 0; x < dataConfig.length; x++) {
+        configSelected.push(dataConfig[x]);
+        this.setState(prevState => ({ config_checked: prevState.config_checked.set(dataConfig[x]._id, isChecked) }));
+      }
+      this.setState({ config_selected: configSelected });
+    } else {
+      for (let x = 0; x < dataConfig.length; x++) {
+        this.setState(prevState => ({ config_checked: prevState.config_checked.set(dataConfig[x]._id, isChecked) }));
+      }
+      configSelected.length = 0;
+      this.setState({ config_selected: configSelected });
+    }
+    this.setState(prevState => ({ config_checked_all: !prevState.config_checked_all }))
+  }
+
+  handleChangeChecklistPage(e) {
+    const isChecked = e.target.checked;
+    let configSelected = this.state.config_selected;
+    let dataConfig = this.state.config_package;
+    if (isChecked) {
+      dataConfig = dataConfig.filter(e => configSelected.map(m => m._id).includes(e._id) !== true);
+      for (let x = 0; x < dataConfig.length; x++) {
+        configSelected.push(dataConfig[x]);
+        this.setState(prevState => ({ config_checked: prevState.config_checked.set(dataConfig[x]._id, isChecked) }));
+      }
+      this.setState({ config_selected: configSelected });
+    } else {
+      for (let x = 0; x < dataConfig.length; x++) {
+        this.setState(prevState => ({ config_checked: prevState.config_checked.set(dataConfig[x]._id, isChecked) }));
+      }
+      configSelected.length = 0;
+      this.setState({ config_selected: configSelected });
+    }
+    this.setState(prevState => ({ config_checked_page: !prevState.config_checked_page }))
+  }
+
   handlePageChange(pageNumber) {
-    console.log(`active page ${pageNumber}`)
-    this.setState({ activePage: pageNumber }, () => {
+    // console.log(`active page ${pageNumber}`)
+    this.setState({ activePage: pageNumber, config_checked_page: false }, () => {
       this.getConfigDataAPI();
     });
   }
@@ -535,7 +628,7 @@ class ConfigUpload extends React.Component {
       dataForm[8] = ppEdit.price;
       this.setState({ PPForm: dataForm });
     } else {
-      this.setState({ PPForm: new Array(9).fill(null)});
+      this.setState({ PPForm: new Array(9).fill(null) });
     }
     this.setState(prevState => ({
       modalPPFedit: !prevState.modalPPFedit
@@ -675,12 +768,9 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataPP = this.state.conf_all;
-    console.log('data conf all', dataPP);
-    // console.log('data conf map', this.state.conf_all.map(e => e.sap_number));
+    const dataPP = this.state.config_package_all;
 
-
-    let headerRow = ["SAP Number", "Config ID",	"Account ID",	"ID Project Doc",	"Project Name",	"Total Price", "ID PP Doc",	"Qty",	"Qty Commercial",	"Currency",	"Price", "Description",	"PP ID",	"PP Group"]
+    let headerRow = ['Config ID',	'Config Name',	'Program',	'Config Type', 'SAP Number', 'SAP Description',	'Description', 'Bundle ID',	'Bundle Name', 'UoM',	'Qunatity']
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -688,14 +778,12 @@ class ConfigUpload extends React.Component {
     }
 
     for (let i = 0; i < dataPP.length; i++) {
-      // console.log('data conf sap num', dataPP[0].sap_number)
-      ws.addRow([dataPP[i].sap_number, dataPP[i].config_id, dataPP[i].account_id, dataPP[i].id_project_doc, dataPP[i].project_name, dataPP[i].total_price])
+      ws.addRow([dataPP[i].config_id, dataPP[i].config_name, dataPP[i].program, dataPP[i].config_type, dataPP[i].sap_number, dataPP[i].sap_description, dataPP[i].description])
       // let getlastrow = ws.lastRow._number;
       // ws.mergeCells('B' + getlastrow + ':D' + getlastrow);
       for (let j = 0; j < dataPP[i].package_list.length; j++) {
-        let package_listIndex = dataPP[i].package_list[j];
-        // console.log('data conf qty', package_listIndex.qty)
-        ws.addRow(["", "", "", "", "", "", package_listIndex.id_pp_doc, package_listIndex.qty, package_listIndex.qty_commercial, package_listIndex.currency, package_listIndex.price, package_listIndex.description, package_listIndex.pp_id, package_listIndex.pp_group])
+        let matIndex = dataPP[i].package_list[j].id_pp_doc;
+        ws.addRow(["", "", "", "","", "","", matIndex.pp_id, matIndex.product_name, matIndex.uom, dataPP[i].package_list[j].qty])
       }
     }
 
@@ -708,7 +796,7 @@ class ConfigUpload extends React.Component {
     const ws = wb.addWorksheet();
 
     let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
-    let HeaderRow2 = ["tower_id","program", "sow", "priority"];
+    let HeaderRow2 = ["tower_id", "program", "sow", "priority"];
 
     Config_group_type_DEFAULT.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
     Config_group_DEFAULT.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
@@ -723,7 +811,25 @@ class ConfigUpload extends React.Component {
     dataConfigSelected.map(e => ws2.addRow([e.config_id, e.config_name]));
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Horizontal Template.xlsx');
+  }
+
+  exportTechnicalVerticalFormat = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let HeaderRow1 = ["tower_id", "program", "sow", "config_group", "config_id", "config_group_type", "qty"];
+
+    ws.addRow(HeaderRow1);
+
+    const ws2 = wb.addWorksheet();
+
+    ws2.addRow(["config_id", "config_name"]);
+    const dataConfigSelected = this.state.config_selected;
+    dataConfigSelected.map(e => ws2.addRow([e.config_id, e.config_name]));
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Vertical Template.xlsx');
   }
 
   // Config Template XLSX bulk upload
@@ -731,9 +837,10 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["config_name","program","config_id", "config_customer_name", "sap_number","sap_description","config_type", "description"]);
+    ws.addRow([ "config_id", "config_name", "program","config_customer_name", "sap_number", "sap_description", "config_type", "description", "bundle_id", "bundle_name", "qty"]);
     const dataConfigSelected = this.state.config_selected;
-    dataConfigSelected.map(e => ws.addRow([e.config_name, e.program, e.config_id, e.config_customer_name, e.sap_number, e.sap_description, e.config_type, e.description]));
+    console.log("dataConfigSelected", dataConfigSelected);
+    dataConfigSelected.map(e => e.package_list.map(p => ws.addRow([e.config_id, e.config_name, e.program, e.config_customer_name, e.sap_number, e.sap_description, e.config_type, e.description, p.pp_id, p.id_pp_doc.product_name, p.qty])));
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'Config Update Template Only Parent.xlsx');
@@ -747,7 +854,7 @@ class ConfigUpload extends React.Component {
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{fontSize:"17px"}}>Config</span>
+                <span style={{ fontSize: "17px" }}>Config</span>
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
@@ -756,8 +863,10 @@ class ConfigUpload extends React.Component {
                         </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>File Template</DropdownItem>
-                        <DropdownItem onClick={this.exportTechnicalFormat}>> Technical BOQ Template</DropdownItem>
+                        <DropdownItem onClick={this.exportTechnicalFormat}>> Technical BOQ Horizontal Template</DropdownItem>
+                        <DropdownItem onClick={this.exportTechnicalVerticalFormat}>> Technical BOQ Vertical Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfigParent}>> Config Update Template Parent</DropdownItem>
+                        <DropdownItem onClick={this.downloadAll} disabled={this.state.config_package_all.length === 0}>> Download Config All</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -823,11 +932,14 @@ class ConfigUpload extends React.Component {
                     <div style={{ marginBottom: '10px' }}>
                       <span style={{ fontSize: '20px', fontWeight: '500' }}>Config List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
+                      <span style={{marginRight: '10px'}}>
+                        <Checkbox name={"all"} checked={this.state.config_checked_all} onChange={this.handleChangeChecklistAll} disabled={this.state.config_package_all.length === 0} />Select All
+                      </span>
                         {/* <span style={{ marginRight: '10px' }}>
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
                           Select All
                         </span> */}
-                        <input className="search-box-material" type="text" name='filter' placeholder="Search Config Name" onChange={this.handleChangeFilter} value={this.state.filter_name} />
+                        <input className="search-box-material" type="text" name='filter' placeholder="Search" onChange={this.handleChangeFilter} value={this.state.filter_name} />
                       </div>
                     </div>
                   </Col>
@@ -839,7 +951,7 @@ class ConfigUpload extends React.Component {
                         <thead style={{ backgroundColor: '#73818f' }} className='fixed-conf'>
                           <tr align="center">
                             <th>
-                              {/* }<Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} /> */}
+                              <Checkbox name={"all"} checked={this.state.config_checked_page} onChange={this.handleChangeChecklistPage} />
                             </th>
                             <th style={{ minWidth: '150px' }}>Config</th>
                             <th>Config Name</th>
@@ -854,7 +966,7 @@ class ConfigUpload extends React.Component {
                         <tbody>
                           {this.state.config_package.map(pp =>
                             <React.Fragment key={pp._id + "frag"}>
-                              <tr style={{ backgroundColor: '#d3d9e7', fontWeight : 700 }} className='fixbody' key={pp._id}>
+                              <tr style={{ backgroundColor: '#d3d9e7', fontWeight: 700 }} className='fixbody' key={pp._id}>
                                 <td align="center"><Checkbox name={pp._id} checked={this.state.config_checked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_id}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.config_name}</td>

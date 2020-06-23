@@ -49,21 +49,25 @@ export const convertDateFormat = (jsondate) => {
  * @param {*} jsondate 
  */
 export const convertDateFormatfull = (jsondate) => {
-  let date = new Date(jsondate);
-  let year = date.getFullYear();
-  let month = date.getMonth() + 1;
-  let dt = date.getDate();
-  let hh = date.getHours();
-  let mm = date.getMinutes();
-  let ss = date.getSeconds();
+  if(jsondate !== undefined && jsondate !== null){
+    let date = new Date(jsondate);
+    let year = date.getFullYear();
+    let month = date.getMonth() + 1;
+    let dt = date.getDate();
+    let hh = date.getHours();
+    let mm = date.getMinutes();
+    let ss = date.getSeconds();
 
-  if (dt < 10) {
-    dt = "0" + dt;
+    if (dt < 10) {
+      dt = "0" + dt;
+    }
+    if (month < 10) {
+      month = "0" + month;
+    }
+    return year + "-" + month + "-" + dt + " " + hh + ":" + mm + ":" + ss;
+  }else{
+    return null
   }
-  if (month < 10) {
-    month = "0" + month;
-  }
-  return year + "-" + month + "-" + dt + " " + hh + ":" + mm + ":" + ss;
 };
 
 // for export all
@@ -78,3 +82,23 @@ export const numToSSColumn = (num) => {
   }
   return s || undefined;
 };
+
+export const convertDMSToDD  = (dms) => {
+  let parts = dms.split(/[^\d+(\,\d+)\d+(\.\d+)?\w]+/);
+  let degrees = parseFloat(parts[0]);
+  let minutes = parseFloat(parts[1]);
+  let seconds = parseFloat(parts[2].replace(',','.'));
+  let direction = parts[3];
+
+  // console.log('degrees: '+degrees)
+  // console.log('minutes: '+minutes)
+  // console.log('seconds: '+seconds)
+  // console.log('direction: '+direction)
+
+  let dd = degrees + minutes / 60 + seconds / (60 * 60);
+
+  if (direction == 'S' || direction == 'W') {
+    dd = dd * -1;
+  } // Don't do anything for N or E
+  return dd;
+}

@@ -19,13 +19,18 @@ import {
   AppSidebarNav2 as AppSidebarNav,
 } from '@coreui/react';
 // sidebar nav config
-import navigation from '../../_nav';
+import navigationXL from '../../_navXL';
+import navigationIndosat from '../../_navIndosat';
+import navigationTelkom from '../../_navTelkom';
 // routes config
-import routes from '../../routes';
+import routesXL from '../../routesXL';
+import routesIndosat from '../../routesIndosat';
+import routesTelkom from '../../routesTelkom';
 
 const DefaultAside = React.lazy(() => import('./DefaultAside'));
 const DefaultFooter = React.lazy(() => import('./DefaultFooter'));
 const DefaultHeader = React.lazy(() => import('./DefaultHeader'));
+const LoaderPage = React.lazy(() => import('../../views/DefaultView/LoaderPage'));
 
 
 
@@ -34,19 +39,22 @@ class DefaultLayout extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      navMenu : navigation,
+      navMenu : this.props.dataLogin.account_id === "3" ? navigationIndosat : this.props.dataLogin.account_id === "1" ? navigationTelkom : navigationXL,
+      routes : this.props.dataLogin.account_id === "3" ? routesIndosat : this.props.dataLogin.account_id === "1" ? routesTelkom : routesXL,
+      userRole : this.props.dataLogin.role,
       minimize : this.props.SidebarMinimize,
     }
   }
 
+  loadingPage = () => <LoaderPage />
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   signOut(e) {
     e.preventDefault();
+    this.props.keycloak.logout();
     localStorage.clear();
     this.props.history.push('/');
     this.postDatatoAPILogout();
-    this.props.keycloak.logout();
   }
 
   componentDidMount(){
@@ -73,7 +81,35 @@ class DefaultLayout extends Component {
   }
 
   showMenuByRole(){
-    console.log("showMenuByRole", navigation);
+    // console.log("showMenuByRole", this.state.navMenu);
+    let rolesUser = this.props.dataLogin.role;
+    let dataMenu = this.state.navMenu.items;
+    let dataMenuRoles = [];
+    if(dataMenu !== undefined && dataMenu.length !== 0 && rolesUser.indexOf("Admin") === -1){
+      for(let i = 0; i < dataMenu.length; i++){
+        let dataMenuIndex = Object.assign({}, dataMenu[i])
+        if(dataMenu[i].roles !== undefined){
+          let allowed = dataMenu[i].roles.some(e => rolesUser.includes(e));
+          if(allowed === false){
+            // dataMenuIndex.splice(i,1);
+          }else{
+            dataMenuRoles.push(dataMenuIndex);
+            if(dataMenu[i].children !== undefined && dataMenu[i].children.length > 0){
+              for(let j = 0; j < dataMenu[i].children.length; j++){
+                if(dataMenu[i].children[j].roles !== undefined){
+                  let allowedChild = dataMenu[i].children[j].roles.some(e => rolesUser.includes(e));
+                  if(allowedChild === false){
+                    // dataMenuIndex.children.splice(j,1);
+                    dataMenuIndex.children = dataMenuIndex.children.filter(e => e.name !== dataMenu[i].children[j].name);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      this.setState({navMenu : {items : dataMenuRoles}});
+    }
   }
 
   componentDidUpdate(){
@@ -107,18 +143,18 @@ class DefaultLayout extends Component {
               <AppSidebarHeader />
               <AppSidebarForm />
               <Suspense>
-              <AppSidebarNav navConfig={navigation} {...this.props} router={router}/>
+              <AppSidebarNav navConfig={this.state.navMenu} {...this.props} router={router}/>
               </Suspense>
               <AppSidebarFooter />
               <AppSidebarMinimizer />
             </AppSidebar>
           )}
           <main className="main">
-            <AppBreadcrumb appRoutes={routes} router={router} className="breadcrumb--xl"/>
+            <AppBreadcrumb appRoutes={this.state.routes} router={router} className={"breadcrumb--"+this.props.dataLogin.account_id}/>
             <Container fluid>
-              <Suspense fallback={this.loading()}>
+              <Suspense fallback={this.loadingPage()}>
                 <Switch>
-                  {routes.map((route, idx) => {
+                  {this.state.routes.map((route, idx) => {
                     return route.component ? (
                       <Route
                         key={idx}

@@ -25,6 +25,7 @@ import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
 import "./DRMcss.css";
+import {convertDateFormat} from '../../helper/basicFunction'
 
 const Checkbox = ({
   type = "checkbox",
@@ -43,7 +44,9 @@ const Checkbox = ({
     />
   );
 
-// const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
+const DefaultNotif = React.lazy(() =>
+  import("../../views/DefaultView/DefaultNotif")
+);
 
 
 
@@ -93,6 +96,7 @@ class DRMDetail extends React.Component {
     this.saveUpdate = this.saveUpdate.bind(this);
     this.toggleDelete = this.toggleDelete.bind(this);
     this.downloadAll = this.downloadAll.bind(this);
+    this.downloadAllFilter = this.downloadAllFilter.bind(this);
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
@@ -235,7 +239,7 @@ class DRMDetail extends React.Component {
   }
 
   changeFilterName(value) {
-    this.getWHStockList();
+    this.getDRMDataList();
   }
 
   handleChangeFilter = (e) => {
@@ -422,7 +426,7 @@ class DRMDetail extends React.Component {
 
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
-      this.getWHStockList();
+      this.getDRMDataList();
     });
   }
 
@@ -493,9 +497,16 @@ class DRMDetail extends React.Component {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed" }, () => {
-        this.toggleLoading();
-      });
+      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+        if(res.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error.message) });
+        }else{
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error) });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
     }
   };
 
@@ -594,10 +605,15 @@ class DRMDetail extends React.Component {
       if (res.data !== undefined) {
         this.toggleLoading();
       } else {
-        this.setState({
-          action_status: "failed",
-          action_message: res.response.data.error,
-        });
+        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+          if(res.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error.message) });
+          }else{
+            this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error) });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
         this.toggleLoading();
       }
     });
@@ -616,6 +632,7 @@ class DRMDetail extends React.Component {
   }
 
   async downloadAll() {
+    this.toggleLoading();
     let download_all = [];
     let getAll_nonpage = await this.getDatafromAPINODE('/drm/getDrm_not_pagination');
     if (getAll_nonpage.data !== undefined) {
@@ -635,6 +652,35 @@ class DRMDetail extends React.Component {
 
     const allocexport = await wb.xlsx.writeBuffer();
     saveAs(new Blob([allocexport]), "All DRM Data.xlsx");
+    this.toggleLoading();
+  }
+
+  async downloadAllFilter() {
+    this.toggleLoading();
+    let download_all = [];
+    let project_name_filter = this.state.filter_list.project_name === null || this.state.filter_list.project_name ===  undefined ? '"project_name" : {"$exists" : 1}' : '"project_name" : {"$regex" : "'+this.state.filter_list.project_name+'", "$options" : "i"}';
+    let tower_id_filter = this.state.filter_list.tower_id === null || this.state.filter_list.tower_id ===  undefined ? '"tower_id" : {"$exists" : 1}' : '"tower_id" : {"$regex" : "'+this.state.filter_list.tower_id+'", "$options" : "i"}';
+    let program_filter = this.state.filter_list.program === null || this.state.filter_list.program ===  undefined ? '"program" : {"$exists" : 1}' : '"program" : {"$regex" : "'+this.state.filter_list.program+'", "$options" : "i"}';
+    let whereAnd = 'q={'+project_name_filter+','+tower_id_filter+','+program_filter+'}'
+    let getAll_nonpage = await this.getDatafromAPINODE('/drm/getDrm?noPg=1&'+whereAnd);
+    if (getAll_nonpage.data !== undefined) {
+      download_all = getAll_nonpage.data.data;
+    }
+
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let headerRow = ["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"];
+    ws.addRow(headerRow);
+
+    for (let i = 0; i < download_all.length; i++) {
+      let drm = download_all[i];
+      ws.addRow([drm.tower_id, drm.project_name, drm.program, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering]);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), "All DRM Data Filter.xlsx");
+    this.toggleLoading();
   }
 
   DeleteData = async () => {
@@ -688,10 +734,10 @@ class DRMDetail extends React.Component {
   render() {
     return (
       <div className="animated fadeIn">
-        {/* }<DefaultNotif
+        <DefaultNotif
           actionMessage={this.state.action_message}
           actionStatus={this.state.action_status}
-        /> */}
+        />
         <Row>
           <Col xl="12">
             <Card style={{}}>
@@ -712,8 +758,9 @@ class DRMDetail extends React.Component {
                       </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportDRMTemplate}>{" "}DRM Template</DropdownItem>
+                        <DropdownItem onClick={this.exportDRMTemplate}>{" "}DRM Template</DropdownItem>                        
                         <DropdownItem onClick={this.downloadAll}>{" "}Download All</DropdownItem>
+                        <DropdownItem onClick={this.downloadAllFilter}>{" "}Download All Filter</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -778,8 +825,10 @@ class DRMDetail extends React.Component {
                 <Row>
                   <Col>
                     <div className="divtable">
-                      <Table responsive bordered>
-                        <thead className="fixed table-drm__header--middle">
+                      <Table bordered style={{
+        height: "400px"
+      }}>
+                        <thead className="table-drm__header--middle">
                           <tr align="center">
                             <th>TowerID</th>
                             <th>Project</th>
@@ -903,7 +952,7 @@ class DRMDetail extends React.Component {
                             <td>{drm.system}</td>
                             <td>{drm.optic_rru}</td>
                             <td>{drm.area}</td>
-                            <td>{drm.verification_date}</td>
+                            <td>{convertDateFormat(drm.verification_date)}</td>
                             <td>{drm.verification_status}</td>
                             <td>{drm.verification_pic}</td>
                             <td>{drm.issued_detail}</td>
@@ -1131,7 +1180,7 @@ class DRMDetail extends React.Component {
 
          {/* Modal create New */}
          <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-         <ModalHeader toggle={this.togglecreateModal}>Create New Material Library</ModalHeader>
+         <ModalHeader toggle={this.togglecreateModal}>Upload DRM</ModalHeader>
          <ModalBody>
            <CardBody>
              <div>

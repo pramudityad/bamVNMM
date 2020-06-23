@@ -51,6 +51,11 @@ class PSUpload extends Component {
         action_message : null,
         material_wh : [],
         material_inbound : [],
+        cd_id_to_tssr_selected : new Map(),
+        cd_id_to_tssr : [],
+        list_tssr_from_ps : [],
+        list_cd_id_mr : [],
+        modal_assign_ps : false,
     };
     this.handleChangeTSSR = this.handleChangeTSSR.bind(this);
     this.getQtyTssrPPNE = this.getQtyTssrPPNE.bind(this);
@@ -61,6 +66,8 @@ class PSUpload extends Component {
     this.connectPlantSpectoTSSR = this.connectPlantSpectoTSSR.bind(this);
     this.getDataWarehouse = this.getDataWarehouse.bind(this);
     this.getDataInbound = this.getDataInbound.bind(this);
+    this.handleChangeCDIDtoTSSR = this.handleChangeCDIDtoTSSR.bind(this);
+    this.toggleAssign = this.toggleAssign.bind(this);
   }
 
   async getDataFromAPINODEWithParams(url) {
@@ -225,6 +232,12 @@ class PSUpload extends Component {
     }
   }
 
+  toggleAssign(e) {
+    this.setState((prevState) => ({
+      modal_assign_ps: !prevState.modal_assign_ps,
+    }));
+  }
+
   getListTssrAll(){
     this.getDataFromAPINODE('/plantspec?q={"id_mr_doc" : null, "submission_status" : "SUBMITTED" }').then( res => {
     // this.getDatafromAPIBAM('/tssr_sorted_nonpage?projection={"project_name" : 1, "no_tssr_boq" : 1, "_id" : 1, "version" : 1 }').then( res => {
@@ -257,9 +270,16 @@ class PSUpload extends Component {
   }
 
   getDataMR(_id_MR){
-    this.getDatafromAPIBAM('/mr_op/'+_id_MR).then(resMR => {
+    this.getDataFromAPINODE('/matreq/' + _id_MR).then(resMR => {
       if(resMR.data !== undefined){
-        this.setState({ data_mr : resMR.data });
+        this.setState({ data_mr : resMR.data }, () => {
+          if(resMR.data.cust_del !== undefined){
+            console.log("resMR.data.cust_del", resMR.data.cust_del);
+            this.setState({list_cd_id_mr : resMR.data.cust_del })
+          }else{
+            this.setState({list_cd_id_mr : [] })
+          }
+        });
       }
     })
   }
@@ -277,6 +297,12 @@ class PSUpload extends Component {
     const dataMR = this.state.data_mr;
     let listSku = [];
     const dataTSSRMaterial = dataTSSR.packages.map(pp => pp.materials.map(material => listSku.push(material.material_id)));
+    let dataTechUniq = [];
+    dataTSSR.packages.map(pp =>
+      dataTechUniq.find(e => e.id_tssr_boq_site_doc === pp.id_tssr_boq_site_doc) === undefined ? dataTechUniq.push({"id_tssr_boq_site_doc" : pp.id_tssr_boq_site_doc, "no_tssr_boq_site" : pp.no_tssr_boq_site}) : null
+    )
+    console.log("dataTechUniq", dataTechUniq);
+    this.setState({list_tssr_from_ps : dataTechUniq});
     listSku = [...new Set(listSku)];
     let site_mr_NE = dataMR.site_info.find(e => e.site_title === "NE");
     let site_mr_FE = dataMR.site_info.find(e => e.site_title === "FE");
@@ -764,11 +790,26 @@ class PSUpload extends Component {
 
   async connectPlantSpectoTSSR(){
     const dataMRParent = this.state.data_mr;
-    this.patchDatatoAPINODE('/matreq/assignPlantSpecByTssr/'+dataMRParent._id+'/ps/'+this.state.id_tssr_selected).then(res => {
+    this.setState({modal_assign_ps : false})
+    let dataTSSR = {};
+    if(this.state.cd_id_to_tssr.length !== 0){
+      dataTSSR = {
+        "data" : this.state.cd_id_to_tssr
+      }
+    }
+    this.patchDatatoAPINODE('/matreq/assignPlantSpecByTssr/'+dataMRParent._id+'/ps/'+this.state.id_tssr_selected, dataTSSR).then(res => {
       if(res.data !== undefined){
         this.setState({ action_status : "success" });
       }else{
-        this.setState({ action_status : "failed" });
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
       }
     })
   }
@@ -790,8 +831,33 @@ class PSUpload extends Component {
     this.getListTssrAll();
   }
 
+  handleChangeCDIDtoTSSR(e){
+    const name = e.target.name;
+    const value = e.target.value;
+    let dataCDSelected = this.state.list_cd_id_mr.find(e => e.id_cd_doc === value)
+    let cd_id_to_tssr = this.state.cd_id_to_tssr;
+    let indexCurrent = cd_id_to_tssr.findIndex(e => e.id_tssr_boq_site_doc === name);
+    if( indexCurrent === -1){
+      cd_id_to_tssr.push({
+  			"id_tssr_boq_site_doc" : name,
+  			"id_cd_doc" : dataCDSelected.id_cd_doc,
+  			"cd_id" : dataCDSelected.cd_id
+  		})
+    }else{
+      cd_id_to_tssr[indexCurrent] = {
+  			"id_tssr_boq_site_doc" : name,
+  			"id_cd_doc" : dataCDSelected.id_cd_doc,
+  			"cd_id" : dataCDSelected.cd_id
+  		}
+    }
+    console.log("cd_id_to_tssr", cd_id_to_tssr);
+    this.setState({cd_id_to_tssr : cd_id_to_tssr})
+    this.setState((prevState) => ({
+      cd_id_to_tssr_selected: prevState.cd_id_to_tssr_selected.set(name, value),
+    }));
+  }
+
   render() {
-    console.log("this.state.data_tssr", this.state.data_tssr);
     if(this.state.data_tssr !== null){
       console.log("this.state.data_tssr stei list", this.state.data_tssr.siteList);
     }
@@ -807,13 +873,14 @@ class PSUpload extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}} >Assign PS</span>
-            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.connectPlantSpectoTSSR}>Assign</Button>
+            connectPlantSpectoTSSR
+            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.toggleAssign}>Assign</Button>
           </CardHeader>
           <CardBody>
             <table>
               <tbody>
                 <tr>
-                  <td style={{width : '150px'}}>PlantSpec</td>
+                  <td style={{width : '150px'}}>PlantSpec Group</td>
                   <td>:</td>
                   <td style={{width : '300px'}}>
                     <Select
@@ -851,7 +918,7 @@ class PSUpload extends Component {
             <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
             <Fragment>
             <Row>
-            {this.state.data_tssr !== null && (
+            {(this.state.data_tssr !== null && this.state.data_mr !== null )&& (
               <Fragment>
                 <Col md="4">
                 <table className="table-header">
@@ -914,6 +981,7 @@ class PSUpload extends Component {
                 <Table hover bordered striped responsive size="sm">
                   <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
                     <tr>
+                      <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PS No. (Program)</th>
                       <th rowSpan="2" className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
                       <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
                       <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>Program</th>
@@ -939,6 +1007,7 @@ class PSUpload extends Component {
                       {this.state.data_tssr.packages.map( pp =>
                         <Fragment>
                           <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                            <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site +" ("+ pp.program +")"}</td>
                             <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                             <td>{pp.product_name}</td>
                             <td>{pp.program}</td>
@@ -950,14 +1019,15 @@ class PSUpload extends Component {
                           </tr>
                           {pp.materials.map(material =>
                             <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                              <td style={{textAlign : 'right'}}></td>
                               <td style={{textAlign : 'right'}}>{material.material_id}</td>
                               <td style={{textAlign : 'left'}}>{material.material_name}</td>
                               <td></td>
                               <td>{material.uom}</td>
-                              <td align='center'>{(pp.qty * material.qty).toFixed(2)}</td>
+                              <td align='center'>{(material.qty).toFixed(2)}</td>
                               <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                               <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
-                              <td align='center'>{pp.qty*material.qty < qty_wh ? "OK":"NOK"}</td>
+                              <td align='center'>{material.qty < qty_wh ? "OK":"NOK"}</td>
                             </tr>
                           ) }
                         </Fragment>)}
@@ -989,6 +1059,43 @@ class PSUpload extends Component {
           </ModalFooter>
         </Modal>
         {/* end Modal Loading */}
+        {/* Modal Assign */}
+        <Modal isOpen={this.state.modal_assign_ps} toggle={this.toggleAssign} className={'modal-md ' + this.props.className}>
+          <ModalBody>
+            <div>
+              <Table responsive striped bordered size="sm">
+                <thead>
+                  <tr>
+                    <th>PS No.</th>
+                    <th>CD ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {this.state.list_tssr_from_ps.map(tssr =>
+                    <tr>
+                      <td style={{paddingTop : '10px'}}>
+                        {tssr.no_tssr_boq_site}
+                      </td>
+                      <td>
+                        <Input type="select" name={tssr.id_tssr_boq_site_doc} value={this.state.cd_id_to_tssr_selected.get(tssr.id_tssr_boq_site_doc)} onChange={this.handleChangeCDIDtoTSSR}>
+                          <option></option>
+                          {this.state.list_cd_id_mr.map(e =>
+                            <option value={e.id_cd_doc}>{e.cd_id}</option>
+                          )}
+                        </Input>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="secondary" onClick={this.toggleLoading}>Close</Button>
+            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.connectPlantSpectoTSSR}>Assign</Button>
+          </ModalFooter>
+        </Modal>
+        {/* end Modal Assign */}
       </div>
 
     );

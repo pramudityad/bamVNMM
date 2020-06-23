@@ -239,9 +239,18 @@ class CPODatabase extends React.Component {
       let postData = await this.postDatatoAPIEXEL('/po_op', pp)
       .then(res => {
         if(res.data !== undefined){
+          this.setState({ action_status: 'success', action_message: null });
           this.toggleLoading();
         }else{
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+            if (res.response.data.error.message !== undefined) {
+              this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+            } else {
+              this.setState({ action_status: 'failed', action_message: res.response.data.error });
+            }
+          } else {
+            this.setState({ action_status: 'failed' });
+          }
           this.toggleLoading();
         }
       });

@@ -35,10 +35,14 @@ class CPODatabaseDetail extends Component {
       modalPOForm: false,
       POForm: new Array(5).fill(null),
       collapse: false,
+      action_message : null,
+      action_status : null,
+      collapse_update : false,
     }
     this.toggleLoading = this.toggleLoading.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.downloadAllCPO2 = this.downloadAllCPO2.bind(this);
+    this.toggleCollapse = this.toggleCollapse.bind(this);
   }
 
   toggle(i) {
@@ -52,6 +56,10 @@ class CPODatabaseDetail extends Component {
 
   toggleAddNew() {
     this.setState({ collapse: !this.state.collapse });
+  }
+
+  toggleCollapse() {
+    this.setState({ collapse_update: !this.state.collapse_update });
   }
 
     toggleLoading() {
@@ -261,17 +269,41 @@ class CPODatabaseDetail extends Component {
     const _id = this.props.match.params.id;
     const res = await this.postDatatoAPINODE('/cpodb/createCpoDbDetail/'+_id, { 'detailData': cpobulkXLS })
     if (res.data !== undefined) {
-      this.setState({ action_status: 'success' });
+      this.setState({ action_status: 'success', action_message : null });
       this.toggleLoading();
     } else {
-      const err_arr = res.response.data["_issues"];
-      let err = [];
-      for( err in err_arr){
-        console.log('res data err', err);
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
       }
-      this.setState({ action_status: 'failed' }, () => {
-        this.toggleLoading();
-      });
+      this.toggleLoading();
+    }
+  }
+
+  updateCPODetailBulk = async () => {
+    this.toggleLoading();
+    const cpobulkXLS = this.state.rowsXLS;
+    const _id = this.props.match.params.id;
+    const res = await this.patchDatatoAPINODE('/cpodb/UpdateCpoDbDetail/'+_id, { 'data': cpobulkXLS })
+    if (res.data !== undefined) {
+      this.setState({ action_status: 'success', action_message : null });
+      this.toggleLoading();
+    } else {
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
     }
   }
 
@@ -371,6 +403,11 @@ class CPODatabaseDetail extends Component {
                       </DropdownMenu>
                     </Dropdown>
                   </div>
+                  {this.state.data_cpo_db.length !== 0 && (
+                    <Button block color="success" size="sm" onClick={this.toggleCollapse} id="toggleCollapse2">
+                      Update
+                    </Button>
+                  )}
                   <div>
                     {this.state.data_cpo !== null && this.state.data_cpo_db.length === 0 ? (
                       <div>
@@ -395,6 +432,28 @@ class CPODatabaseDetail extends Component {
                     </React.Fragment>
                   )} */}
               </CardHeader>
+              <Collapse isOpen={this.state.collapse_update}>
+                <Card style={{ margin: '10px 10px 5px 10px' }}>
+                  <CardBody>
+                    <div>
+                      <table>
+                        <tbody>
+                          <tr>
+                            <td>Upload File</td>
+                            <td>:</td>
+                            <td>
+                              <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{ "padding": "10px", "visiblity": "hidden" }} />
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardBody>
+                  <CardFooter>
+                    <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.updateCPODetailBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;Update </Button>
+                  </CardFooter>
+                </Card>
+              </Collapse>
               <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>
                 <Card style={{ margin: '10px 10px 5px 10px' }}>
                   <CardBody>

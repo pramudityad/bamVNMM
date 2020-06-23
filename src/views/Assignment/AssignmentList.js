@@ -30,6 +30,7 @@ class AssignmentList extends Component {
       totalData: 0,
       perPage: 10,
       filter_list: new Array(8).fill(""),
+      asg_all: []
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.getAssignmentList = this.getAssignmentList.bind(this);
@@ -37,6 +38,8 @@ class AssignmentList extends Component {
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.getAssignmentList = this.getAssignmentList.bind(this);
+    this.getAllAssignment = this.getAllAssignment.bind(this);
+    this.downloadAllAssignment = this.downloadAllAssignment.bind(this);
   }
 
   async getDataFromAPINODE(url) {
@@ -99,8 +102,30 @@ class AssignmentList extends Component {
     })
   }
 
+  getAllAssignment() {
+    const page = this.state.activePage;
+    const maxPage = this.state.perPage;
+    let filter_array = [];
+    this.state.filter_list[0] !== "" && (filter_array.push('"Assignment_No":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
+    this.state.filter_list[1] !== "" && (filter_array.push('"Account_Name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
+    this.state.filter_list[2] !== "" && (filter_array.push('"Project":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
+    this.state.filter_list[3] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
+    this.state.filter_list[4] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+    this.state.filter_list[5] !== "" && (filter_array.push('"Current_Status":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
+    this.state.filter_list[6] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
+    let whereAnd = '{' + filter_array.join(',') + '}';
+    this.getDataFromAPINODE('/aspAssignment/aspassign?noPg=1&q=' + whereAnd).then(res => {
+      if (res.data !== undefined) {
+        const items = res.data.data;
+        this.setState({ asg_all: items });
+        console.log('asg list', this.state.asg_all)
+      }
+    })
+  }
+
   componentDidMount() {
     this.getAssignmentList();
+    this.getAllAssignment();
     document.title = 'Assignment List | BAM';
   }
 
@@ -125,6 +150,7 @@ class AssignmentList extends Component {
 
   onChangeDebounced(e) {
     this.getAssignmentList();
+    this.getAllAssignment();
   }
 
   async downloadASGList() {
@@ -136,12 +162,41 @@ class AssignmentList extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let headerRow = ["Assignment ID", "Account Name", " Project Name", " SOW Type", " NW  NW Activity Terms of Payment", " Item Status Work Status"];
+    let headerRow = ["Assignment ID", "Account Name", "Project Name", "SOW Type", "NW", "NW Activity", "Terms of Payment", "Item Status", "Work Status"];
     ws.addRow(headerRow);
 
     for (let i = 0; i < listASGAll.length; i++) {
       let list = listASGAll[i];
       ws.addRow([list.Assignment_No, list.Account_Name, list.Project, list.SOW_Type, list.NW, list.NW_Activity, list.Payment_Terms, list.Item_Status, list.Work_Status])
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Assignment List.xlsx');
+  }
+
+  async downloadAllAssignment() {
+    let allAssignmentList = this.state.asg_all;
+
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let headerRow = ["assignment_id", "project", "sow_type", "created_based", "vendor_code", "vendor_name", "payment_terms", "identifier", "ssow_rbs_id_1", "ssow_rbs_activity_number_1", "ssow_rbs_unit_1", "ssow_rbs_quantity_1", "ssow_rbs_id_2", "ssow_rbs_activity_number_2", "ssow_rbs_unit_2", "ssow_rbs_quantity_2", "ssow_rbs_id_3", "ssow_rbs_activity_number_3", "ssow_rbs_unit_3", "ssow_rbs_quantity_3", "ssow_rbs_id_4", "ssow_rbs_activity_number_4", "ssow_rbs_unit_4", "ssow_rbs_quantity_4", "ssow_rbs_id_5", "ssow_rbs_activity_number_5", "ssow_rbs_unit_5", "ssow_rbs_quantity_5", "ssow_trm_id_1", "ssow_trm_activity_number_1", "ssow_trm_unit_1", "ssow_trm_quantity_1", "ssow_trm_id_2", "ssow_trm_activity_number_2", "ssow_trm_unit_2", "ssow_trm_quantity_2", "ssow_trm_id_3", "ssow_trm_activity_number_3", "ssow_trm_unit_3", "ssow_trm_quantity_3", "ssow_trm_id_4", "ssow_trm_activity_number_4", "ssow_trm_unit_4", "ssow_trm_quantity_4", "ssow_trm_id_5", "ssow_trm_activity_number_5", "ssow_trm_unit_5", "ssow_trm_quantity_5"];
+    ws.addRow(headerRow);
+
+    for (let i = 0; i < allAssignmentList.length; i++) {
+      let rowAdded = [allAssignmentList[i].Assignment_No, allAssignmentList[i].Project, allAssignmentList[i].SOW_Type, "tower_id", allAssignmentList[i].Vendor_Code_Number, allAssignmentList[i].Vendor_Name, allAssignmentList[i].Payment_Terms, allAssignmentList[i].Site_ID];
+      let rbs_ssow = allAssignmentList[i].SSOW_List.filter(item => item.sow_type === "RBS");
+      for (let j = 0; j < rbs_ssow.length; j++) {
+        rowAdded.push(rbs_ssow[j].ssow_id, rbs_ssow[j].ssow_activity_number, rbs_ssow[j].ssow_unit, rbs_ssow[j].ssow_qty);
+      }
+      for (let k = 0; k < 5 - rbs_ssow.length; k++) {
+        rowAdded.push("", "", "", "");
+      }
+      let trm_ssow = allAssignmentList[i].SSOW_List.filter(item => item.sow_type === "TRM");
+      for (let j = 0; j < trm_ssow.length; j++) {
+        rowAdded.push(trm_ssow[j].ssow_id, trm_ssow[j].ssow_activity_number, trm_ssow[j].ssow_unit, trm_ssow[j].ssow_qty);
+      }
+      ws.addRow(rowAdded);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -196,7 +251,7 @@ class AssignmentList extends Component {
                 </span>
                 <Link to={'/assignment-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment</Button></Link>
                 <Link to={'/bulk-assignment-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment Bulk</Button></Link>
-                <Button style={downloadAssignment} outline color="success" onClick={this.downloadASGList} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List</Button>
+                <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignment} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">

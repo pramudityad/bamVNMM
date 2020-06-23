@@ -95,6 +95,9 @@ class MRDetail extends Component {
       id_mr_selected: null,
       selected_dsp: "",
       asp_data: [],
+      modal_revision: false,
+      revision_note: "",
+      wbs_cd_id_data : [],
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
@@ -111,6 +114,8 @@ class MRDetail extends Component {
     this.downloadMaterialMRReport = this.downloadMaterialMRReport.bind(this);
     this.needReviseMR = this.needReviseMR.bind(this);
     this.toggleModalapprove = this.toggleModalapprove.bind(this);
+    this.toggleModalRevision = this.toggleModalRevision.bind(this);
+    this.handleRevisionNote = this.handleRevisionNote.bind(this);
   }
 
   toggleModalapprove(e) {
@@ -119,6 +124,17 @@ class MRDetail extends Component {
     this.setState((prevState) => ({
       modal_approve_ldm: !prevState.modal_approve_ldm,
     }));
+  }
+
+  toggleModalRevision(e) {
+    this.setState((prevState) => ({
+      modal_revision: !prevState.modal_revision
+    }));
+  }
+
+  handleRevisionNote(e) {
+    let value = e.target.value;
+    this.setState({ revision_note: value })
   }
 
   async getDatafromAPIEXEL(url) {
@@ -323,6 +339,26 @@ class MRDetail extends Component {
     }
   }
 
+  async getDatafromAPIXL(url){
+    try {
+      let respond = await axios.get(API_URL_XL +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
+    }
+  }
+
   checkValueReturn(value1, value2) {
     // if value undefined return Value2
     if (typeof value1 !== "undefined" && value1 !== null) {
@@ -368,8 +404,11 @@ class MRDetail extends Component {
           this.getASPList();
         }
         this.setState({ data_mr: resMR.data }, () => {
+          if(this.state.data_mr.cust_del !== undefined){
+            this.getDataCDID(this.state.data_mr.cust_del.map(e => e.cd_id));
+          }
           this.setState(
-            { mr_pp: resMR.data.packages.filter((e) => e.qty !== 0) },
+            { mr_pp: resMR.data.packages },
             () => {
               if (
                 status_can_edit_material.includes(resMR.data.current_mr_status)
@@ -383,6 +422,15 @@ class MRDetail extends Component {
         });
       }
     });
+  }
+
+  async getDataCDID(array_cd_id){
+    let array_in_cdid = '"'+array_cd_id.join('", "')+'"';
+    let projection = '&projection={"WP_ID" : 1, "C1003_WBS_HW" : 1, "C1008_WBS_HWAC" : 1, "C1013_WBS_LCM" : 1, "C1018_WBS_PNRO" : 1, "C1024_WBS_PNDO" : 1, "C1032_WBS_HW_Bulk" : 1, "C1033_WBS_LCM_Bulk" : 1, "C1034_WBS_PowHW_Site_Basis" : 1, "C1035_WBS_PowLCM_Site_Basis" : 1, "C1036_WBS_Kathrein" : 1}'
+    const getWPID = await this.getDatafromAPIXL('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}'+projection);
+    if(getWPID !== undefined && getWPID.data !== undefined) {
+      this.setState({ wbs_cd_id_data : getWPID.data._items});
+    }
   }
 
   async getDataWarehouse(data_ps) {
@@ -728,6 +776,7 @@ class MRDetail extends Component {
     // }
 
     let headerRow = [
+      "bam_id",
       "bundle_id",
       "bundle_name",
       "program",
@@ -735,11 +784,12 @@ class MRDetail extends Component {
       "material_name_plan",
       "material_id_actual",
       "material_name_actual",
-      "unit",
+      "uom",
       "qty",
       "stock_warehouse",
       "inbound_warehouse",
       "availability",
+      "source_material",
     ];
     ws.addRow(headerRow);
     let list_material_id = [];
@@ -754,6 +804,7 @@ class MRDetail extends Component {
         qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
         ws.addRow([
+          dataMatIdx._id,
           dataItemMR[i].pp_id,
           dataItemMR[i].product_name,
           dataItemMR[i].program,
@@ -766,6 +817,7 @@ class MRDetail extends Component {
           qty_wh,
           qty_inbound,
           dataMatIdx.qty < qty_wh ? "OK" : "NOK",
+          dataMatIdx.source_material,
         ]);
       }
     }
@@ -818,7 +870,7 @@ class MRDetail extends Component {
       "Material Name",
       "Description",
       "Category",
-      "QTY",
+      "Qty Available",
     ]);
     for (let j = 0; j < dataMaterialVariant.length; j++) {
       ws2.addRow([
@@ -860,6 +912,7 @@ class MRDetail extends Component {
       "Material Name",
       "Unit",
       "Qty",
+      "Material Source",
     ];
     ws.addRow(headerRow);
     for (let i = 0; i < dataItemMR.length; i++) {
@@ -877,6 +930,7 @@ class MRDetail extends Component {
           dataMatIdx.material_name,
           dataMatIdx.material_unit,
           dataMatIdx.qty,
+          dataMatIdx.source_material,
         ]);
       }
     }
@@ -930,14 +984,14 @@ class MRDetail extends Component {
   async needReviseMR() {
     const dataMR = this.state.data_mr;
     let patchDataMR = await this.patchDatatoAPINODE(
-      "/matreq/needReviseMRFromWH/" + dataMR._id
+      "/matreq/needReviseMRFromWH/" + dataMR._id, {"note_value" : this.state.revision_note}
     );
     if (
       patchDataMR.data !== undefined &&
       patchDataMR.status >= 200 &&
       patchDataMR.status <= 300
     ) {
-      this.setState({ action_status: "success" });
+      this.setState({ action_status: "success", modal_revision : false });
     } else {
       if (
         patchDataMR.response !== undefined &&
@@ -953,11 +1007,48 @@ class MRDetail extends Component {
           this.setState({
             action_status: "failed",
             action_message: patchDataMR.response.data.error,
+            modal_revision : false
           });
         }
       } else {
         this.setState({ action_status: "failed" });
       }
+    }
+  }
+
+  tableViewWBSCDID(cd_id){
+    const dataCDWBS = this.state.wbs_cd_id_data;
+    let dataCDWBSbyCDID = dataCDWBS.find(e => e.WP_ID === cd_id);
+    if(dataCDWBSbyCDID !== undefined){
+      return (
+        <Fragment>
+          <td>{dataCDWBSbyCDID.C1003_WBS_HW}</td>
+          <td>{dataCDWBSbyCDID.C1008_WBS_HWAC}</td>
+          <td>{dataCDWBSbyCDID.C1013_WBS_LCM}</td>
+          <td>{dataCDWBSbyCDID.C1018_WBS_PNRO}</td>
+          <td>{dataCDWBSbyCDID.C1024_WBS_PNDO}</td>
+          <td>{dataCDWBSbyCDID.C1032_WBS_HW_Bulk}</td>
+          <td>{dataCDWBSbyCDID.C1033_WBS_LCM_Bulk}</td>
+          <td>{dataCDWBSbyCDID.C1034_WBS_PowHW_Site_Basis}</td>
+          <td>{dataCDWBSbyCDID.C1035_WBS_PowLCM_Site_Basis}</td>
+          <td>{dataCDWBSbyCDID.C1036_WBS_Kathrein}</td>
+        </Fragment>
+      )
+    }else{
+      return(
+        <Fragment>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </Fragment>
+      )
     }
   }
 
@@ -1173,7 +1264,7 @@ class MRDetail extends Component {
                         <div className="mr-detail__body--flex">
                           <div>
                             <div className="mr-detail__body--header-detail">
-                              <span>DSP Company</span>
+                              <span>Delivery Company</span>
                             </div>
                             <div>{this.state.data_mr.dsp_company}</div>
                           </div>
@@ -1187,6 +1278,14 @@ class MRDetail extends Component {
                                   " " +
                                   this.state.data_mr.origin.value
                                 : ""}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="mr-detail__body--header-detail">
+                              <span>Shipment ID</span>
+                            </div>
+                            <div>
+                              {this.state.data_mr.no_shipment}
                             </div>
                           </div>
                         </div>
@@ -1210,7 +1309,7 @@ class MRDetail extends Component {
                               </div>
                             </Fragment>
                           )}
-                          {this.state.mr_site_NE !== null && (
+                          {this.state.mr_site_FE !== null && (
                             <Fragment>
                               <div className="mr-detail__flex-body--25">
                                 <div className="mr-detail__body--header-detail">
@@ -1226,6 +1325,52 @@ class MRDetail extends Component {
                               </div>
                             </Fragment>
                           )}
+                        </div>
+
+                        <hr className="mr-detail__line" />
+
+                        <div className="mr-detail__body--flex-long">
+                            <Fragment>
+                              {this.state.data_mr.cust_del !== undefined ? (
+                                this.state.data_mr.cust_del.map((e) => (
+                                  <div className="mr-detail__flex-body--25">
+                                    <div className="mr-detail__body--header-detail">
+                                      <span>WBS of CD ID {e.cd_id}</span>
+                                    </div>
+                                    <div>
+                                      <Table responsive striped bordered size="sm">
+                                        <thead>
+                                          <tr style={{fontSize : '10.5px'}}>
+                                            <th>WBS HW</th>
+                                            <th>WBS HWAC</th>
+                                            <th>WBS LCM</th>
+                                            <th>WBS PNRO</th>
+                                            <th>WBS PNDO</th>
+                                            <th>WBS HW Bulk</th>
+                                            <th>WBS LCM Bulk</th>
+                                            <th>WBS PowHW Site Basis</th>
+                                            <th>WBS PowLCM Site Basis</th>
+                                            <th>WBS Kathrein</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          <tr style={{fontSize : '10.5px'}}>
+                                            {this.tableViewWBSCDID(e.cd_id)}
+                                          </tr>
+                                        </tbody>
+                                      </Table>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="mr-detail__flex-body--25">
+                                  <div className="mr-detail__body--header-detail">
+                                    <span>WBS of CD ID {this.state.data_mr.cd_id}</span>
+                                  </div>
+                                  <div>{this.state.mr_site_NE.site_id}</div>
+                                </div>
+                              )}
+                            </Fragment>
                         </div>
 
                         <hr className="mr-detail__line" />
@@ -1410,7 +1555,7 @@ class MRDetail extends Component {
                       </Col>
                     </Row>
                     <hr className="upload-line-ordering"></hr>
-                    <div>PlantSpec No : {this.state.data_mr !== null ? this.state.data_mr.no_plantspec : ""}</div>
+                    <div>PlantSpec Group No : {this.state.data_mr !== null ? this.state.data_mr.no_plantspec : ""}</div>
                     <div className="divtable2">
                       <Table hover bordered striped responsive size="sm">
                         <thead
@@ -1498,6 +1643,16 @@ class MRDetail extends Component {
                             ) : (
                               <Fragment></Fragment>
                             )}
+                            <th
+                              rowSpan="2"
+                              className="fixedhead"
+                              style={{ width: "75px", verticalAlign: "middle" }}
+                            >
+                              CPO Number
+                            </th>
+                            <th rowSpan="2" className="fixedhead" style={{ width: "75px", verticalAlign: "middle" }}>
+                              Material Source
+                            </th>
                           </tr>
                           {this.state.data_mr !== null &&
                           this.state.data_mr.mr_type !== "Relocation" &&
@@ -1565,6 +1720,8 @@ class MRDetail extends Component {
                                     <td></td>
                                     <td></td>
                                     <td></td>
+                                    <td>{pp.cpo_number}</td>
+                                    <td>{pp.source_material}</td>
                                   </tr>
                                   {pp.materials.map((material) => (
                                     <tr
@@ -1637,6 +1794,8 @@ class MRDetail extends Component {
                                       <td align="center">
                                         {material.qty < qty_wh ? "OK" : "NOK"}
                                       </td>
+                                      <td>{material.cpo_number}</td>
+                                      <td>{material.source_material}</td>
                                     </tr>
                                   ))}
                                 </Fragment>
@@ -1646,8 +1805,7 @@ class MRDetail extends Component {
                                 <td colSpan="5">Loading...</td>
                               </tr>
                             ) : (
-                              this.state.data_mr.current_mr_status ===
-                                "NOT ASSIGNED" && (
+                              this.state.data_mr.current_mr_status === "NOT ASSIGNED" && (
                                 <tr>
                                   <td colSpan="5">PS not Assigned</td>
                                 </tr>
@@ -1669,7 +1827,7 @@ class MRDetail extends Component {
                                     <td>{pp.product_name}</td>
                                     <td>{pp.program}</td>
                                     <td>{pp.uom}</td>
-                                    <td align="center">{pp.qty}</td>
+                                    <td align="center" colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{pp.qty}</td>
                                     {this.state.mr_site_FE !== null ? (
                                       <td align="center">
                                         {this.getQtyMRPPFE(pp.pp_id)}
@@ -1677,6 +1835,8 @@ class MRDetail extends Component {
                                     ) : (
                                       <Fragment></Fragment>
                                     )}
+                                    <td>{pp.cpo_number}</td>
+                                    <td>{pp.source_material}</td>
                                   </tr>
                                   {pp.materials.map((material) => (
                                     <tr
@@ -1694,7 +1854,7 @@ class MRDetail extends Component {
                                       </td>
                                       <td></td>
                                       <td>{material.uom}</td>
-                                      <td align="center">{material.qty}</td>
+                                      <td align="center" colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{material.qty}</td>
                                       {this.state.mr_site_FE !== null ? (
                                         <td align="center">
                                           {this.getQtyMRMDFE(
@@ -1705,6 +1865,8 @@ class MRDetail extends Component {
                                       ) : (
                                         <Fragment></Fragment>
                                       )}
+                                      <td>{material.cpo_number}</td>
+                                      <td>{material.source_material}</td>
                                     </tr>
                                   ))}
                                 </Fragment>
@@ -1839,7 +2001,7 @@ class MRDetail extends Component {
                       color="warning"
                       style={{ float: "left" }}
                       size="sm"
-                      onClick={this.needReviseMR}
+                      onClick={this.toggleModalRevision}
                     >
                       Need Revise
                     </Button>
@@ -1875,6 +2037,17 @@ class MRDetail extends Component {
           </ModalFooter>
         </Modal>
         {/* end Modal Loading */}
+
+        <Modal isOpen={this.state.modal_revision} toggle={this.toggleModalRevision} className={"modal-sm"}>
+          <ModalHeader>Note for Revision</ModalHeader>
+          <ModalBody>
+            <Input type="textarea" rows="9" placeholder="Note..." onChange={this.handleRevisionNote} value={this.state.revision_note} />
+          </ModalBody>
+          <ModalFooter>
+            <Button color="warning" style={{ float: "right", marginRight: "8px" }} onClick={this.needReviseMR}><i className="fa fa-edit" style={{ marginRight: "8px" }}></i> Need Revision</Button>
+            <Button color="secondary" onClick={this.toggleModalRevision}>Cancel</Button>
+          </ModalFooter>
+        </Modal>
 
         {/* modal form approve */}
         <ModalForm

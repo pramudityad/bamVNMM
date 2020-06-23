@@ -31,7 +31,7 @@ class ListCPOBoq extends Component {
       list_cpo_boq : [],
       modal_delete : false,
         Tech_All : [],
-        prevPage : 0,
+        prevPage : 1,
         activePage : 1,
         totalData : 0,
         perPage : 10,
@@ -95,10 +95,16 @@ class ListCPOBoq extends Component {
   }
 
   getCpoBoqList(){
-    this.getDataFromAPINODE('/cpoBoqList?lmt=10&pg=104').then(res => {
+    this.getDataFromAPINODE('/cpoBoqList?srt=cpo_boq_id:-1&lmt='+this.state.perPage +
+    "&pg=" + this.state.activePage).then(res => {
       if(res.data !== undefined){
-        this.setState({list_cpo_boq : res.data.data});
+        this.setState({list_cpo_boq : res.data.data, prevPage: this.state.activePage,
+          totalData: res.data.totalResults});
+      } else{
+        this.setState({list_cpo_boq : [], prevPage: this.state.activePage,
+          totalData: 0});
       }
+      // console.log('totalData ', this.state.totalData)
     })
   }
 
@@ -246,7 +252,7 @@ class ListCPOBoq extends Component {
               <span style={{marginTop:'8px'}}>CPO BOQ List</span>
               {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
                 <div className="card-header-actions" style={{marginRight:'5px'}}>
-                    <Link to='/cpo-boq-creation'>
+                    <Link to='/list-cpo-boq/creation'>
                     <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
                     </Link>
                 </div>
@@ -270,7 +276,7 @@ class ListCPOBoq extends Component {
                             <td style={{verticalAlign : 'middle'}}>{boq.cpo_boq_id}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.creator[0].email}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              <Link to={'/detail-cpo-boq/'+boq.cpo_number}>
+                              <Link to={'/list-cpo-boq/detail/'+boq.cpo_number}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                               </Link>
                               {/* <Link to={'/approval-technical/'+boq._id}>
@@ -289,7 +295,7 @@ class ListCPOBoq extends Component {
                 <Pagination
                     activePage={this.state.activePage}
                     itemsCountPerPage={this.state.perPage}
-                    totalItemsCount={this.state.totalData.total}
+                    totalItemsCount={this.state.totalData}
                     pageRangeDisplayed={5}
                     onChange={this.handlePageChange}
                     itemClass="page-item"

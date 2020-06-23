@@ -1,12 +1,12 @@
 import React, { Component } from "react";
 import { ModalBody, ModalHeader, Modal, ModalFooter } from "reactstrap";
 
-const ModalDelete = ({ isOpen, toggle, className, title, children }) => {
+const ModalDelete = ({ isOpen, toggle, className, title, children, body }) => {
   return (
     <div>
       <Modal isOpen={isOpen} toggle={toggle} className={className}>
         <ModalHeader toggle={toggle}>{title}</ModalHeader>
-        <ModalBody>Are you sure ?</ModalBody>
+        <ModalBody>{body}</ModalBody>
         <ModalFooter>
             {children}
         </ModalFooter>

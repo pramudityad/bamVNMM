@@ -2323,10 +2323,10 @@ class TechnicalBoq extends Component {
                             </DropdownToggle>
                             <DropdownMenu>
                               <DropdownItem onClick={this.toggleUpload} value="Delivery" id="toggleCollapse1">
-                                <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Qty Delivery
+                                <i className="fas fa-edit" aria-hidden="true"> </i> &nbsp;Qty Delivery
                               </DropdownItem>
                               <DropdownItem onClick={this.toggleUpload} value="Commercial" id="toggleCollapse1">
-                                <i className="fa fa-pencil" aria-hidden="true"> </i> &nbsp;Qty Commercial
+                                <i className="fas fa-edit" aria-hidden="true"> </i> &nbsp;Qty Commercial
                               </DropdownItem>
                             </DropdownMenu>
                           </Dropdown>

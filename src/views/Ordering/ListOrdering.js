@@ -83,7 +83,7 @@ class ListOrdering extends Component {
                                 <td style={{verticalAlign : 'middle', textAlign : "center"}}>
                                     <Link to={'/detail-ordering/'+ord._id}>
                                         <Button className="btn-primary" size="sm" color="primary" style={{marginRight : '10px'}}>
-                                        <i className="fa fa-pencil" aria-hidden="true"></i>&nbsp; Detail
+                                        <i className="fas fa-edit" aria-hidden="true"></i>&nbsp; Detail
                                         </Button>
                                     </Link>
                                 </td>

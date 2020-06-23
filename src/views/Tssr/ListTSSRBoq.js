@@ -74,10 +74,15 @@ class ListTSSRBoq extends Component {
     let filter_project = this.state.filter_list[2] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
     let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
     let filter_status = this.state.filter_list[5] === null ? '"approval_status":{"$exists" : 1}' : '"approval_status":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
-    let where = 'q={'+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+'}';
-    this.getDataFromAPINODE('/techBoqList?srt=_id:-1&'+where).then(res => {
+    let where = 'q={'+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+', "tssr_approval_status" : {"$ne" : "NOT SUBMITTED"}}';
+    this.getDataFromAPINODE('/techBoqList?srt=_id:-1&'+where+ "&lmt=" +
+    this.state.perPage +
+    "&pg=" +
+    this.state.activePage).then(res => {
       if(res.data !== undefined){
-        this.setState({list_tech_boq : res.data.data});
+        this.setState({list_tech_boq : res.data.data, prevPage: this.state.activePage, totalData: res.data.totalResults});
+      } else {
+        this.setState({ list_tech_boq: [], prevPage: this.state.activePage, totalData: 0})
       }
     })
   }
@@ -88,7 +93,7 @@ class ListTSSRBoq extends Component {
 
   handlePageChange(pageNumber) {
     this.setState({activePage: pageNumber}, () => {
-      this.getListBOQ();
+      this.getTechBoqList();
     });
   }
 
@@ -196,7 +201,7 @@ class ListTSSRBoq extends Component {
                             <td style={{verticalAlign : 'middle'}}>{boq.version}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.tssr_approval_status}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              <Link to={'/detail-tssr-boq/'+boq._id}>
+                              <Link to={'/list-tssr-boq/detail/'+boq._id}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                               </Link>
                               {/*<Button  size="sm" color="danger" style={{color : "white"}} value={boq._id} onClick={e => this.deleteTechBoq(e, "value")}>
@@ -212,7 +217,7 @@ class ListTSSRBoq extends Component {
                 <Pagination
                     activePage={this.state.activePage}
                     itemsCountPerPage={this.state.perPage}
-                    totalItemsCount={this.state.totalData.total}
+                    totalItemsCount={this.state.totalData}
                     pageRangeDisplayed={5}
                     onChange={this.handlePageChange}
                     itemClass="page-item"

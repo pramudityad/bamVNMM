@@ -12,22 +12,18 @@ import {
   Collapse,
 } from "reactstrap";
 import { Col, FormGroup, Label, Row, Table, Input } from "reactstrap";
-import { ExcelRenderer } from "react-excel-renderer";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
-import axios from "axios";
 import Pagination from "react-js-pagination";
 import debounce from "lodash.debounce";
-import Select from "react-select";
 import { saveAs } from "file-saver";
 import Excel from "exceljs";
 import { connect } from "react-redux";
-import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
 import ModalDelete from "../../components/ModalDelete";
 import Loading from '../../components/Loading'
 import {getDatafromAPIEXEL ,getDatafromAPINODE, postDatatoAPINODE, patchDatatoAPINODE, deleteDataFromAPINODE} from '../../../helper/asyncFunction'
-
+import {convertDMSToDD} from '../../../helper/basicFunction'
 import "../MatStyle.css";
 
 const Checkbox = ({
@@ -328,12 +324,14 @@ class WHManagement extends React.Component {
     let newDataXLS = [];
     for (let i = 0; i < dataXLS.length; i++) {
       let col = [];
+      console.log('col ', col)
       for (let j = 0; j < dataXLS[0].length; j++) {
         if (typeof dataXLS[i][j] === "object") {
           let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
           if (dataObject !== null) {
             dataObject = dataObject.replace(/"/g, "");
           }
+          console.log('dataObject ', dataObject)
           col.push(dataObject);
         } else {
           col.push(this.checkValue(dataXLS[i][j]));
@@ -350,7 +348,7 @@ class WHManagement extends React.Component {
     // console.log("here ur dataLogin", this.props.dataLogin);
     // console.log('token from asycn ', this.props.dataLogin.token);
     this.getWHStockList();
-    // change this
+    this.getASPList();
     document.title = "Warehouse Management | BAM";
   }
 
@@ -455,16 +453,24 @@ class WHManagement extends React.Component {
     const res = await postDatatoAPINODE("/whManagement/createWarehouse", {
       managementData: BulkXLSX,
     }, this.props.dataLogin.token);
-    console.log("res bulk ", res.data);
+    console.log("res bulk ", res.response);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed" }, () => {
-        this.toggleLoading();
-      });
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
     }
   };
+
 
   saveTruncateBulk = async () => {
     this.toggleLoading();
@@ -532,7 +538,15 @@ class WHManagement extends React.Component {
       });
     } else {
       this.toggleLoading();
-      this.setState({ action_status: "failed" });
+      if (patchData.response !== undefined && patchData.response.data !== undefined && patchData.response.data.error !== undefined) {
+        if (patchData.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: patchData.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: patchData.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
     }
   }
 
@@ -566,9 +580,15 @@ class WHManagement extends React.Component {
           this.toggleLoading();
         });
       } else {
-        this.setState({
-          action_status: "failed",
-        });
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
         this.toggleLoading();
       }
     });
@@ -652,8 +672,12 @@ class WHManagement extends React.Component {
   };
 
   exportMatStatus = async () => {
+
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+    const aspData = this.state.asp_data;
+    // console.log('aspData ', aspData);
 
     ws.addRow([
       "wh_name",
@@ -668,6 +692,14 @@ class WHManagement extends React.Component {
     ws.addRow(["Jakarta", "JKT1", "Asep", "Priuk", 0, 0, "EID", "Internal"]);
     ws.addRow(["Jakarta2", "JKT1", "Asep", "Priuk", 0, 0, "2000175941", "dsp"]);
     ws.addRow(["Jakarta3", "JKT1", "Asep", "Priuk", 0, 0, "2000175941", "asp"]);
+
+    ws2.addRow(["Vendor Name", "Vendor Code"]);
+    ws2.addRow(["EID", "Internal"]);
+    for (let i = 0; i < aspData.length; i++) {
+      // const element = aspData[i];
+      ws2.addRow([aspData[i].Name, aspData[i].Vendor_Code]);
+    }
+
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
@@ -724,6 +756,7 @@ class WHManagement extends React.Component {
   }
 
   render() {
+    const {all_data} = this.state;
     return (
       <div className="animated fadeIn">
         <DefaultNotif
@@ -853,10 +886,10 @@ class WHManagement extends React.Component {
                 </Row>
                 <Row>
                   <Col>
-                    <div className="divtable">
-                      <Table responsive size="sm">
+                    <div >
+                      <Table size="sm">
                         <thead
-                          style={{ backgroundColor: "#73818f" }}
+                          // style={{ backgroundColor: "#73818f" }}
                           className="fixed-whman"
                         >
                           <tr align="center">
@@ -870,18 +903,18 @@ class WHManagement extends React.Component {
                               >
                                 <b>Warehouse ID</b>
                               </Button></th>
-                            <th>WH Manager</th>
+                            <th style={{ width: '100px'}}>WH Manager</th>
                             <th>Address</th>
                             <th>Latitude</th>
                             <th>Longitude</th>
                             <th>Owner</th>
                             <th>WH Type</th>
-                            <th></th>
-                            <th></th>
+                            <th colspan="2"></th>
+                            {/* <th></th> */}
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.all_data
+                          {all_data
                             .map((e) => (
                               <React.Fragment key={e._id + "frag"}>
                                 <tr
@@ -895,10 +928,10 @@ class WHManagement extends React.Component {
                                   <td style={{ textAlign: "center" }}>
                                     {e.wh_id}
                                   </td>
-                                  <td style={{ textAlign: "center" }}>
+                                  <td >
                                     {e.wh_manager}
                                   </td>
-                                  <td style={{ textAlign: "center" }}>
+                                  <td >
                                     {e.address}
                                   </td>
                                   <td style={{ textAlign: "center" }}>
@@ -922,7 +955,7 @@ class WHManagement extends React.Component {
                                       onClick={this.toggleEdit}
                                       title="Edit"
                                     >
-                                      <i className="icon-pencil icons"></i>
+                                      <i className="fas fa-edit"></i>
                                     </Button>
                                   </td>
                                   <td>
@@ -1063,7 +1096,7 @@ class WHManagement extends React.Component {
                     value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
                   >
-                    <option selected="true" disabled="disabled">Select Owner</option>    
+                    <option selected="true" disabled="disabled">Select Owner</option>
                     {this.state.asp_data.map((asp) => (
                       <option value={asp.Vendor_Code}>{asp.Name}</option>
                     ))}
@@ -1074,7 +1107,7 @@ class WHManagement extends React.Component {
             </Row>
           </ModalBody>
           <ModalFooter>
-            <Button color="success" onClick={this.saveNew}>
+            <Button color="success" onClick={this.saveNew} disabled={!this.state.DataForm}>
               Create
             </Button>
           </ModalFooter>
@@ -1224,6 +1257,7 @@ class WHManagement extends React.Component {
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
           title={"Delete WH "+ this.state.selected_wh_id}
+          body={"Are you sure ?"}
         >
           <Button color="danger" onClick={this.DeleteData}>
             Delete

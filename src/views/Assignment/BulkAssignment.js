@@ -73,7 +73,7 @@ class BulkAssignment extends Component {
         action_message : null,
         redirectSign : false,
         asp_list : [],
-        uploadan_type : "Predefined SSOW",
+        uploadan_type : "without Predefined SSOW",
     };
     this.saveDataAssignmentBulk = this.saveDataAssignmentBulk.bind(this);
     this.exportFormatBulkAssignment = this.exportFormatBulkAssignment.bind(this);
@@ -269,12 +269,13 @@ class BulkAssignment extends Component {
     this.setState({waiting_status : true});
     let wp_invalid = [];
     const dataXLSASG = {
-      "includeSsow" : this.state.uploadan_type === "Predefined SSOW" ? true : false,
+      "includeSsow" : this.state.uploadan_type === "without Predefined SSOW" ? true : false,
       "data" : dataXLS
     }
     const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', dataXLSASG);
     if(respondCheckingASG.data !== undefined && respondCheckingASG.status >= 200 && respondCheckingASG.status <= 300 ) {
       let dataChecking = respondCheckingASG.data.data;
+      console.log("respondCheckingASG.data.data", JSON.stringify(respondCheckingASG.data.data));
       this.setState({assignment_ssow_upload : dataChecking});
       if(dataChecking.filter(e => e.operation === "INVALID").length !== 0){
         this.setState({ action_status : 'failed', action_message : 'Please check INVALID row in preview' });
@@ -324,14 +325,22 @@ class BulkAssignment extends Component {
   async saveDataAssignmentBulk(){
     const dataChecking = this.state.assignment_ssow_upload;
     const dataCheckingASG = {
-      "includeSsow" : this.state.uploadan_type === "Predefined SSOW" ? true : false,
+      "includeSsow" : this.state.uploadan_type === "without Predefined SSOW" ? true : false,
       "data" : dataChecking
     }
     const respondSaveASG = await this.postDatatoAPINODE('/aspAssignment/createAspAssign', dataCheckingASG);
     if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
       this.setState({ action_status : 'success' });
     } else{
-      this.setState({ action_status : 'failed' });
+      if (respondSaveASG.response !== undefined && respondSaveASG.response.data !== undefined && respondSaveASG.response.data.error !== undefined) {
+        if (respondSaveASG.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error.message.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
     }
   }
 
@@ -353,7 +362,7 @@ class BulkAssignment extends Component {
       indexSSOW = 5;
     }
     let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
-    if(this.state.uploadan_type === "Predefined SSOW"){
+    if(this.state.uploadan_type === "without Predefined SSOW"){
       let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
       if(sow_type === "RBSTRM"){
         for(let idx = 1; idx <= indexSSOW; idx++){
@@ -401,8 +410,8 @@ class BulkAssignment extends Component {
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}} >ASP Assignment Bulk </span>
             <select type="select" onChange={this.handleChangeUploadType} value={this.state.uploadan_type} disabled={this.state.rowsXLS.length !== 0}>
+              <option value="without Predefined SSOW">without Predefined SSOW</option>
               <option value="Predefined SSOW">Predefined SSOW</option>
-              <option value="no Predefined SSOW">no Predefined SSOW</option>
             </select>
             <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkAssignment} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment Format</Button>
             {/* }<select type="select" onChange={this.handleChangeSOWType} value={this.state.sow_type_selected} style={{marginRight : '8px', marginTop :'3px', float : 'right', width : '100px'}}>
@@ -434,7 +443,7 @@ class BulkAssignment extends Component {
                   <td colSpan="4" style={{textAlign : 'center'}}>BULK ASP ASSIGNMENT PREVIEW  {this.state.uploadan_type}</td>
                 </tr>
                 <tr>
-                  <td colSpan="4" style={{textAlign : 'center', fontSize : '15px', color : 'red'}}>{this.state.uploadan_type === "Predefined SSOW" ? "It will need approval from authoried": "SSOW List get from default mapping of SSOW to CD ID" }</td>
+                  <td colSpan="4" style={{textAlign : 'center', fontSize : '15px', color : 'red'}}>{this.state.uploadan_type === "without Predefined SSOW" ? "It will need approval from authoried": "SSOW List get from default mapping of SSOW to CD ID" }</td>
                 </tr>
               </tbody>
             </table>

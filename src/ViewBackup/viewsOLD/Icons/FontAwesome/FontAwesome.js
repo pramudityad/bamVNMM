@@ -1308,15 +1308,15 @@ class FontAwesome extends Component {
               </Col>
 
               <Col xs="6" sm="4" md="3" lg="2">
-                <i className="fa fa-pencil fa-lg mt-4"></i><br />pencil
+                <i className="fas fa-edit fa-lg mt-4"></i><br />pencil
               </Col>
 
               <Col xs="6" sm="4" md="3" lg="2">
-                <i className="fa fa-pencil-square fa-lg mt-4"></i><br />pencil-square
+                <i className="fas fa-edit-square fa-lg mt-4"></i><br />pencil-square
               </Col>
 
               <Col xs="6" sm="4" md="3" lg="2">
-                <i className="fa fa-pencil-square-o fa-lg mt-4"></i><br />pencil-square-o
+                <i className="fas fa-edit-square-o fa-lg mt-4"></i><br />pencil-square-o
               </Col>
 
               <Col xs="6" sm="4" md="3" lg="2">

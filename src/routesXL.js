@@ -2,38 +2,38 @@ import React from 'react';
 import GRInternal from './views/MR/GR/GRInternal';
 // import WHDashboard from './views/Warehouse/WHDashboard';
 
-const Breadcrumbs = React.lazy(() => import('./views/Base/Breadcrumbs'));
-const Cards = React.lazy(() => import('./views/Base/Cards'));
-const Carousels = React.lazy(() => import('./views/Base/Carousels'));
-const Collapses = React.lazy(() => import('./views/Base/Collapses'));
-const Dropdowns = React.lazy(() => import('./views/Base/Dropdowns'));
-const Forms = React.lazy(() => import('./views/Base/Forms'));
-const Jumbotrons = React.lazy(() => import('./views/Base/Jumbotrons'));
-const ListGroups = React.lazy(() => import('./views/Base/ListGroups'));
-const Navbars = React.lazy(() => import('./views/Base/Navbars'));
-const Navs = React.lazy(() => import('./views/Base/Navs'));
-const Paginations = React.lazy(() => import('./views/Base/Paginations'));
-const Popovers = React.lazy(() => import('./views/Base/Popovers'));
-const ProgressBar = React.lazy(() => import('./views/Base/ProgressBar'));
-const Switches = React.lazy(() => import('./views/Base/Switches'));
-const Tables = React.lazy(() => import('./views/Base/Tables'));
-const Tabs = React.lazy(() => import('./views/Base/Tabs'));
-const Tooltips = React.lazy(() => import('./views/Base/Tooltips'));
-const BrandButtons = React.lazy(() => import('./views/Buttons/BrandButtons'));
-const ButtonDropdowns = React.lazy(() => import('./views/Buttons/ButtonDropdowns'));
-const ButtonGroups = React.lazy(() => import('./views/Buttons/ButtonGroups'));
-const Buttons = React.lazy(() => import('./views/Buttons/Buttons'));
-const Charts = React.lazy(() => import('./views/Charts'));
-const Dashboard = React.lazy(() => import('./views/Dashboard'));
-const CoreUIIcons = React.lazy(() => import('./views/Icons/CoreUIIcons'));
-const Flags = React.lazy(() => import('./views/Icons/Flags'));
-const FontAwesome = React.lazy(() => import('./views/Icons/FontAwesome'));
-const SimpleLineIcons = React.lazy(() => import('./views/Icons/SimpleLineIcons'));
-const Alerts = React.lazy(() => import('./views/Notifications/Alerts'));
-const Badges = React.lazy(() => import('./views/Notifications/Badges'));
-const Modals = React.lazy(() => import('./views/Notifications/Modals'));
-const Colors = React.lazy(() => import('./views/Theme/Colors'));
-const Typography = React.lazy(() => import('./views/Theme/Typography'));
+const Breadcrumbs = React.lazy(() => import('./views/Base/Breadcrumbs/Breadcrumbs'));
+const Cards = React.lazy(() => import('./views/Base/Cards/Cards'));
+const Carousels = React.lazy(() => import('./views/Base/Carousels/Carousels'));
+const Collapses = React.lazy(() => import('./views/Base/Collapses/Collapses'));
+const Dropdowns = React.lazy(() => import('./views/Base/Dropdowns/Dropdowns'));
+const Forms = React.lazy(() => import('./views/Base/Forms/Forms'));
+const Jumbotrons = React.lazy(() => import('./views/Base/Jumbotrons/Jumbotrons'));
+const ListGroups = React.lazy(() => import('./views/Base/ListGroups/ListGroups'));
+const Navbars = React.lazy(() => import('./views/Base/Navbars/Navbars'));
+const Navs = React.lazy(() => import('./views/Base/Navs/Navs'));
+const Paginations = React.lazy(() => import('./views/Base/Paginations/Pagnations'));
+const Popovers = React.lazy(() => import('./views/Base/Popovers/Popovers'));
+const ProgressBar = React.lazy(() => import('./views/Base/ProgressBar/ProgressBar'));
+const Switches = React.lazy(() => import('./views/Base/Switches/Switches'));
+const Tables = React.lazy(() => import('./views/Base/Tables/Tables'));
+const Tabs = React.lazy(() => import('./views/Base/Tabs/Tabs'));
+const Tooltips = React.lazy(() => import('./views/Base/Tooltips/Tooltips'));
+const BrandButtons = React.lazy(() => import('./views/Buttons/BrandButtons/BrandButtons'));
+const ButtonDropdowns = React.lazy(() => import('./views/Buttons/ButtonDropdowns/ButtonDropdowns'));
+const ButtonGroups = React.lazy(() => import('./views/Buttons/ButtonGroups/ButtonGroups'));
+const Buttons = React.lazy(() => import('./views/Buttons/Buttons/Buttons'));
+const Charts = React.lazy(() => import('./views/Charts/Charts'));
+const Dashboard = React.lazy(() => import('./views/Dashboard/Dashboard'));
+const CoreUIIcons = React.lazy(() => import('./views/Icons/CoreUIIcons/CoreUIIcons'));
+const Flags = React.lazy(() => import('./views/Icons/Flags/Flags'));
+const FontAwesome = React.lazy(() => import('./views/Icons/FontAwesome/FontAwesome'));
+const SimpleLineIcons = React.lazy(() => import('./views/Icons/SimpleLineIcons/SimpleLineIcons'));
+const Alerts = React.lazy(() => import('./views/Notifications/Alerts/Alerts'));
+const Badges = React.lazy(() => import('./views/Notifications/Badges/Badges'));
+const Modals = React.lazy(() => import('./views/Notifications/Modals/Modals'));
+const Colors = React.lazy(() => import('./views/Theme/Colors/Colors'));
+const Typography = React.lazy(() => import('./views/Theme/Typography/Typography'));
 const Widgets = React.lazy(() => import('./views/Widgets/Widgets'));
 const Users = React.lazy(() => import('./views/Users/Users'));
 const User = React.lazy(() => import('./views/Users/User'));
@@ -72,6 +72,11 @@ const BulkNotifytoASP = React.lazy(() => import('./views/Assignment/BulkNotifyto
 const AssignmentListASP = React.lazy(() => import('./views/Assignment/AssignmentListASP'));
 const AssignmentDetailASP = React.lazy(() => import('./views/Assignment/AssignmentDetailASP'));
 const AssignmentListApproval = React.lazy(() => import('./views/Assignment/AssignmentListApproval'));
+
+const PRPOCreation = React.lazy(() => import('./views/PRPO/CreatePRPO'));
+const ListPRPO = React.lazy(() => import('./views/PRPO/ListPRPO'));
+const DetailPRPO = React.lazy(() => import('./views/PRPO/DetailPRPO'));
+const EditPRPO = React.lazy(() => import('./views/PRPO/EditPRPO'));
 
 const ListTechnical = React.lazy(() => import('./views/Technical/ListTechnical'));
 const DetailTechnical = React.lazy(() => import('./views/Technical/TechnicalBoq'));
@@ -122,10 +127,14 @@ const DetailCPOBoq = React.lazy(() => import('./views/TechnicalCPO/DetailCPOBoq'
 const ListTSSRBoq = React.lazy(() => import('./views/Tssr/ListTSSRBoq'));
 const DetailTSSRBoq = React.lazy(() => import('./views/Tssr/TSSRBoq'));
 
+const CRDetail = React.lazy(() => import('./views/CR/CRDetail'));
+
 const DRMDetail = React.lazy(() => import('./views/DRM/DRMDetail'));
 
 const GR  = React.lazy(() => import('./views/Warehouse/GR'));
 const GI  = React.lazy(() => import('./views/Warehouse/GI'));
+
+const LoaderPage = React.lazy(() => import('./views/DefaultView/LoaderPage'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -201,14 +210,16 @@ const routes = [
   { path: '/assignment-detail/:id', exact: true, name: 'Assignment Detail', component: AssignmentDetail },
   { path: '/assignment-edit/:id', exact: true, name: 'Assignment Edit', component: AssignmentEdit },
   { path: '/bulk-assignment-notify', exact: true, name: 'Bulk Assignment Notify to ASP', component: BulkNotifytoASP },
+
   { path: '/list-technical', exact: true, name: 'List Technical BOQ', component: ListTechnical },
-  { path: '/detail-technical/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+  { path: '/list-technical/detail/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
   { path: '/approval-technical/:id', exact: true, name: 'Approval Technical BOQ', component: ApprovalTechnical },
-  { path: '/new-technical', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+  { path: '/list-technical/new', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
+
   { path: '/dsa-creation', exact: true, name: 'DSA Creation', component: DSACreation },
   { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
-  { path: '/commercial-creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
-  { path: '/detail-commercial/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
+  { path: '/list-commercial/creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
+  { path: '/list-commercial/detail/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
   { path: '/po-assign-commercial/:id', exact: true, name: 'PO Assign Commercial BOQ', component: POAssign },
   { path: '/submission-commercial/:id', exact: true, name: 'Submission Commercial BOQ', component: SubmissionCommBoq },
 
@@ -236,11 +247,11 @@ const routes = [
   { path: '/detail-list-cpo-database/:id', exact: true, name: 'CPO Database', component: CPODatabaseDetail },
 
   { path: '/list-cpo-boq', exact: true, name: 'List CPO BOQ', component: ListCPOBoq },
-  { path: '/detail-cpo-boq/:id', exact: true, name: 'CPO BOQ Detail', component: DetailCPOBoq },
-  { path: '/cpo-boq-creation', exact: true, name: 'CPO BOQ Creation', component: DetailCPOBoq },
+  { path: '/list-cpo-boq/detail/:id', exact: true, name: 'CPO BOQ Detail', component: DetailCPOBoq },
+  { path: '/list-cpo-boq/creation', exact: true, name: 'CPO BOQ Creation', component: DetailCPOBoq },
 
   { path: '/list-tssr-boq', exact: true, name: 'List TSSR BOQ', component: ListTSSRBoq },
-  { path: '/detail-tssr-boq/:id', exact: true, name: 'CPO TSSR Detail', component: DetailTSSRBoq },
+  { path: '/list-tssr-boq/detail/:id', exact: true, name: 'CPO TSSR Detail', component: DetailTSSRBoq },
 
   { path: '/shipment-list', exact: true, name: 'Shipment List', component: ShipmentList },
 
@@ -263,12 +274,20 @@ const routes = [
 
   { path: '/drm-detail', exact: true, name: 'DRM Detail', component: DRMDetail },
 
+  { path: '/cr-detail', exact: true, name: 'CR Detail', component: CRDetail },
+
   { path: '/order-received-per-wh/:whid', name: 'Order Received', component: OrderReceived },
   { path: '/order-processing-per-wh/:whid', exact: true, name: 'Order Processing', component: OrderProcessing },
   { path: '/ready-to-deliver-per-wh/:whid', exact: true, name: 'Ready To Deliver', component: ReadyToDeliver },
   { path: '/joint-check-per-wh/:whid', exact: true, name: 'Joint Check', component: JointCheck },
   { path: '/loading-process-per-wh/:whid', exact: true, name: 'Loading Process', component: LoadingProcess },
   { path: '/material-dispatch-per-wh/:whid', exact: true, name: 'Material Dispatch', component: MaterialDispatch },
+  { path: '/loader-page', exact: true, name: 'Material Dispatch', component: LoaderPage },
+
+  { path: '/prt-list/creation', exact: true, name: 'PRT Creation', component: PRPOCreation },
+  { path: '/prt-list', exact: true, name: 'PRT List', component: ListPRPO },
+  { path: '/prt-list/detail/:id', exact: true, name: 'PRT Detail', component: DetailPRPO },
+  { path: '/prt-list/edit/:id', exact: true, name: 'PRT Edit', component: EditPRPO },
 
 ];
 
