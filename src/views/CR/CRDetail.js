@@ -551,18 +551,20 @@ class CRDetail extends React.Component {
     const dd =  today.getDate();
     const submission_date = getDateonly(e);
     const diff = dd - submission_date;
-    console.log('diff ',diff);
+    // console.log('diff ',diff);
+    // this.setState({ cr_temp_aging: diff });
     return diff;
-    this.setState({ cr_temp_aging: diff });
+    
   }
 
   countagingApproved(e, b){    
     const approval_date = getDateonly(e);
     const submission_date = getDateonly(b);
     const diff = approval_date - submission_date;
-    console.log('diff ',diff);
+    // console.log('diff ',diff);
+    // this.setState({ cr_temp_aging: diff });
     return diff;
-    this.setState({ cr_temp_aging: diff });
+    
   }
 
   async saveUpdate() {
@@ -1037,8 +1039,10 @@ class CRDetail extends React.Component {
                             <td>{cr.category}</td>
                             <td>{cr.reason}</td>
                             <td>{convertDateFormat(cr.date_submission)}</td>
-                            {/* <td>{cr.ageing}</td> */}<td>{(cr.date_approval === null ? this.countagingCR(cr.date_submission) : this.countagingApproved(cr.date_approval, cr.date_submission))}</td>
-                            {/* <td>{cr.duration}</td> */}<td>{this.cr_temp_aging > 7? '> 7 Days' : '< 7 Days' }</td>
+                            {/* aging */}
+                            <td>{cr.date_approval === null ? this.countagingCR(cr.date_submission) : this.countagingApproved(cr.date_approval, cr.date_submission)}</td>
+                            {/* duration */}
+                            <td>{cr.duration > 7 ? '> 7 Days' : '< 7 Days' }</td>
                             <td>{cr.date_approval === null ? null : convertDateFormat(cr.date_approval)}</td>                            
                             <td>{cr.pic}</td>
                             <td>{cr.cr_announce_status}</td>
