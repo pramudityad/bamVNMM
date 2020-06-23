@@ -23,7 +23,7 @@ import Excel from "exceljs";
 import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
-
+import {convertDateFormat, getDateonly} from '../../helper/basicFunction'
 import "./CRcss.css";
 
 const Checkbox = ({
@@ -82,6 +82,7 @@ class CRDetail extends React.Component {
       activeItemId: null,
       createModal: false,
       filter_list : {},
+      cr_temp_aging : 0,
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -545,6 +546,25 @@ class CRDetail extends React.Component {
     this.setState({ MatStockForm: dataForm });
   }
 
+  countagingCR(e){    
+    const today = new Date();
+    const dd =  today.getDate();
+    const submission_date = getDateonly(e);
+    const diff = dd - submission_date;
+    console.log('diff ',diff);
+    return diff;
+    this.setState({ cr_temp_aging: diff });
+  }
+
+  countagingApproved(e, b){    
+    const approval_date = getDateonly(e);
+    const submission_date = getDateonly(b);
+    const diff = approval_date - submission_date;
+    console.log('diff ',diff);
+    return diff;
+    this.setState({ cr_temp_aging: diff });
+  }
+
   async saveUpdate() {
     let respondSaveEdit = undefined;
     const dataPPEdit = this.state.MatStockForm;
@@ -986,7 +1006,6 @@ class CRDetail extends React.Component {
                                 </InputGroup>
                               </div>
                             </th>
-                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
                             <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
                           </tr>
                         </thead>
@@ -1017,10 +1036,10 @@ class CRDetail extends React.Component {
                             <td>{cr.cr_number}</td>
                             <td>{cr.category}</td>
                             <td>{cr.reason}</td>
-                            <td>{cr.date_submission}</td>
-                            <td>{cr.ageing}</td>
-                            <td>{cr.duration}</td>
-                            <td>{cr.date_approval}</td>                            
+                            <td>{convertDateFormat(cr.date_submission)}</td>
+                            {/* <td>{cr.ageing}</td> */}<td>{(cr.date_approval === null ? this.countagingCR(cr.date_submission) : this.countagingApproved(cr.date_approval, cr.date_submission))}</td>
+                            {/* <td>{cr.duration}</td> */}<td>{this.cr_temp_aging > 7? '> 7 Days' : '< 7 Days' }</td>
+                            <td>{cr.date_approval === null ? null : convertDateFormat(cr.date_approval)}</td>                            
                             <td>{cr.pic}</td>
                             <td>{cr.cr_announce_status}</td>
                             <td>{cr.final_status}</td>
@@ -1248,7 +1267,7 @@ class CRDetail extends React.Component {
 
          {/* Modal create New */}
          <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-         <ModalHeader toggle={this.togglecreateModal}>Create New Material Library</ModalHeader>
+         <ModalHeader toggle={this.togglecreateModal}>Create New CR</ModalHeader>
          <ModalBody>
            <CardBody>
              <div>
