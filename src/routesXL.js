@@ -101,6 +101,7 @@ const BulkApproval = React.lazy(() => import('./views/MR/ListBulkApproval'));
 const ListOrdering = React.lazy(() => import('./views/Ordering/ListOrdering'));
 const DetailOrdering = React.lazy(() => import('./views/Ordering/OrderingMaterial'));
 const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUpload'));
+
 const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabaseList'));
 const CPODatabaseDetail  = React.lazy(() => import('./views/CPODatabase/CPODatabaseDetail'));
 
