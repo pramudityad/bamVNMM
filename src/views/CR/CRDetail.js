@@ -1007,7 +1007,7 @@ class CRDetail extends React.Component {
                                 </InputGroup>
                               </div>
                             </th>
-                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th ></th><th></th><th></th><th></th><th></th><th></th><th></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1041,7 +1041,7 @@ class CRDetail extends React.Component {
                             {/* aging */}
                             <td>{cr.date_approval === null ? this.countagingCR(cr.date_submission) : this.countagingApproved(cr.date_approval, cr.date_submission)}</td>
                             {/* duration */}
-                            <td>{cr.duration > 7 ? '> 7 Days' : '< 7 Days' }</td>
+                            <td>{this.countagingCR(cr.date_submission) > 7 ? '> 7 Days' : '< 7 Days' }</td>
                             <td>{cr.date_approval === null ? null : convertDateFormat(cr.date_approval)}</td>                            
                             <td>{cr.pic}</td>
                             <td>{cr.cr_announce_status}</td>
