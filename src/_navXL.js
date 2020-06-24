@@ -56,7 +56,7 @@ export default {
         },
         {
           name: 'DRM',
-          url: '/drm-detail',
+          url: '/drm-list',
           icon: 'icon-docs',
           roles : ["BAM-Solution", "BAM-Engineering"],
         },

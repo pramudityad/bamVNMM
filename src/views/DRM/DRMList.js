@@ -23,8 +23,9 @@ import Excel from "exceljs";
 import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
-import {convertDateFormat, getDateonly} from '../../helper/basicFunction'
-import "./CRcss.css";
+
+import "./DRMcss.css";
+import {convertDateFormat} from '../../helper/basicFunction'
 
 const Checkbox = ({
   type = "checkbox",
@@ -49,7 +50,7 @@ const DefaultNotif = React.lazy(() =>
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-class CRDetail extends React.Component {
+class DRMList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -82,7 +83,6 @@ class CRDetail extends React.Component {
       activeItemId: null,
       createModal: false,
       filter_list : {},
-      cr_temp_aging : 0,
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -164,7 +164,7 @@ class CRDetail extends React.Component {
 
   async getDatafromAPINODE(url) {
     try {
-      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
+      let respond = await axios.get(API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -183,7 +183,7 @@ class CRDetail extends React.Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(process.env.REACT_APP_API_URL_NODE + url, data, {
+      let respond = await axios.post(API_URL_NODE + url, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -202,7 +202,7 @@ class CRDetail extends React.Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(process.env.REACT_APP_API_URL_NODE + url, data, {
+      let respond = await axios.patch(API_URL_NODE + url, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -221,7 +221,7 @@ class CRDetail extends React.Component {
 
   async deleteDataFromAPINODE(url) {
     try {
-      let respond = await axios.delete(process.env.REACT_APP_API_URL_NODE + url, {
+      let respond = await axios.delete(API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -361,23 +361,15 @@ class CRDetail extends React.Component {
   componentDidMount() {
     // this.getWHStockList();();
     this.getDRMDataList();
-    document.title = "CR Detail | BAM";
+    document.title = "DRM List | BAM";
   }
 
   getDRMDataList() {
-    let cr_system_number = this.state.filter_list.cr_system_number === null || this.state.filter_list.cr_system_number ===  undefined ? '"cr_system_number" : {"$exists" : 1}' : '"cr_system_number" : {"$regex" : "'+this.state.filter_list.cr_system_number+'", "$options" : "i"}';
-    let sub_region_before = this.state.filter_list.sub_region_before === null || this.state.filter_list.sub_region_before ===  undefined ? '"sub_region_before" : {"$exists" : 1}' : '"sub_region_before" : {"$regex" : "'+this.state.filter_list.sub_region_before+'", "$options" : "i"}';
-    let tower_id_before = this.state.filter_list.tower_id_before === null || this.state.filter_list.tower_id_before ===  undefined ? '"tower_id_before" : {"$exists" : 1}' : '"tower_id_before" : {"$regex" : "'+this.state.filter_list.tower_id_before+'", "$options" : "i"}';
-    let site_id_before = this.state.filter_list.site_id_before === null || this.state.filter_list.site_id_before ===  undefined ? '"site_id_before" : {"$exists" : 1}' : '"site_id_before" : {"$regex" : "'+this.state.filter_list.site_id_before+'", "$options" : "i"}';
-    let site_name_before = this.state.filter_list.site_name_before === null || this.state.filter_list.site_name_before ===  undefined ? '"site_name_before" : {"$exists" : 1}' : '"site_name_before" : {"$regex" : "'+this.state.filter_list.site_name_before+'", "$options" : "i"}';
-    let sub_region_after = this.state.filter_list.sub_region_after === null || this.state.filter_list.sub_region_after ===  undefined ? '"sub_region_after" : {"$exists" : 1}' : '"sub_region_after" : {"$regex" : "'+this.state.filter_list.sub_region_after+'", "$options" : "i"}';
-    let tower_id_after = this.state.filter_list.tower_id_after === null || this.state.filter_list.tower_id_after ===  undefined ? '"tower_id_after" : {"$exists" : 1}' : '"tower_id_after" : {"$regex" : "'+this.state.filter_list.tower_id_after+'", "$options" : "i"}';
-    let site_id_after = this.state.filter_list.site_id_after === null || this.state.filter_list.site_id_after ===  undefined ? '"site_id_after" : {"$exists" : 1}' : '"site_id_after" : {"$regex" : "'+this.state.filter_list.site_id_after+'", "$options" : "i"}';
-    let site_name_after = this.state.filter_list.site_name_after === null || this.state.filter_list.site_name_after ===  undefined ? '"site_name_after" : {"$exists" : 1}' : '"site_name_after" : {"$regex" : "'+this.state.filter_list.site_name_after+'", "$options" : "i"}';
-    let remark = this.state.filter_list.remark === null || this.state.filter_list.remark ===  undefined ? '"remark" : {"$exists" : 1}' : '"remark" : {"$regex" : "'+this.state.filter_list.remark+'", "$options" : "i"}';
-    let status = this.state.filter_list.status === null || this.state.filter_list.status ===  undefined ? '"status" : {"$exists" : 1}' : '"status" : {"$regex" : "'+this.state.filter_list.status+'", "$options" : "i"}';
-    let whereAnd = 'q={'+cr_system_number+','+sub_region_before+','+tower_id_before+','+site_id_before+','+site_name_before+','+sub_region_after+','+tower_id_after+','+site_id_after+','+site_name_after+','+remark+','+status+'}';
-    this.getDatafromAPINODE("/changeRequest/getCr?srt=_id:-1&lmt=" + this.state.perPage + '&pg=' + this.state.activePage+'&'+whereAnd).then((res) => {
+    let project_name_filter = this.state.filter_list.project_name === null || this.state.filter_list.project_name ===  undefined ? '"project_name" : {"$exists" : 1}' : '"project_name" : {"$regex" : "'+this.state.filter_list.project_name+'", "$options" : "i"}';
+    let tower_id_filter = this.state.filter_list.tower_id === null || this.state.filter_list.tower_id ===  undefined ? '"tower_id" : {"$exists" : 1}' : '"tower_id" : {"$regex" : "'+this.state.filter_list.tower_id+'", "$options" : "i"}';
+    let program_filter = this.state.filter_list.program === null || this.state.filter_list.program ===  undefined ? '"program" : {"$exists" : 1}' : '"program" : {"$regex" : "'+this.state.filter_list.program+'", "$options" : "i"}';
+    let whereAnd = 'q={'+project_name_filter+','+tower_id_filter+','+program_filter+'}'
+    this.getDatafromAPINODE("/drm/getDrm?lmt=" + this.state.perPage + '&pg=' + this.state.activePage+'&'+whereAnd).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -497,8 +489,8 @@ class CRDetail extends React.Component {
     this.togglecreateModal();
     const dataXLS = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE("/changeRequest/createCr", {
-      'crData': dataXLS,
+    const res = await this.postDatatoAPINODE("/drm/createWithCheckDrm", {
+      'drmData': dataXLS,
     });
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
@@ -544,27 +536,6 @@ class CRDetail extends React.Component {
     let dataForm = this.state.MatStockForm;
     dataForm[parseInt(index)] = value;
     this.setState({ MatStockForm: dataForm });
-  }
-
-  countagingCR(e){    
-    const today = new Date();
-    const dd =  today.getDate();
-    const submission_date = getDateonly(e);
-    const diff = dd - submission_date;
-    // console.log('diff ',diff);
-    // this.setState({ cr_temp_aging: diff });
-    return diff;
-    
-  }
-
-  countagingApproved(e, b){    
-    const approval_date = getDateonly(e);
-    const submission_date = getDateonly(b);
-    const diff = approval_date - submission_date;
-    // console.log('diff ',diff);
-    // this.setState({ cr_temp_aging: diff });
-    return diff;
-    
   }
 
   async saveUpdate() {
@@ -663,7 +634,7 @@ class CRDetail extends React.Component {
   async downloadAll() {
     this.toggleLoading();
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE('/changeRequest/getCr?noPg=1');
+    let getAll_nonpage = await this.getDatafromAPINODE('/drm/getDrm_not_pagination');
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -671,34 +642,27 @@ class CRDetail extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["cr_system_number","sub_region_before","project_group","tower_id_before","site_id_before","site_name_before","project_definition_before","municipality_before","sow_before","site_base_type","wbs", "sub_region_after","tower_id_after","site_id_after", "site_name_after", "project_definition_after", "municipality_after", "sow_after", "cr_number","category","reason", "date_submission", "ageing", "duration", "date_approval", "remark","status","pic", "cr_announce_status","final_status","po_completeness"]);
+    let headerRow = ["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"];
+    ws.addRow(headerRow);
 
     for (let i = 0; i < download_all.length; i++) {
-      let cr = download_all[i];
-      ws.addRow([cr.cr_system_number, cr.sub_region_before, cr.project_group, cr.tower_id_before, cr.site_id_before, cr.site_name_before, cr.project_definition_before, cr.municipality_before, cr.sow_before, cr.site_base_type, cr.wbs, cr.sub_region_after, cr.tower_id_after, cr.site_id_after, cr.site_name_after, cr.project_definition_after, cr.municipality_after, cr.sow_after, cr.cr_number, cr.category, cr.reason, cr.date_submission, cr.ageing, cr.duration, cr.date_approval, cr.remark, cr.status, cr.pic, cr.cr_announce_status, cr.final_status, cr.po_completeness]);
+      let drm = download_all[i];
+      ws.addRow([drm.tower_id, drm.project_name, drm.program, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All CR Data.xlsx");
+    saveAs(new Blob([allocexport]), "All DRM Data.xlsx");
     this.toggleLoading();
   }
 
   async downloadAllFilter() {
     this.toggleLoading();
-    let cr_system_number = this.state.filter_list.cr_system_number === null || this.state.filter_list.cr_system_number ===  undefined ? '"cr_system_number" : {"$exists" : 1}' : '"cr_system_number" : {"$regex" : "'+this.state.filter_list.cr_system_number+'", "$options" : "i"}';
-    let sub_region_before = this.state.filter_list.sub_region_before === null || this.state.filter_list.sub_region_before ===  undefined ? '"sub_region_before" : {"$exists" : 1}' : '"sub_region_before" : {"$regex" : "'+this.state.filter_list.sub_region_before+'", "$options" : "i"}';
-    let tower_id_before = this.state.filter_list.tower_id_before === null || this.state.filter_list.tower_id_before ===  undefined ? '"tower_id_before" : {"$exists" : 1}' : '"tower_id_before" : {"$regex" : "'+this.state.filter_list.tower_id_before+'", "$options" : "i"}';
-    let site_id_before = this.state.filter_list.site_id_before === null || this.state.filter_list.site_id_before ===  undefined ? '"site_id_before" : {"$exists" : 1}' : '"site_id_before" : {"$regex" : "'+this.state.filter_list.site_id_before+'", "$options" : "i"}';
-    let site_name_before = this.state.filter_list.site_name_before === null || this.state.filter_list.site_name_before ===  undefined ? '"site_name_before" : {"$exists" : 1}' : '"site_name_before" : {"$regex" : "'+this.state.filter_list.site_name_before+'", "$options" : "i"}';
-    let sub_region_after = this.state.filter_list.sub_region_after === null || this.state.filter_list.sub_region_after ===  undefined ? '"sub_region_after" : {"$exists" : 1}' : '"sub_region_after" : {"$regex" : "'+this.state.filter_list.sub_region_after+'", "$options" : "i"}';
-    let tower_id_after = this.state.filter_list.tower_id_after === null || this.state.filter_list.tower_id_after ===  undefined ? '"tower_id_after" : {"$exists" : 1}' : '"tower_id_after" : {"$regex" : "'+this.state.filter_list.tower_id_after+'", "$options" : "i"}';
-    let site_id_after = this.state.filter_list.site_id_after === null || this.state.filter_list.site_id_after ===  undefined ? '"site_id_after" : {"$exists" : 1}' : '"site_id_after" : {"$regex" : "'+this.state.filter_list.site_id_after+'", "$options" : "i"}';
-    let site_name_after = this.state.filter_list.site_name_after === null || this.state.filter_list.site_name_after ===  undefined ? '"site_name_after" : {"$exists" : 1}' : '"site_name_after" : {"$regex" : "'+this.state.filter_list.site_name_after+'", "$options" : "i"}';
-    let remark = this.state.filter_list.remark === null || this.state.filter_list.remark ===  undefined ? '"remark" : {"$exists" : 1}' : '"remark" : {"$regex" : "'+this.state.filter_list.remark+'", "$options" : "i"}';
-    let status = this.state.filter_list.status === null || this.state.filter_list.status ===  undefined ? '"status" : {"$exists" : 1}' : '"status" : {"$regex" : "'+this.state.filter_list.status+'", "$options" : "i"}';
-    let whereAnd = 'q={'+cr_system_number+','+sub_region_before+','+tower_id_before+','+site_id_before+','+site_name_before+','+sub_region_after+','+tower_id_after+','+site_id_after+','+site_name_after+','+remark+','+status+'}';
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE('/changeRequest/getCr?noPg=1&'+whereAnd);
+    let project_name_filter = this.state.filter_list.project_name === null || this.state.filter_list.project_name ===  undefined ? '"project_name" : {"$exists" : 1}' : '"project_name" : {"$regex" : "'+this.state.filter_list.project_name+'", "$options" : "i"}';
+    let tower_id_filter = this.state.filter_list.tower_id === null || this.state.filter_list.tower_id ===  undefined ? '"tower_id" : {"$exists" : 1}' : '"tower_id" : {"$regex" : "'+this.state.filter_list.tower_id+'", "$options" : "i"}';
+    let program_filter = this.state.filter_list.program === null || this.state.filter_list.program ===  undefined ? '"program" : {"$exists" : 1}' : '"program" : {"$regex" : "'+this.state.filter_list.program+'", "$options" : "i"}';
+    let whereAnd = 'q={'+project_name_filter+','+tower_id_filter+','+program_filter+'}'
+    let getAll_nonpage = await this.getDatafromAPINODE('/drm/getDrm?noPg=1&'+whereAnd);
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -706,15 +670,16 @@ class CRDetail extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["cr_system_number","sub_region_before","project_group","tower_id_before","site_id_before","site_name_before","project_definition_before","municipality_before","sow_before","site_base_type","wbs", "sub_region_after","tower_id_after","site_id_after", "site_name_after", "project_definition_after", "municipality_after", "sow_after", "cr_number","category","reason", "date_submission", "ageing", "duration", "date_approval", "remark","status","pic", "cr_announce_status","final_status","po_completeness"]);
+    let headerRow = ["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"];
+    ws.addRow(headerRow);
 
     for (let i = 0; i < download_all.length; i++) {
-      let cr = download_all[i];
-      ws.addRow([cr.cr_system_number, cr.sub_region_before, cr.project_group, cr.tower_id_before, cr.site_id_before, cr.site_name_before, cr.project_definition_before, cr.municipality_before, cr.sow_before, cr.site_base_type, cr.wbs, cr.sub_region_after, cr.tower_id_after, cr.site_id_after, cr.site_name_after, cr.project_definition_after, cr.municipality_after, cr.sow_after, cr.cr_number, cr.category, cr.reason, cr.date_submission, cr.ageing, cr.duration, cr.date_approval, cr.remark, cr.status, cr.pic, cr.cr_announce_status, cr.final_status, cr.po_completeness]);
+      let drm = download_all[i];
+      ws.addRow([drm.tower_id, drm.project_name, drm.program, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All CR Data Filter.xlsx");
+    saveAs(new Blob([allocexport]), "All DRM Data Filter.xlsx");
     this.toggleLoading();
   }
 
@@ -736,16 +701,17 @@ class CRDetail extends React.Component {
     });
   }
 
-  exportCRTemplate = async () => {
+  exportDRMTemplate = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["cr_system_number","sub_region_before","project_group","tower_id_before","site_id_before","site_name_before","project_definition_before","municipality_before","sow_before","site_base_type","wbs", "sub_region_after","tower_id_after","site_id_after", "site_name_after", "project_definition_after", "municipality_after", "sow_after", "cr_number","category","reason", "date_submission", "ageing", "duration", "date_approval", "remark","status","pic", "cr_announce_status","final_status","po_completeness"]);
+    ws.addRow(["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"]);
 
-    ws.addRow(["new","Jabo 1 EXAMPLE","STP Sunrise Project B2","JAW-JT-SLW-3108","4431387E","SUDIRMAN SLAWI","XP/2427","JAKARTA SELATAN","Add L2100 5M+Swap RU to RRU Dualband 4T4R+Swap All Existing antenna to Penta Band","Site Base","-","Jabo 1","JAW-JK-KYB-1575","4431387E","CISANGGIRI_IV_RAWA_BARAT","New Prodeff", "Kab. Kodya Jakarta Selatan", "Add L2100 5M + Swap RU to RRU B0 + Swap RU to RRU Dualband 4T4R + Swap All Existing antenna to Quadband","","","Add Config : Config-30fa","","","","","Cancel CR, Back to Original Plan","Cancel CR","EID","","",""]);
+    ws.addRow(["JWT-BBS-0001","XL BAM DEMO 2020","Capacity"]);
+		ws.addRow(["JWT-BBS-0002","XL BAM DEMO 2020","Coverage"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), "CR Template.xlsx");
+    saveAs(new Blob([PPFormat]), "DRM Template.xlsx");
   };
 
   handleFilterList(e) {
@@ -777,7 +743,7 @@ class CRDetail extends React.Component {
             <Card style={{}}>
               <CardHeader>
                 <span style={{ marginTop: "5px", position: "absolute" }}>
-                  {" "}CR Detail{" "}
+                  {" "}DRM List{" "}
                 </span>
                 <div className="card-header-actions" style={{ display: "inline-flex" }}>
                   <div>
@@ -792,7 +758,7 @@ class CRDetail extends React.Component {
                       </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportCRTemplate}>{" "}CR Template</DropdownItem>
+                        <DropdownItem onClick={this.exportDRMTemplate}>{" "}DRM Template</DropdownItem>                        
                         <DropdownItem onClick={this.downloadAll}>{" "}Download All</DropdownItem>
                         <DropdownItem onClick={this.downloadAllFilter}>{" "}Download All Filter</DropdownItem>
                       </DropdownMenu>
@@ -862,40 +828,52 @@ class CRDetail extends React.Component {
                       <Table bordered style={{
         height: "400px"
       }}>
-                        <thead className=" table-drm__header--middle">
+                        <thead className="table-drm__header--middle">
                           <tr align="center">
-                            <th>CR System Number</th>
-                            <th>Sub Region (Before)</th>
-                            <th>XL Tower ID (before)</th>
-                            <th>Site ID (before)</th>
-                            <th>Site Name (before)</th>
-                            <th>Sub Region (After)</th>
-                            <th>XL Tower ID (after)</th>
-                            <th>Site ID (after)</th>
-                            <th>Site Name (after)</th>
-                            <th>Remark</th>
-                            <th>Status</th>
-
-                            <th>Project Group</th>
-                            <th>Project Definition (before)</th>
-                            <th>Municipality (before)</th>
-                            <th>SOW (Before)</th>
-                            <th>Site Base Type</th>
-                            <th>WBS</th>
-                            <th>Project Definition (after)</th>
-                            <th>Municipality (after)</th>
-                            <th>SOW (After)</th>
-                            <th>CR Number</th>
-                            <th>Category</th>
-                            <th>Reason Drop/Replace/Redesign</th>
-                            <th>Date Submission</th>
-                            <th>Ageing</th>
-                            <th>Duration</th>
-                            <th>Date Approval</th>      
-                            <th>PIC</th>
-                            <th>CR Announce Status</th>
-                            <th>Final Status</th>
-                            <th>PO Completeness (Compare TSSR BOQ to CPO of the Site - SOW Code basis)</th>
+                            <th>TowerID</th>
+                            <th>Project</th>
+                            <th>Program</th>
+                            <th>Actual RBS DATA</th>
+                            <th>Actual DU</th>
+                            <th>RU B0 (900)</th>
+                            <th>RU B1 (2100)</th>
+                            <th>RU B3 (1800) </th>
+                            <th>RU B8 (900)</th>
+                            <th>RU B1B3</th>
+                            <th>RU Band Agnostic</th>
+                            <th>Remarks Need CR/Go as SoW Original</th>
+                            <th>Existing Antenna (type)</th>
+                            <th>ANTENNA_HEIGHT </th>
+                            <th>Scenario RAN</th>
+                            <th>Dismantle Antenna</th>
+                            <th>Dismantle RU</th>
+                            <th>Dismantele Accessories</th>
+                            <th>Dismantle DU</th>
+                            <th>Dismantle RBS/Encl</th>
+                            <th>EXISTING DAN SCENARIO IMPLEMENTASI RBS </th>
+                            <th>DRM FINAL (MODULE)</th>
+                            <th>DRM Final Radio</th>
+                            <th>DRM Final SOW Cabinet</th>
+                            <th>DRM FINAL (SOW G9/U9/L9)</th>
+                            <th>DRM FINAL (SOW G18/L18)</th>
+                            <th>DRM FINAL (SOW U21/L21)</th>
+                            <th>DRM FINAL (ANTENNA TYPE)</th>
+                            <th>PLAN ANTENNA AZIMUTH</th>
+                            <th>PLAN ANTENNA ET/MT</th>
+                            <th>Module</th>
+                            <th>Cabinet</th>
+                            <th>Radio</th>
+                            <th>Power RRU</th>
+                            <th>Antenna</th>
+                            <th>Dismantle</th>
+                            <th>System</th>
+                            <th>Optic RRU</th>
+                            <th>Area</th>
+                            <th>VERIFICATION (DATE)</th>
+                            <th>VERIFICATION (STATUS)</th>
+                            <th>VERIFICATION PIC</th>
+                            <th>ISSUED DETAIL</th>
+                            <th>CR Flag engineering</th>
                           </tr>
                           <tr>
                             <th>
@@ -904,7 +882,7 @@ class CRDetail extends React.Component {
                                   <InputGroupAddon addonType="prepend">
                                     <InputGroupText><i className="fa fa-search"></i></InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.cr_system_number} name="cr_system_number" size="sm"/>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.tower_id} name="tower_id" size="sm"/>
                                 </InputGroup>
                               </div>
                             </th>
@@ -914,7 +892,7 @@ class CRDetail extends React.Component {
                                   <InputGroupAddon addonType="prepend">
                                     <InputGroupText><i className="fa fa-search"></i></InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.sub_region_before} name="sub_region_before" size="sm"/>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.project_name} name="project_name" size="sm"/>
                                 </InputGroup>
                               </div>
                             </th>
@@ -924,130 +902,63 @@ class CRDetail extends React.Component {
                                   <InputGroupAddon addonType="prepend">
                                     <InputGroupText><i className="fa fa-search"></i></InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.tower_id_before} name="tower_id_before" size="sm"/>
+                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.program} name="program" size="sm"/>
                                 </InputGroup>
                               </div>
                             </th>
-                            <th>
-                              <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
-                                  <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                                  </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.site_id_before} name="site_id_before" size="sm"/>
-                                </InputGroup>
-                              </div>
-                            </th>
-                            <th>
-                              <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
-                                  <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                                  </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.site_name_before} name="site_name_before" size="sm"/>
-                                </InputGroup>
-                              </div>
-                            </th>
-                            <th>
-                              <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '100px'}}>
-                                  <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                                  </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.sub_region_after} name="sub_region_after" size="sm"/>
-                                </InputGroup>
-                              </div>
-                            </th>
-                            <th>
-                              <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
-                                  <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                                  </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.tower_id_after} name="tower_id_after" size="sm"/>
-                                </InputGroup>
-                              </div>
-                            </th>
-                            <th>
-                              <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
-                                  <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                                  </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.site_id_after} name="site_id_after" size="sm"/>
-                                </InputGroup>
-                              </div>
-                            </th>
-                            <th>
-                              <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '100px'}}>
-                                  <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                                  </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.site_name_after} name="site_name_after" size="sm"/>
-                                </InputGroup>
-                              </div>
-                            </th>
-                            <th>
-                              <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
-                                  <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                                  </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.remark} name="remark" size="sm"/>
-                                </InputGroup>
-                              </div>
-                            </th>
-                            <th>
-                              <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
-                                  <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                                  </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.status} name="status" size="sm"/>
-                                </InputGroup>
-                              </div>
-                            </th>
+                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
                             <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
                           </tr>
                         </thead>
                         <tbody>
-                        {this.state.all_data.map(cr =>
+                        {this.state.all_data.map(drm =>
                           <tr>
-                            <td>{cr.cr_system_number}</td>
-                            <td>{cr.sub_region_before}</td>
-                            <td>{cr.tower_id_before}</td>
-                            <td>{cr.site_id_before}</td>
-                            <td>{cr.site_name_before}</td>
-                            <td>{cr.sub_region_after}</td>
-                            <td>{cr.tower_id_after}</td>
-                            <td>{cr.site_id_after}</td>
-                            <td>{cr.site_name_after}</td>
-                            <td>{cr.remark}</td>
-                            <td>{cr.status}</td>
-
-                            <td>{cr.project_group}</td>
-                            <td>{cr.project_definition_before}</td>
-                            <td>{cr.municipality_before}</td>
-                            <td>{cr.sow_before}</td>
-                            <td>{cr.site_base_type}</td>
-                            <td>{cr.wbs}</td> 
-                            <td>{cr.project_definition_after}</td>
-                            <td>{cr.municipality_after}</td>
-                            <td>{cr.sow_after}</td>
-                            <td>{cr.cr_number}</td>
-                            <td>{cr.category}</td>
-                            <td>{cr.reason}</td>
-                            <td>{convertDateFormat(cr.date_submission)}</td>
-                            {/* aging */}
-                            <td>{cr.date_approval === null ? this.countagingCR(cr.date_submission) : this.countagingApproved(cr.date_approval, cr.date_submission)}</td>
-                            {/* duration */}
-                            <td>{cr.duration > 7 ? '> 7 Days' : '< 7 Days' }</td>
-                            <td>{cr.date_approval === null ? null : convertDateFormat(cr.date_approval)}</td>                            
-                            <td>{cr.pic}</td>
-                            <td>{cr.cr_announce_status}</td>
-                            <td>{cr.final_status}</td>
-                            <td>{cr.po_completeness}</td>
+                            <td>{drm.tower_id} {<Link to={'/drm-list/detail/' + drm._id}>
+                                    <Button color="primary" size="sm" style={{ marginRight: '10px' }}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
+                                  </Link>}</td>
+                            <td>{drm.project_name}</td>
+                            <td>{drm.program}</td>
+                            <td>{drm.actual_rbs_data}</td>
+                            <td>{drm.actual_du}</td>
+                            <td>{drm.ru_b0_900}</td>
+                            <td>{drm.ru_b1_2100}</td>
+                            <td>{drm.ru_b3_1800}</td>
+                            <td>{drm.ru_b8_900}</td>
+                            <td>{drm.ru_b1b3}</td>
+                            <td>{drm.ru_band_agnostic}</td>
+                            <td>{drm.remarks_need_cr_go_as_sow_original}</td>
+                            <td>{drm.existing_antenna_type}</td>
+                            <td>{drm.antenna_height}</td>
+                            <td>{drm.scenario_ran}</td>
+                            <td>{drm.dismantle_antenna}</td>
+                            <td>{drm.dismantle_ru}</td>
+                            <td>{drm.dismantle_accessories}</td>
+                            <td>{drm.dismantle_du}</td>
+                            <td>{drm.dismantle_rbs_encl}</td>
+                            <td>{drm.existing_dan_scenario_implementasi_rbs}</td>
+                            <td>{drm.drm_final_module}</td>
+                            <td>{drm.drm_final_radio}</td>
+                            <td>{drm.drm_final_sow_cabinet}</td>
+                            <td>{drm.drm_final_sow_g9_u9_l9}</td>
+                            <td>{drm.drm_final_sow_g18_l18}</td>
+                            <td>{drm.drm_final_sow_u21_l21}</td>
+                            <td>{drm.drm_final_antenna_type}</td>
+                            <td>{drm.plan_antenna_azimuth}</td>
+                            <td>{drm.plan_antenna_et_mt}</td>
+                            <td>{drm.module}</td>
+                            <td>{drm.cabinet}</td>
+                            <td>{drm.radio}</td>
+                            <td>{drm.power_rru}</td>
+                            <td>{drm.antenna}</td>
+                            <td>{drm.dismantle}</td>
+                            <td>{drm.system}</td>
+                            <td>{drm.optic_rru}</td>
+                            <td>{drm.area}</td>
+                            <td>{convertDateFormat(drm.verification_date)}</td>
+                            <td>{drm.verification_status}</td>
+                            <td>{drm.verification_pic}</td>
+                            <td>{drm.issued_detail}</td>
+                            <td>{drm.cr_flag_engineering}</td>
                           </tr>
                         )}
 
@@ -1271,7 +1182,7 @@ class CRDetail extends React.Component {
 
          {/* Modal create New */}
          <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-         <ModalHeader toggle={this.togglecreateModal}>Create New CR</ModalHeader>
+         <ModalHeader toggle={this.togglecreateModal}>Upload DRM</ModalHeader>
          <ModalBody>
            <CardBody>
              <div>
@@ -1336,4 +1247,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(CRDetail);
+export default connect(mapStateToProps)(DRMList);
