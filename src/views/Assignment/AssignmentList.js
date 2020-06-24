@@ -93,7 +93,7 @@ class AssignmentList extends Component {
     this.state.filter_list[5] !== "" && (filter_array.push('"Current_Status":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
     this.state.filter_list[6] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/aspAssignment/aspassign?q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
+    this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
@@ -114,7 +114,7 @@ class AssignmentList extends Component {
     this.state.filter_list[5] !== "" && (filter_array.push('"Current_Status":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
     this.state.filter_list[6] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/aspAssignment/aspassign?noPg=1&q=' + whereAnd).then(res => {
+    this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1&q=' + whereAnd).then(res => {
       if (res.data !== undefined) {
         const items = res.data.data;
         this.setState({ asg_all: items });
@@ -125,7 +125,7 @@ class AssignmentList extends Component {
 
   componentDidMount() {
     this.getAssignmentList();
-    this.getAllAssignment();
+    // this.getAllAssignment();
     document.title = 'Assignment List | BAM';
   }
 
@@ -155,7 +155,7 @@ class AssignmentList extends Component {
 
   async downloadASGList() {
     let listASGAll = [];
-    let getASG = await this.getDataFromAPI('/asp_assignment_sorted_non_page');
+    let getASG = await this.getDataFromAPI('/asp_assignment_sorted_non_page?srt=_id:-1&');
     if (getASG.data !== undefined) {
       listASGAll = getASG.data._items;
     }
@@ -175,7 +175,11 @@ class AssignmentList extends Component {
   }
 
   async downloadAllAssignment() {
-    let allAssignmentList = this.state.asg_all;
+    let allAssignmentList = [];
+    let getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1');
+    if (getASG.data !== undefined) {
+      allAssignmentList = getASG.data.data;
+    }
 
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();

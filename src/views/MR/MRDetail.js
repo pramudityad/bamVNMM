@@ -123,6 +123,7 @@ class MRDetail extends Component {
     this.toggleModalapprove = this.toggleModalapprove.bind(this);
     this.toggleModalRevision = this.toggleModalRevision.bind(this);
     this.handleRevisionNote = this.handleRevisionNote.bind(this);
+    this.downloadMaterialMRTRACY = this.downloadMaterialMRTRACY.bind(this);
   }
 
   toggleModalapprove(e) {
@@ -922,10 +923,6 @@ class MRDetail extends Component {
       ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name, null, null, dataItemMR[i].uom, null, null, null, dataItemMR[i].no_tssr_boq_site, dataItemMR[i].program]);
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
-        // let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
-        // let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
-        // qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
-        // qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
         ws.addRow([
           null,
           null,
@@ -943,6 +940,35 @@ class MRDetail extends Component {
     saveAs(
       new Blob([allocexport]),
       "Material MR PS " + dataMR.mr_id + " Report.xlsx"
+    );
+  }
+
+  async downloadMaterialMRTRACY() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataMR = this.state.data_mr;
+    const dataItemMR = this.state.list_mr_item;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    let headerRow = ["REC_TYPE", "FILLER", "COMP_CD", "CUST_DELIV_NO", "CUST_ID", "CUST_CNTRY_CD", "ETA_SHP_DT", "SHP_DT", "SITE_LOC_ID", "SITE_CNTRY_CD", "SEND_SYSTEM", "SEND_UNIT", "SALES_GRP", "PRNO ", "SHP_NO", "END_CUST_NM", "END_CUST_ID", "CUST_NM", "SALES_ORD_NO", "PACK_ID", "PURCH_ORD_NO", "SER_NO", "CIN", "GI_Type", "Shp_Pnt", "Plant_ID"];
+    ws.addRow(headerRow);
+    const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
+    const dataSite = dataMR.site_info[0].site_id
+    for (let i = 0; i < dataItemMR.length; i++) {
+      for (let j = 0; j < dataItemMR[i].materials.length; j++) {
+        let dataMatIdx = dataItemMR[i].materials[j];
+        ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dispatchData.mr_status_date, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, dataMR.no_shipment, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([allocexport]),
+      "Material MR " + dataMR.mr_id + " TRACY.xlsx"
     );
   }
 
@@ -1486,6 +1512,17 @@ class MRDetail extends Component {
                                       onClick={this.downloadMaterialMRReport}
                                     >
                                       Download MR PS
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      color="secondary"
+                                      style={{
+                                        float: "right",
+                                        marginRight: "10px",
+                                      }}
+                                      onClick={this.downloadMaterialMRTRACY}
+                                    >
+                                      TRACY Format
                                     </Button>
                                   </td>
                                 </tr>

@@ -146,7 +146,7 @@ class BulkNotifytoASP extends Component {
     this.state.filter_list[8] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
     filter_array.push('"$or":[{"Current_Status" : "ASP ASSIGNMENT CREATED"}, {"Current_Status" : "PM APPROVE"}]');
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/aspAssignment/aspassign?q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
+    this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
@@ -158,7 +158,7 @@ class BulkNotifytoASP extends Component {
   getAssignmentListAll() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPINODE('/aspAssignment/aspassign?q={ "$or" :[{"Current_Status" : "ASP ASSIGNMENT CREATED"}, {"Current_Status" : "PM APPROVE"}]}').then(res => {
+    this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q={ "$or" :[{"Current_Status" : "ASP ASSIGNMENT CREATED"}, {"Current_Status" : "PM APPROVE"}]}').then(res => {
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;

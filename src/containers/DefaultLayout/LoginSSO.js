@@ -7,7 +7,7 @@ import ActionType from '../../redux/reducer/globalActionType';
 import App from '../../App';
 import './LoginSSO.css';
 import { Button, Card, CardBody, CardFooter, Col, Container, Form, Input, InputGroup, InputGroupAddon, InputGroupText, Row } from 'reactstrap';
-import telkom from '../../assets/img/customer/logo-telkom-indonesia-transparent-background.png';
+import telkom from '../../assets/img/customer/Telkomsel_Logo.png';
 import xl from '../../assets/img/customer/1200px-XL_logo_2016.svg.png';
 import indosat from '../../assets/img/customer/Indosat-Ooredoo-Vector-Logo.png';
 import ericssonLogo from '../../assets/img/brand/ERI_horizontal_RGB_WHITE.svg';
@@ -157,7 +157,7 @@ class SSOLogin extends Component {
                 <div className="flex--card-account" >
                   <div className="card-account--telkom" onClick={()=>this.handleChangeAccount("1")}>
                     <div>
-                      <img src={telkom} alt="telkom logo" style={{width : '80%'}} />
+                      <img src={telkom} alt="telkom logo" style={{width : '80%', marginTop : '15%'}} />
                       {/* }<h2>TELKOM</h2> */}
                     </div>
                   </div>
