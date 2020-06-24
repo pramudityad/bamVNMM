@@ -369,14 +369,14 @@ class DRMList extends React.Component {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
-          version_selected: res.data.data.version
+          version_selected: res.data.data.version-1
         });        
         this.toggleLoading();
       } else {
         this.setState({ all_data: {} });
         this.toggleLoading();
       }
-      // console.log('version ',this.state.version_selected)
+      console.log('version ',this.state.version_selected)
 
     });    
   }
@@ -1146,9 +1146,7 @@ class DRMList extends React.Component {
                               <Input
                                 type="select"
                                 value={
-                                  this.state.version_selected === null
-                                    ? drm.version
-                                    : this.state.version_selected
+                                  this.state.version_selected
                                 }
                                 onChange={this.handleChangeVersion}
                                 style={{ width: "100px", height: "30px" }}
