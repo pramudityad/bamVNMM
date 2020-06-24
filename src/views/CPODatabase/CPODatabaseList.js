@@ -39,7 +39,7 @@ class CPODatabase extends React.Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      filter_name: null,
+      filter_name: "",
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -62,7 +62,7 @@ class CPODatabase extends React.Component {
     this.togglePOForm = this.togglePOForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterDebounce = debounce(this.changeFilterName, 500);
+    this.changeFilterName = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
@@ -150,18 +150,18 @@ class CPODatabase extends React.Component {
   handleChangeFilter = (e) => {
     let value = e.target.value;
     if (value.length === 0) {
-      value = null;
+      value = "";
     }
     this.setState({ filter_name: value }, () => {
-      this.changeFilterDebounce(value);
+      this.changeFilterName(value);
     });
   }
 
   getPODataList() {
-    // let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
     // this.getDatatoAPIEXEL('/po_op?max_results=' + this.state.perPage + '&page=' + this.state.activePage + '&where={' + po_number + '}')
     this.getDatafromAPINODE('/cpodb/getCpoDb?srt=_id:-1&lmt='+this.state.perPage +
-    "&pg=" + this.state.activePage)
+    "&pg=" + this.state.activePage+ '&q={' + po_number + '}')
       .then(res => {
         // console.log('all cpoDB', res.data)
         if (res.data !== undefined) {

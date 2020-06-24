@@ -11,7 +11,17 @@ import {
   DropdownToggle,
   Collapse,
 } from "reactstrap";
-import { Col, FormGroup, Label, Row, Table, Input, InputGroup, InputGroupAddon, InputGroupText } from "reactstrap";
+import {
+  Col,
+  FormGroup,
+  Label,
+  Row,
+  Table,
+  Input,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+} from "reactstrap";
 import { ExcelRenderer } from "react-excel-renderer";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 import axios from "axios";
@@ -25,7 +35,7 @@ import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 
 import "./DRMcss.css";
-import {convertDateFormat} from '../../helper/basicFunction'
+import { convertDateFormat } from "../../helper/basicFunction";
 
 const Checkbox = ({
   type = "checkbox",
@@ -34,15 +44,15 @@ const Checkbox = ({
   onChange,
   value,
 }) => (
-    <input
-      type={type}
-      name={name}
-      checked={checked}
-      onChange={onChange}
-      value={value}
-      className="checkmark-dash"
-    />
-  );
+  <input
+    type={type}
+    name={name}
+    checked={checked}
+    onChange={onChange}
+    value={value}
+    className="checkmark-dash"
+  />
+);
 
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
@@ -50,7 +60,7 @@ const DefaultNotif = React.lazy(() =>
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-class DRMDetail extends React.Component {
+class DRMList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -69,7 +79,9 @@ class DRMDetail extends React.Component {
       data_array: [],
       action_status: null,
       action_message: null,
-      all_data: [],
+      all_data: {},
+      list_version: [],
+      version_selected: null,
       data_PO: [],
       packageSelected: [],
       modal_loading: false,
@@ -82,11 +94,10 @@ class DRMDetail extends React.Component {
       activeItemName: "",
       activeItemId: null,
       createModal: false,
-      filter_list : {},
+      filter_list: {},
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
-    this.handlePageChange = this.handlePageChange.bind(this);
     this.changeFilterDebounce = debounce(this.changeFilterName, 500);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
@@ -100,6 +111,8 @@ class DRMDetail extends React.Component {
     this.togglecreateModal = this.togglecreateModal.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
+    this.handleChangeVersion = this.handleChangeVersion.bind(this);
+
   }
 
   toggle(i) {
@@ -160,7 +173,6 @@ class DRMDetail extends React.Component {
       createModal: !this.state.createModal,
     });
   }
-
 
   async getDatafromAPINODE(url) {
     try {
@@ -239,7 +251,7 @@ class DRMDetail extends React.Component {
   }
 
   changeFilterName(value) {
-    this.getDRMDataList();
+    this.getDRMData();
   }
 
   handleChangeFilter = (e) => {
@@ -256,21 +268,6 @@ class DRMDetail extends React.Component {
     let keyword = e.target.value;
     this.setState({ search: keyword });
   };
-
-
-  getWHStockList() {
-    this.getDatafromAPINODE("/variants/variants?lmt=" + this.state.perPage + '&pg=' + this.state.activePage).then((res) => {
-      if (res.data !== undefined) {
-        this.setState({
-          all_data: res.data.data,
-          prevPage: this.state.activePage,
-          total_dataParent: res.data.totalResults,
-        });
-      } else {
-        this.setState({ all_data: [], total_dataParent: 0, prevPage: this.state.activePage });
-      }
-    });
-  }
 
   isSameValue(element, value) {
     //function for FindIndex
@@ -360,73 +357,65 @@ class DRMDetail extends React.Component {
 
   componentDidMount() {
     // this.getWHStockList();();
-    this.getDRMDataList();
+    this.getDRMData(this.props.match.params.id);
+    this.getAllDRMDataVersion(this.props.match.params.id);
     document.title = "DRM Detail | BAM";
+    // console.log('version ',this.state.all_data)
   }
 
-  getDRMDataList() {
-    let project_name_filter = this.state.filter_list.project_name === null || this.state.filter_list.project_name ===  undefined ? '"project_name" : {"$exists" : 1}' : '"project_name" : {"$regex" : "'+this.state.filter_list.project_name+'", "$options" : "i"}';
-    let tower_id_filter = this.state.filter_list.tower_id === null || this.state.filter_list.tower_id ===  undefined ? '"tower_id" : {"$exists" : 1}' : '"tower_id" : {"$regex" : "'+this.state.filter_list.tower_id+'", "$options" : "i"}';
-    let program_filter = this.state.filter_list.program === null || this.state.filter_list.program ===  undefined ? '"program" : {"$exists" : 1}' : '"program" : {"$regex" : "'+this.state.filter_list.program+'", "$options" : "i"}';
-    let whereAnd = 'q={'+project_name_filter+','+tower_id_filter+','+program_filter+'}'
-    this.getDatafromAPINODE("/drm/getDrm?lmt=" + this.state.perPage + '&pg=' + this.state.activePage+'&'+whereAnd).then((res) => {
+  getDRMData(_id) {
+    this.toggleLoading();
+    this.getDatafromAPINODE("/drm/getDrm/" + _id).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
-          prevPage: this.state.activePage,
-          total_dataParent: res.data.totalResults,
+          version_selected: res.data.data.version-1
+        });
+        this.toggleLoading();
+      } else {
+        this.setState({ all_data: {} });
+        this.toggleLoading();
+      }
+      console.log('version ',this.state.version_selected)
+
+    });
+  }
+
+  getAllDRMDataVersion(_id) {
+    this.getDatafromAPINODE("/drm/getDrmVersion/" + _id).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({
+         list_version : res.data.data.map(a => a.version)
         });
       } else {
-        this.setState({ all_data: [], total_dataParent: 0, prevPage: this.state.activePage });
+        this.setState({ list_version: [] });
       }
     });
   }
 
-  handleChangeChecklist(e) {
-    const item = e.target.name;
-    const isChecked = e.target.checked;
-    const mrList = this.state.assignment_list;
-    let dataMRChecked = this.state.data_asg_checked;
-    if (isChecked === true) {
-      const getMR = mrList.find((e) => e._id === item);
-      dataMRChecked.push(getMR);
-    } else {
-      dataMRChecked = dataMRChecked.filter(function (e) {
-        return e._id !== item;
-      });
-    }
-    this.setState({ data_asg_checked: dataMRChecked });
-    this.setState((prevState) => ({
-      asg_checked: prevState.asg_checked.set(item, isChecked),
-    }));
-  }
-
-  handleChangeChecklistAll(e) {
-    const isChecked = e.target.checked;
-    const mrList = this.state.assignment_all;
-    let dataMRChecked = this.state.data_asg_checked;
-    if (isChecked === true) {
-      for (let i = 0; i < mrList.length; i++) {
-        if (this.state.asg_checked.get(mrList[i]._id) !== true) {
-          dataMRChecked.push(mrList[i]);
-        }
-        this.setState((prevState) => ({
-          asg_checked: prevState.asg_checked.set(mrList[i]._id, true),
-        }));
+  handleChangeVersion(e){
+    const value = e.target.value;
+    this.setState({version_selected : value}, () => {
+      if(value !== this.state.all_data.version){
+        this.getDRMDataVersion(this.props.match.params.id, value);
+      }else{
+        this.getDRMData(this.props.match.params.id);
       }
-      this.setState({
-        data_asg_checked: dataMRChecked,
-        asg_checked_all: isChecked,
-      });
-    } else {
-      this.setState({ asg_checked: new Map(), data_asg_checked: [] });
-      this.setState({ asg_checked_all: isChecked });
-    }
+    });
   }
 
-  handlePageChange(pageNumber) {
-    this.setState({ activePage: pageNumber }, () => {
-      this.getDRMDataList();
+  getDRMDataVersion(_id, ver) {
+    this.toggleLoading();
+    this.getDatafromAPINODE("/drm/getDrmVersion/" + _id + '/ver/' + ver).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({
+         all_data : res.data.data
+        });
+        this.toggleLoading();
+      } else {
+        this.setState({ all_data: [] });
+        this.toggleLoading();
+      }
     });
   }
 
@@ -490,21 +479,31 @@ class DRMDetail extends React.Component {
     const dataXLS = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     const res = await this.postDatatoAPINODE("/drm/createWithCheckDrm", {
-      'drmData': dataXLS,
+      drmData: dataXLS,
     });
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-        if(res.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error.message) });
-        }else{
-          this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error) });
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({
+            action_status: "failed",
+            action_message: JSON.stringify(res.response.data.error.message),
+          });
+        } else {
+          this.setState({
+            action_status: "failed",
+            action_message: JSON.stringify(res.response.data.error),
+          });
         }
-      }else{
-        this.setState({ action_status: 'failed' });
+      } else {
+        this.setState({ action_status: "failed" });
       }
       this.toggleLoading();
     }
@@ -516,10 +515,13 @@ class DRMDetail extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     // console.log('xlsx data', JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE("/variants/createVariantsTruncate", {
-      'materialData': BulkXLSX,
-    });
-    console.log('res bulk ', res);
+    const res = await this.postDatatoAPINODE(
+      "/variants/createVariantsTruncate",
+      {
+        materialData: BulkXLSX,
+      }
+    );
+    console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -605,14 +607,24 @@ class DRMDetail extends React.Component {
       if (res.data !== undefined) {
         this.toggleLoading();
       } else {
-        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-          if(res.response.data.error.message !== undefined){
-            this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error.message) });
-          }else{
-            this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error) });
+        if (
+          res.response !== undefined &&
+          res.response.data !== undefined &&
+          res.response.data.error !== undefined
+        ) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: JSON.stringify(res.response.data.error.message),
+            });
+          } else {
+            this.setState({
+              action_status: "failed",
+              action_message: JSON.stringify(res.response.data.error),
+            });
           }
-        }else{
-          this.setState({ action_status: 'failed' });
+        } else {
+          this.setState({ action_status: "failed" });
         }
         this.toggleLoading();
       }
@@ -633,36 +645,155 @@ class DRMDetail extends React.Component {
 
   async downloadAll() {
     this.toggleLoading();
-    let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE('/drm/getDrm_not_pagination');
-    if (getAll_nonpage.data !== undefined) {
-      download_all = getAll_nonpage.data.data;
-    }
+    const download_all = this.state.all_data;
+    // let getAll_nonpage = await this.getDatafromAPINODE(
+    //   "/drm/getDrm_not_pagination"
+    // );
+    // if (getAll_nonpage.data !== undefined) {
+    //   download_all = getAll_nonpage.data.data;
+    // }
 
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let headerRow = ["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"];
+    let headerRow = [
+      "tower_id",
+      "project_name",
+      "program",
+      "actual_rbs_data",
+      "actual_du",
+      "ru_b0_900",
+      "ru_b1_2100",
+      "ru_b3_1800",
+      "ru_b8_900",
+      "ru_b1b3",
+      "ru_band_agnostic",
+      "remarks_need_cr_go_as_sow_original",
+      "existing_antenna_type",
+      "antenna_height",
+      "scenario_ran",
+      "dismantle_antenna",
+      "dismantle_ru",
+      "dismantle_accessories",
+      "dismantle_du",
+      "dismantle_rbs_encl",
+      "existing_dan_scenario_implementasi_rbs",
+      "drm_final_module",
+      "drm_final_radio",
+      "drm_final_sow_cabinet",
+      "drm_final_sow_g9_u9_l9",
+      "drm_final_sow_g18_l18",
+      "drm_final_sow_u21_l21",
+      "drm_final_antenna_type",
+      "plan_antenna_azimuth",
+      "plan_antenna_et_mt",
+      "module",
+      "cabinet",
+      "radio",
+      "power_rru",
+      "antenna",
+      "dismantle",
+      "system",
+      "optic_rru",
+      "area",
+      "verification_date",
+      "verification_status",
+      "verification_pic",
+      "issued_detail",
+      "cr_flag_engineering",
+    ];
     ws.addRow(headerRow);
 
-    for (let i = 0; i < download_all.length; i++) {
-      let drm = download_all[i];
-      ws.addRow([drm.tower_id, drm.project_name, drm.program, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering]);
-    }
+    // for (let i = 0; i < download_all.length; i++) {
+    //   let drm = download_all[i];
+      ws.addRow([
+        download_all.tower_id,
+        download_all.project_name,
+        download_all.program,
+        download_all.actual_rbs_data,
+        download_all.actual_du,
+        download_all.ru_b0_900,
+        download_all.ru_b1_2100,
+        download_all.ru_b3_1800,
+        download_all.ru_b8_900,
+        download_all.ru_b1b3,
+        download_all.ru_band_agnostic,
+        download_all.remarks_need_cr_go_as_sow_original,
+        download_all.existing_antenna_type,
+        download_all.antenna_height,
+        download_all.scenario_ran,
+        download_all.dismantle_antenna,
+        download_all.dismantle_ru,
+        download_all.dismantle_accessories,
+        download_all.dismantle_du,
+        download_all.dismantle_rbs_encl,
+        download_all.existing_dan_scenario_implementasi_rbs,
+        download_all.drm_final_module,
+        download_all.drm_final_radio,
+        download_all.drm_final_sow_cabinet,
+        download_all.drm_final_sow_g9_u9_l9,
+        download_all.drm_final_sow_g18_l18,
+        download_all.drm_final_sow_u21_l21,
+        download_all.drm_final_antenna_type,
+        download_all.plan_antenna_azimuth,
+        download_all.plan_antenna_et_mt,
+        download_all.module,
+        download_all.cabinet,
+        download_all.radio,
+        download_all.power_rru,
+        download_all.antenna,
+        download_all.dismantle,
+        download_all.system,
+        download_all.optic_rru,
+        download_all.area,
+        download_all.verification_date,
+        download_all.verification_status,
+        download_all.verification_pic,
+        download_all.issued_detail,
+        download_all.cr_flag_engineering
+      ]);
+    // }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All DRM Data.xlsx");
+    saveAs(new Blob([allocexport]), "DRM Data "+ download_all.no_drm + " ver "+ download_all.version+".xlsx");
     this.toggleLoading();
   }
 
   async downloadAllFilter() {
     this.toggleLoading();
     let download_all = [];
-    let project_name_filter = this.state.filter_list.project_name === null || this.state.filter_list.project_name ===  undefined ? '"project_name" : {"$exists" : 1}' : '"project_name" : {"$regex" : "'+this.state.filter_list.project_name+'", "$options" : "i"}';
-    let tower_id_filter = this.state.filter_list.tower_id === null || this.state.filter_list.tower_id ===  undefined ? '"tower_id" : {"$exists" : 1}' : '"tower_id" : {"$regex" : "'+this.state.filter_list.tower_id+'", "$options" : "i"}';
-    let program_filter = this.state.filter_list.program === null || this.state.filter_list.program ===  undefined ? '"program" : {"$exists" : 1}' : '"program" : {"$regex" : "'+this.state.filter_list.program+'", "$options" : "i"}';
-    let whereAnd = 'q={'+project_name_filter+','+tower_id_filter+','+program_filter+'}'
-    let getAll_nonpage = await this.getDatafromAPINODE('/drm/getDrm?noPg=1&'+whereAnd);
+    let project_name_filter =
+      this.state.filter_list.project_name === null ||
+      this.state.filter_list.project_name === undefined
+        ? '"project_name" : {"$exists" : 1}'
+        : '"project_name" : {"$regex" : "' +
+          this.state.filter_list.project_name +
+          '", "$options" : "i"}';
+    let tower_id_filter =
+      this.state.filter_list.tower_id === null ||
+      this.state.filter_list.tower_id === undefined
+        ? '"tower_id" : {"$exists" : 1}'
+        : '"tower_id" : {"$regex" : "' +
+          this.state.filter_list.tower_id +
+          '", "$options" : "i"}';
+    let program_filter =
+      this.state.filter_list.program === null ||
+      this.state.filter_list.program === undefined
+        ? '"program" : {"$exists" : 1}'
+        : '"program" : {"$regex" : "' +
+          this.state.filter_list.program +
+          '", "$options" : "i"}';
+    let whereAnd =
+      "q={" +
+      project_name_filter +
+      "," +
+      tower_id_filter +
+      "," +
+      program_filter +
+      "}";
+    let getAll_nonpage = await this.getDatafromAPINODE(
+      "/drm/getDrm?noPg=1&" + whereAnd
+    );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -670,12 +801,102 @@ class DRMDetail extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let headerRow = ["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"];
+    let headerRow = [
+      "tower_id",
+      "project_name",
+      "program",
+      "actual_rbs_data",
+      "actual_du",
+      "ru_b0_900",
+      "ru_b1_2100",
+      "ru_b3_1800",
+      "ru_b8_900",
+      "ru_b1b3",
+      "ru_band_agnostic",
+      "remarks_need_cr_go_as_sow_original",
+      "existing_antenna_type",
+      "antenna_height",
+      "scenario_ran",
+      "dismantle_antenna",
+      "dismantle_ru",
+      "dismantle_accessories",
+      "dismantle_du",
+      "dismantle_rbs_encl",
+      "existing_dan_scenario_implementasi_rbs",
+      "drm_final_module",
+      "drm_final_radio",
+      "drm_final_sow_cabinet",
+      "drm_final_sow_g9_u9_l9",
+      "drm_final_sow_g18_l18",
+      "drm_final_sow_u21_l21",
+      "drm_final_antenna_type",
+      "plan_antenna_azimuth",
+      "plan_antenna_et_mt",
+      "module",
+      "cabinet",
+      "radio",
+      "power_rru",
+      "antenna",
+      "dismantle",
+      "system",
+      "optic_rru",
+      "area",
+      "verification_date",
+      "verification_status",
+      "verification_pic",
+      "issued_detail",
+      "cr_flag_engineering",
+    ];
     ws.addRow(headerRow);
 
     for (let i = 0; i < download_all.length; i++) {
       let drm = download_all[i];
-      ws.addRow([drm.tower_id, drm.project_name, drm.program, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering]);
+      ws.addRow([
+        drm.tower_id,
+        drm.project_name,
+        drm.program,
+        drm.actual_rbs_data,
+        drm.actual_du,
+        drm.ru_b0_900,
+        drm.ru_b1_2100,
+        drm.ru_b3_1800,
+        drm.ru_b8_900,
+        drm.ru_b1b3,
+        drm.ru_band_agnostic,
+        drm.remarks_need_cr_go_as_sow_original,
+        drm.existing_antenna_type,
+        drm.antenna_height,
+        drm.scenario_ran,
+        drm.dismantle_antenna,
+        drm.dismantle_ru,
+        drm.dismantle_accessories,
+        drm.dismantle_du,
+        drm.dismantle_rbs_encl,
+        drm.existing_dan_scenario_implementasi_rbs,
+        drm.drm_final_module,
+        drm.drm_final_radio,
+        drm.drm_final_sow_cabinet,
+        drm.drm_final_sow_g9_u9_l9,
+        drm.drm_final_sow_g18_l18,
+        drm.drm_final_sow_u21_l21,
+        drm.drm_final_antenna_type,
+        drm.plan_antenna_azimuth,
+        drm.plan_antenna_et_mt,
+        drm.module,
+        drm.cabinet,
+        drm.radio,
+        drm.power_rru,
+        drm.antenna,
+        drm.dismantle,
+        drm.system,
+        drm.optic_rru,
+        drm.area,
+        drm.verification_date,
+        drm.verification_status,
+        drm.verification_pic,
+        drm.issued_detail,
+        drm.cr_flag_engineering,
+      ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -699,16 +920,61 @@ class DRMDetail extends React.Component {
         });
       }
     });
-  }
+  };
 
   exportDRMTemplate = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"]);
+    ws.addRow([
+      "tower_id",
+      "project_name",
+      "program",
+      "actual_rbs_data",
+      "actual_du",
+      "ru_b0_900",
+      "ru_b1_2100",
+      "ru_b3_1800",
+      "ru_b8_900",
+      "ru_b1b3",
+      "ru_band_agnostic",
+      "remarks_need_cr_go_as_sow_original",
+      "existing_antenna_type",
+      "antenna_height",
+      "scenario_ran",
+      "dismantle_antenna",
+      "dismantle_ru",
+      "dismantle_accessories",
+      "dismantle_du",
+      "dismantle_rbs_encl",
+      "existing_dan_scenario_implementasi_rbs",
+      "drm_final_module",
+      "drm_final_radio",
+      "drm_final_sow_cabinet",
+      "drm_final_sow_g9_u9_l9",
+      "drm_final_sow_g18_l18",
+      "drm_final_sow_u21_l21",
+      "drm_final_antenna_type",
+      "plan_antenna_azimuth",
+      "plan_antenna_et_mt",
+      "module",
+      "cabinet",
+      "radio",
+      "power_rru",
+      "antenna",
+      "dismantle",
+      "system",
+      "optic_rru",
+      "area",
+      "verification_date",
+      "verification_status",
+      "verification_pic",
+      "issued_detail",
+      "cr_flag_engineering",
+    ]);
 
-    ws.addRow(["JWT-BBS-0001","XL BAM DEMO 2020","Capacity"]);
-		ws.addRow(["JWT-BBS-0002","XL BAM DEMO 2020","Coverage"]);
+    ws.addRow(["JWT-BBS-0001", "XL BAM DEMO 2020", "Capacity"]);
+    ws.addRow(["JWT-BBS-0002", "XL BAM DEMO 2020", "Coverage"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "DRM Template.xlsx");
@@ -717,21 +983,22 @@ class DRMDetail extends React.Component {
   handleFilterList(e) {
     const index = e.target.name;
     let value = e.target.value;
-    if(value !== "" && value.length === 0) {
+    if (value !== "" && value.length === 0) {
       value = null;
     }
     let dataFilter = this.state.filter_list;
     dataFilter[index] = value;
-    this.setState({filter_list : dataFilter, activePage: 1}, () => {
+    this.setState({ filter_list: dataFilter, activePage: 1 }, () => {
       this.onChangeDebounced(e);
-    })
+    });
   }
 
   onChangeDebounced(e) {
-    this.getDRMDataList();
+    this.getDRMData();
   }
 
   render() {
+    const drm = this.state.all_data;
     return (
       <div className="animated fadeIn">
         <DefaultNotif
@@ -743,26 +1010,68 @@ class DRMDetail extends React.Component {
             <Card style={{}}>
               <CardHeader>
                 <span style={{ marginTop: "5px", position: "absolute" }}>
-                  {" "}DRM Detail{" "}
+                  {" "}
+                  DRM Detail{" "}
                 </span>
-                <div className="card-header-actions" style={{ display: "inline-flex" }}>
+                <div
+                  className="card-header-actions"
+                  style={{ display: "inline-flex" }}
+                >
                   <div>
-                    <Button block color="success" onClick={this.togglecreateModal} size="sm">
-                      <i className="fa fa-plus-square" aria-hidden="true">{" "}&nbsp;{" "}</i>{" "}New
-                  </Button>
+                    <Button
+                      block
+                      color="success"
+                      onClick={this.togglecreateModal}
+                      size="sm"
+                    >
+                      <i className="fa fa-plus-square" aria-hidden="true">
+                        {" "}
+                        &nbsp;{" "}
+                      </i>{" "}
+                      New
+                    </Button>
                   </div>
                   <div style={{ marginRight: "10px" }}>
-                    <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggle(0);}} size="sm">
+                    {/* <Dropdown
+                      isOpen={this.state.dropdownOpen[0]}
+                      toggle={() => {
+                        this.toggle(0);
+                      }}
+                      size="sm"
+                    >
                       <DropdownToggle caret color="light">
-                        Download Template
+                        Download DRM
                       </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportDRMTemplate}>{" "}DRM Template</DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>{" "}Download All</DropdownItem>
-                        <DropdownItem onClick={this.downloadAllFilter}>{" "}Download All Filter</DropdownItem>
+                        <DropdownItem onClick={this.exportDRMTemplate}>
+                          {" "}
+                          DRM Template
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>
+                          {" "}
+                          Download
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAllFilter}>
+                          {" "}
+                          Download All Filter
+                        </DropdownItem>
                       </DropdownMenu>
-                    </Dropdown>
+                    </Dropdown> */}
+                    &nbsp;&nbsp;&nbsp;
+                                    <Button
+                  style={{ marginRight: "8px", float: "right" }}
+                  outline
+                  color="info"
+                  size="sm"
+                  onClick={this.downloadAll}
+                >
+                  <i
+                    className="fa fa-download"
+                    style={{ marginRight: "8px" }}
+                  ></i>
+                  DRM Format
+                </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -864,9 +1173,45 @@ class DRMDetail extends React.Component {
                 </Row>
               </div>
                 <Row>
+                  <Col sm="6" md="6">
+                    <div style={{ marginLeft: "10px" }}>
+                      <table
+                        style={{ width: "100%", marginBottom: "5px" }}
+                        className="table-header"
+                      >
+                        <tbody>
+                          <tr style={{ fontWeight: "425", fontSize: "15px" }}>
+                            <td style={{ textAlign: "left" }}>Version</td>
+                            <td style={{ textAlign: "left" }}>:</td>
+                            <td style={{ textAlign: "left" }} colspan={2}>
+                              <Input
+                                type="select"
+                                value={
+                                  this.state.version_selected
+                                }
+                                onChange={this.handleChangeVersion}
+                                style={{ width: "100px", height: "30px" }}
+                              >
+                                {this.state.list_version.map((e, i) => (
+                                  <option value={i}>{i}</option>
+                                ))}
+                              </Input>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </Col>
+                </Row>
+                <Row>
                   <Col>
                     <div className="divtable">
-                      <Table bordered style={{height: "400px"}}>
+                      <Table
+                        bordered
+                        style={{
+                          height: "400px",
+                        }}
+                      >
                         <thead className="table-drm__header--middle">
                           <tr align="center">
                             <th>TowerID</th>
@@ -914,43 +1259,9 @@ class DRMDetail extends React.Component {
                             <th>ISSUED DETAIL</th>
                             <th>CR Flag engineering</th>
                           </tr>
-                          <tr>
-                            <th>
-                              <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
-                                  <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                                  </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.tower_id} name="tower_id" size="sm"/>
-                                </InputGroup>
-                              </div>
-                            </th>
-                            <th>
-                              <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
-                                  <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                                  </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.project_name} name="project_name" size="sm"/>
-                                </InputGroup>
-                              </div>
-                            </th>
-                            <th>
-                              <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '100px'}}>
-                                  <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                                  </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.program} name="program" size="sm"/>
-                                </InputGroup>
-                              </div>
-                            </th>
-                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
-                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
-                          </tr>
                         </thead>
                         <tbody>
-                        {this.state.all_data.map(drm =>
+                          {/* {this.state.all_data.map(drm => */}
                           <tr>
                             <td>{drm.tower_id}</td>
                             <td>{drm.project_name}</td>
@@ -972,7 +1283,9 @@ class DRMDetail extends React.Component {
                             <td>{drm.dismantle_accessories}</td>
                             <td>{drm.dismantle_du}</td>
                             <td>{drm.dismantle_rbs_encl}</td>
-                            <td>{drm.existing_dan_scenario_implementasi_rbs}</td>
+                            <td>
+                              {drm.existing_dan_scenario_implementasi_rbs}
+                            </td>
                             <td>{drm.drm_final_module}</td>
                             <td>{drm.drm_final_radio}</td>
                             <td>{drm.drm_final_sow_cabinet}</td>
@@ -997,24 +1310,10 @@ class DRMDetail extends React.Component {
                             <td>{drm.issued_detail}</td>
                             <td>{drm.cr_flag_engineering}</td>
                           </tr>
-                        )}
-
+                          {/* )} */}
                         </tbody>
                       </Table>
                     </div>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col>
-                    <Pagination
-                      activePage={this.state.activePage}
-                      itemsCountPerPage={this.state.perPage}
-                      totalItemsCount={this.state.total_dataParent}
-                      pageRangeDisplayed={5}
-                      onChange={this.handlePageChange}
-                      itemClass="page-item"
-                      linkClass="page-link"
-                    />
                   </Col>
                 </Row>
               </CardBody>
@@ -1217,36 +1516,47 @@ class DRMDetail extends React.Component {
           </ModalFooter>
         </Modal>
 
-         {/* Modal create New */}
-         <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-         <ModalHeader toggle={this.togglecreateModal}>Upload DRM</ModalHeader>
-         <ModalBody>
-           <CardBody>
-             <div>
-               <table>
-                 <tbody>
-                   <tr>
-                     <td>Upload File</td>
-                     <td>:</td>
-                     <td>
-                       <input
-                         type="file"
-                         onChange={this.fileHandlerMaterial.bind(this)}
-                         style={{ padding: "10px", visiblity: "hidden" }}
-                       />
-                     </td>
-                   </tr>
-                 </tbody>
-               </table>
-             </div>
-           </CardBody>
-         </ModalBody>
-         <ModalFooter>
-           <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveDRMBulk}>Save</Button>{' '}
-           {/* }<Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button> */}
-         </ModalFooter>
-       </Modal>
-
+        {/* Modal create New */}
+        <Modal
+          isOpen={this.state.createModal}
+          toggle={this.togglecreateModal}
+          className={this.props.className}
+        >
+          <ModalHeader toggle={this.togglecreateModal}>Upload DRM</ModalHeader>
+          <ModalBody>
+            <CardBody>
+              <div>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Upload File</td>
+                      <td>:</td>
+                      <td>
+                        <input
+                          type="file"
+                          onChange={this.fileHandlerMaterial.bind(this)}
+                          style={{ padding: "10px", visiblity: "hidden" }}
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardBody>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              block
+              color="success"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveDRMBulk}
+            >
+              Save
+            </Button>{" "}
+            {/* }<Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button> */}
+          </ModalFooter>
+        </Modal>
 
         {/* Modal Loading */}
         <Modal
@@ -1284,4 +1594,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(DRMDetail);
+export default connect(mapStateToProps)(DRMList);

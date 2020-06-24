@@ -23,7 +23,7 @@ import Excel from "exceljs";
 import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
-import {convertDateFormat, getDateonly} from '../../helper/basicFunction'
+import {convertDateFormat} from '../../helper/basicFunction'
 import "./CRcss.css";
 
 const Checkbox = ({
@@ -544,27 +544,6 @@ class CRDetail extends React.Component {
     let dataForm = this.state.MatStockForm;
     dataForm[parseInt(index)] = value;
     this.setState({ MatStockForm: dataForm });
-  }
-
-  countagingCR(e){
-    const today = new Date();
-    const dd =  today.getDate();
-    const submission_date = getDateonly(e);
-    const diff = dd - submission_date;
-    // console.log('diff ',diff);
-    // this.setState({ cr_temp_aging: diff });
-    return diff;
-
-  }
-
-  countagingApproved(e, b){
-    const approval_date = getDateonly(e);
-    const submission_date = getDateonly(b);
-    const diff = approval_date - submission_date;
-    // console.log('diff ',diff);
-    // this.setState({ cr_temp_aging: diff });
-    return diff;
-
   }
 
   async saveUpdate() {
