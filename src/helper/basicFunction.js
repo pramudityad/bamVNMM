@@ -63,7 +63,7 @@ export const convertDateFormatfull = (jsondate) => {
   }
 };
 
-export const getDateonly = (jsondate) => {
+export const getDateFormat = (jsondate) => {
   let date = new Date(jsondate);
   let year = date.getFullYear();
   let month = date.getMonth() + 1;
@@ -75,7 +75,7 @@ export const getDateonly = (jsondate) => {
   if (month < 10) {
     month = "0" + month;
   }
-  return dt;
+  return year,month,dt;
 };
 
 // for export all
