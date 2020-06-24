@@ -1081,7 +1081,7 @@ class CRDetail extends React.Component {
 
          {/* Modal create New */}
          <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-         <ModalHeader toggle={this.togglecreateModal}>Create New Material Library</ModalHeader>
+         <ModalHeader toggle={this.togglecreateModal}>CR Uploader</ModalHeader>
          <ModalBody>
            <CardBody>
              <div>

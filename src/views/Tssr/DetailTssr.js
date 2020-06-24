@@ -1618,7 +1618,7 @@ class DetailTssr extends Component {
                     </thead>
                     <tbody>
                       {this.state.tssrData !== null && Array.isArray(this.state.tssrData.packages) && (
-                        this.state.tssrData.packages.map(pp =>
+                        this.state.tssrData.packages.filter(e => e.product_type.toLowerCase() !== "svc").map(pp =>
                           <Fragment>
                             <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                               <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site +" ("+pp.program+")"}</td>

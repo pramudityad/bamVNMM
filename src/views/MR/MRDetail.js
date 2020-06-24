@@ -772,18 +772,9 @@ class MRDetail extends Component {
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
 
-    // const getMaterialVariant = await this.getDataFromAPINODE('/variants/variants');
-    // if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
-    //   dataMaterialVariant = getMaterialVariant.data.data;
-    // }
-    //
-    // ws2.addRow(["Origin","Material ID","Material Name","Description", "Category"]);
-    // for(let j = 0; j < dataMaterialVariant.length; j++){
-    //   ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category]);
-    // }
-
     let headerRow = [
       "bam_id",
+      "ps_number",
       "bundle_id",
       "bundle_name",
       "program",
@@ -812,6 +803,7 @@ class MRDetail extends Component {
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
         ws.addRow([
           dataMatIdx._id,
+          dataItemMR[i].no_tssr_boq_site,
           dataItemMR[i].pp_id,
           dataItemMR[i].product_name,
           dataItemMR[i].program,
@@ -920,10 +912,14 @@ class MRDetail extends Component {
       "Unit",
       "Qty",
       "Material Source",
+      "CPO Number",
+      "PS No.",
+      "Program"
     ];
     ws.addRow(headerRow);
+    ws.addRow([]);
     for (let i = 0; i < dataItemMR.length; i++) {
-      ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name]);
+      ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name, null, null, dataItemMR[i].uom, null, null, null, dataItemMR[i].no_tssr_boq_site, dataItemMR[i].program]);
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
         // let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
@@ -935,9 +931,10 @@ class MRDetail extends Component {
           null,
           dataMatIdx.material_id,
           dataMatIdx.material_name,
-          dataMatIdx.material_unit,
+          dataMatIdx.uom,
           dataMatIdx.qty,
           dataMatIdx.source_material,
+          dataMatIdx.cpo_number,
         ]);
       }
     }
@@ -1657,8 +1654,8 @@ class MRDetail extends Component {
                             >
                               CPO Number
                             </th>
-                            <th rowSpan="2" className="fixedhead" style={{ width: "75px", verticalAlign: "middle" }}>
-                              Material Source
+                            <th rowSpan="2" className="fixedhead" style={{verticalAlign: "middle" }}>
+                              PS No. / Material Source
                             </th>
                           </tr>
                           {this.state.data_mr !== null &&
@@ -1697,7 +1694,7 @@ class MRDetail extends Component {
                         status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
                           <tbody>
                             {this.state.mr_site_NE !== null &&
-                              this.state.list_mr_item.map((pp) => (
+                              this.state.list_mr_item.filter(e => e.product_type.toLowerCase() !== "svc").map((pp) => (
                                 <Fragment>
                                   <tr
                                     style={{ backgroundColor: "#E5FCC2" }}
@@ -1728,7 +1725,7 @@ class MRDetail extends Component {
                                     <td></td>
                                     <td></td>
                                     <td>{pp.cpo_number}</td>
-                                    <td>{pp.source_material}</td>
+                                    <td>{pp.no_tssr_boq_site}</td>
                                   </tr>
                                   {pp.materials.map((material) => (
                                     <tr
@@ -1843,7 +1840,7 @@ class MRDetail extends Component {
                                       <Fragment></Fragment>
                                     )}
                                     <td>{pp.cpo_number}</td>
-                                    <td>{pp.source_material}</td>
+                                    <td>{pp.no_tssr_boq_site}</td>
                                   </tr>
                                   {pp.materials.map((material) => (
                                     <tr
