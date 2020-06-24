@@ -369,7 +369,7 @@ class DRMList extends React.Component {
     let tower_id_filter = this.state.filter_list.tower_id === null || this.state.filter_list.tower_id ===  undefined ? '"tower_id" : {"$exists" : 1}' : '"tower_id" : {"$regex" : "'+this.state.filter_list.tower_id+'", "$options" : "i"}';
     let program_filter = this.state.filter_list.program === null || this.state.filter_list.program ===  undefined ? '"program" : {"$exists" : 1}' : '"program" : {"$regex" : "'+this.state.filter_list.program+'", "$options" : "i"}';
     let whereAnd = 'q={'+project_name_filter+','+tower_id_filter+','+program_filter+'}'
-    this.getDatafromAPINODE("/drm/getDrm?lmt=" + this.state.perPage + '&pg=' + this.state.activePage+'&'+whereAnd).then((res) => {
+    this.getDatafromAPINODE("/drm/getDrm?srt=_id:-1&lmt=" + this.state.perPage + '&pg=' + this.state.activePage+'&'+whereAnd).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
