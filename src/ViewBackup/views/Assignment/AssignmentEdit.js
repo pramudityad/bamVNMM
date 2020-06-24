@@ -61,7 +61,7 @@ class AssignmentEdit extends Component {
 
   async getDataFromAPINode(url) {
     try {
-      let respond = await axios.get(API_URL_Node+url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE+url, {
         headers: {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser
@@ -80,7 +80,7 @@ class AssignmentEdit extends Component {
 
   async postDatatoAPINode(url, data) {
     try {
-      let respond = await axios.post(API_URL_Node+url, data, {
+      let respond = await axios.post(process.env.REACT_APP_API_URL_NODE+url, data, {
         headers: {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser
@@ -123,7 +123,7 @@ class AssignmentEdit extends Component {
 
   async patchDatatoAPINode(url, data){
     try {
-      let respond = await axios.patch(API_URL_Node +url, data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL_NODE +url, data, {
         headers: {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser

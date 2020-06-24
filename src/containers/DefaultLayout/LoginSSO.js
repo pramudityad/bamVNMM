@@ -34,7 +34,7 @@ class SSOLogin extends Component {
 
   async postDatatoAPILogin(url, data){
     try {
-      let respond = await axios.post(API_URL_Node +url, data, {
+      let respond = await axios.post(process.env.REACT_APP_API_URL_NODE +url, data, {
         headers : {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '
