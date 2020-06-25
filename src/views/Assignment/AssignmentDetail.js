@@ -709,7 +709,7 @@ class AssignmentDetail extends Component {
                       <Col md="4">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>PR</Label>
-                          <Input type="text" name="pr" readOnly />
+                          <Input type="text" name="pr" readOnly value={this.state.data_assignment.PR_for_ASP}/>
                         </FormGroup>
                       </Col>
                       <Col md="4">

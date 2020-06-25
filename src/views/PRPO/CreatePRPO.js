@@ -13,7 +13,9 @@ import {
   Label,
 } from "reactstrap";
 import { connect } from "react-redux";
+import Loading from "../components/Loading";
 import Select from "react-select";
+import './prpo.css';
 import {
   postDatatoAPINODE,
   getDatafromAPIEXEL,
@@ -22,11 +24,14 @@ const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
 
+
 class CreatePRPO extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      action_status : null,
+      action_message : null,
       Dataform: {
         prt_id: "",
         site_id: "",
@@ -87,6 +92,13 @@ class CreatePRPO extends Component {
     this.handleInputProject = this.handleInputProject.bind(this);
     this.postPRT = this.postPRT.bind(this);
     this.addSSOW = this.addSSOW.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
   }
 
   componentDidMount() {
@@ -167,8 +179,8 @@ class CreatePRPO extends Component {
   };
 
   async postPRT() {
+    this.toggleLoading();
     let prt_data = {
-      prt_id: this.state.Dataform.prt_id,
       site_id: this.state.Dataform.site_id,
       site_name: this.state.Dataform.site_name,
       quotation_number: this.state.Dataform.quotation_number,
@@ -220,11 +232,18 @@ class CreatePRPO extends Component {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" }, () => {});
       } else {
-        this.setState({
-          action_status: "failed",
-        });
+        if(post.response !== undefined && post.response.data !== undefined && post.response.data.error !== undefined){
+          if(post.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: post.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: post.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
       }
     });
+    this.toggleLoading();
   }
 
   addSSOW() {
@@ -245,10 +264,11 @@ class CreatePRPO extends Component {
     const { Dataform, SSOW_List_out } = this.state;
     return (
       <div className="animated fadeIn">
-        <DefaultNotif
-          actionMessage={this.state.action_message}
-          actionStatus={this.state.action_status}
-        />
+        <Row className="row-alert-fixed">
+          <Col xs="12" lg="12">
+            <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
+          </Col>
+        </Row>
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -266,18 +286,6 @@ class CreatePRPO extends Component {
                       <b>General Information</b>
                     </h5>
                     <Form>
-                      <FormGroup row>
-                        <Label sm={2}>PRT ID</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="PRT ID"
-                            name={"prt_id"}
-                            value={Dataform.prt_id}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
                       <FormGroup row>
                         <Label sm={2}>Site ID</Label>
                         <Col sm={10}>
@@ -468,9 +476,9 @@ class CreatePRPO extends Component {
                             <option value="" disabled selected hidden>
                               Select Action Point
                             </option>
-                            <option value="">New Assignment</option>
-                            <option value="">Revise Assignment</option>
-                            <option value="">Cancel Assignment</option>
+                            <option value="New Assignment">New Assignment</option>
+                            <option value="Revise Assignment">Revise Assignment</option>
+                            <option value="Cancel Assignment">Cancel Assignment</option>
                           </Input>
                         </Col>
                       </FormGroup>
@@ -843,6 +851,12 @@ class CreatePRPO extends Component {
             </Card>
           </Col>
         </Row>
+        {/* Modal Loading */}
+        <Loading isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm modal--loading "}>
+        </Loading>
+        {/* end Modal Loading */}
       </div>
     );
   }

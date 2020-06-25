@@ -370,7 +370,7 @@ class DRMList extends React.Component {
         this.setState({
           all_data: res.data.data,
           version_selected: res.data.data.version-1
-        });
+        });        
         this.toggleLoading();
       } else {
         this.setState({ all_data: {} });
@@ -378,10 +378,10 @@ class DRMList extends React.Component {
       }
       console.log('version ',this.state.version_selected)
 
-    });
+    });    
   }
 
-  getAllDRMDataVersion(_id) {
+  getAllDRMDataVersion(_id) {    
     this.getDatafromAPINODE("/drm/getDrmVersion/" + _id).then((res) => {
       if (res.data !== undefined) {
         this.setState({
@@ -1131,47 +1131,6 @@ class DRMList extends React.Component {
                 </Card>
               </Collapse>
               <CardBody>
-              <div style={{marginBottom : '10px'}}>
-                <Row>
-                  <Col md="1">
-                    <span>Tower ID</span>
-                  </Col>
-                  <Col md="3">
-                    <InputGroup className="input-prepend">
-                      <InputGroupAddon addonType="prepend">
-                        <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                      </InputGroupAddon>
-                      <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.tower_id} name="tower_id" size="sm"/>
-                    </InputGroup>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col md="1">
-                    <span>Project</span>
-                  </Col>
-                  <Col md="3">
-                    <InputGroup className="input-prepend">
-                      <InputGroupAddon addonType="prepend">
-                        <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                      </InputGroupAddon>
-                      <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.project_name} name="project_name" size="sm"/>
-                    </InputGroup>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col md="1">
-                    <span>Program</span>
-                  </Col>
-                  <Col md="3">
-                    <InputGroup className="input-prepend">
-                      <InputGroupAddon addonType="prepend">
-                        <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                      </InputGroupAddon>
-                      <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.program} name="program" size="sm"/>
-                    </InputGroup>
-                  </Col>
-                </Row>
-              </div>
                 <Row>
                   <Col sm="6" md="6">
                     <div style={{ marginLeft: "10px" }}>

@@ -1087,10 +1087,13 @@ class MRDetail extends Component {
       backgroundColor: "#e3e3e3",
     };
 
-    const MapLoader = withScriptjs(GMap);
+    function MapsTrekking(props){
+      return (<GMap dsp_lat={props.latitude} dsp_lng={props.latitude}/>)
+    }
 
-    let qty_wh = undefined,
-      qty_inbound = undefined;
+    const MapLoader = withScriptjs(MapsTrekking);
+
+    let qty_wh = undefined,qty_inbound = undefined;
     return (
       <div>
         <DefaultNotif
@@ -2000,9 +2003,10 @@ class MRDetail extends Component {
                 )}
                 {this.state.tabs_submenu[3] === true && (
                   <Fragment>
-                    {/* <GoogleMap site_lat={-6.3046027} site_lng={106.7951936} /> */}
+                    <MapsTrekking latitude={-6.173990} longitude={106.826851}/>
+                    {/* <GoogleMap site_lat={-6.3046027} site_lng={106.7951936} /> AIzaSyAoCmcgwc7MN40js68RpcZdSzh9yLrmLF4*/}
                     <MapLoader
-                      googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyAoCmcgwc7MN40js68RpcZdSzh9yLrmLF4"
+                      googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyB5mmXco3GYZhRDNY4CJcBlaENjteSC8DM"
                       loadingElement={<div style={{ height: "100%" }} />}
                     />
                   </Fragment>

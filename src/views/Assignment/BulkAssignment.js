@@ -74,12 +74,20 @@ class BulkAssignment extends Component {
         redirectSign : false,
         asp_list : [],
         uploadan_type : "without Predefined SSOW",
+        modal_loading : false,
     };
     this.saveDataAssignmentBulk = this.saveDataAssignmentBulk.bind(this);
     this.exportFormatBulkAssignment = this.exportFormatBulkAssignment.bind(this);
     this.handleChangeSOWType = this.handleChangeSOWType.bind(this);
     this.handleChangeUploadType = this.handleChangeUploadType.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
   }
+
+	toggleLoading(){
+	  this.setState(prevState => ({
+	    modal_loading: !prevState.modal_loading
+	  }));
+	}
 
   async getDataFromAPIEXEL(url) {
     try {
@@ -275,7 +283,6 @@ class BulkAssignment extends Component {
     const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', dataXLSASG);
     if(respondCheckingASG.data !== undefined && respondCheckingASG.status >= 200 && respondCheckingASG.status <= 300 ) {
       let dataChecking = respondCheckingASG.data.data;
-      console.log("respondCheckingASG.data.data", JSON.stringify(respondCheckingASG.data.data));
       this.setState({assignment_ssow_upload : dataChecking});
       if(dataChecking.filter(e => e.operation === "INVALID").length !== 0){
         this.setState({ action_status : 'failed', action_message : 'Please check INVALID row in preview' });
@@ -323,6 +330,7 @@ class BulkAssignment extends Component {
   }
 
   async saveDataAssignmentBulk(){
+  	this.toggleLoading();
     const dataChecking = this.state.assignment_ssow_upload;
     const dataCheckingASG = {
       "includeSsow" : this.state.uploadan_type === "without Predefined SSOW" ? true : false,
@@ -342,6 +350,7 @@ class BulkAssignment extends Component {
         this.setState({ action_status: 'failed' });
       }
     }
+    this.toggleLoading();
   }
 
   handleChangeSOWType(e){

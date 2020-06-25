@@ -118,6 +118,7 @@ class DetailTssr extends Component {
     this.toggleUpload = this.toggleUpload.bind(this);
     this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
     this.downloadMaterialTSSRUpload = this.downloadMaterialTSSRUpload.bind(this);
+    this.exportMaterialPSReport = this.exportMaterialPSReport.bind(this);
   }
 
   toggleUpload() {
@@ -1311,6 +1312,107 @@ class DetailTssr extends Component {
     saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' uploader.xlsx');
   }
 
+  async exportMaterialPSReport() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataTSSR = this.state.tssrData;
+    const dataItemTSSR = this.state.tssrData.packages;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    const DatePrint = new Date();
+    const DatePrintOnly = DatePrint.getFullYear()+'-'+(DatePrint.getMonth()+1).toString().padStart(2, '0')+'-'+DatePrint.getDay().toString().padStart(2, '0');
+
+    const prepared = ws.mergeCells('A4:E4');
+    ws.getCell('A4').value = 'prepared';
+    ws.getCell('A4').alignment  = { vertical: 'top', horizontal: 'left' };
+    ws.getCell('A4').font  = { size: 8 };
+    ws.getCell('A4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const preparedEmail = ws.mergeCells('A5:E5');
+    ws.getCell('A5').value = this.state.userEmail;
+    ws.getCell('A5').alignment  = {horizontal: 'left' };
+    ws.getCell('A5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const DocumentNo = ws.mergeCells('F4:I4');
+    ws.getCell('F4').value = 'Document No.';
+    ws.getCell('F4').font  = { size: 8 };
+    ws.getCell('F4').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const DocumentNum = ws.mergeCells('F5:I5');
+    ws.getCell('F5').value = dataTSSR.no_plantspec;
+    ws.getCell('F5').alignment  = {horizontal: 'left' };
+    ws.getCell('F5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const Approved = ws.mergeCells('A6:C7');
+    ws.getCell('A6').value = 'Approved';
+    ws.getCell('A6').font  = { size: 8 };
+    ws.getCell('A6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('A6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}};
+
+    const Checked = ws.mergeCells('D6:E7');
+    ws.getCell('D6').value = 'Checked';
+    ws.getCell('D6').font  = { size: 8 };
+    ws.getCell('D6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('D6').border = {top: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const dateDoc = ws.mergeCells('F6:G6');
+    ws.getCell('F6').value = 'Date';
+    ws.getCell('F6').font  = { size: 8 };
+    ws.getCell('F6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const dateDocument = ws.mergeCells('F7:G7');
+    ws.getCell('F7').value = DatePrintOnly;
+    ws.getCell('F7').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const revDoc = ws.mergeCells('H6:I6');
+    ws.getCell('H6').value = 'Rev';
+    ws.getCell('H6').font  = { size: 8 };
+    ws.getCell('H6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('H6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const revDocNum = ws.mergeCells('H7:I7');
+    ws.getCell('H7').value = "-";
+    ws.getCell('H7').alignment  = {horizontal: 'left' };
+    ws.getCell('H7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    ws.addRow([""]);
+    ws.addRow(["Project", null, ": "+dataTSSR.project_name]);
+    ws.addRow([""]);
+    ws.addRow(["Site ID", null, ": "+dataTSSR.site_info[0].site_id]);
+    ws.addRow([""]);
+
+    let headerRow = ["NO.","DENOMINATION / FUNCTIONAL DESCRIPTION", null, "PRODUCT CODE", null, "QTY PLAN", "QTY ACTUAL", "UNIT", "REMARKS"];
+    ws.addRow(headerRow);
+    ws.addRow([""]);
+    let dataItemTSSRConfig = [...new Set(dataItemTSSR.map(({ config_id }) => config_id))];
+
+    for(let a = 0; a < dataItemTSSRConfig.length; a++){
+      let itemTSSRBundle = dataItemTSSR.filter(e => e.config_id === dataItemTSSRConfig[a]);
+      ws.addRow([null, dataItemTSSRConfig[a], null, null, null, null, null, null, null]);
+      ws.addRow([""]);
+      ws.addRow([null, dataItemTSSRConfig[a], null, null, null, null, null, null, dataItemTSSRConfig[a]]);
+      ws.addRow([""]);
+      for(let i = 0; i < itemTSSRBundle.length; i++){
+        ws.addRow([null, itemTSSRBundle[i].product_name, null, itemTSSRBundle[i].pp_id, null, itemTSSRBundle[i].qty, itemTSSRBundle[i].qty, itemTSSRBundle[i].uom, itemTSSRBundle[i].pp_id]);
+        for(let j = 0; j < itemTSSRBundle[i].materials.length; j++){
+          let dataMatIdx = itemTSSRBundle[i].materials[j];
+          ws.addRow([null, dataMatIdx.material_name, null, dataMatIdx.material_id, null, dataMatIdx.qty, dataMatIdx.qty, dataMatIdx.uom, null]);
+        }
+        ws.addRow([""]);
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' Report.xlsx');
+  }
+
   async saveUpdateMaterial(){
     const dataXLS = this.state.rowsXLS;
     const dataTSSR = this.state.tssrData;
@@ -1400,6 +1502,7 @@ class DetailTssr extends Component {
                 </DropdownToggle>
                 <DropdownMenu>
                   <DropdownItem header>TSSR File</DropdownItem>
+                  <DropdownItem onClick={this.exportMaterialPSReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Report</DropdownItem>
                   <DropdownItem onClick={this.downloadMaterialTSSRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
                 </DropdownMenu>
               </Dropdown>
