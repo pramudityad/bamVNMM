@@ -105,6 +105,7 @@ class DetailTssr extends Component {
         collapseUpload : false,
         dropdownOpen: new Array(1).fill(false),
         wbs_cd_id_data : [],
+        qty_ps : [["bam_id","tssr_id","bundle_id","bundle_name","program","material_id_plan","material_name_plan","material_id_actual","material_name_actual","uom","qty"]],
     };
     this.handleChangeProject = this.handleChangeProject.bind(this);
     this.handleChangeVersion = this.handleChangeVersion.bind(this);
@@ -117,6 +118,7 @@ class DetailTssr extends Component {
     this.submitTSSR = this.submitTSSR.bind(this);
     this.toggleUpload = this.toggleUpload.bind(this);
     this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
+    this.saveUpdateMaterialWeb = this.saveUpdateMaterialWeb.bind(this);
     this.downloadMaterialTSSRUpload = this.downloadMaterialTSSRUpload.bind(this);
   }
 
@@ -1047,6 +1049,23 @@ class DetailTssr extends Component {
     })
   }
 
+  handleChangeQTY(e, i, u){
+    const value_qty = e.target.value;
+    const Data_tssr = this.state.tssrData;
+    const Data_package = Data_tssr.packages[u];
+    const Data_mat =  Data_tssr.packages[u].materials[i];
+
+    this.setState(
+      (prevState) => ({
+        qty_ps: [
+          ...prevState.qty_ps,
+          [Data_mat._id, Data_mat.no_tssr_boq_site, Data_package.pp_id, Data_package.product_name, Data_package.program, Data_mat.material_id_plan, Data_mat.material_name_plan, Data_mat.material_id_plan, Data_mat.material_name_plan, Data_mat.uom, value_qty]
+        ],
+      }),
+      () => console.log(this.state.qty_ps)
+    );
+  }
+
   getDataTssrVersion(_id_tssr, version){
     this.getDatafromAPIBAM('/tssr_version_op?where={"id_document" : "'+_id_tssr+'", "version" : "'+version+'"}').then( resTssr => {
       if(resTssr.data !== undefined){
@@ -1311,8 +1330,28 @@ class DetailTssr extends Component {
     saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' uploader.xlsx');
   }
 
+  async saveUpdateMaterialWeb(){
+    const dataWeb = this.state.qty_ps;
+    const dataTSSR = this.state.tssrData;
+    let patchDataMat = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataTSSR._id, {"identifier" : "PS" ,"data" : dataWeb});
+    if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
+      this.setState({ action_status : 'success'});
+    } else{
+      if(patchDataMat.response !== undefined && patchDataMat.response.data !== undefined && patchDataMat.response.data.error !== undefined){
+        if(patchDataMat.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
   async saveUpdateMaterial(){
     const dataXLS = this.state.rowsXLS;
+    console.log('dataXLS ',dataXLS);
     const dataTSSR = this.state.tssrData;
     let patchDataMat = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataTSSR._id, {"identifier" : "PS" ,"data" : dataXLS});
     if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
@@ -1418,6 +1457,13 @@ class DetailTssr extends Component {
                           <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
                             <i className="fa fa-paste">&nbsp;&nbsp;</i>
                             Save
+                          </Button>
+                        </div>
+                        &nbsp;&nbsp;&nbsp;
+                        <div style={{display : 'flex', "align-items": "baseline"}}>
+                          <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.saveUpdateMaterialWeb} >
+                            <i className="fa fa-paste">&nbsp;&nbsp;</i>
+                            Save Web
                           </Button>
                         </div>
                         </React.Fragment>
@@ -1618,9 +1664,9 @@ class DetailTssr extends Component {
                     </thead>
                     <tbody>
                       {this.state.tssrData !== null && Array.isArray(this.state.tssrData.packages) && (
-                        this.state.tssrData.packages.map(pp =>
+                        this.state.tssrData.packages.map((pp, arr_pp) =>
                           <Fragment>
-                            <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                            <tr key={arr_pp} style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                               <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site +" ("+pp.program+")"}</td>
                               <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                               <td>{pp.product_name}</td>
@@ -1631,14 +1677,14 @@ class DetailTssr extends Component {
                               <td align='center'></td>
                               <td align='center'></td>
                             </tr>
-                            {pp.materials.map(material =>
-                              <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                            {pp.materials.map((material, arr_mat) =>
+                              <tr key={arr_mat} style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
                                 <td>{material.source_material}</td>
                                 <td style={{textAlign : 'right'}}>{material.material_id}</td>
                                 <td style={{textAlign : 'left'}}>{material.material_name}</td>
                                 <td style={{textAlign : 'left'}}></td>
                                 <td>{material.uom}</td>
-                                <td align='center'>{(material.qty).toFixed(2)}</td>
+                                <td key={arr_mat} align='center'>{<Input type="number" min="0" defaultValue={(material.qty).toFixed(2)} onChange={e => {this.handleChangeQTY(e, arr_mat, arr_pp)} } /> }</td>
                                 <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                                 <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                                 <td align='center'>{material.qty < qty_wh ? "OK":"NOK"}</td>
