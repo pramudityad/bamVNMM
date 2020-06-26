@@ -235,7 +235,7 @@ class AssignmentCreation extends Component {
 
   async previewData(){
     const dataXLS = [
-      ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier", "ssow_rbs_id_1","ssow_rbs_activity_number_1","ssow_rbs_unit_1","ssow_rbs_quantity_1","ssow_rbs_id_2","ssow_rbs_activity_number_2","ssow_rbs_unit_2","ssow_rbs_quantity_2","ssow_rbs_id_3","ssow_rbs_activity_number_3","ssow_rbs_unit_3","ssow_rbs_quantity_3","ssow_rbs_id_4","ssow_rbs_activity_number_4","ssow_rbs_unit_4","ssow_rbs_quantity_4","ssow_rbs_id_5","ssow_rbs_activity_number_5","ssow_rbs_unit_5","ssow_rbs_quantity_5","ssow_rbs_id_6","ssow_rbs_activity_number_6","ssow_rbs_unit_6","ssow_rbs_quantity_6","ssow_rbs_id_7","ssow_rbs_activity_number_7","ssow_rbs_unit_7","ssow_rbs_quantity_7"],
+      ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"],
       ["new", this.state.project_name_selected, this.state.create_assignment_form[16], this.state.identifier_by, this.state.create_assignment_form[67], this.state.create_assignment_form[66],  this.state.create_assignment_form[15], this.state.tower_selected_id]
     ];
     const dataXLSASG = {
@@ -251,6 +251,7 @@ class AssignmentCreation extends Component {
         this.setState({assignment_ssow_upload : dataChecking, creation_ssow_form : []}, () => {
           if(dataChecking.SSOW_List !== undefined && dataChecking.SSOW_List.length !== 0){
             this.setState({creation_ssow_form : dataChecking.SSOW_List})
+            this.setState({action_status : null, action_message : null})
           }else{
             this.setState({creation_ssow_form : [{}]})
           }
@@ -598,12 +599,11 @@ class AssignmentCreation extends Component {
                     <Col md="6">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>Project Name</Label>
-                        {this.state.identifier_by !== "tower_id" && this.state.tower_selected_id !== null ? <Input readOnly value={this.state.project_name} onChange={this.handleChangeProjectXL}/> : <Select
+                        <Select
                           cacheOptions
                           options={this.state.list_project_selection}
                           onChange={this.handleChangeProjectXL}
-                        />}
-                        
+                        />
                       </FormGroup>
                     </Col>
                   ) : (

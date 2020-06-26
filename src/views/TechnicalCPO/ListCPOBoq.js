@@ -38,12 +38,15 @@ class ListCPOBoq extends Component {
         filter_list : new Array(8).fill(null),
         filter_createdBy : [],
         activity_list : [],
+        filter_name : null,
+        list_cpo_boq_filter : [],
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.handleFilterListName = this.handleFilterListName.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.onChangeDebouncedName = debounce(this.onChangeDebouncedName, 1000);
+    this.changeFilterName = debounce(this.changeFilterName, 1000);
   }
 
   async getDataFromAPINODE(url) {
@@ -98,10 +101,10 @@ class ListCPOBoq extends Component {
     this.getDataFromAPINODE('/cpoBoqList?srt=cpo_boq_id:-1&lmt='+this.state.perPage +
     "&pg=" + this.state.activePage).then(res => {
       if(res.data !== undefined){
-        this.setState({list_cpo_boq : res.data.data, prevPage: this.state.activePage,
+        this.setState({list_cpo_boq : res.data.data, list_cpo_boq_filter : res.data.data, prevPage: this.state.activePage,
           totalData: res.data.totalResults});
       } else{
-        this.setState({list_cpo_boq : [], prevPage: this.state.activePage,
+        this.setState({list_cpo_boq : [], list_cpo_boq_filter : [], prevPage: this.state.activePage,
           totalData: 0});
       }
       // console.log('totalData ', this.state.totalData)
@@ -220,25 +223,32 @@ class ListCPOBoq extends Component {
     const now_date = NowDate.getFullYear()+"/"+(NowDate.getMonth()+1)+"/"+NowDate.getDate();
     return DateNow;
   }
-  //
-  // toggleDelete(e){
-  //   let value = null;
-  //   this.setState(prevState => ({
-  //     modal_delete: !prevState.modal_delete
-  //   }));
-  //   if(e !== undefined){
-  //     if(e.currentTarget.value === undefined){
-  //       value = e.target.value;
-  //     }else{
-  //       value = e.currentTarget.value;
-  //     }
-  //   }
-  //   this.setState({modal_delete_noBOQ : value})
-  // }
 
   deleteTechBoq(e){
     const _id_tech = e.currentTarget.value;
     const delTech = this.deleteDataFromAPINODE('/techBoq/deleteOneTechBoq/'+_id_tech);
+  }
+
+  handleChangeFilter = (e) => {
+    let value = e.target.value;
+    if (value.length === 0) {
+      value = null;
+    }
+    this.setState({ filter_name: value }, () => {
+      this.changeFilterName(value);
+    });
+  }
+
+  changeFilterName(value) {
+    const dataCPOBOQ = this.state.list_cpo_boq;
+    if(value !== null){
+      const regexValue = '/'+value+'/g';
+      const globalRegex = RegExp(value, 'gi');
+      const dataFilter = dataCPOBOQ.filter(cpo => globalRegex.test(cpo.cpo_number));
+      this.setState({list_cpo_boq_filter : dataFilter})
+    }else{
+      this.setState({list_cpo_boq_filter : this.state.list_cpo_boq})
+    }
   }
 
   render() {
@@ -260,6 +270,15 @@ class ListCPOBoq extends Component {
             </React.Fragment>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
+            <Row>
+              <Col>
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
+                    <input className="search-box-material" type="text" name='filter' placeholder="Search CPO" onChange={this.handleChangeFilter} value={this.state.filter_name} />
+                  </div>
+                </div>
+              </Col>
+            </Row>
             <Table hover bordered striped responsive size="sm">
               <thead>
                   <tr>
@@ -270,7 +289,7 @@ class ListCPOBoq extends Component {
                   </tr>
               </thead>
               <tbody>
-                    {this.state.list_cpo_boq.map((boq,i) =>
+                    {this.state.list_cpo_boq_filter.sort((a, b) => b.created_on - a.created_on).map((boq,i) =>
                         <tr key={boq._id}>
                             <td style={{verticalAlign : 'middle'}}>{boq.cpo_number}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.cpo_boq_id}</td>
@@ -279,12 +298,6 @@ class ListCPOBoq extends Component {
                               <Link to={'/list-cpo-boq/detail/'+boq.cpo_number}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                               </Link>
-                              {/* <Link to={'/approval-technical/'+boq._id}>
-                                <Button color="warning" size="sm"> <i className="fa fa-check-circle" aria-hidden="true">&nbsp;</i> Approval</Button>
-                              </Link> */}
-                              {/*<Button  size="sm" color="danger" style={{color : "white"}} value={boq._id} onClick={e => this.deleteTechBoq(e, "value")}>
-                                  <i className="fa fa-trash" aria-hidden="true"></i>
-                              </Button> */}
                             </td>
                         </tr>
                     )}

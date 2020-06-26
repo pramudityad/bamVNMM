@@ -968,7 +968,7 @@ class MRDetail extends Component {
     const allocexport = await wb.xlsx.writeBuffer();
     saveAs(
       new Blob([allocexport]),
-      "Material MR " + dataMR.mr_id + " TRACY.xlsx"
+      "TRACY Material MR " + dataMR.mr_id + ".xlsx"
     );
   }
 

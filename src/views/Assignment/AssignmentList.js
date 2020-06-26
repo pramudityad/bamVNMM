@@ -40,6 +40,7 @@ class AssignmentList extends Component {
     this.getAssignmentList = this.getAssignmentList.bind(this);
     this.getAllAssignment = this.getAllAssignment.bind(this);
     this.downloadAllAssignment = this.downloadAllAssignment.bind(this);
+    this.downloadAllAssignmentAcceptenceMigration = this.downloadAllAssignmentAcceptenceMigration.bind(this);
   }
 
   async getDataFromAPINODE(url) {
@@ -207,6 +208,28 @@ class AssignmentList extends Component {
     saveAs(new Blob([allocexport]), 'Assignment List.xlsx');
   }
 
+  async downloadAllAssignmentAcceptenceMigration() {
+    let allAssignmentList = [];
+    let getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1');
+    if (getASG.data !== undefined) {
+      allAssignmentList = getASG.data.data;
+    }
+
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let headerRow = ["assignment_id", "sh_assingment_no", "cd_id"];
+    ws.addRow(headerRow);
+
+    for (let i = 0; i < allAssignmentList.length; i++) {
+      let rowAdded = [allAssignmentList[i].Assignment_No, allAssignmentList[i].SH_Assignment_No, allAssignmentList[i].cust_del !== undefined ? allAssignmentList[i].cust_del.map(e => e.cd_id).join(', ') : null];
+      ws.addRow(rowAdded);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Assignment List For Acceptence Migration SH.xlsx');
+  }
+
   loopSearchBar = () => {
     let searchBar = [];
     for (let i = 0; i < 7; i++) {
@@ -256,6 +279,7 @@ class AssignmentList extends Component {
                 <Link to={'/assignment-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment</Button></Link>
                 <Link to={'/bulk-assignment-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment Bulk</Button></Link>
                 <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignment} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List</Button>
+                {/* }<Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignmentAcceptenceMigration} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List Acceptence Migration</Button> */}
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">

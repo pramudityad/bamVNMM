@@ -1442,7 +1442,7 @@ class DetailTssr extends Component {
       ws.addRow([""]);
       for(let i = 0; i < itemTSSRBundle.length; i++){
         numberPSItem = numberPSItem+1;
-        ws.addRow([numberPSItem, itemTSSRBundle[i].product_name, null, itemTSSRBundle[i].pp_id, null, itemTSSRBundle[i].qty, itemTSSRBundle[i].qty, itemTSSRBundle[i].uom, itemTSSRBundle[i].pp_id]);
+        ws.addRow([numberPSItem, itemTSSRBundle[i].product_name, null, null, itemTSSRBundle[i].pp_id, itemTSSRBundle[i].qty, null, itemTSSRBundle[i].uom, null]);
         for(let j = 0; j < itemTSSRBundle[i].materials.length; j++){
           let dataMatIdx = itemTSSRBundle[i].materials[j];
           ws.addRow([null, dataMatIdx.material_name, null, dataMatIdx.material_id, null, dataMatIdx.qty, dataMatIdx.qty, dataMatIdx.uom, null]);
@@ -1566,7 +1566,7 @@ class DetailTssr extends Component {
       let itemTSSRBundle = dataItemTSSR.filter(e => e.config_id === dataItemTSSRConfig[a] && e.product_type.toLowerCase() !== "svc");
       for(let i = 0; i < itemTSSRBundle.length; i++){
         numberPSItem = numberPSItem+1;
-        ws.addRow([numberPSItem, itemTSSRBundle[i].product_name, null, null, null, itemTSSRBundle[i].qty, itemTSSRBundle[i].qty, null, itemTSSRBundle[i].pp_id]);
+        ws.addRow([numberPSItem, itemTSSRBundle[i].product_name, null, null, null, itemTSSRBundle[i].qty, null, null, null]);
         for(let j = 0; j < itemTSSRBundle[i].materials.length; j++){
           let dataMatIdx = itemTSSRBundle[i].materials[j];
           ws.addRow([null, dataMatIdx.material_name, null, null, null, dataMatIdx.qty, dataMatIdx.qty, null, null]);
@@ -1596,6 +1596,7 @@ class DetailTssr extends Component {
         this.setState({ action_status: 'failed' });
       }
     }
+  }
 
   async saveUpdateMaterial(){
     const dataXLS = this.state.rowsXLS;
@@ -1914,7 +1915,7 @@ class DetailTssr extends Component {
                     </thead>
                     <tbody>
                       {this.state.tssrData !== null && Array.isArray(this.state.tssrData.packages) && (
-                        this.state.tssrData.packages.filter(e => e.product_type.toLowerCase() !== "svc").map(pp =>
+                        this.state.tssrData.packages.filter(e => e.product_type.toLowerCase() !== "svc").map((pp,arr_pp) =>
                           <Fragment>
                             <tr key={arr_pp} style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                               <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site +" ("+pp.program+")"}</td>

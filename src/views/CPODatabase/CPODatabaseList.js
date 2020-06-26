@@ -403,6 +403,29 @@ class CPODatabase extends React.Component {
     this.toggleLoading();
     const cpobulkXLS = this.state.rowsXLS;
     const cpoData = await this.getCPOFormat(cpobulkXLS);
+    const res = await this.postDatatoAPINODE('/cpodb/createCpoDb', { 'poData': cpobulkXLS });
+    // const res = await this.postDatatoAPINODE('/cpodb/createCpoDbWithDetail', { 'poData': cpobulkXLS });
+    if (res.data !== undefined) {
+      this.setState({ action_status: 'success', action_message : null });
+      this.toggleLoading();
+    } else {
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
+    }
+  }
+
+  saveCPOBulkWithDetail = async () => {
+    this.toggleLoading();
+    const cpobulkXLS = this.state.rowsXLS;
+    const cpoData = await this.getCPOFormat(cpobulkXLS);
     // const res = await this.postDatatoAPINODE('/cpodb/createCpoDb', { 'poData': cpobulkXLS });
     const res = await this.postDatatoAPINODE('/cpodb/createCpoDbWithDetail', { 'poData': cpobulkXLS });
     if (res.data !== undefined) {
@@ -471,6 +494,17 @@ class CPODatabase extends React.Component {
     saveAs(new Blob([PPFormat]), 'CPO Level 1 Template.xlsx');
   }
 
+  exportFormatCPOWithDetail = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    ws.addRow(["po_number","date","currency","payment_terms","shipping_terms", "contract", "contact", "config_id", "description", "mm_id", "need_by_date", "qty", "unit", "price"]);
+    ws.addRow(["PO0001","2020-02-21","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com","INSTALL:CONFIG SERVICE 11_1105A","3416315 |  INSTALL:CONFIG SERVICE 11_1105A  | YYYY:2019 | MM:12","desc","2020-08-21",1,"Performance Unit",1000000]);
+    ws.addRow(["PO0001","2020-02-21","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com","Cov_2020_Config-4a","330111 | Cov_2020_Config-4a | YYYY : 2020 | MM : 04","desc","2020-12-12",200,"Performance Unit",15000000]);
+
+    const PPFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([PPFormat]), 'CPO with Detail Template.xlsx');
+  }
 
   render() {
     return (
@@ -490,6 +524,7 @@ class CPODatabase extends React.Component {
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatCPO_level1}> CPO Level 1 Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatCPOWithDetail}> CPO With Detail Template</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -528,7 +563,8 @@ class CPODatabase extends React.Component {
                     </div>
                   </CardBody>
                   <CardFooter>
-                    <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveCPOBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
+                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveCPOBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
+                    <Button style={{marginLeft : '20px'}} color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveCPOBulkWithDetail}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE With Detail</Button>
                     {/* <Button color="primary" style={{ float: 'right' }} onClick={this.togglePOForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button> */}
                   </CardFooter>
                 </Card>
