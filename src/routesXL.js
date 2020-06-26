@@ -185,7 +185,7 @@ const routes = [
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
   { path: '/ps-list', exact: true, name: 'Plant Spec List', component: TssrList },
   { path: '/ps-bom', exact: true, name: 'Plant Spec BOM', component: TssrBOM },
-  { path: '/ps-bom/:id', name: 'Plant Spec BOM', component: TssrBOMDetail },
+  { path: '/ps-list/:id', name: 'Plant Spec BOM', component: TssrBOMDetail },
   { path: '/mr-list', exact: true, name: 'MR List', component: MRList },
   { path: '/mr-na-list', exact: true, name: 'MR List Not Assign', component: MRNAList },
   { path: '/mr-creation', exact: true, name: 'Create MR', component: MRCreation },

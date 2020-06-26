@@ -508,7 +508,7 @@ class EditPRPO extends Component {
                             type="select"
                             placeholder="Action Point"
                             name={"action_point"}
-                            defaultValue={all_data.action_point}
+                            value={all_data.action_point}
                             onChange={this.handleInput}
                           >
                             <option value="" disabled selected hidden>
@@ -527,7 +527,7 @@ class EditPRPO extends Component {
                             type="select"
                             placeholder="Currency"
                             name={"currency"}
-                            defaultValue={all_data.currency}
+                            value={all_data.currency}
                             onChange={this.handleInput}
                           >
                             <option value="" disabled selected hidden>

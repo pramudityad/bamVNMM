@@ -421,8 +421,9 @@ class MRCreation extends Component {
       const getWPID = await this.getDatafromAPIXL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}');
       if(getWPID !== undefined && getWPID.data !== undefined) {
         getWPID.data._items.map(wp =>
-          wp_id_list.push({'value' : wp.WP_ID , 'label' : wp.WP_ID +" ( "+wp.WP_Name+" )"}))
+          wp_id_list.push({'value' : wp.WP_ID , 'label' : wp.WP_ID +" ( "+wp.WP_Name+" )", 'project' : wp.CD_Info_Project_Name}))
       }
+      this.setState({project_name : wp_id_list[0].project})
       return wp_id_list;
     }
   }
@@ -574,11 +575,11 @@ class MRCreation extends Component {
                 <Col md={6}>
                   <FormGroup>
                     <Label>Project</Label>
-                      <Select
-                        cacheOptions
-                        options={this.state.list_project_selection}
-                        onChange={this.handleChangeProjectXL}
-                      />
+                    {this.state.identifier_by !== "tower_id" && this.state.tower_selected_id !== null ? <Input readOnly value={this.state.project_name} onChange={this.handleChangeProjectXL}/> : <Select
+                          cacheOptions
+                          options={this.state.list_project_selection}
+                          onChange={this.handleChangeProjectXL}
+                        />}
                   </FormGroup>
                 </Col>
               </Row>
