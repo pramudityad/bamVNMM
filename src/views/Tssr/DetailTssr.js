@@ -1358,13 +1358,13 @@ class DetailTssr extends Component {
     ws.getCell('A5').alignment  = {horizontal: 'left' };
     ws.getCell('A5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
-    const DocumentNo = ws.mergeCells('F4:I4');
+    const DocumentNo = ws.mergeCells('F4:H4');
     ws.getCell('F4').value = 'Document No.';
     ws.getCell('F4').font  = { size: 8 };
     ws.getCell('F4').alignment  = {vertical: 'top', horizontal: 'left' };
     ws.getCell('F4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
 
-    const DocumentNum = ws.mergeCells('F5:I5');
+    const DocumentNum = ws.mergeCells('F5:H5');
     ws.getCell('F5').value = dataTSSR.no_plantspec;
     ws.getCell('F5').alignment  = {horizontal: 'left' };
     ws.getCell('F5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
@@ -1392,34 +1392,38 @@ class DetailTssr extends Component {
     ws.getCell('F7').alignment  = {vertical: 'top', horizontal: 'left' };
     ws.getCell('F7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
-    const revDoc = ws.mergeCells('H6:I6');
+    // const revDoc = ws.mergeCells('H6:I6');
     ws.getCell('H6').value = 'Rev';
     ws.getCell('H6').font  = { size: 8 };
     ws.getCell('H6').alignment  = {vertical: 'top', horizontal: 'left' };
     ws.getCell('H6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
 
-    const revDocNum = ws.mergeCells('H7:I7');
+    // const revDocNum = ws.mergeCells('H7:I7');
     ws.getCell('H7').value = "-";
     ws.getCell('H7').alignment  = {horizontal: 'left' };
     ws.getCell('H7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
-    ws.getCell('J6').value = 'File';
-    ws.getCell('J6').font  = { size: 8 };
-    ws.getCell('J6').alignment  = {vertical: 'top', horizontal: 'left' };
-    ws.getCell('J6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+    ws.mergeCells('I6:J6');
+    ws.getCell('I6').value = 'File';
+    ws.getCell('I6').font  = { size: 8 };
+    ws.getCell('I6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('I6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
 
-    ws.getCell('J7').value = null;
-    ws.getCell('J7').alignment  = {horizontal: 'left' };
-    ws.getCell('J7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.mergeCells('I7:J7');
+    ws.getCell('I7').value = null;
+    ws.getCell('I7').alignment  = {horizontal: 'left' };
+    ws.getCell('I7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
-    ws.getCell('J4').value = 'PO Number';
-    ws.getCell('J4').font  = { size: 8 };
-    ws.getCell('J4').alignment  = {vertical: 'top', horizontal: 'left' };
-    ws.getCell('J4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+    ws.mergeCells('I4:J4');
+    ws.getCell('I4').value = 'PO Number';
+    ws.getCell('I4').font  = { size: 8 };
+    ws.getCell('I4').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('I4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
 
-    ws.getCell('J5').value = null;
-    ws.getCell('J5').alignment  = {horizontal: 'left' };
-    ws.getCell('J5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.mergeCells('I5:J5');
+    ws.getCell('I5').value = null;
+    ws.getCell('I5').alignment  = {horizontal: 'left' };
+    ws.getCell('I5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
     ws.addRow([""]);
     ws.addRow(["Project", null, ": "+dataTSSR.project_name]);

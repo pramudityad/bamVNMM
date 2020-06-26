@@ -1,0 +1,6 @@
+{
+    "name": "CPODatabase",
+    "version": "0.0.0",
+    "private": true,
+    "main": "./CPODatabase.js"
+  }

@@ -279,7 +279,7 @@ class AssignmentList extends Component {
                 <Link to={'/assignment-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment</Button></Link>
                 <Link to={'/bulk-assignment-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment Bulk</Button></Link>
                 <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignment} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List</Button>
-                {/* }<Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignmentAcceptenceMigration} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List Acceptence Migration</Button> */}
+                <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignmentAcceptenceMigration} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List Acceptence Migration</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
