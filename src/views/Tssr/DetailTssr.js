@@ -1931,7 +1931,11 @@ class DetailTssr extends Component {
                                 <td style={{textAlign : 'left'}}>{material.material_name}</td>
                                 <td style={{textAlign : 'left'}}></td>
                                 <td>{material.uom}</td>
-                                <td key={arr_mat} align='center'>{<Input type="number" min="0" defaultValue={(material.qty).toFixed(2)} onChange={e => {this.handleChangeQTY(e, arr_mat, arr_pp)} } /> }</td>
+                                <td key={arr_mat} align='center'>
+                                  {this.state.collapseUpload === true ? (
+                                    <Input type="number" min="0" defaultValue={(material.qty).toFixed(2)} onChange={e => {this.handleChangeQTY(e, arr_mat, arr_pp)} } />
+                                  ) : material.qty }
+                                </td>
                                 <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                                 <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                                 <td align='center'>{material.qty < qty_wh ? "OK":"NOK"}</td>
