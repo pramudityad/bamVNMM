@@ -604,7 +604,7 @@ class AssignmentCreation extends Component {
                     <Col md="6">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>Project Name</Label>
-                        {this.state.identifier_by !== "tower_id" && this.state.tower_selected_id !== null ? <Input readOnly value={this.state.project_name}/> : <Select
+                        {this.state.identifier_by !== "tower_id" && this.state.tower_selected_id !== null ? <Input readOnly value={this.state.project_name} onChange={this.handleChangeProjectXL}/> : <Select
                           cacheOptions
                           options={this.state.list_project_selection}
                           onChange={this.handleChangeProjectXL}
