@@ -264,7 +264,7 @@ class MRCreation extends Component {
       if(respondCheckingMR.data !== undefined && respondCheckingMR.status >= 200 && respondCheckingMR.status <= 300 ) {
         const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', {"data" : respondCheckingMR.data.data });
         if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
-          this.setState({ action_status : 'success' });
+          this.setState({ action_status : 'success', action_message: null });
         } else{
           if(respondSaveMR.response !== undefined && respondSaveMR.response.data !== undefined && respondSaveMR.response.data.error !== undefined){
             if(respondSaveMR.response.data.error.message !== undefined){
@@ -420,6 +420,7 @@ class MRCreation extends Component {
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
       const getWPID = await this.getDatafromAPIXL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}');
       if(getWPID !== undefined && getWPID.data !== undefined) {
+        this.setState({list_cd_id : getWPID.data._items});
         getWPID.data._items.map(wp =>
           wp_id_list.push({'value' : wp.WP_ID , 'label' : wp.WP_ID +" ( "+wp.WP_Name+" )", 'project' : wp.CD_Info_Project_Name}))
       }
@@ -429,8 +430,14 @@ class MRCreation extends Component {
   }
 
   handleChangeTowerXL(e){
-    console.log(" e.value",  e.value);
-    this.setState({tower_selected_id : e.value});
+    const cd_id_number = e.value;
+    this.setState({tower_selected_id : cd_id_number});
+    if(this.state.identifier_by === "cd_id"){
+      let findCDID = this.state.list_cd_id.find(e => e.WP_ID === cd_id_number.trim());
+      if(findCDID !== undefined){
+        this.setState({project_selected : findCDID.CD_Info_Project, project_name_selected : findCDID.CD_Info_Project_Name });
+      }
+    }
     return e
   }
 
@@ -492,7 +499,11 @@ class MRCreation extends Component {
     }
     return (
       <div>
-        <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
+        <Row className="row-alert-fixed">
+          <Col xs="12" lg="12">
+            <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
+          </Col>
+        </Row>
         <Row>
         <Col xl="12">
         <Card>
@@ -527,19 +538,6 @@ class MRCreation extends Component {
                   </FormGroup>
                 </Col>
               </Row>
-              {/* }<Row form>
-                <Col md={6}>
-                  <FormGroup>
-                    <Label>CD ID</Label>
-                    <Input type="select" name="0" value={this.state.cd_id_selected} onChange={this.handleChangeCD}>
-                      <option value="" disabled selected hidden>Select CD ID</option>
-                      {this.state.list_cd_id.map( cd_id =>
-                        <option value={cd_id._id}>{cd_id.WP_ID +" ("+cd_id.WP_Name+")"}</option>
-                      )}
-                    </Input>
-                  </FormGroup>
-                </Col>
-              </Row> */}
               <Row form>
                 <Col md={6}>
                   <FormGroup>
@@ -568,16 +566,25 @@ class MRCreation extends Component {
                 </Col>
               </Row>
               <Row form>
+              {this.state.identifier_by === "tower_id" ? (
                 <Col md={6}>
                   <FormGroup>
                     <Label>Project</Label>
-                    {this.state.identifier_by !== "tower_id" && this.state.tower_selected_id !== null ? <Input readOnly value={this.state.project_name} onChange={this.handleChangeProjectXL}/> : <Select
-                          cacheOptions
-                          options={this.state.list_project_selection}
-                          onChange={this.handleChangeProjectXL}
-                        />}
+                      <Select
+                        cacheOptions
+                        options={this.state.list_project_selection}
+                        onChange={this.handleChangeProjectXL}
+                      />
                   </FormGroup>
                 </Col>
+              ) : (
+                <Col md="6">
+                  <FormGroup>
+                    <Label>Project Name</Label>
+                    <Input value={this.state.project_name_selected} readOnly/>
+                  </FormGroup>
+                </Col>
+              )}
               </Row>
               <Row form>
                 <Col md={6}>

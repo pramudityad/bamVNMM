@@ -8,6 +8,7 @@ import { saveAs } from 'file-saver';
 import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
 import Select from 'react-select';
+import ericssonLogoBlack from '../../assets/img/brand/ERI_horizontal_RGB_BLACK.svg';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -120,6 +121,8 @@ class DetailTssr extends Component {
     this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
     this.saveUpdateMaterialWeb = this.saveUpdateMaterialWeb.bind(this);
     this.downloadMaterialTSSRUpload = this.downloadMaterialTSSRUpload.bind(this);
+    this.exportMaterialPSReport = this.exportMaterialPSReport.bind(this);
+    this.exportMaterialPSReportBundling = this.exportMaterialPSReportBundling.bind(this);
   }
 
   toggleUpload() {
@@ -1330,6 +1333,275 @@ class DetailTssr extends Component {
     saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' uploader.xlsx');
   }
 
+  async exportMaterialPSReport() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataTSSR = this.state.tssrData;
+    const dataItemTSSR = this.state.tssrData.packages;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    const DatePrint = new Date();
+    const DatePrintOnly = DatePrint.getFullYear()+'-'+(DatePrint.getMonth()+1).toString().padStart(2, '0')+'-'+DatePrint.getDay().toString().padStart(2, '0');
+
+    const prepared = ws.mergeCells('A4:E4');
+    ws.getCell('A4').value = 'prepared';
+    ws.getCell('A4').alignment  = { vertical: 'top', horizontal: 'left' };
+    ws.getCell('A4').font  = { size: 8 };
+    ws.getCell('A4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const preparedEmail = ws.mergeCells('A5:E5');
+    ws.getCell('A5').value = this.state.userEmail;
+    ws.getCell('A5').alignment  = {horizontal: 'left' };
+    ws.getCell('A5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const DocumentNo = ws.mergeCells('F4:H4');
+    ws.getCell('F4').value = 'Document No.';
+    ws.getCell('F4').font  = { size: 8 };
+    ws.getCell('F4').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const DocumentNum = ws.mergeCells('F5:H5');
+    ws.getCell('F5').value = dataTSSR.no_plantspec;
+    ws.getCell('F5').alignment  = {horizontal: 'left' };
+    ws.getCell('F5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const Approved = ws.mergeCells('A6:C7');
+    ws.getCell('A6').value = 'Approved';
+    ws.getCell('A6').font  = { size: 8 };
+    ws.getCell('A6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('A6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}};
+
+    const Checked = ws.mergeCells('D6:E7');
+    ws.getCell('D6').value = 'Checked';
+    ws.getCell('D6').font  = { size: 8 };
+    ws.getCell('D6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('D6').border = {top: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const dateDoc = ws.mergeCells('F6:G6');
+    ws.getCell('F6').value = 'Date';
+    ws.getCell('F6').font  = { size: 8 };
+    ws.getCell('F6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const dateDocument = ws.mergeCells('F7:G7');
+    ws.getCell('F7').value = DatePrintOnly;
+    ws.getCell('F7').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    // const revDoc = ws.mergeCells('H6:I6');
+    ws.getCell('H6').value = 'Rev';
+    ws.getCell('H6').font  = { size: 8 };
+    ws.getCell('H6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('H6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    // const revDocNum = ws.mergeCells('H7:I7');
+    ws.getCell('H7').value = "-";
+    ws.getCell('H7').alignment  = {horizontal: 'left' };
+    ws.getCell('H7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    ws.mergeCells('I6:J6');
+    ws.getCell('I6').value = 'File';
+    ws.getCell('I6').font  = { size: 8 };
+    ws.getCell('I6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('I6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    ws.mergeCells('I7:J7');
+    ws.getCell('I7').value = null;
+    ws.getCell('I7').alignment  = {horizontal: 'left' };
+    ws.getCell('I7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    ws.mergeCells('I4:J4');
+    ws.getCell('I4').value = 'PO Number';
+    ws.getCell('I4').font  = { size: 8 };
+    ws.getCell('I4').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('I4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    ws.mergeCells('I5:J5');
+    ws.getCell('I5').value = null;
+    ws.getCell('I5').alignment  = {horizontal: 'left' };
+    ws.getCell('I5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    ws.addRow([""]);
+    ws.addRow(["Project", null, ": "+dataTSSR.project_name]);
+    ws.mergeCells('A9:B9');
+    ws.addRow([""]);
+    ws.addRow(["Site ID", null, ": "+dataTSSR.site_info[0].site_id]);
+    ws.mergeCells('A11:B11');
+    ws.addRow([""]);
+
+    let headerRow = ["NO.","DENOMINATION / FUNCTIONAL DESCRIPTION", null, null, "PRODUCT CODE", null, "QTY PLAN", "QTY ACTUAL", "UNIT", "REMARKS"];
+    ws.addRow(headerRow);
+    ws.mergeCells('B13:D13');
+    ws.mergeCells('E13:F13');
+    ws.getCell('A13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('B13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('F13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('G13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('H13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('I13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('J13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('A13').font  = {bold : true };
+    ws.getCell('B13').font  = {bold : true };
+    ws.getCell('F13').font  = {bold : true };
+    ws.getCell('G13').font  = {bold : true };
+    ws.getCell('H13').font  = {bold : true };
+    ws.getCell('I13').font  = {bold : true };
+    ws.getCell('J13').font  = {bold : true };
+    ws.addRow([""]);
+    let dataItemTSSRConfig = [...new Set(dataItemTSSR.map(({ config_id }) => config_id))];
+
+    let numberPSItem = 0;
+
+    for(let a = 0; a < dataItemTSSRConfig.length; a++){
+      let itemTSSRBundle = dataItemTSSR.filter(e => e.config_id === dataItemTSSRConfig[a] && e.product_type.toLowerCase() !== "svc");
+      ws.addRow([null, dataItemTSSRConfig[a], null, null, null, null, null, null, null]);
+      ws.addRow([""]);
+      numberPSItem = numberPSItem+1;
+      ws.addRow([numberPSItem, dataItemTSSRConfig[a], null, null, null, null, null, null, null, dataItemTSSRConfig[a]]);
+      ws.addRow([""]);
+      for(let i = 0; i < itemTSSRBundle.length; i++){
+        numberPSItem = numberPSItem+1;
+        ws.addRow([numberPSItem, itemTSSRBundle[i].product_name, null, null, itemTSSRBundle[i].pp_id, null, itemTSSRBundle[i].qty, null, itemTSSRBundle[i].uom, null]);
+        for(let j = 0; j < itemTSSRBundle[i].materials.length; j++){
+          let dataMatIdx = itemTSSRBundle[i].materials[j];
+          ws.addRow([null, dataMatIdx.material_name, null, null, dataMatIdx.material_id, null, dataMatIdx.qty, dataMatIdx.qty, dataMatIdx.uom, null]);
+        }
+        ws.addRow([""]);
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' Report.xlsx');
+  }
+
+  async exportMaterialPSReportBundling() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataTSSR = this.state.tssrData;
+    const dataItemTSSR = this.state.tssrData.packages;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    // const logoEricsson = wb.addImage({
+    //   filename: '../../assets/img/brand/ERI_horizontal_RGB_BLACK.svg',
+    //   extension: 'png',
+    // });
+    //
+    // console.log("logoEricsson", logoEricsson);
+
+    // ws.addImage(logoEricsson, 'A1:D2');
+
+    const DatePrint = new Date();
+    const DatePrintOnly = DatePrint.getFullYear()+'-'+(DatePrint.getMonth()+1).toString().padStart(2, '0')+'-'+DatePrint.getDay().toString().padStart(2, '0');
+
+    const prepared = ws.mergeCells('A4:E4');
+    ws.getCell('A4').value = 'prepared';
+    ws.getCell('A4').alignment  = { vertical: 'top', horizontal: 'left' };
+    ws.getCell('A4').font  = { size: 8 };
+    ws.getCell('A4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const preparedEmail = ws.mergeCells('A5:E5');
+    ws.getCell('A5').value = this.state.userEmail;
+    ws.getCell('A5').alignment  = {horizontal: 'left' };
+    ws.getCell('A5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const DocumentNo = ws.mergeCells('F4:I4');
+    ws.getCell('F4').value = 'Document No.';
+    ws.getCell('F4').font  = { size: 8 };
+    ws.getCell('F4').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const DocumentNum = ws.mergeCells('F5:I5');
+    ws.getCell('F5').value = dataTSSR.no_plantspec;
+    ws.getCell('F5').alignment  = {horizontal: 'left' };
+    ws.getCell('F5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const Approved = ws.mergeCells('A6:C7');
+    ws.getCell('A6').value = 'Approved';
+    ws.getCell('A6').font  = { size: 8 };
+    ws.getCell('A6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('A6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}};
+
+    const Checked = ws.mergeCells('D6:E7');
+    ws.getCell('D6').value = 'Checked';
+    ws.getCell('D6').font  = { size: 8 };
+    ws.getCell('D6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('D6').border = {top: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const dateDoc = ws.mergeCells('F6:G6');
+    ws.getCell('F6').value = 'Date';
+    ws.getCell('F6').font  = { size: 8 };
+    ws.getCell('F6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const dateDocument = ws.mergeCells('F7:G7');
+    ws.getCell('F7').value = DatePrintOnly;
+    ws.getCell('F7').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const revDoc = ws.mergeCells('H6:I6');
+    ws.getCell('H6').value = 'File';
+    ws.getCell('H6').font  = { size: 8 };
+    ws.getCell('H6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('H6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const revDocNum = ws.mergeCells('H7:I7');
+    ws.getCell('H7').value = null;
+    ws.getCell('H7').alignment  = {horizontal: 'left' };
+    ws.getCell('H7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    ws.addRow([""]);
+    ws.addRow(["Project", null, ": "+dataTSSR.project_name]);
+    ws.mergeCells('A9:B9');
+    ws.addRow([""]);
+    ws.addRow(["Site ID", null, ": "+dataTSSR.site_info[0].site_id]);
+    ws.mergeCells('A11:B11');
+    ws.addRow([""]);
+
+    let headerRow = ["No","Description", null, null, "SAP NUMBER", "Qty Plan", "Qty Built", "SLOC", "REMARKS"];
+    ws.addRow(headerRow);
+    ws.mergeCells('B13:D13');
+    ws.getCell('A13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('B13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('E13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('F13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('G13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('H13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('I13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('A13').font  = {bold : true };
+    ws.getCell('B13').font  = {bold : true };
+    ws.getCell('E13').font  = {bold : true };
+    ws.getCell('F13').font  = {bold : true };
+    ws.getCell('G13').font  = {bold : true };
+    ws.getCell('H13').font  = {bold : true };
+    ws.getCell('I13').font  = {bold : true };
+    ws.addRow([""]);
+    let dataItemTSSRConfig = [...new Set(dataItemTSSR.map(({ config_id }) => config_id))];
+
+    let numberPSItem = 0;
+    for(let a = 0; a < dataItemTSSRConfig.length; a++){
+      let itemTSSRBundle = dataItemTSSR.filter(e => e.config_id === dataItemTSSRConfig[a] && e.product_type.toLowerCase() !== "svc");
+      for(let i = 0; i < itemTSSRBundle.length; i++){
+        numberPSItem = numberPSItem+1;
+        ws.addRow([numberPSItem, itemTSSRBundle[i].product_name, null, null, null, itemTSSRBundle[i].qty, null, null, null]);
+        for(let j = 0; j < itemTSSRBundle[i].materials.length; j++){
+          let dataMatIdx = itemTSSRBundle[i].materials[j];
+          ws.addRow([null, dataMatIdx.material_name, null, null, null, dataMatIdx.qty, null, null, null]);
+        }
+        ws.addRow([""]);
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' Report Bundling.xlsx');
+  }
+
   async saveUpdateMaterialWeb(){
     const dataWeb = this.state.qty_ps;
     const dataTSSR = this.state.tssrData;
@@ -1439,6 +1711,8 @@ class DetailTssr extends Component {
                 </DropdownToggle>
                 <DropdownMenu>
                   <DropdownItem header>TSSR File</DropdownItem>
+                  <DropdownItem onClick={this.exportMaterialPSReportBundling}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Report Bundling</DropdownItem>
+                  <DropdownItem onClick={this.exportMaterialPSReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Report</DropdownItem>
                   <DropdownItem onClick={this.downloadMaterialTSSRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
                 </DropdownMenu>
               </Dropdown>
@@ -1660,7 +1934,7 @@ class DetailTssr extends Component {
                     </thead>
                     <tbody>
                       {this.state.tssrData !== null && Array.isArray(this.state.tssrData.packages) && (
-                        this.state.tssrData.packages.map((pp, arr_pp) =>
+                        this.state.tssrData.packages.filter(e => e.product_type.toLowerCase() !== "svc").map((pp,arr_pp) =>
                           <Fragment>
                             <tr key={arr_pp} style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                               <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site +" ("+pp.program+")"}</td>
@@ -1680,7 +1954,11 @@ class DetailTssr extends Component {
                                 <td style={{textAlign : 'left'}}>{material.material_name}</td>
                                 <td style={{textAlign : 'left'}}></td>
                                 <td>{material.uom}</td>
-                                <td key={arr_mat} align='center'>{<Input type="number" min="0" defaultValue={(material.qty).toFixed(2)} onChange={e => {this.handleChangeQTY(e, arr_mat, arr_pp)} } /> }</td>
+                                <td key={arr_mat} align='center'>
+                                  {this.state.collapseUpload === true ? (
+                                    <Input type="number" min="0" defaultValue={(material.qty).toFixed(2)} onChange={e => {this.handleChangeQTY(e, arr_mat, arr_pp)} } />
+                                  ) : material.qty }
+                                </td>
                                 <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                                 <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                                 <td align='center'>{material.qty < qty_wh ? "OK":"NOK"}</td>

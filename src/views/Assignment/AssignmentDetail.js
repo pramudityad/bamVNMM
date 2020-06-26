@@ -568,6 +568,16 @@ class AssignmentDetail extends Component {
                 </CardHeader>
                 <CardBody>
                   <Form>
+                    {(this.state.data_assignment.SH_Assignment_No !== null && this.state.data_assignment.SH_Assignment_No !== undefined) && (
+                      <Row>
+                        <Col md="6">
+                          <FormGroup style={{ paddingLeft: "16px" }}>
+                            <Label>SH Assignment ID</Label>
+                            <Input type="text" readOnly value={this.state.data_assignment.SH_Assignment_No}></Input>
+                          </FormGroup>
+                        </Col>
+                      </Row>
+                    )}
                     <h5>ACTIVITY</h5>
                     <Row>
                       <Col md="6">
@@ -709,7 +719,7 @@ class AssignmentDetail extends Component {
                       <Col md="4">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>PR</Label>
-                          <Input type="text" name="pr" readOnly />
+                          <Input type="text" name="pr" readOnly value={this.state.data_assignment.PR_for_ASP}/>
                         </FormGroup>
                       </Col>
                       <Col md="4">

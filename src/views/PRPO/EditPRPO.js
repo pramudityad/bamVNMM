@@ -15,7 +15,7 @@ import {
 } from "reactstrap";
 import { connect } from "react-redux";
 import Select from "react-select";
-
+import './prpo.css';
 import Loading from "../components/Loading";
 import {
   getDatafromAPINODE,
@@ -33,6 +33,8 @@ class EditPRPO extends Component {
 
     this.state = {
       all_data: [],
+      action_status : null,
+      action_message : null,
       Dataform: {
         prt_id: "",
         site_id: "",
@@ -252,9 +254,15 @@ class EditPRPO extends Component {
         this.setState({ action_status: "success" });
         this.toggleLoading();
       } else {
-        this.setState({
-          action_status: "failed",
-        });
+        if(patch.response !== undefined && patch.response.data !== undefined && patch.response.data.error !== undefined){
+          if(patch.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: patch.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: patch.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
         this.toggleLoading();
       }
     });
@@ -275,13 +283,14 @@ class EditPRPO extends Component {
   };
 
   render() {
-	const { all_data, SSOW_List_out} = this.state;	
+	const { all_data, SSOW_List_out} = this.state;
     return (
       <div className="animated fadeIn">
-        <DefaultNotif
-          actionMessage={this.state.action_message}
-          actionStatus={this.state.action_status}
-        />
+        <Row className="row-alert-fixed">
+          <Col xs="12" lg="12">
+            <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
+          </Col>
+        </Row>
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -505,9 +514,9 @@ class EditPRPO extends Component {
                             <option value="" disabled selected hidden>
                               Select Action Point
                             </option>
-                            <option value="">New Assignment</option>
-                            <option value="">Revise Assignment</option>
-                            <option value="">Cancel Assignment</option>
+                            <option value="New Assignment">New Assignment</option>
+                            <option value="Revise Assignment">Revise Assignment</option>
+                            <option value="Cancel Assignment">Cancel Assignment</option>
                           </Input>
                         </Col>
                       </FormGroup>
@@ -545,8 +554,8 @@ class EditPRPO extends Component {
                     <Row xs="4">
                       <Col md="4">
                         SSOW
-                        <Input	
-                        key={ssow_data._id}					
+                        <Input
+                        key={ssow_data._id}
                           type="text"
                           placeholder={`SSOW #${idx + 1}`}
                           name={"ssow"}

@@ -123,6 +123,7 @@ class MRDetail extends Component {
     this.toggleModalapprove = this.toggleModalapprove.bind(this);
     this.toggleModalRevision = this.toggleModalRevision.bind(this);
     this.handleRevisionNote = this.handleRevisionNote.bind(this);
+    this.downloadMaterialMRTRACY = this.downloadMaterialMRTRACY.bind(this);
   }
 
   toggleModalapprove(e) {
@@ -772,18 +773,9 @@ class MRDetail extends Component {
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
 
-    // const getMaterialVariant = await this.getDataFromAPINODE('/variants/variants');
-    // if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
-    //   dataMaterialVariant = getMaterialVariant.data.data;
-    // }
-    //
-    // ws2.addRow(["Origin","Material ID","Material Name","Description", "Category"]);
-    // for(let j = 0; j < dataMaterialVariant.length; j++){
-    //   ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category]);
-    // }
-
     let headerRow = [
       "bam_id",
+      "ps_number",
       "bundle_id",
       "bundle_name",
       "program",
@@ -812,6 +804,7 @@ class MRDetail extends Component {
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
         ws.addRow([
           dataMatIdx._id,
+          dataItemMR[i].no_tssr_boq_site,
           dataItemMR[i].pp_id,
           dataItemMR[i].product_name,
           dataItemMR[i].program,
@@ -920,24 +913,25 @@ class MRDetail extends Component {
       "Unit",
       "Qty",
       "Material Source",
+      "CPO Number",
+      "PS No.",
+      "Program"
     ];
     ws.addRow(headerRow);
+    ws.addRow([]);
     for (let i = 0; i < dataItemMR.length; i++) {
-      ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name]);
+      ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name, null, null, dataItemMR[i].uom, null, null, null, dataItemMR[i].no_tssr_boq_site, dataItemMR[i].program]);
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
-        // let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
-        // let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
-        // qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
-        // qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
         ws.addRow([
           null,
           null,
           dataMatIdx.material_id,
           dataMatIdx.material_name,
-          dataMatIdx.material_unit,
+          dataMatIdx.uom,
           dataMatIdx.qty,
           dataMatIdx.source_material,
+          dataMatIdx.cpo_number,
         ]);
       }
     }
@@ -946,6 +940,35 @@ class MRDetail extends Component {
     saveAs(
       new Blob([allocexport]),
       "Material MR PS " + dataMR.mr_id + " Report.xlsx"
+    );
+  }
+
+  async downloadMaterialMRTRACY() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataMR = this.state.data_mr;
+    const dataItemMR = this.state.list_mr_item;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    let headerRow = ["REC_TYPE", "FILLER", "COMP_CD", "CUST_DELIV_NO", "CUST_ID", "CUST_CNTRY_CD", "ETA_SHP_DT", "SHP_DT", "SITE_LOC_ID", "SITE_CNTRY_CD", "SEND_SYSTEM", "SEND_UNIT", "SALES_GRP", "PRNO ", "SHP_NO", "END_CUST_NM", "END_CUST_ID", "CUST_NM", "SALES_ORD_NO", "PACK_ID", "PURCH_ORD_NO", "SER_NO", "CIN", "GI_Type", "Shp_Pnt", "Plant_ID"];
+    ws.addRow(headerRow);
+    const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
+    const dataSite = dataMR.site_info[0].site_id
+    for (let i = 0; i < dataItemMR.length; i++) {
+      for (let j = 0; j < dataItemMR[i].materials.length; j++) {
+        let dataMatIdx = dataItemMR[i].materials[j];
+        ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dispatchData.mr_status_date, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, dataMR.no_shipment, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([allocexport]),
+      "TRACY Material MR " + dataMR.mr_id + ".xlsx"
     );
   }
 
@@ -1064,10 +1087,13 @@ class MRDetail extends Component {
       backgroundColor: "#e3e3e3",
     };
 
-    const MapLoader = withScriptjs(GMap);
+    function MapsTrekking(props){
+      return (<GMap dsp_lat={props.latitude} dsp_lng={props.latitude}/>)
+    }
 
-    let qty_wh = undefined,
-      qty_inbound = undefined;
+    const MapLoader = withScriptjs(MapsTrekking);
+
+    let qty_wh = undefined,qty_inbound = undefined;
     return (
       <div>
         <DefaultNotif
@@ -1490,6 +1516,17 @@ class MRDetail extends Component {
                                     >
                                       Download MR PS
                                     </Button>
+                                    <Button
+                                      size="sm"
+                                      color="secondary"
+                                      style={{
+                                        float: "right",
+                                        marginRight: "10px",
+                                      }}
+                                      onClick={this.downloadMaterialMRTRACY}
+                                    >
+                                      TRACY Format
+                                    </Button>
                                   </td>
                                 </tr>
                                 {this.state.mr_site_FE !== null &&
@@ -1657,8 +1694,8 @@ class MRDetail extends Component {
                             >
                               CPO Number
                             </th>
-                            <th rowSpan="2" className="fixedhead" style={{ width: "75px", verticalAlign: "middle" }}>
-                              Material Source
+                            <th rowSpan="2" className="fixedhead" style={{verticalAlign: "middle" }}>
+                              PS No. / Material Source
                             </th>
                           </tr>
                           {this.state.data_mr !== null &&
@@ -1697,7 +1734,7 @@ class MRDetail extends Component {
                         status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
                           <tbody>
                             {this.state.mr_site_NE !== null &&
-                              this.state.list_mr_item.map((pp) => (
+                              this.state.list_mr_item.filter(e => e.product_type.toLowerCase() !== "svc").map((pp) => (
                                 <Fragment>
                                   <tr
                                     style={{ backgroundColor: "#E5FCC2" }}
@@ -1728,7 +1765,7 @@ class MRDetail extends Component {
                                     <td></td>
                                     <td></td>
                                     <td>{pp.cpo_number}</td>
-                                    <td>{pp.source_material}</td>
+                                    <td>{pp.no_tssr_boq_site}</td>
                                   </tr>
                                   {pp.materials.map((material) => (
                                     <tr
@@ -1843,7 +1880,7 @@ class MRDetail extends Component {
                                       <Fragment></Fragment>
                                     )}
                                     <td>{pp.cpo_number}</td>
-                                    <td>{pp.source_material}</td>
+                                    <td>{pp.no_tssr_boq_site}</td>
                                   </tr>
                                   {pp.materials.map((material) => (
                                     <tr
@@ -1966,9 +2003,10 @@ class MRDetail extends Component {
                 )}
                 {this.state.tabs_submenu[3] === true && (
                   <Fragment>
-                    {/* <GoogleMap site_lat={-6.3046027} site_lng={106.7951936} /> */}
+                    <MapsTrekking latitude={-6.173990} longitude={106.826851}/>
+                    {/* <GoogleMap site_lat={-6.3046027} site_lng={106.7951936} /> AIzaSyAoCmcgwc7MN40js68RpcZdSzh9yLrmLF4*/}
                     <MapLoader
-                      googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyAoCmcgwc7MN40js68RpcZdSzh9yLrmLF4"
+                      googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyB5mmXco3GYZhRDNY4CJcBlaENjteSC8DM"
                       loadingElement={<div style={{ height: "100%" }} />}
                     />
                   </Fragment>

@@ -28,6 +28,7 @@ const PSList = React.lazy(() => import('./viewsIndosat/PS/PSList'));
 const PSBOM = React.lazy(() => import('./viewsIndosat/PS/PSBOM'));
 const PSBOMDetail = React.lazy(() => import('./viewsIndosat/PS/DetailPS'));
 
+const CRDetail = React.lazy(() => import('./viewsIndosat/CR/CRDetail'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -60,6 +61,7 @@ const routes = [
   { path: '/ps-creation', exact: true, name: 'Plant Spec BOM', component: PSBOM },
   { path: '/ps-detail/:id', name: 'Plant Spec BOM', component: PSBOMDetail },
 
+  { path: '/cr-detail', exact: true, name: 'CR Detail', component: CRDetail },
 
 ];
 

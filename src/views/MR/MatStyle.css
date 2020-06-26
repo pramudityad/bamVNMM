@@ -170,3 +170,9 @@ ul.mr-detail__ul--cd-id {
   padding-left: 0px !important;
   margin-bottom: 0px !important;
 }
+
+.row-alert-fixed .alert {
+  z-index: 1;
+  position: fixed;
+  top: 75px;
+}

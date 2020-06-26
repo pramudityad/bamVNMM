@@ -46,6 +46,7 @@ class AssignmentCreation extends Component {
       asp_list : [],
       create_assignment_form : new Array(69).fill(null),
       // creation_ssow_form : new Array(1).fill({}),
+      list_cd_id : [],
       creation_ssow_form : [],
       list_tower : [],
       list_project : [],
@@ -234,7 +235,7 @@ class AssignmentCreation extends Component {
 
   async previewData(){
     const dataXLS = [
-      ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier", "ssow_rbs_id_1","ssow_rbs_activity_number_1","ssow_rbs_unit_1","ssow_rbs_quantity_1","ssow_rbs_id_2","ssow_rbs_activity_number_2","ssow_rbs_unit_2","ssow_rbs_quantity_2","ssow_rbs_id_3","ssow_rbs_activity_number_3","ssow_rbs_unit_3","ssow_rbs_quantity_3","ssow_rbs_id_4","ssow_rbs_activity_number_4","ssow_rbs_unit_4","ssow_rbs_quantity_4","ssow_rbs_id_5","ssow_rbs_activity_number_5","ssow_rbs_unit_5","ssow_rbs_quantity_5","ssow_rbs_id_6","ssow_rbs_activity_number_6","ssow_rbs_unit_6","ssow_rbs_quantity_6","ssow_rbs_id_7","ssow_rbs_activity_number_7","ssow_rbs_unit_7","ssow_rbs_quantity_7"],
+      ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"],
       ["new", this.state.project_name_selected, this.state.create_assignment_form[16], this.state.identifier_by, this.state.create_assignment_form[67], this.state.create_assignment_form[66],  this.state.create_assignment_form[15], this.state.tower_selected_id]
     ];
     const dataXLSASG = {
@@ -250,6 +251,7 @@ class AssignmentCreation extends Component {
         this.setState({assignment_ssow_upload : dataChecking, creation_ssow_form : []}, () => {
           if(dataChecking.SSOW_List !== undefined && dataChecking.SSOW_List.length !== 0){
             this.setState({creation_ssow_form : dataChecking.SSOW_List})
+            this.setState({action_status : null, action_message : null})
           }else{
             this.setState({creation_ssow_form : [{}]})
           }
@@ -278,8 +280,8 @@ class AssignmentCreation extends Component {
       ["new", this.state.project_name_selected, this.state.create_assignment_form[16], this.state.identifier_by, this.state.create_assignment_form[67], this.state.create_assignment_form[66], this.state.create_assignment_form[15], this.state.tower_selected_id]
     ];
     const listSSOW = this.state.creation_ssow_form;
-    listSSOW.map((e,idx) => dataXLS[0].push("ssow_"+(e.sow_type.toLowerCase())+"_id_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_activity_number_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_unit_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_quantity_"+(idx+1).toString() ));
-    listSSOW.map(e => dataXLS[1].push(e.ssow_id, e.ssow_activity_number, e.ssow_unit, e.ssow_qty));
+    listSSOW.filter(e =>e.sow_type !== undefined).map((e,idx) => dataXLS[0].push("ssow_"+(e.sow_type.toLowerCase())+"_id_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_activity_number_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_unit_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_quantity_"+(idx+1).toString() ));
+    listSSOW.filter(e =>e.sow_type !== undefined).map(e => dataXLS[1].push(e.ssow_id, e.ssow_activity_number, e.ssow_unit, e.ssow_qty));
     const dataXLSASG = {
       "includeSsow" : this.state.can_edit_ssow === true ? true : false,
       "data" : dataXLS
@@ -349,12 +351,19 @@ class AssignmentCreation extends Component {
   };
 
   handleChangeProjectXL(e){
-    this.setState({project_selected : e.value, project_name_selected : e.value })
+    this.setState({project_selected : e.value, project_name_selected : e.value });
     return e;
   }
 
   handleChangeTowerXL(e){
-    this.setState({tower_selected_id : e.value});
+    const cd_id_number = e.value;
+    this.setState({tower_selected_id : cd_id_number});
+    if(this.state.identifier_by === "cd_id"){
+      let findCDID = this.state.list_cd_id.find(e => e.WP_ID === cd_id_number.trim());
+      if(findCDID !== undefined){
+        this.setState({project_selected : findCDID.CD_Info_Project, project_name_selected : findCDID.CD_Info_Project_Name });
+      }
+    }
     return e
   }
 
@@ -435,6 +444,7 @@ class AssignmentCreation extends Component {
       // const getSSOWID = await this.getDataFromAPIEXEL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
       const getWPID = await this.getDataFromAPIEXEL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}');
       if(getWPID !== undefined && getWPID.data !== undefined) {
+        this.setState({list_cd_id : getWPID.data._items});
         getWPID.data._items.map(wp =>
           wp_id_list.push({'value' : wp.WP_ID , 'label' : wp.WP_ID +" ( "+wp.WP_Name+" )", 'project' : wp.CD_Info_Project_Name }))
       }
@@ -534,7 +544,6 @@ class AssignmentCreation extends Component {
     if(this.state.redirect_sign !== false) {
       return (<Redirect to={'/assignment-list/'} />);
     }
-    console.log("creation_ssow_form", this.state.creation_ssow_form);
     return (
       <div className="animated fadeIn">
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -571,23 +580,8 @@ class AssignmentCreation extends Component {
                             onChange={this.handleChangeTowerXL}
                           />
                         )}
-                        {/* }<Select
-                          cacheOptions
-                          options={this.state.list_tower_selection}
-                          onChange={this.handleChangeTowerXL}
-                        /> */}
                       </FormGroup>
                     </Col>
-                    {/*<Col md="6">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>WP ID</Label>
-                        <Select
-                          cacheOptions
-                          options={this.state.list_tower_selection}
-                          onChange={this.handleChangeTowerXL}
-                        />
-                      </FormGroup>
-                    </Col> */}
                   </Row>
                   <Row>
                     <Col md="6">
@@ -601,85 +595,26 @@ class AssignmentCreation extends Component {
                     </Col>
                   </Row>
                   <Row>
+                  {this.state.identifier_by === "tower_id" ? (
                     <Col md="6">
                       <FormGroup style={{paddingLeft: "16px"}}>
                         <Label>Project Name</Label>
-                        {this.state.identifier_by !== "tower_id" && this.state.tower_selected_id !== null ? <Input readOnly value={this.state.project_name} onChange={this.handleChangeProjectXL}/> : <Select
+                        <Select
                           cacheOptions
                           options={this.state.list_project_selection}
                           onChange={this.handleChangeProjectXL}
-                        />}
-                        
+                        />
                       </FormGroup>
                     </Col>
+                  ) : (
+                    <Col md="6">
+                      <FormGroup style={{paddingLeft: "16px"}}>
+                        <Label>Project Name</Label>
+                        <Input value={this.state.project_name_selected} readOnly/>
+                      </FormGroup>
+                    </Col>
+                  )}
                   </Row>
-                  {/* }<Row style={{marginTop: "16px"}}>
-                    <Col md="6">
-                      <h5>SITE DETAILS NE</h5>
-                    </Col>
-                    <Col md="6">
-                      <h5>SITE DETAILS FE</h5>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col md="6">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Site ID</Label>
-                        <Input type="text" name="site_id_ne" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.Site_Info_SiteID_NE : ""} />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Site Name</Label>
-                        <Input type="text" name="site_name_ne" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.Site_Info_SiteName_NE : ""} />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Latitude</Label>
-                        <Input type="text" name="site_lat_ne" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.Site_Info_Latitude_NE : ""} />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Longitude</Label>
-                        <Input type="text" name="site_long_ne" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.Site_Info_Longitude_NE : ""} />
-                      </FormGroup>
-                    </Col>
-                    <Col md="6">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Site ID</Label>
-                        <Input type="text" name="site_id_fe" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.Site_Info_SiteID_FE : ""} />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Site Name</Label>
-                        <Input type="text" name="site_name_fe" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.Site_Info_SiteName_FE : ""} />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Latitude</Label>
-                        <Input type="text" name="site_lat_fe" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.Site_Info_Latitude_FE : ""} />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Longitude</Label>
-                        <Input type="text" name="site_long_fe" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.Site_Info_Longitude_FE : ""} />
-                      </FormGroup>
-                    </Col>
-                  </Row>
-                  <h5 style={{marginTop: "16px"}}>SOW / CONFIG</h5>
-                  <Row>
-                    <Col md="6">
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>SOW / Config</Label>
-                        <Input type="text" name="sow_config" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.CD_Info_SOW_Type : ""} />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>NN Service</Label>
-                        <Input type="text" name="nn_service" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.CD_Info_Network_Number : ""} />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>WBS</Label>
-                        <Input type="text" name="wbs" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.CD_Info_WBS : ""} />
-                      </FormGroup>
-                      <FormGroup style={{paddingLeft: "16px"}}>
-                        <Label>Act Code</Label>
-                        <Input type="text" name="act_code" readOnly value={this.state.list_activity_selected !== null ? this.state.list_activity_selected.CD_Info_Activity_Code : ""} />
-                      </FormGroup>
-                    </Col>
-                  </Row> */}
                   <Row>
                     <Col md="6">
                       <FormGroup style={{paddingLeft: "16px"}}>
