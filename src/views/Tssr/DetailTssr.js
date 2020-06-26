@@ -1396,12 +1396,30 @@ class DetailTssr extends Component {
     ws.getCell('H6').value = 'Rev';
     ws.getCell('H6').font  = { size: 8 };
     ws.getCell('H6').alignment  = {vertical: 'top', horizontal: 'left' };
-    ws.getCell('H6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('H6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
 
     const revDocNum = ws.mergeCells('H7:I7');
     ws.getCell('H7').value = "-";
     ws.getCell('H7').alignment  = {horizontal: 'left' };
-    ws.getCell('H7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('H7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    ws.getCell('J6').value = 'File';
+    ws.getCell('J6').font  = { size: 8 };
+    ws.getCell('J6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('J6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    ws.getCell('J7').value = null;
+    ws.getCell('J7').alignment  = {horizontal: 'left' };
+    ws.getCell('J7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    ws.getCell('J4').value = 'PO Number';
+    ws.getCell('J4').font  = { size: 8 };
+    ws.getCell('J4').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('J4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    ws.getCell('J5').value = null;
+    ws.getCell('J5').alignment  = {horizontal: 'left' };
+    ws.getCell('J5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
     ws.addRow([""]);
     ws.addRow(["Project", null, ": "+dataTSSR.project_name]);
@@ -1411,23 +1429,24 @@ class DetailTssr extends Component {
     ws.mergeCells('A11:B11');
     ws.addRow([""]);
 
-    let headerRow = ["NO.","DENOMINATION / FUNCTIONAL DESCRIPTION", null, null, "PRODUCT CODE", "QTY PLAN", "QTY ACTUAL", "UNIT", "REMARKS"];
+    let headerRow = ["NO.","DENOMINATION / FUNCTIONAL DESCRIPTION", null, null, "PRODUCT CODE", null, "QTY PLAN", "QTY ACTUAL", "UNIT", "REMARKS"];
     ws.addRow(headerRow);
     ws.mergeCells('B13:D13');
+    ws.mergeCells('E13:F13');
     ws.getCell('A13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
     ws.getCell('B13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('E13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
     ws.getCell('F13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
     ws.getCell('G13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
     ws.getCell('H13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
     ws.getCell('I13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('J13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
     ws.getCell('A13').font  = {bold : true };
     ws.getCell('B13').font  = {bold : true };
-    ws.getCell('E13').font  = {bold : true };
     ws.getCell('F13').font  = {bold : true };
     ws.getCell('G13').font  = {bold : true };
     ws.getCell('H13').font  = {bold : true };
     ws.getCell('I13').font  = {bold : true };
+    ws.getCell('J13').font  = {bold : true };
     ws.addRow([""]);
     let dataItemTSSRConfig = [...new Set(dataItemTSSR.map(({ config_id }) => config_id))];
 
@@ -1438,14 +1457,14 @@ class DetailTssr extends Component {
       ws.addRow([null, dataItemTSSRConfig[a], null, null, null, null, null, null, null]);
       ws.addRow([""]);
       numberPSItem = numberPSItem+1;
-      ws.addRow([numberPSItem, dataItemTSSRConfig[a], null, null, null, null, null, null, dataItemTSSRConfig[a]]);
+      ws.addRow([numberPSItem, dataItemTSSRConfig[a], null, null, null, null, null, null, null, dataItemTSSRConfig[a]]);
       ws.addRow([""]);
       for(let i = 0; i < itemTSSRBundle.length; i++){
         numberPSItem = numberPSItem+1;
-        ws.addRow([numberPSItem, itemTSSRBundle[i].product_name, null, null, itemTSSRBundle[i].pp_id, itemTSSRBundle[i].qty, null, itemTSSRBundle[i].uom, null]);
+        ws.addRow([numberPSItem, itemTSSRBundle[i].product_name, null, null, itemTSSRBundle[i].pp_id, null, itemTSSRBundle[i].qty, null, itemTSSRBundle[i].uom, null]);
         for(let j = 0; j < itemTSSRBundle[i].materials.length; j++){
           let dataMatIdx = itemTSSRBundle[i].materials[j];
-          ws.addRow([null, dataMatIdx.material_name, null, dataMatIdx.material_id, null, dataMatIdx.qty, dataMatIdx.qty, dataMatIdx.uom, null]);
+          ws.addRow([null, dataMatIdx.material_name, null, null, dataMatIdx.material_id, null, dataMatIdx.qty, dataMatIdx.qty, dataMatIdx.uom, null]);
         }
         ws.addRow([""]);
       }
@@ -1569,7 +1588,7 @@ class DetailTssr extends Component {
         ws.addRow([numberPSItem, itemTSSRBundle[i].product_name, null, null, null, itemTSSRBundle[i].qty, null, null, null]);
         for(let j = 0; j < itemTSSRBundle[i].materials.length; j++){
           let dataMatIdx = itemTSSRBundle[i].materials[j];
-          ws.addRow([null, dataMatIdx.material_name, null, null, null, dataMatIdx.qty, dataMatIdx.qty, null, null]);
+          ws.addRow([null, dataMatIdx.material_name, null, null, null, dataMatIdx.qty, null, null, null]);
         }
         ws.addRow([""]);
       }
