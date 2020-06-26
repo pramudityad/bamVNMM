@@ -1454,17 +1454,13 @@ class DetailTssr extends Component {
                         <React.Fragment>
                         <div style={{display : 'flex', "align-items": "baseline"}}>
                           <input type="file" onChange={this.fileHandlerTSSR.bind(this)} style={{"padding":"10px"}}/>
-                          <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
-                            <i className="fa fa-paste">&nbsp;&nbsp;</i>
-                            Save
-                          </Button>
-                        </div>
-                        &nbsp;&nbsp;&nbsp;
-                        <div style={{display : 'flex', "align-items": "baseline"}}>
-                          <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.saveUpdateMaterialWeb} >
+                          {this.state.rowsXLS.length === 0 ? <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.saveUpdateMaterialWeb} >
                             <i className="fa fa-paste">&nbsp;&nbsp;</i>
                             Save Web
-                          </Button>
+                          </Button>: <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
+                            <i className="fa fa-paste">&nbsp;&nbsp;</i>
+                            Save
+                          </Button>}
                         </div>
                         </React.Fragment>
                       )}
