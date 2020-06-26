@@ -370,7 +370,7 @@ class DRMList extends React.Component {
         this.setState({
           all_data: res.data.data,
           version_selected: res.data.data.version-1
-        });        
+        });
         this.toggleLoading();
       } else {
         this.setState({ all_data: {} });
@@ -378,10 +378,10 @@ class DRMList extends React.Component {
       }
       console.log('version ',this.state.version_selected)
 
-    });    
+    });
   }
 
-  getAllDRMDataVersion(_id) {    
+  getAllDRMDataVersion(_id) {
     this.getDatafromAPINODE("/drm/getDrmVersion/" + _id).then((res) => {
       if (res.data !== undefined) {
         this.setState({
@@ -1151,9 +1151,9 @@ class DRMList extends React.Component {
                                 onChange={this.handleChangeVersion}
                                 style={{ width: "100px", height: "30px" }}
                               >
-                                {this.state.list_version.map((e, i) => (
+                                {this.state.list_version.length !== 0 ? this.state.list_version.map((e, i) => (
                                   <option value={i}>{i}</option>
-                                ))}
+                                )) : (<option value={0}>{0}</option>)}
                               </Input>
                             </td>
                           </tr>
