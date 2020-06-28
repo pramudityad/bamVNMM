@@ -623,13 +623,13 @@ class MatInboundPlan extends React.Component {
   }
 
   async downloadAll() {
-    let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE(
-      "/whInboundPlan/getWhInboundPlan?noPg=1"
-    );
-    if (getAll_nonpage.data !== undefined) {
-      download_all = getAll_nonpage.data.data;
-    }
+    let download_all = this.state.all_data;
+    // let getAll_nonpage = await this.getDatafromAPINODE(
+    //   "/whInboundPlan/getWhInboundPlan?noPg=1"
+    // );
+    // if (getAll_nonpage.data !== undefined) {
+    //   download_all = getAll_nonpage.data.data;
+    // }
 
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -659,7 +659,7 @@ class MatInboundPlan extends React.Component {
       let list = download_all[i];
       ws.addRow([
         list.owner_id,
-        list.wh_id,
+        this.state.selected_wh,
         list.po_number,
         list.project_name,
         list.sku,
@@ -675,7 +675,7 @@ class MatInboundPlan extends React.Component {
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All Material Inbound.xlsx");
+    saveAs(new Blob([allocexport]), "All Material Inbound "+this.state.selected_wh+".xlsx");
   }
 
   DeleteData = async () => {
