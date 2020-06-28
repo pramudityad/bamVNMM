@@ -68,6 +68,7 @@ class BulkAssignment extends Component {
         list_data_activity : [],
         sow_type_selected : "RBS",
         rowsXLS : [],
+        rowsXLSMigration : [],
         waiting_status : null,
         action_status : null,
         action_message : null,
@@ -77,7 +78,9 @@ class BulkAssignment extends Component {
         modal_loading : false,
     };
     this.saveDataAssignmentBulk = this.saveDataAssignmentBulk.bind(this);
+    this.saveDataAssignmentBulkMigration = this.saveDataAssignmentBulkMigration.bind(this);
     this.exportFormatBulkAssignment = this.exportFormatBulkAssignment.bind(this);
+    this.exportFormatBulkAssignmentMigration = this.exportFormatBulkAssignmentMigration.bind(this);
     this.handleChangeSOWType = this.handleChangeSOWType.bind(this);
     this.handleChangeUploadType = this.handleChangeUploadType.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -189,6 +192,25 @@ class BulkAssignment extends Component {
       }
     }
 
+    async patchDatatoAPINODE(url, data) {
+      try {
+        let respond = await axios.patch(API_URL_NODE + url, data, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + this.state.tokenUser
+          },
+        })
+        if (respond.status >= 200 && respond.status < 300) {
+          console.log("respond Patch data", respond);
+        }
+        return respond;
+      } catch (err) {
+        let respond = err;
+        console.log("respond Patch data", err.response);
+        return respond;
+      }
+    }
+
   checkValue(props){
     //Swap undefined to null
     if( typeof props === 'undefined' ) {
@@ -245,6 +267,25 @@ class BulkAssignment extends Component {
     }
   }
 
+  fileHandlerMigration = (event) => {
+    let fileObj = event.target.files[0];
+    if(fileObj !== undefined){
+      ExcelRenderer(fileObj, (err, rest) => {
+        if(err){
+          console.log(err);
+        }
+        else{
+          this.setState({
+            action_status : null,
+            action_message : null
+          }, () => {
+            this.ArrayEmptytoNullMigration(rest.rows);
+          });
+        }
+      });
+    }
+  }
+
   ArrayEmptytoNull(dataXLS){
     let newDataXLS = [];
     for(let i = 0; i < dataXLS.length; i++){
@@ -258,6 +299,20 @@ class BulkAssignment extends Component {
       rowsXLS: newDataXLS
     });
     this.checkingDataAssignment(newDataXLS);
+  }
+
+  ArrayEmptytoNullMigration(dataXLS){
+    let newDataXLS = [];
+    for(let i = 0; i < dataXLS.length; i++){
+      let col = [];
+      for(let j = 0; j < dataXLS[0].length; j++){
+        col.push(this.checkValue(dataXLS[i][j]));
+      }
+      newDataXLS.push(col);
+    }
+    this.setState({
+      rowsXLS: newDataXLS
+    });
   }
 
   componentDidMount(){
@@ -342,9 +397,28 @@ class BulkAssignment extends Component {
     } else{
       if (respondSaveASG.response !== undefined && respondSaveASG.response.data !== undefined && respondSaveASG.response.data.error !== undefined) {
         if (respondSaveASG.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error.message.message });
+          this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error.message });
         } else {
           this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+  }
+
+  async saveDataAssignmentBulkMigration(){
+    this.toggleLoading();
+    const respondPatchASG = await this.patchDatatoAPINODE('/aspAssignment/updateStatusMigration', { dataAssignment: this.state.rowsXLS });
+    if(respondPatchASG.data !== undefined && respondPatchASG.status >= 200 && respondPatchASG.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      if (respondPatchASG.response !== undefined && respondPatchASG.response.data !== undefined && respondPatchASG.response.data.error !== undefined) {
+        if (respondPatchASG.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: respondPatchASG.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: respondPatchASG.response.data.error });
         }
       } else {
         this.setState({ action_status: 'failed' });
@@ -401,6 +475,49 @@ class BulkAssignment extends Component {
     saveAs(new Blob([MRFormat]), 'Assignment '+this.state.uploadan_type+' Uploader Template.xlsx');
   }
 
+  exportFormatBulkAssignmentMigration = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const sow_type = this.state.sow_type_selected;
+    let indexSSOW = 7;
+    if(sow_type === "SACME"){
+      indexSSOW = 25;
+    }
+    if(sow_type === "RBSTRM"){
+      indexSSOW = 5;
+    }
+    let headerRow = ["id","sh_assignment_no", "assignment_creation_date", "assignment_creation_by","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
+    if(this.state.uploadan_type === "without Predefined SSOW"){
+      let headerRow = ["id","sh_assignment_no", "assignment_creation_date", "assignment_creation_by","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
+      if(sow_type === "RBSTRM"){
+        for(let idx = 1; idx <= indexSSOW; idx++){
+          headerRow.push("ssow_rbs_id_"+idx.toString(), "ssow_rbs_activity_number_"+idx.toString(), "ssow_rbs_unit_"+idx.toString(), "ssow_rbs_quantity_"+idx.toString() );
+        }
+        for(let idx = 1; idx <= indexSSOW; idx++){
+          headerRow.push("ssow_trm_id_"+idx.toString(), "ssow_trm_activity_number_"+idx.toString(), "ssow_trm_unit_"+idx.toString(), "ssow_trm_quantity_"+idx.toString() );
+        }
+        ws.addRow(headerRow);
+        ws.addRow(["new", null, null, null, "XL BAM DEMO 2020","RBSTRM", "tower_id", 2000054443,"PT SINERGI AITIKOM","3070","JAW-JT-BBS-0001","1.1.1","3022264",null,1,"1.1.4","3022960",null,2,null,null,null,null,null,null,null,null,null,null,null,null,"1.1.1.T", "3022917", "Site", 2, null,null,null,null]);
+        ws.addRow(["new", null, null, null, "XL BAM DEMO 2020","RBSTRM", "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930","1.1.1.N","3022917","pc",3,"1.1.4.N","3022962",null,2,null,null,null,null,null,null,null,null,null,null,null,null,"1.1.1.T", "3022917", "Site", 2, null,null,null,null]);
+      }else{
+        for(let idx = 1; idx <= indexSSOW; idx++){
+          headerRow.push("ssow_"+(sow_type.toLowerCase())+"_id_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_activity_number_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_unit_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_quantity_"+idx.toString() );
+        }
+        ws.addRow(headerRow);
+        ws.addRow(["new", null, null, null, "XL BAM DEMO 2020",sow_type, "tower_id", 2000054443,"PT SINERGI AITIKOM","3070","JAW-JT-BBS-0001","1.1.1","3022264",null,1,"1.1.4","3022960",null,2,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]);
+        ws.addRow(["new", null, null, null, "XL BAM DEMO 2020",sow_type, "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930","1.1.1.N","3022917","pc",3,"1.1.4.N","3022962",null,2,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]);
+      }
+    }else{
+      ws.addRow(headerRow);
+      ws.addRow(["new", null, null, null, "XL BAM DEMO 2020",sow_type, "tower_id", 2000054443,"PT SINERGI AITIKOM","3070","JAW-JT-BBS-0001"]);
+      ws.addRow(["new", null, null, null, "XL BAM DEMO 2020",sow_type, "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930"]);
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Assignment '+this.state.uploadan_type+' Uploader Template For Migration.xlsx');
+  }
+
   handleChangeUploadType(e){
     const value = e.target.value;
     this.setState({uploadan_type : value});
@@ -423,17 +540,7 @@ class BulkAssignment extends Component {
               <option value="Predefined SSOW">Predefined SSOW</option>
             </select>
             <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkAssignment} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment Format</Button>
-            {/* }<select type="select" onChange={this.handleChangeSOWType} value={this.state.sow_type_selected} style={{marginRight : '8px', marginTop :'3px', float : 'right', width : '100px'}}>
-              <option value="" disabled selected hidden>SOW Type</option>
-              <option value="NDO">NDO</option>
-              <option value="RBS">RBS</option>
-              <option value="TRM">TRM</option>
-              <option value="Power">Power</option>
-              <option value="SACME">SACME</option>
-              <option value="Survey">Survey</option>
-              <option value="BSC">BSC</option>
-              <option value="RNC">RNC</option>
-            </select> */}
+            <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkAssignmentMigration} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment Format For Migration</Button>
             <select type="select" onChange={this.handleChangeSOWType} value={this.state.sow_type_selected} style={{marginRight : '8px', marginTop :'3px', float : 'right', width : '100px'}}>
               <option value={null} disabled hidden>SOW Type</option>
               <option value="RBS">RBS</option>
@@ -442,10 +549,35 @@ class BulkAssignment extends Component {
             </select>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
-            <input type="file" onChange={this.fileHandlerAssignment.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
-            <Button color="success" onClick={this.saveDataAssignmentBulk} style={{float : 'right'}} disabled={this.state.waiting_status || this.state.rowsXLS.length === 0}>
-              {this.state.waiting_status === true ? "loading.." : "Save"}
-            </Button>
+            <Row>
+              <Col>
+                <input type="file" onChange={this.fileHandlerAssignment.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
+                <Button color="success" onClick={this.saveDataAssignmentBulk} style={{float : 'right'}} disabled={this.state.waiting_status || this.state.rowsXLS.length === 0}>
+                  {this.state.waiting_status === true ? "loading.." : "Save"}
+                </Button>
+              </Col>
+            </Row>
+            {this.state.userRole.includes('Admin') && (
+              <Fragment>
+                <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
+                <Row>
+                  <Col>
+                    <h5>Migration Status from SH :</h5>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <input type="file" onChange={this.fileHandlerMigration.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
+                    <span style={{color : 'red'}}>*NOTIFIED TO ASP MUST BE FILLED IN</span>
+                    <Button color="success" onClick={this.saveDataAssignmentBulkMigration} style={{float : 'right'}}>
+                      Save Migration Status
+                    </Button>
+                  </Col>
+                </Row>
+                <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
+              </Fragment>
+            )}
+
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>

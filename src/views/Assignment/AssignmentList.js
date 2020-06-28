@@ -210,7 +210,7 @@ class AssignmentList extends Component {
 
   async downloadAllAssignmentAcceptenceMigration() {
     let allAssignmentList = [];
-    let getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1');
+    let getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1&v={"Assignment_No" : 1, "SH_Assignment_No" : 1}');
     if (getASG.data !== undefined) {
       allAssignmentList = getASG.data.data;
     }
@@ -218,11 +218,12 @@ class AssignmentList extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let headerRow = ["assignment_id", "sh_assingment_no", "cd_id"];
+    let headerRow = ["bam_assignment_id", "sh_assignment_no", "notify_to_asp_date", "notify_to_asp_by", "asp_acceptance_date", "asp_acceptance_by", "asp_need_revise_date", "asp_need_revise_by", "assignment_cancel_date", "assignment_cancel_by"];
     ws.addRow(headerRow);
 
     for (let i = 0; i < allAssignmentList.length; i++) {
-      let rowAdded = [allAssignmentList[i].Assignment_No, allAssignmentList[i].SH_Assignment_No, allAssignmentList[i].cust_del !== undefined ? allAssignmentList[i].cust_del.map(e => e.cd_id).join(', ') : null];
+      // let rowAdded = [allAssignmentList[i].Assignment_No, allAssignmentList[i].SH_Assignment_No, allAssignmentList[i].cust_del !== undefined ? allAssignmentList[i].cust_del.map(e => e.cd_id).join(', ') : null];
+      let rowAdded = [allAssignmentList[i].Assignment_No, allAssignmentList[i].SH_Assignment_No];
       ws.addRow(rowAdded);
     }
 
@@ -279,7 +280,7 @@ class AssignmentList extends Component {
                 <Link to={'/assignment-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment</Button></Link>
                 <Link to={'/bulk-assignment-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment Bulk</Button></Link>
                 <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignment} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List</Button>
-                <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignmentAcceptenceMigration} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List Acceptence Migration</Button>
+                <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignmentAcceptenceMigration} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List Status Migration</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">

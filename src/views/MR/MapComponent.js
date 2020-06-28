@@ -13,6 +13,7 @@ const propTypes = {
     dsp_lng: PropTypes.number,
     site_lat: PropTypes.number,
     site_lng: PropTypes.number,
+    googleMapURL : null,
 }
 
 const defaultProps = {
@@ -20,6 +21,7 @@ const defaultProps = {
     dsp_lng: 106.7999035,
     site_lat: -6.2626619,
     site_lng: 106.7826552,
+    googleMapURL : null,
 }
 
 class MapComponent extends Component {
@@ -44,6 +46,7 @@ class MapComponent extends Component {
           this.setState({
             directions: result
           });
+          console.log("result", result);
         } else {
           console.error(`error fetching directions ${result}`);
         }
@@ -52,6 +55,7 @@ class MapComponent extends Component {
   }
 
   render() {
+    console.log("lot lang", this.props.dsp_lat);
     const GMapping = withGoogleMap(props => (
       <GoogleMap
         defaultCenter={{ lat: this.props.site_lat, lng: this.props.site_lng }}
@@ -65,10 +69,12 @@ class MapComponent extends Component {
 
     return (
       <div>
-        <GMapping
-          containerElement={<div style={{ height: `600px`, width: "100%" }} />}
-          mapElement={<div style={{ height: `100%` }} />}
-        />
+        {this.props.googleMapURL !== null && (
+          <GMapping
+            containerElement={<div style={{ height: '600px', width: "100%" }} />}
+            mapElement={<div style={{ height: '100%' }} />}
+          />
+        )}
       </div>
     );
   }

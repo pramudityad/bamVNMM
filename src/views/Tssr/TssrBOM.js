@@ -729,7 +729,7 @@ class TssrBOM extends Component {
 
   render() {
     if(this.state.redirectSign !== false){
-      return (<Redirect to={'/ps-bom/'+this.state.redirectSign} />);
+      return (<Redirect to={'/ps-list/'+this.state.redirectSign} />);
     }
     return (
       <div>
