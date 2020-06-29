@@ -551,9 +551,16 @@ class GIInternal extends React.Component {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed" }, () => {
-        this.toggleLoading();
-      });
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
     }
   };
 
@@ -571,9 +578,16 @@ class GIInternal extends React.Component {
       this.setState({ action_status: "success", rowsXLS: [] });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed", rowsXLS: [] }, () => {
-        this.toggleLoading();
-      });
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
     }
   };
 
