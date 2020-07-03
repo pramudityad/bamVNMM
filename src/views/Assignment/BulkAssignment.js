@@ -8,6 +8,7 @@ import { saveAs } from 'file-saver';
 import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -248,72 +249,161 @@ class BulkAssignment extends Component {
     return data.findIndex(e => this.isSameValue(e,value));
   }
 
-  fileHandlerAssignment = (event) => {
-    let fileObj = event.target.files[0];
-    if(fileObj !== undefined){
-      ExcelRenderer(fileObj, (err, rest) => {
-        if(err){
-          console.log(err);
-        }
-        else{
-          this.setState({
-            action_status : null,
-            action_message : null
-          }, () => {
-            this.ArrayEmptytoNull(rest.rows);
-          });
-        }
+  fileHandlerAssignment = (input) => {
+    const file = input.target.files[0];
+    const reader = new FileReader();
+    const rABS = !!reader.readAsBinaryString;
+    reader.onload = (e) => {
+      /* Parse data */
+      const bstr = e.target.result;
+      const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array', cellDates:true});
+      /* Get first worksheet */
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      /* Convert array of arrays */
+      const data = XLSX.utils.sheet_to_json(ws, {header:1, devfal : null});
+      /* Update state */
+      // this.ArrayEmptytoNull(data);
+      this.setState({ action_status: null, action_message: null }, () => {
+        this.ArrayEmptytoNull(data);
       });
-    }
+    };
+    if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
   }
 
-  fileHandlerMigration = (event) => {
-    let fileObj = event.target.files[0];
-    if(fileObj !== undefined){
-      ExcelRenderer(fileObj, (err, rest) => {
-        if(err){
-          console.log(err);
-        }
-        else{
-          this.setState({
-            action_status : null,
-            action_message : null
-          }, () => {
-            this.ArrayEmptytoNullMigration(rest.rows);
-          });
-        }
+  // fileHandlerAssignment = (event) => {
+  //   let fileObj = event.target.files[0];
+  //   if(fileObj !== undefined){
+  //     ExcelRenderer(fileObj, (err, rest) => {
+  //       if(err){
+  //         console.log(err);
+  //       }
+  //       else{
+  //         this.setState({
+  //           action_status : null,
+  //           action_message : null
+  //         }, () => {
+  //           this.ArrayEmptytoNull(rest.rows);
+  //         });
+  //       }
+  //     });
+  //   }
+  // }
+
+  fileHandlerMigration = (input) => {
+    const file = input.target.files[0];
+    const reader = new FileReader();
+    const rABS = !!reader.readAsBinaryString;
+    reader.onload = (e) => {
+      /* Parse data */
+      const bstr = e.target.result;
+      const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array', cellDates:true});
+      /* Get first worksheet */
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      /* Convert array of arrays */
+      const data = XLSX.utils.sheet_to_json(ws, {header:1, devfal : null});
+      /* Update state */
+      // this.ArrayEmptytoNull(data);
+      this.setState({ action_status: null, action_message: null }, () => {
+        this.ArrayEmptytoNullMigration(data);
       });
-    }
+    };
+    if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
   }
+
+  // fileHandlerMigration = (event) => {
+  //   let fileObj = event.target.files[0];
+  //   if(fileObj !== undefined){
+  //     ExcelRenderer(fileObj, (err, rest) => {
+  //       if(err){
+  //         console.log(err);
+  //       }
+  //       else{
+  //         this.setState({
+  //           action_status : null,
+  //           action_message : null
+  //         }, () => {
+  //           this.ArrayEmptytoNullMigration(rest.rows);
+  //         });
+  //       }
+  //     });
+  //   }
+  // }
 
   ArrayEmptytoNull(dataXLS){
     let newDataXLS = [];
     for(let i = 0; i < dataXLS.length; i++){
       let col = [];
       for(let j = 0; j < dataXLS[0].length; j++){
-        col.push(this.checkValue(dataXLS[i][j]));
+        if(typeof dataXLS[i][j] === "object"){
+          let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
+          if(dataObject !== null){
+            dataObject = dataObject.replace(/"/g, "");
+          }
+          col.push(dataObject);
+        }else{
+          col.push(this.checkValue(dataXLS[i][j]));
+        }
       }
       newDataXLS.push(col);
     }
     this.setState({
-      rowsXLS: newDataXLS
+      rowsXLS : newDataXLS,
     });
     this.checkingDataAssignment(newDataXLS);
   }
+  //
+  // ArrayEmptytoNull(dataXLS){
+  //   let newDataXLS = [];
+  //   for(let i = 0; i < dataXLS.length; i++){
+  //     let col = [];
+  //     for(let j = 0; j < dataXLS[0].length; j++){
+  //       col.push(this.checkValue(dataXLS[i][j]));
+  //     }
+  //     newDataXLS.push(col);
+  //   }
+  //   this.setState({
+  //     rowsXLS: newDataXLS
+  //   });
+  //   this.checkingDataAssignment(newDataXLS);
+  // }
 
   ArrayEmptytoNullMigration(dataXLS){
     let newDataXLS = [];
     for(let i = 0; i < dataXLS.length; i++){
       let col = [];
       for(let j = 0; j < dataXLS[0].length; j++){
-        col.push(this.checkValue(dataXLS[i][j]));
+        if(typeof dataXLS[i][j] === "object"){
+          let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
+          if(dataObject !== null){
+            dataObject = dataObject.replace(/"/g, "");
+          }
+          col.push(dataObject);
+        }else{
+          col.push(this.checkValue(dataXLS[i][j]));
+        }
       }
       newDataXLS.push(col);
     }
     this.setState({
-      rowsXLS: newDataXLS
+      rowsXLS : newDataXLS,
     });
   }
+
+  // ArrayEmptytoNullMigration(dataXLS){
+  //   let newDataXLS = [];
+  //   for(let i = 0; i < dataXLS.length; i++){
+  //     let col = [];
+  //     for(let j = 0; j < dataXLS[0].length; j++){
+  //       col.push(this.checkValue(dataXLS[i][j]));
+  //     }
+  //     newDataXLS.push(col);
+  //   }
+  //   this.setState({
+  //     rowsXLS: newDataXLS
+  //   });
+  // }
 
   componentDidMount(){
     this.getASPList();
@@ -345,9 +435,9 @@ class BulkAssignment extends Component {
     } else{
       if(respondCheckingASG.response !== undefined && respondCheckingASG.response.data !== undefined && respondCheckingASG.response.data.error !== undefined){
         if(respondCheckingASG.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: respondCheckingASG.response.data.error.message });
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondCheckingASG.response.data.error.message) });
         }else{
-          this.setState({ action_status: 'failed', action_message: respondCheckingASG.response.data.error });
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondCheckingASG.response.data.error) });
         }
       }else{
         this.setState({ action_status: 'failed' });
@@ -397,9 +487,9 @@ class BulkAssignment extends Component {
     } else{
       if (respondSaveASG.response !== undefined && respondSaveASG.response.data !== undefined && respondSaveASG.response.data.error !== undefined) {
         if (respondSaveASG.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error.message });
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveASG.response.data.error.message) });
         } else {
-          this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error });
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveASG.response.data.error) });
         }
       } else {
         this.setState({ action_status: 'failed' });

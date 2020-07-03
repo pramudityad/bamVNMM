@@ -5,15 +5,16 @@ import {
   withGoogleMap,
   withScriptjs,
   GoogleMap,
-  DirectionsRenderer
+  DirectionsRenderer,
+  Marker
 } from "react-google-maps";
+import iconTruck from '../../assets/img/loaded-truck-side-view.png';
 
 const propTypes = {
     dsp_lat: PropTypes.number,
     dsp_lng: PropTypes.number,
     site_lat: PropTypes.number,
     site_lng: PropTypes.number,
-    googleMapURL : null,
 }
 
 const defaultProps = {
@@ -21,7 +22,6 @@ const defaultProps = {
     dsp_lng: 106.7999035,
     site_lat: -6.2626619,
     site_lng: 106.7826552,
-    googleMapURL : null,
 }
 
 class MapComponent extends Component {
@@ -30,51 +30,53 @@ class MapComponent extends Component {
   };
 
   componentDidMount() {
-    const directionsService = new google.maps.DirectionsService();
-
-    const origin = { lat: this.props.dsp_lat, lng: this.props.dsp_lng };
-    const destination = { lat: this.props.site_lat, lng: this.props.site_lng };
-
-    directionsService.route(
-      {
-        origin: origin,
-        destination: destination,
-        travelMode: google.maps.TravelMode.DRIVING
-      },
-      (result, status) => {
-        if (status === google.maps.DirectionsStatus.OK) {
-          this.setState({
-            directions: result
-          });
-          console.log("result", result);
-        } else {
-          console.error(`error fetching directions ${result}`);
-        }
-      }
-    );
+    // const directionsService = new google.maps.DirectionsService();
+    //
+    // const origin = { lat: this.props.dsp_lat, lng: this.props.dsp_lng };
+    // const destination = { lat: this.props.site_lat, lng: this.props.site_lng };
+    //
+    // directionsService.route(
+    //   {
+    //     origin: origin,
+    //     destination: destination,
+    //     travelMode: google.maps.TravelMode.DRIVING
+    //   },
+    //   (result, status) => {
+    //     if (status === google.maps.DirectionsStatus.OK) {
+    //       this.setState({
+    //         directions: result
+    //       });
+    //     } else {
+    //       console.error(`error fetching directions ${result}`);
+    //     }
+    //   }
+    // );
   }
 
   render() {
-    console.log("lot lang", this.props.dsp_lat);
-    const GMapping = withGoogleMap(props => (
+    const GMapping = withScriptjs(withGoogleMap(props => (
       <GoogleMap
-        defaultCenter={{ lat: this.props.site_lat, lng: this.props.site_lng }}
+        defaultCenter={{ lat: this.props.dsp_lat, lng: this.props.dsp_lng }}
         defaultZoom={13}
       >
-        <DirectionsRenderer
-          directions={this.state.directions}
-        />
+      <Marker
+        icon={{
+          url: iconTruck
+        }}
+        position={{ lat: this.props.dsp_lat, lng: this.props.dsp_lng}}
+      />
       </GoogleMap>
-    ));
+    )));
 
     return (
       <div>
-        {this.props.googleMapURL !== null && (
-          <GMapping
-            containerElement={<div style={{ height: '600px', width: "100%" }} />}
-            mapElement={<div style={{ height: '100%' }} />}
-          />
-        )}
+        <GMapping
+          googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyB5mmXco3GYZhRDNY4CJcBlaENjteSC8DM"
+          loadingElement={<div style={{ height: "100%" }} />}
+          containerElement={<div style={{ height: `600px`, width: "100%" }} />}
+          mapElement={<div style={{ height: `100%` }} />}
+        />
+
       </div>
     );
   }
