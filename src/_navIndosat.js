@@ -9,6 +9,11 @@ export default {
           url: '/product-package',
           icon: 'icon-folder',
         },
+        {
+          name: 'Service Library',
+          url: '/svc-library',
+          icon: 'icon-folder',
+        },
       ]
     },
     {
