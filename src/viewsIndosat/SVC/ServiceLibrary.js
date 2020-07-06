@@ -43,7 +43,7 @@ const Checkbox = ({
   />
 );
 
-// const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
+const DefaultNotif = React.lazy(() => import("../../views/DefaultView/DefaultNotif"));
 
 
 class SVCLibrary extends React.Component {
@@ -180,7 +180,7 @@ class SVCLibrary extends React.Component {
 
 
   changeFilterName(value) {
-    this.getWHStockList();
+    this.getList();
   }
 
   handleChangeFilter = (e) => {
@@ -193,16 +193,16 @@ class SVCLibrary extends React.Component {
     });
   };
 
-  getWHStockList() {
+  getList() {
     this.toggleLoading();
-    let filter_mat_id =
+    let filter =
       this.state.filter_list === null
         ? '{"$exists" : 1}'
         : '{"$regex" : "' + this.state.filter_list + '", "$options" : "i"}';
-    let whereAnd = '{"material_id": ' + filter_mat_id + "}";
+    let whereAnd = '{"service_id": ' + filter + "}";
     // console.log("filter whereand ".whereAnd);
     this.getDatafromAPINODE(
-      "/variants/variants?q=" +
+      "/libser/getLibSer?q=" +
         whereAnd +
         "&lmt=" +
         this.state.perPage +
@@ -315,7 +315,7 @@ class SVCLibrary extends React.Component {
   }
 
   componentDidMount() {
-    // this.getWHStockList();
+    // this.getList();
     document.title = "Service  Library | BAM";
   }
 
@@ -335,7 +335,7 @@ class SVCLibrary extends React.Component {
         break;
       case 0:
         this.setState({ perPage: limitpg }, () => {
-          this.getWHStockList();
+          this.getList();
         });
         break;
       default:
@@ -360,7 +360,7 @@ class SVCLibrary extends React.Component {
         break;
       case 0:
         this.setState({ activePage: pageNumber }, () => {
-          this.getWHStockList();
+          this.getList();
         });
         break;
       default:
@@ -369,38 +369,15 @@ class SVCLibrary extends React.Component {
     }
   }
 
-  saveMatStockWHBulk = async () => {
+  postBulk = async () => {
     this.toggleLoading();
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE("/variants/createVariants", {
-      materialData: BulkXLSX,
+    const res = await this.postDatatoAPINODE("/libser/createLibSer", {
+      library_service: BulkXLSX,
     });
     // console.log('res bulk ', res.error.message);
-    if (res.data !== undefined) {
-      this.setState({ action_status: "success" });
-      this.toggleLoading();
-    } else {
-      this.setState({ action_status: "failed" }, () => {
-        this.toggleLoading();
-      });
-    }
-  };
-
-  saveTruncateBulk = async () => {
-    this.toggleLoading();
-    this.togglecreateModal();
-    const BulkXLSX = this.state.rowsXLS;
-    // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    // console.log('xlsx data', JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE(
-      "/variants/createVariantsTruncate",
-      {
-        materialData: BulkXLSX,
-      }
-    );
-    console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -434,7 +411,7 @@ class SVCLibrary extends React.Component {
   async downloadAll() {
     let download_all = [];
     let getAll_nonpage = await this.getDatafromAPINODE(
-      "/variants/variants?noPg=1"
+      "/libser/getLibSer?noPg=1"
     );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
@@ -444,11 +421,11 @@ class SVCLibrary extends React.Component {
     const ws = wb.addWorksheet();
 
     let headerRow = [
-      "Origin",
+      "Boq Service Scope",
       "Service ID",
-      "Service Name",
       "Description",
-      "Category",
+      "PR Uploader Description",      
+      "Unit Price",
     ];
     ws.addRow(headerRow);
 
@@ -476,11 +453,11 @@ class SVCLibrary extends React.Component {
     this.toggleLoading();
     this.toggleDelete();
     const DelData = this.deleteDataFromAPINODE(
-      "/variants/deleteVariants/" + objData
+      "/libser/deleteLibSer/" + objData
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
-        this.getWHStockList();
+        this.getList();
         this.toggleLoading();
       } else {
         this.setState({ action_status: "failed" }, () => {
@@ -495,26 +472,14 @@ class SVCLibrary extends React.Component {
     const ws = wb.addWorksheet();
 
     ws.addRow([
-      "origin",
-      "material_name",
-      "material_id",
+      "boq_service_scope",
+      "service_id",
       "description",
-      "category",
+      "pr_uploader_description",
+      "unit_price",
     ]);
-    ws.addRow([
-      "LCM",
-      "Mat A",
-      "EID-42020500040",
-      "Optic Cable 2F LC-LC SM, 20M for RRUS01 (RPM2533512/20)",
-      " Optic",
-    ]);
-    ws.addRow([
-      "LCM",
-      "Mat B",
-      "RL2LC-SM20000",
-      "Optic Cable 2F LC-LC SM, 20M for RRUS01 (RPM2533512/20)",
-      " Optic",
-    ]);
+    ws.addRow(["Swap Radio B3 to 4499B3, 4T4R Activation [U2100 L2100] Swap Radio B1 to 4499B1, 4T4R Activation; Dismantle Swap Material and Send to WH for Redeployment","BTSS7","Hybrid Trunk Cables Installation Greenfield 2 Sectors Site","BTSS7-Hybrid Trunk Cables Installation Greenfield 2 Sectors Site",100]);
+    ws.addRow(["Swap Radio B3 to 4499B3, 4T4R Activation [U2100 L2100] Swap Radio B1 to 4499B1, 4T4R Activation; Dismantle Swap Material and Send to WH for Redeployment","BTSS8","Hybrid Trunk Cables Installation Greenfield 3 Sectors Site","BTSS8-Hybrid Trunk Cables Installation Greenfield 3 Sectors Site",100]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "Service Library Template.xlsx");
@@ -523,7 +488,7 @@ class SVCLibrary extends React.Component {
   getListSort() {
     this.toggleLoading();
     this.getDatafromAPINODE(
-      "/variants/variants?srt=" +
+      "/libser/getLibSer?srt=" +
         this.state.sortField +
         ":" +
         this.state.sortType +
@@ -573,10 +538,10 @@ class SVCLibrary extends React.Component {
   render() {
     return (
       <div className="animated fadeIn">
-        {/* <DefaultNotif
+        <DefaultNotif
           actionMessage={this.state.action_message}
           actionStatus={this.state.action_status}
-        /> */}
+        />
         <Row>
           <Col xl="12">
             <Card style={{}}>
@@ -1036,11 +1001,11 @@ class SVCLibrary extends React.Component {
               color="success"
               className="btn-pill"
               disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveMatStockWHBulk}
+              onClick={this.postBulk}
             >
               Save
             </Button>{" "}
-            <Button
+            {/* <Button
               block
               color="secondary"
               className="btn-pill"
@@ -1048,7 +1013,7 @@ class SVCLibrary extends React.Component {
               onClick={this.saveTruncateBulk}
             >
               Truncate
-            </Button>
+            </Button> */}
           </ModalFooter>
         </ModalCreateNew>
 
