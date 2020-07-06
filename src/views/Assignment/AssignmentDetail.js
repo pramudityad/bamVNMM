@@ -569,6 +569,8 @@ class AssignmentDetail extends Component {
                 <CardBody>
                   <Form>
                     {(this.state.data_assignment.SH_Assignment_No !== null && this.state.data_assignment.SH_Assignment_No !== undefined) && (
+                      <Fragment>
+                      <h5>SH Migration Data</h5>
                       <Row>
                         <Col md="6">
                           <FormGroup style={{ paddingLeft: "16px" }}>
@@ -577,6 +579,29 @@ class AssignmentDetail extends Component {
                           </FormGroup>
                         </Col>
                       </Row>
+                      <Row>
+                        <Col md="12" style={{ paddingLeft: "31px", paddingRight : '31px' }}>
+                          <Table responsive striped bordered size="sm">
+                            <thead>
+                              <tr>
+                                <th>Status</th>
+                                <th>By</th>
+                                <th>Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                            {this.state.data_assignment.ASP_Assignment_Status.map(stat =>
+                              <tr>
+                                <td>{stat.status_value}</td>
+                                <td>{stat.status_updater}</td>
+                                <td>{stat.status_date}</td>
+                              </tr>
+                            )}
+                            </tbody>
+                          </Table>
+                        </Col>
+                      </Row>
+                      </Fragment>
                     )}
                     <h5>ACTIVITY</h5>
                     <Row>

@@ -93,10 +93,18 @@ class BulkMR extends Component {
         redirectSign : false,
         data_checking_mr : [],
         list_warehouse : [],
+        modal_loading : false,
     };
     this.exportFormatBulkMR = this.exportFormatBulkMR.bind(this);
     this.saveDataMRBulk = this.saveDataMRBulk.bind(this);
     this.downloadResultofUploader = this.downloadResultofUploader.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
   }
 
   async getDataFromAPIEXEL(url) {
@@ -378,7 +386,6 @@ class BulkMR extends Component {
     this.setState({
       rowsXLS : newDataXLS,
     });
-    console.log("newDataXLS", JSON.stringify(newDataXLS));
     this.checkingDataMR(newDataXLS);
     // this.formatDataTSSR(newDataXLS);
   }
@@ -534,6 +541,7 @@ class BulkMR extends Component {
   }
 
   async saveDataMRBulk(){
+    this.toggleLoading();
     const dataChecking = this.state.data_checking_mr;
     const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', {"data" : dataChecking});
     if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
@@ -541,7 +549,7 @@ class BulkMR extends Component {
     } else{
       if (respondSaveMR.response !== undefined && respondSaveMR.response.data !== undefined && respondSaveMR.response.data.error !== undefined) {
         if (respondSaveMR.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error.message.message });
+          this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error.message });
         } else {
           this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error });
         }
@@ -549,6 +557,7 @@ class BulkMR extends Component {
         this.setState({ action_status: 'failed' });
       }
     }
+    this.toggleLoading();
   }
 
   // getDataSites(){

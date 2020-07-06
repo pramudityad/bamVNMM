@@ -14,7 +14,6 @@ import {
   NavLink,
 } from "reactstrap";
 import { Form, FormGroup, Label } from "reactstrap";
-import { Link } from 'react-router-dom';
 import { Modal, ModalBody, ModalHeader, ModalFooter } from "reactstrap";
 import axios from "axios";
 import { connect } from "react-redux";
@@ -823,7 +822,7 @@ class MRDetail extends Component {
           dataMatIdx.material_name_plan,
           dataMatIdx.material_id,
           dataMatIdx.material_name,
-          dataMatIdx.uom,
+          dataMatIdx.material_unit,
           dataMatIdx.qty,
           qty_wh,
           qty_inbound,
@@ -989,17 +988,12 @@ class MRDetail extends Component {
 
     let headerRow = ["REC_TYPE", "FILLER", "COMP_CD", "CUST_DELIV_NO", "CUST_ID", "CUST_CNTRY_CD", "ETA_SHP_DT", "SHP_DT", "SITE_LOC_ID", "SITE_CNTRY_CD", "SEND_SYSTEM", "SEND_UNIT", "SALES_GRP", "PRNO ", "SHP_NO", "END_CUST_NM", "END_CUST_ID", "CUST_NM", "SALES_ORD_NO", "PACK_ID", "PURCH_ORD_NO", "SER_NO", "CIN", "GI_Type", "Shp_Pnt", "Plant_ID"];
     ws.addRow(headerRow);
-    let dateDispatch = null;
     const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
-    if(dispatchData.mr_status_date !== undefined && dispatchData.mr_status_date !== null){
-      let dateDispatchNew = new Date(dispatchData.mr_status_date);
-      dateDispatch = dateDispatchNew.getFullYear().toString()+(dateDispatchNew.getMonth()+1).toString().padStart(2, '0')+dateDispatchNew.getDate().toString().padStart(2, '0');
-    }
     const dataSite = dataMR.site_info[0].site_id
     for (let i = 0; i < dataItemMR.length; i++) {
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
-        ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, dataMR.no_shipment, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
+        ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dispatchData.mr_status_date, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, dataMR.no_shipment, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
       }
     }
 
@@ -1276,7 +1270,9 @@ class MRDetail extends Component {
                             <div>
                               <ul className="mr-detail__ul--cd-id">
                                 {this.state.data_mr.cust_del !== undefined ? (
-                                  <li>{this.state.data_mr.cust_del.join(', ')}</li>
+                                  this.state.data_mr.cust_del.map((e) => (
+                                    <li>{e.cd_id}</li>
+                                  ))
                                 ) : (
                                   <li>{this.state.data_mr.cd_id}</li>
                                 )}
@@ -1357,16 +1353,6 @@ class MRDetail extends Component {
                               {this.state.data_mr.no_shipment}
                             </div>
                           </div>
-                          {(this.state.data_mr.mr_note !== undefined && this.state.data_mr.mr_note.find(e => e.title === "RE-ROUTE") !== undefined) && (
-                            <div>
-                              <div className="mr-detail__body--header-detail">
-                                <span>Re-Route</span>
-                              </div>
-                              <div>
-                                {this.state.data_mr.mr_note.find(e => e.title === "RE-ROUTE").value}
-                              </div>
-                            </div>
-                          )}
                         </div>
 
                         <hr className="mr-detail__line" />
@@ -1647,7 +1633,7 @@ class MRDetail extends Component {
                       </Col>
                     </Row>
                     <hr className="upload-line-ordering"></hr>
-                    <div>PlantSpec Group No : {this.state.data_mr !== null ? (<Link to={'/ps-list/'+this.state.data_mr.id_plantspec_doc}>{this.state.data_mr.no_plantspec}</Link>) : ""}</div>
+                    <div>PlantSpec Group No : {this.state.data_mr !== null ? this.state.data_mr.no_plantspec : ""}</div>
                     <div className="divtable2">
                       <Table hover bordered striped responsive size="sm">
                         <thead
@@ -2057,10 +2043,10 @@ class MRDetail extends Component {
                       googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyB5mmXco3GYZhRDNY4CJcBlaENjteSC8DM"
                       loadingElement={<div style={{ height: "100%" }} />}
                     /> */}
-                    {this.state.location_mr.updated_location !== undefined ? (
+                    {this.state.location_mr.latest_location !== undefined ? (
                       <GMap
-                        dsp_lat={this.state.location_mr.updated_location.latitude}
-                        dsp_lng={this.state.location_mr.updated_location.longitude}
+                        dsp_lat={this.state.location_mr.latest_location.latitude}
+                        dsp_lng={this.state.location_mr.latest_location.longitude}
                       />
                     ): (
                       <GMap/>

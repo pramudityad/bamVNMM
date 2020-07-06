@@ -640,7 +640,15 @@ class TssrBOM extends Component {
       this.setState({ action_status : 'success', action_message : 'PS has been saved successfully!' });
       setTimeout(function () { this.setState({redirectSign : respondSaveTSSR.data.objMrPs._id}); }.bind(this), 2000);
     } else{
-      this.setState({ action_status : 'failed' });
+      if(respondSaveTSSR.response !== undefined && respondSaveTSSR.response.data !== undefined && respondSaveTSSR.response.data.error !== undefined){
+        if(respondSaveTSSR.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: respondSaveTSSR.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: respondSaveTSSR.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
     }
   }
 
@@ -729,7 +737,7 @@ class TssrBOM extends Component {
 
   render() {
     if(this.state.redirectSign !== false){
-      return (<Redirect to={'/ps-bom/'+this.state.redirectSign} />);
+      return (<Redirect to={'/ps-list/'+this.state.redirectSign} />);
     }
     return (
       <div>
