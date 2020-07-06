@@ -500,6 +500,7 @@ class DetailPRPO extends Component {
                           readOnly
                             type="checkbox"
                             //placeholder="Req GR DP"
+                            disabled={true}
                             name={"req_gr_dp"}
                             value={all_data.req_gr_dp}
                             onChange={this.handleInput}
@@ -539,6 +540,7 @@ class DetailPRPO extends Component {
                           readOnly
                             type="checkbox"
                             //placeholder="Req Revision DP"
+                            disabled={true}
                             name={"req_revision_dp"}
                             value={all_data.req_revision_dp}
                             onChange={this.handleInput}
@@ -552,6 +554,7 @@ class DetailPRPO extends Component {
                           readOnly
                             type="checkbox"
                             //placeholder="Revision Done DP"
+                            disabled={true}
                             name={"revision_done_dp"}
                             value={all_data.revision_done_dp}
                             onChange={this.handleInput}
@@ -586,6 +589,7 @@ class DetailPRPO extends Component {
                           readOnly
                             type="checkbox"
                             //placeholder="Req GR Final"
+                            disabled={true}
                             name={"req_gr_final"}
                             value={all_data.req_gr_final}
                             onChange={this.handleInput}
@@ -625,6 +629,7 @@ class DetailPRPO extends Component {
                           readOnly
                             type="checkbox"
                             //placeholder="Req Revision Final"
+                            disabled={true}
                             name={"req_revision_final"}
                             value={all_data.req_revision_final}
                             onChange={this.handleInput}
@@ -639,6 +644,7 @@ class DetailPRPO extends Component {
                             type="checkbox"
                             //placeholder="Area"
                             name={"revision_done_final"}
+                            disabled={true}
                             value={all_data.revision_done_final}
                             onChange={this.handleInput}
                           />
