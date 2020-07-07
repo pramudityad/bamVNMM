@@ -60,6 +60,8 @@ const MaterialDispatch = React.lazy(() => import('./views/Warehouse/MaterialDisp
 const ProjectDashboard = React.lazy(() => import('./views/Project/ProjectDashboard'));
 const OrderCreated = React.lazy(() => import('./views/Project/OrderCreated'));
 const LOMList = React.lazy(() => import('./views/MR/LOMList'));
+const MatLOMList = React.lazy(() => import('./views/MR/MatLOMList'));
+
 
 const AssignmentCreation = React.lazy(() => import('./views/Assignment/AssignmentCreation'));
 const AssignmentList = React.lazy(() => import('./views/Assignment/AssignmentList'));
@@ -206,6 +208,8 @@ const routes = [
   { path: '/project-dashboard', exact: true, name: 'Project Dashboard', component: ProjectDashboard },
   { path: '/order-created', exact: true, name: 'Order Created', component: OrderCreated },
   { path: '/lom-list', exact: true, name: 'LOM List', component: LOMList },
+  { path: '/matlom-list', exact: true, name: 'Material LOM List', component: MatLOMList },
+
   { path: '/assignment-creation', exact: true, name: 'Assignment Creation', component: AssignmentCreation },
   { path: '/assignment-list', exact: true, name: 'Assignment List', component: AssignmentList },
   { path: '/bulk-assignment-creation', exact: true, name: 'Bulk Assignment Creation', component: BulkAssignment },
