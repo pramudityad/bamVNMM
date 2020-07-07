@@ -25,8 +25,12 @@ import Loading from "../components/Loading";
 import ModalCreateNew from "../components/ModalCreateNew";
 import ModalDelete from "../components/ModalDelete";
 
-import {getDatafromAPINODE, postDatatoAPINODE, deleteDataFromAPINODE} from '../../helper/asyncFunction'
-
+import {
+  getDatafromAPINODE,
+  postDatatoAPINODE,
+  deleteDataFromAPINODE,
+  patchDatatoAPINODE,
+} from "../../helper/asyncFunction";
 
 const Checkbox = ({
   type = "checkbox",
@@ -45,8 +49,9 @@ const Checkbox = ({
   />
 );
 
-const DefaultNotif = React.lazy(() => import("../../views/DefaultView/DefaultNotif"));
-
+const DefaultNotif = React.lazy(() =>
+  import("../../views/DefaultView/DefaultNotif")
+);
 
 class SVCLibrary extends React.Component {
   constructor(props) {
@@ -74,8 +79,8 @@ class SVCLibrary extends React.Component {
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
       modalMatStockForm: false,
-      modalMatStockEdit: false,
-      MatStockForm: new Array(6).fill(null),
+      modalEdit: false,
+      modalNew: new Array(6).fill(null),
       collapse: false,
       danger: false,
       activeItemName: "",
@@ -148,23 +153,22 @@ class SVCLibrary extends React.Component {
   }
 
   toggleEdit(e) {
-    const modalMatStockEdit = this.state.modalMatStockEdit;
-    if (modalMatStockEdit === false) {
+    const modalEdit = this.state.modalEdit;
+    if (modalEdit === false) {
       const value = e.currentTarget.value;
-      const aEdit = this.state.all_data.find((e) => e.owner_id === value);
-      let dataForm = this.state.MatStockForm;
-      dataForm[0] = aEdit.sku_description;
-      dataForm[1] = aEdit.serial_number;
-      dataForm[2] = aEdit.project_name;
-      dataForm[3] = aEdit.box_number;
-      dataForm[4] = aEdit.condition;
-      dataForm[5] = aEdit.notes;
-      this.setState({ MatStockForm: dataForm });
+      const aEdit = this.state.all_data.find((e) => e._id === value);
+      let dataForm = this.state.modalNew;
+      dataForm[0] = aEdit.boq_service_scope;
+      dataForm[1] = aEdit.service_id;
+      dataForm[2] = aEdit.description;
+      dataForm[3] = aEdit.pr_uploader_description;
+      dataForm[4] = aEdit.unit_price;
+      this.setState({ modalNew: dataForm, selected_id: value });
     } else {
-      this.setState({ MatStockForm: new Array(6).fill(null) });
+      this.setState({ modalNew: new Array(5).fill(null) });
     }
     this.setState((prevState) => ({
-      modalMatStockEdit: !prevState.modalMatStockEdit,
+      modalEdit: !prevState.modalEdit,
     }));
   }
 
@@ -179,7 +183,6 @@ class SVCLibrary extends React.Component {
       createModal: !this.state.createModal,
     });
   }
-
 
   changeFilterName(value) {
     this.getList();
@@ -209,7 +212,8 @@ class SVCLibrary extends React.Component {
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
-        this.state.activePage, this.props.dataLogin.token
+        this.state.activePage,
+      this.props.dataLogin.token
     ).then((res) => {
       // console.log("List All", res.data);
       if (res.data !== undefined) {
@@ -375,10 +379,159 @@ class SVCLibrary extends React.Component {
     this.toggleLoading();
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
-    // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await postDatatoAPINODE("/libser/createLibSer", {
-      library_service: BulkXLSX
-    }, this.props.dataLogin.token );
+    // const BulkData = await this.getFormat(BulkXLSX);
+    const res = await postDatatoAPINODE(
+      "/libser/createLibSer",
+      {
+        library_service: BulkXLSX,
+      },
+      this.props.dataLogin.token
+    );
+    // console.log('res bulk ', res.error.message);
+    if (res.data !== undefined) {
+      this.setState({ action_status: "success" });
+      this.toggleLoading();
+    } else {
+      this.setState({ action_status: "failed" }, () => {
+        this.toggleLoading();
+      });
+    }
+  };
+
+  saveUpdate = async () => {
+    this.toggleLoading();
+    this.toggleEdit();
+    const dataEdit = this.state.modalNew;
+    const _id = this.state.selected_id;
+    let pp = {
+      boq_service_scope: dataEdit[0],
+      service_id: dataEdit[1],
+      description: dataEdit[2],
+      pr_uploader_description: dataEdit[3],
+      unit_price: dataEdit[4],
+    };
+    const res = await patchDatatoAPINODE(
+      "/libser/UpdateLibSer/" + _id,
+      {
+        data: pp,
+      },
+      this.props.dataLogin.token
+    );
+    // console.log('res bulk ', res.error.message);
+    if (res.data !== undefined) {
+      this.setState({ action_status: "success" });
+      this.toggleLoading();
+    } else {
+      this.setState({ action_status: "failed" }, () => {
+        this.toggleLoading();
+      });
+    }
+  };
+
+  saveNew = async () => {
+    this.toggleLoading();
+    this.toggleMatStockForm();
+    const dataEdit = this.state.modalNew;
+    let pp = {
+      boq_service_scope: dataEdit[0],
+      service_id: dataEdit[1],
+      description: dataEdit[2],
+      pr_uploader_description: dataEdit[3],
+      unit_price: dataEdit[4],
+    };
+    const res = await postDatatoAPINODE(
+      "/libser/createOneLibSer/",
+      {
+        library_service: pp,
+      },
+      this.props.dataLogin.token
+    );
+    // console.log('res bulk ', res.error.message);
+    if (res.data !== undefined) {
+      this.setState({ action_status: "success" });
+      this.toggleLoading();
+    } else {
+      this.setState({ action_status: "failed" }, () => {
+        this.toggleLoading();
+      });
+    }
+  };
+
+  async getFormat(dataImport) {
+    const dataHeader = dataImport[0];
+    const onlyParent = dataImport
+      .map((e) => e)
+      .filter((e) =>
+        this.checkValuetoString(e[this.getIndex(dataHeader, "id")])
+      );
+    let data_array = [];
+    if (onlyParent !== undefined && onlyParent.length !== 0) {
+      for (let i = 1; i < onlyParent.length; i++) {
+        const aa = {
+          _id: this.checkValue(onlyParent[i][this.getIndex(dataHeader, "id")]),
+          boq_service_scope: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "Boq Service Scope")]
+          ),
+          service_id: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "Service ID")]
+          ),
+          service_product: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "Service Product")]
+          ),
+          pr_uploader_description: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "PR Uploader Description")]
+          ),
+          unit_price: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "Unit Price")]
+          ),
+          description: this.checkValue(
+            onlyParent[i][this.getIndex(dataHeader, "Description")]
+          ),
+        };
+        // if (aa._id !== undefined && aa._id !== null) {
+        //   aa["_id"] = aa._id.toString();
+        // }
+        // if (aa.boq_service_scope !== undefined && aa.boq_service_scope !== null) {
+        //   aa["boq_service_scope"] = aa.boq_service_scope.toString();
+        // }
+        // if (aa.service_id !== undefined && aa.service_id !== null) {
+        //   aa["service_id"] = aa.service_id.toString();
+        // }
+        // if (aa.service_product !== undefined && aa.service_product !== null) {
+        //   aa["service_product"] = aa.service_product.toString();
+        // }
+        // if (aa.pr_uploader_description !== undefined && aa.pr_uploader_description !== null) {
+        //   aa["pr_uploader_description"] = aa.pr_uploader_description.toString();
+        // }
+        // if (aa.unit_price !== undefined && aa.unit_price !== null) {
+        //   aa["unit_price"] = aa.unit_price();
+        // }
+        // if (aa.description !== undefined && aa.description !== null) {
+        //   aa["description"] = aa.description.toString();
+        // }
+        data_array.push(aa);
+      }
+      console.log('data xlsx ',JSON.stringify(data_array));
+      return data_array;
+    } else {
+      this.setState(
+        { action_status: "failed", action_message: "Please check your format" },
+      );
+    }
+  }
+
+  updateBulk = async () => {
+    this.toggleLoading();
+    this.togglecreateModal();
+    const BulkXLSX = this.state.rowsXLS;
+    const BulkData = await this.getFormat(BulkXLSX);
+    const res = await patchDatatoAPINODE(
+      "/libser/UpdateLibSer",
+      {
+        data: BulkData,
+      },
+      this.props.dataLogin.token
+    );
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
@@ -393,9 +546,9 @@ class SVCLibrary extends React.Component {
   handleChangeForm(e) {
     const value = e.target.value;
     const index = e.target.name;
-    let dataForm = this.state.MatStockForm;
+    let dataForm = this.state.modalNew;
     dataForm[parseInt(index)] = value;
-    this.setState({ MatStockForm: dataForm });
+    this.setState({ modalNew: dataForm });
   }
 
   numToSSColumn(num) {
@@ -413,7 +566,8 @@ class SVCLibrary extends React.Component {
   async downloadAll() {
     let download_all = [];
     let getAll_nonpage = await getDatafromAPINODE(
-      "/libser/getLibSer?noPg=1", this.props.dataLogin.token
+      "/libser/getLibSer?noPg=1",
+      this.props.dataLogin.token
     );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
@@ -423,10 +577,12 @@ class SVCLibrary extends React.Component {
     const ws = wb.addWorksheet();
 
     let headerRow = [
+      "id",
       "Boq Service Scope",
       "Service ID",
+      "Service Product",
       "Description",
-      "PR Uploader Description",      
+      "PR Uploader Description",
       "Unit Price",
     ];
     ws.addRow(headerRow);
@@ -438,8 +594,10 @@ class SVCLibrary extends React.Component {
     for (let i = 0; i < download_all.length; i++) {
       let list = download_all[i];
       ws.addRow([
+        list._id,
         list.boq_service_scope,
         list.service_id,
+        list.service_product,
         list.description,
         list.pr_uploader_description,
         list.unit_price,
@@ -455,7 +613,8 @@ class SVCLibrary extends React.Component {
     this.toggleLoading();
     this.toggleDelete();
     const DelData = deleteDataFromAPINODE(
-      "/libser/deleteLibSer/" + objData, this.props.dataLogin.token
+      "/libser/deleteLibSer/" + objData,
+      this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
@@ -480,8 +639,20 @@ class SVCLibrary extends React.Component {
       "pr_uploader_description",
       "unit_price",
     ]);
-    ws.addRow(["Swap Radio B3 to 4499B3, 4T4R Activation [U2100 L2100] Swap Radio B1 to 4499B1, 4T4R Activation; Dismantle Swap Material and Send to WH for Redeployment","BTSS7","Hybrid Trunk Cables Installation Greenfield 2 Sectors Site","BTSS7-Hybrid Trunk Cables Installation Greenfield 2 Sectors Site",100]);
-    ws.addRow(["Swap Radio B3 to 4499B3, 4T4R Activation [U2100 L2100] Swap Radio B1 to 4499B1, 4T4R Activation; Dismantle Swap Material and Send to WH for Redeployment","BTSS8","Hybrid Trunk Cables Installation Greenfield 3 Sectors Site","BTSS8-Hybrid Trunk Cables Installation Greenfield 3 Sectors Site",100]);
+    ws.addRow([
+      "Swap Radio B3 to 4499B3, 4T4R Activation [U2100 L2100] Swap Radio B1 to 4499B1, 4T4R Activation; Dismantle Swap Material and Send to WH for Redeployment",
+      "BTSS7",
+      "Hybrid Trunk Cables Installation Greenfield 2 Sectors Site",
+      "BTSS7-Hybrid Trunk Cables Installation Greenfield 2 Sectors Site",
+      100,
+    ]);
+    ws.addRow([
+      "Swap Radio B3 to 4499B3, 4T4R Activation [U2100 L2100] Swap Radio B1 to 4499B1, 4T4R Activation; Dismantle Swap Material and Send to WH for Redeployment",
+      "BTSS8",
+      "Hybrid Trunk Cables Installation Greenfield 3 Sectors Site",
+      "BTSS8-Hybrid Trunk Cables Installation Greenfield 3 Sectors Site",
+      100,
+    ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "Service Library Template.xlsx");
@@ -497,7 +668,8 @@ class SVCLibrary extends React.Component {
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
-        this.state.activePage, this.props.dataLogin.token
+        this.state.activePage,
+      this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
@@ -560,7 +732,29 @@ class SVCLibrary extends React.Component {
                     {this.state.userRole.includes("Flow-PublicInternal") !==
                     true ? (
                       <div>
-                        <Button
+                        <Dropdown
+                          isOpen={this.state.dropdownOpen[0]}
+                          toggle={() => {
+                            this.toggle(0);
+                          }}
+                        >
+                          <DropdownToggle block color="success">
+                            <i className="fa fa-plus-square" aria-hidden="true">
+                              {" "}
+                              &nbsp;{" "}
+                            </i>{" "}
+                            Create New
+                          </DropdownToggle>
+                          <DropdownMenu>
+                            <DropdownItem onClick={this.toggleMatStockForm}>
+                              > Form{" "}
+                            </DropdownItem>
+                            <DropdownItem onClick={this.togglecreateModal}>
+                              > Bulk{" "}
+                            </DropdownItem>
+                          </DropdownMenu>
+                        </Dropdown>
+                        {/* <Button
                           block
                           color="success"
                           onClick={this.togglecreateModal}
@@ -571,7 +765,7 @@ class SVCLibrary extends React.Component {
                             &nbsp;{" "}
                           </i>{" "}
                           New
-                        </Button>
+                        </Button> */}
                       </div>
                     ) : (
                       ""
@@ -693,7 +887,7 @@ class SVCLibrary extends React.Component {
                             <th>PR Uploader Service Description</th>
                             <th>Unit Price</th>
                             {/* <th></th> */}
-                            <th></th>
+                            <th colSpan="2"></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -706,9 +900,7 @@ class SVCLibrary extends React.Component {
                               >
                                 {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
                                 {/* <td style={{ textAlign: "center" }}> */}
-                                <td>
-                                  {e.boq_service_scope}
-                                </td>
+                                <td>{e.boq_service_scope}</td>
                                 <td style={{ textAlign: "center" }}>
                                   {e.service_id}
                                 </td>
@@ -722,11 +914,11 @@ class SVCLibrary extends React.Component {
                                   {e.unit_price}
                                 </td>
 
-                                {/* <td>
+                                <td>
                                   <Button
                                     size="sm"
                                     color="secondary"
-                                    value={e.owner_id}
+                                    value={e._id}
                                     onClick={this.toggleEdit}
                                     title="Edit"
                                   >
@@ -735,7 +927,7 @@ class SVCLibrary extends React.Component {
                                       aria-hidden="true"
                                     ></i>
                                   </Button>
-                                </td> */}
+                                </td>
                                 <td>
                                   <Button
                                     size="sm"
@@ -783,78 +975,60 @@ class SVCLibrary extends React.Component {
           toggle={this.toggleMatStockForm}
           className="modal--form-e"
         >
-          <ModalHeader>Form Service  Library</ModalHeader>
+          <ModalHeader>Form Service Library</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="owner_id">Owner ID</Label>
+                  <Label htmlFor="boq_service_scope">BOQ Service Scope</Label>
                   <Input
                     type="text"
                     name="0"
                     placeholder=""
-                    value={this.state.MatStockForm[0]}
+                    value={this.state.modalNew[0]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="po_number">PO Number</Label>
+                  <Label htmlFor="service_id">ID</Label>
                   <Input
                     type="text"
                     name="1"
                     placeholder=""
-                    value={this.state.MatStockForm[1]}
+                    value={this.state.modalNew[1]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="arrival_date">Arrival Date</Label>
+                  <Label htmlFor="description">Description</Label>
                   <Input
-                    type="datetime-local"
+                    type="text"
+                    name="2"
                     placeholder=""
-                    value={this.state.MatStockForm[2]}
+                    value={this.state.modalNew[2]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="project_name">Project Name</Label>
+                  <Label htmlFor="pr_uploader_description">PR Uploader Description</Label>
                   <Input
                     type="text"
                     name="3"
                     placeholder=""
-                    value={this.state.MatStockForm[3]}
+                    value={this.state.modalNew[3]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="sku">SKU</Label>
+                  <Label htmlFor="unit_price">Unit Price</Label>
                   <Input
                     type="text"
+                    name="4"
                     placeholder=""
-                    value={this.state.MatStockForm[4]}
+                    value={this.state.modalNew[4]}
                     onChange={this.handleChangeForm}
                   />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="sku_description">SKU Description</Label>
-                  <Input
-                    type="text"
-                    placeholder=""
-                    value={this.state.MatStockForm[5]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="qty">Qty</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    name="6"
-                    placeholder=""
-                    value={this.state.MatStockForm[6]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
+                </FormGroup>                
               </Col>
             </Row>
           </ModalBody>
@@ -868,75 +1042,64 @@ class SVCLibrary extends React.Component {
 
         {/* Modal Edit PP */}
         <Modal
-          isOpen={this.state.modalMatStockEdit}
+          isOpen={this.state.modalEdit}
           toggle={this.toggleEdit}
           className="modal--form"
         >
-          <ModalHeader>Form Update Service  Library</ModalHeader>
+          <ModalHeader>Form Update Service Library</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
-                <FormGroup>
-                  <Label htmlFor="sku_description">SKU Description</Label>
+              <FormGroup>
+                  <Label htmlFor="boq_service_scope">BOQ Service Scope</Label>
                   <Input
                     type="text"
                     name="0"
                     placeholder=""
-                    value={this.state.MatStockForm[0]}
+                    value={this.state.modalNew[0]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="serial_number">Serial Number</Label>
+                  <Label htmlFor="service_id">ID</Label>
                   <Input
                     type="text"
                     name="1"
                     placeholder=""
-                    value={this.state.MatStockForm[1]}
+                    value={this.state.modalNew[1]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="project_name">Project Name</Label>
+                  <Label htmlFor="description">Description</Label>
                   <Input
-                    type="datetime-local"
+                    type="text"
                     placeholder=""
-                    value={this.state.MatStockForm[2]}
+                    name="2"
+                    value={this.state.modalNew[2]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="box_number">Box Number</Label>
+                  <Label htmlFor="pr_uploader_description">PR Uploader Description</Label>
                   <Input
                     type="text"
                     name="3"
                     placeholder=""
-                    value={this.state.MatStockForm[3]}
+                    value={this.state.modalNew[3]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="condition">Condition</Label>
+                  <Label htmlFor="unit_price">Unit Price</Label>
                   <Input
                     type="text"
-                    min="0"
                     name="4"
                     placeholder=""
-                    value={this.state.MatStockForm[4]}
+                    value={this.state.modalNew[4]}
                     onChange={this.handleChangeForm}
                   />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    name="6"
-                    placeholder=""
-                    value={this.state.MatStockForm[5]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
+                </FormGroup>  
               </Col>
             </Row>
           </ModalBody>
@@ -953,7 +1116,7 @@ class SVCLibrary extends React.Component {
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
-          title={"Delete Service ID "+ this.state.selected_name}
+          title={"Delete Service ID " + this.state.selected_name}
           body={"Are you sure ?"}
         >
           <Button color="danger" onClick={this.DeleteData}>
@@ -1008,15 +1171,15 @@ class SVCLibrary extends React.Component {
             >
               Save
             </Button>{" "}
-            {/* <Button
+            <Button
               block
-              color="secondary"
+              color="warning"
               className="btn-pill"
               disabled={this.state.rowsXLS.length === 0}
-              onClick={this.saveTruncateBulk}
+              onClick={this.updateBulk}
             >
-              Truncate
-            </Button> */}
+              Update
+            </Button>
           </ModalFooter>
         </ModalCreateNew>
 
