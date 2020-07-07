@@ -25,6 +25,8 @@ import Loading from "../components/Loading";
 import ModalCreateNew from "../components/ModalCreateNew";
 import ModalDelete from "../components/ModalDelete";
 
+import {getDatafromAPINODE, postDatatoAPINODE, deleteDataFromAPINODE} from '../../helper/asyncFunction'
+
 
 const Checkbox = ({
   type = "checkbox",
@@ -201,13 +203,13 @@ class SVCLibrary extends React.Component {
         : '{"$regex" : "' + this.state.filter_list + '", "$options" : "i"}';
     let whereAnd = '{"service_id": ' + filter + "}";
     // console.log("filter whereand ".whereAnd);
-    this.getDatafromAPINODE(
+    getDatafromAPINODE(
       "/libser/getLibSer?q=" +
         whereAnd +
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
-        this.state.activePage
+        this.state.activePage, this.props.dataLogin.token
     ).then((res) => {
       // console.log("List All", res.data);
       if (res.data !== undefined) {
@@ -315,7 +317,7 @@ class SVCLibrary extends React.Component {
   }
 
   componentDidMount() {
-    // this.getList();
+    this.getList();
     document.title = "Service  Library | BAM";
   }
 
@@ -374,9 +376,9 @@ class SVCLibrary extends React.Component {
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE("/libser/createLibSer", {
-      library_service: BulkXLSX,
-    });
+    const res = await postDatatoAPINODE("/libser/createLibSer", {
+      library_service: BulkXLSX
+    }, this.props.dataLogin.token );
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
@@ -410,8 +412,8 @@ class SVCLibrary extends React.Component {
 
   async downloadAll() {
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE(
-      "/libser/getLibSer?noPg=1"
+    let getAll_nonpage = await getDatafromAPINODE(
+      "/libser/getLibSer?noPg=1", this.props.dataLogin.token
     );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
@@ -436,11 +438,11 @@ class SVCLibrary extends React.Component {
     for (let i = 0; i < download_all.length; i++) {
       let list = download_all[i];
       ws.addRow([
-        list.origin,
-        list.material_id,
-        list.material_name,
+        list.boq_service_scope,
+        list.service_id,
         list.description,
-        list.category,
+        list.pr_uploader_description,
+        list.unit_price,
       ]);
     }
 
@@ -452,8 +454,8 @@ class SVCLibrary extends React.Component {
     const objData = this.state.selected_id;
     this.toggleLoading();
     this.toggleDelete();
-    const DelData = this.deleteDataFromAPINODE(
-      "/libser/deleteLibSer/" + objData
+    const DelData = deleteDataFromAPINODE(
+      "/libser/deleteLibSer/" + objData, this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
@@ -487,7 +489,7 @@ class SVCLibrary extends React.Component {
 
   getListSort() {
     this.toggleLoading();
-    this.getDatafromAPINODE(
+    getDatafromAPINODE(
       "/libser/getLibSer?srt=" +
         this.state.sortField +
         ":" +
@@ -495,7 +497,7 @@ class SVCLibrary extends React.Component {
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
-        this.state.activePage
+        this.state.activePage, this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
@@ -703,20 +705,21 @@ class SVCLibrary extends React.Component {
                                 key={e._id}
                               >
                                 {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
-                                <td style={{ textAlign: "center" }}>
-                                  {e.origin}
+                                {/* <td style={{ textAlign: "center" }}> */}
+                                <td>
+                                  {e.boq_service_scope}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
-                                  {e.material_id}
-                                </td>
-                                <td style={{ textAlign: "center" }}>
-                                  {e.material_name}
+                                  {e.service_id}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
                                   {e.description}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
-                                  {e.category}
+                                  {e.pr_uploader_description}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.unit_price}
                                 </td>
 
                                 {/* <td>
@@ -738,7 +741,7 @@ class SVCLibrary extends React.Component {
                                     size="sm"
                                     color="danger"
                                     value={e._id}
-                                    name={e.material_id}
+                                    name={e.service_id}
                                     onClick={this.toggleDelete}
                                     title="Delete"
                                   >
@@ -950,7 +953,7 @@ class SVCLibrary extends React.Component {
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
-          title={"Delete Service  "+ this.state.selected_name}
+          title={"Delete Service ID "+ this.state.selected_name}
           body={"Are you sure ?"}
         >
           <Button color="danger" onClick={this.DeleteData}>
