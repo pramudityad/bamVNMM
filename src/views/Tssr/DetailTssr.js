@@ -121,6 +121,7 @@ class DetailTssr extends Component {
     this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
     this.saveUpdateMaterialWeb = this.saveUpdateMaterialWeb.bind(this);
     this.downloadMaterialTSSRUpload = this.downloadMaterialTSSRUpload.bind(this);
+    this.downloadMaterialTSSRUpload2 = this.downloadMaterialTSSRUpload2.bind(this);
     this.exportMaterialPSReport = this.exportMaterialPSReport.bind(this);
     this.exportMaterialPSReportBundling = this.exportMaterialPSReportBundling.bind(this);
   }
@@ -1333,6 +1334,76 @@ class DetailTssr extends Component {
     saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' uploader.xlsx');
   }
 
+  // check_availability(availability){
+  //   if (availability === "OK" ){ continue; }
+  // }
+
+  async downloadMaterialTSSRUpload2() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataTSSR = this.state.tssrData;
+    const dataItemTSSR = this.state.tssrData.packages;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    let headerRow = ["bam_id", "tssr_id", "bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "stock_warehouse", "inbound_warehouse", "availability", "source_material"];
+    ws.addRow(headerRow);
+    let list_material_id = [];
+    for(let i = 0; i < dataItemTSSR.length; i++){
+      for(let j = 0; j < dataItemTSSR[i].materials.length; j++){
+        let dataMatIdx = dataItemTSSR[i].materials[j];
+        list_material_id.push(dataMatIdx.material_id);
+        let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
+        let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
+        qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
+        qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
+        if ((dataMatIdx.qty) < qty_wh) {continue}
+        ws.addRow([dataMatIdx._id, dataItemTSSR[i].no_tssr_boq_site, dataItemTSSR[i].pp_id, dataItemTSSR[i].product_name, dataItemTSSR[i].program, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.uom, dataMatIdx.qty, qty_wh, qty_inbound, (dataMatIdx.qty) < qty_wh ? "OK":"NOK"]);
+      }
+    }
+
+    let listMatId = [...new Set(list_material_id)];
+    let matIdData = {
+      "list_material_id" : listMatId
+    }
+
+    const getMaterialVariant = await this.postDatatoAPINODE('/variants/materialId', matIdData);
+    if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
+      dataMaterialVariant = getMaterialVariant.data.data;
+    }
+
+    dataMaterialVariant = this.CompareArrayObject(dataMaterialVariant, "description");
+
+    let sku_list = [];
+    for(let j = 0; j < dataMaterialVariant.length; j++){
+      sku_list.push(dataMaterialVariant[j].material_id);
+    }
+    const list_qtySKU = [];
+    const getQtyfromWHbySKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', {"sku": sku_list }).then((res) => {
+      if(res.data !== undefined && res.status >= 200 && res.status < 400){
+        const dataSKU = res.data.data;
+        for (let i = 0; i < dataSKU.length; i++) {
+          if (dataSKU[i][0] === undefined){
+            list_qtySKU.push(0);
+          } else {
+            list_qtySKU.push(dataSKU[i][0].qty_sku);
+          }
+        }
+      }
+    });
+
+    ws2.addRow(["Origin","Material ID","Material Name","Description", "Category", "Qty Available"]);
+    for(let j = 0; j < dataMaterialVariant.length; j++){
+      ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category, list_qtySKU[j]]);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' uploader.xlsx');
+  }
+
   async exportMaterialPSReport() {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -1714,6 +1785,7 @@ class DetailTssr extends Component {
                   <DropdownItem onClick={this.exportMaterialPSReportBundling}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Report Bundling</DropdownItem>
                   <DropdownItem onClick={this.exportMaterialPSReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Report</DropdownItem>
                   <DropdownItem onClick={this.downloadMaterialTSSRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
+                  <DropdownItem onClick={this.downloadMaterialTSSRUpload2}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format NOK</DropdownItem>
                 </DropdownMenu>
               </Dropdown>
               {/* }<Button style={{marginRight : '8px', float : 'right', display: 'none'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download PS Format</Button> */}
