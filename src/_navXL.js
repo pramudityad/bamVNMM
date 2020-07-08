@@ -250,5 +250,11 @@ export default {
       icon: 'fa fa-stop-circle',
       roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
     },
+    {
+      name: 'Material LOM List',
+      url: '/matlom-list',
+      icon: 'fa fa-stop-circle',
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+    },
   ],
 };
