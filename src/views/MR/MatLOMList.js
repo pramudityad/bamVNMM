@@ -38,7 +38,7 @@ class MatLOMList extends Component {
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
-    this.downloadMRlist = this.downloadMRlist.bind(this);
+    this.downloadList = this.downloadList.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
     this.proceedMilestone = this.proceedMilestone.bind(this);
@@ -148,7 +148,7 @@ class MatLOMList extends Component {
     return s || undefined;
   }
 
-  async downloadMRlist() {
+  async downloadList() {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
@@ -166,7 +166,7 @@ class MatLOMList extends Component {
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'LOM List.xlsx');
+    saveAs(new Blob([allocexport]), 'Material LOM List.xlsx');
   }
 
   async patchDataToAPI(url, data, _etag) {
@@ -361,7 +361,7 @@ class MatLOMList extends Component {
                 <span style={{ lineHeight: '2' }}>
                   <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> Material LOM List
                 </span>
-                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download MR List</Button>
+                <Button style={downloadMR} outline color="success" onClick={this.downloadList} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Export List</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
