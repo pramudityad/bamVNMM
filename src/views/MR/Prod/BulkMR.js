@@ -465,9 +465,9 @@ class BulkMR extends Component {
       for(let i =0; i < dataChecking.length; i++){
         if(dataChecking[i].operation === "INVALID"){
           if(dataChecking[i].cd_id === null){
-            wp_invalid.push(dataChecking[i].cd_id + " CD ID Row " +i)
+            wp_invalid.push(dataChecking[i].cd_id)
           }else{
-            wp_invalid.push(dataChecking[i].activity_status+ " Activity Row " +i)
+            wp_invalid.push(dataChecking[i].activity_status)
           }
 
         }

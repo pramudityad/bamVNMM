@@ -327,7 +327,7 @@ class LoadingProcess extends Component {
         "dsp_name": inputanDetailShipment.driver_name,
         "dsp_phone": inputanDetailShipment.driver_phone_number,
         "dsp_truck": inputanDetailShipment.truck_number,
-        "dsp_truck_type": inputanDetailShipment.truck_type
+        "dsp_truck_type": inputanDetailShipment.truck_type === "Other" ? inputanDetailShipment.other_truck_type : inputanDetailShipment.truck_type
       }
     }
     let res = await this.patchDatatoAPINODE('/matreq/loadingProcess', dataShipment);
@@ -530,7 +530,11 @@ class LoadingProcess extends Component {
                             <option value="CD2">CD2</option>
                             <option value="CD3">CD3</option>
                             <option value="CD4">CD4</option>
+                            <option value="Other">Other</option>
                           </Input>
+                          {this.state.shipment_detail.truck_type === "Other" && (
+                            <Input style={{marginLeft : "5px"}} type="text" name="10" placeholder="Other Type" name="other_truck_type" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.other_truck_type} />
+                          )}
                           {this.state.validation_form.truck_number === false && (
                             <i class="fa fa-exclamation-triangle" aria-hidden="true" style={{ color: "rgba(255,61,0 ,1)", paddingLeft: '10px' }}></i>
                           )}

@@ -846,6 +846,16 @@ class ConfigUpload extends React.Component {
     saveAs(new Blob([PPFormat]), 'Config Update Template Only Parent.xlsx');
   }
 
+  exportFormatAllConfigUploader = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let typeArray = ["config_name", "program", "config_id", "config_customer_name", "sap_number", "sap_description", "config_type", "description"];
+
+    const PPFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([PPFormat]), 'All Config Template.xlsx');
+  }
+
   render() {
     return (
       <div className="animated fadeIn">

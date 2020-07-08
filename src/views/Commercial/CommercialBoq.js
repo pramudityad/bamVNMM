@@ -840,18 +840,18 @@ class CommercialBoq extends Component {
         dataSites = this.state.data_comm_boq_items;
       }
 
-      const headerPackage = ["tower_id", "program", "sow", "config_type", "config_id", "qty", "unit_price_usd","unit_price_idr"];
+      const headerPackage = ["tower_id", "program", "sow", "config_type", "config_id", "sap_number", "qty", "unit_price_usd","unit_price_idr"];
 
       ws.addRow(headerPackage);
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         if(this.state.version_selected !== null && dataComm.version !== this.state.version_selected){
           for(let j = 0; j < dataSites[i].itemsVersion.length; j++ ){
-            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].net_price_incentive_usd, dataSites[i].itemsVersion[j].net_price_incentive]);
+            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].sap_number,dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].net_price_incentive_usd, dataSites[i].itemsVersion[j].net_price_incentive]);
           }
         }else{
           for(let j = 0; j < dataSites[i].items.length; j++ ){
-            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].qty, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive]);
+            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].qty, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive]);
           }
         }
       }
@@ -861,7 +861,7 @@ class CommercialBoq extends Component {
 
     render() {
       if(this.state.redirectSign !== false){
-        return (<Redirect to={'/detail-commercial/'+this.state.redirectSign} />);
+        return (<Redirect to={'/list-commercial/detail/'+this.state.redirectSign} />);
       }
 
       function AlertProcess(props){
@@ -1073,7 +1073,7 @@ class CommercialBoq extends Component {
                           <th>SOW</th>
                           <th>Category</th>
                           <th>Config ID</th>
-                          <th>SAP Description</th>
+                          <th>SAP Number</th>
                           <th>Qty</th>
                           <th>Unit Price after Incentive (USD)</th>
                           <th>Unit Price after Incentive (IDR)</th>
@@ -1091,7 +1091,7 @@ class CommercialBoq extends Component {
                               <td>{site.sow}</td>
                               <td>{item.config_type}</td>
                               <td>{item.config_id}</td>
-                              <td>{item.sap_description}</td>
+                              <td>{item.sap_number}</td>
                               <td>{item.qty}</td>
                               <td style={{width : '75px'}}>
                                 <Input

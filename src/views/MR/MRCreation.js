@@ -493,6 +493,14 @@ class MRCreation extends Component {
     return delType
   }
 
+  addDateFunction(afterDay){
+    var today = new Date();
+    today.setDate(today.getDate() + parseInt(afterDay));
+    let todayDate = today.getFullYear().toString()+"-"+(today.getMonth()+1).toString().padStart(2, '0')+"-"+today.getDate().toString().padStart(2, '0')
+    console.log("today", todayDate);
+    return todayDate;
+  }
+
   render() {
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);
@@ -641,6 +649,7 @@ class MRCreation extends Component {
                       type="date"
                       name="5" value={this.state.create_mr_form[5]} onChange={this.handleChangeFormMRCreation}
                       style={this.state.validation_form.etd === false ? {borderColor : 'red'} : {}}
+                      min={this.addDateFunction(4)}
                     />
                   </FormGroup>
                 </Col>
