@@ -12,6 +12,10 @@ import {
   Nav,
   NavItem,
   NavLink,
+  Dropdown,
+  DropdownToggle,
+  DropdownMenu,
+  DropdownItem
 } from "reactstrap";
 import { Form, FormGroup, Label } from "reactstrap";
 import { Link } from 'react-router-dom';
@@ -107,6 +111,8 @@ class MRDetail extends Component {
       revision_note: "",
       wbs_cd_id_data : [],
       location_mr : {},
+      dropdownOpen: new Array(1).fill(false),
+
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
@@ -119,6 +125,7 @@ class MRDetail extends Component {
     this.handleChangeFormMRUpdate = this.handleChangeFormMRUpdate.bind(this);
     this.updateDataMR = this.updateDataMR.bind(this);
     this.downloadMaterialMRUpload = this.downloadMaterialMRUpload.bind(this);
+    this.downloadMaterialMRUpload2 = this.downloadMaterialMRUpload2.bind(this);
     this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
     this.downloadMaterialMRReport = this.downloadMaterialMRReport.bind(this);
     this.needReviseMR = this.needReviseMR.bind(this);
@@ -140,6 +147,15 @@ class MRDetail extends Component {
     this.setState((prevState) => ({
       modal_revision: !prevState.modal_revision
     }));
+  }
+
+  toggleDropdown(i) {
+    const newArray = this.state.dropdownOpen.map((element, index) => {
+      return (index === i ? !element : false);
+    });
+    this.setState({
+      dropdownOpen: newArray,
+    });
   }
 
   handleRevisionNote(e) {
@@ -901,6 +917,135 @@ class MRDetail extends Component {
     );
   }
 
+  async downloadMaterialMRUpload2() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataMR = this.state.data_mr;
+    const dataItemMR = this.state.list_mr_item;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    let headerRow = [
+      "bam_id",
+      "ps_number",
+      "bundle_id",
+      "bundle_name",
+      "program",
+      "material_id_plan",
+      "material_name_plan",
+      "material_id_actual",
+      "material_name_actual",
+      "uom",
+      "qty",
+      "stock_warehouse",
+      "inbound_warehouse",
+      "availability",
+      "source_material",
+    ];
+    ws.addRow(headerRow);
+    let list_material_id = [];
+    for (let i = 0; i < dataItemMR.length; i++) {
+      for (let j = 0; j < dataItemMR[i].materials.length; j++) {
+        let dataMatIdx = dataItemMR[i].materials[j];
+        list_material_id.push(dataMatIdx.material_id);
+        let qty_wh = stockWH.find((e) => e.sku === dataMatIdx.material_id);
+        let qty_inbound = inboundWH.find(
+          (e) => e.sku === dataMatIdx.material_id
+        );
+        qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
+        qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
+        if ((dataMatIdx.qty) < qty_wh) {continue}
+        ws.addRow([
+          dataMatIdx._id,
+          dataItemMR[i].no_tssr_boq_site,
+          dataItemMR[i].pp_id,
+          dataItemMR[i].product_name,
+          dataItemMR[i].program,
+          dataMatIdx.material_id_plan,
+          dataMatIdx.material_name_plan,
+          dataMatIdx.material_id,
+          dataMatIdx.material_name,
+          dataMatIdx.uom,
+          dataMatIdx.qty,
+          qty_wh,
+          qty_inbound,
+          dataMatIdx.qty < qty_wh ? "OK" : "NOK",
+          dataMatIdx.source_material,
+        ]);
+      }
+    }
+
+    let listMatId = [...new Set(list_material_id)];
+    let matIdData = {
+      "list_material_id" : listMatId
+    }
+
+    const getMaterialVariant = await this.postDatatoAPINODE(
+      "/variants/materialId",
+      matIdData
+    );
+    if (
+      getMaterialVariant.data !== undefined &&
+      getMaterialVariant.status >= 200 &&
+      getMaterialVariant.status < 400
+    ) {
+      dataMaterialVariant = getMaterialVariant.data.data;
+    }
+
+    dataMaterialVariant = this.CompareArrayObject(
+      dataMaterialVariant,
+      "description"
+    );
+
+    // dataMaterialVariant.sort(function(a, b){return a.description.toLowerCase() - b.description.toLowerCase()});
+    let sku_list = [];
+    for (let j = 0; j < dataMaterialVariant.length; j++) {
+      sku_list.push(dataMaterialVariant[j].material_id);
+    }
+    const list_qtySKU = [];
+    const getQtyfromWHbySKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', {"sku": sku_list }).then((res) => {
+      if(res.data !== undefined && res.status >= 200 && res.status < 400){
+        const dataSKU = res.data.data;
+        // console.log('dataSKU ', dataSKU);
+        for (let i = 0; i < dataSKU.length; i++) {
+          if (dataSKU[i][0] === undefined) {
+            list_qtySKU.push(0);
+          } else {
+            list_qtySKU.push(dataSKU[i][0].qty_sku);
+          }
+        }
+      }
+    });
+
+    ws2.addRow([
+      "Origin",
+      "Material ID",
+      "Material Name",
+      "Description",
+      "Category",
+      "Qty Available",
+    ]);
+    for (let j = 0; j < dataMaterialVariant.length; j++) {
+      ws2.addRow([
+        dataMaterialVariant[j].origin,
+        dataMaterialVariant[j].material_id,
+        dataMaterialVariant[j].material_name,
+        dataMaterialVariant[j].description,
+        dataMaterialVariant[j].category,
+        list_qtySKU[j],
+      ]);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([allocexport]),
+      "Material MR " + dataMR.mr_id + " uploader NOK.xlsx"
+    );
+  }
+
   async downloadMaterialMRReport() {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -1555,7 +1700,22 @@ class MRDetail extends Component {
                           <tbody>
                             {this.state.data_mr !== null && (
                               <Fragment>
-                                <tr>
+                                <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
+                                  <DropdownToggle caret color="secondary">
+                                    <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
+                                  </DropdownToggle>
+                                  <DropdownMenu>
+                                    <DropdownItem header>TSSR File</DropdownItem>
+                                    {(this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
+                                                      <DropdownItem onClick={this.downloadMaterialMRTRACY}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY Format</DropdownItem>
+
+                                    )}
+                                    <DropdownItem onClick={this.downloadMaterialMRReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MR PS</DropdownItem>
+                                    <DropdownItem onClick={this.downloadMaterialMRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
+                                    <DropdownItem onClick={this.downloadMaterialMRUpload2}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format NOK</DropdownItem>
+                                  </DropdownMenu>
+                                </Dropdown>
+                                {/* <tr>
                                   <td style={{ width: "550px" }}>
                                     <Button
                                       size="sm"
@@ -1590,7 +1750,7 @@ class MRDetail extends Component {
                                       </Button>
                                     )}
                                   </td>
-                                </tr>
+                                </tr> */}
                                 {this.state.mr_site_FE !== null &&
                                 this.state.data_mr.mr_type !== "Relocation" &&
                                 this.state.data_mr.mr_type !== "Return" ? (
