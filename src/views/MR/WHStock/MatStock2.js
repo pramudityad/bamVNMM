@@ -755,6 +755,7 @@ class MaterialStock2 extends React.Component {
     const ws = wb.addWorksheet();
 
     let headerRow = [
+      "Project ID",
       "Owner ID",
       "WH ID",
       "PO Number",
@@ -768,6 +769,10 @@ class MaterialStock2 extends React.Component {
       "Box Number",
       "Condition",
       "Notes",
+      "Batch",
+      "Location",
+      "WHS",
+      "Description",      
     ];
     ws.addRow(headerRow);
 
@@ -778,6 +783,7 @@ class MaterialStock2 extends React.Component {
     for (let i = 0; i < download_all.length; i++) {
       let list = download_all[i];
       ws.addRow([
+        list.project_id,
         list.owner_id,
         this.state.selected_wh,
         list.po_number,
@@ -791,6 +797,10 @@ class MaterialStock2 extends React.Component {
         list.box_number,
         list.condition,
         list.notes,
+        list.batch,
+        list.location,
+        list.whs,
+        list.description
       ]);
     }
 
@@ -834,6 +844,11 @@ class MaterialStock2 extends React.Component {
       "box_number",
       "condition",
       "notes",
+      "batch",
+      "location",
+      "whs",
+      "description",
+      "project_id",    
       "transaction_type",
     ]);
     ws.addRow([
@@ -849,6 +864,11 @@ class MaterialStock2 extends React.Component {
       "box_number",
       "condition",
       "notes",
+      "batch",
+      "location",
+      "whs",
+      "description",
+      "project_id",  
       "Inbound",
     ]);
     ws.addRow([
@@ -864,6 +884,11 @@ class MaterialStock2 extends React.Component {
       "box_number",
       "condition",
       "notes",
+      "batch",
+      "location",
+      "whs",
+      "description",
+      "project_id",  
       "Outbond",
     ]);
 
@@ -1123,6 +1148,11 @@ class MaterialStock2 extends React.Component {
                             <th>Box Number</th>
                             <th>Condition</th>
                             <th>Notes</th>
+                            <th>Batch</th>
+                            <th>Location</th>
+                            <th>WHS</th>
+                            <th>Description</th>
+                            <th>Project ID</th>
                             <th>Transaction Type</th>
                             <th></th>
                           </tr>
@@ -1169,6 +1199,21 @@ class MaterialStock2 extends React.Component {
                                 </td>
                                 <td style={{ textAlign: "center" }}>
                                   {e.notes}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.batch}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.location}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.whs}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.description}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.project_id}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
                                   {e.transaction_type}
