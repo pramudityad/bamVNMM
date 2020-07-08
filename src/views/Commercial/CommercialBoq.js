@@ -467,7 +467,9 @@ class CommercialBoq extends Component {
       let revision = true;
       if(revisionType === "save"){
         revision = false;
+        this.toggleSave();
       }
+      this.toggleRevised();
       let dataComm = this.state.data_comm_boq;
       const incentive_amount = this.state.incentiveChange;
       const unit_price_idr_amount = this.state.UnitPriceIDRChange;
@@ -526,7 +528,7 @@ class CommercialBoq extends Component {
       if(updateComm.data !== undefined){
         this.setState({action_status : 'success'});
       }else{
-        this.setState({action_status : 'success'});
+        this.setState({action_status : 'failed'});
       }
       this.toggleLoading();
     }
