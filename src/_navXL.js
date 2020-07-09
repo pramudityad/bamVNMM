@@ -95,7 +95,7 @@ export default {
           name: 'Assignment List (ASP)',
           url: '/assignment-list-asp',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
         },
         {
           name: 'Assignment Bulk Notify',
