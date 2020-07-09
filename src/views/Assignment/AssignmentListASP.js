@@ -88,7 +88,7 @@ class AssignmentListASP extends Component {
     this.state.filter_list[3] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
     this.state.filter_list[4] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
     this.state.filter_list[6] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
-    filter_array.push('"Current_Status": "ASP ASSIGNMENT NOTIFIED TO ASP"')
+    filter_array.push('"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP"')
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {

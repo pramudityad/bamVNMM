@@ -590,6 +590,8 @@ class AssignmentCreation extends Component {
                         <Input type="select" name="16" onChange={this.handleChangeForm}>
                           <option value="" disabled selected hidden>Select SOW</option>
                           <option value="RBS">RBS</option>
+                          <option value="RBS">TRM</option>
+                          <option value="RBS">NDO</option>
                         </Input>
                       </FormGroup>
                     </Col>

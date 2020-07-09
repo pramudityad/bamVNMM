@@ -56,6 +56,7 @@ const OrderProcessing = React.lazy(() => import('./views/Warehouse/OrderProcessi
 const ReadyToDeliver = React.lazy(() => import('./views/Warehouse/ReadyToDeliver'));
 const JointCheck = React.lazy(() => import('./views/Warehouse/JointCheck'));
 const LoadingProcess = React.lazy(() => import('./views/Warehouse/LoadingProcess'));
+const WaitingDispatch = React.lazy(() => import('./views/Warehouse/WaitingDispatch'));
 const MaterialDispatch = React.lazy(() => import('./views/Warehouse/MaterialDispatch'));
 const ProjectDashboard = React.lazy(() => import('./views/Project/ProjectDashboard'));
 const OrderCreated = React.lazy(() => import('./views/Project/OrderCreated'));
@@ -204,6 +205,7 @@ const routes = [
   { path: '/ready-to-deliver', exact: true, name: 'Ready To Deliver', component: ReadyToDeliver },
   { path: '/joint-check', exact: true, name: 'Joint Check', component: JointCheck },
   { path: '/loading-process', exact: true, name: 'Loading Process', component: LoadingProcess },
+  { path: '/waiting-dispatch', exact: true, name: 'Material Dispatch', component: WaitingDispatch },
   { path: '/material-dispatch', exact: true, name: 'Material Dispatch', component: MaterialDispatch },
   { path: '/project-dashboard', exact: true, name: 'Project Dashboard', component: ProjectDashboard },
   { path: '/order-created', exact: true, name: 'Order Created', component: OrderCreated },

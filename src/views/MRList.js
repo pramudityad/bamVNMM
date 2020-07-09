@@ -7,7 +7,11 @@ import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
+import ActionType from '../../redux/reducer/globalActionType';
 import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
+
+import Loading from '../components/Loading'
+
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -15,7 +19,7 @@ const password = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class WaitingDispatch extends Component {
+class MRList extends Component {
   constructor(props) {
     super(props);
 
@@ -31,14 +35,17 @@ class WaitingDispatch extends Component {
       totalData: 0,
       perPage: 10,
       filter_list: new Array(14).fill(""),
-      mr_all: []
+      mr_all: [],
+      modal_loading: false,
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
-    this.getAllMR = this.getAllMR.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+    this.downloadAllMRMigration = this.downloadAllMRMigration.bind(this);
+    // this.getAllMR = this.getAllMR.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -80,6 +87,12 @@ class WaitingDispatch extends Component {
     }
   }
 
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
+  }
+
   getMRList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
@@ -97,12 +110,9 @@ class WaitingDispatch extends Component {
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
-    filter_array.push('"$or" : [{"current_mr_status": "LOADING PROCESS FINISH"}]');
-    if(this.state.userRole.indexOf("BAM-ASP Management") === 1 && this.state.userRole.indexOf("Admin") === -1){
-      filter_array.push('"dsp_company" : "Tes Vendor"');
-    }
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
+      console.log("MR List Sorted", res);
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
@@ -111,7 +121,8 @@ class WaitingDispatch extends Component {
     })
   }
 
-  getAllMR() {
+  async getAllMR() {
+    let mrList = [];
     let filter_array = [];
     this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
     this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
@@ -126,18 +137,16 @@ class WaitingDispatch extends Component {
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
-    filter_array.push('"$or" : [{"current_mr_status": "LOADING PROCESS FINISH"}]');
-    if(this.state.userRole.indexOf("BAM-ASP Management") === 1 && this.state.userRole.indexOf("Admin") === -1){
-      filter_array.push('"dsp_company" : "Tes Vendor"');
-    }
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
-      console.log("MR List All", res);
-      if (res.data !== undefined) {
-        const items = res.data.data;
-        this.setState({ mr_all: items });
-      }
-    })
+    let res = await this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd)
+    if (res.data !== undefined) {
+      const items = res.data.data;
+      mrList = res.data.data;
+      return mrList;
+      // this.setState({ mr_all: items });
+    }else{
+      return [];
+    }
   }
 
   numToSSColumn(num) {
@@ -152,12 +161,13 @@ class WaitingDispatch extends Component {
   }
 
   async downloadMRlist() {
+    this.toggleLoading();
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const allMR = this.state.mr_all;
+    const allMR = await this.getAllMR();
 
-    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Created By", "Updated On", "Created On"];
+    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Updated On", "Created On"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -165,17 +175,22 @@ class WaitingDispatch extends Component {
     }
 
     for (let i = 0; i < allMR.length; i++) {
-      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0].site_id, allMR[i].site_info[0].site_name, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
+      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, allMR[i].updated_on, allMR[i].created_on])
     }
-
+    this.toggleLoading();
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Material Dispatch.xlsx');
+    saveAs(new Blob([allocexport]), 'MR List.xlsx');
   }
 
   componentDidMount() {
+    this.props.SidebarMinimizer(true);
     this.getMRList();
-    this.getAllMR();
-    document.title = 'Material Dispatch | BAM';
+    // this.getAllMR();
+    document.title = 'MR List | BAM';
+  }
+
+  componentWillUnmount() {
+    this.props.SidebarMinimizer(false);
   }
 
   handlePageChange(pageNumber) {
@@ -197,9 +212,31 @@ class WaitingDispatch extends Component {
     })
   }
 
+  async downloadAllMRMigration() {
+    let allMRList = [];
+    let getMR = await this.getDataFromAPINODE('/matreq?noPg=1&srt=_id:-1&q={"mr_mitt_no" : {"$exists" : 1}, "mr_mitt_no" : {"$ne" : null}}');
+    if (getMR.data !== undefined) {
+      allMRList = getMR.data.data;
+    }
+
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let headerRow = ["mr_bam_id","mr_mitt_no","ps_mitt_no","plantspec_assigned_date","plantspec_assigned_by","mr_requested_date","mr_requested_by","mr_approved_date","mr_approved_by","order_processing_finish_date","order_processing_finish_by","rtd_confirmed_date","rtd_confirmed_by","joint_check_finish_date","joint_check_finish_by","loading_process_finish_date","loading_process_finish_by","mr_dispatch_date","mr_dispatch_by","mr_on_site_date","mr_on_site_by"];
+    ws.addRow(headerRow);
+
+    for (let i = 0; i < allMRList.length; i++) {
+      let rowAdded = [allMRList[i].mr_id, allMRList[i].mr_mitt_no];
+      ws.addRow(rowAdded);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'MR List For Status Migration from SH Template.xlsx');
+  }
+
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {
@@ -225,7 +262,8 @@ class WaitingDispatch extends Component {
 
   render() {
     const downloadMR = {
-      float: 'right'
+      float: 'right',
+      marginRight: '10px'
     }
 
     return (
@@ -235,15 +273,17 @@ class WaitingDispatch extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: '2' }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> Material Dispatch
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MR List
                 </span>
+                <Link to={'/mr-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR</Button></Link>
+                <Link to={'/bulk-mr-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR Bulk</Button></Link>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download MR List</Button>
+                <Button style={downloadMR} outline color="success" onClick={this.downloadAllMRMigration} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Format MR List Status Migration</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
                       <th>MR ID</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
@@ -269,13 +309,6 @@ class WaitingDispatch extends Component {
                     )}
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
-                        <td>
-                          {list.current_mr_status === "LOADING PROCESS FINISH" ? (
-                            "Waiting Dispatch"
-                          ) : (
-                              "Finish"
-                            )}
-                        </td>
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
                         <td>
@@ -305,7 +338,7 @@ class WaitingDispatch extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries</small>
+                  <small>Showing {this.state.totalData} entries</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}
@@ -320,6 +353,13 @@ class WaitingDispatch extends Component {
             </Card>
           </Col>
         </Row>
+
+                {/* Modal Loading */}
+                <Loading isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm modal--loading "}>
+        </Loading>
+        {/* end Modal Loading */}
       </div>
     );
   }
@@ -327,8 +367,15 @@ class WaitingDispatch extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    dataLogin: state.loginData
+    dataLogin: state.loginData,
+    SidebarMinimize: state.minimizeSidebar
   }
 }
 
-export default connect(mapStateToProps)(WaitingDispatch);
+const mapDispatchToProps = (dispatch) => {
+  return {
+    SidebarMinimizer: (minimize) => dispatch({ type: ActionType.MINIMIZE_SIDEBAR, minimize_sidebar: minimize }),
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(MRList);
