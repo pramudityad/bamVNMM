@@ -43,8 +43,10 @@ class AssignmentListReport extends Component {
       totalData: 0,
       perPage: 10,
       filter_list: new Array(8).fill(""),
-      filter_list_date: "",
-      filter_list_date2: "",
+      filter_date:{
+        filter_list_date: null,
+        filter_list_date2: null
+      },
       asg_all: [],
     };
     this.handlePageChange = this.handlePageChange.bind(this);
@@ -53,7 +55,7 @@ class AssignmentListReport extends Component {
     this.handleFilterList = this.handleFilterList.bind(this);
     this.handleFilterDate = this.handleFilterDate.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
-    this.getAssignmentList = this.getAssignmentList.bind(this);
+    // this.getAssignmentList = this.getAssignmentList.bind(this);
     this.getAllAssignment = this.getAllAssignment.bind(this);
     this.downloadAllAssignment = this.downloadAllAssignment.bind(this);
     this.downloadAllAssignmentAcceptenceMigration = this.downloadAllAssignmentAcceptenceMigration.bind(
@@ -104,7 +106,7 @@ class AssignmentListReport extends Component {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     let filter_array = [];
-    let filter_date = '{"created_on":{"$gte":"2020-04-21 00:00:00", "$lte":"2020-04-22 00:00:00"}}';
+    let date =  this.state.filter_date.filter_list_date && this.state.filter_date.filter_list_date2 === null ? '{}' : '{"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 00:00:00"}}';
     this.state.filter_list[0] !== "" &&
       filter_array.push(
         '"Assignment_No":{"$regex" : "' +
@@ -146,11 +148,10 @@ class AssignmentListReport extends Component {
         '"Work_Status":{"$regex" : "' +
           this.state.filter_list[6] +
           '", "$options" : "i"}'
-      );
-      let date = "" ? "" : filter_date;     
+      );   
       let whereAnd = "{" + filter_array.join(",") + "}";
-    this.getDataFromAPINODE(
-      "/aspAssignment/aspassign?srt=_id:-1&q=" + date + "&" +
+      this.getDataFromAPINODE(
+      "/aspAssignment/aspassign?srt=_id:-1&q="+ date + "&" +
         whereAnd +
         "&lmt=" +
         maxPage +
@@ -169,9 +170,7 @@ class AssignmentListReport extends Component {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     let filter_array = [];
-    // let this.state.filter_list_date || this.state.filter_list_date2 === "" ? 
-    let filter_date = '{"created_on":{"$gte":"2020-04-21 00:00:00", "$lte":"2020-04-22 00:00:00"}}';
-    // this.state.filter_list_date === "" ? "" : "";
+    // let date = this.state.filter_list_date && this.state.filter_list_date2 === null ? '{}' : '{"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 00:00:00"}}';
     this.state.filter_list[0] !== "" &&
       filter_array.push(
         '"Assignment_No":{"$regex" : "' +
@@ -213,11 +212,10 @@ class AssignmentListReport extends Component {
         '"Work_Status":{"$regex" : "' +
           this.state.filter_list[6] +
           '", "$options" : "i"}'
-      );
-    let date = "" ? "" : filter_date;     
+      );   
     let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE(
-      "/aspAssignment/aspassign?srt=_id:-1&noPg=1&q=" + date + "&" + whereAnd
+      "/aspAssignment/aspassign?srt=_id:-1&noPg=1&q=" + whereAnd
     ).then((res) => {
       if (res.data !== undefined) {
         const items = res.data.data;
@@ -228,6 +226,8 @@ class AssignmentListReport extends Component {
   }
 
   componentDidMount() {
+    console.log('1 ',this.state.filter_date.filter_list_date)
+    console.log('2 ',this.state.filter_date.filter_list_date2)
     this.getAssignmentList();
     // this.getAllAssignment();
     document.title = "Assignment List | BAM";
@@ -253,21 +253,24 @@ class AssignmentListReport extends Component {
   }
 
   handleFilterDate(e) {
-    const index = e.target.name;
-    let value = e.target.value;
-    if (value !== "" && value.length === 0) {
-      value = "";
-    }
-    let dataFilter = this.state.filter_list;
-    dataFilter[parseInt(index)] = value;
-    this.setState({ filter_list_date: dataFilter, filter_list_date2: dataFilter, activePage: 1 }, () => {
-      this.onChangeDebounced(e);
-    });
+    const value = e.target.value;
+    const name = e.target.name;
+    this.setState(
+      (prevState) => ({
+        filter_date: {
+          ...prevState.filter_date,
+          [name]: value,
+        },
+      }),
+      () => this.onChangeDebounced(e)
+      // () => console.log(this.state.filter_date)
+    );
   }
+
 
   onChangeDebounced(e) {
     this.getAssignmentList();
-    this.getAllAssignment();
+    // this.getAllAssignment();
   }
 
   async downloadASGList() {
@@ -572,9 +575,9 @@ class AssignmentListReport extends Component {
                 </Button>
               </CardHeader>
               <CardBody>
-                <Label>Filter Date</Label>
+                <Label><b>Filter Date</b></Label>
                 <Row>
-                  <div className="controls" style={{ width: "150px" }}>
+                  <div className="controls" style={{ width: "150px", marginLeft: "10px" }}>
                     <div>Start Date</div>
                     <InputGroup className="input-prepend">
                       <InputGroupAddon addonType="prepend">
@@ -585,6 +588,7 @@ class AssignmentListReport extends Component {
                       <Input
                         type="date"
                         placeholder="Search"
+                        name={"filter_list_date"}
                         onChange={this.handleFilterDate}
                         value={this.state.filter_list_date}
                         size="sm"
@@ -603,6 +607,7 @@ class AssignmentListReport extends Component {
                       <Input
                         type="date"
                         placeholder="Search"
+                        name={"filter_list_date2"}
                         onChange={this.handleFilterDate}
                         value={this.state.filter_list_date2}
                         size="sm"
@@ -630,7 +635,7 @@ class AssignmentListReport extends Component {
                   <tbody>
                     {this.state.assignment_list.length === 0 && (
                       <tr>
-                        <td colSpan="10">No Data Available</td>
+                        <td colSpan="10">Select Date First</td>
                       </tr>
                     )}
                     {this.state.assignment_list.map((list, i) => (
