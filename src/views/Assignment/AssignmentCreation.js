@@ -296,17 +296,19 @@ class AssignmentCreation extends Component {
       }else{
         const respondSaveASG = await this.postDatatoAPINODE('/aspAssignment/createAspAssign', {"includeSsow" : this.state.can_edit_ssow === true ? true : false, "data" : dataChecking});
         if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
-          // if(this.state.can_edit_ssow === true){
-          //   let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
-          //   const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment has been created, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is created by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
-          //   let dataEmail = {
-          //     // "to": creatorEmail,
-          //     "to" : "damar.pramuditya@ericsson.com",
-          //     "subject":"[Assignment Created] Assignment "+dataAssignment.Assignment_No,
-          //     "body": bodyEmail
-          //   }
-          //   const sendEmail = await apiSendEmail(dataEmail);
-          // }        
+          if(this.state.can_edit_ssow === true){
+            const response = respondSaveASG.data.aspDocsp[0];
+            // console.log(response);
+            let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+response._id;
+            const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment has been created, <br/><br/><i>Site</i>: <b>"+response.Site_ID+"</b> <br/><i>Project</i>: <b>"+response.Project+"</b><br/><i>Assignment</i>: <b>"+response.Assignment_No+"</b><br/><br/>is created by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+            let dataEmail = {
+              // "to": creatorEmail,
+              "to" : "damar.pramuditya@ericsson.com",
+              "subject":"[Assignment Created] Assignment "+response.Assignment_No,
+              "body": bodyEmail
+            }
+            const sendEmail = await apiSendEmail(dataEmail);
+          }        
           this.setState({ action_status : 'success' });
         } else{
           if(respondSaveASG.response !== undefined && respondSaveASG.response.data !== undefined && respondSaveASG.response.data.error !== undefined){

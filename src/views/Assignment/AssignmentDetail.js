@@ -738,6 +738,7 @@ class AssignmentDetail extends Component {
 
   async approveASGbyPM(e) {
     const newDate = new Date();
+    const dataAssignment = this.state.data_assignment;
     const dateNow =
       newDate.getFullYear() +
       "-" +
@@ -755,6 +756,15 @@ class AssignmentDetail extends Component {
     let res = await this.patchDatatoAPINODE("/aspAssignment/pmApproval/" + _id);
     if (res !== undefined) {
       if (res.data !== undefined) {
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
+        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment need approval by PM, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let dataEmail = {
+          // "to": creatorEmail,
+          "to": "damar.pramuditya@ericsson.com",
+          "subject":"[NEED APPROVAL by PM] Assignment "+dataAssignment.Assignment_No,
+          "body": bodyEmail
+        }
+        let sendEmail = await apiSendEmail(dataEmail);
         this.setState({ action_status: "success" });
       } else {
         this.setState({ action_status: "failed" });
