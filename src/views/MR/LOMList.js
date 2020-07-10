@@ -272,7 +272,7 @@ class LOMList extends Component {
 
   componentDidMount() {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'LOM List | BAM';
   }
 
@@ -297,7 +297,7 @@ class LOMList extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {

@@ -356,7 +356,7 @@ class LoadingProcess extends Component {
   componentDidMount() {
     this.getMRList();
     this.loadOptionsASP();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'Loading Process | BAM';
   }
 
@@ -390,7 +390,7 @@ class LoadingProcess extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   handleChangeShipmentDetail(e) {

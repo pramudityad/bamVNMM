@@ -734,7 +734,7 @@ class TechnicalBoq extends Component {
     }else{
       if(patchData.response !== undefined){
         if(patchData.response.data !== undefined){
-          this.setState({action_status : 'failed', action_message : patchData.response.data.error })
+          this.setState({action_status : 'failed', action_message : JSON.stringify(patchData.response.data.error) })
         }else{
           this.setState({action_status : 'failed'});
         }

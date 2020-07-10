@@ -529,7 +529,7 @@ class GR extends Component {
   componentDidMount() {
     this.getWHManagementID();
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = "GR | BAM";
   }
 
@@ -554,7 +554,7 @@ class GR extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {

@@ -26,6 +26,90 @@ const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNot
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
+
+class TableTSSRHorizontal extends React.Component{
+  constructor(props) {
+      super(props);
+  }
+
+  getTechnicalRow(site_data_config, config_group, config_group_type){
+    const dataConfigIdx = site_data_config.find(e => e.config_group === config_group && e.config_group_type === config_group_type);
+    if(dataConfigIdx !== undefined){
+      return ( <Fragment>
+                  <td>{dataConfigIdx.config_id}</td>
+                  <td>{dataConfigIdx.qty}</td>
+                  <td>{dataConfigIdx.qty_commercial}</td>
+                </Fragment>)
+    }else{
+      return ( <Fragment>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </Fragment>)
+    }
+  }
+
+  render(){
+    console.log("Props Child", this.props)
+    return(
+      <Table hover bordered striped responsive size="sm">
+        <thead>
+        <tr>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            Tower ID
+          </th>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            Program
+          </th>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            SOW
+          </th>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            Priority
+          </th>
+          {this.props.configHeader.config_group_type_header.map(type =>
+            <Fragment>
+              <th>{type}</th>
+              <th>{type}</th>
+              <th>{type}</th>
+            </Fragment>
+          )}
+        </tr>
+        <tr>
+          {this.props.configHeader.config_group_header.map(conf =>
+            <Fragment>
+              <th>{conf}</th>
+              <th>Qty</th>
+              <th>Qty Comm</th>
+            </Fragment>
+          )}
+        </tr>
+        </thead>
+        <tbody>
+        {this.props.dataTechBoqSites.map(site =>
+          <tr>
+            <td>{site.site_id}</td>
+            <td>{site.program}</td>
+            <td>{site.sow}</td>
+            <td>{site.priority}</td>
+            {(this.props.isVersion === "rollback") ? (
+              this.props.configHeader.config_group_header.map((conf,i) =>
+                this.getTechnicalRow(site.siteItemConfigVersion, conf, this.props.configHeader.config_group_type_header[i])
+              )
+            ): (
+              this.props.configHeader.config_group_header.map((conf,i) =>
+                this.getTechnicalRow(site.siteItemConfig, conf, this.props.configHeader.config_group_type_header[i])
+              )
+            )}
+
+          </tr>
+        )}
+        </tbody>
+      </Table>
+    )
+  }
+}
+
 class TSSRBoq extends Component {
     constructor(props) {
       super(props);
@@ -128,7 +212,7 @@ class TSSRBoq extends Component {
       this.toggleDropdown = this.toggleDropdown.bind(this);
       this.toggleUpload = this.toggleUpload.bind(this);
       this.handleChangeCommentConfig = this.handleChangeCommentConfig.bind(this);
-      this.approvalTechnical = this.approvalTechnical.bind(this);
+      this.approvalTSSR = this.approvalTSSR.bind(this);
       this.handleChangeCommentTSSR = this.handleChangeCommentTSSR.bind(this);
       this.handleChangeQtyTSSRConfig = this.handleChangeQtyTSSRConfig.bind(this);
       this.handlePageChange = this.handlePageChange.bind(this);
@@ -541,21 +625,23 @@ class TSSRBoq extends Component {
       }
       const dataHeader = this.state.view_tech_header_table;
 
-      let ppIdRow = ["Tower ID", "Program", "SOW", "BOQ Configuration", "SAP Number", "Qty Technical", "QTY TSSR", "Diff", "Note"];
+      let ppIdRow = ["Tower ID", "Program", "SOW", "BOQ Configuration", "SAP Number", "QTY TSSR", "Qty Delta"];
 
       ws.addRow(ppIdRow);
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
-          let idx_config_comment = dataSites[i].siteItemConfig[j].tssr_notes === undefined ? "" : dataSites[i].siteItemConfig[j].tssr_notes.length !== 0 ? dataSites[i].siteItemConfig[j].tssr_notes[dataSites[i].siteItemConfig[j].tssr_notes.length-1].note : "";
-          let idx_config_qty = dataSites[i].siteItemConfig[j].tssr_notes === undefined ? 0 : dataSites[i].siteItemConfig[j].tssr_notes.length !== 0 ? dataSites[i].siteItemConfig[j].tssr_notes[dataSites[i].siteItemConfig[j].tssr_notes.length-1].suggested_qty : 0;
-          let diff = dataSites[i].siteItemConfig[j].qty - idx_config_qty
-          ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty, idx_config_qty, diff, idx_config_comment]);
+          let qty_delta = null;
+          let dataConfigDelta = dataSites[i].siteItemConfigDelta.find(e => e.config_id === dataSites[i].siteItemConfig[j].config_id && e.config_group === dataSites[i].siteItemConfig[j].config_group && e.config_group_type === dataSites[i].siteItemConfig[j].config_group_type);
+          if(dataConfigDelta !== undefined){
+            qty_delta = dataConfigDelta.qty;
+          }
+          ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty, qty_delta]);
         }
       }
 
       const MRFormat = await wb.xlsx.writeBuffer();
-      saveAs(new Blob([MRFormat]), 'TSSR BOQ Vertical.xlsx');
+      saveAs(new Blob([MRFormat]), 'TSSR BOQ Vertical Report.xlsx');
     }
 
     exportFormatTSSRUpdate = async () =>{
@@ -587,55 +673,21 @@ class TSSRBoq extends Component {
       saveAs(new Blob([MRFormat]), 'TSSR BOQ Update Format.xlsx');
     }
 
-    async approvalTechnical(e){
-      this.toggleLoading()
-      let currValue = e.currentTarget.value;
-      if(currValue !== undefined){
-        currValue = parseInt(currValue);
-      }
-      let tssrApproval = {
-        "operation":currValue
-      }
-      let configNotes = [];
-      let diffQty = [];
-      const data_tech = this.state.data_tech_boq_sites;
-      if(currValue === 5){
-        tssrApproval["tssrNote"] = true;
-        tssrApproval["techBoqNote"] = {};
-        tssrApproval["techBoqNote"]["note_value"] = this.state.tssr_comment !== null ? this.state.tssr_comment : this.state.data_tech_boq === null ? "-" : this.state.data_tech_boq.notes === undefined ? " " : this.state.data_tech_boq.notes.length !== 0 ? this.state.data_tech_boq.notes[this.state.data_tech_boq.notes.length-1].note_value : " ";
-        let config_comment = this.state.tssr_config_comment;
-        let config_qty = this.state.tssr_config_qty;
-        for(let i = 0; i < data_tech.length; i++){
-          const data_tech_site = data_tech[i];
-          for(let j = 0; j < data_tech_site.siteItemConfig.length ;j++ ){
-            let conf = data_tech_site.siteItemConfig[j];
-            let idx_config_comment = this.state.tssr_config_comment.has(conf._id) === true ? this.state.tssr_config_comment.get(conf._id) : conf.tssr_notes === undefined ? "" : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].note : "";
-            let idx_config_qty = config_qty.has(conf._id) === true ? config_qty.get(conf._id) : conf.tssr_notes === undefined ? data_tech_site.siteItemConfig[j].qty : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].suggested_qty : data_tech_site.siteItemConfig[j].qty;
-            let configNoteIdx = {
-              "_id": conf._id,
-              "tssr_note" : idx_config_comment,
-              "suggested_qty": idx_config_qty.length === 0 ? 0 : parseFloat(idx_config_qty)
-            }
-            if(data_tech_site.siteItemConfig[j].qty !== configNoteIdx.suggested_qty ){
-              diffQty.push("["+data_tech_site.siteItemConfig[j].site_id+"] => "+data_tech_site.siteItemConfig[j].config_id);
-            }
-            configNotes.push(configNoteIdx);
+    async approvalTSSR(e){
+      let patchData = await this.patchDatatoAPINODE('/tssr/approveTssr/'+this.props.match.params.id)
+      if(patchData.data !== undefined){
+        this.setState({action_status : 'success'});
+      }else{
+        if(patchData.response !== undefined){
+          if(patchData.response.data !== undefined){
+            this.setState({action_status : 'failed', action_message : JSON.stringify(patchData.response.data.error) })
+          }else{
+            this.setState({action_status : 'failed'});
           }
-        }
-        tssrApproval["tssrItemConfigNotes"] = configNotes;
-        if(diffQty.length !== 0){
-          tssrApproval["isGap"] = true;
+        }else{
+          this.setState({action_status : 'failed'});
         }
       }
-      this.toggleLoading();
-      // console.log("tssrApproval", JSON.stringify(tssrApproval));
-      this.setState({tssr_data_upload : tssrApproval}, () => {
-        if(diffQty.length !== 0){
-          this.toggleAlert();
-        }else{
-          this.saveDataTSSR();
-        }
-      });
     }
 
     async saveDataTSSR(){
@@ -687,6 +739,7 @@ class TSSRBoq extends Component {
       const dataPatch = {
         "revision" : revision,
         "itemPackage": false,
+        "tssrBoqNote": "TSSR Updated",
         "sites_data" : dataChecked.tech_data,
         "configList" : dataChecked.configList
       }
@@ -723,11 +776,6 @@ class TSSRBoq extends Component {
         }
       }
       this.toggleLoading();
-      if(revisionType==='save'){
-        this.toggleSave();
-      }else{
-        this.toggleRevised();
-      }
     }
 
     // exportFormatTSSRHorizontalWithDRM = async () =>{
@@ -798,6 +846,62 @@ class TSSRBoq extends Component {
 
       let headerDRM = ["Actual RBS DATA", "Actual DU", "RU B0 (900)", "RU B1 (2100)", "RU B3 (1800) ", "RU B8 (900)", "RU B1B3", "RU Band Agnostic", "Remarks Need CR/Go as SoW Original", "Existing Antenna (type)", "ANTENNA_HEIGHT ", "Scenario RAN", "Dismantle Antenna", "Dismantle RU", "Dismantele Accessories", "Dismantle DU", "Dismantle RBS/Encl", "EXISTING DAN SCENARIO IMPLEMENTASI RBS ", "DRM FINAL (MODULE)", "DRM Final Radio", "DRM Final SOW Cabinet", "DRM FINAL (SOW G9/U9/L9)", "DRM FINAL (SOW G18/L18)", "DRM FINAL (SOW U21/L21)", "DRM FINAL (ANTENNA TYPE)", "PLAN ANTENNA AZIMUTH", "PLAN ANTENNA ET/MT", "Module", "Cabinet", "Radio", "Power RRU", "Antenna", "Dismantle", "System", "Optic RRU", "Area", "VERIFICATION (DATE)", "VERIFICATION (STATUS)", "VERIFICATION PIC", "ISSUED DETAIL", "CR Flag engineering"]
 
+      header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e, e]));
+      header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty", "delta"]));
+
+      HeaderRow1.push(null, null);
+      HeaderRow2.push(null, null);
+      headerDRM.map(e => HeaderRow1.push("DRM"));
+      HeaderRow2 = HeaderRow2.concat(headerDRM);
+
+      ws.addRow(HeaderRow1);
+      ws.addRow(HeaderRow2);
+      for(let i = 0; i < dataSites.length ; i++){
+        let qtyConfig = []
+        for(let j = 0; j < header_config.config_group_header.length; j++ ){
+          let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+          let dataConfigDelta = dataSites[i].siteItemConfigDelta.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+          if(dataConfigIdx !== undefined){
+            let idx_config_qty = dataConfigIdx.qty;
+            let idx_delta_qty = null;
+            if(dataConfigDelta !== undefined){
+              idx_delta_qty = dataConfigDelta.qty;
+            }
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, idx_config_qty, idx_delta_qty]);
+          }else{
+            qtyConfig = qtyConfig.concat([null, null]);
+          }
+        }
+        let drm = this.getDataDRM(dataSites[i].site_id, dataSites[i].program);
+        ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].priority]
+          .concat(qtyConfig)
+          .concat([null, null, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering])
+        );
+      }
+
+      const TSSRDRM = await wb.xlsx.writeBuffer();
+      saveAs(new Blob([TSSRDRM]), 'TSSR '+dataTech.no_tech_boq+' Report with DRM.xlsx');
+    }
+
+    exportFormatTSSRHorizontal = async () =>{
+      const wb = new Excel.Workbook();
+      const ws = wb.addWorksheet();
+
+      const dataTech = this.state.data_tech_boq;
+      let dataSites = [];
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        dataSites = this.state.data_tech_boq_sites_version;
+      }else{
+        dataSites = this.state.data_tech_boq_sites;
+      }
+
+      const header_config = this.state.view_tech_all_header_table;
+
+      let headerDRM = ["Actual RBS DATA", "Actual DU", "RU B0 (900)", "RU B1 (2100)", "RU B3 (1800) ", "RU B8 (900)", "RU B1B3", "RU Band Agnostic", "Remarks Need CR/Go as SoW Original", "Existing Antenna (type)", "ANTENNA_HEIGHT ", "Scenario RAN", "Dismantle Antenna", "Dismantle RU", "Dismantele Accessories", "Dismantle DU", "Dismantle RBS/Encl", "EXISTING DAN SCENARIO IMPLEMENTASI RBS ", "DRM FINAL (MODULE)", "DRM Final Radio", "DRM Final SOW Cabinet", "DRM FINAL (SOW G9/U9/L9)", "DRM FINAL (SOW G18/L18)", "DRM FINAL (SOW U21/L21)", "DRM FINAL (ANTENNA TYPE)", "PLAN ANTENNA AZIMUTH", "PLAN ANTENNA ET/MT", "Module", "Cabinet", "Radio", "Power RRU", "Antenna", "Dismantle", "System", "Optic RRU", "Area", "VERIFICATION (DATE)", "VERIFICATION (STATUS)", "VERIFICATION PIC", "ISSUED DETAIL", "CR Flag engineering"]
+
+      let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
+      let HeaderRow2 = ["tower_id","program", "sow", "priority"];
+
       header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
       header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
 
@@ -822,48 +926,6 @@ class TSSRBoq extends Component {
           .concat(qtyConfig)
           .concat([drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering])
         );
-      }
-
-      const TSSRDRM = await wb.xlsx.writeBuffer();
-      saveAs(new Blob([TSSRDRM]), 'TSSR '+dataTech.no_tech_boq+' Report with DRM.xlsx');
-    }
-
-    exportFormatTSSRHorizontal = async () =>{
-      const wb = new Excel.Workbook();
-      const ws = wb.addWorksheet();
-
-      const dataTech = this.state.data_tech_boq;
-      let dataSites = [];
-      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-        dataSites = this.state.data_tech_boq_sites_version;
-      }else{
-        dataSites = this.state.data_tech_boq_sites;
-      }
-
-      const header_config = this.state.view_tech_header_table;
-
-      let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
-      let HeaderRow2 = ["tower_id","program", "sow", "priority"];
-
-      header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
-      header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
-
-      ws.addRow(HeaderRow1);
-      ws.addRow(HeaderRow2);
-      for(let i = 0; i < dataSites.length ; i++){
-        let qtyConfig = []
-        for(let j = 0; j < header_config.config_group_header.length; j++ ){
-          let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
-          if(dataConfigIdx !== undefined){
-            let idx_config_qty = dataConfigIdx.qty;
-            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, idx_config_qty]);
-          }else{
-            qtyConfig = qtyConfig.concat([null, null]);
-          }
-        }
-        let drm = this.getDataDRM(dataSites[i].site_id, dataSites[i].program);
-        ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].priority]
-          .concat(qtyConfig));
       }
 
       const TSSRDRM = await wb.xlsx.writeBuffer();
@@ -995,10 +1057,10 @@ class TSSRBoq extends Component {
                         </DropdownToggle>
                         <DropdownMenu>
                           <DropdownItem header> TSSR File</DropdownItem>
-                          <DropdownItem onClick={this.exportFormatTSSRVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Vertical</DropdownItem>
+                          <DropdownItem onClick={this.exportFormatTSSRVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Vertical Report</DropdownItem>
                           <DropdownItem onClick={this.exportFormatTSSRHorizontalWithDRM}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR with DRM Report</DropdownItem>
                           <DropdownItem onClick={this.exportDRMofTSSR}> <i className="fa fa-file-text-o" aria-hidden="true"></i>DRM of TSSR</DropdownItem>
-                          <DropdownItem onClick={this.exportFormatTSSRUpdate}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Update Vertical Format </DropdownItem>
+                          {/* }<DropdownItem onClick={this.exportFormatTSSRUpdate}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Update Vertical Format </DropdownItem> */}
                           <DropdownItem onClick={this.exportFormatTSSRHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Update Horizontal Format </DropdownItem>
 
                         </DropdownMenu>
@@ -1022,7 +1084,7 @@ class TSSRBoq extends Component {
                       <tbody>
                         <tr style={{fontWeight : '425', fontSize : '23px'}}>
                           <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>
-                          {this.props.match.params.id === undefined ? "CREATE" : ""} TSSR BOQ
+                          TSSR BOQ {this.state.data_tech_boq !== null ? this.state.data_tech_boq.no_tssr_boq : ""}
                           </td>
                         </tr>
                         {this.state.data_tech_boq !== null && (
@@ -1034,7 +1096,7 @@ class TSSRBoq extends Component {
                               <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Project : {this.state.data_tech_boq.project_name}</td>
                             </tr>
                             <tr style={{fontWeight : '390', fontSize : '10px', fontStyle:'oblique'}}>
-                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Status : {this.state.data_tech_boq.tssr_approval_status}</td>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Status : {this.state.data_tech_boq.current_status}</td>
                             </tr>
                           </React.Fragment>
                         )}
@@ -1054,6 +1116,7 @@ class TSSRBoq extends Component {
                             <th>Config</th>
                             <th>SAP Number</th>
                             <th>Qty TSSR</th>
+                            <th>Qty Delta</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1066,6 +1129,7 @@ class TSSRBoq extends Component {
                                 <td>{conf.config_id}</td>
                                 <td>{conf.sap_number}</td>
                                 <td>{conf.qty}</td>
+                                <td>{site.siteItemConfigDelta.find(e => e.config_group_type === conf.config_group_type && e.config_group === conf.config_group) !== undefined ? site.siteItemConfigDelta.find(e => e.config_group_type === conf.config_group_type && e.config_group === conf.config_group).qty : null}</td>
                               </tr>
                           )
                         )}
@@ -1124,6 +1188,10 @@ class TSSRBoq extends Component {
                           </tr>
                         </thead>
                         <tbody>
+                        <TableTSSRHorizontal
+                          dataTechBoqSites={this.state.data_tech_boq_sites_pagination}
+                          configHeader={this.state.view_tech_all_header_table}
+                        />
                         {this.state.data_tech_boq_sites_pagination.map(site =>
                           site.siteItemConfig.map(conf =>
                               <tr>
@@ -1152,6 +1220,9 @@ class TSSRBoq extends Component {
                   </nav>
                 </CardBody>
                 <CardFooter>
+                  <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value={"1"} onClick={this.approvalTSSR} disabled={false}>
+                      Confirm
+                  </Button>
                 </CardFooter>
               </Card>
             </Col>

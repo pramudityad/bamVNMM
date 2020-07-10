@@ -213,7 +213,7 @@ class MaterialDispatch extends Component {
 
   componentDidMount() {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'Material Dispatch | BAM';
   }
 
@@ -238,7 +238,7 @@ class MaterialDispatch extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {

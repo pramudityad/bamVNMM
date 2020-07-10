@@ -307,7 +307,7 @@ class OrderProcessing extends Component {
 
   componentDidMount() {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'Order Processing | BAM';
   }
 
@@ -374,7 +374,7 @@ class OrderProcessing extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {

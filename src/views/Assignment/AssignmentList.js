@@ -8,11 +8,7 @@ import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
 
-const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
-const username_tsel = 'adminbamidsuper';
-const password_tsel = 'F760qbAg2sml';
-
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+const API_URL_NODE = process.env.REACT_APP_API_URL_NODE;
 
 class AssignmentList extends Component {
   constructor(props) {
@@ -34,7 +30,6 @@ class AssignmentList extends Component {
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.getAssignmentList = this.getAssignmentList.bind(this);
-    this.downloadASGList = this.downloadASGList.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.getAssignmentList = this.getAssignmentList.bind(this);
@@ -50,26 +45,6 @@ class AssignmentList extends Component {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + this.state.tokenUser
         },
-      });
-      if (respond.status >= 200 && respond.status < 300) {
-        console.log("respond data", respond);
-      }
-      return respond;
-    } catch (err) {
-      let respond = err;
-      console.log("respond data", err);
-      return respond;
-    }
-  }
-
-  async getDataFromAPI(url) {
-    try {
-      let respond = await axios.get(API_URL_tsel + url, {
-        headers: { 'Content-Type': 'application/json' },
-        auth: {
-          username: username_tsel,
-          password: password_tsel
-        }
       });
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond data", respond);
@@ -152,27 +127,6 @@ class AssignmentList extends Component {
   onChangeDebounced(e) {
     this.getAssignmentList();
     this.getAllAssignment();
-  }
-
-  async downloadASGList() {
-    let listASGAll = [];
-    let getASG = await this.getDataFromAPI('/asp_assignment_sorted_non_page?srt=_id:-1&');
-    if (getASG.data !== undefined) {
-      listASGAll = getASG.data._items;
-    }
-    const wb = new Excel.Workbook();
-    const ws = wb.addWorksheet();
-
-    let headerRow = ["Assignment ID", "Account Name", "Project Name", "SOW Type", "NW", "NW Activity", "Terms of Payment", "Item Status", "Work Status"];
-    ws.addRow(headerRow);
-
-    for (let i = 0; i < listASGAll.length; i++) {
-      let list = listASGAll[i];
-      ws.addRow([list.Assignment_No, list.Account_Name, list.Project, list.SOW_Type, list.NW, list.NW_Activity, list.Payment_Terms, list.Item_Status, list.Work_Status])
-    }
-
-    const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Assignment List.xlsx');
   }
 
   async downloadAllAssignment() {

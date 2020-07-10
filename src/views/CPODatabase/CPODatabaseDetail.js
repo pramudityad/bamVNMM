@@ -343,16 +343,22 @@ class CPODatabaseDetail extends Component {
     saveAs(new Blob([PPFormat]), 'CPO Level 2 Template.xlsx');
   }
 
-  exportFormatCPO_level2 = async () => {
+  exportFormatCPOParentWithDetail = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["config_id", "description", "mm_id", "need_by_date", "qty", "unit", "price"]);
-    ws.addRow(["INSTALL:CONFIG SERVICE 11_1105A","3416315 |  INSTALL:CONFIG SERVICE 11_1105A  | YYYY:2019 | MM:12","desc","2020-08-21",1,"Performance Unit",1000000]);
-		ws.addRow(["Cov_2020_Config-4a","330111 | Cov_2020_Config-4a | YYYY : 2020 | MM : 04","desc","2020-12-12",200,"Performance Unit",15000000]);
+    const dataPO = this.state.data_cpo;
+
+        ws.addRow(["po_number", "date", "currency", "payment_terms", "shipping_terms", "contract", "contact", "config_id", "description", "mm_id", "need_by_date", "qty", "unit", "price", "total_price", "Match Status"]);
+
+    for(let i = 0; i < dataPO.cpoDetail.length; i++){
+      const e = dataPO.cpoDetail[i];
+      ws.addRow([dataPO.po_number.toString(), dataPO.date.substring(0, 10), dataPO.currency, dataPO.payment_terms, dataPO.shipping_terms,
+        dataPO.contract, dataPO.contact, e.config_id, e.description, e.mmid, e.need_by_date, e.qty, e.unit, e.price, , e.total_price, e.match_status]);
+    }
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), 'CPO Level 2 Template.xlsx');
+    saveAs(new Blob([PPFormat]), 'CPO Data With Detail.xlsx');
   }
 
   exportFormatCPO_level2Update = async () => {
@@ -396,9 +402,12 @@ class CPODatabaseDetail extends Component {
                       <DropdownMenu>
                         <DropdownItem header>File</DropdownItem>
                         <DropdownItem onClick={this.exportCPODetail}> CPO Detail File</DropdownItem>
+
                         {this.state.data_cpo !== null && this.state.data_cpo_db.length === 0 ? (
                           <DropdownItem onClick={this.exportFormatCPO_level2}> CPO Level 2 Template</DropdownItem>
-                        ) : ("")}
+                        ) : (
+                          <DropdownItem onClick={this.exportFormatCPOParentWithDetail}> CPO Data With Detail</DropdownItem>
+                        )}
                         {/* }<DropdownItem onClick={this.exportFormatCPO_level2Update}> CPO Level 2 Template Update</DropdownItem> */}
                       </DropdownMenu>
                     </Dropdown>
