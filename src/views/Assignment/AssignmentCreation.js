@@ -8,6 +8,8 @@ import { Redirect } from 'react-router-dom';
 import Select from 'react-select';
 import debounce from 'lodash.debounce';
 
+import {apiSendEmail} from '../../helper/asyncFunction'
+
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
@@ -294,6 +296,7 @@ class AssignmentCreation extends Component {
       }else{
         const respondSaveASG = await this.postDatatoAPINODE('/aspAssignment/createAspAssign', {"includeSsow" : this.state.can_edit_ssow === true ? true : false, "data" : dataChecking});
         if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
+          
           this.setState({ action_status : 'success' });
         } else{
           if(respondSaveASG.response !== undefined && respondSaveASG.response.data !== undefined && respondSaveASG.response.data.error !== undefined){
