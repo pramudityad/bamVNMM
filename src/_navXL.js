@@ -108,7 +108,13 @@ export default {
           url: '/prt-list',
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
-        }
+        },
+        {
+          name: 'Assignment Report',
+          url: '/assignment-list-report',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+        },
       ]
     },
     {

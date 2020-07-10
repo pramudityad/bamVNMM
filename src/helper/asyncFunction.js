@@ -3,6 +3,8 @@ import React from "react";
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
+const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
+
 const usernameXL = "adminbamidsuper";
 const passwordXL = "F760qbAg2sml";
 
@@ -102,3 +104,16 @@ export const deleteDataFromAPINODE = async (url, props) => {
     return respond;
   }
 };
+
+// email
+export const apiSendEmail = async (data) => {
+  try {
+    let respond = await axios.post(API_EMAIL, data, {
+      headers : {'Content-Type':'application/json'},
+    })
+    return respond;
+  }catch (err) {
+    let respond = undefined;
+    return respond;
+  }
+}

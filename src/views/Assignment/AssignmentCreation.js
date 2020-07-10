@@ -8,6 +8,8 @@ import { Redirect } from 'react-router-dom';
 import Select from 'react-select';
 import debounce from 'lodash.debounce';
 
+import {apiSendEmail} from '../../helper/asyncFunction'
+
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
@@ -59,6 +61,7 @@ class AssignmentCreation extends Component {
       assignment_ssow_upload : null,
       can_edit_ssow : false,
       identifier_by : "cd_id",
+      email_cpm: null,
     }
 
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -294,6 +297,20 @@ class AssignmentCreation extends Component {
       }else{
         const respondSaveASG = await this.postDatatoAPINODE('/aspAssignment/createAspAssign', {"includeSsow" : this.state.can_edit_ssow === true ? true : false, "data" : dataChecking});
         if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
+          if(this.state.can_edit_ssow === true){
+            const response = respondSaveASG.data.aspDocsp[0];
+            // let cpm_email = this.state.email_cpm;
+            // let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+response._id;
+            // const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment has been created, <br/><br/><i>Site</i>: <b>"+response.Site_ID+"</b> <br/><i>Project</i>: <b>"+response.Project+"</b><br/><i>Assignment</i>: <b>"+response.Assignment_No+"</b><br/><br/>is created by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+            // let dataEmail = {
+            //   "to": cpm_email+'; aminuddin.fauzan@ericsson.com',
+            //   // "to" : "damar.pramuditya@ericsson.com",
+            //   "subject":"[Assignment Created] Assignment "+response.Assignment_No,
+            //   "body": bodyEmail
+            // }
+            // // console.log(dataEmail)
+            // const sendEmail = await apiSendEmail(dataEmail);
+          }        
           this.setState({ action_status : 'success' });
         } else{
           if(respondSaveASG.response !== undefined && respondSaveASG.response.data !== undefined && respondSaveASG.response.data.error !== undefined){
@@ -338,7 +355,7 @@ class AssignmentCreation extends Component {
   filterDataProject = (inputValue) => {
     const list = [];
     this.state.list_project.map(i =>
-        list.push({'label' : i.Project, 'value' : i.Project})
+        list.push({'label' : i.Project, 'value' : i.Project, 'id': i._id})
     )
     this.setState({list_project_selection : list})
     if(inputValue.length === 0){
@@ -351,7 +368,11 @@ class AssignmentCreation extends Component {
   };
 
   handleChangeProjectXL(e){
-    this.setState({project_selected : e.value, project_name_selected : e.value });
+    let obj = this.state.list_project.find((a) => a.Project === e.value);
+    let email = obj.Email_CPM_Name;
+    // console.log(obj.Email_CPM_Name)
+    this.setState({project_selected : e.value, project_name_selected : e.value, email_cpm: email});
+    // console.log(this.state.email_cpm);
     return e;
   }
 

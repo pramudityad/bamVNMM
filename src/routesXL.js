@@ -66,6 +66,7 @@ const MatLOMList = React.lazy(() => import('./views/MR/MatLOMList'));
 
 const AssignmentCreation = React.lazy(() => import('./views/Assignment/AssignmentCreation'));
 const AssignmentList = React.lazy(() => import('./views/Assignment/AssignmentList'));
+const AssignmentReport = React.lazy(() => import('./views/Assignment/AssignmentReport'));
 const BulkAssignment = React.lazy(() => import('./views/Assignment/BulkAssignment'));
 const AssignmentDetail = React.lazy(() => import('./views/Assignment/AssignmentDetail'));
 const AssignmentEdit = React.lazy(() => import('./views/Assignment/AssignmentEdit'));
@@ -214,6 +215,7 @@ const routes = [
 
   { path: '/assignment-creation', exact: true, name: 'Assignment Creation', component: AssignmentCreation },
   { path: '/assignment-list', exact: true, name: 'Assignment List', component: AssignmentList },
+  { path: '/assignment-list-report', exact: true, name: 'Assignment List', component: AssignmentReport },
   { path: '/bulk-assignment-creation', exact: true, name: 'Bulk Assignment Creation', component: BulkAssignment },
   { path: '/assignment-detail/:id', exact: true, name: 'Assignment Detail', component: AssignmentDetail },
   { path: '/assignment-edit/:id', exact: true, name: 'Assignment Edit', component: AssignmentEdit },
