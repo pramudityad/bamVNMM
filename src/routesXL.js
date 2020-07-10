@@ -111,6 +111,9 @@ const CPODatabaseDetail  = React.lazy(() => import('./views/CPODatabase/CPODatab
 const ShipmentList = React.lazy(() => import('./views/ShipmentList/ShipmentList'));
 
 const WHManagement  = React.lazy(() => import('./views/MR/WHManagement/WHManagement'));
+const ASPManagement  = React.lazy(() => import('./views/MR/ASPUser/ASPUser'));
+const ASPManagementDet  = React.lazy(() => import('./views/MR/ASPUser/ASPUserDet'));
+
 
 const MaterialStock  = React.lazy(() => import('./views/MR/WHStock/MatStock2'));
 const MaterialInboundPlan  = React.lazy(() => import('./views/MR/WHInbound/MatInboundPlan2'));
@@ -264,6 +267,10 @@ const routes = [
   { path: '/shipment-list', exact: true, name: 'Shipment List', component: ShipmentList },
 
   { path: '/wh-management', exact: true, name: 'Warehouse Management', component: WHManagement },
+  { path: '/asp-user-management', exact: true, name: 'Vendor List', component: ASPManagement },
+  { path: '/asp-user-management/:id', exact: true, name: 'Vendor Management', component: ASPManagementDet },
+
+
   { path: '/mat-library', exact: true, name: 'Material Library', component: MatLibrary },
 
   { path: '/mr-dashboard-global', exact: true, name: 'Material Request Dashboard', component: MRDashboardGlob },
