@@ -172,7 +172,11 @@ class DefaultLayout extends Component {
                         )} />
                     ) : (null);
                   })}
-                  <Redirect from="/" to="/dashboard" />
+                  {((this.state.userRole.includes("BAM-ASP") !== false || this.state.userRole.includes("BAM-ASP Management") !== false) && this.state.userRole.includes("Admin") === false) ? (
+                    <Redirect from="/" to="/assignment-list-asp" />
+                  ) : (
+                    <Redirect from="/" to="/dashboard" />
+                  )}
                 </Switch>
               </Suspense>
             </Container>
