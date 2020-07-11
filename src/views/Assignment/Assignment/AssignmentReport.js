@@ -37,8 +37,6 @@ class AssignmentListReport extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      vendor_name : this.props.dataLogin.vendor_name,
-      vendor_code : this.props.dataLogin.vendor_code,
       assignment_list: [],
       prevPage: 0,
       activePage: 1,
@@ -127,6 +125,12 @@ class AssignmentListReport extends Component {
           this.state.filter_list[2] +
           '", "$options" : "i"}'
       );
+    this.state.filter_list[3] !== "" &&
+      filter_array.push(
+        '"Vendor_Name":{"$regex" : "' +
+          this.state.filter_list[3] +
+          '", "$options" : "i"}'
+      );
     this.state.filter_list[4] !== "" &&
       filter_array.push(
         '"Payment_Terms":{"$regex" : "' +
@@ -145,9 +149,6 @@ class AssignmentListReport extends Component {
           this.state.filter_list[6] +
           '", "$options" : "i"}'
       );
-      if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
-        filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
-      }
       let whereAnd = "{" + filter_array.join(",") + "}";
       this.getDataFromAPINODE(
       "/aspAssignment/aspassign?srt=_id:-1&q="+ date + "&" +
@@ -188,6 +189,12 @@ class AssignmentListReport extends Component {
           this.state.filter_list[2] +
           '", "$options" : "i"}'
       );
+    this.state.filter_list[3] !== "" &&
+      filter_array.push(
+        '"Vendor_Name":{"$regex" : "' +
+          this.state.filter_list[3] +
+          '", "$options" : "i"}'
+      );
     this.state.filter_list[4] !== "" &&
       filter_array.push(
         '"Payment_Terms":{"$regex" : "' +
@@ -206,9 +213,6 @@ class AssignmentListReport extends Component {
           this.state.filter_list[6] +
           '", "$options" : "i"}'
       );
-      if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
-        filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
-      }
     let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE(
       "/aspAssignment/aspassign?srt=_id:-1&noPg=1&q=" + whereAnd

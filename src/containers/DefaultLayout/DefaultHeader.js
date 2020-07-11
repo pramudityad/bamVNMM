@@ -27,6 +27,12 @@ class DefaultHeader extends Component {
     super(props);
 
     this.state = {
+      userId: this.props.dataLogin._id,
+      userName: this.props.dataLogin.userName,
+      userEmail: this.props.dataLogin.email,
+      tokenUser: this.props.dataLogin.token,
+      vendor_name : this.props.dataLogin.vendor_name,
+      vendor_code : this.props.dataLogin.vendor_code,
       order_created : [],
       rtd : [],
       userRole: this.props.dataLogin.role,
@@ -79,8 +85,12 @@ class DefaultHeader extends Component {
   }
 
   componentDidMount() {
-    this.getOrderCreated();
-    this.getRTD();
+    if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
+      
+    }else{
+      this.getOrderCreated();
+      this.getRTD();
+    }
   }
 
   render() {

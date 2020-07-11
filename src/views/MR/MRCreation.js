@@ -649,7 +649,6 @@ class MRCreation extends Component {
                       type="date"
                       name="5" value={this.state.create_mr_form[5]} onChange={this.handleChangeFormMRCreation}
                       style={this.state.validation_form.etd === false ? {borderColor : 'red'} : {}}
-                      min={this.addDateFunction(4)}
                     />
                   </FormGroup>
                 </Col>

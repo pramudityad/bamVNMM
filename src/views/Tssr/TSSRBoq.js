@@ -1220,9 +1220,15 @@ class TSSRBoq extends Component {
                   </nav>
                 </CardBody>
                 <CardFooter>
-                  <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value={"1"} onClick={this.approvalTSSR} disabled={false}>
-                      Confirm
-                  </Button>
+                {this.state.data_tech_boq !== null && (
+                  <Fragment>
+                    {this.state.data_tech_boq.current_status !== "TSSR BOQ CONFIRMED" && (
+                      <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value={"1"} onClick={this.approvalTSSR} disabled={false}>
+                          Confirm
+                      </Button>
+                    )}
+                  </Fragment>
+                )}
                 </CardFooter>
               </Card>
             </Col>

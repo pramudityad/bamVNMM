@@ -25,6 +25,8 @@ class MaterialDispatch extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      vendor_name : this.props.dataLogin.vendor_name,
+      vendor_code : this.props.dataLogin.vendor_code,
       mr_list: [],
       prevPage: 0,
       activePage: 1,
@@ -98,8 +100,9 @@ class MaterialDispatch extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     filter_array.push('"$or" : [{"current_milestones": "MS_DISPATCH"}, {"current_milestones": "MS_LOADING_PROCESS", "current_mr_status": "LOADING PROCESS FINISH"}]');
-    if(this.state.userRole.indexOf("BAM-ASP Management") === 1 && this.state.userRole.indexOf("Admin") === -1){
-      filter_array.push('"dsp_company" : "Tes Vendor"');
+
+    if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
+      filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
     }
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
@@ -127,8 +130,8 @@ class MaterialDispatch extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     filter_array.push('"$or" : [{"current_milestones": "MS_DISPATCH"}, {"current_milestones": "MS_LOADING_PROCESS", "current_mr_status": "LOADING PROCESS FINISH"}]');
-    if(this.state.userRole.indexOf("BAM-ASP Management") === 1 && this.state.userRole.indexOf("Admin") === -1){
-      filter_array.push('"dsp_company" : "Tes Vendor"');
+    if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
+      filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
     }
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
@@ -318,7 +321,7 @@ class MaterialDispatch extends Component {
                           {list.current_mr_status === "LOADING PROCESS FINISH" ? (
                             "Waiting Dispatch"
                           ) : (
-                              <React.Fragment>Finish {this.state.userRole.indexOf("BAM-ASP Management") === -1 && (<Button color="info" size="sm" onClick={() => this.downloadMRTRACY(list._id)}>TRACY</Button>)}</React.Fragment>
+                              <React.Fragment>Finish {(this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 )&& (<Button color="info" size="sm" onClick={() => this.downloadMRTRACY(list._id)}>TRACY</Button>)}</React.Fragment>
                             )}
                         </td>
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>

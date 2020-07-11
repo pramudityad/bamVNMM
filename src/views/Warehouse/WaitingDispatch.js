@@ -25,6 +25,8 @@ class WaitingDispatch extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      vendor_name : this.props.dataLogin.vendor_name,
+      vendor_code : this.props.dataLogin.vendor_code,
       mr_list: [],
       prevPage: 0,
       activePage: 1,
@@ -98,6 +100,9 @@ class WaitingDispatch extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     filter_array.push('"$or" : [{"current_mr_status": "LOADING PROCESS FINISH"}]');
+    if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
+      filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
+    }
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
@@ -124,6 +129,9 @@ class WaitingDispatch extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     filter_array.push('"$or" : [{"current_mr_status": "LOADING PROCESS FINISH"}]');
+    if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
+      filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
+    }
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
       console.log("MR List All", res);

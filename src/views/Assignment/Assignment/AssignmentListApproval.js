@@ -14,7 +14,7 @@ const password_tsel = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class AssignmentListASP extends Component {
+class AssignmentListApproval extends Component {
   constructor(props) {
     super(props);
 
@@ -24,8 +24,6 @@ class AssignmentListASP extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      vendor_name : this.props.dataLogin.vendor_name,
-      vendor_code : this.props.dataLogin.vendor_code,
       assignment_list: [],
       prevPage: 0,
       activePage: 1,
@@ -89,11 +87,8 @@ class AssignmentListASP extends Component {
     this.state.filter_list[2] !== "" && (filter_array.push('"Project":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
     this.state.filter_list[3] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
     this.state.filter_list[4] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+    filter_array.push('"Current_Status":"REQUEST PM APPROVAL"');
     this.state.filter_list[6] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
-    filter_array.push('"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP"');
-    if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
-      filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
-    }
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
@@ -106,7 +101,7 @@ class AssignmentListASP extends Component {
 
   componentDidMount() {
     this.getAssignmentList();
-    document.title = 'Assignment List | BAM';
+    document.title = 'Assignment List NA | BAM';
   }
 
   handlePageChange(pageNumber) {
@@ -134,15 +129,10 @@ class AssignmentListASP extends Component {
 
   async downloadASGList() {
     let listASGAll = [];
-    let vendorSeacrh = '';
-    if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
-      vendorSeacrh = ', "Vendor_Name" : "'+this.state.vendor_name+'"';
-    }
-    let getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1&q={"Current_Status" : "ASP ASSIGNMENT NOTIFIED TO ASP"'+vendorSeacrh+'}');
+    let getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1');
     if (getASG.data !== undefined) {
       listASGAll = getASG.data.data;
     }
-
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
@@ -185,6 +175,10 @@ class AssignmentListASP extends Component {
       marginRight: '10px'
     }
 
+    const tableWidth = {
+      width: '150px'
+    }
+
     return (
       <div className="animated fadeIn">
         <Row>
@@ -192,7 +186,7 @@ class AssignmentListASP extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: '2' }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> Assignment List
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> Assignment List Need Approval
                 </span>
               </CardHeader>
               <CardBody>
@@ -221,7 +215,7 @@ class AssignmentListASP extends Component {
                     {this.state.assignment_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
-                          <Link to={'/assignment-detail-asp/' + list._id}>
+                          <Link to={'/assignment-detail/' + list._id}>
                             <Button style={{ width: "90px" }} outline color="info" size="sm">Detail</Button>
                           </Link>
                         </td>
@@ -261,4 +255,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(AssignmentListASP);
+export default connect(mapStateToProps)(AssignmentListApproval);

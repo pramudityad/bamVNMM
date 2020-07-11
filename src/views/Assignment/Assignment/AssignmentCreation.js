@@ -299,17 +299,18 @@ class AssignmentCreation extends Component {
         if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
           if(this.state.can_edit_ssow === true){
             const response = respondSaveASG.data.aspDocsp[0];
-            let cpm_email = this.state.email_cpm;
-            let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+response._id;
-            const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been created and need approval because the assingment not using list SSOW from the mapping, <br/><br/><i>Site</i>: <b>"+response.Site_ID+"</b> <br/><i>Project</i>: <b>"+response.Project+"</b><br/><i>Assignment</i>: <b>"+response.Assignment_No+"</b><br/><br/>is created by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
-            let dataEmail = {
-              // "to": cpm_email+'; aminuddin.fauzan@ericsson.com',
-              "to": cpm_email+' ;',
-              "subject":"[Assignment Need Approval] Assignment "+response.Assignment_No,
-              "body": bodyEmail
-            }
-            // console.log(dataEmail)
-            const sendEmail = await apiSendEmail(dataEmail);
+            // let cpm_email = this.state.email_cpm;
+            // let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+response._id;
+            // const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been created and need approval because the assingment not using list SSOW from the mapping, <br/><br/><i>Site</i>: <b>"+response.Site_ID+"</b> <br/><i>Project</i>: <b>"+response.Project+"</b><br/><i>Assignment</i>: <b>"+response.Assignment_No+"</b><br/><br/>is created by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+            // let dataEmail = {
+            //   // "to": cpm_email+'; aminuddin.fauzan@ericsson.com',
+            //   "to": cpm_email+' ;',
+            //   // "to" : "damar.pramuditya@ericsson.com",
+            //   "subject":"[Assignment Need Approval] Assignment "+response.Assignment_No,
+            //   "body": bodyEmail
+            // }
+            // // console.log(dataEmail)
+            // const sendEmail = await apiSendEmail(dataEmail);
           }
           this.setState({ action_status : 'success' });
         } else{

@@ -8,8 +8,6 @@ import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
 import ActionType from '../../redux/reducer/globalActionType';
-import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
-
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -224,7 +222,7 @@ class BulkRequest extends Component {
   componentDidMount() {
     this.props.SidebarMinimizer(true);
     this.getMRList();
-    // this.getAllMR();
+    this.getAllMR();
     document.title = 'MR PS Not Assigned | BAM';
   }
 
@@ -308,7 +306,7 @@ class BulkRequest extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    // this.getAllMR();
+    this.getAllMR();
   }
 
   loopSearchBar = () => {
@@ -407,10 +405,10 @@ class BulkRequest extends Component {
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
-                        <td>{convertDateFormat(list.eta)}</td>
+                        <td>{list.eta}</td>
                         <td></td>
-                        <td>{convertDateFormatfull(list.updated_on)}</td>
-                        <td>{convertDateFormatfull(list.created_on)}</td>
+                        <td>{list.updated_on}</td>
+                        <td>{list.created_on}</td>
                       </tr>
                     )}
                   </tbody>

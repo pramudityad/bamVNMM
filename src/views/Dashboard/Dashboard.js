@@ -520,6 +520,8 @@ class Dashboard extends Component {
       pendingBOQ : 0,
       pendingMR : 0,
       pendingASG : 0,
+      POExpired : 0,
+      queryPOExpired : '',
     };
   }
 
@@ -557,6 +559,7 @@ class Dashboard extends Component {
     this.getPendingTaskBOQ();
     this.getPendingTaskMR();
     this.getPendingTaskASG();
+    this.getPODataListPending();
   }
 
   async getPendingTaskBOQ(){
@@ -585,6 +588,23 @@ class Dashboard extends Component {
       count = dataPendingTPM.data.totalResults;
       this.setState({pendingASG : count});
     }
+  }
+
+  getPODataListPending() {
+    let count = 0;
+    let today = new Date();
+    today.setDate(today.getDate()-120);
+    let dateExpired = today.getFullYear().toString()+"-"+(today.getMonth()+1).toString().padStart(2, '0')+"-"+today.getDate().toString().padStart(2, '0');
+    this.setState({queryPOExpired : 'q={"date" : {"$lte":"'+dateExpired+' 0:0:0"}}'});
+    this.getDataFromAPINODE('/cpodb/getCpoDb?srt=_id:-1&lmt=1&pg=1&q={"date" : {"$lte":"'+dateExpired+' 0:0:0"}}')
+      .then(res => {
+        if (res.data !== undefined) {
+          count = res.data.totalResults;
+          this.setState({POExpired : count});
+        } else {
+          this.setState({POExpired : 0});
+        }
+      })
   }
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
@@ -636,15 +656,17 @@ class Dashboard extends Component {
           </Col>
 
           <Col xs="12" sm="6" lg="3">
+          <Link to={'/cpo-database/'}>
             <Card className="text-white bg-danger">
               <CardBody className="pb-0">
-                <div className="text-value">0</div>
-                <div>Rejected Task</div>
+                <div className="text-value">{this.state.POExpired}</div>
+                <div>PO to Be Expired & Expired</div>
               </CardBody>
               <div className="chart-wrapper mx-3" style={{ height: '70px' }}>
                 <Bar data={cardChartData4} options={cardChartOpts4} height={70} />
               </div>
             </Card>
+            </Link>
           </Col>
         </Row>
 

@@ -7,6 +7,7 @@ import { ExcelRenderer } from 'react-excel-renderer';
 import { connect } from 'react-redux';
 import { Modal, ModalBody, ModalHeader, ModalFooter } from 'reactstrap';
 import * as XLSX from 'xlsx';
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -318,6 +319,8 @@ class CPODatabaseDetail extends Component {
     ws.addRow(["Currency", dataCPO.currency]);
     ws.addRow(["Contract", dataCPO.contract]);
     ws.addRow(["Contact", dataCPO.contact]);
+    ws.addRow(["Date", convertDateFormat(dataCPO.date)]);
+    ws.addRow(["Aging", this.Aging(convertDateFormat(dataCPO.date))]);
 
     ws.addRow([""]);
 
@@ -381,6 +384,14 @@ class CPODatabaseDetail extends Component {
       this.getPODataList(this.props.match.params.id);
     }
     document.title = 'CPO Database Detail | BAM';
+  }
+
+  Aging(date){
+    let today = new Date();
+    today.setDate(today.getDate()-120);
+    let dateExpired = today.getFullYear().toString()+"-"+(today.getMonth()+1).toString().padStart(2, '0')+"-"+today.getDate().toString().padStart(2, '0');
+    let aging = (new Date() - new Date(date)) / (1000 * 60 * 60 * 24);
+    return aging.toFixed(0);
   }
 
   render() {
@@ -513,7 +524,7 @@ class CPODatabaseDetail extends Component {
                   {/* <React.Fragment> */}
                   {this.state.data_cpo !== null && (
                     <Row>
-                      <Col sm="6" md="6">
+                      <Col sm="7" md="7">
                         <table className="table-header">
                           <tbody>
                             <tr style={{ fontWeight: '425', fontSize: '15px' }}>
@@ -538,6 +549,25 @@ class CPODatabaseDetail extends Component {
                               <td>Contact</td>
                               <td>:</td>
                               <td>{this.state.data_cpo.contact}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </Col>
+                      <Col sm="5" md="5">
+                        <table className="table-header">
+                          <tbody>
+                            <tr style={{ fontWeight: '425', fontSize: '15px' }}>
+                              <td colSpan="4" style={{ textAlign: 'center', marginBottom: '10px', fontWeight: '500' }}>CPO INFORMATION</td>
+                            </tr>
+                            <tr style={{ fontWeight: '425', fontSize: '15px' }}>
+                              <td style={{ width: '150px' }}>Date </td>
+                              <td>:</td>
+                              <td>{convertDateFormat(this.state.data_cpo.date)}</td>
+                            </tr>
+                            <tr style={{ fontWeight: '425', fontSize: '15px' }}>
+                              <td>Aging</td>
+                              <td>:</td>
+                              <td style={this.Aging(convertDateFormat(this.state.data_cpo.date)) >= 120 ? {color : 'rgba(230,74,25 ,1)'} : {} }>{this.Aging(convertDateFormat(this.state.data_cpo.date))}</td>
                             </tr>
                           </tbody>
                         </table>

@@ -1112,12 +1112,12 @@ class CommercialBoq extends Component {
                           <th>Qty</th>
                           {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === false) && (
                             <React.Fragment>
-                          <th>Unit Price after Incentive (USD)</th>
-                          <th>Unit Price after Incentive (IDR)</th>
-                          <th>Total Price after Incentive (USD)</th>
-                          <th>Total Price after Incentive (IDR)</th>
-                          </React.Fragment>
-                        )}
+                            <th>Unit Price after Incentive (USD)</th>
+                            <th>Unit Price after Incentive (IDR)</th>
+                            <th>Total Price after Incentive (USD)</th>
+                            <th>Total Price after Incentive (IDR)</th>
+                            </React.Fragment>
+                          )}
                         </tr>
                       </thead>
                       <tbody>

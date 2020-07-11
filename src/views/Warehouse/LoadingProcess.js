@@ -618,7 +618,7 @@ class LoadingProcess extends Component {
                             <td style={{ textAlign: 'left' }}>{mr.mr_id}</td>
                             <td>{mr.project_name}</td>
                             <td>{mr.total_boxes}</td>
-                            <td>{mr.list_of_box_id !== undefined ? mr.list_of_box_id.map(e => e + ', ') : ''}</td>
+                            <td>{mr.list_of_box_id !== undefined ? mr.list_of_box_id.map(e => typeof e === "string" ? e+" , " : e.box_id + " , ") : ''}</td>
                           </tr>
                         )}
                       </tbody>

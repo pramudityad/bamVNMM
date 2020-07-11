@@ -24,8 +24,6 @@ class AssignmentListASP extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      vendor_name : this.props.dataLogin.vendor_name,
-      vendor_code : this.props.dataLogin.vendor_code,
       assignment_list: [],
       prevPage: 0,
       activePage: 1,
@@ -90,10 +88,7 @@ class AssignmentListASP extends Component {
     this.state.filter_list[3] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
     this.state.filter_list[4] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
     this.state.filter_list[6] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
-    filter_array.push('"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP"');
-    if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
-      filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
-    }
+    filter_array.push('"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP"')
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
@@ -134,11 +129,7 @@ class AssignmentListASP extends Component {
 
   async downloadASGList() {
     let listASGAll = [];
-    let vendorSeacrh = '';
-    if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
-      vendorSeacrh = ', "Vendor_Name" : "'+this.state.vendor_name+'"';
-    }
-    let getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1&q={"Current_Status" : "ASP ASSIGNMENT NOTIFIED TO ASP"'+vendorSeacrh+'}');
+    let getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1&q={"Current_Status" : "ASP ASSIGNMENT NOTIFIED TO ASP"}');
     if (getASG.data !== undefined) {
       listASGAll = getASG.data.data;
     }

@@ -580,7 +580,7 @@ class OrderCreated extends Component {
 
   rejectMR(e) {
     const id_doc = e.currentTarget.id;
-    this.patchDatatoAPINODE("/matreq/rejectMatreq/" + id_doc).then((res) => {
+    this.patchDatatoAPINODE("/matreq/rejectMatreq/" + id_doc, {"rejectNote": "Rejected MR by LDM"}).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getMRList();
