@@ -20,11 +20,12 @@ import Excel from "exceljs";
 import { connect } from "react-redux";
 import * as XLSX from "xlsx";
 import { Redirect, Route, Switch, Link } from 'react-router-dom';
+import Select from 'react-select';
 
 
 import ModalDelete from "../../components/ModalDelete";
 import Loading from '../../components/Loading'
-import {getDatafromAPIEXEL ,getDatafromAPINODE, postDatatoAPINODE, patchDatatoAPINODE, deleteDataFromAPINODE} from '../../../helper/asyncFunction'
+import {getDatafromAPIEXEL,getDatafromAPINODE, postDatatoAPINODE, patchDatatoAPINODE, deleteDataFromAPINODE} from '../../../helper/asyncFunction'
 import {convertDMSToDD} from '../../../helper/basicFunction'
 import "../MatStyle.css";
 
@@ -76,6 +77,7 @@ class ASPUserManagement extends React.Component {
       all_data: [],
       asp_data: [],
       data_PO: [],
+      asp_list : [],
       packageSelected: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
@@ -92,6 +94,9 @@ class ASPUserManagement extends React.Component {
       selected_wh_id: "",
       sortType: 0,
       sortField: "",
+      selected_vendor_code: null,
+      selected_vendor_name: null,
+      list_asp_user: [],
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -109,7 +114,8 @@ class ASPUserManagement extends React.Component {
     this.resettogglecreateModal = this.resettogglecreateModal.bind(this);
     this.requestSort = this.requestSort.bind(this);
     this.handleChangeLimit = this.handleChangeLimit.bind(this);
-
+    this.handleSelectUser = this.handleSelectUser.bind(this);
+    this.handlechangevendor = this.handlechangevendor.bind(this);
   }
 
   toggle(i) {
@@ -180,17 +186,58 @@ class ASPUserManagement extends React.Component {
     }));
   }
 
-  toggleMatStockForm() {
-    this.getASPList();
-    this.setState((prevState) => ({
-      modalMatStockForm: !prevState.modalMatStockForm,
-    }));
-  }
+  // toggleMatStockForm(e) {
+  //   if(this.state.modalMatStockForm === true){
+  //     this.setState((prevState) => ({
+  //       modalMatStockForm: !prevState.modalMatStockForm
+  //     }));
+  //   }else{
+  //     const code_vendor = e.target.value;
+  //     const name_vendor = e.target.name;
+  //     console.log(code_vendor)
+  //     // this.getASPList();
+  //     this.setState((prevState) => ({
+  //       modalMatStockForm: !prevState.modalMatStockForm, selected_vendor_code: code_vendor, selected_vendor_name: name_vendor
+  //     }));
+  //   }
+  // }
 
   togglecreateModal() {
     this.setState({
       createModal: !this.state.createModal,
     });
+  }
+
+  loadOptionsASP() {
+    getDatafromAPIEXEL('/vendor_data_non_page', this.state.tokenUser).then(res => {
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({asp_list : items});
+      }
+    })
+  }
+
+  getASPUser() {
+    getDatafromAPINODE("/vendorManagement/getAllUser", this.props.dataLogin.token).then((res) => {
+      if (res.data !== undefined) {
+        const data_user = res.data.data;
+        let list_asp_select = [];      
+        data_user.map(i => list_asp_select.push({'label' : i.email, 'value' : i._id}))  
+        this.setState({ list_asp_user: list_asp_select, 
+          });
+      } else {
+        this.setState({ list_asp_user: [] });
+      }
+    });
+  }
+
+  toggleMatStockForm() {
+    this.getASPUser();
+    this.loadOptionsASP();
+    // this.getASPList();
+    this.setState((prevState) => ({
+      modalMatStockForm: !prevState.modalMatStockForm,
+    }));
   }
 
   changeFilterName(value) {
@@ -244,13 +291,12 @@ class ASPUserManagement extends React.Component {
   getASPList() {
     // switch (this.props.dataLogin.account_id) {
     //   case "xl":
-    getDatafromAPIEXEL("/vendor_data").then((res) => {
+    getDatafromAPINODE('/vendorManagement/viewAllVendor', this.props.dataLogin.token).then((res) => {
       // console.log("asp data ", res.data);
       if (res.data !== undefined) {
-        this.setState({ asp_data: res.data._items, prevPage: this.state.activePage,
-            total_dataParent: res.data._meta.total, });
+        this.setState({ asp_data: res.data.data });
       } else {
-        this.setState({ asp_data: [], prevPage: this.state.activePage, total_dataParent: 0 });
+        this.setState({ asp_data: [] });
       }
     });
     //     break;
@@ -557,42 +603,36 @@ class ASPUserManagement extends React.Component {
   async saveNew() {
     this.toggleMatStockForm();
     this.toggleLoading();
-    let poData = [];
-    let respondSaveNew = undefined;
-    const dataPPEdit = this.state.DataForm;
-    let pp = {
-      wh_name: dataPPEdit[0],
-      wh_id: dataPPEdit[1],
-      wh_manager: dataPPEdit[2],
-      address: dataPPEdit[3],
-      owner: dataPPEdit[4],
-      wh_type: dataPPEdit[5],
-      latitude: dataPPEdit[6],
-      longitude: dataPPEdit[7],
-    };
-    poData.push(pp);
-    console.log("post data ", pp);
-    let postData = await postDatatoAPINODE(
-      "/whManagement/createOneWarehouse",
+    let poData = [];    
+    for (let i = 0; i < this.state.id_email_selected.length; i++) {
+      poData.push({
+        id: this.state.id_email_selected[i],
+        vendor_code: this.state.selected_vendor_code,
+      });      
+    }
+    // poData.push(pp);
+    console.log("post data ", poData);
+    let postData = await patchDatatoAPINODE(
+      "/vendorManagement/assignVendor",
       {
-        managementData: pp,
+        data: poData,
       }, this.props.dataLogin.token
     ).then((res) => {
-      console.log("res save one ", res);
+      console.log("res save ", res);
       if (res.data !== undefined) {
         this.setState({ action_status: "success" }, () => {
           this.toggleLoading();
         });
       } else {
-        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
-          if (res.response.data.error.message !== undefined) {
-            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-          } else {
-            this.setState({ action_status: 'failed', action_message: res.response.data.error });
-          }
-        } else {
+        // if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        //   if (res.response.data.error.message !== undefined) {
+        //     this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        //   } else {
+        //     this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        //   }
+        // } else {
           this.setState({ action_status: 'failed' });
-        }
+        // }
         this.toggleLoading();
       }
     });
@@ -655,25 +695,6 @@ class ASPUserManagement extends React.Component {
     const allocexport = await wb.xlsx.writeBuffer();
     saveAs(new Blob([allocexport]), "All Warehouse.xlsx");
   }
-
-  DeleteData = async () => {
-    const objData = this.state.selected_id;
-    this.toggleLoading();
-    this.toggleDelete();
-    const DelData = deleteDataFromAPINODE(
-      "/whManagement/deleteWarehouse/" + objData, this.props.dataLogin.token
-    ).then((res) => {
-      if (res.data !== undefined) {
-        this.setState({ action_status: "success" });
-        this.getWHStockList();
-        this.toggleLoading();
-      } else {
-        this.setState({ action_status: "failed" }, () => {
-          this.toggleLoading();
-        });
-      }
-    });
-  };
 
   exportMatStatus = async () => {
 
@@ -740,6 +761,41 @@ class ASPUserManagement extends React.Component {
     });
   }
 
+  handleSelectUser = (newValue) => {
+    if (newValue !== null) {
+      const selectPriority = [];
+      newValue.forEach( i => {
+        selectPriority.push(i.value)
+      })
+      console.log('selectPriority ',selectPriority)
+      this.setState({id_email_selected : selectPriority});
+      // this.priorityToXLSCreation(selectPriority)
+    } else {
+      this.setState({id_email_selected : []});
+      // this.priorityToXLSCreation([])
+    }
+    return newValue;
+  }
+
+  DeleteData = async () => {
+    const objData = this.state.selected_id;
+    this.toggleLoading();
+    this.toggleDelete();
+    const DelData = deleteDataFromAPINODE(
+      "/whManagement/deleteWarehouse/" + objData, this.props.dataLogin.token
+    ).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
+        this.getWHStockList();
+        this.toggleLoading();
+      } else {
+        this.setState({ action_status: "failed" }, () => {
+          this.toggleLoading();
+        });
+      }
+    });
+  };
+
   requestSort(e) {
     let sortType = this.state.sortType;
     if (sortType === 0) {
@@ -757,6 +813,16 @@ class ASPUserManagement extends React.Component {
         this.getListSort();
       });
     }
+  }
+
+  async handlechangevendor(e) {
+    const code = e.target.value;
+    // console.log('code ', code);
+    // const name = e.target.value;
+    // const value = e.target.value;
+    this.setState({ selected_vendor_code: code }, () => {
+      console.log(this.state.selected_vendor_code)
+    });
   }
 
   render() {
@@ -780,7 +846,7 @@ class ASPUserManagement extends React.Component {
                   style={{ display: "inline-flex" }}
                 >
                   <div>
-                    {this.state.userRole.includes("Flow-PublicInternal") !==
+                    {/* {this.state.userRole.includes("Flow-PublicInternal") !==
                     true ? (
                       <div>
                         <Dropdown
@@ -794,7 +860,7 @@ class ASPUserManagement extends React.Component {
                               {" "}
                               &nbsp;{" "}
                             </i>{" "}
-                            Create New
+                            Assign User
                           </DropdownToggle>
                           <DropdownMenu>
                             <DropdownItem onClick={this.toggleMatStockForm}>
@@ -805,13 +871,27 @@ class ASPUserManagement extends React.Component {
                             </DropdownItem>
                           </DropdownMenu>
                         </Dropdown>
-                      </div>
+                        <Button onClick={this.toggleMatStockForm}>
+                        <i className="fa fa-plus-square" aria-hidden="true">
+                              {" "}
+                              &nbsp;{" "}
+                            </i>{" "}
+                            Assign User
+                        </Button> */}
+                        <Button onClick={this.toggleMatStockForm}>
+                        <i className="fa fa-plus-square" aria-hidden="true">
+                              {" "}
+                              &nbsp;{" "}
+                            </i>{" "}
+                            New User
+                        </Button>
+                      {/* </div>
                     ) : (
                       ""
-                    )}
+                    )} */}
                   </div>
                   &nbsp;&nbsp;&nbsp;
-                  <div style={{ marginRight: "10px" }}>
+                  {/* <div style={{ marginRight: "10px" }}>
                     <Dropdown
                       isOpen={this.state.dropdownOpen[1]}
                       toggle={() => {
@@ -836,7 +916,7 @@ class ASPUserManagement extends React.Component {
                         </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
-                  </div>
+                  </div> */}
                 </div>
               </CardHeader>
               <Collapse
@@ -882,7 +962,7 @@ class ASPUserManagement extends React.Component {
                       className="search-box-material"
                       type="text"
                       name="filter"
-                      placeholder="Search WH Name"
+                      placeholder="Search"
                       onChange={this.handleChangeFilter}
                       value={this.state.filter_name}
                     />
@@ -907,8 +987,7 @@ class ASPUserManagement extends React.Component {
                               >
                                 <b>Vendor Code</b>
                               </Button></th>
-                            <th style={{ width: '100px'}}>Vendor Email</th>
-                            <th></th>
+                            <th ></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -925,12 +1004,9 @@ class ASPUserManagement extends React.Component {
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.Vendor_Code}
-                                  </td>
-                                  <td >
-                                    {e.Email}
-                                  </td>                                  
-                                  <td style={{ textAlign: 'center' }}>
-                                  <Link to={'/asp-user-management/' + e._id}>
+                                  </td>                                                 
+                                  <td>
+                                  <Link to={'/asp-user-management/' + e.Vendor_Code}>
                                     <Button color="primary" size="sm" style={{ marginRight: '10px' }}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                                   </Link>
                                 </td>
@@ -967,113 +1043,41 @@ class ASPUserManagement extends React.Component {
           toggle={this.toggleMatStockForm}
           className="modal--form-e"
         >
-          <ModalHeader>Form WH Management</ModalHeader>
+          <ModalHeader>Vendor Management</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="wh_name">Warehouse Name</Label>
-                  <Input
-                    type="text"
-                    name="0"
-                    placeholder="Warehouse Name"
-                    value={this.state.DataForm[0]}
-                    onChange={this.handleChangeForm}
-                  />
+                  {/* single */}
+                  <Label htmlFor="wh_name">Email</Label>
+                  <Select
+                    isMulti
+                    name="priority"
+                    options={this.state.list_asp_user}
+                    className="basic-multi-select"
+                    classNamePrefix="select"
+                    onChange={this.handleSelectUser}
+                    // isDisabled = {this.state.list_asp_user.length==0}
+                                />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="wh_id">Warehouse ID </Label>
-                  <Input
-                    type="text"
-                    name="1"
-                    placeholder="Warehouse ID"
-                    value={this.state.DataForm[1]}
-                    onChange={this.handleChangeForm}
-                  />
+                  <Label>Vendor Name</Label>
+                  <Input type="select" name="14" onChange={this.handlechangevendor}>
+                          <option value="" disabled selected hidden>Select Vendor</option>
+                          {this.state.asp_list.map((list, i) =>
+                            <option value={list.Vendor_Code}>{list.Name}</option>
+                          )}
+                        </Input>
                 </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="wh_manager">WH Manager</Label>
-                  <Input
-                    type="text"
-                    name="2"
-                    placeholder="WH Manager"
-                    value={this.state.DataForm[2]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    type="text"
-                    name="3"
-                    placeholder="Address"
-                    value={this.state.DataForm[3]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="latitude">Latitude</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    name="6"
-                    placeholder="Latitude"
-                    value={this.state.DataForm[6]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="longitude">Longitude</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    name="7"
-                    placeholder="Longitude"
-                    value={this.state.DataForm[7]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="owner type">Owner Type</Label>
-                  <Input
-                    type="select"
-                    name="5"
-                    placeholder=""
-                    value={this.state.DataForm[5]}
-                    onChange={this.handleChangeForm}
-                  >
-                    <option selected="true" disabled="disabled">Select Owner Type</option>
-                    <option value="ASP">ASP</option>
-                    <option value="DSP">DSP</option>
-                    <option value="Internal">Internal</option>
-                  </Input>
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="owner">Owner</Label>
-                  <Input
-                    type="select"
-                    name="4"
-                    placeholder=""
-                    value={this.state.DataForm[4]}
-                    onChange={this.handleChangeForm}
-                  >
-                    <option selected="true" disabled="disabled">Select Owner</option>
-                    {this.state.asp_data.map((asp) => (
-                      <option value={asp.Vendor_Code}>{asp.Name}</option>
-                    ))}
-                    <option value="Internal">Internal</option>
-                  </Input>
-                </FormGroup>
-              </Col>
+                </Col>
             </Row>
           </ModalBody>
           <ModalFooter>
-            <Button color="success" onClick={this.saveNew} disabled={!this.state.DataForm}>
-              Create
+            <Button color="success" onClick={this.saveNew}>
+              Save
             </Button>
           </ModalFooter>
         </Modal>
-        {/*  Modal New PO*/}
 
         {/* Modal Edit PP */}
         <Modal
