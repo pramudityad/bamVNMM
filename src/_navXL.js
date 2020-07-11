@@ -176,6 +176,11 @@ export default {
           url: '/wh-management',
           icon: 'fas fa-pallet',
         },
+        {
+          name: 'ASP User Management',
+          url: '/asp-user-management',
+          icon: 'icon-list',
+        },
       ]
     },
     {
