@@ -77,6 +77,8 @@ class AssignmentDetail extends Component {
       revision_note: "",
       modal_reschedule: false,
       reschedule_note: "",
+      vendor_id: null,
+      vendor_email: null,
     };
     this.notifyASP = this.notifyASP.bind(this);
     this.saveBastNumber = this.saveBastNumber.bind(this);
@@ -236,6 +238,7 @@ class AssignmentDetail extends Component {
   componentDidMount() {
     this.getDataAssignment(this.props.match.params.id);
     document.title = "Assignment Detail | BAM";
+    // this.getASPListEmail();
   }
 
   getDataAssignment(_id_Assignment) {
@@ -284,13 +287,15 @@ class AssignmentDetail extends Component {
       if (res.data !== undefined) {
         let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
         const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment need to be approved by, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is notified by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
-        let email_vendor = this.state.data_assignment.Vendor_Email;
+        // let name_vendor = this.state.data_assignment.Vendor_Name;
+        this.getASPListEmail(this.state.vendor_id);
         let dataEmail = {
-          "to": email_vendor,
+          "to": this.state.vendor_email,
           // "to" : "damar.pramuditya@ericsson.com",
           "subject":"[Assignment Need Approval from ASP] Assignment "+dataAssignment.Assignment_No,
           "body": bodyEmail
         }
+        console.log(dataEmail)
         // const sendEmail = await apiSendEmail(dataEmail);
         this.setState({ action_status: "success" });
       } else {
@@ -571,7 +576,7 @@ class AssignmentDetail extends Component {
       asp_selected["Vendor_Email"] = asp_name.Email;
       asp_selected["Vendor_Name"] = asp_name.Name;
     }
-    this.setState({ data_assignment: asp_selected });
+    this.setState({ data_assignment: asp_selected, vendor_id : asp_name._id});
   }
 
   handleChangeTOP(e) {
@@ -610,6 +615,17 @@ class AssignmentDetail extends Component {
       if (res.data !== undefined) {
         const items = res.data._items;
         this.setState({ asp_list: items });
+      }
+    });
+  }
+
+  getASPListEmail(_id) {
+    this.getDataFromAPIEXEL("/vendor_data_non_page/"+ _id).then((res) => {
+      // this.getDataFromAPIEXEL("/vendor_data_non_page/5e9ddd1203748a2f02b1fa63").then((res) => {
+      if (res.data !== undefined) {
+        const items = res.data.Email;
+        // const email_list = items.map(e => e.Email);
+        this.setState({ vendor_email: items });
       }
     });
   }
