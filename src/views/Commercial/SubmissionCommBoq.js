@@ -2100,11 +2100,15 @@ class SubmissionCommBoq extends Component {
                           <th>Config ID</th>
                           <th>SAP Desc</th>
                           <th>Qty</th>
+                          {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-SubmissionBoq-ViewWithoutPrice") === false) && (
+                            <React.Fragment>
                           <th>Unit Price after Incentive (USD)</th>
                           <th>Unit Price after Incentive (IDR)</th>
                           <th>Total Price after Incentive (USD)</th>
                           <th>Total Price after Incentive (IDR)</th>
                           <th>CPO BOQ Ref.</th>
+                          </React.Fragment>
+                        )}
                         </tr>
                       </thead>
                       {this.state.data_view_submission_items.map(site =>
@@ -2117,11 +2121,15 @@ class SubmissionCommBoq extends Component {
                               <td>{item.config_id}</td>
                               <td>{item.sap_description}</td>
                               <td>{item.qty}</td>
+                              {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-SubmissionBoq-ViewWithoutPrice") === false) && (
+                                <React.Fragment>
                               <td>{item.net_price_incentive_usd}</td>
                               <td>{item.net_price_incentive}</td>
                               <td>{item.total_price_incentive_usd.toFixed(2)}</td>
                               <td>{item.total_price_incentive.toFixed(2)}</td>
                               <td>{item.cpo_boq}</td>
+                              </React.Fragment>
+                            )}
                             </tr>
                           )}
                         </tbody>

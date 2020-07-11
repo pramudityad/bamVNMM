@@ -15,6 +15,8 @@ const password_tsel = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
+const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
+
 class AssignmentDetailASP extends Component {
   constructor(props) {
     super(props);
@@ -147,6 +149,18 @@ class AssignmentDetailASP extends Component {
     }
   }
 
+  async apiSendEmail(data){
+    try {
+      let respond = await axios.post(API_EMAIL, data, {
+        headers : {'Content-Type':'application/json'},
+      })
+      return respond;
+    }catch (err) {
+      let respond = undefined;
+      return respond;
+    }
+  }
+
   componentDidMount() {
     this.getDataAssignment(this.props.match.params.id);
     document.title = 'Assignment Detail | BAM';
@@ -237,10 +251,27 @@ class AssignmentDetailASP extends Component {
   async acceptASG(e) {
     let successUpdate = [];
     const _id = e.target.id;
+    const dataAssignment = this.state.data_assignment;
     let res = await this.patchDatatoAPINODE('/aspAssignment/acceptAspAssignment/' + _id);
+    let creatorEmail = null;
+    let creator = dataAssignment.ASP_Assignment_Status.find(e => e.status_value === "CREATED" && e.status_name === "ASP_ASSIGNMENT");
+    if(creator !== undefined){
+      creatorEmail = creator.status_updater;
+    }
     if (res !== undefined) {
       if (res.data !== undefined) {
-        this.setState({ action_status: "success" })
+        if(creatorEmail !== null){
+          let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
+          const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been approved by ASP, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is approved by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+          let dataEmail = {
+            "to": creatorEmail,
+            // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
+            "subject":"[APPROVED by ASP] Assignment "+dataAssignment.Assignment_No,
+            "body": bodyEmail
+          }
+          // let sendEmail = await this.apiSendEmail(dataEmail);
+        }
+        this.setState({ action_status: "success", action_status : null })
       } else {
         this.setState({ action_status: "failed" })
       }
@@ -257,9 +288,26 @@ class AssignmentDetailASP extends Component {
       const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
       const _etag = e.target.value;
       const _id = e.target.id;
+      const dataAssignment = this.state.data_assignment;
+      let creatorEmail = null;
+      let creator = dataAssignment.ASP_Assignment_Status.find(e => e.status_value === "CREATED" && e.status_name === "ASP_ASSIGNMENT");
+      if(creator !== undefined){
+        creatorEmail = creator.status_updater;
+      }
       let res = await this.patchDatatoAPINODE('/aspAssignment/reviseAspAssignment/' + _id, { "note": this.state.revision_note });
       if (res !== undefined) {
         if (res.data !== undefined) {
+          if(creatorEmail !== null){
+            let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
+            const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been requested for Revision by ASP, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for revision by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.revision_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+            let dataEmail = {
+              "to": creatorEmail,
+              // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
+              "subject":"[Request Revision by ASP] Assignment "+dataAssignment.Assignment_No,
+              "body": bodyEmail
+            }
+            // let sendEmail = await this.apiSendEmail(dataEmail);
+          }
           this.setState({ action_status: "success" })
         } else {
           this.setState({ action_status: "failed" })
@@ -279,9 +327,26 @@ class AssignmentDetailASP extends Component {
       const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
       const _etag = e.target.value;
       const _id = e.target.id;
+      const dataAssignment = this.state.data_assignment;
+      let creatorEmail = null;
+      let creator = dataAssignment.ASP_Assignment_Status.find(e => e.status_value === "CREATED" && e.status_name === "ASP_ASSIGNMENT");
+      if(creator !== undefined){
+        creatorEmail = creator.status_updater;
+      }
       let res = await this.patchDatatoAPINODE('/aspAssignment/reScheduleAspAssignment/' + _id, { "note": this.state.reschedule_note });
       if (res !== undefined) {
         if (res.data !== undefined) {
+          if(creatorEmail !== null){
+            let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
+            const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been requested for Reschedule by ASP, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for reschedule by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.reschedule_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+            let dataEmail = {
+              "to": creatorEmail,
+              // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
+              "subject":"[Request Reschedule by ASP] Assignment "+dataAssignment.Assignment_No,
+              "body": bodyEmail
+            }
+            // let sendEmail = await this.apiSendEmail(dataEmail);
+          }
           this.setState({ action_status: "success" })
         } else {
           this.setState({ action_status: "failed" })

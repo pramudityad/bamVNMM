@@ -1397,6 +1397,20 @@ class MRDetail extends Component {
                             Project Name : {this.state.data_mr.project_name}
                           </td>
                         </tr>
+                        {(this.state.data_mr.mr_mitt_no != undefined && this.state.data_mr.mr_mitt_no !== null) && (
+                          <tr>
+                            <td
+                              colSpan="4"
+                              style={{
+                                fontSize: "13px",
+                                textAlign: "center",
+                                color: "rgba(59,134,134,1)",
+                              }}
+                            >
+                              MR MITT Migration ID : {this.state.data_mr.mr_mitt_no}
+                            </td>
+                          </tr>
+                        )}
                       </Fragment>
                     )}
                   </tbody>
@@ -1421,7 +1435,7 @@ class MRDetail extends Component {
                             <div>
                               <ul className="mr-detail__ul--cd-id">
                                 {this.state.data_mr.cust_del !== undefined ? (
-                                  <li>{this.state.data_mr.cust_del.join(', ')}</li>
+                                  <li>{this.state.data_mr.cust_del.map(cd => cd.cd_id).join(', ')}</li>
                                 ) : (
                                   <li>{this.state.data_mr.cd_id}</li>
                                 )}
@@ -1669,7 +1683,7 @@ class MRDetail extends Component {
                                         {this.state.data_mr.list_of_box_id !==
                                         undefined
                                           ? this.state.data_mr.list_of_box_id.map(
-                                              (e) => e + ", "
+                                              (e) => typeof e === "string" ? e+" , " : e.box_id + " , "
                                             )
                                           : ""}
                                       </td>
@@ -1682,18 +1696,18 @@ class MRDetail extends Component {
                         </table>
                       </Col>
                       <Col md="6">
-                        <table style={{ marginBottom: "0px" }}>
+                        <table style={{ marginBottom: "0px", float : 'right' }}>
                           <tbody>
                             {this.state.data_mr !== null && (
                               <Fragment>
-                                <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
+                                <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'left', marginRight : '10px'}}>
                                   <DropdownToggle caret color="secondary">
                                     <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
                                   </DropdownToggle>
                                   <DropdownMenu>
                                     <DropdownItem header>TSSR File</DropdownItem>
-                                    {(this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
-                                                      <DropdownItem onClick={this.downloadMaterialMRTRACY}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY Format</DropdownItem>
+                                    {((this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 ) && this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
+                                      <DropdownItem onClick={this.downloadMaterialMRTRACY}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY Format</DropdownItem>
 
                                     )}
                                     <DropdownItem onClick={this.downloadMaterialMRReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MR PS</DropdownItem>
@@ -2139,6 +2153,92 @@ class MRDetail extends Component {
                         )}
                       </Table>
                     </div>
+                    <div>Material LOM</div>
+                    <div className="divtable2">
+                      <Table hover bordered striped responsive size="sm">
+                        <thead style={{ backgroundColor: "#0B486B", color: "white" }} className="table-mr__header--fixed">
+                          <th
+                            rowSpan="2"
+                            className="fixedhead"
+                            style={{
+                              width: "250px",
+                              verticalAlign: "middle",
+                            }}
+                          >
+                            PP / Material Code
+                          </th>
+                          <th
+                            rowSpan="2"
+                            className="fixedhead"
+                            style={{ verticalAlign: "middle" }}
+                          >
+                            PP / Material Name
+                          </th>
+                          <th
+                            rowSpan="2"
+                            className="fixedhead"
+                            style={{ width: "75px", verticalAlign: "middle" }}
+                          >
+                            Program
+                          </th>
+                          <th
+                            rowSpan="2"
+                            className="fixedhead"
+                            style={{ width: "75px", verticalAlign: "middle" }}
+                          >
+                            Unit
+                          </th>
+                          <th
+                            rowSpan="2"
+                            className="fixedhead"
+                            style={{
+                              width: "100px",
+                              verticalAlign: "middle",
+                            }}
+                          >
+                            Total Qty per PP
+                          </th>
+                        </thead>
+                        <tbody>
+                          {(this.state.data_mr !== null && this.state.data_mr.lom_packages !== undefined) && (
+                            <Fragment>
+                              {this.state.data_mr.lom_packages.map(pp =>
+                                <Fragment>
+                                  <tr
+                                    style={{ backgroundColor: "#E5FCC2" }}
+                                    className="fixbody"
+                                  >
+                                    <td style={{ textAlign: "left" }}>
+                                      {pp.pp_id}
+                                    </td>
+                                    <td>{pp.product_name}</td>
+                                    <td>{pp.program}</td>
+                                    <td>{pp.uom}</td>
+                                    <td>{pp.qty}</td>
+                                  </tr>
+                                  {pp.lom_materials.map(mm =>
+                                    <Fragment>
+                                      <tr style={{
+                                        backgroundColor:
+                                          "rgba(248,246,223, 0.5)",
+                                      }}>
+                                        <td style={{ textAlign: "right" }}>
+                                          {mm.material_id}
+                                        </td>
+                                        <td>{mm.material_name}</td>
+                                        <td></td>
+                                        <td>{mm.uom}</td>
+                                        <td>{mm.qty}</td>
+                                      </tr>
+                                    </Fragment>
+                                  )}
+                                </Fragment>
+                              )}
+                            </Fragment>
+                          )}
+                        </tbody>
+                      </Table>
+                    </div>
                   </Fragment>
                 )}
                 {this.state.tabs_submenu[2] === true && (
@@ -2258,14 +2358,16 @@ class MRDetail extends Component {
                     ) : (
                       <div></div>
                     )}
-                    <Button
-                      color="warning"
-                      style={{ float: "left" }}
-                      size="sm"
-                      onClick={this.toggleModalRevision}
-                    >
-                      Need Revise
-                    </Button>
+                    {(this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 ) && (
+                      <Button
+                        color="warning"
+                        style={{ float: "left" }}
+                        size="sm"
+                        onClick={this.toggleModalRevision}
+                      >
+                        Need Revise
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardFooter>

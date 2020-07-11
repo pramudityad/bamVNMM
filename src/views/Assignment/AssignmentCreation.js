@@ -8,7 +8,7 @@ import { Redirect } from 'react-router-dom';
 import Select from 'react-select';
 import debounce from 'lodash.debounce';
 
-import {apiSendEmail} from '../../helper/asyncFunction'
+import {apiSendEmail} from '../../helper/asyncFunction';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -299,18 +299,18 @@ class AssignmentCreation extends Component {
         if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
           if(this.state.can_edit_ssow === true){
             const response = respondSaveASG.data.aspDocsp[0];
-            // let cpm_email = this.state.email_cpm;
-            // let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+response._id;
-            // const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment has been created, <br/><br/><i>Site</i>: <b>"+response.Site_ID+"</b> <br/><i>Project</i>: <b>"+response.Project+"</b><br/><i>Assignment</i>: <b>"+response.Assignment_No+"</b><br/><br/>is created by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
-            // let dataEmail = {
-            //   "to": cpm_email+'; aminuddin.fauzan@ericsson.com',
-            //   // "to" : "damar.pramuditya@ericsson.com",
-            //   "subject":"[Assignment Created] Assignment "+response.Assignment_No,
-            //   "body": bodyEmail
-            // }
-            // // console.log(dataEmail)
-            // const sendEmail = await apiSendEmail(dataEmail);
-          }        
+            let cpm_email = this.state.email_cpm;
+            let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+response._id;
+            const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been created and need approval because the assingment not using list SSOW from the mapping, <br/><br/><i>Site</i>: <b>"+response.Site_ID+"</b> <br/><i>Project</i>: <b>"+response.Project+"</b><br/><i>Assignment</i>: <b>"+response.Assignment_No+"</b><br/><br/>is created by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+            let dataEmail = {
+              // "to": cpm_email+'; aminuddin.fauzan@ericsson.com',
+              "to": cpm_email+' ;',
+              "subject":"[Assignment Need Approval] Assignment "+response.Assignment_No,
+              "body": bodyEmail
+            }
+            // console.log(dataEmail)
+            const sendEmail = await apiSendEmail(dataEmail);
+          }
           this.setState({ action_status : 'success' });
         } else{
           if(respondSaveASG.response !== undefined && respondSaveASG.response.data !== undefined && respondSaveASG.response.data.error !== undefined){
@@ -370,9 +370,7 @@ class AssignmentCreation extends Component {
   handleChangeProjectXL(e){
     let obj = this.state.list_project.find((a) => a.Project === e.value);
     let email = obj.Email_CPM_Name;
-    // console.log(obj.Email_CPM_Name)
     this.setState({project_selected : e.value, project_name_selected : e.value, email_cpm: email});
-    // console.log(this.state.email_cpm);
     return e;
   }
 
@@ -383,6 +381,12 @@ class AssignmentCreation extends Component {
       let findCDID = this.state.list_cd_id.find(e => e.WP_ID === cd_id_number.trim());
       if(findCDID !== undefined){
         this.setState({project_selected : findCDID.CD_Info_Project, project_name_selected : findCDID.CD_Info_Project_Name });
+        let obj = this.state.list_project.find((a) => a.Project === findCDID.CD_Info_Project_Name);
+        let email = null;
+        if(obj !== undefined){
+          email = obj.Email_CPM_Name;
+          this.setState({email_cpm: email})
+        }
       }
     }
     return e
@@ -611,6 +615,8 @@ class AssignmentCreation extends Component {
                         <Input type="select" name="16" onChange={this.handleChangeForm}>
                           <option value="" disabled selected hidden>Select SOW</option>
                           <option value="RBS">RBS</option>
+                          <option value="RBS">TRM</option>
+                          <option value="RBS">NDO</option>
                         </Input>
                       </FormGroup>
                     </Col>

@@ -354,21 +354,13 @@ class TssrBOM extends Component {
     });
   }
 
-  getListSiteTechforPS(_id){
-    this.getDataFromAPINODE('/plantspec/getTechnicalByProjectId/'+_id).then(res => {
-      if(res.data !== undefined){
-        this.setState({list_site : res.data.data});
-      }
-    })
-  }
-
   handleChangeSiteTSSR(e) {
     const value = e.value;
     const text = e.label;
     const list_site_idx = this.state.list_site.find(e => e._id === value);
     let dataArrayTssr = this.state.list_tssr_selected;
-    dataArrayTssr.push({"site_selected" : value, "tech_selected" : e.id_tech_boq_doc, "label" : text});
-    this.setState({list_site_selected : value, list_site_tech_boq_selected : e.id_tech_boq_doc, list_tssr_selected : dataArrayTssr }, () => {
+    dataArrayTssr.push({"site_selected" : value, "id_tssr_boq_doc" : e.id_tssr_boq_doc, "label" : text});
+    this.setState({list_site_selected : value, list_site_tech_boq_selected : e.id_tssr_boq_doc, list_tssr_selected : dataArrayTssr }, () => {
       // this.getDataTech();
     });
   }
@@ -608,7 +600,7 @@ class TssrBOM extends Component {
   //   let tssrData = {
   //     "tssr_info" : {
   //       "no_tssr_boq": "",
-  //       "id_boq_tech_doc" : this.state.dataTech.id_tech_boq_doc,
+  //       "id_boq_tech_doc" : this.state.dataTech.id_tssr_boq_doc,
   //       "no_boq_tech" : this.state.dataTech.no_tech_boq,
   //       "id_project_doc" : this.state.dataTech.id_project_doc,
   //       "project_name" : this.state.dataTech.project_name
@@ -635,7 +627,7 @@ class TssrBOM extends Component {
 
   async saveTssrBOM(){
     // setTimeout(function () { this.setState({redirectSign : "5ec2d5bb5ac433f42df7401a"}); }.bind(this), 2000);
-    const respondSaveTSSR = await this.postDatatoAPINODE('/plantspec/createPlantspec', {"psData" : this.state.data_tssr_selected});
+    const respondSaveTSSR = await this.postDatatoAPINODE('/plantspec/createPlantspec2', {"psData" : this.state.data_tssr_selected});
     if(respondSaveTSSR.data !== undefined && respondSaveTSSR.status >= 200 && respondSaveTSSR.status <= 300 ){
       this.setState({ action_status : 'success', action_message : 'PS has been saved successfully!' });
       setTimeout(function () { this.setState({redirectSign : respondSaveTSSR.data.objMrPs._id}); }.bind(this), 2000);
@@ -658,20 +650,6 @@ class TssrBOM extends Component {
     this.setState(prevState => ({ change_qty_ps: prevState.change_qty_ps.set(name, value) }));
   }
 
-  filterSiteTSSR = (inputValue) => {
-    const list = [];
-    let list_site_api = this.state.list_site.filter(i =>
-      i.site_id.toLowerCase().includes(inputValue.toLowerCase()) || i.no_tech_boq.toLowerCase().includes(inputValue.toLowerCase())
-    )
-    list_site_api.map(site =>
-        list.push({'value' : site._id, 'label' : site.site_id +" ("+site.no_tech_boq+")"})
-    )
-    this.setState({list_site_selection : list});
-    return this.state.list_site_selection.filter(i =>
-      i.label.toLowerCase().includes(inputValue.toLowerCase())
-    );
-  };
-
   // filterSiteTSSR = (inputValue) => {
   //   const list = [];
   //   let list_site_api = this.state.list_site.filter(i =>
@@ -691,10 +669,10 @@ class TssrBOM extends Component {
       return [];
     } else {
       let site_tssr_list = [];
-      const getSiteTSSR = await this.getDataFromAPINODE('/plantspec/getTechnicalByProjectId/'+this.state.project_selected+'?siteId='+inputValue);
+      const getSiteTSSR = await this.getDataFromAPINODE('/plantspec/getTechnicalByProjectId2/'+this.state.project_selected+'?siteId='+inputValue);
       if(getSiteTSSR !== undefined && getSiteTSSR.data !== undefined) {
         getSiteTSSR.data.data.map(site =>
-          site_tssr_list.push({'value' : site._id, 'label' : "PS "+site.no_tech_boq+"-"+site.site_id +" ("+site.program+")", 'id_tech_boq_doc' : site.id_tech_boq_doc })
+          site_tssr_list.push({'value' : site._id, 'label' : "PS "+site.no_tssr_boq+"-"+site.site_id +" ("+site.program+")", 'id_tssr_boq_doc' : site.id_tssr_boq_doc })
         );
       }
       console.log("site_tssr_list", site_tssr_list);
@@ -713,12 +691,12 @@ class TssrBOM extends Component {
     tssrSelected.map( e =>
       dataTSSRforGet.push(
         {
-          "techBoqId": e.tech_selected,
+          "techBoqId": e.id_tssr_boq_doc,
           "siteId": e.site_selected
         }
       )
     );
-    this.postDatatoAPINODE('/plantspec/getTssrData', {"data" : dataTSSRforGet}).then(res => {
+    this.postDatatoAPINODE('/plantspec/getTssrData2', {"data" : dataTSSRforGet}).then(res => {
       if(res.data !== undefined){
         this.setState({data_tssr_selected : res.data.psData})
       }else{

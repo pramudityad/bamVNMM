@@ -37,6 +37,8 @@ class AssignmentListReport extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      vendor_name : this.props.dataLogin.vendor_name,
+      vendor_code : this.props.dataLogin.vendor_code,
       assignment_list: [],
       prevPage: 0,
       activePage: 1,
@@ -106,7 +108,7 @@ class AssignmentListReport extends Component {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     let filter_array = [];
-    let date =  this.state.filter_date.filter_list_date && this.state.filter_date.filter_list_date2 === null ? '{}' : '{"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 00:00:00"}}';
+    let date =  this.state.filter_date.filter_list_date && this.state.filter_date.filter_list_date2 === null ? '{}' : '{"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 23:59:59"}}';
     this.state.filter_list[0] !== "" &&
       filter_array.push(
         '"Assignment_No":{"$regex" : "' +
@@ -123,12 +125,6 @@ class AssignmentListReport extends Component {
       filter_array.push(
         '"Project":{"$regex" : "' +
           this.state.filter_list[2] +
-          '", "$options" : "i"}'
-      );
-    this.state.filter_list[3] !== "" &&
-      filter_array.push(
-        '"Vendor_Name":{"$regex" : "' +
-          this.state.filter_list[3] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[4] !== "" &&
@@ -148,7 +144,10 @@ class AssignmentListReport extends Component {
         '"Work_Status":{"$regex" : "' +
           this.state.filter_list[6] +
           '", "$options" : "i"}'
-      );   
+      );
+      if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
+        filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
+      }
       let whereAnd = "{" + filter_array.join(",") + "}";
       this.getDataFromAPINODE(
       "/aspAssignment/aspassign?srt=_id:-1&q="+ date + "&" +
@@ -189,12 +188,6 @@ class AssignmentListReport extends Component {
           this.state.filter_list[2] +
           '", "$options" : "i"}'
       );
-    this.state.filter_list[3] !== "" &&
-      filter_array.push(
-        '"Vendor_Name":{"$regex" : "' +
-          this.state.filter_list[3] +
-          '", "$options" : "i"}'
-      );
     this.state.filter_list[4] !== "" &&
       filter_array.push(
         '"Payment_Terms":{"$regex" : "' +
@@ -212,7 +205,10 @@ class AssignmentListReport extends Component {
         '"Work_Status":{"$regex" : "' +
           this.state.filter_list[6] +
           '", "$options" : "i"}'
-      );   
+      );
+      if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
+        filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
+      }
     let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE(
       "/aspAssignment/aspassign?srt=_id:-1&noPg=1&q=" + whereAnd
@@ -525,28 +521,6 @@ class AssignmentListReport extends Component {
                   ></i>{" "}
                   Assignment List
                 </span>
-                <Link to={"/assignment-creation"}>
-                  <Button color="success" style={{ float: "right" }} size="sm">
-                    <i
-                      className="fa fa-plus-square"
-                      style={{ marginRight: "8px" }}
-                    ></i>
-                    Create Assignment
-                  </Button>
-                </Link>
-                <Link to={"/bulk-assignment-creation"}>
-                  <Button
-                    color="success"
-                    style={{ float: "right", marginRight: "8px" }}
-                    size="sm"
-                  >
-                    <i
-                      className="fa fa-plus-square"
-                      style={{ marginRight: "8px" }}
-                    ></i>
-                    Create Assignment Bulk
-                  </Button>
-                </Link>
                 <Button
                   style={downloadAssignment}
                   outline
@@ -558,20 +532,7 @@ class AssignmentListReport extends Component {
                     className="fa fa-download"
                     style={{ marginRight: "8px" }}
                   ></i>
-                  Download Assignment List
-                </Button>
-                <Button
-                  style={downloadAssignment}
-                  outline
-                  color="success"
-                  onClick={this.downloadAllAssignmentAcceptenceMigration}
-                  size="sm"
-                >
-                  <i
-                    className="fa fa-download"
-                    style={{ marginRight: "8px" }}
-                  ></i>
-                  Download Assignment List Status Migration
+                  Download Assignment List Report
                 </Button>
               </CardHeader>
               <CardBody>

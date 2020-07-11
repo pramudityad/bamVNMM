@@ -225,6 +225,7 @@ class TechnicalBoq extends Component {
     this.exportFormatTechnicalHorizontal = this.exportFormatTechnicalHorizontal.bind(this);
     this.exportFormatTechnicalVertical = this.exportFormatTechnicalVertical.bind(this);
     this.approvalTechnical = this.approvalTechnical.bind(this);
+    this.submitTSSR = this.submitTSSR.bind(this);
     this.handleChangeOptionView = this.handleChangeOptionView.bind(this);
     this.handleChangeFormatUploader = this.handleChangeFormatUploader.bind(this);
     this.toggleSave = this.toggleSave.bind(this);
@@ -712,7 +713,28 @@ class TechnicalBoq extends Component {
     }else{
       if(patchData.response !== undefined){
         if(patchData.response.data !== undefined){
-          this.setState({action_status : 'failed', action_message : patchData.response.data.error })
+          this.setState({action_status : 'failed', action_message : JSON.stringify(patchData.response.data.error) })
+        }else{
+          this.setState({action_status : 'failed'});
+        }
+      }else{
+        this.setState({action_status : 'failed'});
+      }
+    }
+  }
+
+  async submitTSSR(e){
+    let currValue = e.currentTarget.value;
+    if(currValue !== undefined){
+      currValue = parseInt(currValue);
+    }
+    let patchData = await this.postDatatoAPINODE('/tssr/createTssr/'+this.state.data_tech_boq._id)
+    if(patchData.data !== undefined){
+      this.setState({action_status : 'success'});
+    }else{
+      if(patchData.response !== undefined){
+        if(patchData.response.data !== undefined){
+          this.setState({action_status : 'failed', action_message : JSON.stringify(patchData.response.data.error) })
         }else{
           this.setState({action_status : 'failed'});
         }
@@ -2445,7 +2467,7 @@ class TechnicalBoq extends Component {
     render() {
       console.log("length", Config_group_DEFAULT.length, Config_group_type_DEFAULT.length);
       if(this.state.redirectSign !== false){
-        return (<Redirect to={'/detail-technical/'+this.state.redirectSign} />);
+        return (<Redirect to={'/list-technical/detail/'+this.state.redirectSign} />);
       }
 
       function AlertProcess(props){
@@ -2748,17 +2770,6 @@ class TechnicalBoq extends Component {
                       </tbody>
                     </Table>
                     ) : (<React.Fragment>
-                      {/*<div style={{display : 'inline-flex', marginBottom : '5px'}}>
-                        <span style={{padding: '4px'}}>Show per Page : </span>
-                        <Input className="select-per-page" name="PO" type="select" onChange={this.handleChangeShow} value={this.state.perPage} >
-                          <option value="5">5</option>
-                          <option value="10">10</option>
-                          <option value="25">25</option>
-                          <option value="50">50</option>
-                          <option value={this.state.data_item.length}>All</option>
-                        </Input>
-                      </div> */}
-
                       {(this.state.version_selected !== null && this.state.data_tech_boq.version !== this.state.version_selected) ? (
                         <TableTechnicalConfig
                           dataTechBoqSites={this.state.data_tech_boq_sites_version}
@@ -2771,54 +2782,6 @@ class TechnicalBoq extends Component {
                           configHeader={this.state.option_tssr_header_view === 'only_filled' ?  this.state.view_tech_header_table : this.state.view_tech_all_header_table}
                         />
                       )}
-
-                      {/*<Table hover bordered striped responsive size="sm">
-                        <thead>
-                        <tr>
-                          <th rowSpan="2" style={{verticalAlign : "middle"}}>
-                            Tower ID
-                          </th>
-                          <th rowSpan="2" style={{verticalAlign : "middle"}}>
-                            Tower Name
-                          </th>
-                          {this.state.view_tech_header_table.config_group_type_header.map(type =>
-                            <th>{type}</th>
-                          )}
-                        </tr>
-                        <tr>
-                          {this.state.view_tech_header_table.config_group_header.map(conf =>
-                            <th>{conf}</th>
-                          )}
-                        </tr>
-                        </thead>
-                        {(this.state.version_selected !== null && this.state.data_tech_boq.version !== this.state.version_selected) ? (
-                          <tbody>
-                          {this.state.data_tech_boq_sites_version.map(site =>
-                            <tr>
-                              <td>{site.site_id}</td>
-                              <td>{site.site_name}</td>
-                              {site.siteItemConfigVersion.map(conf =>
-                                <td>{conf.qty}</td>
-                              )}
-                            </tr>
-                          )}
-                          </tbody>
-                        ) : (
-                          <tbody>
-                          {this.state.data_tech_boq_sites.map(site =>
-                            <tr>
-                              <td>{site.site_id}</td>
-                              <td>{site.site_name}</td>
-                              {site.siteItemConfig.map(conf =>
-                                <td>{conf.qty}</td>
-                              )}
-                            </tr>
-                          )}
-                          </tbody>
-                        )}
-                      </Table>
-                      {/*
-                      */}
                       <nav>
                         <div>
                           <Pagination
@@ -2860,13 +2823,13 @@ class TechnicalBoq extends Component {
                       <Row>
                         {(this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP") ? (
                           <Col>
-                            <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.approvalTechnical} disabled={false}>
+                            <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.submitTSSR} disabled={false}>
                                 {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP" ? "Submit to TSSR" : "TSSR Submitted"}
                             </Button>
                           </Col>
                         ) : (
                           <Col>
-                            <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.approvalTechnical} disabled={true}>
+                            <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.submitTSSR} disabled={true}>
                                 {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP" ? "Submit to TSSR" : "TSSR Submitted"}
                             </Button>
                           </Col>

@@ -27,8 +27,15 @@ class DefaultHeader extends Component {
     super(props);
 
     this.state = {
+      userId: this.props.dataLogin._id,
+      userName: this.props.dataLogin.userName,
+      userEmail: this.props.dataLogin.email,
+      tokenUser: this.props.dataLogin.token,
+      vendor_name : this.props.dataLogin.vendor_name,
+      vendor_code : this.props.dataLogin.vendor_code,
       order_created : [],
-      rtd : []
+      rtd : [],
+      userRole: this.props.dataLogin.role,
     }
 
     this.getOrderCreated = this.getOrderCreated.bind(this);
@@ -78,8 +85,12 @@ class DefaultHeader extends Component {
   }
 
   componentDidMount() {
-    this.getOrderCreated();
-    this.getRTD();
+    if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
+      
+    }else{
+      this.getOrderCreated();
+      this.getRTD();
+    }
   }
 
   render() {
@@ -95,19 +106,24 @@ class DefaultHeader extends Component {
           minimized={{ src: sygnet, width: 30, height: 30, alt: 'CoreUI Logo' }}
         />
         <AppSidebarToggler className="d-md-down-none" display="lg" />
-
-        <Nav className="d-md-down-none" navbar>
-          <NavItem className="px-3">
-            <NavLink to="/dashboard" className="nav-link">Dashboard</NavLink>
-          </NavItem>
-          <NavItem className="px-3">
-            <Link to="/users" className="nav-link">Users</Link>
-          </NavItem>
-          <NavItem className="px-3">
-            <NavLink to="/settings" className="nav-link">Settings</NavLink>
-          </NavItem>
-        </Nav>
+        {(this.state.userRole.indexOf("BAM-ASP Management") !== 1 && this.state.userRole.indexOf("Admin") !== -1) && (
+          <React.Fragment>
+          <Nav className="d-md-down-none" navbar>
+            <NavItem className="px-3">
+              <NavLink to="/dashboard" className="nav-link">Dashboard</NavLink>
+            </NavItem>
+            <NavItem className="px-3">
+              <Link to="/users" className="nav-link">Users</Link>
+            </NavItem>
+            <NavItem className="px-3">
+              <NavLink to="/settings" className="nav-link">Settings</NavLink>
+            </NavItem>
+          </Nav>
+          </React.Fragment>
+        ) }
         <Nav className="ml-auto" navbar>
+        {(this.state.userRole.indexOf("BAM-ASP Management") !== 1 && this.state.userRole.indexOf("Admin") !== -1) && (
+          <React.Fragment>
           <UncontrolledDropdown nav direction="down">
             <DropdownToggle nav>
               <i className={this.state.order_created.length === 0 ? "fa fa-envelope" : "fa fa-envelope faa-ring animated"}></i>{this.state.order_created.length !== 0 && (<Badge pill color="danger">{this.state.order_created.length}</Badge>)}
@@ -134,6 +150,8 @@ class DefaultHeader extends Component {
               }
             </DropdownMenu>
           </UncontrolledDropdown>
+          </React.Fragment>
+        ) }
           <UncontrolledDropdown nav direction="down">
             <DropdownToggle nav>
               {this.props.dataLogin.nameUser}

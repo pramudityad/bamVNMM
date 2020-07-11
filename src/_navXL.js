@@ -77,7 +77,7 @@ export default {
     {
       name: 'Assignment',
       icon: 'icon-docs',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
       children: [
         {
           name: 'Assignment List',
@@ -89,7 +89,7 @@ export default {
           name: 'Assignment NA List',
           url: '/assignment-list-approval',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-TPM", "BAM-Customer Project Manager"],
         },
         {
           name: 'Assignment List (ASP)',
@@ -113,7 +113,7 @@ export default {
           name: 'Assignment Report',
           url: '/assignment-list-report',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
         },
       ]
     },
@@ -208,7 +208,7 @@ export default {
     {
       name: 'MR Milestones',
       icon: 'icon-paper-plane',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASP Management", "BAM-ASP"],
       children: [
         {
           name: 'Order Received',
@@ -241,10 +241,16 @@ export default {
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
         {
+          name: 'Waiting Dispatch',
+          url: '/waiting-dispatch',
+          icon: 'fa fa-truck-moving',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP Management", "BAM-ASP"],
+        },
+        {
           name: 'Material Dispatch',
           url: '/material-dispatch',
           icon: 'fa fa-truck-moving',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASP Management", "BAM-ASP"],
         },
         {
           name: 'Shipment',

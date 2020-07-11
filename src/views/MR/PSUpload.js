@@ -62,7 +62,7 @@ class PSUpload extends Component {
     this.getQtyTssrPPFE = this.getQtyTssrPPFE.bind(this);
     this.editQtyNE = this.editQtyNE.bind(this);
     this.editQtyFE = this.editQtyFE.bind(this);
-    this.connectPlantSpectoTSSR = this.connectPlantSpectoTSSR.bind(this);
+    this.connectMRtoTSSR = this.connectMRtoTSSR.bind(this);
     this.getDataWarehouse = this.getDataWarehouse.bind(this);
     this.getDataInbound = this.getDataInbound.bind(this);
     this.handleChangeCDIDtoTSSR = this.handleChangeCDIDtoTSSR.bind(this);
@@ -238,7 +238,7 @@ class PSUpload extends Component {
   }
 
   getListTssrAll(){
-    this.getDataFromAPINODE('/plantspec?q={"id_mr_doc" : null, "submission_status" : "SUBMITTED" }').then( res => {
+    this.getDataFromAPINODE('/plantspec?q={"id_mr_doc" : null, "submission_status" : "SUBMITTED", "site_info.site_id" : "'+this.state.data_mr.site_info[0].site_id+'", "project_name" : "'+this.state.data_mr.project_name+'" }').then( res => {
     // this.getDatafromAPIBAM('/tssr_sorted_nonpage?projection={"project_name" : 1, "no_tssr_boq" : 1, "_id" : 1, "version" : 1 }').then( res => {
       if(res.data !== undefined){
         const items = res.data.data;
@@ -272,6 +272,7 @@ class PSUpload extends Component {
     this.getDataFromAPINODE('/matreq/' + _id_MR).then(resMR => {
       if(resMR.data !== undefined){
         this.setState({ data_mr : resMR.data }, () => {
+          this.getListTssrAll();
           if(resMR.data.cust_del !== undefined){
             console.log("resMR.data.cust_del", resMR.data.cust_del);
             this.setState({list_cd_id_mr : resMR.data.cust_del })
@@ -443,7 +444,7 @@ class PSUpload extends Component {
     }
   }
 
-  async connectPlantSpectoTSSR(){
+  async connectMRtoTSSR(){
     const dataMRParent = this.state.data_mr;
     this.setState({modal_assign_ps : false})
     let dataTSSR = {};
@@ -452,7 +453,7 @@ class PSUpload extends Component {
         "data" : this.state.cd_id_to_tssr
       }
     }
-    this.patchDatatoAPINODE('/matreq/assignPlantSpecByTssr/'+dataMRParent._id+'/ps/'+this.state.id_tssr_selected, dataTSSR).then(res => {
+    this.patchDatatoAPINODE('/matreq/assignPlantSpecByTssr2/'+dataMRParent._id+'/ps/'+this.state.id_tssr_selected, dataTSSR).then(res => {
       if(res.data !== undefined){
         this.setState({ action_status : "success" });
       }else{
@@ -483,7 +484,7 @@ class PSUpload extends Component {
 
   componentDidMount(){
     this.getDataMR(this.props.match.params.id);
-    this.getListTssrAll();
+
   }
 
   handleChangeCDIDtoTSSR(e){
@@ -524,7 +525,6 @@ class PSUpload extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}} >Assign PS</span>
-            connectPlantSpectoTSSR
             <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.toggleAssign}>Assign</Button>
           </CardHeader>
           <CardBody>
@@ -743,7 +743,7 @@ class PSUpload extends Component {
           </ModalBody>
           <ModalFooter>
             <Button color="secondary" onClick={this.toggleLoading}>Close</Button>
-            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.connectPlantSpectoTSSR}>Assign</Button>
+            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.connectMRtoTSSR}>Assign</Button>
           </ModalFooter>
         </Modal>
         {/* end Modal Assign */}

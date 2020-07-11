@@ -493,6 +493,14 @@ class MRCreation extends Component {
     return delType
   }
 
+  addDateFunction(afterDay){
+    var today = new Date();
+    today.setDate(today.getDate() + parseInt(afterDay));
+    let todayDate = today.getFullYear().toString()+"-"+(today.getMonth()+1).toString().padStart(2, '0')+"-"+today.getDate().toString().padStart(2, '0')
+    console.log("today", todayDate);
+    return todayDate;
+  }
+
   render() {
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);

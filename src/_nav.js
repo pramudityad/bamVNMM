@@ -191,7 +191,7 @@ export default {
     {
       name: 'MR Milestones',
       icon: 'icon-paper-plane',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASP Management"],
       children: [
         {
           name: 'Order Received',
@@ -227,7 +227,7 @@ export default {
           name: 'Material Dispatch',
           url: '/material-dispatch',
           icon: 'fa fa-truck-moving',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASP Management"],
         },
         {
           name: 'Shipment',

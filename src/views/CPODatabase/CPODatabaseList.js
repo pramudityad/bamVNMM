@@ -14,7 +14,7 @@ import { connect } from 'react-redux';
 import { Redirect, Route, Switch, Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
-import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
@@ -158,10 +158,14 @@ class CPODatabase extends React.Component {
   }
 
   getPODataList() {
+    let queryDate = ''
+    // if(this.props.location.search.length !== 0){
+    //   queryDate = ", "+this.props.location.search.replace("?q=", "").replace("{", "").replace("}", "")
+    // }
     let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
     // this.getDatatoAPIEXEL('/po_op?max_results=' + this.state.perPage + '&page=' + this.state.activePage + '&where={' + po_number + '}')
     this.getDatafromAPINODE('/cpodb/getCpoDb?srt=_id:-1&lmt='+this.state.perPage +
-    "&pg=" + this.state.activePage+ '&q={' + po_number + '}')
+    "&pg=" + this.state.activePage+ '&q={' + po_number+queryDate + '}')
       .then(res => {
         // console.log('all cpoDB', res.data)
         if (res.data !== undefined) {
@@ -506,7 +510,16 @@ class CPODatabase extends React.Component {
     saveAs(new Blob([PPFormat]), 'CPO with Detail Template.xlsx');
   }
 
+  Aging(date){
+    let today = new Date();
+    today.setDate(today.getDate()-120);
+    let dateExpired = today.getFullYear().toString()+"-"+(today.getMonth()+1).toString().padStart(2, '0')+"-"+today.getDate().toString().padStart(2, '0');
+    let aging = (new Date() - new Date(date)) / (1000 * 60 * 60 * 24);
+    return aging.toFixed(0);
+  }
+
   render() {
+    console.log("props Loc", this.props);
     return (
       <div className="animated fadeIn">
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -588,6 +601,7 @@ class CPODatabase extends React.Component {
                           <tr align="center">
                             <th style={{ minWidth: '150px' }}>PO Number</th>
                             <th>Date</th>
+                            <th>Aging</th>
                             <th>Currency</th>
                             <th>Payment Terms</th>
                             <th>Shipping Terms</th>
@@ -603,6 +617,11 @@ class CPODatabase extends React.Component {
                               <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={po._id}>
                                 <td style={{ textAlign: 'center' }}>{po.po_number}</td>
                                 <td style={{ textAlign: 'center' }}>{convertDateFormat(po.date)}</td>
+                                {this.Aging(convertDateFormat(po.date)) >= 120 ? (
+                                  <td style={{ textAlign: 'center', backgroundColor: 'rgba(255,112,67 ,1)' }}>{this.Aging(convertDateFormat(po.date))}</td>
+                                ) : (
+                                  <td style={{ textAlign: 'center' }}>{this.Aging(convertDateFormat(po.date))}</td>
+                                )}
                                 <td style={{ textAlign: 'center' }}>{po.currency}</td>
                                 <td style={{ textAlign: 'center' }}>{po.payment_terms}</td>
                                 <td style={{ textAlign: 'center' }}>{po.shipping_terms}</td>

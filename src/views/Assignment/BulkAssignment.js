@@ -10,6 +10,8 @@ import {connect} from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
+import {apiSendEmail} from '../../helper/asyncFunction';
+
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
@@ -77,6 +79,7 @@ class BulkAssignment extends Component {
         asp_list : [],
         uploadan_type : "without Predefined SSOW",
         modal_loading : false,
+        project_in_bulk : [],
     };
     this.saveDataAssignmentBulk = this.saveDataAssignmentBulk.bind(this);
     this.saveDataAssignmentBulkMigration = this.saveDataAssignmentBulkMigration.bind(this);
@@ -418,6 +421,16 @@ class BulkAssignment extends Component {
     })
   }
 
+  async getProjectinBulk(array_project){
+    let arrayProject = '"'+array_project.join('", "')+'"';
+    const dataProject = await this.getDataFromAPIEXEL('/project_sorted_non_page?where={"Project" : {"$in" : ['+arrayProject+']}}');
+    if(dataProject.data !== undefined){
+      return dataProject.data._items;
+    }else{
+      return []
+    }
+  }
+
   async checkingDataAssignment(dataXLS){
     this.setState({waiting_status : true});
     let wp_invalid = [];
@@ -431,6 +444,11 @@ class BulkAssignment extends Component {
       this.setState({assignment_ssow_upload : dataChecking});
       if(dataChecking.filter(e => e.operation === "INVALID").length !== 0){
         this.setState({ action_status : 'failed', action_message : 'Please check INVALID row in preview' });
+      }else{
+        const dataProject = await this.getProjectinBulk(respondCheckingASG.data.data.map(e => e.Project));
+        this.setState({project_in_bulk : dataProject}, () => {
+          console.log("this.state.project_in_bulk", this.state.project_in_bulk);
+        });
       }
     } else{
       if(respondCheckingASG.response !== undefined && respondCheckingASG.response.data !== undefined && respondCheckingASG.response.data.error !== undefined){
@@ -483,6 +501,23 @@ class BulkAssignment extends Component {
     }
     const respondSaveASG = await this.postDatatoAPINODE('/aspAssignment/createAspAssign', dataCheckingASG);
     if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
+      if(this.state.uploadan_type === "without Predefined SSOW"){
+        for(let i = 0 ; i < this.state.project_in_bulk.length; i++){
+          let dataAssignmentforProject = respondSaveASG.data.aspDocsp.filter(e => e.Project === this.state.project_in_bulk[i].Project);
+          let dataTableASGEmail = "";
+          dataAssignmentforProject.map(asg => dataTableASGEmail = dataTableASGEmail+"<tr><td style='padding:5px'><a href='https://bam-id.e-dpm.com/assignment-detail/"+asg._id+"'>"+asg.Assignment_No+"</a></td><td style='padding:5px'>"+asg.Project+"</td><td style='padding:5px'>"+asg.Site_ID+"</td></tr>")
+          let cpm_email = this.state.project_in_bulk[i].Email_CPM_Name;
+          const linkNA = "https://bam-id.e-dpm.com/assignment-list-approval";
+          const bodyEmail = "<span style='font-size:30px;font-weight:800;'>Approval Request</span><br/><br/><span>You have a request for Assignment Approval because the assignment not using list SSOW from the mapping</span><br/><br/><span style='font-size:20px;font-weight:600;'>Approval Request</span><br/><br/><span>This is automate generate email from DPM - BAM. There is a list of Assignments that need to be approved : </span><br/><body><table cellspacing='0' cellpadding='0' align='center' border='1'><tr><td>Assignment</td><td>Project</td><td>Site</td></tr>"+dataTableASGEmail+"</table></body><br/><span>Follow this link to see all Assignment need approval : <a href='"+linkNA+"'>"+linkNA+"</a></span><br/><span style='font-size:20px;font-weight:600;'>Don't know what this is?</span><br/><br/><span>This message is sent from DPM - BAM, since you are registered as one of the approval role. Questions are welcome to dpm.notification@ericsson.com</span>";
+          let dataEmail = {
+            // "to": cpm_email+'; aminuddin.fauzan@ericsson.com',
+            "to": cpm_email+' ;',
+            "subject":"[Assignment Need Approval] Assignment",
+            "body": bodyEmail
+          }
+          // const sendEmail = await apiSendEmail(dataEmail);
+        }
+      }
       this.setState({ action_status : 'success' });
     } else{
       if (respondSaveASG.response !== undefined && respondSaveASG.response.data !== undefined && respondSaveASG.response.data.error !== undefined) {
@@ -636,6 +671,7 @@ class BulkAssignment extends Component {
               <option value="RBS">RBS</option>
               <option value="TRM">TRM</option>
               <option value="RBSTRM">RBS - TRM</option>
+              <option value="NDO">NDO</option>
             </select>
           </CardHeader>
           <CardBody className='card-UploadBoq'>

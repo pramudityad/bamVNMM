@@ -7,6 +7,7 @@ import { ExcelRenderer } from 'react-excel-renderer';
 import { connect } from 'react-redux';
 import { Modal, ModalBody, ModalHeader, ModalFooter } from 'reactstrap';
 import * as XLSX from 'xlsx';
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -318,6 +319,8 @@ class CPODatabaseDetail extends Component {
     ws.addRow(["Currency", dataCPO.currency]);
     ws.addRow(["Contract", dataCPO.contract]);
     ws.addRow(["Contact", dataCPO.contact]);
+    ws.addRow(["Date", convertDateFormat(dataCPO.date)]);
+    ws.addRow(["Aging", this.Aging(convertDateFormat(dataCPO.date))]);
 
     ws.addRow([""]);
 
@@ -343,16 +346,22 @@ class CPODatabaseDetail extends Component {
     saveAs(new Blob([PPFormat]), 'CPO Level 2 Template.xlsx');
   }
 
-  exportFormatCPO_level2 = async () => {
+  exportFormatCPOParentWithDetail = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["config_id", "description", "mm_id", "need_by_date", "qty", "unit", "price"]);
-    ws.addRow(["INSTALL:CONFIG SERVICE 11_1105A","3416315 |  INSTALL:CONFIG SERVICE 11_1105A  | YYYY:2019 | MM:12","desc","2020-08-21",1,"Performance Unit",1000000]);
-		ws.addRow(["Cov_2020_Config-4a","330111 | Cov_2020_Config-4a | YYYY : 2020 | MM : 04","desc","2020-12-12",200,"Performance Unit",15000000]);
+    const dataPO = this.state.data_cpo;
+
+        ws.addRow(["po_number", "date", "currency", "payment_terms", "shipping_terms", "contract", "contact", "config_id", "description", "mm_id", "need_by_date", "qty", "unit", "price", "total_price", "Match Status"]);
+
+    for(let i = 0; i < dataPO.cpoDetail.length; i++){
+      const e = dataPO.cpoDetail[i];
+      ws.addRow([dataPO.po_number.toString(), dataPO.date.substring(0, 10), dataPO.currency, dataPO.payment_terms, dataPO.shipping_terms,
+        dataPO.contract, dataPO.contact, e.config_id, e.description, e.mmid, e.need_by_date, e.qty, e.unit, e.price, , e.total_price, e.match_status]);
+    }
 
     const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), 'CPO Level 2 Template.xlsx');
+    saveAs(new Blob([PPFormat]), 'CPO Data With Detail.xlsx');
   }
 
   exportFormatCPO_level2Update = async () => {
@@ -377,6 +386,14 @@ class CPODatabaseDetail extends Component {
     document.title = 'CPO Database Detail | BAM';
   }
 
+  Aging(date){
+    let today = new Date();
+    today.setDate(today.getDate()-120);
+    let dateExpired = today.getFullYear().toString()+"-"+(today.getMonth()+1).toString().padStart(2, '0')+"-"+today.getDate().toString().padStart(2, '0');
+    let aging = (new Date() - new Date(date)) / (1000 * 60 * 60 * 24);
+    return aging.toFixed(0);
+  }
+
   render() {
 
     return (
@@ -396,9 +413,12 @@ class CPODatabaseDetail extends Component {
                       <DropdownMenu>
                         <DropdownItem header>File</DropdownItem>
                         <DropdownItem onClick={this.exportCPODetail}> CPO Detail File</DropdownItem>
+
                         {this.state.data_cpo !== null && this.state.data_cpo_db.length === 0 ? (
                           <DropdownItem onClick={this.exportFormatCPO_level2}> CPO Level 2 Template</DropdownItem>
-                        ) : ("")}
+                        ) : (
+                          <DropdownItem onClick={this.exportFormatCPOParentWithDetail}> CPO Data With Detail</DropdownItem>
+                        )}
                         {/* }<DropdownItem onClick={this.exportFormatCPO_level2Update}> CPO Level 2 Template Update</DropdownItem> */}
                       </DropdownMenu>
                     </Dropdown>
@@ -504,7 +524,7 @@ class CPODatabaseDetail extends Component {
                   {/* <React.Fragment> */}
                   {this.state.data_cpo !== null && (
                     <Row>
-                      <Col sm="6" md="6">
+                      <Col sm="7" md="7">
                         <table className="table-header">
                           <tbody>
                             <tr style={{ fontWeight: '425', fontSize: '15px' }}>
@@ -529,6 +549,25 @@ class CPODatabaseDetail extends Component {
                               <td>Contact</td>
                               <td>:</td>
                               <td>{this.state.data_cpo.contact}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </Col>
+                      <Col sm="5" md="5">
+                        <table className="table-header">
+                          <tbody>
+                            <tr style={{ fontWeight: '425', fontSize: '15px' }}>
+                              <td colSpan="4" style={{ textAlign: 'center', marginBottom: '10px', fontWeight: '500' }}>CPO INFORMATION</td>
+                            </tr>
+                            <tr style={{ fontWeight: '425', fontSize: '15px' }}>
+                              <td style={{ width: '150px' }}>Date </td>
+                              <td>:</td>
+                              <td>{convertDateFormat(this.state.data_cpo.date)}</td>
+                            </tr>
+                            <tr style={{ fontWeight: '425', fontSize: '15px' }}>
+                              <td>Aging</td>
+                              <td>:</td>
+                              <td style={this.Aging(convertDateFormat(this.state.data_cpo.date)) >= 120 ? {color : 'rgba(230,74,25 ,1)'} : {} }>{this.Aging(convertDateFormat(this.state.data_cpo.date))}</td>
                             </tr>
                           </tbody>
                         </table>

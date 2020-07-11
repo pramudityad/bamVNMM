@@ -500,7 +500,7 @@ class MatLOMList extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   // loopSearchBar = () => {

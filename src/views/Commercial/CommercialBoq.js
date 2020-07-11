@@ -14,7 +14,8 @@ import Select from 'react-select';
 import { connect } from 'react-redux';
 import jsonData from './jsonData.js';
 import debounce from 'lodash.debounce';
-import ModalDelete from '../components/ModalDelete'
+import ModalDelete from '../components/ModalDelete';
+import Pagination from "react-js-pagination";
 
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
@@ -41,6 +42,7 @@ class CommercialBoq extends Component {
         data_comm_boq : null,
         data_comm_boq_version : null,
         data_comm_boq_items : [],
+        data_comm_boq_items_pagination : [],
         data_comm_boq_items_version : [],
         list_tech_boq : [],
         list_tech_boq_selection : [],
@@ -107,6 +109,9 @@ class CommercialBoq extends Component {
         total_comm : {},
         boq_tech_select : {},
         save_confirmation: false,
+        perPage : 10,
+        prevPage : 1,
+        activePage : 1,
       revise_confirmation: false,
       selected_id: "",
       selected_version: null,
@@ -399,8 +404,23 @@ class CommercialBoq extends Component {
       let getComm = await this.getDataFromAPINODE('/commBoq/'+_id)
       if(getComm.data !== undefined){
         const dataComm = getComm.data;
-        this.setState({data_comm_boq : dataComm.data, data_comm_boq_items : dataComm.data.site, list_version : new Array(parseInt(dataComm.data.version)+1).fill("0")});
+        this.setState({data_comm_boq : dataComm.data, data_comm_boq_items : dataComm.data.site, list_version : new Array(parseInt(dataComm.data.version)+1).fill("0")}, () => {
+          this.dataViewPagination(dataComm.data.site);
+        });
       }
+    }
+
+    dataViewPagination(dataCommView){
+      let perPage = this.state.perPage;
+      let dataTechPage = [];
+      if(perPage !== dataCommView.length){
+        let pageNow = this.state.activePage-1;
+        dataTechPage = dataCommView.slice(pageNow * perPage, (pageNow+1)*perPage);
+      }else{
+        dataTechPage = dataCommView;
+      }
+      console.log("dataTechPage", dataTechPage);
+      this.setState({data_comm_boq_items_pagination : dataTechPage})
     }
 
     handleChangeincentive = (e) => {
@@ -811,17 +831,28 @@ class CommercialBoq extends Component {
       ws.addRow([""]);
 
       let ppIdRow = ["Tower ID", "Program", "SOW", "Category", "Config ID", "SAP", "SAP Description", "Qty", "Description", "Unit Price after Incentive (USD)", "Unit Price after Incentive (IDR)", "Total Price after Incentive (USD)", "Total Price after Incentive (IDR)"];
+      if(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === false){
+        ppIdRow = ["Tower ID", "Program", "SOW", "Category", "Config ID", "SAP", "SAP Description", "Qty", "Description"];
+      }
 
       ws.addRow(ppIdRow);
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         if(this.state.version_selected !== null && dataComm.version !== this.state.version_selected){
           for(let j = 0; j < dataSites[i].itemsVersion.length; j++ ){
-            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].sap_number, dataSites[i].itemsVersion[j].sap_description, dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].description, dataSites[i].itemsVersion[j].net_price_incentive_usd, dataSites[i].itemsVersion[j].net_price_incentive, dataSites[i].itemsVersion[j].total_price_incentive_usd, dataSites[i].itemsVersion[j].total_price_incentive]);
+            if(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === false){
+              ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].sap_number, dataSites[i].itemsVersion[j].sap_description, dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].description, dataSites[i].itemsVersion[j].net_price_incentive_usd, dataSites[i].itemsVersion[j].net_price_incentive, dataSites[i].itemsVersion[j].total_price_incentive_usd, dataSites[i].itemsVersion[j].total_price_incentive]);
+            }else{
+              ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].sap_number, dataSites[i].itemsVersion[j].sap_description, dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].description]);
+            }
           }
         }else{
           for(let j = 0; j < dataSites[i].items.length; j++ ){
-            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].sap_description, dataSites[i].items[j].qty, dataSites[i].items[j].description, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive, dataSites[i].items[j].total_price_incentive_usd, dataSites[i].items[j].total_price_incentive]);
+            if(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === false){
+              ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].sap_description, dataSites[i].items[j].qty, dataSites[i].items[j].description, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive, dataSites[i].items[j].total_price_incentive_usd, dataSites[i].items[j].total_price_incentive]);
+            }else{
+              ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].sap_description, dataSites[i].items[j].qty, dataSites[i].items[j].description]);
+            }
           }
         }
       }
@@ -842,18 +873,18 @@ class CommercialBoq extends Component {
         dataSites = this.state.data_comm_boq_items;
       }
 
-      const headerPackage = ["tower_id", "program", "sow", "config_type", "config_id", "qty", "unit_price_usd","unit_price_idr"];
+      const headerPackage = ["tower_id", "program", "sow", "config_type", "config_id", "sap_number", "qty", "unit_price_usd","unit_price_idr"];
 
       ws.addRow(headerPackage);
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         if(this.state.version_selected !== null && dataComm.version !== this.state.version_selected){
           for(let j = 0; j < dataSites[i].itemsVersion.length; j++ ){
-            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].net_price_incentive_usd, dataSites[i].itemsVersion[j].net_price_incentive]);
+            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].itemsVersion[j].config_type, dataSites[i].itemsVersion[j].config_id, dataSites[i].itemsVersion[j].sap_number,dataSites[i].itemsVersion[j].qty, dataSites[i].itemsVersion[j].net_price_incentive_usd, dataSites[i].itemsVersion[j].net_price_incentive]);
           }
         }else{
           for(let j = 0; j < dataSites[i].items.length; j++ ){
-            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].qty, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive]);
+            ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].qty, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive]);
           }
         }
       }
@@ -863,7 +894,7 @@ class CommercialBoq extends Component {
 
     render() {
       if(this.state.redirectSign !== false){
-        return (<Redirect to={'/detail-commercial/'+this.state.redirectSign} />);
+        return (<Redirect to={'/list-commercial/detail/'+this.state.redirectSign} />);
       }
 
       function AlertProcess(props){
@@ -909,7 +940,9 @@ class CommercialBoq extends Component {
                         <DropdownMenu>
                           <DropdownItem header> Commercial File</DropdownItem>
                           <DropdownItem onClick={this.exportCommercial}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Commercial File</DropdownItem>
-                          <DropdownItem onClick={this.exportCommercialTemplate}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Commercial Template</DropdownItem>
+                          {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === false) && (
+                            <DropdownItem onClick={this.exportCommercialTemplate}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Commercial Template</DropdownItem>
+                          )}
                         </DropdownMenu>
                       </Dropdown>
                     </React.Fragment>
@@ -1075,12 +1108,16 @@ class CommercialBoq extends Component {
                           <th>SOW</th>
                           <th>Category</th>
                           <th>Config ID</th>
-                          <th>SAP Description</th>
+                          <th>SAP Number</th>
                           <th>Qty</th>
-                          <th>Unit Price after Incentive (USD)</th>
-                          <th>Unit Price after Incentive (IDR)</th>
-                          <th>Total Price after Incentive (USD)</th>
-                          <th>Total Price after Incentive (IDR)</th>
+                          {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === false) && (
+                            <React.Fragment>
+                            <th>Unit Price after Incentive (USD)</th>
+                            <th>Unit Price after Incentive (IDR)</th>
+                            <th>Total Price after Incentive (USD)</th>
+                            <th>Total Price after Incentive (IDR)</th>
+                            </React.Fragment>
+                          )}
                         </tr>
                       </thead>
                       <tbody>
@@ -1093,8 +1130,10 @@ class CommercialBoq extends Component {
                               <td>{site.sow}</td>
                               <td>{item.config_type}</td>
                               <td>{item.config_id}</td>
-                              <td>{item.sap_description}</td>
+                              <td>{item.sap_number}</td>
                               <td>{item.qty}</td>
+                              {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === false) && (
+                                <React.Fragment>
                               <td style={{width : '75px'}}>
                                 <Input
                                   type="number"
@@ -1116,29 +1155,15 @@ class CommercialBoq extends Component {
                                 />
                               </td>
                               <td style={{width : '100px'}}>
-                                {/* }<Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeTotalPriceUSD}
-                                  value={!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
-                                /> */}
                                 {!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id)}
                               </td>
                               <td style={{width : '200px'}}>
-                                {/* }<Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeTotalPriceIDR}
-                                  value={!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
-                                /> */}
                                 {!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id)}
                               </td>
+                              </React.Fragment>
+                            )}
                             </tr>
-                          )) : this.state.data_comm_boq_items.map(site =>
+                          )) : this.state.data_comm_boq_items_pagination.map(site =>
                           site.items.map(item =>
                             <tr>
                               <td>{item.site_id}</td>
@@ -1148,54 +1173,55 @@ class CommercialBoq extends Component {
                               <td>{item.config_id}</td>
                               <td>{item.sap_number}</td>
                               <td>{item.qty}</td>
-                              <td style={{width : '120px'}}>
-                                <Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeUnitPriceUSD}
-                                  value={!this.state.UnitPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive_usd : this.state.UnitPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
-                                />
-                              </td>
-                              <td style={{width : '120px'}}>
-                                <Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeUnitPriceIDR}
-                                  value={!this.state.UnitPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive : this.state.UnitPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
-                                />
-                              </td>
-                              <td style={{width : '120px'}}>
-                                {/* }<Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeTotalPriceUSD}
-                                  value={!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
-                                /> */}
-                                {!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd.toFixed(2) : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id).toFixed(2)}
-                              </td>
-                              <td style={{width : '120px'}}>
-                                {/* }<Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeTotalPriceIDR}
-                                  value={!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
-                                /> */}
-                                {!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive.toFixed(2) : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id).toFixed(2)}
-                              </td>
+                              {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === false) && (
+                                <React.Fragment>
+                                  <td style={{width : '120px'}}>
+                                    <Input
+                                      type="number"
+                                      name={item.site_id+' /// '+item.config_id}
+                                      className="BoQ-style-qty"
+                                      placeholder=""
+                                      onChange={this.handleChangeUnitPriceUSD}
+                                      value={!this.state.UnitPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive_usd : this.state.UnitPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
+                                    />
+                                  </td>
+                                  <td style={{width : '120px'}}>
+                                    <Input
+                                      type="number"
+                                      name={item.site_id+' /// '+item.config_id}
+                                      className="BoQ-style-qty"
+                                      placeholder=""
+                                      onChange={this.handleChangeUnitPriceIDR}
+                                      value={!this.state.UnitPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive : this.state.UnitPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
+                                    />
+                                  </td>
+                                  <td style={{width : '120px'}}>
+                                    {!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd.toFixed(2) : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id).toFixed(2)}
+                                  </td>
+                                  <td style={{width : '120px'}}>
+                                    {!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive.toFixed(2) : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id).toFixed(2)}
+                                  </td>
+                                </React.Fragment>
+                              )}
                             </tr>
                           ))
                         }
                       </tbody>
                     </Table>
                   )}
+                  <nav>
+                    <div>
+                      <Pagination
+                          activePage={this.state.activePage}
+                          itemsCountPerPage={this.state.perPage}
+                          totalItemsCount={this.state.data_comm_boq_items.length}
+                          pageRangeDisplayed={5}
+                          onChange={this.handlePageChange}
+                          itemClass="page-item"
+                          linkClass="page-link"
+                      />
+                    </div>
+                  </nav>
                   </div>
                   {this.state.boq_comm_API !== null &&  (
 		               <React.Fragment>

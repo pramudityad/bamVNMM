@@ -43,6 +43,8 @@ class DefaultLayout extends Component {
       routes : this.props.dataLogin.account_id === "3" ? routesIndosat : this.props.dataLogin.account_id === "1" ? routesTelkom : routesXL,
       userRole : this.props.dataLogin.role,
       minimize : this.props.SidebarMinimize,
+      vendor_name : this.props.dataLogin.vendor_name,
+      vendor_code : this.props.dataLogin.vendor_code,
     }
   }
 
@@ -85,6 +87,10 @@ class DefaultLayout extends Component {
     let rolesUser = this.props.dataLogin.role;
     let dataMenu = this.state.navMenu.items;
     let dataMenuRoles = [];
+    if(this.state.vendor_code !== undefined && this.state.vendor_code !== null && this.state.vendor_code.length !== 0){
+      rolesUser.push("BAM-ASP");
+    }
+    console.log("rolesUser", rolesUser);
     if(dataMenu !== undefined && dataMenu.length !== 0 && rolesUser.indexOf("Admin") === -1){
       for(let i = 0; i < dataMenu.length; i++){
         let dataMenuIndex = Object.assign({}, dataMenu[i])
@@ -166,7 +172,11 @@ class DefaultLayout extends Component {
                         )} />
                     ) : (null);
                   })}
-                  <Redirect from="/" to="/dashboard" />
+                  {((this.state.userRole.includes("BAM-ASP") !== false || this.state.userRole.includes("BAM-ASP Management") !== false) && this.state.userRole.includes("Admin") === false) ? (
+                    <Redirect from="/" to="/assignment-list-asp" />
+                  ) : (
+                    <Redirect from="/" to="/dashboard" />
+                  )}
                 </Switch>
               </Suspense>
             </Container>

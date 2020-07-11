@@ -345,7 +345,7 @@ class JointCheck extends Component {
 
   componentDidMount() {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'Joint Check | BAM';
   }
 
@@ -370,7 +370,7 @@ class JointCheck extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {

@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input, Collapse, Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap';
+import { Card, CardHeader, CardBody, CardFooter, Table, Row, Col, Button, Input, Collapse, Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap';
 import { Form, FormGroup, Label } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
@@ -2044,6 +2044,8 @@ class DetailTssr extends Component {
                 </div>
               </Fragment>
             </CardBody>
+            <CardFooter>
+            </CardFooter>
           </Card>
           </Col>
         </Row>
