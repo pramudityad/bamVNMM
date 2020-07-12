@@ -61,7 +61,7 @@ class WHManagement extends React.Component {
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
       search: null,
-      filter_name: null,
+      filter_name: "",
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -205,16 +205,18 @@ class WHManagement extends React.Component {
     });
   };
 
-  getWHStockList() {
+  getWHStockList() {    
     this.toggleLoading();
-    let filter_wh_name =
-      this.state.filter_name === null
-        ? '{"$exists" : 1}'
-        : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
-    let whereAnd = '{"owner_name": ' + filter_wh_name + "}";
+    console.log('search')
+    let filter = '{"$regex" : "", "$options" : "i"}';
+    if (this.state.filter_name !== "") {
+      filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    }
+    // let filter = this.state.filter_name === ""  ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    let whereOr = '{"$or" : [{"wh_name": ' + filter + '}, {"owner_name": ' + filter + '}]}';
     getDatafromAPINODE(
       "/whManagement/warehouse?q=" +
-        whereAnd +
+        whereOr +
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
@@ -879,7 +881,7 @@ class WHManagement extends React.Component {
                       className="search-box-material"
                       type="text"
                       name="filter"
-                      placeholder="Search WH Owner"
+                      placeholder="Search "
                       onChange={this.handleChangeFilter}
                       value={this.state.filter_name}
                     />
