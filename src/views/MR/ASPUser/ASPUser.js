@@ -930,7 +930,7 @@ class ASPUserManagement extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                    <div
+                    {/* <div
                         style={{
                           float: "left",
                           margin: "5px",
@@ -949,7 +949,7 @@ class ASPUserManagement extends React.Component {
                           <option value={"100"}>100</option>
                           <option value={"noPg=1"}>All</option>
                         </Input>
-                      </div>
+                      </div> */}
                       <div
                         style={{
                           float: "left",
@@ -958,14 +958,14 @@ class ASPUserManagement extends React.Component {
                         }}
                       ></div>
                     </div>
-                    <input
+                    {/* <input
                       className="search-box-material"
                       type="text"
                       name="filter"
                       placeholder="Search"
                       onChange={this.handleChangeFilter}
                       value={this.state.filter_name}
-                    />
+                    /> */}
                   </Col>
                 </Row>
                 <Row>

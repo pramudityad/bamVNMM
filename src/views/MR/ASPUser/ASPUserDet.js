@@ -808,7 +808,7 @@ class ASPUserDet extends React.Component {
               <CardHeader>
                 <span style={{ marginTop: "8px", position: "absolute" }}>
                   {" "}
-                  Vendor Management{" "}
+                  Vendor Management{" "}{this.state.vendor_data.Vendor_Name}
                 </span>
                 <div
                   className="card-header-actions"
@@ -892,7 +892,7 @@ class ASPUserDet extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                    <div
+                    {/* <div
                         style={{
                           float: "left",
                           margin: "5px",
@@ -911,7 +911,7 @@ class ASPUserDet extends React.Component {
                           <option value={"100"}>100</option>
                           <option value={"noPg=1"}>All</option>
                         </Input>
-                      </div>
+                      </div> */}
                       <div
                         style={{
                           float: "left",
@@ -920,14 +920,14 @@ class ASPUserDet extends React.Component {
                         }}
                       ></div>
                     </div>
-                    <input
+                    {/* <input
                       className="search-box-material"
                       type="text"
                       name="filter"
                       placeholder="Search "
                       onChange={this.handleChangeFilter}
                       value={this.state.filter_name}
-                    />
+                    /> */}
                   </Col>
                 </Row>
                 <Row>
@@ -1023,8 +1023,8 @@ class ASPUserDet extends React.Component {
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
-          title={"Delete User "+ this.state.selected_wh_name}
-          body={"From vendor. Are you sure ?"}
+          title={"Delete User "+ this.state.selected_wh_id}
+          body={"From vendor "+ this.state.vendor_data.Vendor_Name+". Are you sure ?"}
         >
           <Button color="danger" onClick={this.DeleteData}>
             Delete
