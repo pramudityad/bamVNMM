@@ -211,7 +211,7 @@ class WHManagement extends React.Component {
       this.state.filter_name === null
         ? '{"$exists" : 1}'
         : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
-    let whereAnd = '{"wh_name": ' + filter_wh_name + "}";
+    let whereAnd = '{"owner_name": ' + filter_wh_name + "}";
     getDatafromAPINODE(
       "/whManagement/warehouse?q=" +
         whereAnd +
@@ -879,7 +879,7 @@ class WHManagement extends React.Component {
                       className="search-box-material"
                       type="text"
                       name="filter"
-                      placeholder="Search WH Name"
+                      placeholder="Search WH Owner"
                       onChange={this.handleChangeFilter}
                       value={this.state.filter_name}
                     />
