@@ -84,6 +84,9 @@ class AssignmentDetail extends Component {
     this.rescheduleASG = this.rescheduleASG.bind(this);
     this.revisionASG = this.revisionASG.bind(this);
     this.approveASGbyPM = this.approveASGbyPM.bind(this);
+    this.CancelASG = this.CancelASG.bind(this);
+    this.ApproveCancelASG = this.ApproveCancelASG.bind(this);
+    this.RejectCancelASG = this.RejectCancelASG.bind(this);
     this.exportFormatBulkAssignment = this.exportFormatBulkAssignment.bind(
       this
     );
@@ -754,15 +757,20 @@ class AssignmentDetail extends Component {
       newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
+    let creatorEmail = null;
+    let creator = dataAssignment.ASP_Assignment_Status.find(e => e.status_value === "CREATED" && e.status_name === "ASP_ASSIGNMENT");
+    if(creator !== undefined){
+      creatorEmail = creator.status_updater;
+    }
     let res = await this.patchDatatoAPINODE("/aspAssignment/pmApproval/" + _id);
     if (res !== undefined) {
       if (res.data !== undefined) {
         let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
-        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment need approval by PM, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment approved by PM "+this.state.userEmail+", <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
         let dataEmail = {
-          // "to": creatorEmail,
+          "to": creatorEmail,
           // "to": "damar.pramuditya@ericsson.com",
-          "subject":"[NEED APPROVAL by PM] Assignment "+dataAssignment.Assignment_No,
+          "subject":"[APPROVED ASG] Assignment "+dataAssignment.Assignment_No,
           "body": bodyEmail
         }
         // let sendEmail = await apiSendEmail(dataEmail);
@@ -773,6 +781,84 @@ class AssignmentDetail extends Component {
       }
     } else {
       this.setState({ action_status: "failed" });
+    }
+  }
+
+  async CancelASG(e) {
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
+    const _id = e.target.id;
+    const dataAssignment = this.state.data_assignment;
+    let res = await this.patchDatatoAPINODE('/aspAssignment/requestCancelation', { "assignmentId": [_id] });
+    if (res !== undefined) {
+      if (res.data !== undefined) {
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
+        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been requested for Cancel by "+this.state.userEmail+", <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for reschedule by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.reschedule_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let dataEmail = {
+          // "to": creatorEmail,
+          // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
+          "subject":"[Cancellation Approval] Assignment "+dataAssignment.Assignment_No,
+          "body": bodyEmail
+        }
+        // let sendEmail = await this.apiSendEmail(dataEmail);
+        this.setState({ action_status: "success" })
+      } else {
+        this.setState({ action_status: "failed" })
+      }
+    } else {
+      this.setState({ action_status: "failed" })
+    }
+  }
+
+  async ApproveCancelASG(e) {
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
+    const _id = e.target.id;
+    const dataAssignment = this.state.data_assignment;
+    let res = await this.patchDatatoAPINODE('/aspAssignment/approveCancelation', { "assignmentId": [_id] });
+    if (res !== undefined) {
+      if (res.data !== undefined) {
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
+        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been Approve for Cancel by "+this.state.userEmail+", <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for reschedule by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.reschedule_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let dataEmail = {
+          // "to": creatorEmail,
+          // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
+          "subject":"[Approve Cancellation] Assignment "+dataAssignment.Assignment_No,
+          "body": bodyEmail
+        }
+        // let sendEmail = await this.apiSendEmail(dataEmail);
+        this.setState({ action_status: "success" })
+      } else {
+        this.setState({ action_status: "failed" })
+      }
+    } else {
+      this.setState({ action_status: "failed" })
+    }
+  }
+
+  async RejectCancelASG(e) {
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
+    const _id = e.target.id;
+    const dataAssignment = this.state.data_assignment;
+    let res = await this.patchDatatoAPINODE('/aspAssignment/rejectCancelation', { "assignmentId": [_id] });
+    if (res !== undefined) {
+      if (res.data !== undefined) {
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
+        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been Reject for Cancel by "+this.state.userEmail+", <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for reschedule by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.reschedule_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let dataEmail = {
+          // "to": creatorEmail,
+          // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
+          "subject":"[Reject Cancellation] Assignment "+dataAssignment.Assignment_No,
+          "body": bodyEmail
+        }
+        // let sendEmail = await this.apiSendEmail(dataEmail);
+        this.setState({ action_status: "success" })
+      } else {
+        this.setState({ action_status: "failed" })
+      }
+    } else {
+      this.setState({ action_status: "failed" })
     }
   }
 
@@ -1616,6 +1702,39 @@ class AssignmentDetail extends Component {
                       onClick={this.approveASGbyPM}
                     >
                       Approve
+                    </Button>
+                  )}
+                  {(this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT REQUEST FOR CANCELATION" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCEL APPROVED") && (
+                    <Button
+                      color="danger"
+                      size="sm"
+                      style={{ float: "left" }}
+                      id={this.state.data_assignment._id}
+                      onClick={this.CancelASG}
+                    >
+                      Cancel AGS
+                    </Button>
+                  )}
+                  {this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (
+                    <Button
+                      color="danger"
+                      size="sm"
+                      style={{ float: "left" }}
+                      id={this.state.data_assignment._id}
+                      onClick={this.ApproveCancelASG}
+                    >
+                      Approve Cancellation AGS
+                    </Button>
+                  )}
+                  {this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (
+                    <Button
+                      color="warning"
+                      size="sm"
+                      style={{ float: "left", marginLeft : "10px" }}
+                      id={this.state.data_assignment._id}
+                      onClick={this.RejectCancelASG}
+                    >
+                      Reject Cancellation AGS
                     </Button>
                   )}
                   {this.state.data_assignment.Current_Status ===
