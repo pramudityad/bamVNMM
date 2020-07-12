@@ -345,6 +345,7 @@ class CPODatabase extends React.Component {
     let pp = {
       po_number: dataPPEdit[0],
       date: dataPPEdit[1],
+      expired_date : dataPPEdit[7],
       currency: dataPPEdit[2],
       payment_terms: dataPPEdit[3],
       shipping_terms: dataPPEdit[4],
@@ -609,6 +610,7 @@ class CPODatabase extends React.Component {
                             <th style={{ minWidth: '150px' }}>PO Number</th>
                             <th>Date</th>
                             <th>Aging</th>
+                            <th>Expired Date</th>
                             <th>Currency</th>
                             <th>Payment Terms</th>
                             <th>Shipping Terms</th>
@@ -629,6 +631,7 @@ class CPODatabase extends React.Component {
                                 ) : (
                                   <td style={{ textAlign: 'center' }}>{this.Aging(convertDateFormat(po.date))}</td>
                                 )}
+                                <td style={{ textAlign: 'center' }}>{po.expired_date !== null && po.expired_date !== undefined ? convertDateFormat(po.expired_date) : null}</td>
                                 <td style={{ textAlign: 'center' }}>{po.currency}</td>
                                 <td style={{ textAlign: 'center' }}>{po.payment_terms}</td>
                                 <td style={{ textAlign: 'center' }}>{po.shipping_terms}</td>
@@ -739,6 +742,16 @@ class CPODatabase extends React.Component {
                     name="1"
                     placeholder=""
                     value={this.state.DataForm[1]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="data">Expired Date</Label>
+                  <Input
+                    type="text"
+                    name="7"
+                    placeholder=""
+                    value={this.state.DataForm[7]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>

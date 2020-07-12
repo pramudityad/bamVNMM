@@ -288,17 +288,16 @@ class AssignmentDetail extends Component {
     );
     if (res !== undefined) {
       if (res.data !== undefined) {
-        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
-        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment need to be approved by, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is notified by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail-asp/"+_id;
+        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment need to be approved by "+dataAssignment.Vendor_Name+", <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is notified by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
         // let name_vendor = this.state.data_assignment.Vendor_Name;
-        this.getASPListEmail(this.state.vendor_id);
+        this.getASPListEmail(dataAssignment.Vendor_Code);
         let dataEmail = {
           "to": this.state.vendor_email,
           // "to" : "damar.pramuditya@ericsson.com",
           "subject":"[Assignment Need Approval from ASP] Assignment "+dataAssignment.Assignment_No,
           "body": bodyEmail
         }
-        console.log(dataEmail)
         // const sendEmail = await apiSendEmail(dataEmail);
         this.setState({ action_status: "success" });
       } else {
