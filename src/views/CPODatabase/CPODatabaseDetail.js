@@ -357,7 +357,7 @@ class CPODatabaseDetail extends Component {
     for(let i = 0; i < dataPO.cpoDetail.length; i++){
       const e = dataPO.cpoDetail[i];
       ws.addRow([dataPO.po_number.toString(), dataPO.date.substring(0, 10), dataPO.currency, dataPO.payment_terms, dataPO.shipping_terms,
-        dataPO.contract, dataPO.contact, e.config_id, e.description, e.mmid, e.need_by_date, e.qty, e.unit, e.price, , e.total_price, e.match_status]);
+        dataPO.contract, dataPO.contact, e.config_id, e.description, e.mm_id, e.need_by_date, e.qty, e.unit, e.price, , e.total_price, e.match_status]);
     }
 
     const PPFormat = await wb.xlsx.writeBuffer();
@@ -370,7 +370,7 @@ class CPODatabaseDetail extends Component {
 
     ws.addRow(["config_id", "description", "mm_id", "need_by_date", "qty", "unit", "price"]);
     this.state.data_cpo_db.map(e =>
-      ws.addRow([e.config_id, e.description, e.mmid, e.need_by_date, e.qty, e.unit, e.price])
+      ws.addRow([e.config_id, e.description, e.mm_id, e.need_by_date, e.qty, e.unit, e.price])
     )
 
     const PPFormat = await wb.xlsx.writeBuffer();
@@ -404,6 +404,7 @@ class CPODatabaseDetail extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: '2', fontSize: '17px' }}> CPO Database Detail </span>
+                {this.state.userRole.findIndex(e => e === "BAM-CpoDB-ViewWithoutPrice") === -1 && (
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
@@ -438,6 +439,7 @@ class CPODatabaseDetail extends Component {
                     ) : ("")}
                   </div>
                 </div>
+                )}
                 {/* {this.state.data_comm_boq !== null && (
                     <React.Fragment>
                       <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
@@ -588,9 +590,14 @@ class CPODatabaseDetail extends Component {
                         <th>Need By Date</th>
                         <th>Qty</th>
                         <th>Unit</th>
-                        <th>Price</th>
-                        <th>Total Price</th>
-                        <th>Match Status</th>
+                        {this.state.userRole.findIndex(e => e === "BAM-CpoDB-ViewWithoutPrice") === -1 && (
+                          <React.Fragment>
+                          <th>Price</th>
+                          <th>Total Price</th>
+                          <th>Match Status</th>
+                          </React.Fragment>
+                        )}
+
                         {/* <th>Unit Price after Incentive (USD)</th>
                           <th>Unit Price after Incentive (IDR)</th>
                           <th>Total Price after Incentive (USD)</th>
@@ -602,14 +609,17 @@ class CPODatabaseDetail extends Component {
                       <tr>
                       <td>{e.config_id}</td>
                       <td>{e.description}</td>
-                      <td>{e.mmid}</td>
+                      <td>{e.mm_id}</td>
                       <td>{e.need_by_date}</td>
                       <td>{e.qty}</td>
                       <td>{e.unit}</td>
-                      <td>{e.price}</td>
-                      <td>{e.total_price}</td>
-                      <td>{e.match_status}</td>
-
+                      {this.state.userRole.findIndex(e => e === "BAM-CpoDB-ViewWithoutPrice") === -1 && (
+                        <React.Fragment>
+                        <td>{e.price}</td>
+                        <td>{e.total_price}</td>
+                        <td>{e.match_status}</td>
+                        </React.Fragment>
+                      )}
                       </tr>
                     )}
                     </tbody>
