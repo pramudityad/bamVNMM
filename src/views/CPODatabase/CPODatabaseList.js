@@ -254,6 +254,7 @@ class CPODatabase extends React.Component {
 
   ArrayEmptytoNull(dataXLS){
     let newDataXLS = [];
+    const idxEM = dataXLS.length > 0 ? dataXLS[0].findIndex(e => e === "expired_month") : 0;
     for(let i = 0; i < dataXLS.length; i++){
       let col = [];
       for(let j = 0; j < dataXLS[0].length; j++){
@@ -265,6 +266,12 @@ class CPODatabase extends React.Component {
           col.push(dataObject);
         }else{
           col.push(this.checkValue(dataXLS[i][j]));
+        }
+      }
+      if(i > 0 && idxEM !== -1){
+        const dataED = dataXLS[i][idxEM];
+        if(/^\d+$/.test(dataED)){
+          col[idxEM] = parseFloat(dataED);
         }
       }
       newDataXLS.push(col);
@@ -338,6 +345,7 @@ class CPODatabase extends React.Component {
     let pp = {
       po_number: dataPPEdit[0],
       date: dataPPEdit[1],
+      expired_date : dataPPEdit[7],
       currency: dataPPEdit[2],
       payment_terms: dataPPEdit[3],
       shipping_terms: dataPPEdit[4],
@@ -502,9 +510,9 @@ class CPODatabase extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["po_number","date","currency","payment_terms","shipping_terms", "contract", "contact", "config_id", "description", "mm_id", "need_by_date", "qty", "unit", "price"]);
-    ws.addRow(["PO0001","2020-02-21","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com","INSTALL:CONFIG SERVICE 11_1105A","3416315 |  INSTALL:CONFIG SERVICE 11_1105A  | YYYY:2019 | MM:12","desc","2020-08-21",1,"Performance Unit",1000000]);
-    ws.addRow(["PO0001","2020-02-21","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com","Cov_2020_Config-4a","330111 | Cov_2020_Config-4a | YYYY : 2020 | MM : 04","desc","2020-12-12",200,"Performance Unit",15000000]);
+    ws.addRow(["po_number","date","expired_month", "currency","payment_terms","shipping_terms", "contract", "contact", "config_id", "description", "mm_id", "need_by_date", "qty", "unit", "price"]);
+    ws.addRow(["PO0001","2020-02-21","6","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com","INSTALL:CONFIG SERVICE 11_1105A","3416315 |  INSTALL:CONFIG SERVICE 11_1105A  | YYYY:2019 | MM:12","desc","2020-08-21",1,"Performance Unit",1000000]);
+    ws.addRow(["PO0001","2020-02-21","6","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com","Cov_2020_Config-4a","330111 | Cov_2020_Config-4a | YYYY : 2020 | MM : 04","desc","2020-12-12",200,"Performance Unit",15000000]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'CPO with Detail Template.xlsx');
@@ -602,6 +610,7 @@ class CPODatabase extends React.Component {
                             <th style={{ minWidth: '150px' }}>PO Number</th>
                             <th>Date</th>
                             <th>Aging</th>
+                            <th>Expired Date</th>
                             <th>Currency</th>
                             <th>Payment Terms</th>
                             <th>Shipping Terms</th>
@@ -622,6 +631,7 @@ class CPODatabase extends React.Component {
                                 ) : (
                                   <td style={{ textAlign: 'center' }}>{this.Aging(convertDateFormat(po.date))}</td>
                                 )}
+                                <td style={{ textAlign: 'center' }}>{po.expired_date !== null && po.expired_date !== undefined ? convertDateFormat(po.expired_date) : null}</td>
                                 <td style={{ textAlign: 'center' }}>{po.currency}</td>
                                 <td style={{ textAlign: 'center' }}>{po.payment_terms}</td>
                                 <td style={{ textAlign: 'center' }}>{po.shipping_terms}</td>
@@ -732,6 +742,16 @@ class CPODatabase extends React.Component {
                     name="1"
                     placeholder=""
                     value={this.state.DataForm[1]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="data">Expired Date</Label>
+                  <Input
+                    type="text"
+                    name="7"
+                    placeholder=""
+                    value={this.state.DataForm[7]}
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
