@@ -21,10 +21,16 @@ import {
   Table,
 } from 'reactstrap';
 import { CustomTooltips } from '@coreui/coreui-plugin-chartjs-custom-tooltips';
-import { getStyle, hexToRgba } from '@coreui/coreui/dist/js/coreui-utilities'
+import { getStyle, hexToRgba } from '@coreui/coreui/dist/js/coreui-utilities';
+import logoEricsson from '../../assets/img/brand/Econ-White.svg';
+import axios from "axios";
+import { connect } from "react-redux";
+import { Link } from 'react-router-dom';
 
 const Widget03 = lazy(() => import('../../views/Widgets/Widget03'));
+const Widget05 = React.lazy(() => import('../../views/Widgets/Widget05'));
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 const brandPrimary = getStyle('--primary')
 const brandSuccess = getStyle('--success')
 const brandInfo = getStyle('--info')
@@ -508,9 +514,33 @@ class Dashboard extends Component {
     this.onRadioBtnClick = this.onRadioBtnClick.bind(this);
 
     this.state = {
+      tokenUser: this.props.dataLogin.token,
       dropdownOpen: false,
       radioSelected: 2,
+      pendingBOQ : 0,
+      pendingMR : 0,
+      pendingASG : 0,
+      POExpired : 0,
+      queryPOExpired : '',
     };
+  }
+
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios.get(API_URL_NODE+url, {
+        headers : {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+      });
+      if(respond.status >= 200 && respond.status < 300) {
+        console.log("respond data dash", respond);
+      }
+      return respond;
+    } catch(err) {
+      let respond = err;
+      return respond;
+    }
   }
 
   toggle() {
@@ -525,6 +555,58 @@ class Dashboard extends Component {
     });
   }
 
+  componentDidMount(){
+    this.getPendingTaskBOQ();
+    this.getPendingTaskMR();
+    this.getPendingTaskASG();
+    this.getPODataListPending();
+  }
+
+  async getPendingTaskBOQ(){
+    let count = 0;
+    let dataTech = await this.getDataFromAPINODE('/techBoqList?srt=_id:-1&q={"approval_status":{"$regex" : "Approved", "$options" : "i"}}&lmt=1&pg=1&v={"_id" : 1}');
+    let dataComm = await this.getDataFromAPINODE('//commBoq?srt=_id:-1&q={"current_status":{"$regex" : "COMM BOQ CREATED", "$options" : "i"}}&lmt=1&pg=1&v={"_id" : 1}');
+    if(dataTech !== undefined && dataComm !== undefined && dataTech.data !== undefined && dataComm.data !== undefined){
+      count = dataTech.data.totalResults - dataComm.data.totalResults;
+      this.setState({pendingBOQ : count});
+    }
+  }
+
+  async getPendingTaskMR(){
+    let count = 0;
+    let dataPendingLDM = await this.getDataFromAPINODE('/matreq?srt=_id:-1&q={"current_mr_status":"MR REQUESTED"}&lmt=1&pg=1&v={"_id" : 1}');
+    if(dataPendingLDM !== undefined && dataPendingLDM.data !== undefined){
+      count = dataPendingLDM.data.totalResults;
+      this.setState({pendingMR : count});
+    }
+  }
+
+  async getPendingTaskASG(){
+    let count = 0;
+    let dataPendingTPM = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q={"Current_Status":"REQUEST PM APPROVAL"}&lmt=10&pg=1&v={"_id" : 1}');
+    if(dataPendingTPM !== undefined && dataPendingTPM.data !== undefined){
+      count = dataPendingTPM.data.totalResults;
+      this.setState({pendingASG : count});
+    }
+  }
+
+  getPODataListPending() {
+    let count = 0;
+    let today = new Date();
+    today.setDate(today.getDate()-120);
+    let dateExpired = today.getFullYear().toString()+"-"+(today.getMonth()+1).toString().padStart(2, '0')+"-"+today.getDate().toString().padStart(2, '0');
+    this.setState({queryPOExpired : 'q={"date" : {"$lte":"'+dateExpired+' 0:0:0"}}'});
+    this.getDataFromAPINODE('/cpodb/getCpoDb?srt=_id:-1&lmt=1&pg=1&q={"date" : {"$lte":"'+dateExpired+' 0:0:0"}}')
+      .then(res => {
+        if (res.data !== undefined) {
+          count = res.data.totalResults;
+          this.setState({POExpired : count});
+        } else {
+          this.setState({POExpired : 0});
+        }
+      })
+  }
+
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
@@ -532,104 +614,86 @@ class Dashboard extends Component {
     return (
       <div className="animated fadeIn">
         <Row>
+
           <Col xs="12" sm="6" lg="3">
+          <Link to={'/order-created'}>
             <Card className="text-white bg-info">
               <CardBody className="pb-0">
-                <ButtonGroup className="float-right">
-                  <ButtonDropdown id='card1' isOpen={this.state.card1} toggle={() => { this.setState({ card1: !this.state.card1 }); }}>
-                    <DropdownToggle caret className="p-0" color="transparent">
-                      <i className="icon-settings"></i>
-                    </DropdownToggle>
-                    <DropdownMenu right>
-                      <DropdownItem>Action</DropdownItem>
-                      <DropdownItem>Another action</DropdownItem>
-                      <DropdownItem disabled>Disabled action</DropdownItem>
-                      <DropdownItem>Something else here</DropdownItem>
-                    </DropdownMenu>
-                  </ButtonDropdown>
-                </ButtonGroup>
-                <div className="text-value">2</div>
+                <div className="text-value">{this.state.pendingMR}</div>
                 <div>Pending Task MR Module</div>
               </CardBody>
               <div className="chart-wrapper mx-3" style={{ height: '70px' }}>
                 <Line data={cardChartData2} options={cardChartOpts2} height={70} />
               </div>
             </Card>
+            </Link>
           </Col>
-
           <Col xs="12" sm="6" lg="3">
+          <Link to={'/assignment-list-approval'}>
             <Card className="text-white bg-primary">
               <CardBody className="pb-0">
-                <ButtonGroup className="float-right">
-                  <Dropdown id='card2' isOpen={this.state.card2} toggle={() => { this.setState({ card2: !this.state.card2 }); }}>
-                    <DropdownToggle className="p-0" color="transparent">
-                      <i className="icon-location-pin"></i>
-                    </DropdownToggle>
-                    <DropdownMenu right>
-                      <DropdownItem>Action</DropdownItem>
-                      <DropdownItem>Another action</DropdownItem>
-                      <DropdownItem>Something else here</DropdownItem>
-                    </DropdownMenu>
-                  </Dropdown>
-                </ButtonGroup>
-                <div className="text-value">2</div>
+                <div className="text-value">{this.state.pendingASG}</div>
                 <div>Pending Task ASP Assingment</div>
               </CardBody>
               <div className="chart-wrapper mx-3" style={{ height: '70px' }}>
                 <Line data={cardChartData1} options={cardChartOpts1} height={70} />
               </div>
             </Card>
+            </Link>
           </Col>
-
           <Col xs="12" sm="6" lg="3">
+          <Link to={'/list-commercial/creation'}>
             <Card className="text-white bg-warning">
               <CardBody className="pb-0">
-                <ButtonGroup className="float-right">
-                  <Dropdown id='card3' isOpen={this.state.card3} toggle={() => { this.setState({ card3: !this.state.card3 }); }}>
-                    <DropdownToggle caret className="p-0" color="transparent">
-                      <i className="icon-settings"></i>
-                    </DropdownToggle>
-                    <DropdownMenu right>
-                      <DropdownItem>Action</DropdownItem>
-                      <DropdownItem>Another action</DropdownItem>
-                      <DropdownItem>Something else here</DropdownItem>
-                    </DropdownMenu>
-                  </Dropdown>
-                </ButtonGroup>
-                <div className="text-value">3</div>
+                <div className="text-value">{this.state.pendingBOQ}</div>
                 <div>Pending Task BOQ</div>
               </CardBody>
               <div className="chart-wrapper" style={{ height: '70px' }}>
                 <Line data={cardChartData3} options={cardChartOpts3} height={70} />
               </div>
             </Card>
+            </Link>
           </Col>
 
           <Col xs="12" sm="6" lg="3">
+          <Link to={'/cpo-database/'}>
             <Card className="text-white bg-danger">
               <CardBody className="pb-0">
-                <ButtonGroup className="float-right">
-                  <ButtonDropdown id='card4' isOpen={this.state.card4} toggle={() => { this.setState({ card4: !this.state.card4 }); }}>
-                    <DropdownToggle caret className="p-0" color="transparent">
-                      <i className="icon-settings"></i>
-                    </DropdownToggle>
-                    <DropdownMenu right>
-                      <DropdownItem>Action</DropdownItem>
-                      <DropdownItem>Another action</DropdownItem>
-                      <DropdownItem>Something else here</DropdownItem>
-                    </DropdownMenu>
-                  </ButtonDropdown>
-                </ButtonGroup>
-                <div className="text-value">0</div>
-                <div>Rejected Task</div>
+                <div className="text-value">{this.state.POExpired}</div>
+                <div>PO to Be Expired & Expired</div>
               </CardBody>
               <div className="chart-wrapper mx-3" style={{ height: '70px' }}>
                 <Bar data={cardChartData4} options={cardChartOpts4} height={70} />
               </div>
             </Card>
+            </Link>
           </Col>
         </Row>
+
+        <hr style={{borderStyle : 'solid', borderWidth: '0px 0px 1px 0px', borderColor : '#0073b7', marginTop: '5px'}}></hr>
+        <div style={{marginTop : '25px'}}>
         <Row>
+          <Col xs="6" sm="4" lg="4">
+            <a style={{textDecoration:"none"}} href="#"><Widget05 icon="fa fa-pencil-square-o" color='#0073b7' header="BAM" value="25" invert>BOQ Assignment Material</Widget05></a>
+          </Col>
+          <Col xs="6" sm="4" lg="4">
+            <a style={{textDecoration:"none"}} href="https://act.e-dpm.com"><Widget05 icon="fa fa-cogs" color="#00c0ef" header="ACT" value="25" invert>ASP Action</Widget05></a>
+          </Col>
+          <Col xs="6" sm="4" lg="4">
+            <a style={{textDecoration:"none"}} href="https://xl.pdb.e-dpm.com/"><Widget05 icon="fa fa-database" color="rgb(255, 193, 7)" header="PDB" value="25" invert>Setup and Plan</Widget05></a>
+          </Col>
+          <Col xs="6" sm="4" lg="4">
+            <a style={{textDecoration:"none"}} href="https://apac.erisite.ericsson.net/apac1/pwa/"><Widget05 icon="fa fa-list-alt" color="#3d9970" header="Erisite" value="25" invert>Global Tools</Widget05></a>
+          </Col>
+          <Col xs="6" sm="4" lg="4">
+            <a style={{textDecoration:"none"}} href="https://apac.erisite.ericsson.net/apac1/pwa/"><Widget05 icon="fa fa-list-alt" color="#3d9970" header="LH3 / EPOD" value="25" invert>Global Tools</Widget05></a>
+          </Col>
+          <Col xs="6" sm="4" lg="4">
+            <a style={{textDecoration:"none"}} href="https://apac.erisite.ericsson.net/apac1/pwa/"><Widget05 icon="fa fa-list-alt" color="#3d9970" header="TRACY" value="25" invert>Global Tools</Widget05></a>
+          </Col>
+        </Row>
+        </div>
+        {/*<Row>
           <Col>
             <Card>
               <CardHeader>
@@ -709,4 +773,10 @@ class Dashboard extends Component {
   }
 }
 
-export default Dashboard;
+const mapStateToProps = (state) => {
+  return {
+    dataLogin: state.loginData,
+  };
+};
+
+export default connect(mapStateToProps)(Dashboard);

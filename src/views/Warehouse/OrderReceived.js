@@ -240,7 +240,7 @@ class OrderReceived extends Component {
 
   componentDidMount() {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'Order Received | BAM';
   }
 
@@ -265,7 +265,7 @@ class OrderReceived extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {

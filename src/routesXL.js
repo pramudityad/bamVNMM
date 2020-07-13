@@ -56,13 +56,17 @@ const OrderProcessing = React.lazy(() => import('./views/Warehouse/OrderProcessi
 const ReadyToDeliver = React.lazy(() => import('./views/Warehouse/ReadyToDeliver'));
 const JointCheck = React.lazy(() => import('./views/Warehouse/JointCheck'));
 const LoadingProcess = React.lazy(() => import('./views/Warehouse/LoadingProcess'));
+const WaitingDispatch = React.lazy(() => import('./views/Warehouse/WaitingDispatch'));
 const MaterialDispatch = React.lazy(() => import('./views/Warehouse/MaterialDispatch'));
 const ProjectDashboard = React.lazy(() => import('./views/Project/ProjectDashboard'));
 const OrderCreated = React.lazy(() => import('./views/Project/OrderCreated'));
 const LOMList = React.lazy(() => import('./views/MR/LOMList'));
+const MatLOMList = React.lazy(() => import('./views/MR/MatLOMList'));
+
 
 const AssignmentCreation = React.lazy(() => import('./views/Assignment/AssignmentCreation'));
 const AssignmentList = React.lazy(() => import('./views/Assignment/AssignmentList'));
+const AssignmentReport = React.lazy(() => import('./views/Assignment/AssignmentReport'));
 const BulkAssignment = React.lazy(() => import('./views/Assignment/BulkAssignment'));
 const AssignmentDetail = React.lazy(() => import('./views/Assignment/AssignmentDetail'));
 const AssignmentEdit = React.lazy(() => import('./views/Assignment/AssignmentEdit'));
@@ -101,12 +105,16 @@ const BulkApproval = React.lazy(() => import('./views/MR/ListBulkApproval'));
 const ListOrdering = React.lazy(() => import('./views/Ordering/ListOrdering'));
 const DetailOrdering = React.lazy(() => import('./views/Ordering/OrderingMaterial'));
 const ConfigManager = React.lazy(() => import('./views/ConfigManagement/ConfigUpload'));
+
 const CPODatabase  = React.lazy(() => import('./views/CPODatabase/CPODatabaseList'));
 const CPODatabaseDetail  = React.lazy(() => import('./views/CPODatabase/CPODatabaseDetail'));
 
 const ShipmentList = React.lazy(() => import('./views/ShipmentList/ShipmentList'));
 
 const WHManagement  = React.lazy(() => import('./views/MR/WHManagement/WHManagement'));
+const ASPManagement  = React.lazy(() => import('./views/MR/ASPUser/ASPUser'));
+const ASPManagementDet  = React.lazy(() => import('./views/MR/ASPUser/ASPUserDet'));
+
 
 const MaterialStock  = React.lazy(() => import('./views/MR/WHStock/MatStock2'));
 const MaterialInboundPlan  = React.lazy(() => import('./views/MR/WHInbound/MatInboundPlan2'));
@@ -184,11 +192,11 @@ const routes = [
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
   { path: '/ps-list', exact: true, name: 'Plant Spec List', component: TssrList },
   { path: '/ps-bom', exact: true, name: 'Plant Spec BOM', component: TssrBOM },
-  { path: '/ps-bom/:id', name: 'Plant Spec BOM', component: TssrBOMDetail },
+  { path: '/ps-list/:id', name: 'Plant Spec BOM', component: TssrBOMDetail },
   { path: '/mr-list', exact: true, name: 'MR List', component: MRList },
   { path: '/mr-na-list', exact: true, name: 'MR List Not Assign', component: MRNAList },
   { path: '/mr-creation', exact: true, name: 'Create MR', component: MRCreation },
-  { path: '/mr-detail/:id', exact: true, name: 'MR Detail', component: MRDetail },
+  { path: '/mr-detail/:id', exact: true, name: 'MR Detail', component: MRDetail, roles : ['BAM-ASP'] },
   { path: '/bulk-mr-creation', name: 'Bulk MR Creation', component: BulkMRCreation },
   { path: '/bulk-mr-request', name: 'Bulk MR Request', component: BulkRequest },
   { path: '/bulk-mr-change-approval', name: 'Bulk MR Change Approval', component: BulkChangeApproval },
@@ -201,12 +209,16 @@ const routes = [
   { path: '/ready-to-deliver', exact: true, name: 'Ready To Deliver', component: ReadyToDeliver },
   { path: '/joint-check', exact: true, name: 'Joint Check', component: JointCheck },
   { path: '/loading-process', exact: true, name: 'Loading Process', component: LoadingProcess },
-  { path: '/material-dispatch', exact: true, name: 'Material Dispatch', component: MaterialDispatch },
+  { path: '/waiting-dispatch', exact: true, name: 'Material Dispatch', component: WaitingDispatch, roles : ['BAM-ASP'] },
+  { path: '/material-dispatch', exact: true, name: 'Material Dispatch', component: MaterialDispatch, roles : ['BAM-ASP'] },
   { path: '/project-dashboard', exact: true, name: 'Project Dashboard', component: ProjectDashboard },
   { path: '/order-created', exact: true, name: 'Order Created', component: OrderCreated },
   { path: '/lom-list', exact: true, name: 'LOM List', component: LOMList },
+  { path: '/matlom-list', exact: true, name: 'Material LOM List', component: MatLOMList },
+
   { path: '/assignment-creation', exact: true, name: 'Assignment Creation', component: AssignmentCreation },
   { path: '/assignment-list', exact: true, name: 'Assignment List', component: AssignmentList },
+  { path: '/assignment-list-report', exact: true, name: 'Assignment List', component: AssignmentReport, roles : ['BAM-ASP'] },
   { path: '/bulk-assignment-creation', exact: true, name: 'Bulk Assignment Creation', component: BulkAssignment },
   { path: '/assignment-detail/:id', exact: true, name: 'Assignment Detail', component: AssignmentDetail },
   { path: '/assignment-edit/:id', exact: true, name: 'Assignment Edit', component: AssignmentEdit },
@@ -224,8 +236,8 @@ const routes = [
   { path: '/po-assign-commercial/:id', exact: true, name: 'PO Assign Commercial BOQ', component: POAssign },
   { path: '/submission-commercial/:id', exact: true, name: 'Submission Commercial BOQ', component: SubmissionCommBoq },
 
-  { path: '/assignment-detail-asp/:id', exact: true, name: 'Assignment Detail (ASP)', component: AssignmentDetailASP },
-  { path: '/assignment-list-asp', exact: true, name: 'Assignment List (ASP)', component: AssignmentListASP },
+  { path: '/assignment-detail-asp/:id', exact: true, name: 'Assignment Detail (ASP)', component: AssignmentDetailASP, roles : ['BAM-ASP'] },
+  { path: '/assignment-list-asp', exact: true, name: 'Assignment List (ASP)', component: AssignmentListASP, roles : ['BAM-ASP'] },
   { path: '/assignment-list-approval', exact: true, name: 'Assignment Need Assignment List ', component: AssignmentListApproval },
 
   { path: '/list-tssr-matix', exact: true, name: 'List TSSR Matrix BOQ', component: ListTssrMatrix },
@@ -257,6 +269,10 @@ const routes = [
   { path: '/shipment-list', exact: true, name: 'Shipment List', component: ShipmentList },
 
   { path: '/wh-management', exact: true, name: 'Warehouse Management', component: WHManagement },
+  { path: '/asp-user-management', exact: true, name: 'Vendor List', component: ASPManagement },
+  { path: '/asp-user-management/:id', exact: true, name: 'Vendor Management', component: ASPManagementDet },
+
+
   { path: '/mat-library', exact: true, name: 'Material Library', component: MatLibrary },
 
   { path: '/mr-dashboard-global', exact: true, name: 'Material Request Dashboard', component: MRDashboardGlob },

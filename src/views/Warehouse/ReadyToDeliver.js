@@ -242,7 +242,7 @@ class ReadyToDeliver extends Component {
 
   componentDidMount() {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'Ready To Deliver | BAM';
   }
 
@@ -267,7 +267,7 @@ class ReadyToDeliver extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {

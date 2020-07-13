@@ -2276,8 +2276,12 @@ class DetailCPOBoq extends Component {
                         <th>Category</th>
                         <th>Source</th>
                         <th>COUPA Catalogue Item</th>
-                        <th>Coupa Unit Price</th>
-                        <th>Coupa Total Price</th>
+                        {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CpoBoq-ViewWithoutPrice") === false) && (
+                          <React.Fragment>
+                          <th>Coupa Unit Price</th>
+                          <th>Coupa Total Price</th>
+                          </React.Fragment>
+                        )}
                         <th>Curr</th>
                         <th>COUPA Requisition Title</th>
                         <th>COUPA Network ID</th>
@@ -2343,8 +2347,12 @@ class DetailCPOBoq extends Component {
                           <td>{row.category}</td>
                           <td>{row.source}</td>
                           <td>{row.coupa_catalogue_item}</td>
-                          <td>{row.coupa_unit_price}</td>
-                          <td>{row.coupa_total_price}</td>
+                          {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CpoBoq-ViewWithoutPrice") === false) && (
+                            <React.Fragment>
+                            <td>{row.coupa_unit_price}</td>
+                            <td>{row.coupa_total_price}</td>
+                            </React.Fragment>
+                          )}
                           <td>{row.currency}</td>
                           <td>{row.coupa_requisition_title}</td>
                           <td>{row.coupa_network_id}</td>

@@ -203,7 +203,7 @@ class ListChangeApproval extends Component {
   componentDidMount() {
     this.props.SidebarMinimizer(true);
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'MR PS Not Assigned | BAM';
   }
 
@@ -331,7 +331,7 @@ class ListChangeApproval extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {

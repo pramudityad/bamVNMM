@@ -9,6 +9,11 @@ export default {
           url: '/product-package',
           icon: 'icon-folder',
         },
+        {
+          name: 'Service Library',
+          url: '/svc-library',
+          icon: 'icon-folder',
+        },
       ]
     },
     {
@@ -40,11 +45,11 @@ export default {
           url: '/list-tssr-boq',
           icon: 'icon-docs',
         },
-      // {
-      //    name: 'TSSR Matrix BOQ ',
-      //    url: '/list-tssr-matix',
-      //    icon: 'icon-drawer',
-      //  },
+      {
+         name: 'CR',
+         url: '/cr-detail',
+         icon: 'icon-drawer',
+       },
        {
         name: 'Plant Spec List',
         url: '/ps-list',

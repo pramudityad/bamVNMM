@@ -266,33 +266,8 @@ class OrderProcessing extends Component {
       let materialData = [];
       for (let j = 0; j < this.state.data_material.packages[i].materials.length; j++) {
         if (this.state.qty_ne.has(this.state.data_material.packages[i].materials[j]._id) !== false || this.state.qty_fe.has(this.state.data_material.packages[i].materials[j]._id) !== false) {
-          let material = {
-            "id_mr_doc": this.state.data_material.packages[i].materials[j].id_mr_doc,
-            "id_mr_pp_doc": this.state.data_material.packages[i].materials[j].id_mr_pp_doc,
-            "id_pp_doc": this.state.data_material.packages[i].materials[j].id_pp_doc,
-            "id_site_doc": this.state.data_material.packages[i].materials[j].id_site_doc,
-            "id_mc_doc": this.state.data_material.packages[i].materials[j].id_mc_doc,
-            "id_po_doc": this.state.data_material.packages[i].materials[j].id_po_doc,
-            "add_photo": this.state.data_material.packages[i].materials[j].add_photo,
-            "deleted": this.state.data_material.packages[i].materials[j].deleted,
-            "mr_id": this.state.data_material.packages[i].materials[j].mr_id,
-            "pp_id": this.state.data_material.packages[i].materials[j].pp_id,
-            "site_id": this.state.data_material.packages[i].materials[j].site_id,
-            "site_name": this.state.data_material.packages[i].materials[j].site_name,
-            "material_id": this.state.data_material.packages[i].materials[j].material_id,
-            "material_name": this.state.data_material.packages[i].materials[j].material_name,
-            "material_type": this.state.data_material.packages[i].materials[j].material_type,
-            "uom": this.state.data_material.packages[i].materials[j].uom,
-            "qty": this.state.data_material.packages[i].materials[j].site_id === this.state.site_NE.site_id ? this.state.qty_ne.get(this.state.data_material.packages[i].materials[j]._id) : this.state.qty_fe.get(this.state.data_material.packages[i].materials[j]._id),
-            "qty_scan": this.state.data_material.packages[i].materials[j].qty_scan,
-            "po_number": this.state.data_material.packages[i].materials[j].po_number,
-            "serial_numbers": [],
-            "created_by": this.state.data_material.packages[i].materials[j].created_by,
-            "updated_by": this.state.data_material.packages[i].materials[j].updated_by,
-            "priority": this.state.data_material.packages[i].materials[j].priority,
-            "updated_on": this.state.data_material.packages[i].materials[j].updated_on,
-            "created_on": this.state.data_material.packages[i].materials[j].created_on
-          }
+          let material = Object.assign({}, this.state.data_material.packages[i].materials[j]);
+          material["qty"] = this.state.data_material.packages[i].materials[j].site_id === this.state.site_NE.site_id ? this.state.qty_ne.get(this.state.data_material.packages[i].materials[j]._id) : this.state.qty_fe.get(this.state.data_material.packages[i].materials[j]._id);
           console.log("material", material.material_id, material.qty);
           if (material.qty !== undefined) {
             if (material.qty !== 0 && material.qty !== "0") {
@@ -301,30 +276,8 @@ class OrderProcessing extends Component {
           }
         }
       }
-      let lom = {
-        "id_mr_doc": this.state.data_material.packages[i].id_mr_doc,
-        "mr_id": this.state.data_material.packages[i].mr_id,
-        "id_pp_doc": this.state.data_material.packages[i].id_pp_doc,
-        "pp_id": this.state.data_material.packages[i].pp_id,
-        "id_site_doc": this.state.data_material.packages[i].id_site_doc,
-        "site_id": this.state.data_material.packages[i].site_id,
-        "site_name": this.state.data_material.packages[i].site_name,
-        "product_name": this.state.data_material.packages[i].product_name,
-        "product_type": this.state.data_material.packages[i].product_type,
-        "physical_group": this.state.data_material.packages[i].physical_group,
-        "uom": this.state.data_material.packages[i].uom,
-        "qty": 1,
-        "qty_scan": this.state.data_material.packages[i].qty_scan,
-        "id_po_doc": this.state.data_material.packages[i].id_po_doc,
-        "po_number": this.state.data_material.packages[i].po_number,
-        "deleted": this.state.data_material.packages[i].deleted,
-        "created_by": this.state.data_material.packages[i].created_by,
-        "updated_by": this.state.data_material.packages[i].updated_by,
-        "add_photo": this.state.data_material.packages[i].add_photo,
-        "updated_on": this.state.data_material.packages[i].updated_on,
-        "created_on": this.state.data_material.packages[i].created_on,
-        "materials": materialData
-      }
+      let lom = Object.assign({}, this.state.data_material.packages[i]);
+      lom["materials"] = materialData;
       if (materialData.length !== 0) {
         lomData.push(lom);
       }
@@ -340,13 +293,21 @@ class OrderProcessing extends Component {
       this.setState({ action_status: "success" });
       setTimeout(function () { window.location.reload(); }, 2000);
     } else {
-      this.setState({ action_status: 'failed' });
+      if(resLOM.response !== undefined && resLOM.response.data !== undefined && resLOM.response.data.error !== undefined){
+        if(resLOM.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: resLOM.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: resLOM.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
     }
   }
 
   componentDidMount() {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'Order Processing | BAM';
   }
 
@@ -413,7 +374,7 @@ class OrderProcessing extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {

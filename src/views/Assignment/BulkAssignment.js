@@ -8,6 +8,9 @@ import { saveAs } from 'file-saver';
 import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+
+import {apiSendEmail} from '../../helper/asyncFunction';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -68,18 +71,30 @@ class BulkAssignment extends Component {
         list_data_activity : [],
         sow_type_selected : "RBS",
         rowsXLS : [],
+        rowsXLSMigration : [],
         waiting_status : null,
         action_status : null,
         action_message : null,
         redirectSign : false,
         asp_list : [],
         uploadan_type : "without Predefined SSOW",
+        modal_loading : false,
+        project_in_bulk : [],
     };
     this.saveDataAssignmentBulk = this.saveDataAssignmentBulk.bind(this);
+    this.saveDataAssignmentBulkMigration = this.saveDataAssignmentBulkMigration.bind(this);
     this.exportFormatBulkAssignment = this.exportFormatBulkAssignment.bind(this);
+    this.exportFormatBulkAssignmentMigration = this.exportFormatBulkAssignmentMigration.bind(this);
     this.handleChangeSOWType = this.handleChangeSOWType.bind(this);
     this.handleChangeUploadType = this.handleChangeUploadType.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
   }
+
+	toggleLoading(){
+	  this.setState(prevState => ({
+	    modal_loading: !prevState.modal_loading
+	  }));
+	}
 
   async getDataFromAPIEXEL(url) {
     try {
@@ -181,6 +196,25 @@ class BulkAssignment extends Component {
       }
     }
 
+    async patchDatatoAPINODE(url, data) {
+      try {
+        let respond = await axios.patch(API_URL_NODE + url, data, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + this.state.tokenUser
+          },
+        })
+        if (respond.status >= 200 && respond.status < 300) {
+          console.log("respond Patch data", respond);
+        }
+        return respond;
+      } catch (err) {
+        let respond = err;
+        console.log("respond Patch data", err.response);
+        return respond;
+      }
+    }
+
   checkValue(props){
     //Swap undefined to null
     if( typeof props === 'undefined' ) {
@@ -218,39 +252,161 @@ class BulkAssignment extends Component {
     return data.findIndex(e => this.isSameValue(e,value));
   }
 
-  fileHandlerAssignment = (event) => {
-    let fileObj = event.target.files[0];
-    if(fileObj !== undefined){
-      ExcelRenderer(fileObj, (err, rest) => {
-        if(err){
-          console.log(err);
-        }
-        else{
-          this.setState({
-            action_status : null,
-            action_message : null
-          }, () => {
-            this.ArrayEmptytoNull(rest.rows);
-          });
-        }
+  fileHandlerAssignment = (input) => {
+    const file = input.target.files[0];
+    const reader = new FileReader();
+    const rABS = !!reader.readAsBinaryString;
+    reader.onload = (e) => {
+      /* Parse data */
+      const bstr = e.target.result;
+      const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array', cellDates:true});
+      /* Get first worksheet */
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      /* Convert array of arrays */
+      const data = XLSX.utils.sheet_to_json(ws, {header:1, devfal : null});
+      /* Update state */
+      // this.ArrayEmptytoNull(data);
+      this.setState({ action_status: null, action_message: null }, () => {
+        this.ArrayEmptytoNull(data);
       });
-    }
+    };
+    if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
   }
+
+  // fileHandlerAssignment = (event) => {
+  //   let fileObj = event.target.files[0];
+  //   if(fileObj !== undefined){
+  //     ExcelRenderer(fileObj, (err, rest) => {
+  //       if(err){
+  //         console.log(err);
+  //       }
+  //       else{
+  //         this.setState({
+  //           action_status : null,
+  //           action_message : null
+  //         }, () => {
+  //           this.ArrayEmptytoNull(rest.rows);
+  //         });
+  //       }
+  //     });
+  //   }
+  // }
+
+  fileHandlerMigration = (input) => {
+    const file = input.target.files[0];
+    const reader = new FileReader();
+    const rABS = !!reader.readAsBinaryString;
+    reader.onload = (e) => {
+      /* Parse data */
+      const bstr = e.target.result;
+      const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array', cellDates:true});
+      /* Get first worksheet */
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      /* Convert array of arrays */
+      const data = XLSX.utils.sheet_to_json(ws, {header:1, devfal : null});
+      /* Update state */
+      // this.ArrayEmptytoNull(data);
+      this.setState({ action_status: null, action_message: null }, () => {
+        this.ArrayEmptytoNullMigration(data);
+      });
+    };
+    if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
+  }
+
+  // fileHandlerMigration = (event) => {
+  //   let fileObj = event.target.files[0];
+  //   if(fileObj !== undefined){
+  //     ExcelRenderer(fileObj, (err, rest) => {
+  //       if(err){
+  //         console.log(err);
+  //       }
+  //       else{
+  //         this.setState({
+  //           action_status : null,
+  //           action_message : null
+  //         }, () => {
+  //           this.ArrayEmptytoNullMigration(rest.rows);
+  //         });
+  //       }
+  //     });
+  //   }
+  // }
 
   ArrayEmptytoNull(dataXLS){
     let newDataXLS = [];
     for(let i = 0; i < dataXLS.length; i++){
       let col = [];
       for(let j = 0; j < dataXLS[0].length; j++){
-        col.push(this.checkValue(dataXLS[i][j]));
+        if(typeof dataXLS[i][j] === "object"){
+          let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
+          if(dataObject !== null){
+            dataObject = dataObject.replace(/"/g, "");
+          }
+          col.push(dataObject);
+        }else{
+          col.push(this.checkValue(dataXLS[i][j]));
+        }
       }
       newDataXLS.push(col);
     }
     this.setState({
-      rowsXLS: newDataXLS
+      rowsXLS : newDataXLS,
     });
     this.checkingDataAssignment(newDataXLS);
   }
+  //
+  // ArrayEmptytoNull(dataXLS){
+  //   let newDataXLS = [];
+  //   for(let i = 0; i < dataXLS.length; i++){
+  //     let col = [];
+  //     for(let j = 0; j < dataXLS[0].length; j++){
+  //       col.push(this.checkValue(dataXLS[i][j]));
+  //     }
+  //     newDataXLS.push(col);
+  //   }
+  //   this.setState({
+  //     rowsXLS: newDataXLS
+  //   });
+  //   this.checkingDataAssignment(newDataXLS);
+  // }
+
+  ArrayEmptytoNullMigration(dataXLS){
+    let newDataXLS = [];
+    for(let i = 0; i < dataXLS.length; i++){
+      let col = [];
+      for(let j = 0; j < dataXLS[0].length; j++){
+        if(typeof dataXLS[i][j] === "object"){
+          let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
+          if(dataObject !== null){
+            dataObject = dataObject.replace(/"/g, "");
+          }
+          col.push(dataObject);
+        }else{
+          col.push(this.checkValue(dataXLS[i][j]));
+        }
+      }
+      newDataXLS.push(col);
+    }
+    this.setState({
+      rowsXLS : newDataXLS,
+    });
+  }
+
+  // ArrayEmptytoNullMigration(dataXLS){
+  //   let newDataXLS = [];
+  //   for(let i = 0; i < dataXLS.length; i++){
+  //     let col = [];
+  //     for(let j = 0; j < dataXLS[0].length; j++){
+  //       col.push(this.checkValue(dataXLS[i][j]));
+  //     }
+  //     newDataXLS.push(col);
+  //   }
+  //   this.setState({
+  //     rowsXLS: newDataXLS
+  //   });
+  // }
 
   componentDidMount(){
     this.getASPList();
@@ -265,6 +421,16 @@ class BulkAssignment extends Component {
     })
   }
 
+  async getProjectinBulk(array_project){
+    let arrayProject = '"'+array_project.join('", "')+'"';
+    const dataProject = await this.getDataFromAPIEXEL('/project_sorted_non_page?where={"Project" : {"$in" : ['+arrayProject+']}}');
+    if(dataProject.data !== undefined){
+      return dataProject.data._items;
+    }else{
+      return []
+    }
+  }
+
   async checkingDataAssignment(dataXLS){
     this.setState({waiting_status : true});
     let wp_invalid = [];
@@ -275,17 +441,21 @@ class BulkAssignment extends Component {
     const respondCheckingASG = await this.postDatatoAPINODE('/aspAssignment/aspAssignmentByActivity', dataXLSASG);
     if(respondCheckingASG.data !== undefined && respondCheckingASG.status >= 200 && respondCheckingASG.status <= 300 ) {
       let dataChecking = respondCheckingASG.data.data;
-      console.log("respondCheckingASG.data.data", JSON.stringify(respondCheckingASG.data.data));
       this.setState({assignment_ssow_upload : dataChecking});
       if(dataChecking.filter(e => e.operation === "INVALID").length !== 0){
         this.setState({ action_status : 'failed', action_message : 'Please check INVALID row in preview' });
+      }else{
+        const dataProject = await this.getProjectinBulk(respondCheckingASG.data.data.map(e => e.Project));
+        this.setState({project_in_bulk : dataProject}, () => {
+          console.log("this.state.project_in_bulk", this.state.project_in_bulk);
+        });
       }
     } else{
       if(respondCheckingASG.response !== undefined && respondCheckingASG.response.data !== undefined && respondCheckingASG.response.data.error !== undefined){
         if(respondCheckingASG.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: respondCheckingASG.response.data.error.message });
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondCheckingASG.response.data.error.message) });
         }else{
-          this.setState({ action_status: 'failed', action_message: respondCheckingASG.response.data.error });
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondCheckingASG.response.data.error) });
         }
       }else{
         this.setState({ action_status: 'failed' });
@@ -323,6 +493,7 @@ class BulkAssignment extends Component {
   }
 
   async saveDataAssignmentBulk(){
+  	this.toggleLoading();
     const dataChecking = this.state.assignment_ssow_upload;
     const dataCheckingASG = {
       "includeSsow" : this.state.uploadan_type === "without Predefined SSOW" ? true : false,
@@ -330,18 +501,55 @@ class BulkAssignment extends Component {
     }
     const respondSaveASG = await this.postDatatoAPINODE('/aspAssignment/createAspAssign', dataCheckingASG);
     if(respondSaveASG.data !== undefined && respondSaveASG.status >= 200 && respondSaveASG.status <= 300 ) {
+      if(this.state.uploadan_type === "without Predefined SSOW"){
+        for(let i = 0 ; i < this.state.project_in_bulk.length; i++){
+          let dataAssignmentforProject = respondSaveASG.data.aspDocsp.filter(e => e.Project === this.state.project_in_bulk[i].Project);
+          let dataTableASGEmail = "";
+          dataAssignmentforProject.map(asg => dataTableASGEmail = dataTableASGEmail+"<tr><td style='padding:5px'><a href='https://bam-id.e-dpm.com/assignment-detail/"+asg._id+"'>"+asg.Assignment_No+"</a></td><td style='padding:5px'>"+asg.Project+"</td><td style='padding:5px'>"+asg.Site_ID+"</td></tr>")
+          let cpm_email = this.state.project_in_bulk[i].Email_CPM_Name;
+          const linkNA = "https://bam-id.e-dpm.com/assignment-list-approval";
+          const bodyEmail = "<span style='font-size:30px;font-weight:800;'>Approval Request</span><br/><br/><span>You have a request for Assignment Approval because the assignment not using list SSOW from the mapping</span><br/><br/><span style='font-size:20px;font-weight:600;'>Approval Request</span><br/><br/><span>This is automate generate email from DPM - BAM. There is a list of Assignments that need to be approved : </span><br/><body><table cellspacing='0' cellpadding='0' align='center' border='1'><tr><td>Assignment</td><td>Project</td><td>Site</td></tr>"+dataTableASGEmail+"</table></body><br/><span>Follow this link to see all Assignment need approval : <a href='"+linkNA+"'>"+linkNA+"</a></span><br/><span style='font-size:20px;font-weight:600;'>Don't know what this is?</span><br/><br/><span>This message is sent from DPM - BAM, since you are registered as one of the approval role. Questions are welcome to dpm.notification@ericsson.com</span>";
+          let dataEmail = {
+            // "to": cpm_email+'; aminuddin.fauzan@ericsson.com',
+            "to": cpm_email+' ;',
+            "subject":"[Assignment Need Approval] Assignment",
+            "body": bodyEmail
+          }
+          // const sendEmail = await apiSendEmail(dataEmail);
+        }
+      }
       this.setState({ action_status : 'success' });
     } else{
       if (respondSaveASG.response !== undefined && respondSaveASG.response.data !== undefined && respondSaveASG.response.data.error !== undefined) {
         if (respondSaveASG.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error.message.message });
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveASG.response.data.error.message) });
         } else {
-          this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error });
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveASG.response.data.error) });
         }
       } else {
         this.setState({ action_status: 'failed' });
       }
     }
+    this.toggleLoading();
+  }
+
+  async saveDataAssignmentBulkMigration(){
+    this.toggleLoading();
+    const respondPatchASG = await this.patchDatatoAPINODE('/aspAssignment/updateStatusMigration', { dataAssignment: this.state.rowsXLS });
+    if(respondPatchASG.data !== undefined && respondPatchASG.status >= 200 && respondPatchASG.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      if (respondPatchASG.response !== undefined && respondPatchASG.response.data !== undefined && respondPatchASG.response.data.error !== undefined) {
+        if (respondPatchASG.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: respondPatchASG.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: respondPatchASG.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
   }
 
   handleChangeSOWType(e){
@@ -392,6 +600,49 @@ class BulkAssignment extends Component {
     saveAs(new Blob([MRFormat]), 'Assignment '+this.state.uploadan_type+' Uploader Template.xlsx');
   }
 
+  exportFormatBulkAssignmentMigration = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const sow_type = this.state.sow_type_selected;
+    let indexSSOW = 7;
+    if(sow_type === "SACME"){
+      indexSSOW = 25;
+    }
+    if(sow_type === "RBSTRM"){
+      indexSSOW = 5;
+    }
+    let headerRow = ["id","sh_assignment_no", "assignment_creation_date", "assignment_creation_by","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
+    if(this.state.uploadan_type === "without Predefined SSOW"){
+      let headerRow = ["id","sh_assignment_no", "assignment_creation_date", "assignment_creation_by","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
+      if(sow_type === "RBSTRM"){
+        for(let idx = 1; idx <= indexSSOW; idx++){
+          headerRow.push("ssow_rbs_id_"+idx.toString(), "ssow_rbs_activity_number_"+idx.toString(), "ssow_rbs_unit_"+idx.toString(), "ssow_rbs_quantity_"+idx.toString() );
+        }
+        for(let idx = 1; idx <= indexSSOW; idx++){
+          headerRow.push("ssow_trm_id_"+idx.toString(), "ssow_trm_activity_number_"+idx.toString(), "ssow_trm_unit_"+idx.toString(), "ssow_trm_quantity_"+idx.toString() );
+        }
+        ws.addRow(headerRow);
+        ws.addRow(["new", null, null, null, "XL BAM DEMO 2020","RBSTRM", "tower_id", 2000054443,"PT SINERGI AITIKOM","3070","JAW-JT-BBS-0001","1.1.1","3022264",null,1,"1.1.4","3022960",null,2,null,null,null,null,null,null,null,null,null,null,null,null,"1.1.1.T", "3022917", "Site", 2, null,null,null,null]);
+        ws.addRow(["new", null, null, null, "XL BAM DEMO 2020","RBSTRM", "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930","1.1.1.N","3022917","pc",3,"1.1.4.N","3022962",null,2,null,null,null,null,null,null,null,null,null,null,null,null,"1.1.1.T", "3022917", "Site", 2, null,null,null,null]);
+      }else{
+        for(let idx = 1; idx <= indexSSOW; idx++){
+          headerRow.push("ssow_"+(sow_type.toLowerCase())+"_id_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_activity_number_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_unit_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_quantity_"+idx.toString() );
+        }
+        ws.addRow(headerRow);
+        ws.addRow(["new", null, null, null, "XL BAM DEMO 2020",sow_type, "tower_id", 2000054443,"PT SINERGI AITIKOM","3070","JAW-JT-BBS-0001","1.1.1","3022264",null,1,"1.1.4","3022960",null,2,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]);
+        ws.addRow(["new", null, null, null, "XL BAM DEMO 2020",sow_type, "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930","1.1.1.N","3022917","pc",3,"1.1.4.N","3022962",null,2,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]);
+      }
+    }else{
+      ws.addRow(headerRow);
+      ws.addRow(["new", null, null, null, "XL BAM DEMO 2020",sow_type, "tower_id", 2000054443,"PT SINERGI AITIKOM","3070","JAW-JT-BBS-0001"]);
+      ws.addRow(["new", null, null, null, "XL BAM DEMO 2020",sow_type, "cd_id", 2000057356,"PT NEXWAVE","5050","X2660930"]);
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Assignment '+this.state.uploadan_type+' Uploader Template For Migration.xlsx');
+  }
+
   handleChangeUploadType(e){
     const value = e.target.value;
     this.setState({uploadan_type : value});
@@ -414,29 +665,45 @@ class BulkAssignment extends Component {
               <option value="Predefined SSOW">Predefined SSOW</option>
             </select>
             <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkAssignment} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment Format</Button>
-            {/* }<select type="select" onChange={this.handleChangeSOWType} value={this.state.sow_type_selected} style={{marginRight : '8px', marginTop :'3px', float : 'right', width : '100px'}}>
-              <option value="" disabled selected hidden>SOW Type</option>
-              <option value="NDO">NDO</option>
-              <option value="RBS">RBS</option>
-              <option value="TRM">TRM</option>
-              <option value="Power">Power</option>
-              <option value="SACME">SACME</option>
-              <option value="Survey">Survey</option>
-              <option value="BSC">BSC</option>
-              <option value="RNC">RNC</option>
-            </select> */}
+            <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkAssignmentMigration} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download Assignment Format For Migration</Button>
             <select type="select" onChange={this.handleChangeSOWType} value={this.state.sow_type_selected} style={{marginRight : '8px', marginTop :'3px', float : 'right', width : '100px'}}>
               <option value={null} disabled hidden>SOW Type</option>
               <option value="RBS">RBS</option>
               <option value="TRM">TRM</option>
               <option value="RBSTRM">RBS - TRM</option>
+              <option value="NDO">NDO</option>
             </select>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
-            <input type="file" onChange={this.fileHandlerAssignment.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
-            <Button color="success" onClick={this.saveDataAssignmentBulk} style={{float : 'right'}} disabled={this.state.waiting_status || this.state.rowsXLS.length === 0}>
-              {this.state.waiting_status === true ? "loading.." : "Save"}
-            </Button>
+            <Row>
+              <Col>
+                <input type="file" onChange={this.fileHandlerAssignment.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
+                <Button color="success" onClick={this.saveDataAssignmentBulk} style={{float : 'right'}} disabled={this.state.waiting_status || this.state.rowsXLS.length === 0}>
+                  {this.state.waiting_status === true ? "loading.." : "Save"}
+                </Button>
+              </Col>
+            </Row>
+            {this.state.userRole.includes('Admin') && (
+              <Fragment>
+                <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
+                <Row>
+                  <Col>
+                    <h5>Migration Status from SH :</h5>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <input type="file" onChange={this.fileHandlerMigration.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
+                    <span style={{color : 'red'}}>*NOTIFIED TO ASP MUST BE FILLED IN</span>
+                    <Button color="success" onClick={this.saveDataAssignmentBulkMigration} style={{float : 'right'}}>
+                      Save Migration Status
+                    </Button>
+                  </Col>
+                </Row>
+                <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
+              </Fragment>
+            )}
+
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>

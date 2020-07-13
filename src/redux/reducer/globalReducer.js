@@ -2,6 +2,7 @@ import ActionType from './globalActionType';
 
 const globalState = {
     loginData : {
+        "data_user" : {},
         "sso_data" : null,
         "role" : ["Public"],
         "nameUser" : null,
@@ -13,6 +14,8 @@ const globalState = {
         "token" : null,
         "sso_id" : null,
         "_id" : null,
+        "vendor_code" : null,
+        "vendor_name" : null,
     },
     minimizeSidebar : false,
 }
@@ -34,6 +37,8 @@ const rootReducer = ( state = globalState, action) => {
                 "nameUser" : action.data_user.name,
                 "sso_data" : action.data_user.sso_data,
                 "account_access" : action.data_user.account_access,
+                "vendor_code" : action.data_user.vendor_code,
+                "vendor_name" : action.data_user.vendor_name,
             }
         }
     }

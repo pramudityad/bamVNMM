@@ -124,19 +124,36 @@ export const deleteDataFromAPINODE = async (url, props) => {
 };
 
 /**
+ * 
+ * @param {*} data email data
+ */
+// email
+export const apiSendEmail = async (data) => {
+  try {
+    let respond = await axios.post(process.env.REACT_APP_API_API_EMAIL, data, {
+      headers : {'Content-Type':'application/json'},
+    })
+    return respond;
+  }catch (err) {
+    let respond = undefined;
+    return respond;
+  }
+}
+
+/**
  * delete with body
  * @param {*} url api2 NODE
  * @param {*} data body
  * @param {*} props Authmethod bearer Token
  */
-export const deleteDataFromAPINODE2 = async (url, data, props) => {
+export const deletemanyDataFromAPINODE = async (url, props, data) => {
   try {
-    let respond = await axios.delete(process.env.REACT_APP_API_URL_NODE + url,{
+    let respond = await axios.delete(process.env.REACT_APP_API_URL_NODE + url, {
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + props,
       },
-      data
+      data,
     });
     if (respond.status >= 200 && respond.status < 300) {
       console.log("respond delete Data", respond);
@@ -147,4 +164,4 @@ export const deleteDataFromAPINODE2 = async (url, data, props) => {
     console.log("respond delete Data err", err);
     return respond;
   }
-}
+};

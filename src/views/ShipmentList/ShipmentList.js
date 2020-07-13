@@ -242,7 +242,7 @@ class ShipmentList extends Component {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     this.getDataFromAPINODE(
-      "/matreqShipment?&lmt=" + maxPage + "&pg=" + page
+      "/matreqShipment?srt=_id:-1&lmt=" + maxPage + "&pg=" + page
     ).then((res) => {
       if (res.data !== undefined) {
         const items = res.data.data;
@@ -439,7 +439,7 @@ class ShipmentList extends Component {
     let MRSelected = this.state.mr_data_selected;
     if (isChecked === true) {
       const getMR = this.state.shipment_detail.mr_list.find((mr) =>mr._id === item)
-      MRSelected.push(getMR);      
+      MRSelected.push(getMR);
     } else {
       MRSelected = MRSelected.filter(function (e) {
         return e._id !== item;
@@ -508,13 +508,13 @@ class ShipmentList extends Component {
                     <div style={{ marginLeft: "auto", float: "right" }}>
                     <Button color="danger" size="sm" value={this.state.shipment_detail._id} onClick={this.toggleDelete} style={{float : 'right', marginRight: "6px"}}>
                       <i className="icon-ban icons "> &nbsp; </i> Cancel Shipment
-                    </Button>                    
+                    </Button>
                     &nbsp;&nbsp;&nbsp;
                     &nbsp;&nbsp;&nbsp;
                     <Button color="warning" size="sm" disabled={this.state.mr_data_selected.length === 0} value={this.state.shipment_detail._id} onClick={this.toggleTakeOut} style={{float : 'right', marginRight:"6px"}}>
                     <i className="icon-action-undo icons "> &nbsp; </i> Takeout MR
                   </Button></div>
-                    
+
                   )}
               </CardHeader>
               <CardBody>
@@ -761,12 +761,12 @@ class ShipmentList extends Component {
         </ModalDelete>
 
         {/* Modal confirmation takeoutMR */}
-        <ModalDelete        
+        <ModalDelete
           isOpen={this.state.warning}
           toggle={this.toggleTakeOut}
           className={"modal-warning " + this.props.className}
           title={"Takeout MR from Shipment " + this.state.shipment_detail.no_shipment}
-          body={"Are you sure want takeout " + this.state.mr_data_selected.map(mr=>mr.mr_id)}          
+          body={"Are you sure want takeout " + this.state.mr_data_selected.map(mr=>mr.mr_id)}
           // title={"Takeout MR "}
         >
           <Button color="warning" onClick={this.TakeoutMR}>

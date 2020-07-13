@@ -205,16 +205,18 @@ class WHManagement extends React.Component {
     });
   };
 
-  getWHStockList() {
+  getWHStockList() {    
     this.toggleLoading();
-    let filter_wh_name =
-      this.state.filter_name === null
-        ? '{"$exists" : 1}'
-        : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
-    let whereAnd = '{"wh_name": ' + filter_wh_name + "}";
+    console.log('search')
+    let filter = '{"$regex" : "", "$options" : "i"}';
+    if (this.state.filter_name !== "") {
+      filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    }
+    // let filter = this.state.filter_name === ""  ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    let whereOr = '{"$or" : [{"wh_name": ' + filter + '}, {"owner_name": ' + filter + '}]}';
     getDatafromAPINODE(
       "/whManagement/warehouse?q=" +
-        whereAnd +
+        whereOr +
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
@@ -460,7 +462,8 @@ class WHManagement extends React.Component {
     } else {
       if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
         if (res.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
+
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
         } else {
           this.setState({ action_status: 'failed', action_message: res.response.data.error });
         }
@@ -878,7 +881,7 @@ class WHManagement extends React.Component {
                       className="search-box-material"
                       type="text"
                       name="filter"
-                      placeholder="Search WH Name"
+                      placeholder="Search "
                       onChange={this.handleChangeFilter}
                       value={this.state.filter_name}
                     />

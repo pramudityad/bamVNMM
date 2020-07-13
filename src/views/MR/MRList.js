@@ -47,6 +47,7 @@ class MRList extends Component {
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
+    this.downloadAllMRMigration = this.downloadAllMRMigration.bind(this);
     // this.getAllMR = this.getAllMR.bind(this);
   }
 
@@ -140,7 +141,7 @@ class MRList extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     let whereAnd = '{' + filter_array.join(',') + '}';
-    let res = await this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd)
+    let res = await this.getDataFromAPINODE('/matreq?srt=_id:-1&noPg=1&q=' + whereAnd)
     if (res.data !== undefined) {
       const items = res.data.data;
       mrList = res.data.data;
@@ -169,7 +170,7 @@ class MRList extends Component {
 
     const allMR = await this.getAllMR();
 
-    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Updated On", "Created On"];
+    let headerRow = ["MR ID", "MR MITT ID","MR Type","MR Delivery Type", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "MR MITT Created On", "MR MITT Created By","Updated On", "Created On"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -177,7 +178,8 @@ class MRList extends Component {
     }
 
     for (let i = 0; i < allMR.length; i++) {
-      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, allMR[i].updated_on, allMR[i].created_on])
+      const creator_mr_mitt = allMR[i].mr_status.find(e => e.mr_status_name === "PLANTSPEC" && e.mr_status_value === "NOT ASSIGNED");
+      ws.addRow([allMR[i].mr_id, allMR[i].mr_mitt_no, allMR[i].mr_type, allMR[i].mr_delivery_type, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, creator_mr_mitt !== undefined ? creator_mr_mitt.mr_status_date : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mr_status_updater : null, allMR[i].updated_on, allMR[i].created_on])
     }
     this.toggleLoading();
     const allocexport = await wb.xlsx.writeBuffer();
@@ -212,6 +214,28 @@ class MRList extends Component {
     this.setState({ filter_list: dataFilter, activePage: 1 }, () => {
       this.onChangeDebounced(e);
     })
+  }
+
+  async downloadAllMRMigration() {
+    let allMRList = [];
+    let getMR = await this.getDataFromAPINODE('/matreq?noPg=1&srt=_id:-1&q={"mr_mitt_no" : {"$exists" : 1}, "mr_mitt_no" : {"$ne" : null}}');
+    if (getMR.data !== undefined) {
+      allMRList = getMR.data.data;
+    }
+
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let headerRow = ["mr_bam_id","mr_mitt_no","ps_mitt_no","plantspec_assigned_date","plantspec_assigned_by","mr_requested_date","mr_requested_by","mr_approved_date","mr_approved_by","order_processing_finish_date","order_processing_finish_by","rtd_confirmed_date","rtd_confirmed_by","joint_check_finish_date","joint_check_finish_by","loading_process_finish_date","loading_process_finish_by","mr_dispatch_date","mr_dispatch_by","mr_on_site_date","mr_on_site_by"];
+    ws.addRow(headerRow);
+
+    for (let i = 0; i < allMRList.length; i++) {
+      let rowAdded = [allMRList[i].mr_id, allMRList[i].mr_mitt_no];
+      ws.addRow(rowAdded);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'MR List For Status Migration from SH Template.xlsx');
   }
 
   onChangeDebounced(e) {
@@ -258,6 +282,7 @@ class MRList extends Component {
                 <Link to={'/mr-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR</Button></Link>
                 <Link to={'/bulk-mr-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR Bulk</Button></Link>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download MR List</Button>
+                <Button style={downloadMR} outline color="success" onClick={this.downloadAllMRMigration} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Format MR List Status Migration</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -309,7 +334,7 @@ class MRList extends Component {
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{convertDateFormat(list.eta)}</td>
-                        <td></td>
+                        <td>{list.creator.map(e => e.email)}</td>
                         <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>

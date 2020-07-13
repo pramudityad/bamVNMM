@@ -1858,14 +1858,21 @@ class SubmissionCommBoq extends Component {
 
       ws.addRow([""]);
 
-      let ppIdRow = ["Submission ID", "Tower ID", "Config ID", "Qty", "Unit Price after Incentive (USD)", "Unit Price after Incentive (IDR)", "Total Price after Incentive (USD)", "Total Price after Incentive (IDR)"];
+      let ppIdRow = ["Submission ID", "Tower ID", "Program", "SOW", "Category", "Config ID", "SAP", "SAP Description", "Qty", "Description", "Unit Price after Incentive (USD)", "Unit Price after Incentive (IDR)", "Total Price after Incentive (USD)", "Total Price after Incentive (IDR)"];
+      if(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === true){
+        ppIdRow = ["Submission ID", "Tower ID", "Program", "SOW", "Category", "Config ID", "SAP", "SAP Description", "Qty", "Description"];
+      }
 
       ws.addRow(ppIdRow);
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         for(let j = 0; j < dataSites[i].items.length; j++ ){
           if(dataSites[i].submission_id === this.state.submission_number_selected){
-            ws.addRow([dataSites[i].submission_id, dataSites[i].site_id, dataSites[i].items[j].config_id, dataSites[i].items[j].qty, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive, dataSites[i].items[j].total_price_incentive_usd, dataSites[i].items[j].total_price_incentive]);
+            if(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === false){
+              ws.addRow([dataSites[i].submission_id, dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].sap_description, dataSites[i].items[j].qty, dataSites[i].items[j].description, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive, dataSites[i].items[j].total_price_incentive_usd, dataSites[i].items[j].total_price_incentive]);
+            }else{
+              ws.addRow([dataSites[i].submission_id, dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].sap_description, dataSites[i].items[j].qty, dataSites[i].items[j].description]);
+            }
           }
         }
       }
@@ -1889,6 +1896,9 @@ class SubmissionCommBoq extends Component {
         newValue.forEach( i => {
           selectPriority.push(i.value)
         })
+        if(selectPriority.length === 0){
+          this.setState({action_status : null, action_message : null})
+        }
         this.setState({priority_selected : selectPriority});
         this.priorityToXLSCreation(selectPriority)
       } else {
@@ -1915,6 +1925,11 @@ class SubmissionCommBoq extends Component {
 
         for(let i = 0; i < dataSiteNonSubmsPriority.length ; i++){
           arraySites.push([dataSiteNonSubmsPriority[i].site_id]);
+        }
+        if(dataSiteNonSubmsPriority.length === 0){
+          this.setState({action_status : 'failed', action_message : 'Sorry, All Site in this priority already became submission'})
+        }else{
+          this.setState({action_status : null, action_message : null})
         }
         console.log("arraySites", arraySites, arrayPriority)
         if(arraySites.length === 0){
@@ -1979,7 +1994,7 @@ class SubmissionCommBoq extends Component {
                                   isDisabled = {this.state.list_priority_avail.length==0}
                                 />
                               </div>
-                                <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.createNewSubmission} disabled={this.state.rowsXLS.length === 0}>
+                                <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.createNewSubmission} disabled={this.state.rowsXLS.length === 0 || this.state.action_status === 'failed'}>
                                   <i className="fa fa-paste">&nbsp;&nbsp;</i>
                                   New
                                 </Button>
@@ -2100,11 +2115,15 @@ class SubmissionCommBoq extends Component {
                           <th>Config ID</th>
                           <th>SAP Desc</th>
                           <th>Qty</th>
+                          {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-SubmissionBoq-ViewWithoutPrice") === false) && (
+                            <React.Fragment>
                           <th>Unit Price after Incentive (USD)</th>
                           <th>Unit Price after Incentive (IDR)</th>
                           <th>Total Price after Incentive (USD)</th>
                           <th>Total Price after Incentive (IDR)</th>
                           <th>CPO BOQ Ref.</th>
+                          </React.Fragment>
+                        )}
                         </tr>
                       </thead>
                       {this.state.data_view_submission_items.map(site =>
@@ -2117,11 +2136,15 @@ class SubmissionCommBoq extends Component {
                               <td>{item.config_id}</td>
                               <td>{item.sap_description}</td>
                               <td>{item.qty}</td>
+                              {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-SubmissionBoq-ViewWithoutPrice") === false) && (
+                                <React.Fragment>
                               <td>{item.net_price_incentive_usd}</td>
                               <td>{item.net_price_incentive}</td>
                               <td>{item.total_price_incentive_usd.toFixed(2)}</td>
                               <td>{item.total_price_incentive.toFixed(2)}</td>
                               <td>{item.cpo_boq}</td>
+                              </React.Fragment>
+                            )}
                             </tr>
                           )}
                         </tbody>

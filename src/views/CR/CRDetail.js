@@ -23,7 +23,7 @@ import Excel from "exceljs";
 import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
-import {convertDateFormat, getDateonly} from '../../helper/basicFunction'
+import {convertDateFormat, getDateFormat} from '../../helper/basicFunction'
 import "./CRcss.css";
 
 const Checkbox = ({
@@ -546,25 +546,24 @@ class CRDetail extends React.Component {
     this.setState({ MatStockForm: dataForm });
   }
 
-  countagingCR(e){    
+  countagingCR(e){
     const today = new Date();
-    const dd =  today.getDate();
-    const submission_date = getDateonly(e);
-    const diff = dd - submission_date;
-    // console.log('diff ',diff);
+    const json_date = new Date(e);
+    console.log('json_date ',json_date);
+    const diff = parseInt((today - json_date)/(1000 * 60 * 60 * 24), 10);
     // this.setState({ cr_temp_aging: diff });
     return diff;
-    
+
   }
 
-  countagingApproved(e, b){    
-    const approval_date = getDateonly(e);
-    const submission_date = getDateonly(b);
-    const diff = approval_date - submission_date;
+  countagingApproved(e, b){
+    const approval_date = new Date(e);
+    const submission_date = new Date(b);
+    const diff = parseInt((approval_date - submission_date)/(1000 * 60 * 60 * 24), 10);
     // console.log('diff ',diff);
     // this.setState({ cr_temp_aging: diff });
     return diff;
-    
+
   }
 
   async saveUpdate() {
@@ -891,7 +890,7 @@ class CRDetail extends React.Component {
                             <th>Date Submission</th>
                             <th>Ageing</th>
                             <th>Duration</th>
-                            <th>Date Approval</th>      
+                            <th>Date Approval</th>
                             <th>PIC</th>
                             <th>CR Announce Status</th>
                             <th>Final Status</th>
@@ -1008,7 +1007,7 @@ class CRDetail extends React.Component {
                                 </InputGroup>
                               </div>
                             </th>
-                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th ></th><th></th><th></th><th></th><th></th><th></th><th></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1031,7 +1030,7 @@ class CRDetail extends React.Component {
                             <td>{cr.municipality_before}</td>
                             <td>{cr.sow_before}</td>
                             <td>{cr.site_base_type}</td>
-                            <td>{cr.wbs}</td> 
+                            <td>{cr.wbs}</td>
                             <td>{cr.project_definition_after}</td>
                             <td>{cr.municipality_after}</td>
                             <td>{cr.sow_after}</td>
@@ -1042,8 +1041,8 @@ class CRDetail extends React.Component {
                             {/* aging */}
                             <td>{cr.date_approval === null ? this.countagingCR(cr.date_submission) : this.countagingApproved(cr.date_approval, cr.date_submission)}</td>
                             {/* duration */}
-                            <td>{cr.duration > 7 ? '> 7 Days' : '< 7 Days' }</td>
-                            <td>{cr.date_approval === null ? null : convertDateFormat(cr.date_approval)}</td>                            
+                            <td>{this.countagingCR(cr.date_submission) > 7 ? '> 7 Days' : '< 7 Days' }</td>
+                            <td>{cr.date_approval === null ? null : convertDateFormat(cr.date_approval)}</td>
                             <td>{cr.pic}</td>
                             <td>{cr.cr_announce_status}</td>
                             <td>{cr.final_status}</td>
@@ -1271,7 +1270,7 @@ class CRDetail extends React.Component {
 
          {/* Modal create New */}
          <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-         <ModalHeader toggle={this.togglecreateModal}>Create New CR</ModalHeader>
+         <ModalHeader toggle={this.togglecreateModal}>CR Uploader</ModalHeader>
          <ModalBody>
            <CardBody>
              <div>

@@ -14,8 +14,8 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import Pagination from "react-js-pagination";
-import Excel from 'exceljs';
-import { saveAs } from 'file-saver';
+import Excel from "exceljs";
+import { saveAs } from "file-saver";
 import { connect } from "react-redux";
 import { getDatafromAPINODE } from "../../helper/asyncFunction";
 
@@ -24,16 +24,16 @@ class ListPRPO extends Component {
     super(props);
 
     this.state = {
-        userRole: this.props.dataLogin.role,
-        userId: this.props.dataLogin._id,
-        userName: this.props.dataLogin.userName,
-        userEmail: this.props.dataLogin.email,
-        tokenUser: this.props.dataLogin.token,
-        all_data : [],
-        prevPage: 0,
-        activePage: 1,
-        totalData: 0,
-        perPage: 10,
+      userRole: this.props.dataLogin.role,
+      userId: this.props.dataLogin._id,
+      userName: this.props.dataLogin.userName,
+      userEmail: this.props.dataLogin.email,
+      tokenUser: this.props.dataLogin.token,
+      all_data: [],
+      prevPage: 0,
+      activePage: 1,
+      totalData: 0,
+      perPage: 10,
     };
     // bind
   }
@@ -41,8 +41,8 @@ class ListPRPO extends Component {
   // function
 
   componentDidMount() {
-    this.getPRTList()
-    document.title = 'PRT List | BAM';
+    this.getPRTList();
+    document.title = "PRT List | BAM";
   }
 
   handlePageChange(pageNumber) {
@@ -51,16 +51,19 @@ class ListPRPO extends Component {
     });
   }
 
-  getPRTList(){
+  getPRTList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    getDatafromAPINODE('/prt/getPrt?'+ 'lmt=' + maxPage + '&pg=' + page, this.props.dataLogin.token).then(res => {
-        if(res.data !== undefined){
-            const items = res.data.data;
-            const totalData = res.data.totalResults;
-            this.setState({ all_data: items, totalData: totalData });
-        }
-    })
+    getDatafromAPINODE(
+      "/prt/getPrt?srt=_id:-1&" + "lmt=" + maxPage + "&pg=" + page,
+      this.props.dataLogin.token
+    ).then((res) => {
+      if (res.data !== undefined) {
+        const items = res.data.data;
+        const totalData = res.data.totalResults;
+        this.setState({ all_data: items, totalData: totalData });
+      }
+    });
   }
 
   loopSearchBar = () => {
@@ -85,13 +88,62 @@ class ListPRPO extends Component {
     return searchBar;
   };
 
-  downloadAll= async () => {
+  downloadAll = async () => {
     let allAssignmentList = this.state.all_data;
 
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let headerRow = ["assignment_id", "project", "sow_type", "created_based", "vendor_code", "vendor_name", "payment_terms", "identifier", "ssow_rbs_id_1", "ssow_rbs_activity_number_1", "ssow_rbs_unit_1", "ssow_rbs_quantity_1", "ssow_rbs_id_2", "ssow_rbs_activity_number_2", "ssow_rbs_unit_2", "ssow_rbs_quantity_2", "ssow_rbs_id_3", "ssow_rbs_activity_number_3", "ssow_rbs_unit_3", "ssow_rbs_quantity_3", "ssow_rbs_id_4", "ssow_rbs_activity_number_4", "ssow_rbs_unit_4", "ssow_rbs_quantity_4", "ssow_rbs_id_5", "ssow_rbs_activity_number_5", "ssow_rbs_unit_5", "ssow_rbs_quantity_5", "ssow_trm_id_1", "ssow_trm_activity_number_1", "ssow_trm_unit_1", "ssow_trm_quantity_1", "ssow_trm_id_2", "ssow_trm_activity_number_2", "ssow_trm_unit_2", "ssow_trm_quantity_2", "ssow_trm_id_3", "ssow_trm_activity_number_3", "ssow_trm_unit_3", "ssow_trm_quantity_3", "ssow_trm_id_4", "ssow_trm_activity_number_4", "ssow_trm_unit_4", "ssow_trm_quantity_4", "ssow_trm_id_5", "ssow_trm_activity_number_5", "ssow_trm_unit_5", "ssow_trm_quantity_5"];
+    let headerRow = [
+      "assignment_id",
+      "project",
+      "sow_type",
+      "created_based",
+      "vendor_code",
+      "vendor_name",
+      "payment_terms",
+      "identifier",
+      "ssow_rbs_id_1",
+      "ssow_rbs_activity_number_1",
+      "ssow_rbs_unit_1",
+      "ssow_rbs_quantity_1",
+      "ssow_rbs_id_2",
+      "ssow_rbs_activity_number_2",
+      "ssow_rbs_unit_2",
+      "ssow_rbs_quantity_2",
+      "ssow_rbs_id_3",
+      "ssow_rbs_activity_number_3",
+      "ssow_rbs_unit_3",
+      "ssow_rbs_quantity_3",
+      "ssow_rbs_id_4",
+      "ssow_rbs_activity_number_4",
+      "ssow_rbs_unit_4",
+      "ssow_rbs_quantity_4",
+      "ssow_rbs_id_5",
+      "ssow_rbs_activity_number_5",
+      "ssow_rbs_unit_5",
+      "ssow_rbs_quantity_5",
+      "ssow_trm_id_1",
+      "ssow_trm_activity_number_1",
+      "ssow_trm_unit_1",
+      "ssow_trm_quantity_1",
+      "ssow_trm_id_2",
+      "ssow_trm_activity_number_2",
+      "ssow_trm_unit_2",
+      "ssow_trm_quantity_2",
+      "ssow_trm_id_3",
+      "ssow_trm_activity_number_3",
+      "ssow_trm_unit_3",
+      "ssow_trm_quantity_3",
+      "ssow_trm_id_4",
+      "ssow_trm_activity_number_4",
+      "ssow_trm_unit_4",
+      "ssow_trm_quantity_4",
+      "ssow_trm_id_5",
+      "ssow_trm_activity_number_5",
+      "ssow_trm_unit_5",
+      "ssow_trm_quantity_5",
+    ];
     ws.addRow(headerRow);
 
     // for (let i = 0; i < allAssignmentList.length; i++) {
@@ -111,8 +163,8 @@ class ListPRPO extends Component {
     // }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'PRT List.xlsx');
-  }
+    saveAs(new Blob([allocexport]), "PRT List.xlsx");
+  };
 
   loading = () => (
     <div className="animated fadeIn pt-1 text-center">Loading...</div>
@@ -194,27 +246,34 @@ class ListPRPO extends Component {
                   </thead>
                   <tbody>
                     {this.state.all_data.length === 0 && (
-                          <tr>
-                            <td colSpan="10">No Data Available</td>
-                          </tr>
-                        )}
-                        {this.state.all_data.map((list, i) =>
-                          <tr key={i}>
-                            <td>
-                              <Link to={'/prt-list/detail/' + list._id}>
-                                <Button style={{ width: "90px" }} outline color="info" size="sm">Detail</Button>
-                              </Link>
-                            </td>
-                            <td>{list.prt_id}</td>
-                            <td>{list.site_id}</td>
-                            <td>{list.site_name}</td>
-                            <td>{list.quotation_number}</td>
-                            <td>{list.signum_pm}</td>
-                            <td>{list.approval_by}</td>
-                            <td>{list.project_name}</td>
-                            <td>{list.area}</td>
-                          </tr>
-                        )}
+                      <tr>
+                        <td colSpan="10">No Data Available</td>
+                      </tr>
+                    )}
+                    {this.state.all_data.map((list, i) => (
+                      <tr key={i}>
+                        <td>
+                          <Link to={"/prt-list/detail/" + list._id}>
+                            <Button
+                              style={{ width: "90px" }}
+                              outline
+                              color="info"
+                              size="sm"
+                            >
+                              Detail
+                            </Button>
+                          </Link>
+                        </td>
+                        <td>{list.prt_id}</td>
+                        <td>{list.site_id}</td>
+                        <td>{list.site_name}</td>
+                        <td>{list.quotation_number}</td>
+                        <td>{list.signum_pm}</td>
+                        <td>{list.approval_by}</td>
+                        <td>{list.project_name}</td>
+                        <td>{list.area}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </Table>
                 <Pagination

@@ -580,7 +580,7 @@ class OrderCreated extends Component {
 
   rejectMR(e) {
     const id_doc = e.currentTarget.id;
-    this.patchDatatoAPINODE("/matreq/rejectMatreq/" + id_doc).then((res) => {
+    this.patchDatatoAPINODE("/matreq/rejectMatreq/" + id_doc, {"rejectNote": "Rejected MR by LDM"}).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getMRList();
@@ -624,7 +624,7 @@ class OrderCreated extends Component {
 
   componentDidMount() {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = "Order Created | BAM";
   }
 
@@ -649,7 +649,7 @@ class OrderCreated extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {
@@ -857,7 +857,7 @@ class OrderCreated extends Component {
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData.total}
+                  totalItemsCount={this.state.totalData}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"

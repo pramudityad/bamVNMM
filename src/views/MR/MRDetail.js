@@ -12,8 +12,13 @@ import {
   Nav,
   NavItem,
   NavLink,
+  Dropdown,
+  DropdownToggle,
+  DropdownMenu,
+  DropdownItem
 } from "reactstrap";
 import { Form, FormGroup, Label } from "reactstrap";
+import { Link } from 'react-router-dom';
 import { Modal, ModalBody, ModalHeader, ModalFooter } from "reactstrap";
 import axios from "axios";
 import { connect } from "react-redux";
@@ -98,6 +103,9 @@ class MRDetail extends Component {
       modal_revision: false,
       revision_note: "",
       wbs_cd_id_data : [],
+      location_mr : {},
+      dropdownOpen: new Array(1).fill(false),
+
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
@@ -110,12 +118,14 @@ class MRDetail extends Component {
     this.handleChangeFormMRUpdate = this.handleChangeFormMRUpdate.bind(this);
     this.updateDataMR = this.updateDataMR.bind(this);
     this.downloadMaterialMRUpload = this.downloadMaterialMRUpload.bind(this);
+    this.downloadMaterialMRUpload2 = this.downloadMaterialMRUpload2.bind(this);
     this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
     this.downloadMaterialMRReport = this.downloadMaterialMRReport.bind(this);
     this.needReviseMR = this.needReviseMR.bind(this);
     this.toggleModalapprove = this.toggleModalapprove.bind(this);
     this.toggleModalRevision = this.toggleModalRevision.bind(this);
     this.handleRevisionNote = this.handleRevisionNote.bind(this);
+    this.downloadMaterialMRTRACY = this.downloadMaterialMRTRACY.bind(this);
   }
 
   toggleModalapprove(e) {
@@ -130,6 +140,15 @@ class MRDetail extends Component {
     this.setState((prevState) => ({
       modal_revision: !prevState.modal_revision
     }));
+  }
+
+  toggleDropdown(i) {
+    const newArray = this.state.dropdownOpen.map((element, index) => {
+      return (index === i ? !element : false);
+    });
+    this.setState({
+      dropdownOpen: newArray,
+    });
   }
 
   handleRevisionNote(e) {
@@ -400,6 +419,7 @@ class MRDetail extends Component {
   getDataMR(_id_MR) {
     this.getDataFromAPINODE("/matreq/" + _id_MR).then((resMR) => {
       if (resMR.data !== undefined) {
+        this.getMRLocation(_id_MR);
         if(resMR.data.dsp_company === null){
           this.getASPList();
         }
@@ -420,6 +440,14 @@ class MRDetail extends Component {
             }
           );
         });
+      }
+    });
+  }
+
+  getMRLocation(_id_MR){
+    this.getDataFromAPINODE('/getMRLocationById/' + _id_MR).then((resLocMR) => {
+      if (resLocMR.data !== undefined) {
+        this.setState({location_mr : resLocMR.data});
       }
     });
   }
@@ -765,18 +793,9 @@ class MRDetail extends Component {
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
 
-    // const getMaterialVariant = await this.getDataFromAPINODE('/variants/variants');
-    // if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
-    //   dataMaterialVariant = getMaterialVariant.data.data;
-    // }
-    //
-    // ws2.addRow(["Origin","Material ID","Material Name","Description", "Category"]);
-    // for(let j = 0; j < dataMaterialVariant.length; j++){
-    //   ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category]);
-    // }
-
     let headerRow = [
       "bam_id",
+      "ps_number",
       "bundle_id",
       "bundle_name",
       "program",
@@ -805,6 +824,7 @@ class MRDetail extends Component {
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
         ws.addRow([
           dataMatIdx._id,
+          dataItemMR[i].no_tssr_boq_site,
           dataItemMR[i].pp_id,
           dataItemMR[i].product_name,
           dataItemMR[i].program,
@@ -812,7 +832,7 @@ class MRDetail extends Component {
           dataMatIdx.material_name_plan,
           dataMatIdx.material_id,
           dataMatIdx.material_name,
-          dataMatIdx.material_unit,
+          dataMatIdx.uom,
           dataMatIdx.qty,
           qty_wh,
           qty_inbound,
@@ -890,6 +910,135 @@ class MRDetail extends Component {
     );
   }
 
+  async downloadMaterialMRUpload2() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataMR = this.state.data_mr;
+    const dataItemMR = this.state.list_mr_item;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    let headerRow = [
+      "bam_id",
+      "ps_number",
+      "bundle_id",
+      "bundle_name",
+      "program",
+      "material_id_plan",
+      "material_name_plan",
+      "material_id_actual",
+      "material_name_actual",
+      "uom",
+      "qty",
+      "stock_warehouse",
+      "inbound_warehouse",
+      "availability",
+      "source_material",
+    ];
+    ws.addRow(headerRow);
+    let list_material_id = [];
+    for (let i = 0; i < dataItemMR.length; i++) {
+      for (let j = 0; j < dataItemMR[i].materials.length; j++) {
+        let dataMatIdx = dataItemMR[i].materials[j];
+        list_material_id.push(dataMatIdx.material_id);
+        let qty_wh = stockWH.find((e) => e.sku === dataMatIdx.material_id);
+        let qty_inbound = inboundWH.find(
+          (e) => e.sku === dataMatIdx.material_id
+        );
+        qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
+        qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
+        if ((dataMatIdx.qty) < qty_wh) {continue}
+        ws.addRow([
+          dataMatIdx._id,
+          dataItemMR[i].no_tssr_boq_site,
+          dataItemMR[i].pp_id,
+          dataItemMR[i].product_name,
+          dataItemMR[i].program,
+          dataMatIdx.material_id_plan,
+          dataMatIdx.material_name_plan,
+          dataMatIdx.material_id,
+          dataMatIdx.material_name,
+          dataMatIdx.uom,
+          dataMatIdx.qty,
+          qty_wh,
+          qty_inbound,
+          dataMatIdx.qty < qty_wh ? "OK" : "NOK",
+          dataMatIdx.source_material,
+        ]);
+      }
+    }
+
+    let listMatId = [...new Set(list_material_id)];
+    let matIdData = {
+      "list_material_id" : listMatId
+    }
+
+    const getMaterialVariant = await this.postDatatoAPINODE(
+      "/variants/materialId",
+      matIdData
+    );
+    if (
+      getMaterialVariant.data !== undefined &&
+      getMaterialVariant.status >= 200 &&
+      getMaterialVariant.status < 400
+    ) {
+      dataMaterialVariant = getMaterialVariant.data.data;
+    }
+
+    dataMaterialVariant = this.CompareArrayObject(
+      dataMaterialVariant,
+      "description"
+    );
+
+    // dataMaterialVariant.sort(function(a, b){return a.description.toLowerCase() - b.description.toLowerCase()});
+    let sku_list = [];
+    for (let j = 0; j < dataMaterialVariant.length; j++) {
+      sku_list.push(dataMaterialVariant[j].material_id);
+    }
+    const list_qtySKU = [];
+    const getQtyfromWHbySKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', {"sku": sku_list }).then((res) => {
+      if(res.data !== undefined && res.status >= 200 && res.status < 400){
+        const dataSKU = res.data.data;
+        // console.log('dataSKU ', dataSKU);
+        for (let i = 0; i < dataSKU.length; i++) {
+          if (dataSKU[i][0] === undefined) {
+            list_qtySKU.push(0);
+          } else {
+            list_qtySKU.push(dataSKU[i][0].qty_sku);
+          }
+        }
+      }
+    });
+
+    ws2.addRow([
+      "Origin",
+      "Material ID",
+      "Material Name",
+      "Description",
+      "Category",
+      "Qty Available",
+    ]);
+    for (let j = 0; j < dataMaterialVariant.length; j++) {
+      ws2.addRow([
+        dataMaterialVariant[j].origin,
+        dataMaterialVariant[j].material_id,
+        dataMaterialVariant[j].material_name,
+        dataMaterialVariant[j].description,
+        dataMaterialVariant[j].category,
+        list_qtySKU[j],
+      ]);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([allocexport]),
+      "Material MR " + dataMR.mr_id + " uploader NOK.xlsx"
+    );
+  }
+
   async downloadMaterialMRReport() {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -905,6 +1054,8 @@ class MRDetail extends Component {
     ws.addRow(["Project", dataMR.project_name]);
     ws.addRow(["Site", this.state.mr_site_NE.site_id]);
 
+    ws.addRow([""]);
+
     let headerRow = [
       "Bundle ID",
       "Bundle Name",
@@ -913,24 +1064,45 @@ class MRDetail extends Component {
       "Unit",
       "Qty",
       "Material Source",
+      "CPO Number",
+      "PS No.",
+      "Program"
     ];
     ws.addRow(headerRow);
+    ws.getCell('A5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('B5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('C5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('D5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('E5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('F5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('G5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('H5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('I5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('J5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('A5').font  = {bold : true };
+    ws.getCell('B5').font  = {bold : true };
+    ws.getCell('C5').font  = {bold : true };
+    ws.getCell('D5').font  = {bold : true };
+    ws.getCell('E5').font  = {bold : true };
+    ws.getCell('F5').font  = {bold : true };
+    ws.getCell('G5').font  = {bold : true };
+    ws.getCell('H5').font  = {bold : true };
+    ws.getCell('I5').font  = {bold : true };
+    ws.getCell('J5').font  = {bold : true };
+    ws.addRow([]);
     for (let i = 0; i < dataItemMR.length; i++) {
-      ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name]);
+      ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name, null, null, dataItemMR[i].uom, null, null, null, dataItemMR[i].no_tssr_boq_site, dataItemMR[i].program]);
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
-        // let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
-        // let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
-        // qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
-        // qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
         ws.addRow([
           null,
           null,
           dataMatIdx.material_id,
           dataMatIdx.material_name,
-          dataMatIdx.material_unit,
+          dataMatIdx.uom,
           dataMatIdx.qty,
           dataMatIdx.source_material,
+          dataMatIdx.cpo_number,
         ]);
       }
     }
@@ -939,6 +1111,40 @@ class MRDetail extends Component {
     saveAs(
       new Blob([allocexport]),
       "Material MR PS " + dataMR.mr_id + " Report.xlsx"
+    );
+  }
+
+  async downloadMaterialMRTRACY() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataMR = this.state.data_mr;
+    const dataItemMR = this.state.list_mr_item;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    let headerRow = ["REC_TYPE", "FILLER", "COMP_CD", "CUST_DELIV_NO", "CUST_ID", "CUST_CNTRY_CD", "ETA_SHP_DT", "SHP_DT", "SITE_LOC_ID", "SITE_CNTRY_CD", "SEND_SYSTEM", "SEND_UNIT", "SALES_GRP", "PRNO ", "SHP_NO", "END_CUST_NM", "END_CUST_ID", "CUST_NM", "SALES_ORD_NO", "PACK_ID", "PURCH_ORD_NO", "SER_NO", "CIN", "GI_Type", "Shp_Pnt", "Plant_ID"];
+    ws.addRow(headerRow);
+    let dateDispatch = null;
+    const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
+    if(dispatchData.mr_status_date !== undefined && dispatchData.mr_status_date !== null){
+      let dateDispatchNew = new Date(dispatchData.mr_status_date);
+      dateDispatch = dateDispatchNew.getFullYear().toString()+(dateDispatchNew.getMonth()+1).toString().padStart(2, '0')+dateDispatchNew.getDate().toString().padStart(2, '0');
+    }
+    const dataSite = dataMR.site_info[0].site_id
+    for (let i = 0; i < dataItemMR.length; i++) {
+      for (let j = 0; j < dataItemMR[i].materials.length; j++) {
+        let dataMatIdx = dataItemMR[i].materials[j];
+        ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, dataMR.no_shipment, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([allocexport]),
+      "TRACY Material MR " + dataMR.mr_id + ".xlsx"
     );
   }
 
@@ -1057,10 +1263,13 @@ class MRDetail extends Component {
       backgroundColor: "#e3e3e3",
     };
 
-    const MapLoader = withScriptjs(GMap);
+    function MapsTrekking(props){
+      return (<GMap/>)
+    }
 
-    let qty_wh = undefined,
-      qty_inbound = undefined;
+    // const MapLoader = withScriptjs(MapsTrekking);
+
+    let qty_wh = undefined,qty_inbound = undefined;
     return (
       <div>
         <DefaultNotif
@@ -1181,6 +1390,20 @@ class MRDetail extends Component {
                             Project Name : {this.state.data_mr.project_name}
                           </td>
                         </tr>
+                        {(this.state.data_mr.mr_mitt_no != undefined && this.state.data_mr.mr_mitt_no !== null) && (
+                          <tr>
+                            <td
+                              colSpan="4"
+                              style={{
+                                fontSize: "13px",
+                                textAlign: "center",
+                                color: "rgba(59,134,134,1)",
+                              }}
+                            >
+                              MR MITT Migration ID : {this.state.data_mr.mr_mitt_no}
+                            </td>
+                          </tr>
+                        )}
                       </Fragment>
                     )}
                   </tbody>
@@ -1205,9 +1428,7 @@ class MRDetail extends Component {
                             <div>
                               <ul className="mr-detail__ul--cd-id">
                                 {this.state.data_mr.cust_del !== undefined ? (
-                                  this.state.data_mr.cust_del.map((e) => (
-                                    <li>{e.cd_id}</li>
-                                  ))
+                                  <li>{this.state.data_mr.cust_del.map(cd => cd.cd_id).join(', ')}</li>
                                 ) : (
                                   <li>{this.state.data_mr.cd_id}</li>
                                 )}
@@ -1288,6 +1509,16 @@ class MRDetail extends Component {
                               {this.state.data_mr.no_shipment}
                             </div>
                           </div>
+                          {(this.state.data_mr.mr_note !== undefined && this.state.data_mr.mr_note.find(e => e.title === "RE-ROUTE") !== undefined) && (
+                            <div>
+                              <div className="mr-detail__body--header-detail">
+                                <span>Re-Route</span>
+                              </div>
+                              <div>
+                                {this.state.data_mr.mr_note.find(e => e.title === "RE-ROUTE").value}
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         <hr className="mr-detail__line" />
@@ -1445,7 +1676,7 @@ class MRDetail extends Component {
                                         {this.state.data_mr.list_of_box_id !==
                                         undefined
                                           ? this.state.data_mr.list_of_box_id.map(
-                                              (e) => e + ", "
+                                              (e) => typeof e === "string" ? e+" , " : e.box_id + " , "
                                             )
                                           : ""}
                                       </td>
@@ -1458,11 +1689,26 @@ class MRDetail extends Component {
                         </table>
                       </Col>
                       <Col md="6">
-                        <table style={{ marginBottom: "0px" }}>
+                        <table style={{ marginBottom: "0px", float : 'right' }}>
                           <tbody>
                             {this.state.data_mr !== null && (
                               <Fragment>
-                                <tr>
+                                <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'left', marginRight : '10px'}}>
+                                  <DropdownToggle caret color="secondary">
+                                    <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
+                                  </DropdownToggle>
+                                  <DropdownMenu>
+                                    <DropdownItem header>TSSR File</DropdownItem>
+                                    {((this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 ) && this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
+                                      <DropdownItem onClick={this.downloadMaterialMRTRACY}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY Format</DropdownItem>
+
+                                    )}
+                                    <DropdownItem onClick={this.downloadMaterialMRReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MR PS</DropdownItem>
+                                    <DropdownItem onClick={this.downloadMaterialMRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
+                                    <DropdownItem onClick={this.downloadMaterialMRUpload2}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format NOK</DropdownItem>
+                                  </DropdownMenu>
+                                </Dropdown>
+                                {/* <tr>
                                   <td style={{ width: "550px" }}>
                                     <Button
                                       size="sm"
@@ -1483,8 +1729,21 @@ class MRDetail extends Component {
                                     >
                                       Download MR PS
                                     </Button>
+                                    {(this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
+                                      <Button
+                                        size="sm"
+                                        color="secondary"
+                                        style={{
+                                          float: "right",
+                                          marginRight: "10px",
+                                        }}
+                                        onClick={this.downloadMaterialMRTRACY}
+                                      >
+                                        TRACY Format
+                                      </Button>
+                                    )}
                                   </td>
-                                </tr>
+                                </tr> */}
                                 {this.state.mr_site_FE !== null &&
                                 this.state.data_mr.mr_type !== "Relocation" &&
                                 this.state.data_mr.mr_type !== "Return" ? (
@@ -1555,7 +1814,7 @@ class MRDetail extends Component {
                       </Col>
                     </Row>
                     <hr className="upload-line-ordering"></hr>
-                    <div>PlantSpec Group No : {this.state.data_mr !== null ? this.state.data_mr.no_plantspec : ""}</div>
+                    <div>PlantSpec Group No : {this.state.data_mr !== null ? (<Link to={'/ps-list/'+this.state.data_mr.id_plantspec_doc}>{this.state.data_mr.no_plantspec}</Link>) : ""}</div>
                     <div className="divtable2">
                       <Table hover bordered striped responsive size="sm">
                         <thead
@@ -1650,8 +1909,8 @@ class MRDetail extends Component {
                             >
                               CPO Number
                             </th>
-                            <th rowSpan="2" className="fixedhead" style={{ width: "75px", verticalAlign: "middle" }}>
-                              Material Source
+                            <th rowSpan="2" className="fixedhead" style={{verticalAlign: "middle" }}>
+                              PS No. / Material Source
                             </th>
                           </tr>
                           {this.state.data_mr !== null &&
@@ -1690,7 +1949,7 @@ class MRDetail extends Component {
                         status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
                           <tbody>
                             {this.state.mr_site_NE !== null &&
-                              this.state.list_mr_item.map((pp) => (
+                              this.state.list_mr_item.filter(e => e.product_type.toLowerCase() !== "svc").map((pp) => (
                                 <Fragment>
                                   <tr
                                     style={{ backgroundColor: "#E5FCC2" }}
@@ -1721,7 +1980,7 @@ class MRDetail extends Component {
                                     <td></td>
                                     <td></td>
                                     <td>{pp.cpo_number}</td>
-                                    <td>{pp.source_material}</td>
+                                    <td>{pp.no_tssr_boq_site}</td>
                                   </tr>
                                   {pp.materials.map((material) => (
                                     <tr
@@ -1836,7 +2095,7 @@ class MRDetail extends Component {
                                       <Fragment></Fragment>
                                     )}
                                     <td>{pp.cpo_number}</td>
-                                    <td>{pp.source_material}</td>
+                                    <td>{pp.no_tssr_boq_site}</td>
                                   </tr>
                                   {pp.materials.map((material) => (
                                     <tr
@@ -1885,6 +2144,104 @@ class MRDetail extends Component {
                             )}
                           </tbody>
                         )}
+                      </Table>
+                    </div>
+                    <div>Material LOM</div>
+                    <div className="divtable2">
+                      <Table hover bordered striped responsive size="sm">
+                        <thead style={{ backgroundColor: "#0B486B", color: "white" }} className="table-mr__header--fixed">
+                          <th
+                            rowSpan="2"
+                            className="fixedhead"
+                            style={{
+                              width: "250px",
+                              verticalAlign: "middle",
+                            }}
+                          >
+                            PP / Material Code
+                          </th>
+                          <th
+                            rowSpan="2"
+                            className="fixedhead"
+                            style={{ verticalAlign: "middle" }}
+                          >
+                            PP / Material Name
+                          </th>
+                          <th
+                            rowSpan="2"
+                            className="fixedhead"
+                            style={{ width: "75px", verticalAlign: "middle" }}
+                          >
+                            Program
+                          </th>
+                          <th
+                            rowSpan="2"
+                            className="fixedhead"
+                            style={{ width: "75px", verticalAlign: "middle" }}
+                          >
+                            Unit
+                          </th>
+                          <th
+                            rowSpan="2"
+                            className="fixedhead"
+                            style={{
+                              width: "100px",
+                              verticalAlign: "middle",
+                            }}
+                          >
+                            Total Qty per PP
+                          </th>
+                          <th
+                            rowSpan="2"
+                            className="fixedhead"
+                            style={{
+                              width: "100px",
+                              verticalAlign: "middle",
+                            }}
+                          >
+                            State
+                          </th>
+                        </thead>
+                        <tbody>
+                          {(this.state.data_mr !== null && this.state.data_mr.lom_packages !== undefined) && (
+                            <Fragment>
+                              {this.state.data_mr.lom_packages.map(pp =>
+                                <Fragment>
+                                  <tr
+                                    style={{ backgroundColor: "#E5FCC2" }}
+                                    className="fixbody"
+                                  >
+                                    <td style={{ textAlign: "left" }}>
+                                      {pp.pp_id}
+                                    </td>
+                                    <td>{pp.product_name}</td>
+                                    <td>{pp.program}</td>
+                                    <td>{pp.uom}</td>
+                                    <td>{pp.qty}</td>
+                                    <td>{pp.process}</td>
+                                  </tr>
+                                  {pp.lom_materials.map(mm =>
+                                    <Fragment>
+                                      <tr style={{
+                                        backgroundColor:
+                                          "rgba(248,246,223, 0.5)",
+                                      }}>
+                                        <td style={{ textAlign: "right" }}>
+                                          {mm.material_id}
+                                        </td>
+                                        <td>{mm.material_name}</td>
+                                        <td></td>
+                                        <td>{mm.uom}</td>
+                                        <td>{mm.qty}</td>
+                                        <td></td>
+                                      </tr>
+                                    </Fragment>
+                                  )}
+                                </Fragment>
+                              )}
+                            </Fragment>
+                          )}
+                        </tbody>
                       </Table>
                     </div>
                   </Fragment>
@@ -1959,11 +2316,20 @@ class MRDetail extends Component {
                 )}
                 {this.state.tabs_submenu[3] === true && (
                   <Fragment>
-                    {/* <GoogleMap site_lat={-6.3046027} site_lng={106.7951936} /> */}
-                    <MapLoader
-                      googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyAoCmcgwc7MN40js68RpcZdSzh9yLrmLF4"
+                    {/*<MapsTrekking latitude={-6.173990} longitude={106.826851}/>
+                     <GoogleMap site_lat={-6.3046027} site_lng={106.7951936} /> AIzaSyAoCmcgwc7MN40js68RpcZdSzh9yLrmLF4*/}
+                    {/*<MapLoader
+                      googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyB5mmXco3GYZhRDNY4CJcBlaENjteSC8DM"
                       loadingElement={<div style={{ height: "100%" }} />}
-                    />
+                    /> */}
+                    {this.state.location_mr.updated_location !== undefined ? (
+                      <GMap
+                        dsp_lat={this.state.location_mr.updated_location.latitude}
+                        dsp_lng={this.state.location_mr.updated_location.longitude}
+                      />
+                    ): (
+                      <GMap/>
+                    )}
                   </Fragment>
                 )}
               </CardBody>
@@ -1997,14 +2363,16 @@ class MRDetail extends Component {
                     ) : (
                       <div></div>
                     )}
-                    <Button
-                      color="warning"
-                      style={{ float: "left" }}
-                      size="sm"
-                      onClick={this.toggleModalRevision}
-                    >
-                      Need Revise
-                    </Button>
+                    {(this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 ) && (
+                      <Button
+                        color="warning"
+                        style={{ float: "left" }}
+                        size="sm"
+                        onClick={this.toggleModalRevision}
+                      >
+                        Need Revise
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardFooter>

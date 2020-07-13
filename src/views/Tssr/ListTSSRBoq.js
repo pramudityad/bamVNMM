@@ -74,8 +74,8 @@ class ListTSSRBoq extends Component {
     let filter_project = this.state.filter_list[2] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
     let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
     let filter_status = this.state.filter_list[5] === null ? '"approval_status":{"$exists" : 1}' : '"approval_status":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
-    let where = 'q={'+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+', "tssr_approval_status" : {"$ne" : "NOT SUBMITTED"}}';
-    this.getDataFromAPINODE('/techBoqList?srt=_id:-1&'+where+ "&lmt=" +
+    let where = 'q={'+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+'}';
+    this.getDataFromAPINODE('/tssr/getTssr?srt=_id:-1&lmt='+
     this.state.perPage +
     "&pg=" +
     this.state.activePage).then(res => {
@@ -199,7 +199,7 @@ class ListTSSRBoq extends Component {
                             <td style={{verticalAlign : 'middle'}}>{boq.project_name}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.creator[0].email}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.version}</td>
-                            <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.tssr_approval_status}</td>
+                            <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.current_status}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
                               <Link to={'/list-tssr-boq/detail/'+boq._id}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>

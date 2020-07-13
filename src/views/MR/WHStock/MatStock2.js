@@ -601,14 +601,21 @@ class MaterialStock2 extends React.Component {
     const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
       stockData: BulkXLSX,
     });
-    // console.log('res bulk ', res.error.message);
+    console.log('res bulk ', res.response);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed" }, () => {
-        this.toggleLoading();
-      });
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
     }
   };
 
@@ -626,9 +633,16 @@ class MaterialStock2 extends React.Component {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed" }, () => {
-        this.toggleLoading();
-      });
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
     }
   };
 
@@ -729,18 +743,19 @@ class MaterialStock2 extends React.Component {
   }
 
   async downloadAll() {
-    let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE(
-      "/whStock/getWhStock?noPg=1"
-    );
-    if (getAll_nonpage.data !== undefined) {
-      download_all = getAll_nonpage.data.data;
-    }
+    let download_all = this.state.all_data;
+    // let getAll_nonpage = await this.getDatafromAPINODE(
+    //   "/whStock/getWhStock?noPg=1"
+    // );
+    // if (getAll_nonpage.data !== undefined) {
+    //   download_all = getAll_nonpage.data.data;
+    // }
 
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
     let headerRow = [
+      "Project ID",
       "Owner ID",
       "WH ID",
       "PO Number",
@@ -754,6 +769,10 @@ class MaterialStock2 extends React.Component {
       "Box Number",
       "Condition",
       "Notes",
+      "Batch",
+      "Location",
+      "WHS",
+      "Description",      
     ];
     ws.addRow(headerRow);
 
@@ -764,6 +783,7 @@ class MaterialStock2 extends React.Component {
     for (let i = 0; i < download_all.length; i++) {
       let list = download_all[i];
       ws.addRow([
+        list.project_id,
         list.owner_id,
         this.state.selected_wh,
         list.po_number,
@@ -777,11 +797,15 @@ class MaterialStock2 extends React.Component {
         list.box_number,
         list.condition,
         list.notes,
+        list.batch,
+        list.location,
+        list.whs,
+        list.description
       ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All Material Stock.xlsx");
+    saveAs(new Blob([allocexport]), "All Material Stock "+this.state.selected_wh+".xlsx");
   }
 
   DeleteData = async () => {
@@ -820,6 +844,11 @@ class MaterialStock2 extends React.Component {
       "box_number",
       "condition",
       "notes",
+      "batch",
+      "location",
+      "whs",
+      "description",
+      "project_id",    
       "transaction_type",
     ]);
     ws.addRow([
@@ -835,6 +864,11 @@ class MaterialStock2 extends React.Component {
       "box_number",
       "condition",
       "notes",
+      "batch",
+      "location",
+      "whs",
+      "description",
+      "project_id",  
       "Inbound",
     ]);
     ws.addRow([
@@ -850,6 +884,11 @@ class MaterialStock2 extends React.Component {
       "box_number",
       "condition",
       "notes",
+      "batch",
+      "location",
+      "whs",
+      "description",
+      "project_id",  
       "Outbond",
     ]);
 
@@ -1109,6 +1148,11 @@ class MaterialStock2 extends React.Component {
                             <th>Box Number</th>
                             <th>Condition</th>
                             <th>Notes</th>
+                            <th>Batch</th>
+                            <th>Location</th>
+                            <th>WHS</th>
+                            <th>Description</th>
+                            <th>Project ID</th>
                             <th>Transaction Type</th>
                             <th></th>
                           </tr>
@@ -1155,6 +1199,21 @@ class MaterialStock2 extends React.Component {
                                 </td>
                                 <td style={{ textAlign: "center" }}>
                                   {e.notes}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.batch}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.location}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.whs}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.description}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.project_id}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
                                   {e.transaction_type}

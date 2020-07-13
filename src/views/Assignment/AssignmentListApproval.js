@@ -87,10 +87,10 @@ class AssignmentListApproval extends Component {
     this.state.filter_list[2] !== "" && (filter_array.push('"Project":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
     this.state.filter_list[3] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
     this.state.filter_list[4] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
-    filter_array.push('"Current_Status":"REQUEST PM APPROVAL"');
+    filter_array.push('"$or" : [{"Current_Status":"REQUEST PM APPROVAL"}, {"Current_Status":"ASP ASSIGNMENT REQUEST FOR CANCELATION"}]');
     this.state.filter_list[6] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/aspAssignment/aspassign?q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
+    this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
@@ -129,9 +129,9 @@ class AssignmentListApproval extends Component {
 
   async downloadASGList() {
     let listASGAll = [];
-    let getASG = await this.getDataFromAPI('/asp_assignment_sorted_non_page');
+    let getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1');
     if (getASG.data !== undefined) {
-      listASGAll = getASG.data._items;
+      listASGAll = getASG.data.data;
     }
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();

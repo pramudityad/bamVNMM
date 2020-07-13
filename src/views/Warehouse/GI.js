@@ -524,7 +524,7 @@ class GI extends Component {
   componentDidMount() {
     this.getWHManagementID();
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = "GI | BAM";
   }
 
@@ -549,7 +549,7 @@ class GI extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {

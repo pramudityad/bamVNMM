@@ -156,7 +156,7 @@ class TssrList extends Component {
                         <td>{list.submission_status}</td>
                         <td>{list.mr_id}</td>
                         <td>
-                          <Link to={'/ps-bom/'+list._id}>
+                          <Link to={'/ps-list/'+list._id}>
                             <Button color="info" size="sm" outline>Detail</Button>
                           </Link>
                         </td>
