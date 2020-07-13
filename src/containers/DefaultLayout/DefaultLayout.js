@@ -61,6 +61,10 @@ class DefaultLayout extends Component {
 
   componentDidMount(){
     this.showMenuByRole();
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      const dataRoutesASP = this.state.routes.filter(e => e.roles !== undefined && e.roles.includes("BAM-ASP"));
+      this.setState({routes : dataRoutesASP })
+    }
   }
 
   async postDatatoAPILogout(){
@@ -90,7 +94,6 @@ class DefaultLayout extends Component {
     if(this.state.vendor_code !== undefined && this.state.vendor_code !== null && this.state.vendor_code.length !== 0){
       rolesUser.push("BAM-ASP");
     }
-    console.log("rolesUser", rolesUser);
     if(dataMenu !== undefined && dataMenu.length !== 0 && rolesUser.indexOf("Admin") === -1){
       for(let i = 0; i < dataMenu.length; i++){
         let dataMenuIndex = Object.assign({}, dataMenu[i])

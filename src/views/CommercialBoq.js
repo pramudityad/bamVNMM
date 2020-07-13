@@ -488,9 +488,8 @@ class CommercialBoq extends Component {
       if(revisionType === "save"){
         revision = false;
         this.toggleSave();
-      }else{
-        this.toggleRevised();
       }
+      this.toggleRevised();
       let dataComm = this.state.data_comm_boq;
       const incentive_amount = this.state.incentiveChange;
       const unit_price_idr_amount = this.state.UnitPriceIDRChange;
@@ -832,7 +831,7 @@ class CommercialBoq extends Component {
       ws.addRow([""]);
 
       let ppIdRow = ["Tower ID", "Program", "SOW", "Category", "Config ID", "SAP", "SAP Description", "Qty", "Description", "Unit Price after Incentive (USD)", "Unit Price after Incentive (IDR)", "Total Price after Incentive (USD)", "Total Price after Incentive (IDR)"];
-      if(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === true){
+      if(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === false){
         ppIdRow = ["Tower ID", "Program", "SOW", "Category", "Config ID", "SAP", "SAP Description", "Qty", "Description"];
       }
 

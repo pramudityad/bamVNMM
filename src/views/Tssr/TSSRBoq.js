@@ -1070,6 +1070,7 @@ class TSSRBoq extends Component {
                 </CardHeader>
                 <CardBody className='card-UploadBoq'>
                   <input type="file" onChange={this.fileHandlerTSSR.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} />
+                  <span style={{color :'rgba(216,67,21 ,1)', fontWeight : '600'}}>*Please Make sure the DRM column has been deleted from uploader</span>
                   <Button style={{'float' : 'right'}} color="warning" onClick={this.updateTSSRBoq} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tssr.tech_data === undefined}>
                     <i className="fa fa-paste">&nbsp;&nbsp;</i>
                       {this.state.rowsTSSR.length === 0 ? 'Save' : this.state.result_check_tssr.tech_data !== undefined ? 'Save' : 'Loading..'}

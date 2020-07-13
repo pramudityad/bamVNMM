@@ -54,8 +54,10 @@ class JointCheck extends Component {
   }
 
   toggleBoxInput(e) {
-    const id_doc = e.currentTarget.id;
-    this.setState({ id_mr_selected: id_doc });
+    if(e !== undefined){
+      const id_doc = e.currentTarget.id;
+      this.setState({ id_mr_selected: id_doc });
+    }
     this.setState(prevState => ({
       modal_box_input: !prevState.modal_box_input
     }));
@@ -325,7 +327,7 @@ class JointCheck extends Component {
     if (res !== undefined) {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" }, () => {
-          // setTimeout(function(){ window.location.reload(); }, 2000);
+          setTimeout(function(){ window.location.reload(); }, 2000);
         });
       } else {
         if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {

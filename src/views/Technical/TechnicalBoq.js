@@ -1948,7 +1948,7 @@ class TechnicalBoq extends Component {
     ws.addRow([""]);
 
     const rowHeader1 = ["",""].concat(dataHeader.config_group_type_header.map(e => e));
-    const rowHeader2 = ["Tower ID","Tower Name"].concat(dataHeader.config_group_header.map(e => e));
+    const rowHeader2 = ["Tower ID","Tower Name","Program"].concat(dataHeader.config_group_header.map(e => e));
     let getlastrowHeaderSum = ws.lastRow._number;
     ws.addRow(rowHeader1);
     let getlastrowHeader1 = ws.lastRow._number;
@@ -1970,7 +1970,7 @@ class TechnicalBoq extends Component {
     }
 
     for(let i = 0; i < dataSites.length ; i++){
-      ws.addRow([ dataSites[i].site_id, dataSites[i].site_name].concat(dataSites[i].siteItemConfig.map(e => e.qty)));
+      ws.addRow([ dataSites[i].site_id, dataSites[i].site_name, dataSites[i].program].concat(dataSites[i].siteItemConfig.map(e => e.qty)));
     }
 
     const techFormat = await wb.xlsx.writeBuffer()
