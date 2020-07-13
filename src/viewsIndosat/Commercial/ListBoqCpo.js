@@ -59,7 +59,7 @@ class ListBoqComm extends Component {
 
   async getDatafromAPI(url){
     try {
-      let respond = await axios.get(API_URL + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL + url, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -79,7 +79,7 @@ class ListBoqComm extends Component {
 
   async patchDatatoAPI(url, data, _etag){
     try {
-      let respond = await axios.patch(API_URL +url, data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL +url, data, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -107,7 +107,7 @@ class ListBoqComm extends Component {
   //   let filter_tech = this.state.filter_list[0] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[0]+'", "$options" : "i"}';
   //   let filter_comm = this.state.filter_list[1] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
   //   let where = 'where={"deleted" : 0, "no_boq_comm" : '+filter_comm+', "project_name" : '+filter_project+', "no_boq_tech" : '+filter_tech+'}';
-  //   axios.get(API_URL +'/boq_comm_audit?'+where+'&max_results='+this.state.perPage+'&page='+page+'&embedded={"created_by" : 1}', {
+  //   axios.get(process.env.REACT_APP_API_URL +'/boq_comm_audit?'+where+'&max_results='+this.state.perPage+'&page='+page+'&embedded={"created_by" : 1}', {
   //       headers : {'Content-Type':'application/json'},
   //       auth: {
   //           username: usernamePhilApi,

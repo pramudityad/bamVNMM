@@ -365,7 +365,7 @@ class TechnicalBoq extends Component {
 
   async getDatafromAPI(url){
     try {
-      let respond = await axios.get(API_URL +url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -386,7 +386,7 @@ class TechnicalBoq extends Component {
 
   async postDatatoAPI(url, data){
     try {
-      let respond = await axios.post(API_URL +url, data, {
+      let respond = await axios.post(process.env.REACT_APP_API_URL +url, data, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,
@@ -410,7 +410,7 @@ class TechnicalBoq extends Component {
 
   async patchDatatoAPI(url, data, _etag){
     try {
-      let respond = await axios.patch(API_URL +url, data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL +url, data, {
         headers : {'Content-Type':'application/json'},
         auth: {
           username: usernamePhilApi,

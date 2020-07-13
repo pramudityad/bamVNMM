@@ -124,7 +124,7 @@ class ListTechnical extends Component {
       }
     }
     let where = 'where={"deleted" : 0, '+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+', '+filter_created_by+''+filter_project_note+'}';
-    axios.get(API_URL +'/boq_tech_audit?'+where+'&max_results='+this.state.perPage+'&page='+page+'&embedded={"created_by" :1}', {
+    axios.get(process.env.REACT_APP_API_URL +'/boq_tech_audit?'+where+'&max_results='+this.state.perPage+'&page='+page+'&embedded={"created_by" :1}', {
         headers : {'Content-Type':'application/json'},
         auth: {
             username: usernamePhilApi,
@@ -144,7 +144,7 @@ class ListTechnical extends Component {
       console.log(this.state.filter_list[3]);
       let filter_getName = this.state.filter_list[3] === null ? '{"$exists" : 1}' : '{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
       let where = 'where={"$or" : [{"email" : '+filter_getName+'}, {"username" : '+filter_getName+'}] }';
-      axios.get(API_URL +'/user_all?'+where, {
+      axios.get(process.env.REACT_APP_API_URL +'/user_all?'+where, {
         headers : {'Content-Type':'application/json'},
         auth: {
             username: usernamePhilApi,
