@@ -63,8 +63,8 @@ class AssignmentListASP extends Component {
       let respond = await axios.get(API_URL_tsel + url, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
-          username: username_tsel,
-          password: password_tsel
+          username: process.env.REACT_APP_username_tsel
+          password:  process.env.REACT_APP_password_tsel
         }
       });
       if (respond.status >= 200 && respond.status < 300) {

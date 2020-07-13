@@ -328,8 +328,8 @@ class TechnicalBoq extends Component {
       let respond = await axios.get(API_URL_ISAT+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
-          username: usernameXL,
-          password: passwordXL
+          username: process.env.REACT_APP_usernameXL,
+          password: process.env.REACT_APP_passwordXL
         }
       });
       if(respond.status >= 200 && respond.status < 300) {
