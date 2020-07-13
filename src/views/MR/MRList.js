@@ -13,9 +13,9 @@ import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFuncti
 import Loading from '../components/Loading'
 
 
-const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const username = 'bamidadmin@e-dpm.com';
-const password = 'F760qbAg2sml';
+
+
+
 
 
 

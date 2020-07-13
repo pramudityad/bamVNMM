@@ -12,7 +12,7 @@ const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const username_tsel = 'adminbamidsuper';
 const password_tsel = 'F760qbAg2sml';
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 
 class AssignmentListASP extends Component {
   constructor(props) {
@@ -41,7 +41,7 @@ class AssignmentListASP extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + this.state.tokenUser

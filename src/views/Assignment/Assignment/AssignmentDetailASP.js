@@ -13,7 +13,7 @@ const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const username_tsel = 'adminbamidsuper';
 const password_tsel = 'F760qbAg2sml';
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 
 const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
 
@@ -70,7 +70,7 @@ class AssignmentDetailASP extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + this.state.tokenUser
@@ -89,7 +89,7 @@ class AssignmentDetailASP extends Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_NODE + url, data, {
+      let respond = await axios.post(process.env.REACT_APP_API_URL_NODE + url, data, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + this.state.tokenUser
@@ -132,7 +132,7 @@ class AssignmentDetailASP extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
+      let respond = await axios.patch(process.env.REACT_APP_API_URL_NODE + url, data, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + this.state.tokenUser

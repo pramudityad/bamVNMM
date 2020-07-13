@@ -9,7 +9,7 @@ import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
 
 // const API_URL_NODE = process.env.REACT_APP_API_URL_NODE;
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 
 class AssignmentList extends Component {
   constructor(props) {
@@ -41,7 +41,7 @@ class AssignmentList extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + this.state.tokenUser

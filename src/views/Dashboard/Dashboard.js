@@ -30,7 +30,7 @@ import { Link } from 'react-router-dom';
 const Widget03 = lazy(() => import('../../views/Widgets/Widget03'));
 const Widget05 = React.lazy(() => import('../../views/Widgets/Widget05'));
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 const brandPrimary = getStyle('--primary')
 const brandSuccess = getStyle('--success')
 const brandInfo = getStyle('--info')
@@ -527,7 +527,7 @@ class Dashboard extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE+url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE+url, {
         headers : {
           'Content-Type':'application/json',
           'Authorization': 'Bearer '+this.state.tokenUser

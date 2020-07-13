@@ -10,7 +10,7 @@ import axios from 'axios';
 
 
 
-const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 // /bamidapi/updateBastNumber/
 
 class WHDashboardDet extends Component {

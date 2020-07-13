@@ -18,9 +18,9 @@ const propTypes = {
 
 const defaultProps = {};
 
-const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const username = 'bamidadmin@e-dpm.com';
-const password = 'F760qbAg2sml';
+
+
+
 
 class DefaultHeader extends Component {
   constructor(props) {

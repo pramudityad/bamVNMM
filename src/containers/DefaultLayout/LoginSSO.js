@@ -16,7 +16,7 @@ import ericssonLogoBlack from '../../assets/img/brand/ERI_horizontal_RGB_BLACK.s
 
 const loading = () => <div className="animated fadeIn pt-3 text-center">Loading...</div>;
 
-const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 
 class SSOLogin extends Component {
   constructor(props) {

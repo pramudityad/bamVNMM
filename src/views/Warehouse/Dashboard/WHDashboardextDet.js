@@ -12,7 +12,7 @@ const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
 
 
-const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 // /bamidapi/updateBastNumber/
 
 class WHDashboardextDet extends Component {

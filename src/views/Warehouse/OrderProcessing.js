@@ -13,7 +13,7 @@ import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFuncti
 
 
 
-const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 
 class OrderProcessing extends Component {
   constructor(props) {

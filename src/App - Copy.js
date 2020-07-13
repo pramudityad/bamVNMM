@@ -18,7 +18,7 @@ const Page404 = React.lazy(() => import('./views/Pages/Page404'));
 const Page500 = React.lazy(() => import('./views/Pages/Page500'));
 const LogError = React.lazy(() => import('./views/Pages/LogError'));
 
-const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 
 class SSOLogin extends Component {
   constructor(props) {
