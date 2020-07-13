@@ -86,10 +86,10 @@ class DefaultHeader extends Component {
 
   componentDidMount() {
     if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
-      
+
     }else{
-      this.getOrderCreated();
-      this.getRTD();
+      // this.getOrderCreated();
+      // this.getRTD();
     }
   }
 
@@ -111,12 +111,6 @@ class DefaultHeader extends Component {
           <Nav className="d-md-down-none" navbar>
             <NavItem className="px-3">
               <NavLink to="/dashboard" className="nav-link">Dashboard</NavLink>
-            </NavItem>
-            <NavItem className="px-3">
-              <Link to="/users" className="nav-link">Users</Link>
-            </NavItem>
-            <NavItem className="px-3">
-              <NavLink to="/settings" className="nav-link">Settings</NavLink>
             </NavItem>
           </Nav>
           </React.Fragment>
@@ -157,7 +151,7 @@ class DefaultHeader extends Component {
               {this.props.dataLogin.nameUser}
             </DropdownToggle>
             <DropdownMenu right>
-              <DropdownItem header tag="div" className="text-center"><strong>Account</strong></DropdownItem>
+              {/*}<DropdownItem header tag="div" className="text-center"><strong>Account</strong></DropdownItem>
               <DropdownItem><i className="fa fa-bell-o"></i> Updates<Badge color="info">42</Badge></DropdownItem>
               <DropdownItem><i className="fa fa-envelope-o"></i> Messages<Badge color="success">42</Badge></DropdownItem>
               <DropdownItem><i className="fa fa-tasks"></i> Tasks<Badge color="danger">42</Badge></DropdownItem>
@@ -168,7 +162,7 @@ class DefaultHeader extends Component {
               <DropdownItem><i className="fa fa-usd"></i> Payments<Badge color="secondary">42</Badge></DropdownItem>
               <DropdownItem><i className="fa fa-file"></i> Projects<Badge color="primary">42</Badge></DropdownItem>
               <DropdownItem divider />
-              <DropdownItem><i className="fa fa-shield"></i> Lock Account</DropdownItem>
+              <DropdownItem><i className="fa fa-shield"></i> Lock Account</DropdownItem>*/}
               <DropdownItem onClick={e => this.props.onLogout(e)}><i className="fa fa-lock"></i> Logout</DropdownItem>
             </DropdownMenu>
           </UncontrolledDropdown>

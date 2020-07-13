@@ -2198,6 +2198,16 @@ class MRDetail extends Component {
                           >
                             Total Qty per PP
                           </th>
+                          <th
+                            rowSpan="2"
+                            className="fixedhead"
+                            style={{
+                              width: "100px",
+                              verticalAlign: "middle",
+                            }}
+                          >
+                            State
+                          </th>
                         </thead>
                         <tbody>
                           {(this.state.data_mr !== null && this.state.data_mr.lom_packages !== undefined) && (
@@ -2215,6 +2225,7 @@ class MRDetail extends Component {
                                     <td>{pp.program}</td>
                                     <td>{pp.uom}</td>
                                     <td>{pp.qty}</td>
+                                    <td>{pp.process}</td>
                                   </tr>
                                   {pp.lom_materials.map(mm =>
                                     <Fragment>
@@ -2229,6 +2240,7 @@ class MRDetail extends Component {
                                         <td></td>
                                         <td>{mm.uom}</td>
                                         <td>{mm.qty}</td>
+                                        <td></td>
                                       </tr>
                                     </Fragment>
                                   )}

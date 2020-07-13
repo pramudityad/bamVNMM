@@ -527,7 +527,6 @@ class CPODatabase extends React.Component {
   }
 
   render() {
-    console.log("props Loc", this.props);
     return (
       <div className="animated fadeIn">
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />

@@ -1727,7 +1727,7 @@ class AssignmentDetail extends Component {
                       id={this.state.data_assignment._id}
                       onClick={this.CancelASG}
                     >
-                      Cancel AGS
+                      Cancel ASG
                     </Button>
                   )}
                   {this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (
@@ -1738,7 +1738,7 @@ class AssignmentDetail extends Component {
                       id={this.state.data_assignment._id}
                       onClick={this.ApproveCancelASG}
                     >
-                      Approve Cancellation AGS
+                      Approve Cancellation ASG
                     </Button>
                   )}
                   {this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (
@@ -1749,7 +1749,7 @@ class AssignmentDetail extends Component {
                       id={this.state.data_assignment._id}
                       onClick={this.RejectCancelASG}
                     >
-                      Reject Cancellation AGS
+                      Reject Cancellation ASG
                     </Button>
                   )}
                   {this.state.data_assignment.Current_Status ===

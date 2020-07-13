@@ -98,8 +98,9 @@ class ListCPOBoq extends Component {
   }
 
   getCpoBoqList(){
+    let filter_no_po = this.state.filter_name === null ? '"cpo_number":{"$exists" : 1}' : '"cpo_number":{"$regex" : "'+this.state.filter_name+'", "$options" : "i"}';
     this.getDataFromAPINODE('/cpoBoqList?srt=cpo_boq_id:-1&lmt='+this.state.perPage +
-    "&pg=" + this.state.activePage).then(res => {
+    "&pg=" + this.state.activePage+'&q={'+filter_no_po+'}').then(res => {
       if(res.data !== undefined){
         this.setState({list_cpo_boq : res.data.data, list_cpo_boq_filter : res.data.data, prevPage: this.state.activePage,
           totalData: res.data.totalResults});
@@ -235,7 +236,7 @@ class ListCPOBoq extends Component {
       value = null;
     }
     this.setState({ filter_name: value }, () => {
-      this.changeFilterName(value);
+      this.onChangeDebounced(value);
     });
   }
 

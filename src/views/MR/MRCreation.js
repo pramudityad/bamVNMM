@@ -460,10 +460,10 @@ class MRCreation extends Component {
       case "Upgrade":
         delType = 2;
         break;
-      case "Relocation":
+      case "Additional":
         delType = 3;
         break;
-      case "Return":
+      case "Outstanding":
         delType = 4;
         break;
       default:
@@ -528,8 +528,8 @@ class MRCreation extends Component {
                       <option value="" disabled selected hidden>Select MR Type</option>
                       <option value="New">New</option>
                       <option value="Upgrade">Upgrade</option>
-                      <option value="Relocation">Relocation</option>
-                      <option value="Return">Return</option>
+                      <option value="Additional">Additional</option>
+                      <option value="Outstanding">Outstanding</option>
                     </Input>
                   </FormGroup>
                 </Col>

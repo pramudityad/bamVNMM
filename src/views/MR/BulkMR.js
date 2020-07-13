@@ -837,6 +837,18 @@ class BulkMR extends Component {
                         <td>1</td>
                         <td>New</td>
                       </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>Upgrade</td>
+                      </tr>
+                      <tr>
+                        <td>3</td>
+                        <td>Additional</td>
+                      </tr>
+                      <tr>
+                        <td>4</td>
+                        <td>Outstanding</td>
+                      </tr>
                     </tbody>
                   </Table>
                 </Col>

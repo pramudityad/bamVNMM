@@ -108,7 +108,14 @@ class AssignmentListReport extends Component {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     let filter_array = [];
-    let date =  this.state.filter_date.filter_list_date && this.state.filter_date.filter_list_date2 === null ? '{}' : '{"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 23:59:59"}}';
+    // let date =  this.state.filter_date.filter_list_date && this.state.filter_date.filter_list_date2 === null ? '{}' : '{"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 23:59:59"}}';
+    if(this.state.filter_date.filter_list_date && this.state.filter_date.filter_list_date2 === null){
+
+    } else {
+      filter_array.push(
+        '{"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 23:59:59"}}'
+      );
+    }
     this.state.filter_list[0] !== "" &&
       filter_array.push(
         '"Assignment_No":{"$regex" : "' +
@@ -145,13 +152,12 @@ class AssignmentListReport extends Component {
           this.state.filter_list[6] +
           '", "$options" : "i"}'
       );
-      if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
+      if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
         filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
       }
       let whereAnd = "{" + filter_array.join(",") + "}";
       this.getDataFromAPINODE(
-      "/aspAssignment/aspassign?srt=_id:-1&q="+ date + "&" +
-        whereAnd +
+      "/aspAssignment/aspassign?srt=_id:-1&q="+ whereAnd +
         "&lmt=" +
         maxPage +
         "&pg=" +
@@ -206,9 +212,9 @@ class AssignmentListReport extends Component {
           this.state.filter_list[6] +
           '", "$options" : "i"}'
       );
-      if((this.state.userRole.indexOf("BAM-ASP") !== -1 || this.state.userRole.indexOf("BAM-ASP Management") !== -1) && this.state.userRole.indexOf("Admin") === -1){
-        filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
-      }
+    if((this.state.userRole.findIndex("BAM-ASP") !== -1 || this.state.userRole.findIndex("BAM-ASP Management") !== -1) && this.state.userRole.findIndex("Admin") === -1){
+      filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
+    }
     let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE(
       "/aspAssignment/aspassign?srt=_id:-1&noPg=1&q=" + whereAnd
@@ -222,9 +228,7 @@ class AssignmentListReport extends Component {
   }
 
   componentDidMount() {
-    console.log('1 ',this.state.filter_date.filter_list_date)
-    console.log('2 ',this.state.filter_date.filter_list_date2)
-    this.getAssignmentList();
+    // this.getAssignmentList();
     // this.getAllAssignment();
     document.title = "Assignment List | BAM";
   }
@@ -314,8 +318,56 @@ class AssignmentListReport extends Component {
 
   async downloadAllAssignment() {
     let allAssignmentList = [];
+    let filter_array = [];
+    if(this.state.filter_date.filter_list_date && this.state.filter_date.filter_list_date2 === null){
+
+    } else {
+      filter_array.push(
+        '{"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 23:59:59"}}'
+      );
+    }
+    this.state.filter_list[0] !== "" &&
+      filter_array.push(
+        '"Assignment_No":{"$regex" : "' +
+          this.state.filter_list[0] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[1] !== "" &&
+      filter_array.push(
+        '"Account_Name":{"$regex" : "' +
+          this.state.filter_list[1] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[2] !== "" &&
+      filter_array.push(
+        '"Project":{"$regex" : "' +
+          this.state.filter_list[2] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[4] !== "" &&
+      filter_array.push(
+        '"Payment_Terms":{"$regex" : "' +
+          this.state.filter_list[4] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[5] !== "" &&
+      filter_array.push(
+        '"Current_Status":{"$regex" : "' +
+          this.state.filter_list[5] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[6] !== "" &&
+      filter_array.push(
+        '"Work_Status":{"$regex" : "' +
+          this.state.filter_list[6] +
+          '", "$options" : "i"}'
+      );
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
+    }
+    let whereAnd = "{" + filter_array.join(",") + "}";
     let getASG = await this.getDataFromAPINODE(
-      "/aspAssignment/aspassign?srt=_id:-1&noPg=1"
+      "/aspAssignment/aspassign?srt=_id:-1&q=" + whereAnd
     );
     if (getASG.data !== undefined) {
       allAssignmentList = getASG.data.data;
@@ -325,14 +377,19 @@ class AssignmentListReport extends Component {
     const ws = wb.addWorksheet();
 
     let headerRow = [
-      "assignment_id",
-      "project",
-      "sow_type",
-      "created_based",
-      "vendor_code",
-      "vendor_name",
-      "payment_terms",
-      "identifier",
+      "Assignment ID",
+      "Project",
+      "Sow Type",
+      "Tower ID",
+      "CD ID",
+      "Vendor",
+      "Payment Terms",
+      "Total Amount",
+      "PO Number",
+      "PO Item",
+      "PO Date",
+      "BAST Number (DP)",
+      "BAST Number (Final)",
       "ssow_rbs_id_1",
       "ssow_rbs_activity_number_1",
       "ssow_rbs_unit_1",
@@ -377,15 +434,22 @@ class AssignmentListReport extends Component {
     ws.addRow(headerRow);
 
     for (let i = 0; i < allAssignmentList.length; i++) {
+      const custDel = allAssignmentList[i].cust_del !== undefined ?  allAssignmentList[i].cust_del.map(e => e.cd_id).join(", ") : null;
+      const totalAmount = allAssignmentList[i].SSOW_List.reduce((a,b) => a + b.ssow_total_price, 0);
       let rowAdded = [
         allAssignmentList[i].Assignment_No,
         allAssignmentList[i].Project,
         allAssignmentList[i].SOW_Type,
-        "tower_id",
-        allAssignmentList[i].Vendor_Code_Number,
+        allAssignmentList[i].Site_ID,
+        custDel,
         allAssignmentList[i].Vendor_Name,
         allAssignmentList[i].Payment_Terms,
-        allAssignmentList[i].Site_ID,
+        totalAmount,
+        allAssignmentList[i].PO_Number,
+        allAssignmentList[i].PO_Item,
+        allAssignmentList[i].PO_Creation_Date,
+        allAssignmentList[i].BAST_No[0] !== undefined ? JSON.stringify(allAssignmentList[i].BAST_No[0]) : null,
+        allAssignmentList[i].BAST_No[0] !== undefined ? JSON.stringify(allAssignmentList[i].BAST_No[0]) : null,
       ];
       let rbs_ssow = allAssignmentList[i].SSOW_List.filter(
         (item) => item.sow_type === "RBS"
