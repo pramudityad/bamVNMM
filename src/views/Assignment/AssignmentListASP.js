@@ -92,7 +92,7 @@ class AssignmentListASP extends Component {
     this.state.filter_list[6] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
     filter_array.push('"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP"');
     if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
-      filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
+      filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
     }
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
@@ -136,7 +136,7 @@ class AssignmentListASP extends Component {
     let listASGAll = [];
     let vendorSeacrh = '';
     if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
-      vendorSeacrh = ', "Vendor_Name" : "'+this.state.vendor_name+'"';
+      vendorSeacrh = ', "Vendor_Code_Number" : "'+this.state.vendor_code+'"';
     }
     let getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1&q={"Current_Status" : "ASP ASSIGNMENT NOTIFIED TO ASP"'+vendorSeacrh+'}');
     if (getASG.data !== undefined) {

@@ -617,6 +617,10 @@ class AssignmentCreation extends Component {
                           <option value="RBS">RBS</option>
                           <option value="TRM">TRM</option>
                           <option value="NDO">NDO</option>
+                          <option value="PLNActivity">PLNActivity</option>
+                          <option value="CME">CME</option>
+                          <option value="Power">Power</option>
+                          <option value="SACME">SACME</option>
                         </Input>
                       </FormGroup>
                     </Col>

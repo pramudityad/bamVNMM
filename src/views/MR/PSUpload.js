@@ -238,7 +238,7 @@ class PSUpload extends Component {
   }
 
   getListTssrAll(){
-    this.getDataFromAPINODE('/plantspec?q={"id_mr_doc" : null, "submission_status" : "SUBMITTED", "site_info.site_id" : "'+this.state.data_mr.site_info[0].site_id+'", "project_name" : "'+this.state.data_mr.project_name+'" }').then( res => {
+    this.getDataFromAPINODE('/plantspec?q={"id_mr_doc" : null, "submission_status" : "SUBMITTED", "site_info.site_id" : "'+this.state.data_mr.site_info[0].site_id+'" }').then( res => {
     // this.getDatafromAPIBAM('/tssr_sorted_nonpage?projection={"project_name" : 1, "no_tssr_boq" : 1, "_id" : 1, "version" : 1 }').then( res => {
       if(res.data !== undefined){
         const items = res.data.data;
@@ -493,19 +493,28 @@ class PSUpload extends Component {
     let dataCDSelected = this.state.list_cd_id_mr.find(e => e.id_cd_doc === value)
     let cd_id_to_tssr = this.state.cd_id_to_tssr;
     let indexCurrent = cd_id_to_tssr.findIndex(e => e.id_tssr_boq_site_doc === name);
-    if( indexCurrent === -1){
-      cd_id_to_tssr.push({
-  			"id_tssr_boq_site_doc" : name,
-  			"id_cd_doc" : dataCDSelected.id_cd_doc,
-  			"cd_id" : dataCDSelected.cd_id
-  		})
+    if(dataCDSelected !== undefined){
+        if( indexCurrent === -1){
+	      cd_id_to_tssr.push({
+	  			"id_tssr_boq_site_doc" : name,
+	  			"id_cd_doc" : dataCDSelected.id_cd_doc,
+	  			"cd_id" : dataCDSelected.cd_id
+	  		})
+	    }else{
+	      cd_id_to_tssr[indexCurrent] = {
+	  			"id_tssr_boq_site_doc" : name,
+	  			"id_cd_doc" : dataCDSelected.id_cd_doc,
+	  			"cd_id" : dataCDSelected.cd_id
+	  		}
+	    }	
     }else{
-      cd_id_to_tssr[indexCurrent] = {
-  			"id_tssr_boq_site_doc" : name,
-  			"id_cd_doc" : dataCDSelected.id_cd_doc,
-  			"cd_id" : dataCDSelected.cd_id
-  		}
+    	if( indexCurrent === -1){
+	    
+	    }else{
+	    	cd_id_to_tssr.splice(indexCurrent,1);
+	    }
     }
+    console.log("cd_id_to_tssr", cd_id_to_tssr)
     this.setState({cd_id_to_tssr : cd_id_to_tssr})
     this.setState((prevState) => ({
       cd_id_to_tssr_selected: prevState.cd_id_to_tssr_selected.set(name, value),
@@ -525,7 +534,7 @@ class PSUpload extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}} >Assign PS</span>
-            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.toggleAssign}>Assign</Button>
+            <Button color='success' style={{float : 'right'}} disabled={this.state.list_tssr_from_ps.length === 0} onClick={this.toggleAssign}>Assign</Button>
           </CardHeader>
           <CardBody>
             <table>
@@ -743,7 +752,7 @@ class PSUpload extends Component {
           </ModalBody>
           <ModalFooter>
             <Button color="secondary" onClick={this.toggleLoading}>Close</Button>
-            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.connectMRtoTSSR}>Assign</Button>
+            <Button color='success' style={{float : 'right'}} disabled={this.state.cd_id_to_tssr.length !== this.state.list_tssr_from_ps.length} onClick={this.connectMRtoTSSR}>Assign</Button>
           </ModalFooter>
         </Modal>
         {/* end Modal Assign */}

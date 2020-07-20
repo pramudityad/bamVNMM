@@ -724,6 +724,7 @@ class TechnicalBoq extends Component {
   }
 
   async submitTSSR(e){
+    this.toggleLoading();
     let currValue = e.currentTarget.value;
     if(currValue !== undefined){
       currValue = parseInt(currValue);
@@ -742,6 +743,7 @@ class TechnicalBoq extends Component {
         this.setState({action_status : 'failed'});
       }
     }
+    this.toggleLoading();
   }
 
     getBOQTechAPI(_id_Tech){
@@ -2444,18 +2446,18 @@ class TechnicalBoq extends Component {
     }
     const dataHeader = this.state.view_tech_header_table;
 
-    let ppIdRow = ["tower_id", "tower_name", "Type", "Configuration BOQ", "SAP NUmber", "Qty"];
+    let ppIdRow = ["Tower ID", "Tower Name", "Program", "SOW", "Type", "Configuration BOQ", "SAP NUmber", "Qty"];
 
     ws.addRow(ppIdRow);
     for(let i = 0; i < dataSites.length ; i++){
       let qtyConfig = []
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
         for(let j = 0; j < dataSites[i].siteItemConfigVersion.length; j++ ){
-          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfigVersion[j].config_type, dataSites[i].siteItemConfigVersion[j].config_id, dataSites[i].siteItemConfigVersion[j].sap_number, dataSites[i].siteItemConfigVersion[j].qty]);
+          ws.addRow([dataSites[i].site_id, dataSites[i].site_name,dataSites[i].program,dataSites[i].sow, dataSites[i].siteItemConfigVersion[j].config_type, dataSites[i].siteItemConfigVersion[j].config_id, dataSites[i].siteItemConfigVersion[j].sap_number, dataSites[i].siteItemConfigVersion[j].qty]);
         }
       }else{
         for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
-          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfig[j].config_type, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty]);
+          ws.addRow([dataSites[i].site_id, dataSites[i].site_name,dataSites[i].program,dataSites[i].sow, dataSites[i].siteItemConfig[j].config_type, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty]);
         }
       }
     }

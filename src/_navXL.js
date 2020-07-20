@@ -18,7 +18,7 @@ export default {
           roles : ["BAM-Engineering", "BAM-Project Planner", "BAM-Solution"],
         },
         {
-          name: 'Material Library',
+          name: 'Material Variant',
           url: '/mat-library',
           icon: 'icon-list',
           roles : ["BAM-Engineering", "BAM-Project Planner"],

@@ -134,7 +134,7 @@ class CommercialBoq extends Component {
       let newDataXLS = [];
       for(let i = 0; i < dataXLS.length; i++){
         let col = [];
-        for(let j = 0; j < dataXLS[1].length; j++){
+        for(let j = 0; j < dataXLS[0].length; j++){
           col.push(this.checkValue(dataXLS[i][j]));
         }
         newDataXLS.push(col);
