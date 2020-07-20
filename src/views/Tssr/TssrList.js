@@ -15,6 +15,8 @@ const password = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
+const arrayFilter = ["no_plantspec", "project_name", "tower_id", "current_status", "mr_id"]
+
 class TssrList extends Component {
   constructor(props) {
     super(props);
@@ -30,10 +32,12 @@ class TssrList extends Component {
       activePage : 1,
       totalData : 0,
       perPage : 10,
-      filter_list : new Array(14).fill(""),
+      filter_list : {},
       tssr_all : []
     }
     this.handlePageChange = this.handlePageChange.bind(this);
+    this.handleFilterList = this.handleFilterList.bind(this);
+    this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
   }
 
   async getDataFromAPIBAM(url) {
@@ -77,9 +81,16 @@ class TssrList extends Component {
 
   getTssrList(){
     const page = this.state.activePage;
-    const maxPage = this.state.perPage
+    const maxPage = this.state.perPage;
+    let filter_array = [];
+    (this.state.filter_list["no_plantspec"] !== null && this.state.filter_list["no_plantspec"] !== undefined) && (filter_array.push('"no_plantspec":{"$regex" : "' + this.state.filter_list["no_plantspec"] + '", "$options" : "i"}'));
+    (this.state.filter_list["project_name"] !== null && this.state.filter_list["project_name"] !== undefined) && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list["project_name"] + '", "$options" : "i"}'));
+    (this.state.filter_list["tower_id"] !== null && this.state.filter_list["tower_id"] !== undefined) && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list["tower_id"] + '", "$options" : "i"}'));
+    (this.state.filter_list["current_status"] !== null && this.state.filter_list["current_status"] !== undefined) && (filter_array.push('"current_milestones":{"$regex" : "' + this.state.filter_list["current_status"] + '", "$options" : "i"}'));
+    (this.state.filter_list["mr_id"] !== null && this.state.filter_list["mr_id"] !== undefined) && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list["mr_id"] + '", "$options" : "i"}'));
     // this.getDataFromAPINODE('/tssrall?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
-    this.getDataFromAPINODE('/plantspec?srt=_id:-1&lmt=' + maxPage + '&pg=' + page).then(res => {
+    let whereAnd = '{' + filter_array.join(',') + '}';
+    this.getDataFromAPINODE('/plantspec?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
     // this.getDataFromAPIBAM('/tssr_sorted?'+'max_results='+this.state.perPage+'&page='+page).then(res => {
       if(res.data !== undefined){
         const totalData = res.data.totalResults;
@@ -116,7 +127,45 @@ class TssrList extends Component {
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
+  loopSearchBar = () => {
+    let searchBar = [];
+    for (let i = 0; i < arrayFilter.length; i++) {
+      searchBar.push(
+        <td>
+          <div className="controls">
+            <InputGroup className="input-prepend">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[arrayFilter[i]]} name={arrayFilter[i]} size="sm" />
+            </InputGroup>
+          </div>
+        </td>
+      )
+    }
+    return searchBar;
+  }
+
+  handleFilterList(e) {
+    const index = e.target.name;
+    let value = e.target.value;
+    if (value.length === 0) {
+      value = null;
+    }
+    let dataFilter = this.state.filter_list;
+    dataFilter[index] = value;
+    this.setState({ filter_list: dataFilter, activePage: 1 }, () => {
+      this.onChangeDebounced(e);
+    })
+  }
+
+  onChangeDebounced(e) {
+    this.getTssrList();
+    // this.getAllMR();
+  }
+
   render() {
+    console.log("getTssrList", this.state.filter_list);
     const downloadMR = {
       float: 'right',
       marginRight: '10px'
@@ -143,9 +192,13 @@ class TssrList extends Component {
                     <tr>
                       <th>No PS Group</th>
                       <th>Project</th>
+                      <th>Tower ID</th>
                       <th>Status</th>
                       <th>MR Related</th>
-                      <th>Action</th>
+                      <th rowSpan="2">Action</th>
+                    </tr>
+                    <tr>
+                      {this.loopSearchBar()}
                     </tr>
                   </thead>
                   <tbody>
@@ -153,6 +206,7 @@ class TssrList extends Component {
                       <tr key={list._id}>
                         <td>{list.no_plantspec}</td>
                         <td>{list.project_name}</td>
+                        <td>{list.site_info[0] !== undefined ? list.site_info[0].site_id : null}</td>
                         <td>{list.submission_status}</td>
                         <td>{list.mr_id}</td>
                         <td>

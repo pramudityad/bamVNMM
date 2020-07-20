@@ -259,7 +259,9 @@ class AssignmentDetail extends Component {
     let value = e.target.value;
     this.setState((prevState) => ({
       bast_assign_form: prevState.bast_assign_form.set(name, value),
-    }));
+    }), () => {
+      console.log("bast_assign_form", this.state.bast_assign_form);
+    });
   };
 
   loading = () => (
@@ -406,19 +408,21 @@ class AssignmentDetail extends Component {
       Assignment_No: dataAssignment.Assignment_No,
       Account_Name: dataAssignment.Account_Name,
       ASP_Acceptance_Date: dataAssignment.ASP_Acceptance_Date,
-      id_cd_doc: null,
-      CD_ID: null,
+      WP_ID: dataAssignment.WP_ID,
       id_project_doc: dataAssignment.id_project_doc,
       Project: dataAssignment.Project,
       SOW_Type: dataAssignment.SOW_Type,
       BAST_No: formBast.get("bast_no"),
+      GR_Type : formBast.get("gr_type"),
       Payment_Terms: dataAssignment.Payment_Terms,
-      Payment_Terms_Ratio: formBast.get("ratio"),
-      PO_Qty: 1,
+      //Persen
+      Payment_Terms_Ratio: (formBast.get("ratio")*100).toString()+"%",
+      //Float
+      GR_Percentage: formBast.get("ratio"),
       PO_Number: dataAssignment.PO_Number,
       PO_Item: dataAssignment.PO_Item,
-      Required_GR_Qty: 1,
       Item_Status: formBast.get("item_status"),
+      Requestor:this.state.userName,
     };
     let assignBast = {
       account_id: null,
@@ -1267,13 +1271,13 @@ class AssignmentDetail extends Component {
                       <Col md="4">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Created By</Label>
-                          <Input type="text" name="pr_created_by" readOnly />
+                          <Input type="text" name="pr_created_by" value={this.state.data_assignment.PR_For_ASP_Creator} readOnly />
                         </FormGroup>
                       </Col>
                       <Col md="4">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Created On</Label>
-                          <Input type="date" name="pr_created_on" readOnly />
+                          <Input type="date" name="pr_created_on" value={this.state.data_assignment.PR_For_ASP_Date !== null && this.state.data_assignment.PR_For_ASP_Date !== undefined ? this.state.data_assignment.PR_For_ASP_Date.slice(0,10) : null} readOnly />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -1292,13 +1296,13 @@ class AssignmentDetail extends Component {
                       <Col md="4">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Created By</Label>
-                          <Input type="text" name="po_created_by" readOnly />
+                          <Input type="text" name="po_created_by" value={this.state.data_assignment.PO_Creator} readOnly />
                         </FormGroup>
                       </Col>
                       <Col md="4">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Created On</Label>
-                          <Input type="date" name="po_created_on" readOnly />
+                          <Input type="date" name="po_created_on" value={this.state.data_assignment.PO_Date !== null && this.state.data_assignment.PO_Date !== undefined ? this.state.data_assignment.PO_Date.slice(0,10) : null} readOnly />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -1602,7 +1606,7 @@ class AssignmentDetail extends Component {
                       )}
                     <h5 style={{ marginTop: "16px" }}>ASSIGN BAST</h5>
                     <Row>
-                      <Col md="4">
+                      <Col md="2">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>BAST NO</Label>
                           <Input
@@ -1615,6 +1619,27 @@ class AssignmentDetail extends Component {
                                 : this.state.bast_assign_form.get("bast_no")
                             }
                           />
+                        </FormGroup>
+                      </Col>
+                      <Col md="2">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>GR Type</Label>
+                          <Input
+                            type="select"
+                            name="gr_type"
+                            onChange={this.handleBastAssign}
+                            value={
+                              !this.state.bast_assign_form.has("gr_type")
+                                ? null
+                                : this.state.bast_assign_form.get("gr_type")
+                            }
+                          >
+                            <option value="" disabled selected hidden>
+                              Select GR Type
+                            </option>
+                            <option value={"DP"}>DP</option>
+                            <option value={"Final"}>Final</option>
+                          </Input>
                         </FormGroup>
                       </Col>
                       <Col md="2">
@@ -1633,12 +1658,16 @@ class AssignmentDetail extends Component {
                             <option value="" disabled selected hidden>
                               Select Ratio
                             </option>
+                            <option value={0.2}>20%</option>
                             <option value={0.3}>30%</option>
                             <option value={0.4}>40%</option>
                             <option value={0.5}>50%</option>
                             <option value={0.6}>60%</option>
                             <option value={0.7}>70%</option>
-                            <option value={1.0}>100%</option>
+                            <option value={0.8}>80%</option>
+                            {(this.state.bast_assign_form.get("gr_type") === "Final") && (
+                              <option value={1.0}>100%</option>
+                            )}
                           </Input>
                         </FormGroup>
                       </Col>

@@ -21,9 +21,9 @@ import Excel from "exceljs";
 import { saveAs } from "file-saver";
 import { connect } from "react-redux";
 
-const API_URL_tsel = "https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi";
-const username_tsel = "adminbamidsuper";
-const password_tsel = "F760qbAg2sml";
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
@@ -45,9 +45,9 @@ class AssignmentListReport extends Component {
       totalData: 0,
       perPage: 10,
       filter_list: new Array(8).fill(""),
-      filter_date:{
+      filter_date: {
         filter_list_date: null,
-        filter_list_date2: null
+        filter_list_date2: null,
       },
       asg_all: [],
     };
@@ -86,11 +86,11 @@ class AssignmentListReport extends Component {
 
   async getDataFromAPI(url) {
     try {
-      let respond = await axios.get(API_URL_tsel + url, {
+      let respond = await axios.get(API_URL_XL + url, {
         headers: { "Content-Type": "application/json" },
         auth: {
-          username: username_tsel,
-          password: password_tsel,
+          username: usernameXL,
+          password: passwordXL,
         },
       });
       if (respond.status >= 200 && respond.status < 300) {
@@ -113,7 +113,7 @@ class AssignmentListReport extends Component {
 
     } else {
       filter_array.push(
-        '{"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 23:59:59"}}'
+        '"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 23:59:59"}'
       );
     }
     this.state.filter_list[0] !== "" &&
@@ -153,7 +153,7 @@ class AssignmentListReport extends Component {
           '", "$options" : "i"}'
       );
       if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
-        filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
+        filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
       }
       let whereAnd = "{" + filter_array.join(",") + "}";
       this.getDataFromAPINODE(
@@ -213,7 +213,7 @@ class AssignmentListReport extends Component {
           '", "$options" : "i"}'
       );
     if((this.state.userRole.findIndex("BAM-ASP") !== -1 || this.state.userRole.findIndex("BAM-ASP Management") !== -1) && this.state.userRole.findIndex("Admin") === -1){
-      filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
+      filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
     }
     let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE(
@@ -230,6 +230,12 @@ class AssignmentListReport extends Component {
   componentDidMount() {
     // this.getAssignmentList();
     // this.getAllAssignment();
+    const dateNow = new Date();
+    const dateToday = (dateNow.getFullYear().toString())+"-"+(dateNow.getMonth()+1).toString().padStart(2, '0')+"-"+(dateNow.getDate().toString().padStart(2, '0')) ;
+    this.setState({filter_date: {
+        filter_list_date: null,
+        filter_list_date2: dateToday,
+      }})
     document.title = "Assignment List | BAM";
   }
 
@@ -262,9 +268,11 @@ class AssignmentListReport extends Component {
           [name]: value,
         },
       }),
-      () => this.onChangeDebounced(e)
-      // () => console.log(this.state.filter_date)
     );
+    console.log(this.state.filter_date);
+    if(this.state.filter_date.filter_list_date !== null && this.state.filter_date.filter_list_date2 !== null){
+      this.onChangeDebounced(e)
+    }
   }
 
 
@@ -316,14 +324,34 @@ class AssignmentListReport extends Component {
     saveAs(new Blob([allocexport]), "Assignment List.xlsx");
   }
 
+  async getAssignmentPerPageGR(array_asg){
+    let dataASG = [];
+    let arrayDataASG = array_asg;
+    let getNumberPage = Math.ceil(arrayDataASG.length / 25);
+    for(let i = 0 ; i < getNumberPage; i++){
+     let DataPaginationASG = arrayDataASG.slice(i * 25, (i+1)*25);
+     let arrayIdASG = '"'+DataPaginationASG.join('", "')+'"';
+     let where_id_ASG = '&where={"Assignment_No" : {"$in" : ['+arrayIdASG+']}}';
+     let resASG = await this.getDataFromAPI('/gr_data?'+where_id_ASG);
+     if(resASG !== undefined){
+       if(resASG.data !== undefined){
+         dataASG = dataASG.concat(resASG.data._items);
+       }
+     }
+    }
+    return dataASG;
+  }
+
+  // "2020-06-25T05:15:04.949Z"
+
   async downloadAllAssignment() {
     let allAssignmentList = [];
     let filter_array = [];
-    if(this.state.filter_date.filter_list_date && this.state.filter_date.filter_list_date2 === null){
+    if(this.state.filter_date.filter_list_date === null && this.state.filter_date.filter_list_date2 === null){
 
     } else {
       filter_array.push(
-        '{"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 23:59:59"}}'
+        '"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 23:59:59"}'
       );
     }
     this.state.filter_list[0] !== "" &&
@@ -363,7 +391,7 @@ class AssignmentListReport extends Component {
           '", "$options" : "i"}'
       );
     if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
-      filter_array.push('"Vendor_Name" : "'+this.state.vendor_name+'"');
+      filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
     }
     let whereAnd = "{" + filter_array.join(",") + "}";
     let getASG = await this.getDataFromAPINODE(
@@ -372,6 +400,8 @@ class AssignmentListReport extends Component {
     if (getASG.data !== undefined) {
       allAssignmentList = getASG.data.data;
     }
+
+    let dataGRAsg = await this.getAssignmentPerPageGR(allAssignmentList.map(e => e.Assignment_No));
 
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -390,51 +420,16 @@ class AssignmentListReport extends Component {
       "PO Date",
       "BAST Number (DP)",
       "BAST Number (Final)",
-      "ssow_rbs_id_1",
-      "ssow_rbs_activity_number_1",
-      "ssow_rbs_unit_1",
-      "ssow_rbs_quantity_1",
-      "ssow_rbs_id_2",
-      "ssow_rbs_activity_number_2",
-      "ssow_rbs_unit_2",
-      "ssow_rbs_quantity_2",
-      "ssow_rbs_id_3",
-      "ssow_rbs_activity_number_3",
-      "ssow_rbs_unit_3",
-      "ssow_rbs_quantity_3",
-      "ssow_rbs_id_4",
-      "ssow_rbs_activity_number_4",
-      "ssow_rbs_unit_4",
-      "ssow_rbs_quantity_4",
-      "ssow_rbs_id_5",
-      "ssow_rbs_activity_number_5",
-      "ssow_rbs_unit_5",
-      "ssow_rbs_quantity_5",
-      "ssow_trm_id_1",
-      "ssow_trm_activity_number_1",
-      "ssow_trm_unit_1",
-      "ssow_trm_quantity_1",
-      "ssow_trm_id_2",
-      "ssow_trm_activity_number_2",
-      "ssow_trm_unit_2",
-      "ssow_trm_quantity_2",
-      "ssow_trm_id_3",
-      "ssow_trm_activity_number_3",
-      "ssow_trm_unit_3",
-      "ssow_trm_quantity_3",
-      "ssow_trm_id_4",
-      "ssow_trm_activity_number_4",
-      "ssow_trm_unit_4",
-      "ssow_trm_quantity_4",
-      "ssow_trm_id_5",
-      "ssow_trm_activity_number_5",
-      "ssow_trm_unit_5",
-      "ssow_trm_quantity_5",
+      "Request GR User (DP)", "Request GR Date (DP)", "GR Number (DP)", "GR Date (DP)", "Request GR User (Final)", "Request GR Date (Final)", "GR Number (FINAL)", "GR Date (FINAL)",
     ];
+    let longestArraySSOW = Math.max.apply(Math, allAssignmentList.map(function (asg) { return asg.SSOW_List.length }));
+    for(let i = 1; i <= longestArraySSOW; i++){headerRow.push("ssow id "+i, "ssow type "+i, "activity number "+i, "ssow unit "+i, "ssow qty "+i)};
     ws.addRow(headerRow);
+
 
     for (let i = 0; i < allAssignmentList.length; i++) {
       const custDel = allAssignmentList[i].cust_del !== undefined ?  allAssignmentList[i].cust_del.map(e => e.cd_id).join(", ") : null;
+      const dataGR = dataGRAsg.filter(e => e.Assignment_No === allAssignmentList[i].Assignment_No);
       const totalAmount = allAssignmentList[i].SSOW_List.reduce((a,b) => a + b.ssow_total_price, 0);
       let rowAdded = [
         allAssignmentList[i].Assignment_No,
@@ -447,35 +442,27 @@ class AssignmentListReport extends Component {
         totalAmount,
         allAssignmentList[i].PO_Number,
         allAssignmentList[i].PO_Item,
-        allAssignmentList[i].PO_Creation_Date,
-        allAssignmentList[i].BAST_No[0] !== undefined ? JSON.stringify(allAssignmentList[i].BAST_No[0]) : null,
-        allAssignmentList[i].BAST_No[0] !== undefined ? JSON.stringify(allAssignmentList[i].BAST_No[0]) : null,
+        allAssignmentList[i].PO_Date,
+        allAssignmentList[i].BAST_No[0], allAssignmentList[i].BAST_No[1],
       ];
-      let rbs_ssow = allAssignmentList[i].SSOW_List.filter(
-        (item) => item.sow_type === "RBS"
-      );
-      for (let j = 0; j < rbs_ssow.length; j++) {
-        rowAdded.push(
-          rbs_ssow[j].ssow_id,
-          rbs_ssow[j].ssow_activity_number,
-          rbs_ssow[j].ssow_unit,
-          rbs_ssow[j].ssow_qty
-        );
+      if(dataGR[0] !== undefined){
+        rowAdded.push(dataGR[0].Requestor, dataGR[0].created_on, dataGR[0].GR_Document_No, dataGR[0].GR_Document_Date)
+      }else{
+        rowAdded.push(null,null,null,null)
       }
-      for (let k = 0; k < 5 - rbs_ssow.length; k++) {
-        rowAdded.push("", "", "", "");
+      if(dataGR[1] !== undefined){
+        rowAdded.push(dataGR[1].Requestor, dataGR[1].created_on, dataGR[1].GR_Document_No, dataGR[1].GR_Document_Date)
+      }else{
+        rowAdded.push(null,null,null,null)
       }
-      let trm_ssow = allAssignmentList[i].SSOW_List.filter(
-        (item) => item.sow_type === "TRM"
-      );
-      for (let j = 0; j < trm_ssow.length; j++) {
-        rowAdded.push(
-          trm_ssow[j].ssow_id,
-          trm_ssow[j].ssow_activity_number,
-          trm_ssow[j].ssow_unit,
-          trm_ssow[j].ssow_qty
-        );
-      }
+      const ssowList = allAssignmentList[i].SSOW_List;
+      ssowList.map(ssow => rowAdded.push(
+        ssow.ssow_id,
+        ssow.sow_type,
+        ssow.ssow_activity_number,
+        ssow.ssow_unit,
+        ssow.ssow_qty
+      ))
       ws.addRow(rowAdded);
     }
 
@@ -615,7 +602,7 @@ class AssignmentListReport extends Component {
                         placeholder="Search"
                         name={"filter_list_date"}
                         onChange={this.handleFilterDate}
-                        value={this.state.filter_list_date}
+                        value={this.state.filter_date.filter_list_date}
                         size="sm"
                       />
                     </InputGroup>
@@ -634,7 +621,7 @@ class AssignmentListReport extends Component {
                         placeholder="Search"
                         name={"filter_list_date2"}
                         onChange={this.handleFilterDate}
-                        value={this.state.filter_list_date2}
+                        value={this.state.filter_date.filter_list_date2}
                         size="sm"
                       />
                     </InputGroup>
@@ -666,6 +653,7 @@ class AssignmentListReport extends Component {
                     {this.state.assignment_list.map((list, i) => (
                       <tr key={list._id}>
                         <td>
+                        {(this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1) && (
                           <Link to={"/assignment-detail/" + list._id}>
                             <Button
                               style={{ width: "90px" }}
@@ -676,6 +664,7 @@ class AssignmentListReport extends Component {
                               Detail
                             </Button>
                           </Link>
+                        )}
                         </td>
                         <td>{list.Assignment_No}</td>
                         <td>{list.Account_Name}</td>

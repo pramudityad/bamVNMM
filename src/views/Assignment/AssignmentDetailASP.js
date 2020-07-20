@@ -269,7 +269,7 @@ class AssignmentDetailASP extends Component {
             "subject":"[APPROVED by ASP] Assignment "+dataAssignment.Assignment_No,
             "body": bodyEmail
           }
-          // let sendEmail = await this.apiSendEmail(dataEmail);
+          let sendEmail = await this.apiSendEmail(dataEmail);
         }
         this.setState({ action_status: "success", action_status : null })
       } else {
@@ -306,7 +306,7 @@ class AssignmentDetailASP extends Component {
               "subject":"[Request Revision by ASP] Assignment "+dataAssignment.Assignment_No,
               "body": bodyEmail
             }
-            // let sendEmail = await this.apiSendEmail(dataEmail);
+            let sendEmail = await this.apiSendEmail(dataEmail);
           }
           this.setState({ action_status: "success" })
         } else {
@@ -345,7 +345,7 @@ class AssignmentDetailASP extends Component {
               "subject":"[Request Reschedule by ASP] Assignment "+dataAssignment.Assignment_No,
               "body": bodyEmail
             }
-            // let sendEmail = await this.apiSendEmail(dataEmail);
+            let sendEmail = await this.apiSendEmail(dataEmail);
           }
           this.setState({ action_status: "success" })
         } else {

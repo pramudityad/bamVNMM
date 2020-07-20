@@ -597,26 +597,35 @@ class MaterialStock2 extends React.Component {
     this.toggleLoading();
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
-    // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
-      stockData: BulkXLSX,
-    });
-    console.log('res bulk ', res.response);
-    if (res.data !== undefined) {
-      this.setState({ action_status: "success" });
-      this.toggleLoading();
-    } else {
-      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
-        if (res.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
-        } else {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
-        }
+    // let RowBulkPage = [];
+    let offset = 100;
+    let getNumberPage = Math.ceil(BulkXLSX.length / offset);
+    let RowXLS = [["owner_id", "po_number", "arrival_date", "project_name", "sku", "sku_description", "qty", "wh_id", "serial_number", "box_number", "condition", "notes", "batch", "location", "whs", "description", "project_id", "transaction_type"]];
+    for(let i = 0 ; i < getNumberPage; i++){
+      let DataPaginationXLS = BulkXLSX.slice(i * offset, (i+1)*offset);
+      let RowBulkPage = RowXLS.concat(DataPaginationXLS);
+      const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
+        stockData: RowBulkPage,
+      });
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
+        // this.toggleLoading();
       } else {
-        this.setState({ action_status: 'failed' });
+        console.log("index", i);
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
+
       }
-      this.toggleLoading();
     }
+    this.toggleLoading();
+    // const BulkData = await this.getMatStockFormat(BulkXLSX);
   };
 
   saveTruncateBulk = async () => {
@@ -624,7 +633,6 @@ class MaterialStock2 extends React.Component {
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    console.log("xlsx data", JSON.stringify(BulkXLSX));
     const res = await this.postDatatoAPINODE("/whStock/createWhStockTruncate", {
       stockData: BulkXLSX,
     });
@@ -772,7 +780,7 @@ class MaterialStock2 extends React.Component {
       "Batch",
       "Location",
       "WHS",
-      "Description",      
+      "Description",
     ];
     ws.addRow(headerRow);
 
@@ -848,7 +856,7 @@ class MaterialStock2 extends React.Component {
       "location",
       "whs",
       "description",
-      "project_id",    
+      "project_id",
       "transaction_type",
     ]);
     ws.addRow([
@@ -868,7 +876,7 @@ class MaterialStock2 extends React.Component {
       "location",
       "whs",
       "description",
-      "project_id",  
+      "project_id",
       "Inbound",
     ]);
     ws.addRow([
@@ -888,7 +896,7 @@ class MaterialStock2 extends React.Component {
       "location",
       "whs",
       "description",
-      "project_id",  
+      "project_id",
       "Outbond",
     ]);
 
@@ -1087,7 +1095,7 @@ class MaterialStock2 extends React.Component {
               </Collapse>
               <CardBody>
                 <Row>
-                  <Col>                    
+                  <Col>
                     <div
                         style={{
                           float: "left",
@@ -1123,7 +1131,7 @@ class MaterialStock2 extends React.Component {
                       onChange={this.handleChangeFilter}
                       value={this.state.filter_name}
                     />
-                    </div>                    
+                    </div>
                   </Col>
                 </Row>
                 <Row>

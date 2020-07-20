@@ -747,7 +747,7 @@ class TssrBOM extends Component {
                 </tr>
                 <tr>
                   <td style={{paddingTop : '10px', width : '150px'}}>
-                    Site
+                    Tower
                   </td>
                   <td style={{paddingTop : '10px', paddingRight : '10px'}}>
                     :
