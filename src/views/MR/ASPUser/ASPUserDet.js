@@ -26,7 +26,7 @@ import ModalDelete from "../../components/ModalDelete";
 import Loading from '../../components/Loading'
 import {getDatafromAPIEXEL ,getDatafromAPINODE, postDatatoAPINODE, patchDatatoAPINODE, deletemanyDataFromAPINODE} from '../../../helper/asyncFunction'
 import {convertDMSToDD} from '../../../helper/basicFunction'
-import "../MatStyle.css";
+// import "../MatStyle.css";
 
 const Checkbox = ({
   type = "checkbox",
@@ -102,7 +102,6 @@ class ASPUserDet extends React.Component {
     this.changeFilterName = debounce(this.changeFilterName, 500);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
-    this.handleChangeForm = this.handleChangeForm.bind(this);
     this.toggleEdit = this.toggleEdit.bind(this);
     this.saveNew = this.saveNew.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
@@ -261,24 +260,15 @@ class ASPUserDet extends React.Component {
   }
 
   getASPList(_id) {
-    // switch (this.props.dataLogin.account_id) {
-    //   case "xl":
     getDatafromAPINODE("/vendorManagement/viewVendor/"+ _id, this.props.dataLogin.token).then((res) => {
-      // console.log("asp data ", res.data);
       if (res.data !== undefined) {                
-        this.setState({ Accounts_data: res.data.data.Accounts, vendor_data: res.data.data
-          // prevPage: this.state.activePage,
-          //   total_dataParent: res.data._meta.total          
+        this.setState({ Accounts_data: res.data.data.Accounts, vendor_data: res.data.data 
           });
           console.log('vendor data ',this.state.vendor_data)
       } else {
-        this.setState({ Accounts_data: [], vendor_data:{} });
+        this.setState({ Accounts_data: null, vendor_data:{} });
       }
     });
-    //     break;
-    //   default:
-    //     break;
-    // }
   }
 
   isSameValue(element, value) {
@@ -376,50 +366,10 @@ class ASPUserDet extends React.Component {
       this.getASPList(this.props.match.params.id);
     }
     // console.log(this.state.tokenUser)
-    document.title = "Warehouse Management | BAM";
+    document.title = "Vendor Management | BAM";
   }
 
-  handleChangeChecklist(e) {
-    const item = e.target.name;
-    const isChecked = e.target.checked;
-    const mrList = this.state.assignment_list;
-    let dataMRChecked = this.state.data_asg_checked;
-    if (isChecked === true) {
-      const getMR = mrList.find((e) => e._id === item);
-      dataMRChecked.push(getMR);
-    } else {
-      dataMRChecked = dataMRChecked.filter(function (e) {
-        return e._id !== item;
-      });
-    }
-    this.setState({ data_asg_checked: dataMRChecked });
-    this.setState((prevState) => ({
-      asg_checked: prevState.asg_checked.set(item, isChecked),
-    }));
-  }
 
-  handleChangeChecklistAll(e) {
-    const isChecked = e.target.checked;
-    const mrList = this.state.assignment_all;
-    let dataMRChecked = this.state.data_asg_checked;
-    if (isChecked === true) {
-      for (let i = 0; i < mrList.length; i++) {
-        if (this.state.asg_checked.get(mrList[i]._id) !== true) {
-          dataMRChecked.push(mrList[i]);
-        }
-        this.setState((prevState) => ({
-          asg_checked: prevState.asg_checked.set(mrList[i]._id, true),
-        }));
-      }
-      this.setState({
-        data_asg_checked: dataMRChecked,
-        asg_checked_all: isChecked,
-      });
-    } else {
-      this.setState({ asg_checked: new Map(), data_asg_checked: [] });
-      this.setState({ asg_checked_all: isChecked });
-    }
-  }
 
   handleChangeLimit(e) {
     let limitpg = e.currentTarget.value;
@@ -500,37 +450,6 @@ class ASPUserDet extends React.Component {
   };
 
 
-  saveTruncateBulk = async () => {
-    this.toggleLoading();
-    this.togglecreateModal();
-    const BulkXLSX = this.state.rowsXLS;
-    // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    console.log("xlsx data", JSON.stringify(BulkXLSX));
-    const res = await postDatatoAPINODE(
-      "/whManagement/createWhManagementTruncate",
-      {
-        managementData: BulkXLSX,
-      }, this.props.dataLogin.token
-    );
-    console.log("res bulk ", res);
-    if (res.data !== undefined) {
-      this.setState({ action_status: "success" });
-      this.toggleLoading();
-    } else {
-      this.setState({ action_status: "failed" }, () => {
-        this.toggleLoading();
-      });
-    }
-  };
-
-  handleChangeForm(e) {
-    const value = e.target.value;
-    const index = e.target.name;
-    console.log("value ", value, index);
-    let dataForm = this.state.DataForm;
-    dataForm[parseInt(index)] = value;
-    this.setState({ DataForm: dataForm });
-  }
 
   async saveUpdate() {
     let respondSaveEdit = undefined;
@@ -585,7 +504,7 @@ class ASPUserDet extends React.Component {
     const dataPPEdit = this.state.DataForm;
       poData.push({
         id: this.state.id_email_selected.map(e=> e),
-        vendor_code: this.state.selected_vendor_code,
+        vendor_code: this.props.match.params.id,
       });
     // poData.push(pp);
     console.log("post data ", poData);
@@ -601,15 +520,15 @@ class ASPUserDet extends React.Component {
           this.toggleLoading();
         });
       } else {
-        // if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
-        //   if (res.response.data.error.message !== undefined) {
-        //     this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-        //   } else {
-        //     this.setState({ action_status: 'failed', action_message: res.response.data.error });
-        //   }
-        // } else {
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
           this.setState({ action_status: 'failed' });
-        // }
+        }
         this.toggleLoading();
       }
     });
@@ -692,40 +611,6 @@ class ASPUserDet extends React.Component {
         });
       }
     });
-  };
-
-  exportMatStatus = async () => {
-
-    const wb = new Excel.Workbook();
-    const ws = wb.addWorksheet();
-    const ws2 = wb.addWorksheet();
-    const aspData = this.state.Accounts_data;
-    // console.log('aspData ', aspData);
-
-    ws.addRow([
-      "wh_name",
-      "wh_id",
-      "wh_manager",
-      "address",
-      "latitude",
-      "longitude",
-      "owner",
-      "wh_type",
-    ]);
-    ws.addRow(["Jakarta", "JKT1", "Asep", "Priuk", 0, 0, "EID", "Internal"]);
-    ws.addRow(["Jakarta2", "JKT1", "Asep", "Priuk", 0, 0, "2000175941", "dsp"]);
-    ws.addRow(["Jakarta3", "JKT1", "Asep", "Priuk", 0, 0, "2000175941", "asp"]);
-
-    ws2.addRow(["Vendor Name", "Vendor Code"]);
-    ws2.addRow(["EID", "Internal"]);
-    for (let i = 0; i < aspData.length; i++) {
-      // const element = aspData[i];
-      ws2.addRow([aspData[i].Name, aspData[i].Vendor_Code]);
-    }
-
-
-    const PPFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
   };
 
   getListSort() {
@@ -814,71 +699,16 @@ class ASPUserDet extends React.Component {
                   className="card-header-actions"
                   style={{ display: "inline-flex" }}
                 >
-                  <div>
-                    {/* {this.state.userRole.includes("Flow-PublicInternal") !==
-                    true ? (
-                      <div> */}
-                        {/* <Dropdown
-                          isOpen={this.state.dropdownOpen[0]}
-                          toggle={() => {
-                            this.toggle(0);
-                          }}
-                        >
-                          <DropdownToggle block color="success">
-                            <i className="fa fa-plus-square" aria-hidden="true">
-                              {" "}
-                              &nbsp;{" "}
-                            </i>{" "}
-                            Create New
-                          </DropdownToggle>
-                          <DropdownMenu>
-                            <DropdownItem onClick={this.toggleMatStockForm}>
-                              > Form{" "}
-                            </DropdownItem>
-                            <DropdownItem onClick={this.togglecreateModal}>
-                              > Bulk{" "}
-                            </DropdownItem>
-                          </DropdownMenu>
-                        </Dropdown> */}
-                        <Button onClick={this.toggleMatStockForm}>
+                  <div>                    
+                        <Button color="success" onClick={this.toggleMatStockForm}>
                         <i className="fa fa-plus-square" aria-hidden="true">
                               {" "}
                               &nbsp;{" "}
                             </i>{" "}
                             New User
                         </Button>
-                      {/* </div>
-                    ) : (
-                      ""
-                    )} */}
                   </div>
                   &nbsp;&nbsp;&nbsp;
-                  {/* <div style={{ marginRight: "10px" }}>
-                    <Dropdown
-                      isOpen={this.state.dropdownOpen[1]}
-                      toggle={() => {
-                        this.toggle(1);
-                      }}
-                    >
-                      <DropdownToggle block color="ghost-warning">
-                        <i className="fa fa-download" aria-hidden="true">
-                          {" "}
-                          &nbsp;{" "}
-                        </i>{" "}
-                        Export
-                      </DropdownToggle>
-                      <DropdownMenu>
-                        <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportMatStatus}>
-                          {" "}
-                          WH Management Template
-                        </DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>
-                          > Download All{" "}
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
-                  </div> */}
                 </div>
               </CardHeader>
               <Collapse
@@ -933,10 +763,10 @@ class ASPUserDet extends React.Component {
                 <Row>
                   <Col>
                     <div >
-                      <Table size="sm">
+                      <Table striped size="sm">
                         <thead
                           // style={{ backgroundColor: "#73818f" }}
-                          className="fixed-whman"
+                          // className="fixed-whman"
                         >
                           <tr>
                           {/* <th><Button color="ghost-dark"
@@ -957,12 +787,12 @@ class ASPUserDet extends React.Component {
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.Accounts_data
-                            .map((e) => (
+                          {this.state.Accounts_data !== null ? 
+                            this.state.Accounts_data.map((e) => (
                               <React.Fragment key={e._id + "frag"}>
                                 <tr
-                                  style={{ backgroundColor: "#d3d9e7" }}
-                                  className="fixbody"
+                                  // style={{ backgroundColor: "#d3d9e7" }}
+                                  // className="fixbody"
                                   key={e._id}
                                 >
                                   <td>
@@ -994,7 +824,10 @@ class ASPUserDet extends React.Component {
                                   </td>
                                 </tr>
                               </React.Fragment>
-                            ))}
+                            )) : (
+                            <tr>
+                            <td colSpan="15">No User Available</td>
+                          </tr>)}
                         </tbody>
                       </Table>
                     </div>
@@ -1058,16 +891,6 @@ class ASPUserDet extends React.Component {
                     onChange={this.handleSelectUser}
                     // isDisabled = {this.state.list_asp_user.length==0}
                                 />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Vendor Name</Label>
-                  <Input
-                    type="text"
-                    // placeholder="Warehouse ID"
-                    value={this.state.vendor_data.Vendor_Name}
-                    name={this.state.vendor_data.Vendor_Code}
-                    readOnly
-                  />
                 </FormGroup>
                 </Col>
             </Row>
