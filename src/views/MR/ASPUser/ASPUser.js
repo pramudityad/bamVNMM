@@ -186,22 +186,6 @@ class ASPUserManagement extends React.Component {
     }));
   }
 
-  // toggleMatStockForm(e) {
-  //   if(this.state.modalMatStockForm === true){
-  //     this.setState((prevState) => ({
-  //       modalMatStockForm: !prevState.modalMatStockForm
-  //     }));
-  //   }else{
-  //     const code_vendor = e.target.value;
-  //     const name_vendor = e.target.name;
-  //     console.log(code_vendor)
-  //     // this.getASPList();
-  //     this.setState((prevState) => ({
-  //       modalMatStockForm: !prevState.modalMatStockForm, selected_vendor_code: code_vendor, selected_vendor_name: name_vendor
-  //     }));
-  //   }
-  // }
-
   togglecreateModal() {
     this.setState({
       createModal: !this.state.createModal,
@@ -244,14 +228,19 @@ class ASPUserManagement extends React.Component {
     this.getWHStockList();
   }
 
+  // handleChangeFilter = (e) => {
+  //   let value = e.target.value;
+  //   if (value.length === 0) {
+  //     value = null;
+  //   }
+  //   this.setState({ filter_name: value }, () => {
+  //     this.changeFilterName(value);
+  //   });
+  // };
+
   handleChangeFilter = (e) => {
-    let value = e.target.value;
-    if (value.length === 0) {
-      value = null;
-    }
-    this.setState({ filter_name: value }, () => {
-      this.changeFilterName(value);
-    });
+    let keyword = e.target.value;
+    this.setState({ filter_name: keyword });
   };
 
   getWHStockList() {
@@ -624,15 +613,15 @@ class ASPUserManagement extends React.Component {
           this.toggleLoading();
         });
       } else {
-        // if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
-        //   if (res.response.data.error.message !== undefined) {
-        //     this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-        //   } else {
-        //     this.setState({ action_status: 'failed', action_message: res.response.data.error });
-        //   }
-        // } else {
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
           this.setState({ action_status: 'failed' });
-        // }
+        }
         this.toggleLoading();
       }
     });
@@ -845,78 +834,16 @@ class ASPUserManagement extends React.Component {
                   className="card-header-actions"
                   style={{ display: "inline-flex" }}
                 >
-                  <div>
-                    {/* {this.state.userRole.includes("Flow-PublicInternal") !==
-                    true ? (
-                      <div>
-                        <Dropdown
-                          isOpen={this.state.dropdownOpen[0]}
-                          toggle={() => {
-                            this.toggle(0);
-                          }}
-                        >
-                          <DropdownToggle block color="success">
-                            <i className="fa fa-plus-square" aria-hidden="true">
-                              {" "}
-                              &nbsp;{" "}
-                            </i>{" "}
-                            Assign User
-                          </DropdownToggle>
-                          <DropdownMenu>
-                            <DropdownItem onClick={this.toggleMatStockForm}>
-                              > Form{" "}
-                            </DropdownItem>
-                            <DropdownItem onClick={this.togglecreateModal}>
-                              > Bulk{" "}
-                            </DropdownItem>
-                          </DropdownMenu>
-                        </Dropdown>
-                        <Button onClick={this.toggleMatStockForm}>
-                        <i className="fa fa-plus-square" aria-hidden="true">
-                              {" "}
-                              &nbsp;{" "}
-                            </i>{" "}
-                            Assign User
-                        </Button> */}
-                        <Button onClick={this.toggleMatStockForm}>
+                  <div>     
+                        <Button color="success" onClick={this.toggleMatStockForm}>
                         <i className="fa fa-plus-square" aria-hidden="true">
                               {" "}
                               &nbsp;{" "}
                             </i>{" "}
                             New User
                         </Button>
-                      {/* </div>
-                    ) : (
-                      ""
-                    )} */}
                   </div>
-                  &nbsp;&nbsp;&nbsp;
-                  {/* <div style={{ marginRight: "10px" }}>
-                    <Dropdown
-                      isOpen={this.state.dropdownOpen[1]}
-                      toggle={() => {
-                        this.toggle(1);
-                      }}
-                    >
-                      <DropdownToggle block color="ghost-warning">
-                        <i className="fa fa-download" aria-hidden="true">
-                          {" "}
-                          &nbsp;{" "}
-                        </i>{" "}
-                        Export
-                      </DropdownToggle>
-                      <DropdownMenu>
-                        <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportMatStatus}>
-                          {" "}
-                          WH Management Template
-                        </DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>
-                          > Download All{" "}
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
-                  </div> */}
+                  &nbsp;&nbsp;&nbsp;                  
                 </div>
               </CardHeader>
               <Collapse
@@ -930,7 +857,7 @@ class ASPUserManagement extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                    <div
+                    {/* <div
                         style={{
                           float: "left",
                           margin: "5px",
@@ -949,7 +876,7 @@ class ASPUserManagement extends React.Component {
                           <option value={"100"}>100</option>
                           <option value={"noPg=1"}>All</option>
                         </Input>
-                      </div>
+                      </div> */}
                       <div
                         style={{
                           float: "left",
@@ -963,39 +890,54 @@ class ASPUserManagement extends React.Component {
                       type="text"
                       name="filter"
                       placeholder="Search"
-                      onChange={this.handleChangeFilter}
-                      value={this.state.filter_name}
+                      onChange={(e) => this.handleChangeFilter(e)}
+                      // value={this.state.filter_name}
                     />
                   </Col>
                 </Row>
                 <Row>
                   <Col>
                     <div >
-                      <Table size="sm">
+                      <Table hover size="sm">
                         <thead
                           // style={{ backgroundColor: "#73818f" }}
                           className="fixed-whman"
                         >
                           <tr align="center">
-                          <th><Button color="ghost-dark"
+                          <th>
+                            {/* <Button color="ghost-dark"
                                 onClick={() => this.requestSort('wh_name')}
-                              >
+                              > */}
                                 <b>Vendor Name</b>
-                              </Button></th>
-                              <th><Button color="ghost-dark"
+                              {/* </Button> */}
+                              </th>
+                              <th>
+                                {/* <Button color="ghost-dark"
                                 onClick={() => this.requestSort('wh_id')}
-                              >
+                              > */}
                                 <b>Vendor Code</b>
-                              </Button></th>
+                              {/* </Button> */}
+                              </th>
                             <th ></th>
                           </tr>
                         </thead>
                         <tbody>
                           {this.state.asp_data
+                           .filter((e) => {
+                            if (this.state.filter_name === null) {
+                              return e;
+                            } else if (
+                              e.Name
+                                .toLowerCase()
+                                .includes(this.state.filter_name.toLowerCase()) 
+                            ) {
+                              return e;
+                            }
+                          })
                             .map((e) => (
                               <React.Fragment key={e._id + "frag"}>
                                 <tr
-                                  style={{ backgroundColor: "#d3d9e7" }}
+                                  // style={{ backgroundColor: "#d3d9e7" }}
                                   className="fixbody"
                                   key={e._id}
                                 >
