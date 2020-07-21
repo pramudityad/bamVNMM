@@ -779,11 +779,13 @@ class CRDetail extends React.Component {
                   {" "}CR Detail{" "}
                 </span>
                 <div className="card-header-actions" style={{ display: "inline-flex" }}>
+                {this.state.userRole.findIndex(e => e === "BAM-CR-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                   <div>
                     <Button block color="success" onClick={this.togglecreateModal} size="sm">
                       <i className="fa fa-plus-square" aria-hidden="true">{" "}&nbsp;{" "}</i>{" "}New
                   </Button>
                   </div>
+                  ):""}
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggle(0);}} size="sm">
                       <DropdownToggle caret color="light">

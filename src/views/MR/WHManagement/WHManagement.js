@@ -779,8 +779,7 @@ class WHManagement extends React.Component {
                   style={{ display: "inline-flex" }}
                 >
                   <div>
-                    {this.state.userRole.includes("Flow-PublicInternal") !==
-                    true ? (
+                    {this.state.userRole.findIndex(e => e === "BAM-WHManagement-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <div>
                         <Dropdown
                           isOpen={this.state.dropdownOpen[0]}
@@ -805,9 +804,7 @@ class WHManagement extends React.Component {
                           </DropdownMenu>
                         </Dropdown>
                       </div>
-                    ) : (
-                      ""
-                    )}
+                    ):""}
                   </div>
                   &nbsp;&nbsp;&nbsp;
                   <div style={{ marginRight: "10px" }}>
@@ -949,7 +946,7 @@ class WHManagement extends React.Component {
                                   <td style={{ textAlign: "center" }}>
                                     {e.wh_type}
                                   </td>
-
+                                  {this.state.userRole.findIndex(e => e === "BAM-WHManagement-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                                   <td>
                                     <Button
                                       size="sm"
@@ -961,6 +958,8 @@ class WHManagement extends React.Component {
                                       <i className="fas fa-edit"></i>
                                     </Button>
                                   </td>
+                                   ):""}
+                                   {this.state.userRole.findIndex(e => e === "BAM-WHManagement-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                                   <td>
                                     <Button
                                       size="sm"
@@ -976,6 +975,7 @@ class WHManagement extends React.Component {
                                       ></i>
                                     </Button>
                                   </td>
+                                   ):""}
                                 </tr>
                               </React.Fragment>
                             ))}

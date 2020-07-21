@@ -444,7 +444,9 @@ class OrderProcessing extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
+                    {this.state.userRole.findIndex(e => e === "BAM-MR-OrderProcessingFinish") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
+                      ):""}
                       <th>MR ID</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
@@ -470,10 +472,12 @@ class OrderProcessing extends Component {
                     )}
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
+                        {this.state.userRole.findIndex(e => e === "BAM-MR-OrderProcessingFinish") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td>
                           <Button outline color="success" size="sm" className="btn-pill" style={{ width: "120px", marginBottom: "4px" }} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-check" style={{ marginRight: "8px" }}></i>Complete</Button>
                           <Button outline color="danger" size="sm" className="btn-pill" style={{ width: "120px" }} id={list._id} value={list._etag} onClick={this.toggleNotComplete}><i className="fa fa-times" style={{ marginRight: "8px" }}></i>Not Complete</Button>
                         </td>
+                         ):""}
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
                         <td>

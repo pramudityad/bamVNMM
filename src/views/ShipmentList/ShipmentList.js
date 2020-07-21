@@ -506,14 +506,18 @@ class ShipmentList extends Component {
                 </span>
                   {this.state.shipment_detail.no_shipment !== undefined && (
                     <div style={{ marginLeft: "auto", float: "right" }}>
+                    {this.state.userRole.findIndex(e => e === "BAM-Shipment-Delete") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                     <Button color="danger" size="sm" value={this.state.shipment_detail._id} onClick={this.toggleDelete} style={{float : 'right', marginRight: "6px"}}>
                       <i className="icon-ban icons "> &nbsp; </i> Cancel Shipment
                     </Button>
+                    ):""}
                     &nbsp;&nbsp;&nbsp;
                     &nbsp;&nbsp;&nbsp;
+                    {this.state.userRole.findIndex(e => e === "BAM-Shipment-RemoveMR") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                     <Button color="warning" size="sm" disabled={this.state.mr_data_selected.length === 0} value={this.state.shipment_detail._id} onClick={this.toggleTakeOut} style={{float : 'right', marginRight:"6px"}}>
                     <i className="icon-action-undo icons "> &nbsp; </i> Takeout MR
-                  </Button></div>
+                  </Button>
+                  ):""}</div>
 
                   )}
               </CardHeader>
@@ -695,7 +699,9 @@ class ShipmentList extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
+                    {this.state.userRole.findIndex(e => e === "BAM-Shipment-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? ( 
                       <th>Action</th>
+                      ):""}
                       <th>Shipment Number</th>
                       <th>Transporter</th>
                       <th>Plat Nomer</th>
@@ -711,6 +717,7 @@ class ShipmentList extends Component {
                     )}
                     {this.state.shipment_list.map((list, i) => (
                       <tr key={list._id}>
+                        {this.state.userRole.findIndex(e => e === "BAM-Shipment-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? ( 
                         <td>
                           <Button
                             size="sm"
@@ -721,6 +728,7 @@ class ShipmentList extends Component {
                             Detail
                           </Button>
                         </td>
+                        ):""}
                         <td>{list.shipment_id}</td>
                         <td>{list.transporter}</td>
                         <td>{list.truck_no}</td>

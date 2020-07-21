@@ -480,9 +480,11 @@ class LoadingProcess extends Component {
             <Card>
               <CardHeader>
                 Shipment Detail
+                {this.state.userRole.findIndex(e => e === "BAM-MR-LoadingProcessFinish") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                 <Button onClick={this.handleCheckingForm} size="sm" style={{ float: 'right' }} color="success" disabled={this.state.mr_data_selected.length === 0}>
                   <i class="fa fa-plus" aria-hidden="true">&nbsp;</i> Ship
                 </Button>
+                 ):""}
               </CardHeader>
               <CardBody>
                 <Row>
@@ -671,7 +673,9 @@ class LoadingProcess extends Component {
                         <td>
                           <Checkbox name={list._id} checked={this.state.mr_checked.get(list._id)} onChange={this.handleChangeChecklist} value={list} />
                         </td>
+                        {this.state.userRole.findIndex(e => e === "BAM-MR-LoadingProcessView") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
+                        ):(<td>{list.mr_id}</td>)}
                         <td>{list.project_name}</td>
                         <td>
                           {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>

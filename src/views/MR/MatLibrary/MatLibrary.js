@@ -667,8 +667,7 @@ class MatLibrary extends React.Component {
                   style={{ display: "inline-flex" }}
                 >
                   <div>
-                    {this.state.userRole.includes("Flow-PublicInternal") !==
-                    true ? (
+                  {this.state.userRole.findIndex(e => e === "BAM-MaterialVariant-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <div>
                         <Button
                           block

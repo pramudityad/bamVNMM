@@ -184,7 +184,10 @@ class TssrList extends Component {
                 <span style={{lineHeight :'2'}}>
                   <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Plant Spec Group List
                 </span>
+                {this.state.userRole.findIndex(e => e === "BAM-Plantspec-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+ 
                 <Link to={'/ps-bom'}><Button color="success" style={{float : 'right'}} size="sm">Create PS</Button></Link>
+                ):""}
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -195,7 +198,9 @@ class TssrList extends Component {
                       <th>Tower ID</th>
                       <th>Status</th>
                       <th>MR Related</th>
+                      {this.state.userRole.findIndex(e => e === "BAM-Plantspec-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <th rowSpan="2">Action</th>
+                      ):""}
                     </tr>
                     <tr>
                       {this.loopSearchBar()}
@@ -209,11 +214,13 @@ class TssrList extends Component {
                         <td>{list.site_info[0] !== undefined ? list.site_info[0].site_id : null}</td>
                         <td>{list.submission_status}</td>
                         <td>{list.mr_id}</td>
+                        {this.state.userRole.findIndex(e => e === "BAM-Plantspec-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td>
                           <Link to={'/ps-list/'+list._id}>
                             <Button color="info" size="sm" outline>Detail</Button>
                           </Link>
                         </td>
+                        ):""}
                       </tr>
                     )}
                   </tbody>

@@ -980,7 +980,8 @@ class CommercialBoq extends Component {
                         {/* End Show Select BOQ Technical */}
 
                         {/* Show import XLS */}
-                        {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
+                        {this.state.userRole.findIndex(e => e === "BAM-CommBoq-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                        this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
                           <React.Fragment>
                             <input type="file" onChange={this.fileHandlerCommercial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} />
                               <Button style={{'float' : 'right',margin : '8px'}} color="warning" onClick={this.toggleSave} value="save">
@@ -992,7 +993,7 @@ class CommercialBoq extends Component {
                                 Revision
                               </Button>
                           </React.Fragment>
-                        )}
+                        ) ):""}
                         {/* End Show import XLS */}
                       </Col>
                      </Row>

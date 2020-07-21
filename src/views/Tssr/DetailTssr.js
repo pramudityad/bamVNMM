@@ -1794,17 +1794,19 @@ class DetailTssr extends Component {
           <Card>
             <CardHeader>
               <span style={{lineHeight :'2', fontSize : '15px'}} >Detail Plant Spec Group</span>
-              {this.state.tssrData !== null && this.state.tssrData.submission_status !== "SUBMITTED" ? (
+              {this.state.userRole.findIndex(e => e === "BAM-Plantspec-Submit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+              this.state.tssrData !== null && this.state.tssrData.submission_status !== "SUBMITTED" ? (
                 <Button style={{marginRight : '8px', float : 'right'}} color="success" onClick={this.submitTSSR} size="sm">Submit</Button>
               ) : (
-                <Fragment></Fragment>
-              )}
-              {this.state.tssrData !== null && this.state.tssrData.locked === false ? (
-                <Fragment>
-                <Button style={{marginRight : '8px', float : 'right'}} color="primary" onClick={this.toggleUpload} size="sm">Edit</Button>
-                <Button style={{marginRight : '8px', float : 'right'}} color="primary" onClick={this.toggleUploadAdditional} size="sm">Edit Additional</Button>
+                <Fragment></Fragment> 
+              )):""}
+              {this.state.userRole.findIndex(e => e === "BAM-Plantspec-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+              this.state.tssrData !== null && this.state.tssrData.locked === false ? (
+                <Fragment>                 
+                <Button style={{marginRight : '8px', float : 'right'}} color="primary" onClick={this.toggleUpload} size="sm">Edit</Button>                
+                <Button style={{marginRight : '8px', float : 'right'}} color="primary" onClick={this.toggleUploadAdditional} size="sm">Edit Additional</Button>               
                 </Fragment>
-              ) : (<Fragment></Fragment>)}
+              ) : (<Fragment></Fragment>) ):""}
               <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
                 <DropdownToggle caret color="secondary">
                   <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File

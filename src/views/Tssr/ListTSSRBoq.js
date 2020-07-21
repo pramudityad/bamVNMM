@@ -146,7 +146,9 @@ class ListTSSRBoq extends Component {
                     <th>Creator</th>
                     <th>Ver.</th>
                     <th style={{'width' : '200px', textAlign : 'center'}}>TSSR Status</th>
+                    {this.state.userRole.findIndex(e => e === "BAM-TSSRBoq-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                     <th>Action</th>
+                    ):""}
                   </tr>
                   <tr>
                       <td>
@@ -200,8 +202,10 @@ class ListTSSRBoq extends Component {
                           </InputGroup>
                         </div>
                       </td>
+                      {this.state.userRole.findIndex(e => e === "BAM-TSSRBoq-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <td>
                       </td>
+                      ):""}
                     </tr>
               </thead>
               <tbody>
@@ -213,11 +217,13 @@ class ListTSSRBoq extends Component {
                             <td style={{verticalAlign : 'middle'}}>{boq.creator[0].email}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.version}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.current_status}</td>
+                            {this.state.userRole.findIndex(e => e === "BAM-TSSRBoq-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
                               <Link to={'/list-tssr-boq/detail/'+boq._id}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                               </Link>
                             </td>
+                            ):""}
                         </tr>
                     )}
                 </tbody>

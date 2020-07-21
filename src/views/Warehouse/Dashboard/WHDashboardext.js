@@ -15,7 +15,7 @@ import Widget from "./Widget";
 import "../wh_css.css";
 import { connect } from "react-redux";
 import axios from "axios";
-import Loading from '../../components/Loading'
+import Loading from "../../components/Loading";
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
@@ -194,7 +194,9 @@ class WarehouseDashboardExt extends Component {
 
   getWHStockList() {
     this.toggleLoading();
-    this.getDatafromAPINODE('/whManagement/warehouse?noPg=1&q={"$or" : [{"wh_type":{"$regex" : "asp", "$options" : "i"}}, {"wh_type":{"$regex" : "dsp", "$options" : "i"}} ]}').then((res) => {
+    this.getDatafromAPINODE(
+      '/whManagement/warehouse?noPg=1&q={"$or" : [{"wh_type":{"$regex" : "asp", "$options" : "i"}}, {"wh_type":{"$regex" : "dsp", "$options" : "i"}} ]}'
+    ).then((res) => {
       console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({
@@ -280,8 +282,7 @@ class WarehouseDashboardExt extends Component {
                       <Link
                         to={{
                           pathname:
-                            "/wh-dashboard-ext/wh-dashboard-ext-det/" +
-                            e.wh_id
+                            "/wh-dashboard-ext/wh-dashboard-ext-det/" + e.wh_id,
                         }}
                       >
                         {/* <a href="wh-dashboard-eid"> */}
@@ -316,40 +317,63 @@ class WarehouseDashboardExt extends Component {
                         <p>{e.owner}</p>
                       </CardBody>
                       <CardFooter>
-                        <Row className="align-items-center">           
-                          <Col col="2" xl className="mb-3 mb-xl-0">
-                          <Link
-                              to={{
-                                // pathname:"/wh-gr-eid/" +e.wh_id,
-                                pathname: "wh-dashboard-ext/wh-gr-ext-per-wh/"+e.wh_id
-                              }}>
-                            <Button
-                              block
-                              color="success"
-                              size="sm"
-                              className="btn-pill"
-                            >
-                              GR
-                            </Button>
-                            </Link>
-                          </Col>
-
-                          <Col col="2" xl className="mb-3 mb-xl-0">
-                          <Link
-                              to={{
-                                // pathname:"/wh-gi-eid/" +e.wh_id,
-                                pathname: "wh-dashboard-ext/wh-gi-ext-per-wh/"+e.wh_id
-                              }}>
-                            <Button
-                              block
-                              color="warning"
-                              size="sm"
-                              className="btn-pill"
-                            >
-                              GI
-                            </Button>
-                            </Link>
-                          </Col>
+                        <Row className="align-items-center">
+                          {this.state.userRole.findIndex(
+                            (e) => e === "BAM-WHExternalGR-View"
+                          ) !== -1 ||
+                          this.state.userRole.findIndex(
+                            (e) => e === "Admin"
+                          ) !== -1 ? (
+                            <Col col="2" xl className="mb-3 mb-xl-0">
+                              <Link
+                                to={{
+                                  // pathname:"/wh-gr-eid/" +e.wh_id,
+                                  pathname:
+                                    "wh-dashboard-ext/wh-gr-ext-per-wh/" +
+                                    e.wh_id,
+                                }}
+                              >
+                                <Button
+                                  block
+                                  color="success"
+                                  size="sm"
+                                  className="btn-pill"
+                                >
+                                  GR
+                                </Button>
+                              </Link>
+                            </Col>
+                          ) : (
+                            ""
+                          )}
+                          {this.state.userRole.findIndex(
+                            (e) => e === "BAM-WHExternalGI-View"
+                          ) !== -1 ||
+                          this.state.userRole.findIndex(
+                            (e) => e === "Admin"
+                          ) !== -1 ? (
+                            <Col col="2" xl className="mb-3 mb-xl-0">
+                              <Link
+                                to={{
+                                  // pathname:"/wh-gi-eid/" +e.wh_id,
+                                  pathname:
+                                    "wh-dashboard-ext/wh-gi-ext-per-wh/" +
+                                    e.wh_id,
+                                }}
+                              >
+                                <Button
+                                  block
+                                  color="warning"
+                                  size="sm"
+                                  className="btn-pill"
+                                >
+                                  GI
+                                </Button>
+                              </Link>
+                            </Col>
+                          ) : (
+                            ""
+                          )}
                         </Row>
                       </CardFooter>
                     </Collapse>
@@ -359,10 +383,11 @@ class WarehouseDashboardExt extends Component {
             ))}
         </Row>
         {/* Modal Loading */}
-        <Loading isOpen={this.state.modal_loading}
+        <Loading
+          isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
-          className={"modal-sm modal--loading "}>
-        </Loading>
+          className={"modal-sm modal--loading "}
+        ></Loading>
         {/* end Modal Loading */}
       </div>
     );

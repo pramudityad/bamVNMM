@@ -880,16 +880,20 @@ class ConfigUpload extends React.Component {
                       </DropdownMenu>
                     </Dropdown>
                   </div>
+                  {this.state.userRole.findIndex(e => e === "BAM-ConfigManager-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                   <div style={{ marginRight: "10px" }}>
                     <Button block color="success" size="sm" onClick={this.toggleAddNew} id="toggleCollapse1">
                       <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> New
                       </Button>
                   </div>
+                   ):""}
+                   {this.state.userRole.findIndex(e => e === "BAM-ConfigManager-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                   <div>
                     <Button block color="warning" size="sm" onClick={this.toggleUpdateBulk} id="toggleCollapse1">
                       <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> Update
                       </Button>
                   </div>
+                  ):""}
                 </div>
               </CardHeader>
               <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>

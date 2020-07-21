@@ -3,56 +3,56 @@ export default {
     {
       name: 'Product',
       icon: 'icon-folder-alt',
-      roles : ["BAM-Engineering", "BAM-Project Planner", "BAM-Solution"],
+      roles : ["BAM-Engineering", "BAM-Project Planner", "BAM-Solution", "BAM-ConfigManager-View", "BAM-BundleManger-View", "BAM-MaterialVariant-View"],
       children: [
         {
           name: 'Bundle Manager',
           url: '/product-package',
           icon: 'icon-folder',
-          roles : ["BAM-Engineering", "BAM-Project Planner"],
+          roles : ["BAM-Engineering", "BAM-Project Planner", "BAM-BundleManger-View"],
         },
         {
           name: 'Config Manager',
           url: '/config-manager',
           icon: 'icon-doc',
-          roles : ["BAM-Engineering", "BAM-Project Planner", "BAM-Solution"],
+          roles : ["BAM-Engineering", "BAM-Project Planner", "BAM-Solution", "BAM-ConfigManager-View"],
         },
         {
           name: 'Material Variant',
           url: '/mat-library',
           icon: 'icon-list',
-          roles : ["BAM-Engineering", "BAM-Project Planner"],
+          roles : ["BAM-Engineering", "BAM-Project Planner", "BAM-MaterialVariant-View"],
         }
       ]
     },
     {
       name: 'BOQ',
       icon: 'icon-folder-alt',
-      roles : ["BAM-Solution", "BAM-Account Team", "BAM-Engineering"],
+      roles : ["BAM-Solution", "BAM-Account Team", "BAM-Engineering", "BAM-TechBoq-View", "BAM-CommBoq-View", "BAM-SubmissionBoq-View", "BAM-CpoBoq-View", "BAM-CpoDB-View", "BAM-CR-View"],
       children: [
         {
           name: 'Technical BOQ',
           url: '/list-technical',
           icon: 'icon-docs',
-          roles : ["BAM-Solution", "BAM-Account Team"],
+          roles : ["BAM-Solution", "BAM-Account Team", "BAM-TechBoq-View"],
         },
         {
           name: 'Commercial BOQ ',
           url: '/list-commercial',
           icon: 'icon-tag',
-          roles : ["BAM-Account Team"],
+          roles : ["BAM-Account Team", "BAM-CommBoq-View", "BAM-SubmissionBoq-View"],
         },
         {
           name: 'CPO Database ',
           url: '/cpo-database',
           icon: 'icon-globe',
-          roles : ["BAM-Account Team"],
+          roles : ["BAM-Account Team", "BAM-CpoDB-View"],
         },
         {
           name: 'CPO BOQ',
           url: '/list-cpo-boq',
           icon: 'icon-docs',
-          roles : ["BAM-Account Team"],
+          roles : ["BAM-Account Team", "BAM-CpoBoq-View"],
         },
         {
           name: 'DRM',
@@ -70,44 +70,44 @@ export default {
           name: 'CR',
           url: '/cr-detail',
           icon: 'icon-docs',
-          roles : ["BAM-Solution", "BAM-Engineering"],
+          roles : ["BAM-Solution", "BAM-Engineering", "BAM-CR-View"],
         },
       ]
     },
     {
       name: 'Assignment',
       icon: 'icon-docs',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP", "BAM-Assignment-View",  "BAM-AssignmentPRT-View"],
       children: [
         {
           name: 'Assignment List',
           url: '/assignment-list',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Assignment-View"],
         },
         {
           name: 'Assignment NA List',
           url: '/assignment-list-approval',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-TPM", "BAM-Customer Project Manager"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-TPM", "BAM-Customer Project Manager", "BAM-Assignment-View"],
         },
         {
           name: 'Assignment List (ASP)',
           url: '/assignment-list-asp',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP", "BAM-Assignment-View"],
         },
         {
           name: 'Assignment Bulk Notify',
           url: '/bulk-assignment-notify',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Assignment-View"],
         },
         {
           name: 'PRT',
           url: '/prt-list',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-AssignmentPRT-View"],
         },
         {
           name: 'Assignment Report',
@@ -121,7 +121,7 @@ export default {
       name: 'Plant Spec List',
       url: '/ps-list',
       icon: 'icon-menu',
-      role : ["BAM-Engineering"]
+      role : ["BAM-Engineering", "BAM-Plantspec-View"]
     },
     {
       name: 'Material Request',
@@ -157,7 +157,7 @@ export default {
     {
       name: 'Warehouse',
       icon: 'fas fa-boxes',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-WHManagement-View"],
       children: [
         {
           name: 'Dashboard EID',
@@ -175,6 +175,7 @@ export default {
           name: 'Warehouse Management',
           url: '/wh-management',
           icon: 'fas fa-pallet',
+          roles: ["BAM-WHManagement-View",]
         },
         {
           name: 'ASP User Management',
@@ -208,19 +209,19 @@ export default {
     {
       name: 'MR Milestones',
       icon: 'icon-paper-plane',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASP Management", "BAM-ASP"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASP Management", "BAM-ASP", "BAM-MR-OrderReceivedView", "BAM-MR-OrderProcessingView", "BAM-MR-JointCheckView", "BAM-Shipment-View", "BAM-MR-LoadingProcessView", "BAM-MR-WaitingDispatchView", "BAM-MR-DispatchView"], 
       children: [
         {
           name: 'Order Received',
           url: '/order-received',
           icon: 'fa fa-warehouse',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-MR-OrderReceivedView"],
         },
         {
           name: 'Order Processing',
           url: '/order-processing',
           icon: 'fa fa-clipboard-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-MR-OrderProcessingView"],
         },
         {
           name: 'Ready to Deliver',
@@ -232,31 +233,31 @@ export default {
           name: 'Joint Check',
           url: '/joint-check',
           icon: 'fa fa-box-open',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-MR-JointCheckView"],
         },
         {
           name: 'Loading Process',
           url: '/loading-process',
           icon: 'fa fa-truck-loading',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-MR-LoadingProcessView"],
         },
         {
           name: 'Waiting Dispatch',
           url: '/waiting-dispatch',
           icon: 'fa fa-truck-moving',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP Management", "BAM-ASP"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP Management", "BAM-ASP", "BAM-MR-WaitingDispatchView"],
         },
         {
           name: 'Material Dispatch',
           url: '/material-dispatch',
           icon: 'fa fa-truck-moving',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASP Management", "BAM-ASP"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASP Management", "BAM-ASP", "BAM-MR-DispatchView"],
         },
         {
           name: 'Shipment',
           url: '/shipment-list',
           icon: 'fa fa-truck-moving',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-Shipment-View"],
         },
 
       ]
@@ -265,7 +266,7 @@ export default {
       name: 'LOM List',
       url: '/lom-list',
       icon: 'fa fa-stop-circle',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-MR-LOMView"],
     },
     {
       name: 'Material LOM List',

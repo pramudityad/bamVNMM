@@ -1964,9 +1964,11 @@ class SubmissionCommBoq extends Component {
                           <DropdownItem onClick={this.exportSubmissionFormatNew}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Create Submission Commercial Format</DropdownItem>
                         </DropdownMenu>
                       </Dropdown>
+                      {this.state.userRole.findIndex(e => e === "BAM-SubmissionBoq-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <Button block style={{ marginLeft: "10px" }} color="success" onClick={this.toggleAddNew} id="toggleCollapse1">
                         <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> New
                       </Button>
+                       ):""}
                       </div>
                     </React.Fragment>
                   )}
@@ -2052,7 +2054,7 @@ class SubmissionCommBoq extends Component {
                               </tr>
                             ) : (
                               <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
-                                <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Submission Doc : {this.state.submission_number_selected} {this.state.submission_number_selected !== "na" && this.state.submission_number_selected !== "all" && (<Button color="danger" size="sm" style={{marginLeft : "20px", fontSize:"10px", paddingTop : '2px', paddingBottom : '2px' }} onClick={this.toggleDelete}>Delete</Button>)}</td>
+                                <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Submission Doc : {this.state.submission_number_selected} {this.state.submission_number_selected !== "na" && this.state.submission_number_selected !== "all" && (this.state.userRole.findIndex(e => e === "BAM-SubmissionBoq-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (<Button color="danger" size="sm" style={{marginLeft : "20px", fontSize:"10px", paddingTop : '2px', paddingBottom : '2px' }} onClick={this.toggleDelete}>Delete</Button> ):"")}</td>
                               </tr>
                             )}
                           </React.Fragment>

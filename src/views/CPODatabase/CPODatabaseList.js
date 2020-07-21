@@ -549,7 +549,7 @@ class CPODatabase extends React.Component {
                     </Dropdown>
                   </div>
                   <div>
-                    {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
+                  {this.state.userRole.findIndex(e => e === "BAM-CpoDB-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <div>
                         <Button block color="success" onClick={this.toggleAddNew} id="toggleCollapse1">
                           <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> New
@@ -637,11 +637,14 @@ class CPODatabase extends React.Component {
                                 <td style={{ textAlign: 'center' }}>{po.contract}</td>
                                 <td style={{ textAlign: 'center' }}>{po.contact}</td>
                                 <td style={{ textAlign: 'center' }}>
+                                {this.state.userRole.findIndex(e => e === "BAM-CpoDB-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                                   <Link to={'/detail-list-cpo-database/' + po._id}>
                                     <Button color="primary" size="sm" style={{ marginRight: '10px' }}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                                   </Link>
+                                   ):""}
                                 </td>
                                 <td style={{ textAlign: 'center' }}>
+                                {this.state.userRole.findIndex(e => e === "BAM-CpoDB-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                                 <Button
                                       size="sm"
                                       color="secondary"
@@ -651,6 +654,7 @@ class CPODatabase extends React.Component {
                                     >
                                       <i className="fas fa-edit"></i>
                                       </Button>
+                                      ):""}
                                 </td>
                               </tr>
                             </React.Fragment>

@@ -256,7 +256,7 @@ class ListTechnical extends Component {
               <CardHeader>
                 <React.Fragment>
                   <span style={{ marginTop: '8px' }}>Technical BOQ List</span>
-                  {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
+                  {this.state.userRole.findIndex(e => e === "BAM-TechBoq-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                     <div className="card-header-actions" style={{ marginRight: '5px' }}>
                       <Link to='/list-technical/new'>
                         <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
@@ -274,7 +274,9 @@ class ListTechnical extends Component {
                       <th>Creator</th>
                       <th>Ver.</th>
                       <th style={{ 'width': '200px', textAlign: 'center' }}>Status</th>
+                      {this.state.userRole.findIndex(e => e === "BAM-TechBoq-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <th style={{ 'width': '200px', textAlign: 'center' }}>Action</th>
+                      ) : ""}
                     </tr>
                     <tr>
                       <td>
@@ -308,6 +310,7 @@ class ListTechnical extends Component {
                           </InputGroup>
                         </div>
                       </td>
+                      
                       <td>
                         <div className="controls">
                           <InputGroup className="input-prepend">
@@ -318,8 +321,9 @@ class ListTechnical extends Component {
                           </InputGroup>
                         </div>
                       </td>
-                      <td>
-                      </td>
+                      {this.state.userRole.findIndex(e => e === "BAM-TechBoq-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                      <td></td>
+                      ) : ""}
                     </tr>
                   </thead>
                   <tbody>
@@ -338,6 +342,7 @@ class ListTechnical extends Component {
                                 <span className="boq-tech-status-A">{boq.approval_status}</span>
                               )}
                         </td>
+                        {this.state.userRole.findIndex(e => e === "BAM-TechBoq-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td style={{ verticalAlign: 'middle', textAlign: "center" }}>
                           <Link to={'/list-technical/detail/' + boq._id}>
                             <Button color="primary" size="sm" style={{ marginRight: '10px' }}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
@@ -347,8 +352,9 @@ class ListTechnical extends Component {
                               </Link>
                               <Button  size="sm" color="danger" style={{color : "white"}} value={boq._id} onClick={e => this.deleteTechBoq(e, "value")}>
                                   <i className="fa fa-trash" aria-hidden="true"></i>
-                              </Button> */}
-                        </td>
+                              </Button> */}                              
+                        </td>)
+                        :""}
                       </tr>
                     )}
                   </tbody>

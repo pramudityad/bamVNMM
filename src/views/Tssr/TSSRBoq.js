@@ -1071,14 +1071,18 @@ class TSSRBoq extends Component {
                 <CardBody className='card-UploadBoq'>
                   <input type="file" onChange={this.fileHandlerTSSR.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} />
                   <span style={{color :'rgba(216,67,21 ,1)', fontWeight : '600'}}>*Please Make sure the DRM column has been deleted from uploader</span>
+                  {this.state.userRole.findIndex(e => e === "BAM-TSSRBoq-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                   <Button style={{'float' : 'right'}} color="warning" onClick={this.updateTSSRBoq} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tssr.tech_data === undefined}>
                     <i className="fa fa-paste">&nbsp;&nbsp;</i>
                       {this.state.rowsTSSR.length === 0 ? 'Save' : this.state.result_check_tssr.tech_data !== undefined ? 'Save' : 'Loading..'}
                   </Button>
+                  ):""}
+                  {this.state.userRole.findIndex(e => e === "BAM-TSSRBoq-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                   <Button style={{'float' : 'right',marginRight : '8px'}} color="success" onClick={this.updateTSSRBoq} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tssr.tech_data === undefined}>
                     <i className="fa fa-copy">&nbsp;&nbsp;</i>
                     {this.state.rowsTSSR.length === 0 ? 'Revision' : this.state.result_check_tssr.tech_data !== undefined ? 'Revision' : 'Loading..'}
                   </Button>
+                  ):""}
                   <Row>
                     <Col sm="12" md="12">
                     <table style={{width : '100%', marginBottom : '0px'}}>
@@ -1221,7 +1225,8 @@ class TSSRBoq extends Component {
                   </nav>
                 </CardBody>
                 <CardFooter>
-                {this.state.data_tech_boq !== null && (
+                {this.state.userRole.findIndex(e => e === "BAM-TSSRBoq-Confirm") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                this.state.data_tech_boq !== null && (
                   <Fragment>
                     {this.state.data_tech_boq.current_status !== "TSSR BOQ CONFIRMED" && (
                       <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value={"1"} onClick={this.approvalTSSR} disabled={false}>
@@ -1229,7 +1234,7 @@ class TSSRBoq extends Component {
                       </Button>
                     )}
                   </Fragment>
-                )}
+                ) ):""}
                 </CardFooter>
               </Card>
             </Col>

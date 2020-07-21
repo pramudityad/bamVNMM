@@ -2530,6 +2530,7 @@ class TechnicalBoq extends Component {
                             </DropdownMenu>
                           </Dropdown>
                         </Col>
+                        {this.state.userRole.findIndex(e => e === "BAM-TechBoq-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <Col>
                           <Dropdown isOpen={this.state.dropdownOpen[1]} toggle={() => {this.toggleDropdown(1);}}>
                             <DropdownToggle caret color="primary" size="sm">
@@ -2545,6 +2546,7 @@ class TechnicalBoq extends Component {
                             </DropdownMenu>
                           </Dropdown>
                         </Col>
+                        ):""}
                       </div>
 
                     </React.Fragment>
@@ -2806,25 +2808,30 @@ class TechnicalBoq extends Component {
                       {this.state.data_tech_boq !== null && (
                       <Row>
                         <Col>
+                        {this.state.userRole.findIndex(e => e === "BAM-TechBoq-SubmitApproval") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                           <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value={"1"} onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.approval_status !== "PRE APPROVAL"}>
                               {this.state.data_tech_boq.approval_status === "PRE APPROVAL" ? "Submit" : "Tech Submitted"}
                           </Button>
+                           ):""}
                         </Col>
                        </Row>
                       )}
                       {(this.state.data_tech_boq !== null && (this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" || this.state.data_tech_boq.approval_status === "APPROVED" )) && (
                       <Row>
                         <Col>
+                        {this.state.userRole.findIndex(e => e === "BAM-TechBoq-Approval") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                           <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value={"2"} onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.approval_status !== 'REQUEST FOR APPROVAL'}>
                               {this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" ? "Approve" : "Tech Approved"}
                           </Button>
+                          ):""}
                         </Col>
                        </Row>
                       )}
                       {this.state.data_tech_boq !== null && (
                       <Row>
-                        {(this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP") ? (
-                          <Col>
+                        {this.state.userRole.findIndex(e => e === "BAM-TechBoq-SubmitTSSR") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                        this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP") ? (
+                          <Col>                          
                             <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.submitTSSR} disabled={false}>
                                 {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP" ? "Submit to TSSR" : "TSSR Submitted"}
                             </Button>
@@ -2835,7 +2842,7 @@ class TechnicalBoq extends Component {
                                 {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP" ? "Submit to TSSR" : "TSSR Submitted"}
                             </Button>
                           </Col>
-                        )}
+                         ):""}
                        </Row>
                       )}
                     </div>

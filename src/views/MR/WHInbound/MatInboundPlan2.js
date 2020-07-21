@@ -834,8 +834,7 @@ class MatInboundPlan extends React.Component {
                 >
                   <div>
                     {/* Open modal for create new */}
-                    {this.state.userRole.includes("Flow-PublicInternal") !==
-                    true ? (
+                    {this.state.userRole.findIndex(e => e === "BAM-WHInboundPlan-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <div>
                         <Button
                           block

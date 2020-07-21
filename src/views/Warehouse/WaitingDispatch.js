@@ -278,7 +278,9 @@ class WaitingDispatch extends Component {
                               "Finish"
                             )}
                         </td>
+                        {this.state.userRole.findIndex(e => e === "BAM-MR-WaitingDispatchView") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
+                        ):(<td>{list.mr_id}</td>)}
                         <td>{list.project_name}</td>
                         <td>
                           {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>

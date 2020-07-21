@@ -442,7 +442,9 @@ class JointCheck extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
+                    {this.state.userRole.findIndex(e => e === "BAM-MR-JointCheckView") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
+                      ):""}
                       <th>MR ID</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
@@ -469,8 +471,12 @@ class JointCheck extends Component {
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
                         {/* <td><Button disabled={!this.state.qty_box.has(list._id)} outline color="primary" size="sm" className="btn-pill" style={{width: "80px"}} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-angle-double-right" style={{marginRight: "8px"}}></i>Done</Button></td> */}
+                        {this.state.userRole.findIndex(e => e === "BAM-MR-JointCheckView") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td><Button color="primary" size="sm" className="btn-pill" style={{ width: "80px" }} id={list._id} onClick={this.toggleBoxInput}><i className="fa fa-angle-double-right" style={{ marginRight: "8px" }}></i>Done</Button></td>
+                        ):""}
+                        {this.state.userRole.findIndex(e => e === "BAM-MR-JointCheckView") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
+                        ):(<td>{list.mr_id}</td>)}
                         <td>{list.project_name}</td>
                         <td>
                           {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>

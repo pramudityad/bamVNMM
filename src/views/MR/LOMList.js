@@ -367,7 +367,9 @@ class LOMList extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
+                    {this.state.userRole.findIndex(e => e === "BAM-MR-LOMConfirmation") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
+                      ):""}
                       <th>MR ID</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
@@ -393,11 +395,15 @@ class LOMList extends Component {
                     )}
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
+{this.state.userRole.findIndex(e => e === "BAM-MR-LOMConfirmation") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td>
                           <Button outline color="success" size="sm" className="btn-pill" style={{ width: "150px", marginBottom: "4px" }} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-check" style={{ marginRight: "8px" }}></i>Send With LOM</Button>
                           <Button outline color="danger" size="sm" className="btn-pill" style={{ width: "150px" }} id={list._id} value={list._etag} onClick={this.rejectMR}><i className="fa fa-times" style={{ marginRight: "8px" }}></i>Wait For Completion</Button>
                         </td>
+                        ):""}
+{this.state.userRole.findIndex(e => e === "BAM-MR-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
+                        ):(<td>{list.mr_id}</td>)}
                         <td>{list.project_name}</td>
                         <td>
                           {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>

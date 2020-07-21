@@ -95,6 +95,7 @@ class DetailPRPO extends Component {
                   ></i>
                   PRT Detail ({all_data.prt_id})
                 </span>
+                {this.state.userRole.findIndex(e => e === "BAM-AssignmentPRT-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                 <Link to={'/prt-list/edit/' + all_data._id}>
                 <Button
                   style={{ marginRight: "8px", float: "right" }}                  
@@ -108,7 +109,7 @@ class DetailPRPO extends Component {
                   Edit
                 </Button>
                 </Link>
-                
+                 ):""}
                 &nbsp;&nbsp;&nbsp;
                 <Button
                   style={{ marginRight: "8px", float: "right" }}

@@ -1706,10 +1706,11 @@ class MRDetail extends Component {
                                   </DropdownToggle>
                                   <DropdownMenu>
                                     <DropdownItem header>TSSR File</DropdownItem>
-                                    {((this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 ) && this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
+                                    {this.state.userRole.findIndex(e => e === "BAM-MR-Dispatch") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                                    ((this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 ) && this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
                                       <DropdownItem onClick={this.downloadMaterialMRTRACY}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY Format</DropdownItem>
 
-                                    )}
+                                    ) ):""}
                                     <DropdownItem onClick={this.downloadMaterialMRReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MR PS</DropdownItem>
                                     <DropdownItem onClick={this.downloadMaterialMRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
                                     <DropdownItem onClick={this.downloadMaterialMRUpload2}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format NOK</DropdownItem>
@@ -2343,7 +2344,8 @@ class MRDetail extends Component {
               <CardFooter>
                 {this.state.data_mr !== null && (
                   <div>
-                    {this.state.data_mr.current_mr_status ===
+                    {this.state.userRole.findIndex(e => e === "BAM-MR-RequestApproval") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                    this.state.data_mr.current_mr_status ===
                       "PLANTSPEC ASSIGNED" ||
                     this.state.data_mr.current_mr_status ===
                       "PLANTSPEC UPDATED" ? (
@@ -2357,8 +2359,9 @@ class MRDetail extends Component {
                       </Button>
                     ) : (
                       <div></div>
-                    )}
-                    {this.state.data_mr.current_mr_status === "MR REQUESTED" ? (
+                    ) ):""}
+                    {this.state.userRole.findIndex(e => e === "BAM-MR-Approval") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                    this.state.data_mr.current_mr_status === "MR REQUESTED" ? (
                       // <Button color='success' style={{float : 'right'}} onClick={this.ApproveMR}>Approve</Button>
                       <Button
                         color="success"
@@ -2369,8 +2372,9 @@ class MRDetail extends Component {
                       </Button>
                     ) : (
                       <div></div>
-                    )}
-                    {(this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 ) && (
+                    ) ):""}
+                    {this.state.userRole.findIndex(e => e === "BAM-MR-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                    (this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 ) && (
                       <Button
                         color="warning"
                         style={{ float: "left" }}
@@ -2379,7 +2383,7 @@ class MRDetail extends Component {
                       >
                         Need Revise
                       </Button>
-                    )}
+                    ) ):""}
                   </div>
                 )}
               </CardFooter>

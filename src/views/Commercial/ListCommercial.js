@@ -48,7 +48,7 @@ class ListCommercial extends Component {
       modal_delete_noBOQ: null,
       filter_list: new Array(8).fill(null),
       filter_createdBy: [],
-      userRole: JSON.parse(localStorage.getItem('user_Roles')),
+      // userRole: JSON.parse(localStorage.getItem('user_Roles')),
 
     };
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -342,9 +342,11 @@ class ListCommercial extends Component {
                 <React.Fragment>
                   <span style={{ position: 'absolute', marginTop: '8px' }}>Commercial BOQ List</span>
                   <div className="card-header-actions" style={{ marginRight: '5px' }}>
+                  {this.state.userRole.findIndex(e => e === "BAM-CommBoq-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                     <Link to='/list-commercial/creation'>
                       <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
                     </Link>
+                     ):""}
                   </div>
                 </React.Fragment>
               </CardHeader>
@@ -419,21 +421,25 @@ class ListCommercial extends Component {
                               )}
                             </td> */}
                         <td style={{ verticalAlign: 'middle', textAlign: "center" }}>
+                        {this.state.userRole.findIndex(e => e === "BAM-CommBoq-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                           <Link to={'/list-commercial/detail/' + boq._id}>
                             <Button className="btn-primary" size="sm" color="primary" style={{ marginRight: '10px' }}>
-                              <i className="fas fa-edit" aria-hidden="true"></i>&nbsp; Edit
+                              <i className="fas fa-edit" aria-hidden="true"></i>&nbsp; Detail
                                 </Button>
                           </Link>
+                           ):""}
                           {/* }<Link to={'/approval-commercial/'+boq._id}>
                                 <Button size="sm" color="warning" style={{marginRight : '10px'}}>
                                   <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; Approval
                                 </Button>
                               </Link> */}
+                              {this.state.userRole.findIndex(e => e === "BAM-SubmissionBoq-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                           <Link to={'/submission-commercial/' + boq._id}>
                             <Button size="sm" color="secondary" style={{ marginRight: '10px' }}>
                               <i className="far fa-check-square" aria-hidden="true"></i>&nbsp; Submission
                                 </Button>
                           </Link>
+                           ):""}
                         </td>
                       </tr>
                     )}

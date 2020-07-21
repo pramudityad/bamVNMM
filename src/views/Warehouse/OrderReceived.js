@@ -335,7 +335,9 @@ class OrderReceived extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
+                    {this.state.userRole.findIndex(e => e === "BAM-MR-OrderReceivedStart") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
+                      ):""}
                       <th>MR ID</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
@@ -361,7 +363,9 @@ class OrderReceived extends Component {
                     )}
                     {this.state.mr_list.map((list, i) =>
                       <tr key={list._id}>
+                        {this.state.userRole.findIndex(e => e === "BAM-MR-OrderReceivedStart") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td><Button outline color="primary" size="sm" className="btn-pill" style={{ width: "130px" }} id={list._id} value={list._etag} onClick={this.proceedMilestone}><i className="fa fa-angle-double-right" style={{ marginRight: "8px" }}></i>Start Processing</Button></td>
+                        ):""}
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
                         <td>

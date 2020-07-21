@@ -233,8 +233,12 @@ class AssignmentList extends Component {
                 <span style={{ lineHeight: '2' }}>
                   <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> Assignment List
                 </span>
+                {this.state.userRole.findIndex(e => e === "BAM-Assignment-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                 <Link to={'/assignment-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment</Button></Link>
+                ):""}
+                {this.state.userRole.findIndex(e => e === "BAM-Assignment-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                 <Link to={'/bulk-assignment-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment Bulk</Button></Link>
+                ):""}
                 <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignment} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List</Button>
                 <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignmentAcceptenceMigration} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List Status Migration</Button>
               </CardHeader>
@@ -242,7 +246,9 @@ class AssignmentList extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
+                    {this.state.userRole.findIndex(e => e === "BAM-Assignment-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
+                      ):""}
                       <th>Assignment ID</th>
                       <th>Account Name</th>
                       <th>Project Name</th>
@@ -263,11 +269,13 @@ class AssignmentList extends Component {
                     )}
                     {this.state.assignment_list.map((list, i) =>
                       <tr key={list._id}>
+                        {this.state.userRole.findIndex(e => e === "BAM-Assignment-View") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td>
                           <Link to={'/assignment-detail/' + list._id}>
                             <Button style={{ width: "90px" }} outline color="info" size="sm">Detail</Button>
                           </Link>
                         </td>
+                        ):""}
                         <td>{list.Assignment_No}</td>
                         <td>{list.Account_Name}</td>
                         <td>{list.Project}</td>

@@ -321,10 +321,12 @@ class MaterialDispatch extends Component {
                           {list.current_mr_status === "LOADING PROCESS FINISH" ? (
                             "Waiting Dispatch"
                           ) : (
-                              <React.Fragment>Finish {(this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 )&& (<Button color="info" size="sm" onClick={() => this.downloadMRTRACY(list._id)}>TRACY</Button>)}</React.Fragment>
+                              <React.Fragment>Finish {this.state.userRole.findIndex(e => e === "BAM-MR-Dispatch") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? ((this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 )&& (<Button color="info" size="sm" onClick={() => this.downloadMRTRACY(list._id)}>TRACY</Button>) ):""}</React.Fragment>
                             )}
                         </td>
+                        {this.state.userRole.findIndex(e => e === "BAM-MR-WaitingDispatchView") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
+                        ):(<td>{list.mr_id}</td>)}
                         <td>{list.project_name}</td>
                         <td>
                           {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>

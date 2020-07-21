@@ -1173,6 +1173,7 @@ class AssignmentDetail extends Component {
                     </Row>
                     <h5 style={{ marginTop: "16px" }}>PR/PO INFORMATION</h5>
                     <Row>
+                    {this.state.userRole.findIndex(e => e === "BAM-Assignment-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <div style={{ paddingLeft: "25px" }}>
                         <Checkbox
                           name="editable"
@@ -1181,6 +1182,7 @@ class AssignmentDetail extends Component {
                         />
                         <span>Editable</span>
                       </div>
+                       ):""}
                     </Row>
                     <Row>
                       <Col md="6">
@@ -1318,6 +1320,7 @@ class AssignmentDetail extends Component {
                       this.state.data_assignment !== undefined && (
                         <Fragment>
                           <h5 style={{ marginTop: "16px" }}>SSOW List</h5>
+                          {this.state.userRole.findIndex(e => e === "BAM-Assignment-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                           <Row
                             style={{
                               paddingLeft: "16px",
@@ -1333,6 +1336,7 @@ class AssignmentDetail extends Component {
                               <span>Editable</span>
                             </div>
                           </Row>
+                           ):""}
                           {this.state.can_edit_ssow ? (
                             <Fragment>
                               {this.state.data_assignment.SSOW_List !==
@@ -1732,7 +1736,8 @@ class AssignmentDetail extends Component {
                   </Form>
                 </CardBody>
                 <CardFooter>
-                  {(this.state.data_assignment.Current_Status ===
+                {this.state.userRole.findIndex(e => e === "BAM-Assignment-ApprovalTPM") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                  (this.state.data_assignment.Current_Status ===
                     "REQUEST PM APPROVAL" ||
                     this.state.data_assignment.Current_Status ===
                       "ASP ASSIGNMENT NEED REVISION" ||
@@ -1747,7 +1752,7 @@ class AssignmentDetail extends Component {
                     >
                       Approve
                     </Button>
-                  )}
+                  ) ):""}
                   {(this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT REQUEST FOR CANCELATION" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCEL APPROVED") && (
                     <Button
                       color="danger"
@@ -1759,7 +1764,8 @@ class AssignmentDetail extends Component {
                       Cancel ASG
                     </Button>
                   )}
-                  {this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (
+                  {this.state.userRole.findIndex(e => e === "BAM-Assignment-ApprovalTPM") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                  this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (
                     <Button
                       color="danger"
                       size="sm"
@@ -1769,8 +1775,9 @@ class AssignmentDetail extends Component {
                     >
                       Approve Cancellation ASG
                     </Button>
-                  )}
-                  {this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (
+                  )):""}
+                  {this.state.userRole.findIndex(e => e === "BAM-Assignment-ApprovalTPM") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                  this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (
                     <Button
                       color="warning"
                       size="sm"
@@ -1780,8 +1787,9 @@ class AssignmentDetail extends Component {
                     >
                       Reject Cancellation ASG
                     </Button>
-                  )}
-                  {this.state.data_assignment.Current_Status ===
+                  )):""}
+                  {this.state.userRole.findIndex(e => e === "BAM-Assignment-NotifyASP") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                  this.state.data_assignment.Current_Status ===
                     "PM APPROVE" && (
                     <Button
                       color="primary"
@@ -1796,7 +1804,7 @@ class AssignmentDetail extends Component {
                       ></i>{" "}
                       Notify ASP
                     </Button>
-                  )}
+                  ) ):""}                  
                   {this.state.data_assignment.Current_Status ===
                     "ASP ASSIGNMENT NOTIFIED TO ASP" && (
                     <Fragment>
@@ -1826,6 +1834,7 @@ class AssignmentDetail extends Component {
                         ></i>{" "}
                         Need Revision
                       </Button>
+                      {this.state.userRole.findIndex(e => e === "BAM-Assignment-ApprovalASP") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <Button
                         color="success"
                         style={{ float: "right", marginRight: "8px" }}
@@ -1839,6 +1848,7 @@ class AssignmentDetail extends Component {
                         ></i>{" "}
                         Accept
                       </Button>
+                      ):""}
                       <Modal
                         isOpen={this.state.modal_revision}
                         toggle={this.toggleModalRevision}

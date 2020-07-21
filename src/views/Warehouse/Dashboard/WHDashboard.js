@@ -9,13 +9,20 @@ import {
   Collapse,
   Button,
 } from "reactstrap";
-import { InputGroup, InputGroupAddon, InputGroupText, Modal, ModalBody, ModalFooter } from "reactstrap";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  Modal,
+  ModalBody,
+  ModalFooter,
+} from "reactstrap";
 import { Link } from "react-router-dom";
 // import Widget from "./Widget";
 import "../wh_css.css";
 import { connect } from "react-redux";
 import axios from "axios";
-import Loading from '../../components/Loading'
+import Loading from "../../components/Loading";
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
@@ -194,7 +201,9 @@ class WarehouseDashboard extends Component {
 
   getWHStockList() {
     this.toggleLoading();
-    this.getDatafromAPINODE('/whManagement/warehouse?noPg=1&q={"wh_type":{"$regex" : "internal", "$options" : "i"}}').then((res) => {
+    this.getDatafromAPINODE(
+      '/whManagement/warehouse?noPg=1&q={"wh_type":{"$regex" : "internal", "$options" : "i"}}'
+    ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -279,8 +288,7 @@ class WarehouseDashboard extends Component {
                       <Link
                         to={{
                           pathname:
-                            "/wh-dashboard-eid/wh-dashboard-eid-det/" +
-                            e.wh_id
+                            "/wh-dashboard-eid/wh-dashboard-eid-det/" + e.wh_id,
                         }}
                       >
                         <h6>
@@ -314,71 +322,112 @@ class WarehouseDashboard extends Component {
                       </CardBody>
                       <CardFooter>
                         <Row className="align-items-center">
-                          <Col col="2" xl className="mb-3 mb-xl-0">
-                            <Link
-                              to={{
-                                pathname:"/wh-dashboard-eid/material-stock2/" +e.wh_id,
-                              }}
-                            >
-                              <Button
-                                block
-                                color="primary"
-                                size="sm"
-                                className="btn-pill"
+                          {this.state.userRole.findIndex(
+                            (e) => e === "BAM-WHStock-View"
+                          ) !== -1 ||
+                          this.state.userRole.findIndex(
+                            (e) => e === "Admin"
+                          ) !== -1 ? (
+                            <Col col="2" xl className="mb-3 mb-xl-0">
+                              <Link
+                                to={{
+                                  pathname:
+                                    "/wh-dashboard-eid/material-stock2/" +
+                                    e.wh_id,
+                                }}
                               >
-                                Stock
-                              </Button>
-                            </Link>
-                          </Col>
-
-                          <Col col="2" xl className="mb-3 mb-xl-0">
-                            <Link
-                              to={{
-                                pathname:"/wh-dashboard-eid/material-inbound-plan2/" +e.wh_id,
-                              }}
-                            >
-                              <Button
-                                block
-                                color="secondary"
-                                size="sm"
-                                className="btn-pill"
+                                <Button
+                                  block
+                                  color="primary"
+                                  size="sm"
+                                  className="btn-pill"
+                                >
+                                  Stock
+                                </Button>
+                              </Link>
+                            </Col>
+                          ) : (
+                            ""
+                          )}
+                          {this.state.userRole.findIndex(
+                            (e) => e === "BAM-WHInboundPlan-View"
+                          ) !== -1 ||
+                          this.state.userRole.findIndex(
+                            (e) => e === "Admin"
+                          ) !== -1 ? (
+                            <Col col="2" xl className="mb-3 mb-xl-0">
+                              <Link
+                                to={{
+                                  pathname:
+                                    "/wh-dashboard-eid/material-inbound-plan2/" +
+                                    e.wh_id,
+                                }}
                               >
-                                Plan
-                              </Button>
-                            </Link>
-                          </Col>
-
-                          <Col col="2" xl className="mb-3 mb-xl-0">
-                          <Link
-                              to={{
-                                pathname:"/wh-dashboard-eid/wh-gr-eid/" +e.wh_id,
-                              }}>
-                            <Button
-                              block
-                              color="success"
-                              size="sm"
-                              className="btn-pill"
-                            >
-                              GR
-                            </Button>
-                            </Link>
-                          </Col>
-
-                          <Col col="2" xl className="mb-3 mb-xl-0">
-                          <Link
-                              to={{
-                                pathname:"/wh-dashboard-eid/wh-gi-eid/" +e.wh_id,
-                              }}>
-                            <Button
-                              block
-                              color="warning"
-                              size="sm"
-                              className="btn-pill"
-                            >
-                              GI
-                            </Button>
-                            </Link>
-                          </Col>
+                                <Button
+                                  block
+                                  color="secondary"
+                                  size="sm"
+                                  className="btn-pill"
+                                >
+                                  Plan
+                                </Button>
+                              </Link>
+                            </Col>
+                          ) : (
+                            ""
+                          )}
+                          {this.state.userRole.findIndex(
+                            (e) => e === "BAM-WHInternalGR-View"
+                          ) !== -1 ||
+                          this.state.userRole.findIndex(
+                            (e) => e === "Admin"
+                          ) !== -1 ? (
+                            <Col col="2" xl className="mb-3 mb-xl-0">
+                              <Link
+                                to={{
+                                  pathname:
+                                    "/wh-dashboard-eid/wh-gr-eid/" + e.wh_id,
+                                }}
+                              >
+                                <Button
+                                  block
+                                  color="success"
+                                  size="sm"
+                                  className="btn-pill"
+                                >
+                                  GR
+                                </Button>
+                              </Link>
+                            </Col>
+                          ) : (
+                            ""
+                          )}
+                          {this.state.userRole.findIndex(
+                            (e) => e === "BAM-WHInternalGI-View"
+                          ) !== -1 ||
+                          this.state.userRole.findIndex(
+                            (e) => e === "Admin"
+                          ) !== -1 ? (
+                            <Col col="2" xl className="mb-3 mb-xl-0">
+                              <Link
+                                to={{
+                                  pathname:
+                                    "/wh-dashboard-eid/wh-gi-eid/" + e.wh_id,
+                                }}
+                              >
+                                <Button
+                                  block
+                                  color="warning"
+                                  size="sm"
+                                  className="btn-pill"
+                                >
+                                  GI
+                                </Button>
+                              </Link>
+                            </Col>
+                          ) : (
+                            ""
+                          )}
                         </Row>
                       </CardFooter>
                     </Collapse>
@@ -388,10 +437,11 @@ class WarehouseDashboard extends Component {
             ))}
         </Row>
         {/* Modal Loading */}
-        <Loading isOpen={this.state.modal_loading}
+        <Loading
+          isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
-          className={"modal-sm modal--loading "}>
-        </Loading>
+          className={"modal-sm modal--loading "}
+        ></Loading>
         {/* end Modal Loading */}
       </div>
     );

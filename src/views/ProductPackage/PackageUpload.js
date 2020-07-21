@@ -920,7 +920,7 @@ class PackageUpload extends React.Component {
                       </DropdownMenu>
                     </Dropdown>
                   </div>
-                  {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
+                  {this.state.userRole.findIndex(e => e === "BAM-BundleManger-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                     <div>
                       <Button block color="success" onClick={this.toggleAddNew} id="toggleCollapse1">
                         <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> New
@@ -1004,11 +1004,13 @@ class PackageUpload extends React.Component {
                                 {/* <td style={{textAlign : 'left'}}>{pp.pp_group}</td> */}
                                 <td style={{ textAlign: 'center' }}>{pp.physical_group}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.product_type}</td>
+                                {this.state.userRole.findIndex(e => e === "BAM-BundleManger-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                                 <td>
                                   <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
                                     <i className="fas fa-edit" aria-hidden="true"></i>
                                   </Button>
                                 </td>
+                                 ):""}
                               </tr>
                               {pp.materials.map(mat =>
                                 <tr className='fixbodymat' key={mat._id}>

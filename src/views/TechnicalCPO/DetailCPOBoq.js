@@ -2134,14 +2134,18 @@ class DetailCPOBoq extends Component {
                             </DropdownMenu>
                           </Dropdown>
                           <div style={{ marginRight: "10px" }}>
+                          {this.state.userRole.findIndex(e => e === "BAM-CpoBoq-Edit") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                             <Button block color="success" size="sm" onClick={this.toggleCollapse} id="toggleCollapse1">
                               Update
                               </Button>
+                              ):""}
                           </div>
                           <div>
+                          {this.state.userRole.findIndex(e => e === "BAM-CpoBoq-Assign") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                             <Button block color="warning" size="sm" onClick={this.toggleCollapseCompare} id="toggleCollapse1">
                               Compare
                             </Button>
+                             ):""}
                           </div>
                         </div>
                         </React.Fragment>

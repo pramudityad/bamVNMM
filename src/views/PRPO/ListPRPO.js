@@ -189,6 +189,7 @@ class ListPRPO extends Component {
                   ></i>{" "}
                   PRT List
                 </span>
+                {this.state.userRole.findIndex(e => e === "BAM-AssignmentPRT-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                 <Link to={"/prt-list/creation"}>
                   <Button color="success" style={{ float: "right" }} size="sm">
                     <i
@@ -198,6 +199,7 @@ class ListPRPO extends Component {
                     Create PRT
                   </Button>
                 </Link>
+                 ):""}
                 {/* <Link to={"/bulk-assignment-creation"}>
                   <Button
                     color="success"
@@ -230,9 +232,11 @@ class ListPRPO extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
+                    {this.state.userRole.findIndex(e => e === "BAM-AssignmentPRT-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>
                         Action
                       </th>
+                       ):""}
                       <th>PRT ID</th>
                       <th>Site Id</th>
                       <th>Site Name</th>
@@ -252,6 +256,7 @@ class ListPRPO extends Component {
                     )}
                     {this.state.all_data.map((list, i) => (
                       <tr key={i}>
+                        {this.state.userRole.findIndex(e => e === "BAM-AssignmentPRT-Create") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                         <td>
                           <Link to={"/prt-list/detail/" + list._id}>
                             <Button
@@ -264,6 +269,7 @@ class ListPRPO extends Component {
                             </Button>
                           </Link>
                         </td>
+                        ):""}
                         <td>{list.prt_id}</td>
                         <td>{list.site_id}</td>
                         <td>{list.site_name}</td>
