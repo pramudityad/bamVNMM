@@ -39,6 +39,8 @@ const Users = React.lazy(() => import('./views/Users/Users'));
 const User = React.lazy(() => import('./views/Users/User'));
 
 const ProductPackage = React.lazy(() => import('./views/ProductPackage/PackageUpload'));
+const AddProductPackage = React.lazy(() => import('./views/ProductPackage/AddMatPackageUpload'));
+
 const TssrList = React.lazy(() => import('./views/Tssr/TssrList'));
 const TssrBOM = React.lazy(() => import('./views/Tssr/TssrBOM'));
 const TssrBOMDetail = React.lazy(() => import('./views/Tssr/DetailTssr'));
@@ -190,6 +192,7 @@ const routes = [
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
 
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
+  { path: '/additional-material-package', exact: true, name: 'Additional Material Package Manager', component: AddProductPackage },
   { path: '/ps-list', exact: true, name: 'Plant Spec List', component: TssrList },
   { path: '/ps-bom', exact: true, name: 'Plant Spec BOM', component: TssrBOM },
   { path: '/ps-list/:id', name: 'Plant Spec BOM', component: TssrBOMDetail },
