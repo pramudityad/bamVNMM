@@ -1804,8 +1804,9 @@ class AssignmentDetail extends Component {
                       ></i>{" "}
                       Notify ASP
                     </Button>
-                  ) ):""}                  
-                  {this.state.data_assignment.Current_Status ===
+                  ) ):""} 
+                     {this.state.userRole.findIndex(e => e === "BAM-Assignment-ApprovalASP") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (              
+                  this.state.data_assignment.Current_Status ===
                     "ASP ASSIGNMENT NOTIFIED TO ASP" && (
                     <Fragment>
                       <Button
@@ -1834,7 +1835,7 @@ class AssignmentDetail extends Component {
                         ></i>{" "}
                         Need Revision
                       </Button>
-                      {this.state.userRole.findIndex(e => e === "BAM-Assignment-ApprovalASP") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
+                      
                       <Button
                         color="success"
                         style={{ float: "right", marginRight: "8px" }}
@@ -1848,7 +1849,7 @@ class AssignmentDetail extends Component {
                         ></i>{" "}
                         Accept
                       </Button>
-                      ):""}
+                      
                       <Modal
                         isOpen={this.state.modal_revision}
                         toggle={this.toggleModalRevision}
@@ -1924,7 +1925,8 @@ class AssignmentDetail extends Component {
                         </ModalFooter>
                       </Modal>
                     </Fragment>
-                  )}
+                  )
+                  ):""}
                 </CardFooter>
               </Card>
             )}

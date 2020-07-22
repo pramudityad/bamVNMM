@@ -844,6 +844,7 @@ class MatLibrary extends React.Component {
                                     ></i>
                                   </Button>
                                 </td> */}
+                                {this.state.userRole.findIndex(e => e === "BAM-MaterialVariant-Delete") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ? (
                                 <td>
                                   <Button
                                     size="sm"
@@ -859,6 +860,7 @@ class MatLibrary extends React.Component {
                                     ></i>
                                   </Button>
                                 </td>
+                                 ):""}
                               </tr>
                             </React.Fragment>
                           ))}
