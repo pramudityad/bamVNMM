@@ -56,6 +56,8 @@ class AddMatPackageUpload extends React.Component {
       packageChecked_page: false,
       modalAdditionalForm : false,
       additional_material : [],
+      search: null,
+
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -180,6 +182,11 @@ class AddMatPackageUpload extends React.Component {
   changeFilterName(value) {
     this.getPackageDataAPI();
   }
+
+  SearchFilter = (e) => {
+    let keyword = e.target.value;
+    this.setState({ search: keyword });
+  };
 
   handleChangeFilter = (e) => {
     let value = e.target.value;
@@ -908,7 +915,7 @@ class AddMatPackageUpload extends React.Component {
     }
 
     const BundleMaterial = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([BundleMaterial]), 'Bundle Material Uploader Template.xlsx');
+    saveAs(new Blob([BundleMaterial]), ' Material Uploader Template.xlsx');
   }
 
   addMaterialAdditional(){
@@ -990,7 +997,7 @@ class AddMatPackageUpload extends React.Component {
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{ marginTop: '8px', position: 'absolute' }}>Bundle Additional Material</span>
+                {/* <span style={{ marginTop: '8px', position: 'absolute' }}> Additional Material</span> */}
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
@@ -999,7 +1006,7 @@ class AddMatPackageUpload extends React.Component {
                         </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        {/* <DropdownItem onClick={this.exportFormatPackage}>> Bundle Template</DropdownItem>
+                        {/* <DropdownItem onClick={this.exportFormatPackage}>>  Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem> */}
                         <DropdownItem onClick={this.exportFormatBundleMaterial}>> Additional Material Template</DropdownItem>
                         {/* <DropdownItem onClick={this.exportFormatConfigVertical} disabled={this.state.packageChecked.length === 0}>> Config Template</DropdownItem>
@@ -1045,7 +1052,7 @@ class AddMatPackageUpload extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: '10px' }}>
-                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Bundle List</span>
+                      <span style={{ fontSize: '20px', fontWeight: '500' }}> Material Additional List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                       <span style={{marginRight: '10px'}}>
                       {/* <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />Select All */}
@@ -1055,7 +1062,7 @@ class AddMatPackageUpload extends React.Component {
                           Select All
                         </span> */}
                         {/* &nbsp;&nbsp;&nbsp; */}
-                        {/* <input className="search-box-material" type="text" name='filter' placeholder="Search" onChange={this.handleChangeFilter} value={this.state.filter_name} /> */}
+                        <input className="search-box-material" type="text" name='filter' placeholder="Search" onChange={(e) => this.SearchFilter(e)}  />
                       </div>
                     </div>
                   </Col>
@@ -1066,50 +1073,62 @@ class AddMatPackageUpload extends React.Component {
                       <table hover bordered responsive size="sm" width='100%'>
                         <thead style={{ backgroundColor: '#c6f569' }} className='fixed-pp'>
                           <tr align="center">
-                            <th>
+                            {/* <th>
                               <Checkbox name={"all"} checked={this.state.packageChecked_page} onChange={this.handleChangeChecklistPage} />
-                            </th>
-                            <th style={{ minWidth: '150px' }}>Additional Name</th>
+                            </th> */}
+                            {/* <th style={{ minWidth: '150px' }}>Additional Name</th> */}
                             <th>Material Name</th>
                             <th>Additional ID</th>
                             <th>Unit</th>
                             <th>Qty</th>
                             {/* <th>Product Package</th> */}
-                            <th>Physical Group</th>
-                            <th>Additional Type/ Material Origin</th>
+                            {/* <th>Physical Group</th> */}
+                            {/* <th>Additional Type/ Material Origin</th> */}
                             {/* <th></th> */}
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.product_package.map(pp =>
+                          {this.state.product_package                        
+                          .map(pp =>
                             <React.Fragment key={pp._id + "frag"}>
-                              <tr style={{ backgroundColor: '#E5FCC2' }} className='fixbody' key={pp._id}>
+                              {/* <tr style={{ backgroundColor: '#E5FCC2' }} className='fixbody' key={pp._id}>
                                 <td align="center"><Checkbox name={pp._id} checked={this.state.packageChecked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
                                 <td colSpan="2" style={{ textAlign: 'left' }}>{pp.product_name}</td>
                                 <td style={{ textAlign: 'left' }}>{pp.pp_id}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.uom}</td>
                                 <td style={{ textAlign: 'left' }}></td>
-                                {/* <td style={{textAlign : 'left'}}>{pp.pp_group}</td> */}
+
                                 <td style={{ textAlign: 'center' }}>{pp.physical_group}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.product_type}</td>
-                                {/* <td>
-                                  <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
-                                    <i className="fas fa-edit" aria-hidden="true"></i>
-                                  </Button>
-                                </td> */}
-                              </tr>
-                              {pp.materials.map(mat =>
+   
+                              </tr> */}
+                              {pp.materials
+                              .filter((mat) => {
+                                if (this.state.search === null) {
+                                  return mat;
+                                } else if (
+                                  mat.material_name
+                                    .toLowerCase()
+                                    .includes(this.state.search.toLowerCase()) ||
+                                  mat.material_id
+                                    .toLowerCase()
+                                    .includes(this.state.search.toLowerCase())
+                                ) {
+                                  return mat;
+                                }
+                              })
+                              .map(mat =>
                                 <tr className='fixbodymat' key={mat._id}>
-                                  <td style={{ textAlign: 'left' }}></td>
-                                  <td style={{ textAlign: 'left' }}></td>
+                                  {/* <td style={{ textAlign: 'left' }}></td>
+                                  <td style={{ textAlign: 'left' }}></td> */}
                                   <td style={{ textAlign: 'left' }}>{mat.material_name}</td>
                                   <td style={{ textAlign: 'left' }}>{mat.material_id}</td>
                                   <td style={{ textAlign: 'center' }}>{mat.uom}</td>
                                   <td style={{ textAlign: 'center' }}>{mat.qty}</td>
                                   {/* }<td style={{textAlign : 'left'}}></td> */}
-                                  <td style={{ textAlign: 'left' }}></td>
-                                  <td style={{ textAlign: 'center' }}>{mat.material_origin}</td>
-                                  <td></td>
+                                  {/* <td style={{ textAlign: 'left' }}></td>
+                                  <td style={{ textAlign: 'center' }}>{mat.material_origin}</td> */}
+                                  {/* <td></td> */}
                                 </tr>
                               )}
                             </React.Fragment>
@@ -1156,11 +1175,11 @@ class AddMatPackageUpload extends React.Component {
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="pp_id">Bundle ID</Label>
+                  <Label htmlFor="pp_id"> ID</Label>
                   <Input type="text" name="0" placeholder="" value={this.state.PPForm[0]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="product_name">Bundle Name</Label>
+                  <Label htmlFor="product_name"> Name</Label>
                   <Input type="text" name="1" placeholder="" value={this.state.PPForm[1]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup row>
