@@ -53,7 +53,9 @@ class AddMatPackageUpload extends React.Component {
       collapse: false,
       modalPPFedit: false,
       packageChecked_all: false,
-      packageChecked_page: false
+      packageChecked_page: false,
+      modalAdditionalForm : false,
+      additional_material : [],
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -74,7 +76,21 @@ class AddMatPackageUpload extends React.Component {
     this.togglePPedit = this.togglePPedit.bind(this);
     this.saveUpdatePP = this.saveUpdatePP.bind(this);
     this.exportFormatBundleMaterial = this.exportFormatBundleMaterial.bind(this);
+    this.toggleAdditionalForm = this.toggleAdditionalForm.bind(this);
+    this.AdditionalForm = this.AdditionalForm.bind(this);
+    this.onChangeMaterialAdditional = this.onChangeMaterialAdditional.bind(this);
+    this.addMaterialAdditional = this.addMaterialAdditional.bind(this);
+    this.deleteMaterialAdditional = this.deleteMaterialAdditional.bind(this);
+    this.saveAdditional = this.saveAdditional.bind(this);
+
   }
+
+  toggleAdditionalForm() {
+    this.setState(prevState => ({
+      modalAdditionalForm: !prevState.modalAdditionalForm
+    }));
+  }
+
   toggle(i) {
     const newArray = this.state.dropdownOpen.map((element, index) => {
       return (index === i ? !element : false);
@@ -876,7 +892,7 @@ class AddMatPackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataPP = this.state.packageSelected;
+    const dataPP = this.state.product_package_all;
 
     ws.addRow(["bundle_id", "bundle_name", "bundle_type", "physical_group", "bundle_unit", "bundle_group", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
 
@@ -895,6 +911,77 @@ class AddMatPackageUpload extends React.Component {
     saveAs(new Blob([BundleMaterial]), 'Bundle Material Uploader Template.xlsx');
   }
 
+  addMaterialAdditional(){
+    let addMaterial = this.state.additional_material;
+    addMaterial.push({});
+    this.setState({additional_material : addMaterial });
+  }
+
+  deleteMaterialAdditional(index){
+    let addMaterial = this.state.additional_material;
+    addMaterial.splice(index,1);
+    this.setState({additional_material : addMaterial });
+  }
+
+  onChangeMaterialAdditional(e){
+    let addMaterial = this.state.additional_material;
+    let idxField = e.target.name.split(" /// ");
+    let value = e.target.value;
+    let idx = idxField[1];
+    let field = idxField[0];
+    addMaterial[parseInt(idx)][field] = value;
+    this.setState({additional_material : addMaterial})
+  }  
+
+  async saveAdditional(){
+    this.toggleLoading();
+    this.setState({modalAdditionalForm : false});
+    const addMaterial = this.state.additional_material;
+    const dataPP = this.state.product_package[0];
+    // const dataUpload = [["material_id_actual", "material_name_actual", "material_type", "unit", "qty"]];
+    const dataUpload = [["pp_id","product_name","product_type","physical_group","package_unit","pp_group","material_id","material_name","material_type","material_origin","material_unit","material_qty"]];
+    for(let i = 0; i < addMaterial.length; i++){
+      dataUpload.push(["AdditionalMaterial","Additional Material","Additional","Additional","grp","AdditionalMaterial", addMaterial[i].material_id_actual, addMaterial[i].material_name_actual, addMaterial[i].material_type, addMaterial[i].material_origin, addMaterial[i].unit, parseFloat(addMaterial[i].qty)]);
+    }
+    let patchDataMat = await this.postDatatoAPINODE('/productpackage/packageWithMaterial', { "data": dataUpload });
+    if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
+      this.setState({ action_status : 'success'});
+    } else{
+      if(patchDataMat.response !== undefined && patchDataMat.response.data !== undefined && patchDataMat.response.data.error !== undefined){
+        if(patchDataMat.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+  }
+
+  AdditionalForm(){
+    // this.toggleLoading();
+    let additionaMaterial = [];
+    const addPP = this.state.product_package.filter(e => e.pp_id === "AdditionalMaterial");
+    const addMaterial = addPP.map(value => value.materials.map(child => child)).reduce((l, n) => l.concat(n), []);
+    for(let i = 0; i < addMaterial.length; i++){
+      let addIdx = {
+        "material_id_actual" : addMaterial[i].material_id,
+        "material_name_actual" : addMaterial[i].material_name,
+        "material_type" : addMaterial[i].material_type,
+        "unit" : addMaterial[i].uom,
+        "qty" : addMaterial[i].qty,
+        "source_material" : addMaterial[i].source_material
+      };
+      additionaMaterial.push(addIdx);
+    }
+    this.setState({additional_material : additionaMaterial, modalAdditionalForm : true}, () => {
+      // this.toggleLoading();
+    });
+
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -903,7 +990,7 @@ class AddMatPackageUpload extends React.Component {
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{ marginTop: '8px', position: 'absolute' }}>Bundle / Material</span>
+                <span style={{ marginTop: '8px', position: 'absolute' }}>Bundle Additional Material</span>
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
@@ -912,19 +999,19 @@ class AddMatPackageUpload extends React.Component {
                         </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatPackage}>> Bundle Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatBundleMaterial}>> Bundle Material Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatConfigVertical} disabled={this.state.packageChecked.length === 0}>> Config Template</DropdownItem>
+                        {/* <DropdownItem onClick={this.exportFormatPackage}>> Bundle Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem> */}
+                        <DropdownItem onClick={this.exportFormatBundleMaterial}>> Additional Material Template</DropdownItem>
+                        {/* <DropdownItem onClick={this.exportFormatConfigVertical} disabled={this.state.packageChecked.length === 0}>> Config Template</DropdownItem>
                         <DropdownItem onClick={this.exportTSSRFormat} disabled={this.state.packageChecked.length === 0}>> PS Template</DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem> */}
                       </DropdownMenu>
                     </Dropdown>
                   </div>
                   {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
                     <div>
                       <Button block color="success" onClick={this.toggleAddNew} id="toggleCollapse1">
-                        <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> New
+                        <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> Update
                         </Button>
                     </div>
                   ) : ("")}
@@ -949,8 +1036,8 @@ class AddMatPackageUpload extends React.Component {
                   </CardBody>
                   <CardFooter>
                     <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackageOneShot} style={{ marginRight: '10px' }}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE</Button>
-                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage}> <i className="fa fa-refresh" aria-hidden="true"> </i> &nbsp;Update </Button>
-                    <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>
+                    {/* <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage}> <i className="fa fa-refresh" aria-hidden="true"> </i> &nbsp;Update </Button> */}
+                    <Button color="primary" style={{ float: 'right' }} onClick={this.AdditionalForm}> <i className="fa fa-paste">&nbsp;&nbsp;</i> &nbsp;Form</Button>
                   </CardFooter>
                 </Card>
               </Collapse>
@@ -961,14 +1048,14 @@ class AddMatPackageUpload extends React.Component {
                       <span style={{ fontSize: '20px', fontWeight: '500' }}>Bundle List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                       <span style={{marginRight: '10px'}}>
-                      <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />Select All
+                      {/* <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />Select All */}
                       </span>
                         {/* <span style={{ marginRight: '10px' }}>
                           <Checkbox name={"allPP"} checked={this.state.packageChecked_allPP} onChange={this.handleChangeChecklistAllPP} disabled={this.state.pp_all.length === 0} />
                           Select All
                         </span> */}
                         {/* &nbsp;&nbsp;&nbsp; */}
-                        <input className="search-box-material" type="text" name='filter' placeholder="Search" onChange={this.handleChangeFilter} value={this.state.filter_name} />
+                        {/* <input className="search-box-material" type="text" name='filter' placeholder="Search" onChange={this.handleChangeFilter} value={this.state.filter_name} /> */}
                       </div>
                     </div>
                   </Col>
@@ -982,15 +1069,15 @@ class AddMatPackageUpload extends React.Component {
                             <th>
                               <Checkbox name={"all"} checked={this.state.packageChecked_page} onChange={this.handleChangeChecklistPage} />
                             </th>
-                            <th style={{ minWidth: '150px' }}>Bundle Name</th>
+                            <th style={{ minWidth: '150px' }}>Additional Name</th>
                             <th>Material Name</th>
-                            <th>Bundle ID</th>
+                            <th>Additional ID</th>
                             <th>Unit</th>
                             <th>Qty</th>
                             {/* <th>Product Package</th> */}
                             <th>Physical Group</th>
-                            <th>Bundle Type/ Material Origin</th>
-                            <th></th>
+                            <th>Additional Type/ Material Origin</th>
+                            {/* <th></th> */}
                           </tr>
                         </thead>
                         <tbody>
@@ -1005,11 +1092,11 @@ class AddMatPackageUpload extends React.Component {
                                 {/* <td style={{textAlign : 'left'}}>{pp.pp_group}</td> */}
                                 <td style={{ textAlign: 'center' }}>{pp.physical_group}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.product_type}</td>
-                                <td>
+                                {/* <td>
                                   <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
                                     <i className="fas fa-edit" aria-hidden="true"></i>
                                   </Button>
-                                </td>
+                                </td> */}
                               </tr>
                               {pp.materials.map(mat =>
                                 <tr className='fixbodymat' key={mat._id}>
@@ -1126,6 +1213,89 @@ class AddMatPackageUpload extends React.Component {
           </ModalFooter>
         </Modal>
         {/*  Modal New PP*/}
+
+        {/* Modal Additional Material */}
+        <Modal isOpen={this.state.modalAdditionalForm} toggle={this.toggleAdditionalForm} className={'modal-xl '+ this.props.className}>
+          <ModalHeader>
+            <div>
+              <span>Form Additional Material</span>
+            </div>
+          </ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col>
+                <Table hover bordered striped responsive size="sm">
+                  <thead>
+                    <tr>
+                      <th>
+                        Material ID
+                      </th>
+                      <th>
+                        Material Name
+                      </th>
+                      <th>
+                        Type
+                      </th>
+                      <th>
+                        Material Origin
+                      </th>
+                      <th>
+                        UoM
+                      </th>
+                      
+                      <th>
+                        Qty
+                      </th>
+                      {/* <th>
+                        Source Material
+                      </th> */}
+                      <th>
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {this.state.additional_material.map((add,i) =>
+                    <tr>
+                      <td>
+                        <input type="text" name={"material_id_actual" + " /// "+i } value={add.material_id_actual} onChange={this.onChangeMaterialAdditional} />
+                      </td>
+                      <td>
+                        <input type="text" name={"material_name_actual" + " /// "+i } value={add.material_name_actual} onChange={this.onChangeMaterialAdditional} />
+                      </td>
+                      <td>
+                        <input type="text" name={"material_type" + " /// "+i } value={add.material_type} onChange={this.onChangeMaterialAdditional} style={{width : '150px'}}/>
+                      </td>
+                      <td>
+                        <input type="text" name={"material_origin" + " /// "+i } value={add.material_origin} onChange={this.onChangeMaterialAdditional} style={{width : '100px'}}/>
+                      </td>
+                      <td>
+                        <input type="text" name={"unit" + " /// "+i } value={add.unit} onChange={this.onChangeMaterialAdditional} style={{width : '100px'}}/>
+                      </td>
+                    
+                      <td>
+                        <input type="number" name={"qty" + " /// "+i } value={add.qty} onChange={this.onChangeMaterialAdditional} style={{width : '75px'}}/>
+                      </td>
+                      {/* <td>
+                        <input type="string" name={"source_material" + " /// "+i } value={add.source_material} onChange={this.onChangeMaterialAdditional} />
+                      </td> */}
+                      <td>
+                        <Button color="danger" size="sm" onClick={e => this.deleteMaterialAdditional(i)}><span className="fa fa-times"></span></Button>
+                      </td>
+                    </tr>
+                  )}
+                  </tbody>
+                  <Button style={{ float : "left", margin : "15px"}} color="info" size="sm" onClick={this.addMaterialAdditional}>Add Material</Button>
+                </Table>
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="warning" size="sm" onClick={this.toggleAdditionalForm}>Cancel</Button>
+            <Button color="success" size="sm" onClick={this.saveAdditional}>Submit</Button>
+          </ModalFooter>
+        </Modal>
+        {/*  Modal Additional Material*/}
 
         {/* Modal Edit PP */}
         <Modal isOpen={this.state.modalPPFedit} toggle={this.togglePPedit} className="modal--form">
