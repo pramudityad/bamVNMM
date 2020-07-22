@@ -696,6 +696,7 @@ class DRMList extends React.Component {
       "system",
       "optic_rru",
       "area",
+      "atp_doc_review",
       "verification_date",
       "verification_status",
       "verification_pic",
@@ -746,6 +747,7 @@ class DRMList extends React.Component {
         download_all.system,
         download_all.optic_rru,
         download_all.area,
+        download_all.atp_doc_review,
         download_all.verification_date,
         download_all.verification_status,
         download_all.verification_pic,
@@ -841,6 +843,7 @@ class DRMList extends React.Component {
       "system",
       "optic_rru",
       "area",
+      "atp_doc_review",
       "verification_date",
       "verification_status",
       "verification_pic",
@@ -891,6 +894,7 @@ class DRMList extends React.Component {
         drm.system,
         drm.optic_rru,
         drm.area,
+        drm.atp_doc_review,
         drm.verification_date,
         drm.verification_status,
         drm.verification_pic,
@@ -966,6 +970,7 @@ class DRMList extends React.Component {
       "system",
       "optic_rru",
       "area",
+      "atp_doc_review",
       "verification_date",
       "verification_status",
       "verification_pic",
@@ -1212,6 +1217,7 @@ class DRMList extends React.Component {
                             <th>System</th>
                             <th>Optic RRU</th>
                             <th>Area</th>
+                            <th>ATP Doc Review Date</th>
                             <th>VERIFICATION (DATE)</th>
                             <th>VERIFICATION (STATUS)</th>
                             <th>VERIFICATION PIC</th>
@@ -1263,6 +1269,7 @@ class DRMList extends React.Component {
                             <td>{drm.system}</td>
                             <td>{drm.optic_rru}</td>
                             <td>{drm.area}</td>
+                            <td>{convertDateFormat(drm.atp_doc_reviewed)}</td>
                             <td>{convertDateFormat(drm.verification_date)}</td>
                             <td>{drm.verification_status}</td>
                             <td>{drm.verification_pic}</td>
