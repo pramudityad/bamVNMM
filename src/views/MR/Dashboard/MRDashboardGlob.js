@@ -174,7 +174,7 @@ class MRDashboardGlob extends Component {
     }
   }
 
-  async getDataFromAPINode(url) {
+  async getDataFromAPINODE(url) {
     try {
       let respond = await axios.get(API_URL_Node + url, {
         headers: {
@@ -213,81 +213,81 @@ class MRDashboardGlob extends Component {
   }
 
   getOrderCreated() {
-    this.getDataFromAPI('/mr_op?where={"current_mr_status":"MR REQUESTED"}').then(res => {
+    this.getDataFromAPINODE('/matreq?q={"current_mr_status":"MR REQUESTED"}').then(res => {
       console.log("Order Created", res);
       if (res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({ order_created: items.total });
+        const items = res.data.totalResults;
+        this.setState({ order_created: items});
       }
     })
   }
 
   getOrderReceived() {
-    this.getDataFromAPI('/mr_op?where={"current_mr_status": "MR APPROVED", "current_milestones":"MS_ORDER_RECEIVED"}').then(res => {
+    this.getDataFromAPINODE('/matreq?q={"current_mr_status": "MR APPROVED", "current_milestones":"MS_ORDER_RECEIVED"}').then(res => {
       console.log("Order Received", res);
       if (res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({ order_received: items.total });
+        const items = res.data.totalResults;
+        this.setState({ order_received: items});
       }
     })
   }
 
   getOrderProcessing() {
-    this.getDataFromAPI('/mr_op?where={"current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED"}').then(res => {
+    this.getDataFromAPINODE('/matreq?q={"current_mr_status": "ORDER PROCESSING START", "current_milestones": "MS_ORDER_RECEIVED"}').then(res => {
       console.log("Order Processing", res);
       if (res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({ order_processing: items.total });
+        const items = res.data.totalResults;
+        this.setState({ order_processing: items});
       }
     })
   }
 
   getReadyToDeliver() {
-    this.getDataFromAPI('/mr_op?where={"$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_READY_TO_DELIVER"}').then(res => {
+    this.getDataFromAPINODE('/matreq?q={"$or" : [{"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}], "current_milestones": "MS_ORDER_PROCESSING"}').then(res => {
       console.log("Ready To Deliver", res);
       if (res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({ ready_to_deliver: items.total });
+        const items = res.data.totalResults;
+        this.setState({ ready_to_deliver: items});
       }
     })
   }
 
   getJointCheck() {
-    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_READY_TO_DELIVER"}').then(res => {
+    this.getDataFromAPINODE('/matreq?q={"current_milestones": "MS_READY_TO_DELIVER"}').then(res => {
       console.log("Joint Check", res);
       if (res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({ joint_check: items.total });
+        const items = res.data.totalResults;
+        this.setState({ joint_check: items});
       }
     })
   }
 
   getLoadingProcess() {
-    this.getDataFromAPI('/mr_op?where={"current_milestones": "MS_JOINT_CHECK"}').then(res => {
+    this.getDataFromAPINODE('/matreq?q={"current_milestones": "MS_JOINT_CHECK"}').then(res => {
       console.log("Loading Process", res);
       if (res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({ loading_process: items.total });
+        const items = res.data.totalResults;
+        this.setState({ loading_process: items});
       }
     })
   }
 
   getMaterialDispatch() {
-    this.getDataFromAPI('/mr_op?where={"$or" : [{"current_milestones": "MS_DISPATCH"}, {"current_milestones": "MS_LOADING_PROCESS", "current_mr_status": "LOADING PROCESS FINISH"}]}').then(res => {
+    this.getDataFromAPINODE('/matreq?q={"$or" : [{"current_milestones": "MS_DISPATCH"}, {"current_milestones": "MS_LOADING_PROCESS", "current_mr_status": "LOADING PROCESS FINISH"}]}').then(res => {
       console.log("Material Dispatch", res);
       if (res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({ material_dispatch: items.total });
+        const items = res.data.totalResults;
+        this.setState({ material_dispatch: items});
       }
     })
   }
 
   getMaterialOnHold() {
-    this.getDataFromAPI('/mr_op?where={"current_mr_status":"LACK OF MATERIAL"}').then(res => {
+    this.getDataFromAPINODE('/matreq?q={"current_mr_status":"LACK OF MATERIAL"}').then(res => {
       console.log("Material On Hold", res);
       if (res.data !== undefined) {
-        const items = res.data._meta;
-        this.setState({ material_on_hold: items.total });
+        const items = res.data.totalResults;
+        this.setState({ material_on_hold: items});
       }
     })
   }
@@ -357,11 +357,11 @@ class MRDashboardGlob extends Component {
         </Row>
         <Row>
           <Col xs="12" sm="6" lg="4">
-            <a href="#" onMouseEnter={() => this.updateHover7("")} onMouseLeave={() => this.updateHover7("inverse")}>
+            <a href="/lom-list" onMouseEnter={() => this.updateHover7("")} onMouseLeave={() => this.updateHover7("inverse")}>
               <Widget color="danger" variant={this.state.variant7} header={this.state.material_on_hold} value={this.state.material_on_hold} mainText="Material On Hold" smallText="The status when the MR is in LOM and has not been confirmed by project whether to send with LOM or wait until it's completed" imageSource={this.state.img_7} />
             </a>
           </Col>
-          <Col xs="12" sm="6" lg="4">
+          {/*}<Col xs="12" sm="6" lg="4">
             <a href="#" onMouseEnter={() => this.updateHover8("")} onMouseLeave={() => this.updateHover8("inverse")}>
               <Widget color="danger" variant={this.state.variant8} header="999" mainText="Wait For Completed" value="999" smallText="The status when the MR is in LOM and needs to wait until the materials are completed" imageSource={this.state.img_8} />
             </a>
@@ -371,7 +371,7 @@ class MRDashboardGlob extends Component {
               <Widget color="danger" variant={this.state.variant9} header="999" mainText="Sent With LOM" value="999" smallText="The status when the MR is in LOM but the project decided to send with LOM" imageSource={this.state.img_9} />
             </a>
           </Col>
-          {/*  */}
+            */}
           <Col xs="12" sm="6" lg="4">
             <a href="wh-gr-ext" onMouseEnter={() => this.updateHover10("")} onMouseLeave={() => this.updateHover10("inverse")}>
               <Widget color="success" variant={this.state.variant10} header={this.state.gr_count} value={this.state.gr_count} mainText="GR" smallText="The amount of GR List on the project" imageSource={this.state.img_10} />

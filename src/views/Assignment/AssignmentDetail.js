@@ -1737,7 +1737,7 @@ class AssignmentDetail extends Component {
                     this.state.data_assignment.Current_Status ===
                       "ASP ASSIGNMENT NEED REVISION" ||
                     this.state.data_assignment.Current_Status ===
-                      "ASP ASSIGNMENT RE-SCHEDULE") && (
+                      "ASP ASSIGNMENT RE-SCHEDULE" && (this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
                     <Button
                       color="success"
                       style={{ float: "right" }}
@@ -1748,7 +1748,7 @@ class AssignmentDetail extends Component {
                       Approve
                     </Button>
                   )}
-                  {(this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT REQUEST FOR CANCELATION" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCEL APPROVED") && (
+                  {(this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT REQUEST FOR CANCELATION" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCEL APPROVED" && (this.state.data_assignment.created_by === this.state.userId || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
                     <Button
                       color="danger"
                       size="sm"
@@ -1759,7 +1759,7 @@ class AssignmentDetail extends Component {
                       Cancel ASG
                     </Button>
                   )}
-                  {this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (
+                  {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1))&& (
                     <Button
                       color="danger"
                       size="sm"
@@ -1770,7 +1770,7 @@ class AssignmentDetail extends Component {
                       Approve Cancellation ASG
                     </Button>
                   )}
-                  {this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (
+                  {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
                     <Button
                       color="warning"
                       size="sm"
@@ -1800,45 +1800,6 @@ class AssignmentDetail extends Component {
                   {this.state.data_assignment.Current_Status ===
                     "ASP ASSIGNMENT NOTIFIED TO ASP" && (
                     <Fragment>
-                      <Button
-                        color="danger"
-                        style={{ float: "right" }}
-                        id={this.state.data_assignment._id}
-                        value={this.state.data_assignment._etag}
-                        onClick={this.toggleModalReschedule}
-                      >
-                        <i
-                          className="fa fa-calendar-alt"
-                          style={{ marginRight: "8px" }}
-                        ></i>{" "}
-                        Reschedule
-                      </Button>
-                      <Button
-                        color="warning"
-                        style={{ float: "right", marginRight: "8px" }}
-                        id={this.state.data_assignment._id}
-                        value={this.state.data_assignment._etag}
-                        onClick={this.toggleModalRevision}
-                      >
-                        <i
-                          className="fa fa-edit"
-                          style={{ marginRight: "8px" }}
-                        ></i>{" "}
-                        Need Revision
-                      </Button>
-                      <Button
-                        color="success"
-                        style={{ float: "right", marginRight: "8px" }}
-                        id={this.state.data_assignment._id}
-                        value={this.state.data_assignment._etag}
-                        onClick={this.acceptASG}
-                      >
-                        <i
-                          className="fa fa-check"
-                          style={{ marginRight: "8px" }}
-                        ></i>{" "}
-                        Accept
-                      </Button>
                       <Modal
                         isOpen={this.state.modal_revision}
                         toggle={this.toggleModalRevision}

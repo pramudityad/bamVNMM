@@ -120,7 +120,7 @@ class ReadyToDeliver extends Component {
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
-    filter_array.push('"$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}]');
+    filter_array.push('"$or" : [{"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}]');
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
@@ -146,7 +146,7 @@ class ReadyToDeliver extends Component {
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
-    filter_array.push('"$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}]');
+    filter_array.push('"$or" : [{"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}]');
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
       console.log("MR List All", res);
@@ -367,19 +367,13 @@ class ReadyToDeliver extends Component {
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
                         <td>
-                          {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>
-                            j === list.cust_del.length - 1 ? custdel.cd_id : custdel.cd_id + ', '
-                          ))}
+                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_id + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_name + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>

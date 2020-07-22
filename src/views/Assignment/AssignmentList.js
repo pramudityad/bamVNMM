@@ -65,10 +65,11 @@ class AssignmentList extends Component {
     this.state.filter_list[0] !== "" && (filter_array.push('"Assignment_No":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
     this.state.filter_list[1] !== "" && (filter_array.push('"Account_Name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
     this.state.filter_list[2] !== "" && (filter_array.push('"Project":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
-    this.state.filter_list[3] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
-    this.state.filter_list[4] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
-    this.state.filter_list[5] !== "" && (filter_array.push('"Current_Status":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
-    this.state.filter_list[6] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
+    this.state.filter_list[3] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
+    this.state.filter_list[4] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+    this.state.filter_list[5] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
+    this.state.filter_list[6] !== "" && (filter_array.push('"Current_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
+    this.state.filter_list[7] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
@@ -86,10 +87,11 @@ class AssignmentList extends Component {
     this.state.filter_list[0] !== "" && (filter_array.push('"Assignment_No":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
     this.state.filter_list[1] !== "" && (filter_array.push('"Account_Name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
     this.state.filter_list[2] !== "" && (filter_array.push('"Project":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
-    this.state.filter_list[3] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
-    this.state.filter_list[4] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
-    this.state.filter_list[5] !== "" && (filter_array.push('"Current_Status":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
-    this.state.filter_list[6] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
+    this.state.filter_list[3] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
+    this.state.filter_list[4] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+    this.state.filter_list[5] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
+    this.state.filter_list[6] !== "" && (filter_array.push('"Current_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
+    this.state.filter_list[7] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1&q=' + whereAnd).then(res => {
       if (res.data !== undefined) {
@@ -189,7 +191,7 @@ class AssignmentList extends Component {
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       searchBar.push(
         <td>
           <div className="controls" style={{ width: '150px' }}>
@@ -246,6 +248,7 @@ class AssignmentList extends Component {
                       <th>Assignment ID</th>
                       <th>Account Name</th>
                       <th>Project Name</th>
+                      <th>CD ID</th>
                       <th>Vendor Name Type</th>
                       <th>Terms of Payment</th>
                       <th>Assignment Status</th>
@@ -271,6 +274,9 @@ class AssignmentList extends Component {
                         <td>{list.Assignment_No}</td>
                         <td>{list.Account_Name}</td>
                         <td>{list.Project}</td>
+                        <td>
+                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
+                        </td>
                         <td>{list.Vendor_Name}</td>
                         <td>{list.Payment_Terms}</td>
                         <td>{list.Current_Status}</td>

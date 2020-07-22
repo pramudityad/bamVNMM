@@ -133,7 +133,7 @@ class MRList extends Component {
     this.state.filter_list[6] !== "" && (filter_array.push('"current_milestones":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
     this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
     this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
-    this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
@@ -276,8 +276,13 @@ class MRList extends Component {
                 <span style={{ lineHeight: '2' }}>
                   <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MR List
                 </span>
-                <Link to={'/mr-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR</Button></Link>
-                <Link to={'/bulk-mr-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR Bulk</Button></Link>
+
+                {(this.state.userRole.findIndex(e => e === "BAM-Engineering") === -1 && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-LDM") === -1) && (
+                <React.Fragment>
+                	<Link to={'/mr-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR</Button></Link>
+                	<Link to={'/bulk-mr-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR Bulk</Button></Link>
+                </React.Fragment>
+                )}
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download MR List</Button>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadAllMRMigration} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Format MR List Status Migration</Button>
               </CardHeader>
@@ -313,19 +318,13 @@ class MRList extends Component {
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
                         <td>
-                          {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>
-                            j === list.cust_del.length - 1 ? custdel.cd_id : custdel.cd_id + ', '
-                          ))}
+                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_id + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_name : site_info.site_name + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>

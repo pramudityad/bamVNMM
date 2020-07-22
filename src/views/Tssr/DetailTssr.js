@@ -124,6 +124,7 @@ class DetailTssr extends Component {
     this.handleChangeTechRef = this.handleChangeTechRef.bind(this);
     this.referenceWithTechBoq = this.referenceWithTechBoq.bind(this);
     this.submitTSSR = this.submitTSSR.bind(this);
+    this.deletePS = this.deletePS.bind(this);
     this.toggleUpload = this.toggleUpload.bind(this);
     this.toggleUploadAdditional = this.toggleUploadAdditional.bind(this);
     this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
@@ -363,6 +364,26 @@ class DetailTssr extends Component {
       let respond = err;
       this.setState({action_status : 'failed', action_message : 'Sorry, There is something error, please refresh page and try again'})
       console.log("respond Post Data", err);
+      return respond;
+    }
+  }
+
+  async deleteDataFromAPINODE(url, data) {
+    try {
+      let respond = await axios.delete(API_URL_NODE + url, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+          data : data
+      });
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond delete Data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond delete Data err", err);
       return respond;
     }
   }
@@ -1143,6 +1164,19 @@ class DetailTssr extends Component {
     })
   }
 
+  deletePS(){
+    this.toggleLoading();
+    this.deleteDataFromAPINODE('/plantspec/deletePlantspec', {"data" : [this.props.match.params.id]}).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+        this.toggleLoading();
+      }else{
+        this.setState({ action_status : "failed" });
+        this.toggleLoading();
+      }
+    })
+  }
+
   CompareArrayObject(arr, prop) {
     return arr.sort(function (a, b) {
         var nameA = a[prop].toLowerCase(),
@@ -1406,7 +1440,8 @@ class DetailTssr extends Component {
     ws.addRow(["Project", null, ": "+dataTSSR.project_name]);
     ws.mergeCells('A9:B9');
     ws.addRow([""]);
-    ws.addRow(["Site ID", null, ": "+dataTSSR.site_info[0].site_id]);
+    ws.addRow(["Tower ID", null, ": "+dataTSSR.site_info[0].site_id]);
+    ws.addRow(["Tower Name", null, ": "+dataTSSR.site_info[0].site_name]);
     ws.mergeCells('A11:B11');
     ws.addRow([""]);
 
@@ -1537,7 +1572,8 @@ class DetailTssr extends Component {
     ws.addRow(["Project", null, ": "+dataTSSR.project_name]);
     ws.mergeCells('A9:B9');
     ws.addRow([""]);
-    ws.addRow(["Site ID", null, ": "+dataTSSR.site_info[0].site_id]);
+    ws.addRow(["Tower ID", null, ": "+dataTSSR.site_info[0].site_id]);
+    ws.addRow(["Tower Name", null, ": "+dataTSSR.site_info[0].site_name]);
     ws.mergeCells('A11:B11');
     ws.addRow([""]);
 
@@ -1794,7 +1830,7 @@ class DetailTssr extends Component {
           <Card>
             <CardHeader>
               <span style={{lineHeight :'2', fontSize : '15px'}} >Detail Plant Spec Group</span>
-              {this.state.tssrData !== null && this.state.tssrData.submission_status !== "SUBMITTED" ? (
+              {this.state.tssrData !== null && (this.state.tssrData.submission_status === "NOT SUBMITTED" ||  this.state.tssrData.submission_status === "PLANTSPEC UPDATED" )? (
                 <Button style={{marginRight : '8px', float : 'right'}} color="success" onClick={this.submitTSSR} size="sm">Submit</Button>
               ) : (
                 <Fragment></Fragment>
@@ -1869,7 +1905,7 @@ class DetailTssr extends Component {
                 </CardBody>
                 <CardFooter>
                   <Button style={{'float' : 'left',marginLeft : 'auto', order : "2"}} color="danger" size="sm" onClick={this.toggleWarningDeleteAdditional}>
-                    <i className="fa fa-paste">&nbsp;&nbsp;</i>
+                    <i className="fa fa-trash">&nbsp;&nbsp;</i>
                     Delete Additional Bundle
                   </Button>
                   <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.AdditionalForm}>
@@ -1931,91 +1967,6 @@ class DetailTssr extends Component {
               </table>
               <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
               <Fragment>
-                <Row>
-                {this.state.tssr_site_NE !== null && (
-                <Col style={{marginBottom : '10px'}}>
-                  <table>
-                    <tbody>
-                      <tr>
-                        <td>Technical Ref</td>
-                        <td>:</td>
-                        {this.state.list_technical_ref !== null ? (
-                          <Fragment>
-                            <td style={{paddingLeft:'10px', width : '200px'}}>
-                              <Select
-                                cacheOptions
-                                options={this.state.list_technical_ref_selection}
-                                onChange={this.handleChangeTechRef}
-                              />
-                            </td>
-                            <td style={{paddingLeft:'10px', width : '100px'}}>
-                              <Button size="sm" color="primary" style={{float: "right"}} sm disabled={this.state.technical_ref_selected === null} onClick={this.referenceWithTechBoq}>Submit</Button>
-                            </td>
-                          </Fragment>
-                        ) : (
-                          <td style={{paddingLeft:'10px', width : '200px'}}>
-                            {this.state.technical_ref_selected}
-                          </td>
-                        )}
-
-                      </tr>
-                    </tbody>
-                  </table>
-                </Col>
-                )}
-                </Row>
-                <Row>
-                {this.state.tssr_site_NE !== null && (
-                  <Fragment>
-                    <Col md="4">
-                    <table className="table-header">
-                      <tbody>
-                          <tr>
-                            <td>Tower ID NE</td>
-                            <td>: &nbsp;</td>
-                            <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_id}</td>
-                          </tr>
-                          <tr>
-                            <td>Tower Name NE</td>
-                            <td>:</td>
-                            <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_id}</td>
-                          </tr>
-                          <tr>
-                            <td>Version</td>
-                            <td>:</td>
-                            <td style={{paddingLeft:'10px'}}>
-                              <Input style={{marginTop : '10px'}} type="select" onChange={this.handleChangeVersion} value={this.state.version_selected === null ? this.state.version_current : this.state.version_selected}>
-                                <option value={this.state.data_tssr.version}>{this.state.data_tssr.version}</option>
-                                {this.state.list_version.map( ver =>
-                                  <option value={ver.version}>{ver.version}</option>
-                                )}
-                              </Input>
-                            </td>
-                          </tr>
-                      </tbody>
-                    </table>
-                    </Col>
-                    {this.state.tssr_site_FE !== null ? (
-                      <Col md="4">
-                      <table className="table-header">
-                        <tbody>
-                          <tr>
-                            <td>Tower ID FE</td>
-                            <td>: &nbsp;</td>
-                            <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_id}</td>
-                          </tr>
-                          <tr>
-                            <td>Tower Name FE</td>
-                            <td>:</td>
-                            <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_id}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      </Col>
-                    ) : (<Fragment></Fragment>)}
-                  </Fragment>
-                )}
-                </Row>
                 <hr className="upload-line-ordering"></hr>
                 <Table responsive striped bordered size="sm">
                   <thead>
@@ -2105,6 +2056,10 @@ class DetailTssr extends Component {
               </Fragment>
             </CardBody>
             <CardFooter>
+              <Button style={{'float' : 'left',marginLeft : 'auto', order : "2"}} color="danger" size="sm" onClick={this.deletePS}>
+                <i className="fa fa-trash">&nbsp;&nbsp;</i>
+                Delete Plant Spec
+              </Button>
             </CardFooter>
           </Card>
           </Col>

@@ -78,6 +78,14 @@ class MRCreation extends Component {
     this.handleChangeIdentifierBy = this.handleChangeIdentifierBy.bind(this);
     this.loadOptionsTowerID = this.loadOptionsTowerID.bind(this);
     this.loadOptionsCDID = this.loadOptionsCDID.bind(this);
+
+    this.toggleLoading = this.toggleLoading.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState(prevState => ({
+      modal_loading: !prevState.modal_loading
+    }));
   }
 
   async postDatatoAPINODE(url, data){
@@ -246,6 +254,7 @@ class MRCreation extends Component {
   }
 
   async saveMRtoAPI(){
+    this.toggleLoading();
     this.setState({action_status : null, action_message : null});
     const dataCD = this.state.data_cd_id_selected;
     const dataForm = this.state.create_mr_form;
@@ -288,6 +297,7 @@ class MRCreation extends Component {
         }
       }
     }
+    this.toggleLoading();
   }
 
   componentDidMount(){
@@ -666,7 +676,7 @@ class MRCreation extends Component {
             </Form>
           </CardBody>
           <CardFooter>
-            <Button color='success' style={{float : 'right'}} onClick={this.saveMRtoAPI}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create MR</Button>
+            <Button color='success' style={{float : 'right'}} onClick={this.saveMRtoAPI} disabled={this.state.modal_loading === true}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create MR</Button>
           </CardFooter>
         </Card>
         </Col>

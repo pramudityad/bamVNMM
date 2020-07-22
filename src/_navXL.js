@@ -77,7 +77,7 @@ export default {
     {
       name: 'Assignment',
       icon: 'icon-docs',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP", "BAM-Customer Project Manager"],
       children: [
         {
           name: 'Assignment List',
@@ -89,7 +89,13 @@ export default {
           name: 'Assignment NA List',
           url: '/assignment-list-approval',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-TPM", "BAM-Customer Project Manager"],
+          roles : ["BAM-Customer Project Manager"],
+        },
+        {
+          name: 'Assignment Approval Bulk',
+          url: '/assignment-bulk-approval',
+          icon: 'icon-list',
+          roles : ["BAM-Customer Project Manager"],
         },
         {
           name: 'Assignment List (ASP)',

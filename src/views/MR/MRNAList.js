@@ -91,7 +91,7 @@ class MRNAList extends Component {
     this.state.filter_list[2] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
     this.state.filter_list[3] !== "" && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
     this.state.filter_list[4] !== "" && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
-    filter_array.push('"current_mr_status":"PLANTSPEC NOT ASSIGNED"');
+    filter_array.push('"$or" : [{"current_mr_status":"PLANTSPEC NOT ASSIGNED"}, {"no_plantspec":null}]');
     this.state.filter_list[6] !== "" && (filter_array.push('"current_milestones":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
     this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
     this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
@@ -279,19 +279,13 @@ class MRNAList extends Component {
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
                         <td>
-                          {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>
-                            j === list.cust_del.length - 1 ? custdel.cd_id : custdel.cd_id + ', '
-                          ))}
+                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_id + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_name + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>

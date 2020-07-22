@@ -76,6 +76,7 @@ const BulkNotifytoASP = React.lazy(() => import('./views/Assignment/BulkNotifyto
 const AssignmentListASP = React.lazy(() => import('./views/Assignment/AssignmentListASP'));
 const AssignmentDetailASP = React.lazy(() => import('./views/Assignment/AssignmentDetailASP'));
 const AssignmentListApproval = React.lazy(() => import('./views/Assignment/AssignmentListApproval'));
+const AssignmentBulkApproval = React.lazy(() => import('./views/Assignment/AssignmentBulkApproval'));
 
 const PRPOCreation = React.lazy(() => import('./views/PRPO/CreatePRPO'));
 const ListPRPO = React.lazy(() => import('./views/PRPO/ListPRPO'));
@@ -144,6 +145,10 @@ const GR  = React.lazy(() => import('./views/Warehouse/GR'));
 const GI  = React.lazy(() => import('./views/Warehouse/GI'));
 
 const LoaderPage = React.lazy(() => import('./views/DefaultView/LoaderPage'));
+
+const BlankPage = React.lazy(() => import('./containers/DefaultLayout/LoginSSO'));
+
+
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -239,6 +244,7 @@ const routes = [
   { path: '/assignment-detail-asp/:id', exact: true, name: 'Assignment Detail (ASP)', component: AssignmentDetailASP, roles : ['BAM-ASP'] },
   { path: '/assignment-list-asp', exact: true, name: 'Assignment List (ASP)', component: AssignmentListASP, roles : ['BAM-ASP'] },
   { path: '/assignment-list-approval', exact: true, name: 'Assignment Need Assignment List ', component: AssignmentListApproval },
+  { path: '/assignment-bulk-approval', exact: true, name: 'Assignment Bulk Approval ', component: AssignmentBulkApproval },
 
   { path: '/list-tssr-matix', exact: true, name: 'List TSSR Matrix BOQ', component: ListTssrMatrix },
   { path: '/tssr-matix-creation', exact: true, name: 'TSSR Matrix BOQ Creation', component: NewTssrMatrix },
@@ -306,6 +312,8 @@ const routes = [
   { path: '/prt-list', exact: true, name: 'PRT List', component: ListPRPO },
   { path: '/prt-list/detail/:id', exact: true, name: 'PRT Detail', component: DetailPRPO },
   { path: '/prt-list/edit/:id', exact: true, name: 'PRT Edit', component: EditPRPO },
+
+  { path: '/blank-page', exact: true, name: 'BlanK Page', component: BlankPage },
 
 ];
 

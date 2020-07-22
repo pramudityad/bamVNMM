@@ -642,12 +642,12 @@ class DRMList extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let headerRow = ["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"];
+    let headerRow = ["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area","atp_doc_reviewed", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"];
     ws.addRow(headerRow);
 
     for (let i = 0; i < download_all.length; i++) {
       let drm = download_all[i];
-      ws.addRow([drm.tower_id, drm.project_name, drm.program, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering]);
+      ws.addRow([drm.tower_id, drm.project_name, drm.program, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.atp_doc_reviewed ,drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -670,12 +670,12 @@ class DRMList extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let headerRow = ["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"];
+    let headerRow = ["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "atp_doc_reviewed", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"];
     ws.addRow(headerRow);
 
     for (let i = 0; i < download_all.length; i++) {
       let drm = download_all[i];
-      ws.addRow([drm.tower_id, drm.project_name, drm.program, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering]);
+      ws.addRow([drm.tower_id, drm.project_name, drm.program, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.atp_doc_reviewed, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -705,7 +705,7 @@ class DRMList extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"]);
+    ws.addRow(["tower_id", "project_name", "program", "actual_rbs_data", "actual_du", "ru_b0_900", "ru_b1_2100", "ru_b3_1800", "ru_b8_900", "ru_b1b3", "ru_band_agnostic", "remarks_need_cr_go_as_sow_original", "existing_antenna_type", "antenna_height", "scenario_ran", "dismantle_antenna", "dismantle_ru", "dismantle_accessories", "dismantle_du", "dismantle_rbs_encl", "existing_dan_scenario_implementasi_rbs", "drm_final_module", "drm_final_radio", "drm_final_sow_cabinet", "drm_final_sow_g9_u9_l9", "drm_final_sow_g18_l18", "drm_final_sow_u21_l21", "drm_final_antenna_type", "plan_antenna_azimuth", "plan_antenna_et_mt", "module", "cabinet", "radio", "power_rru", "antenna", "dismantle", "system", "optic_rru", "area","atp_doc_reviewed", "verification_date", "verification_status", "verification_pic", "issued_detail", "cr_flag_engineering"]);
 
     ws.addRow(["JWT-BBS-0001","XL BAM DEMO 2020","Capacity"]);
 		ws.addRow(["JWT-BBS-0002","XL BAM DEMO 2020","Coverage"]);
@@ -758,7 +758,7 @@ class DRMList extends React.Component {
                       </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportDRMTemplate}>{" "}DRM Template</DropdownItem>                        
+                        <DropdownItem onClick={this.exportDRMTemplate}>{" "}DRM Template</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>{" "}Download All</DropdownItem>
                         <DropdownItem onClick={this.downloadAllFilter}>{" "}Download All Filter</DropdownItem>
                       </DropdownMenu>
@@ -869,6 +869,7 @@ class DRMList extends React.Component {
                             <th>System</th>
                             <th>Optic RRU</th>
                             <th>Area</th>
+                            <th>ATP Doc Review Date</th>
                             <th>VERIFICATION (DATE)</th>
                             <th>VERIFICATION (STATUS)</th>
                             <th>VERIFICATION PIC</th>
@@ -954,6 +955,7 @@ class DRMList extends React.Component {
                             <td>{drm.system}</td>
                             <td>{drm.optic_rru}</td>
                             <td>{drm.area}</td>
+                            <td>{(drm.atp_doc_reviewed === undefined || drm.atp_doc_reviewed === null ) ? null : convertDateFormat(drm.atp_doc_reviewed)}</td>
                             <td>{convertDateFormat(drm.verification_date)}</td>
                             <td>{drm.verification_status}</td>
                             <td>{drm.verification_pic}</td>

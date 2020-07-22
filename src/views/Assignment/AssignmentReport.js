@@ -134,22 +134,28 @@ class AssignmentListReport extends Component {
           this.state.filter_list[2] +
           '", "$options" : "i"}'
       );
-    this.state.filter_list[4] !== "" &&
+    this.state.filter_list[3] !== "" &&
       filter_array.push(
-        '"Payment_Terms":{"$regex" : "' +
-          this.state.filter_list[4] +
+        '"cust_del.cd_id":{"$regex" : "' +
+          this.state.filter_list[3] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[5] !== "" &&
       filter_array.push(
-        '"Current_Status":{"$regex" : "' +
+        '"Payment_Terms":{"$regex" : "' +
           this.state.filter_list[5] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[6] !== "" &&
       filter_array.push(
-        '"Work_Status":{"$regex" : "' +
+        '"Current_Status":{"$regex" : "' +
           this.state.filter_list[6] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[7] !== "" &&
+      filter_array.push(
+        '"Work_Status":{"$regex" : "' +
+          this.state.filter_list[7] +
           '", "$options" : "i"}'
       );
       if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
@@ -194,22 +200,28 @@ class AssignmentListReport extends Component {
           this.state.filter_list[2] +
           '", "$options" : "i"}'
       );
-    this.state.filter_list[4] !== "" &&
+    this.state.filter_list[3] !== "" &&
       filter_array.push(
-        '"Payment_Terms":{"$regex" : "' +
-          this.state.filter_list[4] +
+        '"cust_del.cd_id":{"$regex" : "' +
+          this.state.filter_list[3] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[5] !== "" &&
       filter_array.push(
-        '"Current_Status":{"$regex" : "' +
+        '"Payment_Terms":{"$regex" : "' +
           this.state.filter_list[5] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[6] !== "" &&
       filter_array.push(
-        '"Work_Status":{"$regex" : "' +
+        '"Current_Status":{"$regex" : "' +
           this.state.filter_list[6] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[7] !== "" &&
+      filter_array.push(
+        '"Work_Status":{"$regex" : "' +
+          this.state.filter_list[7] +
           '", "$options" : "i"}'
       );
     if((this.state.userRole.findIndex("BAM-ASP") !== -1 || this.state.userRole.findIndex("BAM-ASP Management") !== -1) && this.state.userRole.findIndex("Admin") === -1){
@@ -372,22 +384,28 @@ class AssignmentListReport extends Component {
           this.state.filter_list[2] +
           '", "$options" : "i"}'
       );
-    this.state.filter_list[4] !== "" &&
+    this.state.filter_list[3] !== "" &&
       filter_array.push(
-        '"Payment_Terms":{"$regex" : "' +
-          this.state.filter_list[4] +
+        '"cust_del.cd_id":{"$regex" : "' +
+          this.state.filter_list[3] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[5] !== "" &&
       filter_array.push(
-        '"Current_Status":{"$regex" : "' +
+        '"Payment_Terms":{"$regex" : "' +
           this.state.filter_list[5] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[6] !== "" &&
       filter_array.push(
-        '"Work_Status":{"$regex" : "' +
+        '"Current_Status":{"$regex" : "' +
           this.state.filter_list[6] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[7] !== "" &&
+      filter_array.push(
+        '"Work_Status":{"$regex" : "' +
+          this.state.filter_list[7] +
           '", "$options" : "i"}'
       );
     if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
@@ -514,7 +532,7 @@ class AssignmentListReport extends Component {
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       searchBar.push(
         <td>
           <div className="controls" style={{ width: "150px" }}>
@@ -637,6 +655,7 @@ class AssignmentListReport extends Component {
                       <th>Assignment ID</th>
                       <th>Account Name</th>
                       <th>Project Name</th>
+                      <th>CD ID</th>
                       <th>Vendor Name Type</th>
                       <th>Terms of Payment</th>
                       <th>Assignment Status</th>
@@ -669,6 +688,9 @@ class AssignmentListReport extends Component {
                         <td>{list.Assignment_No}</td>
                         <td>{list.Account_Name}</td>
                         <td>{list.Project}</td>
+                        <td>
+                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
+                        </td>
                         <td>{list.Vendor_Name}</td>
                         <td>{list.Payment_Terms}</td>
                         <td>{list.Current_Status}</td>

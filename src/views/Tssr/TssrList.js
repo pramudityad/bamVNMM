@@ -86,7 +86,7 @@ class TssrList extends Component {
     (this.state.filter_list["no_plantspec"] !== null && this.state.filter_list["no_plantspec"] !== undefined) && (filter_array.push('"no_plantspec":{"$regex" : "' + this.state.filter_list["no_plantspec"] + '", "$options" : "i"}'));
     (this.state.filter_list["project_name"] !== null && this.state.filter_list["project_name"] !== undefined) && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list["project_name"] + '", "$options" : "i"}'));
     (this.state.filter_list["tower_id"] !== null && this.state.filter_list["tower_id"] !== undefined) && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list["tower_id"] + '", "$options" : "i"}'));
-    (this.state.filter_list["current_status"] !== null && this.state.filter_list["current_status"] !== undefined) && (filter_array.push('"current_milestones":{"$regex" : "' + this.state.filter_list["current_status"] + '", "$options" : "i"}'));
+    (this.state.filter_list["current_status"] !== null && this.state.filter_list["current_status"] !== undefined) && (filter_array.push('"submission_status":{"$regex" : "' + this.state.filter_list["current_status"] + '", "$options" : "i"}'));
     (this.state.filter_list["mr_id"] !== null && this.state.filter_list["mr_id"] !== undefined) && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list["mr_id"] + '", "$options" : "i"}'));
     // this.getDataFromAPINODE('/tssrall?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
     let whereAnd = '{' + filter_array.join(',') + '}';
@@ -208,7 +208,11 @@ class TssrList extends Component {
                         <td>{list.project_name}</td>
                         <td>{list.site_info[0] !== undefined ? list.site_info[0].site_id : null}</td>
                         <td>{list.submission_status}</td>
-                        <td>{list.mr_id}</td>
+                        <td>
+                          <Link to={'/mr-detail/'+list.id_mr_doc}>
+                            {list.mr_id}
+                          </Link>
+                        </td>
                         <td>
                           <Link to={'/ps-list/'+list._id}>
                             <Button color="info" size="sm" outline>Detail</Button>

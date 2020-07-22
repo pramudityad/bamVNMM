@@ -112,6 +112,7 @@ class MRDetail extends Component {
       wbs_cd_id_data : [],
       location_mr : {},
       dropdownOpen: new Array(1).fill(false),
+      modal_loading : false,
 
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
@@ -129,10 +130,19 @@ class MRDetail extends Component {
     this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
     this.downloadMaterialMRReport = this.downloadMaterialMRReport.bind(this);
     this.needReviseMR = this.needReviseMR.bind(this);
+    this.takeoutPS = this.takeoutPS.bind(this);
+    this.cancelMR = this.cancelMR.bind(this);
     this.toggleModalapprove = this.toggleModalapprove.bind(this);
     this.toggleModalRevision = this.toggleModalRevision.bind(this);
     this.handleRevisionNote = this.handleRevisionNote.bind(this);
     this.downloadMaterialMRTRACY = this.downloadMaterialMRTRACY.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+  }
+
+  toggleLoading(){
+    this.setState(prevState => ({
+      modal_loading: !prevState.modal_loading
+    }));
   }
 
   toggleModalapprove(e) {
@@ -381,6 +391,26 @@ class MRDetail extends Component {
     }catch (err) {
       let respond = err;
       console.log("respond Get Data", err);
+      return respond;
+    }
+  }
+
+  async deleteDataFromAPINODE(url, data) {
+    try {
+      let respond = await axios.delete(API_URL_NODE + url, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+          data : data
+      });
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond delete Data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond delete Data err", err);
       return respond;
     }
   }
@@ -647,7 +677,7 @@ class MRDetail extends Component {
     });
   }
 
-  milestoneStat(ms_name, ms_status, ms_date, ms_updater, index) {
+  milestoneStat(ms_name, ms_status, ms_date, ms_updater, ms_notes, index) {
     return (
       <VerticalTimelineElement
         className="vertical-timeline-element--work"
@@ -660,6 +690,11 @@ class MRDetail extends Component {
         <h4 className="vertical-timeline-element-subtitle">
           initiated by <b>{ms_updater}</b>
         </h4>
+        {(ms_notes !== undefined && ms_notes !== null) && (
+          <h6 className="vertical-timeline-element-subtitle">
+            Notes : {ms_notes}
+          </h6>
+        )}
       </VerticalTimelineElement>
     );
   }
@@ -688,19 +723,23 @@ class MRDetail extends Component {
   }
 
   requestForApproval() {
+    this.toggleLoading();
     let dataMR = this.state.data_mr;
     this.patchDatatoAPINODE("/matreq/requestMatreq/" + dataMR._id).then(
       (res) => {
         if (res.data !== undefined) {
           this.setState({ action_status: "success" });
+          this.toggleLoading();
         } else {
           this.setState({ action_status: "failed" });
+          this.toggleLoading();
         }
       }
     );
   }
 
   ApproveMR(e) {
+    this.toggleLoading();
     const _id = this.props.match.params.id;
     let body = this.state.selected_dsp;
     if(this.state.data_mr.dsp_company !== null && this.state.data_mr.dsp_company !== undefined){
@@ -713,6 +752,7 @@ class MRDetail extends Component {
         if (res.data !== undefined) {
           this.setState({ action_status: "success" });
           this.toggleModalapprove();
+          this.toggleLoading();
         } else {
           if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
             if (res.response.data.error.message !== undefined) {
@@ -724,6 +764,7 @@ class MRDetail extends Component {
             this.setState({ action_status: 'failed' });
           }
           this.toggleModalapprove();
+          this.toggleLoading();
         }
       }
     );
@@ -1156,6 +1197,7 @@ class MRDetail extends Component {
   }
 
   async saveUpdateMaterial() {
+    this.toggleLoading();
     const dataXLS = this.state.rowsXLS;
     const dataMR = this.state.data_mr;
     let patchDataMat = await this.patchDatatoAPINODE(
@@ -1192,9 +1234,11 @@ class MRDetail extends Component {
         this.setState({ action_status: "failed" });
       }
     }
+    this.toggleLoading();
   }
 
   async needReviseMR() {
+    this.toggleLoading();
     const dataMR = this.state.data_mr;
     let patchDataMR = await this.patchDatatoAPINODE(
       "/matreq/needReviseMRFromWH/" + dataMR._id, {"note_value" : this.state.revision_note}
@@ -1227,6 +1271,35 @@ class MRDetail extends Component {
         this.setState({ action_status: "failed" });
       }
     }
+    this.toggleLoading();
+  }
+
+  async takeoutPS(){
+    this.toggleLoading();
+    const dataMR = this.state.data_mr;
+    this.patchDatatoAPINODE('/matreq/takeOutPlantSpec/'+dataMR._id).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+        this.toggleLoading();
+      }else{
+        this.setState({ action_status : "failed" });
+        this.toggleLoading();
+      }
+    })
+  }
+
+  async cancelMR(){
+    this.toggleLoading();
+    const dataMR = this.state.data_mr;
+    this.patchDatatoAPINODE('/matreq/cancelMatreq/'+dataMR._id, {"cancelNote" : "Cancel MR"}).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+        this.toggleLoading();
+      }else{
+        this.setState({ action_status : "failed" });
+        this.toggleLoading();
+      }
+    })
   }
 
   tableViewWBSCDID(cd_id){
@@ -1706,7 +1779,7 @@ class MRDetail extends Component {
                                   </DropdownToggle>
                                   <DropdownMenu>
                                     <DropdownItem header>TSSR File</DropdownItem>
-                                    {((this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 ) && this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
+                                    {((this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 ) && this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
                                       <DropdownItem onClick={this.downloadMaterialMRTRACY}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY Format</DropdownItem>
 
                                     )}
@@ -1715,42 +1788,6 @@ class MRDetail extends Component {
                                     <DropdownItem onClick={this.downloadMaterialMRUpload2}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format NOK</DropdownItem>
                                   </DropdownMenu>
                                 </Dropdown>
-                                {/* <tr>
-                                  <td style={{ width: "550px" }}>
-                                    <Button
-                                      size="sm"
-                                      color="secondary"
-                                      style={{ float: "right" }}
-                                      onClick={this.downloadMaterialMRUpload}
-                                    >
-                                      Download Format
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      color="secondary"
-                                      style={{
-                                        float: "right",
-                                        marginRight: "10px",
-                                      }}
-                                      onClick={this.downloadMaterialMRReport}
-                                    >
-                                      Download MR PS
-                                    </Button>
-                                    {(this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
-                                      <Button
-                                        size="sm"
-                                        color="secondary"
-                                        style={{
-                                          float: "right",
-                                          marginRight: "10px",
-                                        }}
-                                        onClick={this.downloadMaterialMRTRACY}
-                                      >
-                                        TRACY Format
-                                      </Button>
-                                    )}
-                                  </td>
-                                </tr> */}
                                 {this.state.mr_site_FE !== null &&
                                 this.state.data_mr.mr_type !== "Relocation" &&
                                 this.state.data_mr.mr_type !== "Return" ? (
@@ -2310,6 +2347,7 @@ class MRDetail extends Component {
                                         ms.mr_status_value,
                                         ms.mr_status_date,
                                         ms.mr_status_updater,
+                                        ms.mr_status_note,
                                         i
                                       );
                                     })}
@@ -2341,47 +2379,74 @@ class MRDetail extends Component {
                 )}
               </CardBody>
               <CardFooter>
-                {this.state.data_mr !== null && (
-                  <div>
-                    {this.state.data_mr.current_mr_status ===
-                      "PLANTSPEC ASSIGNED" ||
-                    this.state.data_mr.current_mr_status ===
-                      "PLANTSPEC UPDATED" ? (
-                      <Button
-                        color="success"
-                        style={{ float: "right" }}
-                        onClick={this.requestForApproval}
-                      >
-                        {" "}
-                        Send Request
-                      </Button>
-                    ) : (
-                      <div></div>
-                    )}
-                    {this.state.data_mr.current_mr_status === "MR REQUESTED" ? (
-                      // <Button color='success' style={{float : 'right'}} onClick={this.ApproveMR}>Approve</Button>
-                      <Button
-                        color="success"
-                        style={{ float: "right" }}
-                        onClick={this.toggleModalapprove}
-                      >
-                        Approve
-                      </Button>
-                    ) : (
-                      <div></div>
-                    )}
-                    {(this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 ) && (
-                      <Button
-                        color="warning"
-                        style={{ float: "left" }}
-                        size="sm"
-                        onClick={this.toggleModalRevision}
-                      >
-                        Need Revise
-                      </Button>
-                    )}
-                  </div>
-                )}
+              {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED") && (
+                <React.Fragment>
+                  {this.state.data_mr !== null && (
+                    <div>
+                      {(this.state.data_mr.current_mr_status ===
+                        "PLANTSPEC ASSIGNED" ||
+                      this.state.data_mr.current_mr_status ===
+                        "PLANTSPEC UPDATED"||
+                      this.state.data_mr.current_mr_status ===
+                        "MR UPDATED") ? (
+                        <Button
+                          color="success"
+                          style={{ float: "right" }}
+                          onClick={this.requestForApproval}
+                        >
+                          {" "}
+                          Send Request
+                        </Button>
+                      ) : (
+                        <div></div>
+                      )}
+                      {(this.state.userRole.findIndex(e => e === "BAM-LDM") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1) && this.state.data_mr.current_mr_status === "MR REQUESTED" ? (
+                        // <Button color='success' style={{float : 'right'}} onClick={this.ApproveMR}>Approve</Button>
+                        <Button
+                          color="success"
+                          style={{ float: "right" }}
+                          onClick={this.toggleModalapprove}
+                        >
+                          Approve
+                        </Button>
+                      ) : (
+                        <div></div>
+                      )}
+                      {this.state.data_mr !== null && this.state.data_mr.no_plantspec !== null && this.state.data_mr.mr_status.findIndex(st => st.mr_status_name === "LOADING_PROCESS" && st.mr_status_value === "FINISH") === -1 ?
+                      (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 ) && (
+                        <Fragment>
+                        <Button
+                          color="warning"
+                          style={{ float: "left" }}
+                          size="sm"
+                          onClick={this.toggleModalRevision}
+                        >
+                          Need Revise
+                        </Button>
+                        <Button
+                          color="danger"
+                          style={{ float: "left", margin: '0 10px 0 20px' }}
+                          size="sm"
+                          onClick={this.takeoutPS}
+                        >
+                          Takeout PS
+                        </Button>
+                        </Fragment>
+                      ) : <Fragment></Fragment>}
+                      {(this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.data_mr.mr_status.findIndex(st => st.mr_status_name === "LOADING_PROCESS" && st.mr_status_value === "FINISH") === -1) && (
+                        <Button
+                          color="danger"
+                          style={{ float: "left", margin: '0 10px 0 10px' }}
+                          size="sm"
+                          onClick={this.cancelMR}
+                        >
+                          Cancel MR
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </React.Fragment>
+              )}
               </CardFooter>
             </Card>
           </Col>
