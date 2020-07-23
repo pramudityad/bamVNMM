@@ -200,9 +200,9 @@ class AddMatPackageUpload extends React.Component {
     this.getDatafromAPINODE('/productpackage?q={"pp_id": "AdditionalMaterial"}&noPg=1')
       .then(res => {
         if (res.data !== undefined) {
-          this.setState({ product_package: res.data.data });
+          this.setState({ product_package_all: res.data.data });
         } else {
-          this.setState({ product_package: [] });
+          this.setState({ product_package_all: [] });
         }
       })
   }
