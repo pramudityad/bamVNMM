@@ -205,9 +205,9 @@ class ASPUserManagement extends React.Component {
     getDatafromAPINODE("/vendorManagement/getAllUser", this.props.dataLogin.token).then((res) => {
       if (res.data !== undefined) {
         const data_user = res.data.data;
-        let list_asp_select = [];      
-        data_user.map(i => list_asp_select.push({'label' : i.email, 'value' : i._id}))  
-        this.setState({ list_asp_user: list_asp_select, 
+        let list_asp_select = [];
+        data_user.map(i => list_asp_select.push({'label' : i.email, 'value' : i._id}))
+        this.setState({ list_asp_user: list_asp_select,
           });
       } else {
         this.setState({ list_asp_user: [] });
@@ -592,15 +592,14 @@ class ASPUserManagement extends React.Component {
   async saveNew() {
     this.toggleMatStockForm();
     this.toggleLoading();
-    let poData = [];    
+    let poData = [];
     for (let i = 0; i < this.state.id_email_selected.length; i++) {
       poData.push({
         id: this.state.id_email_selected[i],
         vendor_code: this.state.selected_vendor_code,
-      });      
+      });
     }
     // poData.push(pp);
-    console.log("post data ", poData);
     let postData = await patchDatatoAPINODE(
       "/vendorManagement/assignVendor",
       {
@@ -834,7 +833,7 @@ class ASPUserManagement extends React.Component {
                   className="card-header-actions"
                   style={{ display: "inline-flex" }}
                 >
-                  <div>     
+                  <div>
                         <Button color="success" onClick={this.toggleMatStockForm}>
                         <i className="fa fa-plus-square" aria-hidden="true">
                               {" "}
@@ -843,7 +842,7 @@ class ASPUserManagement extends React.Component {
                             New User
                         </Button>
                   </div>
-                  &nbsp;&nbsp;&nbsp;                  
+                  &nbsp;&nbsp;&nbsp;
                 </div>
               </CardHeader>
               <Collapse
@@ -929,7 +928,7 @@ class ASPUserManagement extends React.Component {
                             } else if (
                               e.Name
                                 .toLowerCase()
-                                .includes(this.state.filter_name.toLowerCase()) 
+                                .includes(this.state.filter_name.toLowerCase())
                             ) {
                               return e;
                             }
@@ -946,7 +945,7 @@ class ASPUserManagement extends React.Component {
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     {e.Vendor_Code}
-                                  </td>                                                 
+                                  </td>
                                   <td>
                                   <Link to={'/asp-user-management/' + e.Vendor_Code}>
                                     <Button color="primary" size="sm" style={{ marginRight: '10px' }}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>

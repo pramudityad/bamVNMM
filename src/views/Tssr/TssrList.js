@@ -15,7 +15,7 @@ const password = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const arrayFilter = ["no_plantspec", "project_name", "tower_id", "current_status", "mr_id"]
+const arrayFilter = ["no_plantspec", "project_name", "tower_id", "current_status", "submission_status", "mr_id"]
 
 class TssrList extends Component {
   constructor(props) {
@@ -86,7 +86,8 @@ class TssrList extends Component {
     (this.state.filter_list["no_plantspec"] !== null && this.state.filter_list["no_plantspec"] !== undefined) && (filter_array.push('"no_plantspec":{"$regex" : "' + this.state.filter_list["no_plantspec"] + '", "$options" : "i"}'));
     (this.state.filter_list["project_name"] !== null && this.state.filter_list["project_name"] !== undefined) && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list["project_name"] + '", "$options" : "i"}'));
     (this.state.filter_list["tower_id"] !== null && this.state.filter_list["tower_id"] !== undefined) && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list["tower_id"] + '", "$options" : "i"}'));
-    (this.state.filter_list["current_status"] !== null && this.state.filter_list["current_status"] !== undefined) && (filter_array.push('"submission_status":{"$regex" : "' + this.state.filter_list["current_status"] + '", "$options" : "i"}'));
+    (this.state.filter_list["current_status"] !== null && this.state.filter_list["current_status"] !== undefined) && (filter_array.push('"current_status":{"$regex" : "' + this.state.filter_list["current_status"] + '", "$options" : "i"}'));
+    (this.state.filter_list["submission_status"] !== null && this.state.filter_list["submission_status"] !== undefined) && (filter_array.push('"submission_status":{"$regex" : "' + this.state.filter_list["submission_status"] + '", "$options" : "i"}'));
     (this.state.filter_list["mr_id"] !== null && this.state.filter_list["mr_id"] !== undefined) && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list["mr_id"] + '", "$options" : "i"}'));
     // this.getDataFromAPINODE('/tssrall?q='+whereAnd+'&lmt='+maxPage+'&pg='+page).then(res => {
     let whereAnd = '{' + filter_array.join(',') + '}';
@@ -194,6 +195,7 @@ class TssrList extends Component {
                       <th>Project</th>
                       <th>Tower ID</th>
                       <th>Status</th>
+                      <th>Submission Status</th>
                       <th>MR Related</th>
                       <th rowSpan="2">Action</th>
                     </tr>
@@ -207,6 +209,7 @@ class TssrList extends Component {
                         <td>{list.no_plantspec}</td>
                         <td>{list.project_name}</td>
                         <td>{list.site_info[0] !== undefined ? list.site_info[0].site_id : null}</td>
+                        <td>{list.current_status}</td>
                         <td>{list.submission_status}</td>
                         <td>
                           <Link to={'/mr-detail/'+list.id_mr_doc}>

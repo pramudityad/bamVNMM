@@ -145,6 +145,7 @@ class DetailTssr extends Component {
     this.saveAdditional = this.saveAdditional.bind(this);
     this.deleteAdditionalMaterialAll = this.deleteAdditionalMaterialAll.bind(this);
     this.toggleWarningDeleteAdditional = this.toggleWarningDeleteAdditional.bind(this);
+    this.downloadEPODFormat = this.downloadEPODFormat.bind(this);
   }
 
   toggleLoading() {
@@ -1615,6 +1616,61 @@ class DetailTssr extends Component {
     saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' Report Bundling.xlsx');
   }
 
+  async downloadEPODFormat(){
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataTSSR = this.state.tssrData;
+    const dataItemTSSR = this.state.tssrData.packages;
+    const dataCDWBS = this.state.wbs_cd_id_data;
+    let dataMaterialVariant = [];
+
+    let checkMaterialOrigin = this.state.tssrData.packages[0] !== undefined ? this.state.tssrData.packages[0].materials[0] !== undefined ? this.state.tssrData.packages[0].materials[0].material_origin !== undefined ? this.state.tssrData.packages[0].materials[0].material_origin : undefined : undefined : undefined;
+
+    // let ppData = [];
+    // if(checkMaterialOrigin === undefined){
+    //   ppData = await this.ppData(dataItemTSSR.map(e => e.pp_id))
+    // }
+
+    let headerRow = ["BOM_ID", "Site_ID", "Material_ID", "Material_Name", "Material_Quantity", "BOM_Status", "WBS_ID", "CPO_ID", "BOM_Creation_Date", "SalesOrder_ID", "InternalPO_ID", "BOM_Approval_Date", "Configuration_ID", "Bundle_ID", "Program_Name", "Material_Category"];
+    ws.addRow(headerRow);
+    let list_material_id = [];
+    for(let i = 0; i < dataItemTSSR.length; i++){
+      let dataCD = null;
+      let dataCDWBSbyCDID = dataCDWBS.find(e => e.WP_ID === dataTSSR.site_info[0].cd_id);
+      if(dataCDWBSbyCDID !== undefined){
+        dataCD = dataCDWBSbyCDID;
+      }
+      for(let j = 0; j < dataItemTSSR[i].materials.length; j++){
+        let dataMatIdx = dataItemTSSR[i].materials[j];
+        ws.addRow([dataTSSR.no_plantspec, dataTSSR.site_info[0].site_id, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.qty, "Approved", dataCD.C1003_WBS_HW, dataItemTSSR[i].cpo_number, null, null, null, null, dataItemTSSR[i].config_id, dataItemTSSR[i].pp_id, dataItemTSSR[i].program, dataMatIdx.material_origin]);
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'EPOD Format '+dataTSSR.no_plantspec+'.xlsx');
+  }
+
+  async getAllPP(array_PP){
+    let dataPP = [];
+    let arrayDataPP = array_PP;
+    let getNumberPage = Math.ceil(arrayDataPP.length / 25);
+    for(let i = 0 ; i < getNumberPage; i++){
+      let DataPaginationPP = arrayDataPP.slice(i * 25, (i+1)*25);
+      let arrayIdPP = '"'+DataPaginationPP.join('", "')+'"';
+      arrayIdPP = arrayIdPP.replace("&", "%26");
+      let where_id_PP = '?where={"pp_id" : {"$in" : ['+arrayIdPP+']}}';
+      let resPP = await this.getDatafromAPI('/pp_sorted_non_page'+where_id_PP);
+      if(resPP !== undefined){
+        if(resPP.data !== undefined){
+          dataPP = dataPP.concat(resPP.data._items);
+        }
+      }
+    }
+    return dataPP;
+  }
+
   async saveUpdateMaterialWeb(){
     this.toggleLoading();
     const dataWeb = this.state.qty_ps;
@@ -1849,6 +1905,7 @@ class DetailTssr extends Component {
                   <DropdownItem header>TSSR File</DropdownItem>
                   <DropdownItem onClick={this.exportMaterialPSReportBundling}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Report Bundling</DropdownItem>
                   <DropdownItem onClick={this.exportMaterialPSReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Report</DropdownItem>
+                  <DropdownItem onClick={this.downloadEPODFormat}> <i className="fa fa-file-text-o" aria-hidden="true"></i>EPOD Format</DropdownItem>
                   <DropdownItem onClick={this.downloadMaterialTSSRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
                   <DropdownItem onClick={this.downloadMaterialTSSRUploadNOK}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format NOK</DropdownItem>
                   <DropdownItem onClick={this.downloadMaterialTSSRUploadAdditional}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Additional Material Format</DropdownItem>
