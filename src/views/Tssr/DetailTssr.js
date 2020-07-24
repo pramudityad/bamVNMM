@@ -114,6 +114,7 @@ class DetailTssr extends Component {
         modal_loading : false,
         additional_material : [],
         modal_delete_warning : false,
+        product_package : [],
     };
     this.handleChangeProject = this.handleChangeProject.bind(this);
     this.handleChangeVersion = this.handleChangeVersion.bind(this);
@@ -661,6 +662,7 @@ class DetailTssr extends Component {
 
   componentDidMount(){
     this.getDataTssr(this.props.match.params.id);
+    this.getPackageDataAPI();
     // this.getVersionTssr(this.props.match.params.id);
   }
 
@@ -1824,7 +1826,16 @@ class DetailTssr extends Component {
     let value = e.target.value;
     let idx = idxField[1];
     let field = idxField[0];
-    addMaterial[parseInt(idx)][field] = value;
+    if(field === "material_id_actual"){
+      addMaterial[parseInt(idx)][field] = value;
+      let material = this.state.product_package[0].materials.find(mm => mm.material_id === value);
+      if(material !== undefined){
+        addMaterial[parseInt(idx)]["material_name_actual"] = material.material_name;
+        addMaterial[parseInt(idx)]["material_type"] = material.material_type;
+        addMaterial[parseInt(idx)]["unit"] = material.uom;
+        // addMaterial[parseInt(idx)]["qty"] = material.qty;
+      }
+    }
     this.setState({additional_material : addMaterial})
   }
 
@@ -1874,6 +1885,18 @@ class DetailTssr extends Component {
       // this.toggleLoading();
     });
 
+  }
+
+
+  getPackageDataAPI() {
+    this.getDataFromAPINODE('/productpackage?q={"pp_id": "AdditionalMaterial"}')
+      .then(res => {
+        if (res.data !== undefined) {
+          this.setState({ product_package: res.data.data});
+        } else {
+          this.setState({ product_package: []});
+        }
+      })
   }
 
   render() {
@@ -2179,7 +2202,14 @@ class DetailTssr extends Component {
                   {this.state.additional_material.map((add,i) =>
                     <tr>
                       <td>
-                        <input type="text" name={"material_id_actual" + " /// "+i } value={add.material_id_actual} onChange={this.onChangeMaterialAdditional} />
+                        <select name="cars" id="cars" name={"material_id_actual" + " /// "+i } value={add.material_id_actual} onChange={this.onChangeMaterialAdditional} >
+                          <option value={null} selected disabled></option>
+                          {this.state.product_package.map(pp =>
+                            pp.materials.map(mm =>
+                              <option value={mm.material_id}>{mm.material_id}</option>
+                            )
+                          )}
+                        </select>
                       </td>
                       <td>
                         <input type="text" name={"material_name_actual" + " /// "+i } value={add.material_name_actual} onChange={this.onChangeMaterialAdditional} />
