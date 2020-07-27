@@ -18,6 +18,12 @@ export default {
           roles : ["BAM-Engineering", "BAM-Project Planner", "BAM-Solution"],
         },
         {
+          name: 'Additional Material',
+          url: '/additional-material',
+          icon: 'icon-folder',
+          roles : ["BAM-Engineering"],
+        },
+        {
           name: 'Material Variant',
           url: '/mat-library',
           icon: 'icon-list',

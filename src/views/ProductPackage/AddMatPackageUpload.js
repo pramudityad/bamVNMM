@@ -792,25 +792,6 @@ class AddMatPackageUpload extends React.Component {
     saveAs(new Blob([techFormat]), 'Technical BOQ Format.xlsx');
   }
 
-  exportTSSRFormat = async () => {
-    const wb = new Excel.Workbook();
-    const ws = wb.addWorksheet();
-
-    const datapackageChecked = this.state.packageSelected;
-
-    let ppIdArray = ["site_title", "site_id", "site_name"];
-    let phyGroupArray = ["", "", ""];
-
-    ppIdArray = ppIdArray.concat(datapackageChecked.map(pp => pp.pp_id + " /// " + pp.product_name));
-    phyGroupArray = phyGroupArray.concat(datapackageChecked.map(pp => pp.product_type));
-
-    ws.addRow(phyGroupArray);
-    ws.addRow(ppIdArray);
-
-    const tssrFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([tssrFormat]), 'PS BOQ Format.xlsx');
-  }
-
   exportFormatPackage = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -938,7 +919,7 @@ class AddMatPackageUpload extends React.Component {
     let field = idxField[0];
     addMaterial[parseInt(idx)][field] = value;
     this.setState({additional_material : addMaterial})
-  }  
+  }
 
   async saveAdditional(){
     this.toggleLoading();
@@ -1088,7 +1069,7 @@ class AddMatPackageUpload extends React.Component {
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.product_package                        
+                          {this.state.product_package
                           .map(pp =>
                             <React.Fragment key={pp._id + "frag"}>
                               {/* <tr style={{ backgroundColor: '#E5FCC2' }} className='fixbody' key={pp._id}>
@@ -1100,7 +1081,7 @@ class AddMatPackageUpload extends React.Component {
 
                                 <td style={{ textAlign: 'center' }}>{pp.physical_group}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.product_type}</td>
-   
+
                               </tr> */}
                               {pp.materials
                               .filter((mat) => {
@@ -1149,11 +1130,6 @@ class AddMatPackageUpload extends React.Component {
                       itemClass="page-item"
                       linkClass="page-link"
                     />
-                  </Col>
-                  <Col>
-                    <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
-                      <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTSSRFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp; Download PS Format</Button>
-                    </div>
                   </Col>
                 </Row>
                 <Row>
@@ -1261,7 +1237,7 @@ class AddMatPackageUpload extends React.Component {
                       <th>
                         UoM
                       </th>
-                      
+
                       <th>
                         Qty
                       </th>
@@ -1291,7 +1267,7 @@ class AddMatPackageUpload extends React.Component {
                       <td>
                         <input type="text" name={"unit" + " /// "+i } value={add.unit} onChange={this.onChangeMaterialAdditional} style={{width : '100px'}}/>
                       </td>
-                    
+
                       <td>
                         <input type="number" name={"qty" + " /// "+i } value={add.qty} onChange={this.onChangeMaterialAdditional} style={{width : '75px'}}/>
                       </td>

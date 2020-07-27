@@ -1833,8 +1833,15 @@ class DetailTssr extends Component {
         addMaterial[parseInt(idx)]["material_name_actual"] = material.material_name;
         addMaterial[parseInt(idx)]["material_type"] = material.material_type;
         addMaterial[parseInt(idx)]["unit"] = material.uom;
-        // addMaterial[parseInt(idx)]["qty"] = material.qty;
+        addMaterial[parseInt(idx)]["qty"] = material.qty;
+      }else{
+        addMaterial[parseInt(idx)]["material_name_actual"] = null;
+        addMaterial[parseInt(idx)]["material_type"] = null;
+        addMaterial[parseInt(idx)]["unit"] = null;
+        addMaterial[parseInt(idx)]["qty"] = null;
       }
+    }else{
+      addMaterial[parseInt(idx)][field] = value;
     }
     this.setState({additional_material : addMaterial})
   }
