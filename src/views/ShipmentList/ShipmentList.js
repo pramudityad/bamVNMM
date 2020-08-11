@@ -217,16 +217,12 @@ class ShipmentList extends Component {
   }
 
   toggleTakeOut(e) {
-    // console.log('mr id ', this.state.shipment_detail.mr_list.map((mr) =>mr.mr_id));
     const modalDelete = this.state.warning;
     if (modalDelete === false) {
       const _id = e.currentTarget.value;
-      // console.log("_id ", _id);
       this.setState({
         warning: !this.state.warning,
         selected_id: _id,
-        // selected_mr: this.state.shipment_detail.mr_list.map((mr) =>mr._id),
-        // selected_mr_id: this.state.shipment_detail.mr_list.map((mr) =>mr.mr_id),
       });
     } else {
       this.setState({
@@ -291,7 +287,6 @@ class ShipmentList extends Component {
   TakeoutMR(e) {
     const _id = this.state.selected_id;
     const mr_takeout = this.state.mr_data_selected.map(mr=>mr._id);
-    console.log('mr_takeout ',mr_takeout)
     if (e !== undefined) {
       this.toggleLoading();
       this.toggleTakeOut();
@@ -446,8 +441,6 @@ class ShipmentList extends Component {
       });
     }
     this.setState({ mr_data_selected: MRSelected });
-    // console.log('MRSelected ', this.state.mr_data_selected)
-    // console.log('MRSelected id ', this.state.mr_data_selected.map(mr=> mr._id))
     this.setState((prevState) => ({
       mr_checked: prevState.mr_checked.set(item, isChecked),
     }));
@@ -697,6 +690,7 @@ class ShipmentList extends Component {
                     <tr>
                       <th>Action</th>
                       <th>Shipment Number</th>
+                      <th>Shipment ID</th>
                       <th>Transporter</th>
                       <th>Plat Nomer</th>
                       <th>Driver</th>
@@ -722,6 +716,7 @@ class ShipmentList extends Component {
                           </Button>
                         </td>
                         <td>{list.shipment_id}</td>
+                        <td>{list.no_shipment}</td>
                         <td>{list.transporter}</td>
                         <td>{list.truck_no}</td>
                         <td>{list.driver}</td>

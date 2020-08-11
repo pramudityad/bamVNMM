@@ -532,7 +532,7 @@ class AddMatPackageUpload extends React.Component {
 
   componentDidMount() {
     this.getPackageDataAPI();
-    this.getPackageDataAPI_all();
+    // this.getPackageDataAPI_all();
     document.title = 'Product Package | BAM';
   }
 
@@ -907,6 +907,7 @@ class AddMatPackageUpload extends React.Component {
 
   deleteMaterialAdditional(index){
     let addMaterial = this.state.additional_material;
+    // addMaterial[i]["material_origin"] = "deleted"
     addMaterial.splice(index,1);
     this.setState({additional_material : addMaterial });
   }
@@ -929,11 +930,20 @@ class AddMatPackageUpload extends React.Component {
     // const dataUpload = [["material_id_actual", "material_name_actual", "material_type", "unit", "qty"]];
     const dataUpload = [["pp_id","product_name","product_type","physical_group","package_unit","pp_group","material_id","material_name","material_type","material_origin","material_unit","material_qty"]];
     for(let i = 0; i < addMaterial.length; i++){
-      dataUpload.push(["AdditionalMaterial","Additional Material","Additional","Additional","grp","AdditionalMaterial", addMaterial[i].material_id_actual, addMaterial[i].material_name_actual, addMaterial[i].material_type, addMaterial[i].material_origin, addMaterial[i].unit, parseFloat(addMaterial[i].qty)]);
+      dataUpload.push(["AdditionalMaterial","Additional Material","Additional","Additional","grp","AdditionalMaterial",
+      addMaterial[i].material_id_actual,
+      addMaterial[i].material_name_actual,
+      addMaterial[i].material_type !== undefined && addMaterial[i].material_type !== null && addMaterial[i].material_type.length !== 0 ? addMaterial[i].material_type : "Additional",
+      addMaterial[i].material_origin,
+      addMaterial[i].unit !== undefined && addMaterial[i].unit !== null && addMaterial[i].unit.length !== 0 ? addMaterial[i].unit : "Additional",
+      addMaterial[i].qty !== undefined && addMaterial[i].qty !== null && addMaterial[i].qty.length !== 0 ? parseFloat(addMaterial[i].qty) : 1,
+    ]);
     }
     let patchDataMat = await this.postDatatoAPINODE('/productpackage/packageWithMaterial', { "data": dataUpload });
     if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
-      this.setState({ action_status : 'success'});
+      this.setState({ action_status : 'success'}, () => {
+        this.getPackageDataAPI();
+      });
     } else{
       if(patchDataMat.response !== undefined && patchDataMat.response.data !== undefined && patchDataMat.response.data.error !== undefined){
         if(patchDataMat.response.data.error.message !== undefined){
@@ -1054,35 +1064,18 @@ class AddMatPackageUpload extends React.Component {
                       <table hover bordered responsive size="sm" width='100%'>
                         <thead style={{ backgroundColor: '#c6f569' }} className='fixed-pp'>
                           <tr align="center">
-                            {/* <th>
-                              <Checkbox name={"all"} checked={this.state.packageChecked_page} onChange={this.handleChangeChecklistPage} />
-                            </th> */}
-                            {/* <th style={{ minWidth: '150px' }}>Additional Name</th> */}
+                            <th>Material ID</th>
                             <th>Material Name</th>
-                            <th>Additional ID</th>
+                            <th>Type</th>
+                            <th>Origin</th>
                             <th>Unit</th>
                             <th>Qty</th>
-                            {/* <th>Product Package</th> */}
-                            {/* <th>Physical Group</th> */}
-                            {/* <th>Additional Type/ Material Origin</th> */}
-                            {/* <th></th> */}
                           </tr>
                         </thead>
                         <tbody>
                           {this.state.product_package
                           .map(pp =>
                             <React.Fragment key={pp._id + "frag"}>
-                              {/* <tr style={{ backgroundColor: '#E5FCC2' }} className='fixbody' key={pp._id}>
-                                <td align="center"><Checkbox name={pp._id} checked={this.state.packageChecked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
-                                <td colSpan="2" style={{ textAlign: 'left' }}>{pp.product_name}</td>
-                                <td style={{ textAlign: 'left' }}>{pp.pp_id}</td>
-                                <td style={{ textAlign: 'center' }}>{pp.uom}</td>
-                                <td style={{ textAlign: 'left' }}></td>
-
-                                <td style={{ textAlign: 'center' }}>{pp.physical_group}</td>
-                                <td style={{ textAlign: 'center' }}>{pp.product_type}</td>
-
-                              </tr> */}
                               {pp.materials
                               .filter((mat) => {
                                 if (this.state.search === null) {
@@ -1100,16 +1093,12 @@ class AddMatPackageUpload extends React.Component {
                               })
                               .map(mat =>
                                 <tr className='fixbodymat' key={mat._id}>
-                                  {/* <td style={{ textAlign: 'left' }}></td>
-                                  <td style={{ textAlign: 'left' }}></td> */}
-                                  <td style={{ textAlign: 'left' }}>{mat.material_name}</td>
-                                  <td style={{ textAlign: 'left' }}>{mat.material_id}</td>
+                                  <td style={{ textAlign: 'center' }}>{mat.material_id}</td>
+                                  <td style={{ textAlign: 'center' }}>{mat.material_name}</td>
+                                  <td style={{ textAlign: 'center' }}>{mat.material_type}</td>
+                                  <td style={{ textAlign: 'center' }}>{mat.material_origin}</td>
                                   <td style={{ textAlign: 'center' }}>{mat.uom}</td>
                                   <td style={{ textAlign: 'center' }}>{mat.qty}</td>
-                                  {/* }<td style={{textAlign : 'left'}}></td> */}
-                                  {/* <td style={{ textAlign: 'left' }}></td>
-                                  <td style={{ textAlign: 'center' }}>{mat.material_origin}</td> */}
-                                  {/* <td></td> */}
                                 </tr>
                               )}
                             </React.Fragment>
@@ -1121,6 +1110,9 @@ class AddMatPackageUpload extends React.Component {
                 </Row>
                 <Row>
                   <Col>
+                    <div style={{ margin: "8px 0px" }}>
+                      <small>Showing {this.state.perPage} entries from {this.state.product_package[0] === undefined ? 0 : this.state.product_package[0].materials.length} data</small>
+                    </div>
                     <Pagination
                       activePage={this.state.activePage}
                       itemsCountPerPage={this.state.perPage}

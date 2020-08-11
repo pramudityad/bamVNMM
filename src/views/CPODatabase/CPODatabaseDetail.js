@@ -7,7 +7,7 @@ import { ExcelRenderer } from 'react-excel-renderer';
 import { connect } from 'react-redux';
 import { Modal, ModalBody, ModalHeader, ModalFooter } from 'reactstrap';
 import * as XLSX from 'xlsx';
-import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction';
+import {convertDateFormatfull, convertDateFormat, numberWithCommas} from '../../helper/basicFunction';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -615,8 +615,8 @@ class CPODatabaseDetail extends Component {
                       <td>{e.unit}</td>
                       {this.state.userRole.findIndex(e => e === "BAM-CpoDB-ViewWithoutPrice") === -1 && (
                         <React.Fragment>
-                        <td>{e.price}</td>
-                        <td>{e.total_price}</td>
+                        <td>{numberWithCommas(e.price)}</td>
+                        <td>{numberWithCommas(e.total_price)}</td>
                         <td>{e.match_status}</td>
                         </React.Fragment>
                       )}

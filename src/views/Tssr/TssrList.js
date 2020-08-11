@@ -13,6 +13,10 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
+const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
+const usernameXL = "adminbamidsuper";
+const passwordXL = "F760qbAg2sml";
+
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 const arrayFilter = ["no_plantspec", "project_name", "tower_id", "current_status", "submission_status", "mr_id"]
@@ -28,6 +32,7 @@ class TssrList extends Component {
       userEmail : this.props.dataLogin.email,
       tokenUser : this.props.dataLogin.token,
       tssr_list : [],
+      data_tower : [],
       prevPage : 0,
       activePage : 1,
       totalData : 0,
@@ -79,6 +84,26 @@ class TssrList extends Component {
     }
   }
 
+  async getDatafromAPIXL(url){
+    try {
+      let respond = await axios.get(API_URL_XL +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
+    }
+  }
+
   getTssrList(){
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
@@ -94,8 +119,21 @@ class TssrList extends Component {
     this.getDataFromAPINODE('/plantspec?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
     // this.getDataFromAPIBAM('/tssr_sorted?'+'max_results='+this.state.perPage+'&page='+page).then(res => {
       if(res.data !== undefined){
+        let siteIDArray = [];
+        res.data.data.map(lst => lst.site_info.map(st => siteIDArray.push(st.site_id)))
+        this.getDataTower(siteIDArray)
         const totalData = res.data.totalResults;
         this.setState({tssr_list : res.data.data, totalData : totalData})
+      }
+    })
+  }
+
+  getDataTower(array_tower_id){
+    console.log("array_tower_id", array_tower_id)
+    let array_tower = '"'+array_tower_id.join('", "')+'"';
+    this.getDatafromAPIXL('/tower_site_op?where={"tower_id" :{"$in" : ['+array_tower+']}}&projection={"tower_id":1,"region":1}').then( res => {
+      if(res.data !== undefined){
+          this.setState({ data_tower : res.data._items })
       }
     })
   }
@@ -130,7 +168,7 @@ class TssrList extends Component {
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < arrayFilter.length; i++) {
+    for (let i = 0; i < arrayFilter.length+1; i++) {
       searchBar.push(
         <td>
           <div className="controls">
@@ -166,7 +204,7 @@ class TssrList extends Component {
   }
 
   render() {
-    console.log("getTssrList", this.state.filter_list);
+
     const downloadMR = {
       float: 'right',
       marginRight: '10px'
@@ -194,6 +232,7 @@ class TssrList extends Component {
                       <th>No PS Group</th>
                       <th>Project</th>
                       <th>Tower ID</th>
+                      <th>Region</th>
                       <th>Status</th>
                       <th>Submission Status</th>
                       <th>MR Related</th>
@@ -208,7 +247,17 @@ class TssrList extends Component {
                       <tr key={list._id}>
                         <td>{list.no_plantspec}</td>
                         <td>{list.project_name}</td>
-                        <td>{list.site_info[0] !== undefined ? list.site_info[0].site_id : null}</td>
+                        {list.site_info[0] !== undefined ? (
+                          <React.Fragment>
+                            <td>{list.site_info[0].site_id}</td>
+                            <td>{this.state.data_tower.find(dt => dt.tower_id === list.site_info[0].site_id ) !== undefined ? this.state.data_tower.find(dt => dt.tower_id === list.site_info[0].site_id ).region : null}</td>
+                          </React.Fragment>
+                        ) : (
+                          <React.Fragment>
+                            <td></td>
+                            <td></td>
+                          </React.Fragment>
+                        )}
                         <td>{list.current_status}</td>
                         <td>{list.submission_status}</td>
                         <td>
@@ -225,6 +274,9 @@ class TssrList extends Component {
                     )}
                   </tbody>
                 </Table>
+                <div style={{ margin: "8px 0px" }} className="pagination">
+                  <small>Showing {this.state.perPage} entries from {this.state.totalData} data</small>
+                </div>
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}

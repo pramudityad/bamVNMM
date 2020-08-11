@@ -832,8 +832,8 @@ class PackageUpload extends React.Component {
     const dataPrint = this.state.packageSelected;
     console.log('pp selected', dataPrint);
 
-    let confArray = ["2020_Config-1D EXAMPLE", "Coverage", "Cov_2020_Config-4_0610", "Cov_2020_Config-4_06", "2515914", "RBS:COV_2020_CONFIG-4DC", "SVC", "EXAMPLE"];
-    let typeArray = ["config_name", "program", "config_id", "config_customer_name", "sap_number", "sap_description", "config_type", "description"];
+    let confArray = ["Cov_2020_Config-4_0610", "2020_Config-1D EXAMPLE", "Coverage", "Cov_2020_Config-4_06", "2515914", "RBS:COV_2020_CONFIG-4DC", "SVC", "EXAMPLE"];
+    let typeArray = ["config_id", "config_name", "program", "config_customer_name", "sap_number", "sap_description", "config_type", "description"];
 
     // ws.addRow(["config_id", "sap_number", "pp_id", "qty", "price", "currency", "config_description", "config_type", "qty_commercial"]);
     typeArray = typeArray.concat(dataPrint.map(pp => pp.pp_id + " /// " + pp.product_name));
@@ -1033,6 +1033,9 @@ class PackageUpload extends React.Component {
                 </Row>
                 <Row>
                   <Col>
+                  <div style={{ margin: "8px 0px" }}>
+                    <small>Showing {this.state.perPage} entries from {this.state.total_dataParent} data</small>
+                  </div>
                     <Pagination
                       activePage={this.state.activePage}
                       itemsCountPerPage={this.state.perPage}

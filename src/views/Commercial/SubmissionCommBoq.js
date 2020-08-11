@@ -13,6 +13,7 @@ import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
 import { connect } from 'react-redux';
 import jsonData from './jsonData.js';
+import {numberWithCommas} from '../../helper/basicFunction';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
@@ -2113,6 +2114,7 @@ class SubmissionCommBoq extends Component {
                           <th>Tower ID</th>
                           <th>Tower Name</th>
                           <th>Config ID</th>
+                          <th>SAP Number</th>
                           <th>SAP Desc</th>
                           <th>Qty</th>
                           {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-SubmissionBoq-ViewWithoutPrice") === false) && (
@@ -2134,14 +2136,15 @@ class SubmissionCommBoq extends Component {
                               <td>{item.site_id}</td>
                               <td>{item.site_name}</td>
                               <td>{item.config_id}</td>
+                              <td>{item.sap_number}</td>
                               <td>{item.sap_description}</td>
                               <td>{item.qty}</td>
                               {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-SubmissionBoq-ViewWithoutPrice") === false) && (
                                 <React.Fragment>
-                              <td>{item.net_price_incentive_usd}</td>
-                              <td>{item.net_price_incentive}</td>
-                              <td>{item.total_price_incentive_usd.toFixed(2)}</td>
-                              <td>{item.total_price_incentive.toFixed(2)}</td>
+                              <td>{numberWithCommas(item.net_price_incentive_usd)}</td>
+                              <td>{numberWithCommas(item.net_price_incentive)}</td>
+                              <td>{numberWithCommas(item.total_price_incentive_usd)}</td>
+                              <td>{numberWithCommas(item.total_price_incentive)}</td>
                               <td>{item.cpo_boq}</td>
                               </React.Fragment>
                             )}

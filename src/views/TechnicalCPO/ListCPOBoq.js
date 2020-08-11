@@ -306,6 +306,9 @@ class ListCPOBoq extends Component {
             </Table>
             <nav>
                 <div>
+                <div style={{ margin: "8px 0px" }}>
+                  <small>Showing {this.state.perPage} entries from {this.state.totalData} data</small>
+                </div>
                 <Pagination
                     activePage={this.state.activePage}
                     itemsCountPerPage={this.state.perPage}

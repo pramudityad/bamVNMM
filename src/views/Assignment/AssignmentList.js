@@ -37,6 +37,7 @@ class AssignmentList extends Component {
     this.getAllAssignment = this.getAllAssignment.bind(this);
     this.downloadAllAssignment = this.downloadAllAssignment.bind(this);
     this.downloadAllAssignmentAcceptenceMigration = this.downloadAllAssignmentAcceptenceMigration.bind(this);
+    this.downloadAllAssignmentBAST = this.downloadAllAssignmentBAST.bind(this);
   }
 
   async getDataFromAPINODE(url) {
@@ -189,6 +190,40 @@ class AssignmentList extends Component {
     saveAs(new Blob([allocexport]), 'Assignment List For Acceptence Migration SH.xlsx');
   }
 
+  async downloadAllAssignmentBAST() {
+    let allAssignmentList = [];
+    let filter_array = [];
+    this.state.filter_list[0] !== "" && (filter_array.push('"Assignment_No":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
+    this.state.filter_list[1] !== "" && (filter_array.push('"Account_Name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
+    this.state.filter_list[2] !== "" && (filter_array.push('"Project":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
+    this.state.filter_list[3] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
+    this.state.filter_list[4] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+    this.state.filter_list[5] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
+    this.state.filter_list[6] !== "" && (filter_array.push('"Current_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
+    this.state.filter_list[7] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
+    filter_array.push('"PO_Number" : {"$ne" : null}')
+    let getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1&q={"PO_Number" : {"$ne" : null}}');
+    if (getASG.data !== undefined) {
+      allAssignmentList = getASG.data.data;
+    }
+
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let headerRow = ["id_assignment_doc", "Assignment_No", "sh_assignment_no",  "Account_Name", "ASP_Acceptance_Date", "WP_ID", "id_project_doc", "Project", "SOW_Type",
+    "BAST_No", "GR_Type", "Payment_Terms", "Payment_Terms_Ratio", "GR_Percentage", "PO_Number", "PO_Item", "Item_Status", "Requestor"];
+    ws.addRow(headerRow);
+
+    for (let i = 0; i < allAssignmentList.length; i++) {
+      let rowAdded = [allAssignmentList[i]._id, allAssignmentList[i].Assignment_No, allAssignmentList[i].SH_Assignment_No, "XL", allAssignmentList[i].ASP_Acceptance_Date !== null && allAssignmentList[i].ASP_Acceptance_Date !== undefined ? allAssignmentList[i].ASP_Acceptance_Date.slice(0, 10) : null, allAssignmentList[i].WP_ID, allAssignmentList[i].id_project_doc, allAssignmentList[i].Project, allAssignmentList[i].SOW_Type,
+      null, null, allAssignmentList[i].Payment_Terms, null, null, allAssignmentList[i].PO_Number, allAssignmentList[i].PO_Item, null, null];
+      ws.addRow(rowAdded);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Assignment List For Migration BAST.xlsx');
+  }
+
   loopSearchBar = () => {
     let searchBar = [];
     for (let i = 0; i < 8; i++) {
@@ -238,7 +273,10 @@ class AssignmentList extends Component {
                 <Link to={'/assignment-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment</Button></Link>
                 <Link to={'/bulk-assignment-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment Bulk</Button></Link>
                 <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignment} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List</Button>
-                <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignmentAcceptenceMigration} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download Assignment List Status Migration</Button>
+                <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignmentAcceptenceMigration} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Template for Status Migration</Button>
+                {(this.state.userRole.findIndex(e => e === "BAM-Admin") !== -1) && (
+                  <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignmentBAST} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Template for BAST Bulk Migration</Button>
+                )}
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -285,6 +323,9 @@ class AssignmentList extends Component {
                     )}
                   </tbody>
                 </Table>
+                <div style={{ margin: "8px 0px" }}>
+                  <small>Showing {this.state.perPage} entries from {this.state.totalData} data</small>
+                </div>
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}

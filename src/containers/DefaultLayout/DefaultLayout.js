@@ -179,8 +179,11 @@ class DefaultLayout extends Component {
                     <Redirect from="/" to="/blank-page" />
                   ) : (
                     <React.Fragment>
-                      {((this.state.userRole.includes("BAM-ASP") !== false || this.state.userRole.includes("BAM-ASP Management") !== false) && this.state.userRole.includes("Admin") === false) ? (
+                      {(
+                        (this.state.userRole.includes("BAM-ASP") !== false || this.state.userRole.includes("BAM-ASP Management") !== false) && this.state.userRole.includes("Admin") === false) ? (
                         <Redirect from="/" to="/assignment-list-asp" />
+                      ) : (this.state.userRole.includes("BAM-Mover") !== false || this.state.userRole.includes("BAM-Mobile-Mover") !== false) ? (
+                        <Redirect from="/" to="/material-dispatch" />
                       ) : (
                         <Redirect from="/" to="/dashboard" />
                       )}

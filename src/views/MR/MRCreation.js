@@ -245,7 +245,6 @@ class MRCreation extends Component {
       }
     }
     this.setState({ validation_form: dataValidate });
-    console.log("dataValidate", dataValidate);
     if (checkerror.length !== 0) {
       return true
     } else {
@@ -266,14 +265,18 @@ class MRCreation extends Component {
       const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
       let list_site = [];
       let dataXLS = [
-        ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "mr_comment_project", "sent_mr_request", "created_based", "identifier"],
-        ["new", this.state.project_name_selected, this.selectMRType(dataForm[3]), this.selectDeliveryType(dataForm[4]), dataForm[8], this.selectedDatetoFormat(dataForm[5]), this.selectedDatetoFormat(dataForm[6]), dataForm[7], "", "", this.state.identifier_by, this.state.tower_selected_id]
+        ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "mr_comment_project", "sent_mr_request", "created_based", "identifier", "priority_mr", "week_number"],
+        ["new", this.state.project_name_selected, this.selectMRType(dataForm[3]), this.selectDeliveryType(dataForm[4]), dataForm[8], this.selectedDatetoFormat(dataForm[5]), this.selectedDatetoFormat(dataForm[6]), dataForm[7], "", "", this.state.identifier_by, this.state.tower_selected_id, dataForm[10], dataForm[11]]
       ]
       const respondCheckingMR = await this.postDatatoAPINODE('/matreq/matreqByActivity', {"data" : dataXLS});
       if(respondCheckingMR.data !== undefined && respondCheckingMR.status >= 200 && respondCheckingMR.status <= 300 ) {
         const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', {"data" : respondCheckingMR.data.data });
         if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
-          this.setState({ action_status : 'success', action_message: null });
+          this.setState({ action_status : 'success', action_message: null }, () => {
+            if(respondSaveMR.data.new !== undefined && respondSaveMR.data.new.length !== 0){
+              setTimeout(function() { this.setState({redirectSign : respondSaveMR.data.new[0]._id })}.bind(this), 2000 );
+            }
+          });
         } else{
           if(respondSaveMR.response !== undefined && respondSaveMR.response.data !== undefined && respondSaveMR.response.data.error !== undefined){
             if(respondSaveMR.response.data.error.message !== undefined){
@@ -609,7 +612,7 @@ class MRCreation extends Component {
                   <FormGroup>
                     <Label>Delivery Company</Label>
                     <Input type="select" name="7" value={this.state.create_mr_form[7]} onChange={this.handleChangeFormMRCreation} style={this.state.validation_form.deliver_by === false ? {borderColor : 'red'} : {}}>
-                      <option value="" disabled selected hidden>Select DSP Company</option>
+                      <option value="" disabled selected hidden>Select Delivery Company</option>
                       <option value="DSP">DSP</option>
                       {this.state.dsp_list.map(e =>
                         <option value={e.Vendor_Code}>{e.Name}</option>
@@ -652,7 +655,7 @@ class MRCreation extends Component {
                 </Col>
               </Row>
               <Row form>
-                <Col md={6}>
+                <Col md={3}>
                   <FormGroup>
                     <Label>ETD</Label>
                     <Input
@@ -662,13 +665,40 @@ class MRCreation extends Component {
                     />
                   </FormGroup>
                 </Col>
-                <Col md={6}>
+                <Col md={3}>
                   <FormGroup>
                     <Label>ETA</Label>
                     <Input
                       type="date"
                       name="6" value={this.state.create_mr_form[6]} onChange={this.handleChangeFormMRCreation}
                       style={this.state.validation_form.eta === false ? {borderColor : 'red'} : {}}
+                    />
+                  </FormGroup>
+                </Col>
+                <Col md={3}>
+                  <FormGroup>
+                    <Label>Priority</Label>
+                    <Input type="select" name="10" value={this.state.create_mr_form[10]} onChange={this.handleChangeFormMRCreation}>
+                      <option value="" disabled selected hidden>Select Priority</option>
+                      <option value={"P1"}>P1</option>
+                      <option value={"P2"}>P2</option>
+                      <option value={"P3"}>P3</option>
+                    </Input>
+                    {/* <Input
+                      type="string"
+                      name="10" value={this.state.create_mr_form[10]} onChange={this.handleChangeFormMRCreation}
+                    /> */}
+                  </FormGroup>
+                </Col>
+                <Col md={3}>
+                  <FormGroup>
+                    <Label>Week target</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="54"
+                      name="11" value={this.state.create_mr_form[11]} onChange={this.handleChangeFormMRCreation}
+
                     />
                   </FormGroup>
                 </Col>

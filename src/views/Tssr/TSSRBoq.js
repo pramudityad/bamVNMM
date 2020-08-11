@@ -26,6 +26,9 @@ const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNot
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
+const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
+const usernameXL = "adminbamidsuper";
+const passwordXL = "F760qbAg2sml";
 
 class TableTSSRHorizontal extends React.Component{
   constructor(props) {
@@ -204,6 +207,7 @@ class TSSRBoq extends Component {
         view_tech_all_header_table : {"config_group_header" : [], "config_group_type_header" : []},
         result_check_tssr : {},
         array_site_ps_creation : [],
+        data_tower : [],
       };
       this.saveDataTSSR = this.saveDataTSSR.bind(this);
       this.toggleAlert = this.toggleAlert.bind(this);
@@ -339,6 +343,26 @@ class TSSRBoq extends Component {
     getIndex(data, value){
       //get index of value in Array
       return data.findIndex(e => this.isSameValue(e,value));
+    }
+
+    async getDatafromAPIXL(url){
+      try {
+        let respond = await axios.get(API_URL_XL +url, {
+          headers : {'Content-Type':'application/json'},
+          auth: {
+            username: usernameXL,
+            password: passwordXL
+          },
+        })
+        if(respond.status >= 200 && respond.status < 300){
+          console.log("respond Get Data", respond);
+        }
+        return respond;
+      }catch (err) {
+        let respond = err;
+        console.log("respond Get Data", err);
+        return respond;
+      }
     }
 
     async getDataFromAPINODE(url) {
@@ -580,12 +604,32 @@ class TSSRBoq extends Component {
           if(res.data.data !== undefined){
             this.setState({data_tssr_boq_sites : dataTech.data.tssr_site}, () => {
               this.viewTechBoqData(dataTech.data.tssr_site);
+              this.getAllTowerRegion(dataTech.data.tssr_site.map(site => site.site_id))
               this.dataViewPagination(this.state.data_tssr_boq_sites);
               this.getDRMData(dataTech.data.tssr_site, dataTech.data.project_name);
             });
           }
         }
       })
+    }
+
+    async getAllTowerRegion(array_sites){
+      let dataSites = [];
+      let arrayDataSites = array_sites;
+      let getNumberPage = Math.ceil(arrayDataSites.length / 100);
+      for(let i = 0 ; i < getNumberPage; i++){
+        let DataPaginationSites = arrayDataSites.slice(i * 100, (i+1)*100);
+        let arrayIdSites = '"'+DataPaginationSites.join('", "')+'"';
+        arrayIdSites = arrayIdSites.replace("&", "%26");
+        let where_id_Sites = '&where={"tower_id" : {"$in" : ['+arrayIdSites+']}}';
+        let resSites = await this.getDatafromAPIXL('/tower_site_op?projection={"tower_id":1,"region":1}'+where_id_Sites);
+        if(resSites !== undefined){
+          if(resSites.data !== undefined){
+            dataSites = dataSites.concat(resSites.data._items);
+          }
+        }
+      }
+      this.setState({data_tower : dataSites});
     }
 
     getDRMData(sites_tech, project){
@@ -1114,7 +1158,7 @@ class TSSRBoq extends Component {
       const wb = new Excel.Workbook();
       const ws = wb.addWorksheet();
 
-      ws.addRow(["bam_id", "tssr_id", "tower_id", "plant_spec_number", "bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty"]);
+      ws.addRow(["bam_id", "tssr_id", "tower_id", "plant_spec_number", "bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "material_type"]);
       for(let i = 0; i < dataSitePSCreate.length; i++ ){
         let dataPreview = await this.postDatatoAPINODE('/plantspec/getTssrData2', {"data" : [{"techBoqId": this.state.data_tssr_boq._id, "siteId": dataSitePSCreate[i].system_site_id}]});
         if(dataPreview.data !== undefined){
@@ -1124,7 +1168,7 @@ class TSSRBoq extends Component {
             for(let j = 0; j < respondSaveTSSR.data.materialData.length; j++){
               const material = respondSaveTSSR.data.materialData[j];
               const findBundle = respondSaveTSSR.data.packageData.find(e => e._id === material.id_mr_pp_doc);
-              ws.addRow([material._id, findBundle !== undefined ? findBundle.no_tssr_boq_site : null, findBundle !== undefined ? findBundle.site_id : null, findBundle !== undefined ? findBundle.no_plantspec : null, findBundle !== undefined ? findBundle.pp_id : null, findBundle !== undefined ? findBundle.product_name : null, findBundle !== undefined ? findBundle.program : null, material.material_id_plan, material.material_name_plan, material.material_id, material.material_name, material.uom, material.qty ])
+              ws.addRow([material._id, findBundle !== undefined ? findBundle.no_tssr_boq_site : null, findBundle !== undefined ? findBundle.site_id : null, findBundle !== undefined ? findBundle.no_plantspec : null, findBundle !== undefined ? findBundle.pp_id : null, findBundle !== undefined ? findBundle.product_name : null, findBundle !== undefined ? findBundle.program : null, material.material_id_plan, material.material_name_plan, material.material_id, material.material_name, material.uom, material.qty, findBundle !== undefined ? findBundle.product_type : null ])
             }
           }else{
             returnErrorCreate.push(dataSitePSCreate[i].site_id);
@@ -1245,6 +1289,7 @@ class TSSRBoq extends Component {
                           <thead class="table-tssr__header--fixed">
                           <tr>
                             <th>Tower ID</th>
+                            <th>Region</th>
                             <th>Program</th>
                             <th>SOW</th>
                             <th>Config</th>
@@ -1258,6 +1303,7 @@ class TSSRBoq extends Component {
                           site.siteItemConfig.map(conf =>
                               <tr>
                                 <td>{site.site_id}</td>
+                                <td>{this.state.data_tower.find(twr => twr.tower_id === site.site_id) !== undefined ? this.state.data_tower.find(twr => twr.tower_id === site.site_id).region : null }</td>
                                 <td>{site.program}</td>
                                 <td>{site.sow}</td>
                                 <td>{conf.config_id}</td>

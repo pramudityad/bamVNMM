@@ -9,19 +9,25 @@ import {
   Marker
 } from "react-google-maps";
 import iconTruck from '../../assets/img/loaded-truck-side-view.png';
+import iconSite from '../../assets/img/tower.png';
+import iconStorage from '../../assets/img/empire-state-building.png';
 
 const propTypes = {
     dsp_lat: PropTypes.number,
     dsp_lng: PropTypes.number,
     site_lat: PropTypes.number,
     site_lng: PropTypes.number,
+    wh_lat: PropTypes.number,
+    wh_lng: PropTypes.number,
 }
 
 const defaultProps = {
-    dsp_lat: -6.2915605,
-    dsp_lng: 106.7999035,
+    dsp_lat: -6.2626619,
+    dsp_lng: 106.7826552,
     site_lat: -6.2626619,
     site_lng: 106.7826552,
+    wh_lat: -6.2626619,
+    wh_lng: 106.7826552,
 }
 
 class MapComponent extends Component {
@@ -54,17 +60,36 @@ class MapComponent extends Component {
   }
 
   render() {
+    console.log(this.props.dsp_lat, this.props.dsp_lng, this.props.site_lat, this.props.site_lng, this.props.wh_lat, this.props.wh_lng)
     const GMapping = withScriptjs(withGoogleMap(props => (
       <GoogleMap
-        defaultCenter={{ lat: this.props.dsp_lat, lng: this.props.dsp_lng }}
-        defaultZoom={13}
+        defaultCenter={{ lat: this.props.dsp_lat, lng: this.props.dsp_lng}}
+        defaultZoom={7}
       >
       <Marker
         icon={{
-          url: iconTruck
+          url: iconSite,
+          scaledSize: {width: 30, height: 30}
         }}
-        position={{ lat: this.props.dsp_lat, lng: this.props.dsp_lng}}
+        position={{ lat: this.props.site_lat, lng: this.props.site_lng}}
       />
+      {(this.props.wh_lat !== null && this.props.wh_lng !== null) && (
+        <Marker
+          icon={{
+            url: iconStorage,
+            scaledSize: {width: 30, height: 30}
+          }}
+          position={{ lat: this.props.wh_lat, lng: this.props.wh_lng}}
+        />
+      )}
+      {(this.props.dsp_lat !== null && this.props.dsp_lng !== null) && (
+        <Marker
+          icon={{
+            url: iconTruck
+          }}
+          position={{ lat: this.props.dsp_lat, lng: this.props.dsp_lng}}
+        />
+      )}
       </GoogleMap>
     )));
 

@@ -89,7 +89,11 @@ class AssignmentListApproval extends Component {
     this.state.filter_list[4] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
     this.state.filter_list[5] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
     this.state.filter_list[7] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
-    filter_array.push('"$or" : [{"Current_Status":"REQUEST PM APPROVAL"}, {"Current_Status":"ASP ASSIGNMENT REQUEST FOR CANCELATION"}]');
+    if(this.state.filter_list[6] !== ""){
+      filter_array.push('"Current_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}');
+    }else{
+      filter_array.push('"$or" : [{"Current_Status":"REQUEST PM APPROVAL"}, {"Current_Status":"ASP ASSIGNMENT REQUEST FOR CANCELATION"}]');
+    }
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
@@ -235,6 +239,9 @@ class AssignmentListApproval extends Component {
                     )}
                   </tbody>
                 </Table>
+                <div style={{ margin: "8px 0px" }}>
+                  <small>Showing {this.state.perPage} entries from {this.state.totalData} data</small>
+                </div>
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}

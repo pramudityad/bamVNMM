@@ -92,12 +92,14 @@ class MRNAList extends Component {
     this.state.filter_list[3] !== "" && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
     this.state.filter_list[4] !== "" && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
     filter_array.push('"$or" : [{"current_mr_status":"PLANTSPEC NOT ASSIGNED"}, {"no_plantspec":null}]');
-    this.state.filter_list[6] !== "" && (filter_array.push('"current_milestones":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
+    this.state.filter_list[6] !== "" && (filter_array.push('"site_info.site_region":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
     this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
     this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
+    this.state.filter_list[9] !== "" && (filter_array.push('"priority_mr":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    this.state.filter_list[10] !== "" && (filter_array.push('"week_number":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
-    this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
-    this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
+    this.state.filter_list[11] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
+    this.state.filter_list[12] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[12] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
@@ -118,12 +120,14 @@ class MRNAList extends Component {
     this.state.filter_list[3] !== "" && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
     this.state.filter_list[4] !== "" && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
     filter_array.push('"current_mr_status":"PLANTSPEC NOT ASSIGNED"');
-    this.state.filter_list[6] !== "" && (filter_array.push('"current_milestones":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
+    this.state.filter_list[6] !== "" && (filter_array.push('"site_info.site_region":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
     this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
     this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
+    this.state.filter_list[9] !== "" && (filter_array.push('"priority_mr":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    this.state.filter_list[10] !== "" && (filter_array.push('"week_number":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
-    this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
-    this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
+    this.state.filter_list[11] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
+    this.state.filter_list[12] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[12] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
@@ -204,7 +208,7 @@ class MRNAList extends Component {
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 14; i++) {
       searchBar.push(
         <td>
           <div className="controls" style={{ width: '150px' }}>
@@ -252,12 +256,14 @@ class MRNAList extends Component {
                       <th>Site ID</th>
                       <th>Site Name</th>
                       <th>Current Status</th>
-                      <th>Current Milestone</th>
+                      <th>Region</th>
                       <th>DSP</th>
                       <th>ETA</th>
-                      <th>Created By</th>
+                      <th>Priority</th>
+                      <th>Target (Week)</th>
                       <th>Updated On</th>
                       <th>Created On</th>
+                      <th>Created By</th>
                     </tr>
                     <tr>
                       {this.loopSearchBar()}
@@ -288,12 +294,16 @@ class MRNAList extends Component {
                           {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
                         </td>
                         <td>{list.current_mr_status}</td>
-                        <td>{list.current_milestones}</td>
+                        <td>
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_region).join(' , '))}
+                        </td>
                         <td>{list.dsp_company}</td>
                         <td>{convertDateFormat(list.eta)}</td>
-                        <td></td>
+                        <td>{list.priority_mr}</td>
+                        <td>{list.week_number}</td>
                         <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
+                        <td></td>
                       </tr>
                     )}
                   </tbody>

@@ -75,6 +75,7 @@ class DetailTssr extends Component {
         userEmail : this.props.dataLogin.email,
         tokenUser : this.props.dataLogin.token,
         rowsXLS : [],
+        data_tower : {},
         data_tssr : null,
         tssr_site_FE : null,
         tssr_site_NE : null,
@@ -533,12 +534,23 @@ class DetailTssr extends Component {
       if(res.data !== undefined){
         this.setState({ tssrData : res.data.data }, () => {
           if(res.data.data.site_info !== undefined){
+            this.getDataTower(res.data.data.site_info[0].site_id)
             this.getDataCDID(res.data.data.site_info.filter(fe => fe.cd_id !== null && fe.cd_id !== undefined).map(e => e.cd_id));
           }
           this.getDataWarehouse();
           this.getDataInbound();
         })
         console.log('tssrData', this.state.tssrData);
+      }
+    })
+  }
+
+  getDataTower(tower_id){
+    this.getDatafromAPIXL('/tower_site_op?where={"tower_id" :"'+tower_id+'"}&projection={"tower_id":1,"region":1}').then( res => {
+      if(res.data !== undefined){
+        if(res.data._items[0] !== undefined){
+          this.setState({ data_tower : res.data._items[0] })
+        }
       }
     })
   }
@@ -1448,24 +1460,24 @@ class DetailTssr extends Component {
     ws.mergeCells('A11:B11');
     ws.addRow([""]);
 
-    let headerRow = ["NO.","DENOMINATION / FUNCTIONAL DESCRIPTION", null, null, "PRODUCT CODE", null, "QTY PLAN", "QTY ACTUAL", "UNIT", "REMARKS"];
+    let headerRow = ["NO.","DENOMINATION", null, null, "PRODUCT CODE", null, "QTY PLAN", "QTY ACTUAL", "UNIT", "REMARKS"];
     ws.addRow(headerRow);
-    ws.mergeCells('B13:D13');
-    ws.mergeCells('E13:F13');
-    ws.getCell('A13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('B13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('F13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('G13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('H13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('I13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('J13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('A13').font  = {bold : true };
-    ws.getCell('B13').font  = {bold : true };
-    ws.getCell('F13').font  = {bold : true };
-    ws.getCell('G13').font  = {bold : true };
-    ws.getCell('H13').font  = {bold : true };
-    ws.getCell('I13').font  = {bold : true };
-    ws.getCell('J13').font  = {bold : true };
+    ws.mergeCells('B14:D14');
+    ws.mergeCells('E14:F14');
+    ws.getCell('A14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('B14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('F14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('G14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('H14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('I14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('J14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('A14').font  = {bold : true };
+    ws.getCell('B14').font  = {bold : true };
+    ws.getCell('F14').font  = {bold : true };
+    ws.getCell('G14').font  = {bold : true };
+    ws.getCell('H14').font  = {bold : true };
+    ws.getCell('I14').font  = {bold : true };
+    ws.getCell('J14').font  = {bold : true };
     ws.addRow([""]);
     let dataItemTSSRConfig = [...new Set(dataItemTSSR.map(({ config_id }) => config_id))];
 
@@ -1580,23 +1592,23 @@ class DetailTssr extends Component {
     ws.mergeCells('A11:B11');
     ws.addRow([""]);
 
-    let headerRow = ["No","Description", null, null, "SAP NUMBER", "Qty Plan", "Qty Built", "SLOC", "REMARKS"];
+    let headerRow = ["No","FUNCTIONAL DESCRIPTION", null, null, "SAP NUMBER", "Qty Plan", "Qty Built", "SLOC", "REMARKS"];
     ws.addRow(headerRow);
-    ws.mergeCells('B13:D13');
-    ws.getCell('A13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('B13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('E13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('F13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('G13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('H13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('I13').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('A13').font  = {bold : true };
-    ws.getCell('B13').font  = {bold : true };
-    ws.getCell('E13').font  = {bold : true };
-    ws.getCell('F13').font  = {bold : true };
-    ws.getCell('G13').font  = {bold : true };
-    ws.getCell('H13').font  = {bold : true };
-    ws.getCell('I13').font  = {bold : true };
+    ws.mergeCells('B14:D14');
+    ws.getCell('A14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('B14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('E14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('F14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('G14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('H14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('I14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('A14').font  = {bold : true };
+    ws.getCell('B14').font  = {bold : true };
+    ws.getCell('E14').font  = {bold : true };
+    ws.getCell('F14').font  = {bold : true };
+    ws.getCell('G14').font  = {bold : true };
+    ws.getCell('H14').font  = {bold : true };
+    ws.getCell('I14').font  = {bold : true };
     ws.addRow([""]);
     let dataItemTSSRConfig = [...new Set(dataItemTSSR.map(({ config_id }) => config_id))];
 
@@ -1644,9 +1656,14 @@ class DetailTssr extends Component {
       if(dataCDWBSbyCDID !== undefined){
         dataCD = dataCDWBSbyCDID;
       }
+      let dataCDMaterial = null;
+      let findCDMaterial = dataTSSR.site_info.find(e => e.no_tssr_boq_site === dataItemTSSR[i].no_tssr_boq_site);
+      if(findCDMaterial !== undefined){
+        dataCDMaterial = findCDMaterial.cd_id;
+      }
       for(let j = 0; j < dataItemTSSR[i].materials.length; j++){
         let dataMatIdx = dataItemTSSR[i].materials[j];
-        ws.addRow([dataTSSR.no_plantspec, dataTSSR.site_info[0].site_id, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.qty, "Approved", dataCD.C1003_WBS_HW, dataItemTSSR[i].cpo_number, null, null, null, null, dataItemTSSR[i].config_id, dataItemTSSR[i].pp_id, dataItemTSSR[i].program, dataMatIdx.material_origin]);
+        ws.addRow([dataTSSR.no_plantspec, dataCDMaterial, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.qty, "Approved", dataCD.C1003_WBS_HW, dataItemTSSR[i].cpo_number, null, null, null, null, dataItemTSSR[i].config_id, dataItemTSSR[i].pp_id, dataItemTSSR[i].program, dataMatIdx.material_origin]);
       }
     }
 
@@ -2048,6 +2065,9 @@ class DetailTssr extends Component {
                     <tr>
                       <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>MR Related : {this.state.tssrData.mr_id}</td>
                     </tr>
+                    <tr>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Region : {this.state.data_tower.region}</td>
+                    </tr>
                     </Fragment>
                   )}
                 </tbody>
@@ -2143,10 +2163,12 @@ class DetailTssr extends Component {
               </Fragment>
             </CardBody>
             <CardFooter>
-              <Button style={{'float' : 'left',marginLeft : 'auto', order : "2"}} color="danger" size="sm" onClick={this.deletePS}>
-                <i className="fa fa-trash">&nbsp;&nbsp;</i>
-                Delete Plant Spec
-              </Button>
+              {(this.state.tssrData !== null && this.state.tssrData.mr_id === null) && (
+                <Button style={{'float' : 'left',marginLeft : 'auto', order : "2"}} color="danger" size="sm" onClick={this.deletePS}>
+                  <i className="fa fa-trash">&nbsp;&nbsp;</i>
+                  Delete Plant Spec
+                </Button>
+              )}
             </CardFooter>
           </Card>
           </Col>

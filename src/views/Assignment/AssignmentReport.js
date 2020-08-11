@@ -60,9 +60,8 @@ class AssignmentListReport extends Component {
     // this.getAssignmentList = this.getAssignmentList.bind(this);
     this.getAllAssignment = this.getAllAssignment.bind(this);
     this.downloadAllAssignment = this.downloadAllAssignment.bind(this);
-    this.downloadAllAssignmentAcceptenceMigration = this.downloadAllAssignmentAcceptenceMigration.bind(
-      this
-    );
+    this.downloadAllAssignmentAcceptenceMigration = this.downloadAllAssignmentAcceptenceMigration.bind(this);
+    this.downloadAllAssignmentBAST = this.downloadAllAssignmentBAST.bind(this);
   }
 
   async getDataFromAPINODE(url) {
@@ -410,6 +409,13 @@ class AssignmentListReport extends Component {
       );
     if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
       filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
+    }else{
+      this.state.filter_list[7] !== "" &&
+        filter_array.push(
+          '"Work_Status":{"$regex" : "' +
+            this.state.filter_list[4] +
+            '", "$options" : "i"}'
+        );
     }
     let whereAnd = "{" + filter_array.join(",") + "}";
     let getASG = await this.getDataFromAPINODE(
@@ -486,6 +492,94 @@ class AssignmentListReport extends Component {
 
     const allocexport = await wb.xlsx.writeBuffer();
     saveAs(new Blob([allocexport]), "Assignment List.xlsx");
+  }
+
+  async downloadAllAssignmentBAST() {
+    let allAssignmentList = [];
+    let filter_array = [];
+    if(this.state.filter_date.filter_list_date === null && this.state.filter_date.filter_list_date2 === null){
+
+    } else {
+      filter_array.push(
+        '"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 23:59:59"}'
+      );
+    }
+    this.state.filter_list[0] !== "" &&
+      filter_array.push(
+        '"Assignment_No":{"$regex" : "' +
+          this.state.filter_list[0] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[1] !== "" &&
+      filter_array.push(
+        '"Account_Name":{"$regex" : "' +
+          this.state.filter_list[1] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[2] !== "" &&
+      filter_array.push(
+        '"Project":{"$regex" : "' +
+          this.state.filter_list[2] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[3] !== "" &&
+      filter_array.push(
+        '"cust_del.cd_id":{"$regex" : "' +
+          this.state.filter_list[3] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[5] !== "" &&
+      filter_array.push(
+        '"Payment_Terms":{"$regex" : "' +
+          this.state.filter_list[5] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[6] !== "" &&
+      filter_array.push(
+        '"Current_Status":{"$regex" : "' +
+          this.state.filter_list[6] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[7] !== "" &&
+      filter_array.push(
+        '"Work_Status":{"$regex" : "' +
+          this.state.filter_list[7] +
+          '", "$options" : "i"}'
+      );
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
+    }else{
+      this.state.filter_list[7] !== "" &&
+        filter_array.push(
+          '"Work_Status":{"$regex" : "' +
+            this.state.filter_list[4] +
+            '", "$options" : "i"}'
+        );
+    }
+    filter_array.push('"PO_Number" : {"$ne" : null}');
+    let whereAnd = "{" + filter_array.join(",") + "}";
+    let getASG = await this.getDataFromAPINODE(
+      "/aspAssignment/aspassign?srt=_id:-1&q=" + whereAnd
+    );
+    if (getASG.data !== undefined) {
+      allAssignmentList = getASG.data.data;
+    }
+
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let headerRow = ["id_assignment_doc", "Assignment_No", "sh_assignment_no",  "Account_Name", "ASP_Acceptance_Date", "WP_ID", "id_project_doc", "Project", "SOW_Type",
+    "BAST_No", "GR_Type", "Payment_Terms", "Payment_Terms_Ratio", "GR_Percentage", "PO_Number", "PO_Item", "Item_Status", "Requestor"];
+    ws.addRow(headerRow);
+
+    for (let i = 0; i < allAssignmentList.length; i++) {
+      let rowAdded = [allAssignmentList[i]._id, allAssignmentList[i].Assignment_No, allAssignmentList[i].SH_Assignment_No, "XL", allAssignmentList[i].ASP_Acceptance_Date !== null && allAssignmentList[i].ASP_Acceptance_Date !== undefined ? allAssignmentList[i].ASP_Acceptance_Date.slice(0, 10) : null, allAssignmentList[i].WP_ID, allAssignmentList[i].id_project_doc, allAssignmentList[i].Project, allAssignmentList[i].SOW_Type,
+      null, null, allAssignmentList[i].Payment_Terms, null, null, allAssignmentList[i].PO_Number, allAssignmentList[i].PO_Item, null, null];
+      ws.addRow(rowAdded);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Assignment List For Migration BAST.xlsx');
   }
 
   async downloadAllAssignmentAcceptenceMigration() {
@@ -603,6 +697,21 @@ class AssignmentListReport extends Component {
                   ></i>
                   Download Assignment List Report
                 </Button>
+                {(this.state.userRole.findIndex(e => e === "BAM-Admin") !== -1) && (
+                <Button
+                  style={downloadAssignment}
+                  outline
+                  color="success"
+                  onClick={this.downloadAllAssignmentBAST}
+                  size="sm"
+                >
+                  <i
+                    className="fa fa-download"
+                    style={{ marginRight: "8px" }}
+                  ></i>
+                  Template for BAST Bulk Migration
+                </Button>
+              )}
               </CardHeader>
               <CardBody>
                 <Label><b>Filter Date</b></Label>

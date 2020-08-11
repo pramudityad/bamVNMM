@@ -138,7 +138,7 @@ export default {
     {
       name: 'Material Request',
       icon: "fas fa-tools",
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
       children: [
         {
           name: 'MR Dashboard',
@@ -150,7 +150,7 @@ export default {
           name: 'MR List',
           url: '/mr-list',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
         {
           name: 'MR PS Not Assigned',

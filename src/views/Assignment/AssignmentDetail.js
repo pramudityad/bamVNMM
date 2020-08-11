@@ -1819,7 +1819,7 @@ class AssignmentDetail extends Component {
                       Approve
                     </Button>
                   )}
-                  {(this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT REQUEST FOR CANCELATION" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCEL APPROVED" && (this.state.data_assignment.created_by === this.state.userId || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
+                  {(this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT REQUEST FOR CANCELATION" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCEL APPROVED" && (this.state.data_assignment.SH_Assignment_No !== null || this.state.data_assignment.created_by === this.state.userId || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
                     <Button
                       color="danger"
                       size="sm"
