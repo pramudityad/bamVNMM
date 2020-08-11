@@ -13,6 +13,9 @@ import {
   Table,
   FormGroup,
   Label,
+  ModalFooter,
+  Modal,
+ ModalBody
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -64,6 +67,8 @@ class OrderCreated extends Component {
       id_mr_selected: null,
       selected_dsp: "",
       data_mr_selected: null,
+      modal_box_input: false,
+      rejectNote: ""
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -74,6 +79,26 @@ class OrderCreated extends Component {
     this.ApproveMR = this.ApproveMR.bind(this);
     this.rejectMR = this.rejectMR.bind(this);
     this.toggleModalapprove = this.toggleModalapprove.bind(this);
+    this.toggleBoxInput = this.toggleBoxInput.bind(this);
+    this.handleChangeNote = this.handleChangeNote.bind(this);
+  }
+
+  toggleBoxInput(e) {
+    if(e !== undefined){
+      const id_doc = e.currentTarget.id;
+      this.setState({ id_mr_selected: id_doc });
+    }
+    this.setState(prevState => ({
+      modal_box_input: !prevState.modal_box_input
+    }));
+  }
+
+  handleChangeNote = (e) => {
+    const name = e.target.name;
+    let value = e.target.value;
+    if (value !== null && value.length !== 0 && value !== 0) {
+      this.setState({ rejectNote: value });
+    }    
   }
 
   async getDataFromAPI(url) {
@@ -580,12 +605,15 @@ class OrderCreated extends Component {
 
   rejectMR(e) {
     const id_doc = e.currentTarget.id;
-    this.patchDatatoAPINODE("/matreq/rejectMatreq/" + id_doc, {"rejectNote": "Rejected MR by LDM"}).then((res) => {
+    let reason = this.state.rejectNote
+    this.patchDatatoAPINODE("/matreq/rejectMatreq/" + id_doc, {"rejectNote": reason}).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getMRList();
+        this.toggleBoxInput();
       } else {
         this.setState({ action_status: "failed" });
+        this.toggleBoxInput();
       }
     });
   }
@@ -801,7 +829,7 @@ class OrderCreated extends Component {
                             style={{ width: "90px" }}
                             id={list._id}
                             value={list._etag}
-                            onClick={this.rejectMR}
+                            onClick={this.toggleBoxInput}
                           >
                             <i
                               className="fa fa-times"
@@ -852,6 +880,30 @@ class OrderCreated extends Component {
             </Card>
           </Col>
         </Row>
+
+{/* Modal Loading */}
+<Modal isOpen={this.state.modal_box_input} toggle={this.toggleBoxInput} className={'modal-sm modal--box-input'}>
+          <ModalBody>
+            <Row>
+              <Col sm="12">
+                <FormGroup>
+                  <Label>Reject Note</Label>
+                  <Input
+                    type="text"
+                    name={this.state.id_mr_selected}
+                    placeholder="Write Reject Note"
+                    onChange={this.handleChangeNote}
+                    value={this.state.rejectNote}
+                  />
+                </FormGroup>                
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            <Button disabled={!this.state.rejectNote} outline color="danger" size="sm" style={{ width: "80px" }} id={this.state.id_mr_selected} onClick={this.rejectMR}>Reject MR</Button>
+          </ModalFooter>
+        </Modal>
+        {/* end Modal Loading */}
 
         {/* modal form approve */}
         <ModalForm

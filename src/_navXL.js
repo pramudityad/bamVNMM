@@ -12,6 +12,12 @@ export default {
           roles : ["BAM-Engineering", "BAM-Project Planner"],
         },
         {
+          name: 'Additional Material',
+          url: '/additional-material-package',
+          icon: 'icon-folder',
+          roles : ["BAM-Engineering", "BAM-Project Planner"],
+        },
+        {
           name: 'Config Manager',
           url: '/config-manager',
           icon: 'icon-doc',

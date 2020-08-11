@@ -187,7 +187,7 @@ class PackageUpload extends React.Component {
       filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
     }
     // let filter = this.state.filter_name === ""  ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
-    let whereOr = '{"$or" : [{"product_name": ' + filter + '}, {"pp_cust_number": ' + filter + '}, {"physical_group": ' + filter + '}]}';
+    let whereOr = '{"pp_id": {"$ne":"AdditionalMaterial"},"$or" : [{"product_name": ' + filter + '}, {"pp_cust_number": ' + filter + '}, {"physical_group": ' + filter + '}]}';
     // let whereOr = '{"$or" : [{"product_name": ' + filter + '}]}';
     this.getDatafromAPINODE('/productpackage?q=' + whereOr + '&lmt=' + this.state.perPage + '&pg=' + this.state.activePage)
       .then(res => {
