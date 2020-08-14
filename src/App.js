@@ -35,6 +35,8 @@ class App extends Component {
 
   }
 
+  // <BrowserRouter basename="/bam-id">
+
   render() {
     console.log("LOGIN SUKSES", this.props.authenticated);
     return (

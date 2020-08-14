@@ -7,6 +7,7 @@ import AsyncSelect from 'react-select/async';
 import { Redirect } from 'react-router-dom';
 import Select from 'react-select';
 import debounce from 'lodash.debounce';
+import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 
 import {apiSendEmail} from '../../helper/asyncFunction';
 
@@ -62,6 +63,7 @@ class AssignmentCreation extends Component {
       can_edit_ssow : false,
       identifier_by : "cd_id",
       email_cpm: null,
+      modal_loading : false,
     }
 
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -84,6 +86,13 @@ class AssignmentCreation extends Component {
     this.handleChangeIdentifierBy = this.handleChangeIdentifierBy.bind(this);
     this.loadOptionsCDID = this.loadOptionsCDID.bind(this);
 
+    this.toggleLoading = this.toggleLoading.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState(prevState => ({
+      modal_loading: !prevState.modal_loading
+    }));
   }
 
   async getDataFromAPI(url) {
@@ -278,6 +287,7 @@ class AssignmentCreation extends Component {
   }
 
   async saveDataASG(){
+    this.toggleLoading();
     let dataXLS = [
       ["id","project","sow_type", "created_based", "vendor_code","vendor_name", "payment_terms","identifier"],
       ["new", this.state.project_name_selected, this.state.create_assignment_form[16], this.state.identifier_by, this.state.create_assignment_form[67], this.state.create_assignment_form[66], this.state.create_assignment_form[15], this.state.tower_selected_id]
@@ -335,6 +345,7 @@ class AssignmentCreation extends Component {
         this.setState({ action_status: 'failed' });
       }
     }
+    this.toggleLoading();
   }
 
   filterDataTower = (inputValue) => {
@@ -621,6 +632,7 @@ class AssignmentCreation extends Component {
                           <option value="CME">CME</option>
                           <option value="Power">Power</option>
                           <option value="SACME">SACME</option>
+                          <option value="ADDITIONAL">Additional</option>
                         </Input>
                       </FormGroup>
                     </Col>
@@ -776,11 +788,28 @@ class AssignmentCreation extends Component {
                 <span style={{color : 'red'}}>Editable SSOW Need Approval from the authorized on the Assignment has been created</span>
               </CardBody>
               <CardFooter>
-                <Button type="submit" color="success" style={{float: "right"}} onClick={this.saveDataASG}><i className="fa fa-plus" style={{marginRight: "8px"}}></i> Save</Button>
+                <Button type="submit" color="success" style={{float: "right"}} onClick={this.saveDataASG} disabled={this.state.modal_loading === true}><i className="fa fa-plus" style={{marginRight: "8px"}}></i> Save</Button>
               </CardFooter>
             </Card>
           </Col>
         </Row>
+        {/* Modal Loading */}
+        <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className}>
+          <ModalBody>
+            <div style={{textAlign : 'center'}}>
+              <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+            </div>
+            <div style={{textAlign : 'center'}}>
+              Loading ...
+            </div>
+            <div style={{textAlign : 'center'}}>
+              System is processing ...
+            </div>
+          </ModalBody>
+          <ModalFooter>
+          </ModalFooter>
+        </Modal>
+        {/* end Modal Loading */}
       </div>
     );
   }

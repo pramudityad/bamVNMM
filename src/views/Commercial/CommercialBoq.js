@@ -16,6 +16,7 @@ import jsonData from './jsonData.js';
 import debounce from 'lodash.debounce';
 import ModalDelete from '../components/ModalDelete';
 import Pagination from "react-js-pagination";
+import {numberWithCommas} from '../../helper/basicFunction';
 
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
@@ -1156,10 +1157,10 @@ class CommercialBoq extends Component {
                                 />
                               </td>
                               <td style={{width : '100px'}}>
-                                {!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id)}
+                                {!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? numberWithCommas(item.total_price_incentive_usd) : numberWithCommas(this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id))}
                               </td>
                               <td style={{width : '200px'}}>
-                                {!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id)}
+                                {!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? numberWithCommas(item.total_price_incentive) : numberWithCommas(this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id))}
                               </td>
                               </React.Fragment>
                             )}
@@ -1197,10 +1198,10 @@ class CommercialBoq extends Component {
                                     />
                                   </td>
                                   <td style={{width : '120px'}}>
-                                    {!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd.toFixed(2) : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id).toFixed(2)}
+                                    {!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? numberWithCommas(item.total_price_incentive_usd) : numberWithCommas(this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id))}
                                   </td>
                                   <td style={{width : '120px'}}>
-                                    {!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive.toFixed(2) : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id).toFixed(2)}
+                                    {!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? numberWithCommas(item.total_price_incentive) : numberWithCommas(this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id))}
                                   </td>
                                 </React.Fragment>
                               )}

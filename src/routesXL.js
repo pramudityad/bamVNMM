@@ -39,7 +39,7 @@ const Users = React.lazy(() => import('./views/Users/Users'));
 const User = React.lazy(() => import('./views/Users/User'));
 
 const ProductPackage = React.lazy(() => import('./views/ProductPackage/PackageUpload'));
-const AddProductPackage = React.lazy(() => import('./views/ProductPackage/AddMatPackageUpload'));
+const AdditionalMaterial = React.lazy(() => import('./views/ProductPackage/AddMatPackageUpload'));
 
 const TssrList = React.lazy(() => import('./views/Tssr/TssrList'));
 const TssrBOM = React.lazy(() => import('./views/Tssr/TssrBOM'));
@@ -78,6 +78,7 @@ const BulkNotifytoASP = React.lazy(() => import('./views/Assignment/BulkNotifyto
 const AssignmentListASP = React.lazy(() => import('./views/Assignment/AssignmentListASP'));
 const AssignmentDetailASP = React.lazy(() => import('./views/Assignment/AssignmentDetailASP'));
 const AssignmentListApproval = React.lazy(() => import('./views/Assignment/AssignmentListApproval'));
+const AssignmentBulkApproval = React.lazy(() => import('./views/Assignment/AssignmentBulkApproval'));
 
 const PRPOCreation = React.lazy(() => import('./views/PRPO/CreatePRPO'));
 const ListPRPO = React.lazy(() => import('./views/PRPO/ListPRPO'));
@@ -147,6 +148,12 @@ const GI  = React.lazy(() => import('./views/Warehouse/GI'));
 
 const LoaderPage = React.lazy(() => import('./views/DefaultView/LoaderPage'));
 
+const BlankPage = React.lazy(() => import('./containers/DefaultLayout/LoginSSO'));
+
+const MRAList  = React.lazy(() => import('./views/MRA/MRAList'));
+const MRANeedConfirm  = React.lazy(() => import('./views/MRA/MRANeedConfirm'));
+const MRADetail  = React.lazy(() => import('./views/MRA/MRADetail'));
+
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -192,7 +199,8 @@ const routes = [
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
 
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
-  { path: '/additional-material-package', exact: true, name: 'Additional Material Package Manager', component: AddProductPackage },
+  { path: '/additional-material', exact: true, name: 'Additional Material Manager', component: AdditionalMaterial },
+
   { path: '/ps-list', exact: true, name: 'Plant Spec List', component: TssrList },
   { path: '/ps-bom', exact: true, name: 'Plant Spec BOM', component: TssrBOM },
   { path: '/ps-list/:id', name: 'Plant Spec BOM', component: TssrBOMDetail },
@@ -242,6 +250,7 @@ const routes = [
   { path: '/assignment-detail-asp/:id', exact: true, name: 'Assignment Detail (ASP)', component: AssignmentDetailASP, roles : ['BAM-ASP'] },
   { path: '/assignment-list-asp', exact: true, name: 'Assignment List (ASP)', component: AssignmentListASP, roles : ['BAM-ASP'] },
   { path: '/assignment-list-approval', exact: true, name: 'Assignment Need Assignment List ', component: AssignmentListApproval },
+  { path: '/assignment-bulk-approval', exact: true, name: 'Assignment Bulk Approval ', component: AssignmentBulkApproval },
 
   { path: '/list-tssr-matix', exact: true, name: 'List TSSR Matrix BOQ', component: ListTssrMatrix },
   { path: '/tssr-matix-creation', exact: true, name: 'TSSR Matrix BOQ Creation', component: NewTssrMatrix },
@@ -309,6 +318,12 @@ const routes = [
   { path: '/prt-list', exact: true, name: 'PRT List', component: ListPRPO },
   { path: '/prt-list/detail/:id', exact: true, name: 'PRT Detail', component: DetailPRPO },
   { path: '/prt-list/edit/:id', exact: true, name: 'PRT Edit', component: EditPRPO },
+
+  { path: '/blank-page', exact: true, name: 'BlanK Page', component: BlankPage },
+
+  { path: '/mra-list', exact: true, name: 'MRA List', component: MRAList },
+  { path: '/mra-list/detail/:id', exact: true, name: 'MRA Detail', component: MRADetail },
+  { path: '/mra-list-need-confirm', exact: true, name: 'MRA Detail', component: MRANeedConfirm },
 
 ];
 

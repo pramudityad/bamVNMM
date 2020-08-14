@@ -90,9 +90,10 @@ class MRDetail extends Component {
       list_mr_item: [],
       rowsXLS: [],
       data_mr: null,
+      data_wh : {},
       mr_site_NE: null,
       mr_site_FE: null,
-      update_mr_form: new Array(9).fill(null),
+      update_mr_form: {},
       update_mr_name_form: new Array(9).fill(null),
       mr_pp: [],
       mr_md: [],
@@ -112,7 +113,8 @@ class MRDetail extends Component {
       wbs_cd_id_data : [],
       location_mr : {},
       dropdownOpen: new Array(1).fill(false),
-
+      modal_loading : false,
+      dsp_list : [],
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
@@ -129,10 +131,22 @@ class MRDetail extends Component {
     this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
     this.downloadMaterialMRReport = this.downloadMaterialMRReport.bind(this);
     this.needReviseMR = this.needReviseMR.bind(this);
+    this.takeoutPS = this.takeoutPS.bind(this);
+    this.cancelMR = this.cancelMR.bind(this);
     this.toggleModalapprove = this.toggleModalapprove.bind(this);
     this.toggleModalRevision = this.toggleModalRevision.bind(this);
     this.handleRevisionNote = this.handleRevisionNote.bind(this);
     this.downloadMaterialMRTRACY = this.downloadMaterialMRTRACY.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+    this.exportMRFormat = this.exportMRFormat.bind(this);
+    this.updateMR = this.updateMR.bind(this);
+    this.downloadMaterialSerialNumberReport = this.downloadMaterialSerialNumberReport.bind(this);
+  }
+
+  toggleLoading(){
+    this.setState(prevState => ({
+      modal_loading: !prevState.modal_loading
+    }));
   }
 
   toggleModalapprove(e) {
@@ -385,6 +399,26 @@ class MRDetail extends Component {
     }
   }
 
+  async deleteDataFromAPINODE(url, data) {
+    try {
+      let respond = await axios.delete(API_URL_NODE + url, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+          data : data
+      });
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond delete Data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond delete Data err", err);
+      return respond;
+    }
+  }
+
   checkValueReturn(value1, value2) {
     // if value undefined return Value2
     if (typeof value1 !== "undefined" && value1 !== null) {
@@ -431,6 +465,9 @@ class MRDetail extends Component {
           this.getASPList();
         }
         this.setState({ data_mr: resMR.data }, () => {
+          if(resMR.data.origin !== undefined){
+            this.getWHOrigin(resMR.data.origin.value);
+          }
           if(this.state.data_mr.cust_del !== undefined){
             this.getDataCDID(this.state.data_mr.cust_del.map(e => e.cd_id));
           }
@@ -449,6 +486,17 @@ class MRDetail extends Component {
         });
       }
     });
+  }
+
+  getWHOrigin(wh_id){
+    this.getDataFromAPINODE('/whManagement/warehouse?q={"wh_id" : "'+wh_id+'"}').then((resWH) => {
+      if(resWH.data !== undefined){
+        if(resWH.data.data[0] !== undefined){
+          this.setState({data_wh : resWH.data.data[0]});
+          console.log("resWH", resWH.data.data[0]);
+        }
+      }
+    })
   }
 
   getMRLocation(_id_MR){
@@ -614,13 +662,30 @@ class MRDetail extends Component {
   }
 
   changeEditable(e) {
+    if(this.state.edit_detail === false){
+      this.getDSPList();
+      let dataForm = this.state.update_mr_form;
+      dataForm["vendor_code"] = this.state.data_mr.dsp_company_code;
+      dataForm["vendor_name"] =this.state.data_mr.dsp_company;
+      this.setState({update_mr_form : dataForm});
+    }
     this.setState((prevState) => ({
       edit_detail: !prevState.edit_detail,
     }));
   }
 
+  getDSPList() {
+    this.toggleLoading();
+    this.getDatafromAPIXL('/vendor_data_non_page?where={"Type":"ASP"}').then(res => {
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({dsp_list : items});
+      }
+      this.toggleLoading();
+    })
+  }
+
   changeTabsSubmenu(e) {
-    console.log("tabs_submenu", e);
     let tab_submenu = new Array(4).fill(false);
     tab_submenu[parseInt(e)] = true;
     this.setState({ tabs_submenu: tab_submenu });
@@ -628,26 +693,20 @@ class MRDetail extends Component {
 
   handleChangeFormMRUpdate(e) {
     const value = e.target.value;
-    const index = e.target.name;
+    const field = e.target.name;
     let dataForm = this.state.update_mr_form;
-    dataForm[parseInt(index)] = value;
+    dataForm[field] = value;
     const indexOpt = e.target.selectedIndex;
-    if (indexOpt !== undefined) {
-      let dataFormName = this.state.update_mr_name_form;
-      const textOpt = e.target[indexOpt].text;
-      dataFormName[parseInt(index)] = textOpt;
-      this.setState({ update_mr_name_form: dataFormName });
+    if (field === 'vendor_code') {
+      let vendoridx = this.state.dsp_list.find(v => v.Vendor_Code === value);
+      if(vendoridx !== undefined){
+        dataForm["vendor_name"] = vendoridx.Name
+      }
     }
-    this.setState({ update_mr_form: dataForm }, () => {
-      console.log(
-        "PPForm",
-        this.state.update_mr_form,
-        this.state.update_mr_name_form
-      );
-    });
+    this.setState({ update_mr_form: dataForm });
   }
 
-  milestoneStat(ms_name, ms_status, ms_date, ms_updater, index) {
+  milestoneStat(ms_name, ms_status, ms_date, ms_updater, ms_notes, index) {
     return (
       <VerticalTimelineElement
         className="vertical-timeline-element--work"
@@ -660,6 +719,11 @@ class MRDetail extends Component {
         <h4 className="vertical-timeline-element-subtitle">
           initiated by <b>{ms_updater}</b>
         </h4>
+        {(ms_notes !== undefined && ms_notes !== null) && (
+          <h6 className="vertical-timeline-element-subtitle">
+            Notes : {ms_notes}
+          </h6>
+        )}
       </VerticalTimelineElement>
     );
   }
@@ -688,19 +752,23 @@ class MRDetail extends Component {
   }
 
   requestForApproval() {
+    this.toggleLoading();
     let dataMR = this.state.data_mr;
     this.patchDatatoAPINODE("/matreq/requestMatreq/" + dataMR._id).then(
       (res) => {
         if (res.data !== undefined) {
           this.setState({ action_status: "success" });
+          this.toggleLoading();
         } else {
           this.setState({ action_status: "failed" });
+          this.toggleLoading();
         }
       }
     );
   }
 
   ApproveMR(e) {
+    this.toggleLoading();
     const _id = this.props.match.params.id;
     let body = this.state.selected_dsp;
     if(this.state.data_mr.dsp_company !== null && this.state.data_mr.dsp_company !== undefined){
@@ -713,6 +781,7 @@ class MRDetail extends Component {
         if (res.data !== undefined) {
           this.setState({ action_status: "success" });
           this.toggleModalapprove();
+          this.toggleLoading();
         } else {
           if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
             if (res.response.data.error.message !== undefined) {
@@ -724,6 +793,7 @@ class MRDetail extends Component {
             this.setState({ action_status: 'failed' });
           }
           this.toggleModalapprove();
+          this.toggleLoading();
         }
       }
     );
@@ -1144,7 +1214,16 @@ class MRDetail extends Component {
     for (let i = 0; i < dataItemMR.length; i++) {
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
-        ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, dataMR.no_shipment, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
+        if(dataMatIdx.serial_numbers !== undefined && dataMatIdx.serial_numbers.length !== 0){
+          let serial_number = dataMatIdx.serial_numbers.find(e => e.flag_name === "obd");
+          if(serial_number !== undefined){
+            for(let k = 0; k < serial_number.list_of_sn.length; k++){
+              ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, dataMR.no_shipment, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, serial_number.list_of_sn[k], null, null, null, null]);
+            }
+          }
+        }else{
+          ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, dataMR.no_shipment, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
+        }
       }
     }
 
@@ -1155,7 +1234,51 @@ class MRDetail extends Component {
     );
   }
 
+  async downloadMaterialSerialNumberReport() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataMR = this.state.data_mr;
+    const dataItemMR = this.state.list_mr_item;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    let headerRow = ["MR_ID", "SKU", "SERIAL_NUMBER", "DESCRIPTION", "SCAN_BY", "LASTEST_UPDATE_DATE_SCAN", "ACCOUNT", "WAREHOUSE"];
+    ws.addRow(headerRow);
+    let dateDispatch = null;
+    const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
+    if(dispatchData !== undefined && dispatchData.mr_status_date !== undefined && dispatchData.mr_status_date !== null){
+      let dateDispatchNew = new Date(dispatchData.mr_status_date);
+      dateDispatch = dateDispatchNew.getFullYear().toString()+(dateDispatchNew.getMonth()+1).toString().padStart(2, '0')+dateDispatchNew.getDate().toString().padStart(2, '0');
+    }
+    const dataSite = dataMR.site_info[0].site_id
+    for (let i = 0; i < dataItemMR.length; i++) {
+      for (let j = 0; j < dataItemMR[i].materials.length; j++) {
+        let dataMatIdx = dataItemMR[i].materials[j];
+        if(dataMatIdx.serial_numbers !== undefined && dataMatIdx.serial_numbers.length !== 0){
+          let serial_number = dataMatIdx.serial_numbers.find(e => e.flag_name === "obd");
+          if(serial_number !== undefined){
+            for(let k = 0; k < serial_number.list_of_sn.length; k++){
+              ws.addRow([dataMR.mr_id, dataMatIdx.material_id, serial_number.list_of_sn[k], dataMatIdx.material_name, serial_number.updated_by, serial_number.updated_on, "XL", dataMR.origin.value]);
+            }
+          }
+        }else{
+          ws.addRow([dataMR.mr_id, dataMatIdx.material_id, null, dataMatIdx.material_name, null, null, "XL", dataMR.origin.value]);
+        }
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([allocexport]),
+      "SERIAL NUMBER Material MR " + dataMR.mr_id + " REPORT.xlsx"
+    );
+  }
+
   async saveUpdateMaterial() {
+    this.toggleLoading();
     const dataXLS = this.state.rowsXLS;
     const dataMR = this.state.data_mr;
     let patchDataMat = await this.patchDatatoAPINODE(
@@ -1192,9 +1315,11 @@ class MRDetail extends Component {
         this.setState({ action_status: "failed" });
       }
     }
+    this.toggleLoading();
   }
 
   async needReviseMR() {
+    this.toggleLoading();
     const dataMR = this.state.data_mr;
     let patchDataMR = await this.patchDatatoAPINODE(
       "/matreq/needReviseMRFromWH/" + dataMR._id, {"note_value" : this.state.revision_note}
@@ -1227,6 +1352,35 @@ class MRDetail extends Component {
         this.setState({ action_status: "failed" });
       }
     }
+    this.toggleLoading();
+  }
+
+  async takeoutPS(){
+    this.toggleLoading();
+    const dataMR = this.state.data_mr;
+    this.patchDatatoAPINODE('/matreq/takeOutPlantSpec/'+dataMR._id).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+        this.toggleLoading();
+      }else{
+        this.setState({ action_status : "failed" });
+        this.toggleLoading();
+      }
+    })
+  }
+
+  async cancelMR(){
+    this.toggleLoading();
+    const dataMR = this.state.data_mr;
+    this.patchDatatoAPINODE('/matreq/cancelMatreq/'+dataMR._id, {"cancelNote" : "Cancel MR"}).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+        this.toggleLoading();
+      }else{
+        this.setState({ action_status : "failed" });
+        this.toggleLoading();
+      }
+    })
   }
 
   tableViewWBSCDID(cd_id){
@@ -1265,6 +1419,100 @@ class MRDetail extends Component {
     }
   }
 
+  async exportMRFormat() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataMR = this.state.data_mr;
+
+    ws.addRow([
+      "id",
+      "project_name",
+      "mr_type",
+      "mr_delivery_type",
+      "origin_warehouse",
+      "etd",
+      "eta",
+      "deliver_by",
+      "mr_comment_project",
+      "sent_mr_request",
+      "created_based",
+      "identifier"
+    ]);
+
+    ws.addRow([
+      dataMR.mr_id,
+      dataMR.project_name,
+      1,
+      1,
+      dataMR.origin.value,
+      dataMR.etd.slice(0,10),
+      dataMR.eta.slice(0,10),
+      dataMR.dsp_company_code,
+      null,
+      null,
+      "cd_id",
+      dataMR.cust_del[0].cd_id
+    ]);
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'MR Uploader Template '+dataMR.mr_id+'.xlsx');
+  }
+
+  async updateMR(){
+    this.toggleLoading();
+    let success = true;
+    this.setState({action_status : null, action_message : null});
+    const dataMR = this.state.data_mr;
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    let list_site = [];
+    let dataXLS = [
+      ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "mr_comment_project", "sent_mr_request", "created_based", "identifier"],
+      [ dataMR.mr_id,
+        dataMR.project_name,
+        1,
+        1,
+        dataMR.origin.value,
+        dataMR.etd.slice(0,10),
+        dataMR.eta.slice(0,10),
+        this.state.update_mr_form.vendor_code,
+        null,
+        null,
+        "cd_id",
+        dataMR.cust_del[0].cd_id
+      ]
+    ]
+    const respondCheckingMR = await this.postDatatoAPINODE('/matreq/matreqByActivity', {"data" : dataXLS});
+    if(respondCheckingMR.data !== undefined && respondCheckingMR.status >= 200 && respondCheckingMR.status <= 300 ) {
+      const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', {"data" : respondCheckingMR.data.data });
+      if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
+        this.setState({ action_status : 'success', action_message: null });
+      } else{
+        if(respondSaveMR.response !== undefined && respondSaveMR.response.data !== undefined && respondSaveMR.response.data.error !== undefined){
+          if(respondSaveMR.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
+      }
+    }else{
+      if(respondCheckingMR.response !== undefined && respondCheckingMR.response.data !== undefined && respondCheckingMR.response.data.error !== undefined){
+        if(respondCheckingMR.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+  }
+
   render() {
     const background = {
       backgroundColor: "#e3e3e3",
@@ -1294,16 +1542,23 @@ class MRDetail extends Component {
                   ></i>
                   MR Detail
                 </span>
-                {/* }<Button style={{float : 'right'}} color="warning" onClick={this.changeEditable}>Editable</Button> */}
-                {this.state.edit_detail !== false && (
-                  <Button
-                    style={{ float: "right", marginRight: "10px" }}
-                    color="success"
-                    onClick={this.updateDataMR}
-                  >
-                    Save
-                  </Button>
+                {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 ) && (
+                  <Fragment>{/* }<Button style={{float : 'right', marginRight: "8px"}} size="sm" color="warning" onClick={this.changeEditable}>Edit MR Detail</Button> */}</Fragment>
                 )}
+                <Button
+                  style={{ marginRight: "8px", float: "right" }}
+                  outline
+                  color="info"
+                  size="sm"
+                  onClick={this.exportMRFormat}
+                  size="sm"
+                >
+                  <i
+                    className="fa fa-download"
+                    style={{ marginRight: "8px" }}
+                  ></i>
+                  MR Format
+                </Button>
               </CardHeader>
               <CardBody>
                 <div style={{ marginBottom: "10px" }}>
@@ -1494,7 +1749,17 @@ class MRDetail extends Component {
                             <div className="mr-detail__body--header-detail">
                               <span>Delivery Company</span>
                             </div>
-                            <div>{this.state.data_mr.dsp_company}</div>
+                            {this.state.edit_detail === true ? (
+                              <Input type="select" name="vendor_code" value={this.state.update_mr_form.vendor_code} onChange={this.handleChangeFormMRUpdate}>
+                                <option value="" disabled selected hidden>Select Delivery Company</option>
+                                <option value="DSP">DSP</option>
+                                {this.state.dsp_list.map(e =>
+                                  <option value={e.Vendor_Code}>{e.Name}</option>
+                                )}
+                              </Input>
+                            ) : (
+                              <div>{this.state.data_mr.dsp_company}</div>
+                            )}
                           </div>
                           <div>
                             <div className="mr-detail__body--header-detail">
@@ -1563,6 +1828,14 @@ class MRDetail extends Component {
                               </div>
                             </Fragment>
                           )}
+                          <Fragment>
+                            <div className="mr-detail__flex-body--25">
+                              <div className="mr-detail__body--header-detail">
+                                <span>MRA</span>
+                              </div>
+                              <div>{this.state.data_mr["matreq-ra"] !== undefined ? this.state.data_mr["matreq-ra"].map(mra => mra.mra_id).join(", ") : null}</div>
+                            </div>
+                          </Fragment>
                         </div>
 
                         <hr className="mr-detail__line" />
@@ -1700,57 +1973,26 @@ class MRDetail extends Component {
                           <tbody>
                             {this.state.data_mr !== null && (
                               <Fragment>
+                              {(this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1)  ? (
                                 <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'left', marginRight : '10px'}}>
                                   <DropdownToggle caret color="secondary">
                                     <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
                                   </DropdownToggle>
                                   <DropdownMenu>
                                     <DropdownItem header>TSSR File</DropdownItem>
-                                    {((this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 ) && this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
+                                    {((this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 ) && this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
                                       <DropdownItem onClick={this.downloadMaterialMRTRACY}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY Format</DropdownItem>
 
                                     )}
+                                    <DropdownItem onClick={this.downloadMaterialSerialNumberReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>SN Report</DropdownItem>
                                     <DropdownItem onClick={this.downloadMaterialMRReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MR PS</DropdownItem>
                                     <DropdownItem onClick={this.downloadMaterialMRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
                                     <DropdownItem onClick={this.downloadMaterialMRUpload2}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format NOK</DropdownItem>
                                   </DropdownMenu>
                                 </Dropdown>
-                                {/* <tr>
-                                  <td style={{ width: "550px" }}>
-                                    <Button
-                                      size="sm"
-                                      color="secondary"
-                                      style={{ float: "right" }}
-                                      onClick={this.downloadMaterialMRUpload}
-                                    >
-                                      Download Format
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      color="secondary"
-                                      style={{
-                                        float: "right",
-                                        marginRight: "10px",
-                                      }}
-                                      onClick={this.downloadMaterialMRReport}
-                                    >
-                                      Download MR PS
-                                    </Button>
-                                    {(this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
-                                      <Button
-                                        size="sm"
-                                        color="secondary"
-                                        style={{
-                                          float: "right",
-                                          marginRight: "10px",
-                                        }}
-                                        onClick={this.downloadMaterialMRTRACY}
-                                      >
-                                        TRACY Format
-                                      </Button>
-                                    )}
-                                  </td>
-                                </tr> */}
+                              ) : (
+                                <Button onClick={this.downloadMaterialMRReport}>Download MR PS</Button>
+                              )}
                                 {this.state.mr_site_FE !== null &&
                                 this.state.data_mr.mr_type !== "Relocation" &&
                                 this.state.data_mr.mr_type !== "Return" ? (
@@ -1777,9 +2019,9 @@ class MRDetail extends Component {
                                         &nbsp;
                                       </td>
                                     </tr>
-                                    {status_can_edit_material.includes(
+                                    {((this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1) && status_can_edit_material.includes(
                                       this.state.data_mr.current_mr_status
-                                    ) && (
+                                    )) && (
                                       <tr>
                                         <td style={{ fontSize: "12px" }}>
                                           Change to Material Variant :{" "}
@@ -1788,9 +2030,9 @@ class MRDetail extends Component {
                                     )}
                                   </Fragment>
                                 )}
-                                {status_can_edit_material.includes(
+                                {((this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1) && status_can_edit_material.includes(
                                   this.state.data_mr.current_mr_status
-                                ) && (
+                                )) && (
                                   <tr>
                                     <td style={{ width: "550px" }}>
                                       <input
@@ -2310,6 +2552,7 @@ class MRDetail extends Component {
                                         ms.mr_status_value,
                                         ms.mr_status_date,
                                         ms.mr_status_updater,
+                                        ms.mr_status_note,
                                         i
                                       );
                                     })}
@@ -2329,59 +2572,114 @@ class MRDetail extends Component {
                       googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyB5mmXco3GYZhRDNY4CJcBlaENjteSC8DM"
                       loadingElement={<div style={{ height: "100%" }} />}
                     /> */}
-                    {this.state.location_mr.updated_location !== undefined ? (
+                    {this.state.data_mr !== null ? (this.state.location_mr.updated_location !== undefined) ? (
+                      <Fragment>
+                      {console.log("dataWH", this.state.data_wh)}
                       <GMap
+                        wh_lat={this.state.data_wh.latitude}
+                        wh_lng={this.state.data_wh.longitude}
                         dsp_lat={this.state.location_mr.updated_location.latitude}
                         dsp_lng={this.state.location_mr.updated_location.longitude}
+                        site_lat={this.state.data_mr.site_info[0].site_latitude}
+                        site_lng={this.state.data_mr.site_info[0].site_longitude}
                       />
+                      </Fragment>
                     ): (
-                      <GMap/>
-                    )}
+                      <GMap
+                        wh_lat={this.state.data_wh.latitude === null ? undefined : this.state.data_wh.latitude}
+                        wh_lng={this.state.data_wh.longitude === null ? undefined : this.state.data_wh.longitude}
+                        dsp_lat={this.state.data_wh.latitude === null ? undefined : this.state.data_wh.latitude}
+                        dsp_lng={this.state.data_wh.longitude === null ? undefined : this.state.data_wh.longitude}
+                        site_lat={this.state.data_mr.site_info[0].site_latitude}
+                        site_lng={this.state.data_mr.site_info[0].site_longitude}
+                      />
+                    ) : <div></div>}
                   </Fragment>
                 )}
               </CardBody>
               <CardFooter>
-                {this.state.data_mr !== null && (
-                  <div>
-                    {this.state.data_mr.current_mr_status ===
-                      "PLANTSPEC ASSIGNED" ||
-                    this.state.data_mr.current_mr_status ===
-                      "PLANTSPEC UPDATED" ? (
-                      <Button
-                        color="success"
-                        style={{ float: "right" }}
-                        onClick={this.requestForApproval}
-                      >
-                        {" "}
-                        Send Request
-                      </Button>
-                    ) : (
-                      <div></div>
-                    )}
-                    {this.state.data_mr.current_mr_status === "MR REQUESTED" ? (
-                      // <Button color='success' style={{float : 'right'}} onClick={this.ApproveMR}>Approve</Button>
-                      <Button
-                        color="success"
-                        style={{ float: "right" }}
-                        onClick={this.toggleModalapprove}
-                      >
-                        Approve
-                      </Button>
-                    ) : (
-                      <div></div>
-                    )}
-                    {(this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 ) && (
-                      <Button
-                        color="warning"
-                        style={{ float: "left" }}
-                        size="sm"
-                        onClick={this.toggleModalRevision}
-                      >
-                        Need Revise
-                      </Button>
-                    )}
-                  </div>
-                )}
+              {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 ) && (
+                <React.Fragment>
+                  {this.state.data_mr !== null && (
+                    <div>
+                      {(this.state.data_mr.current_mr_status ===
+                        "PLANTSPEC ASSIGNED" ||
+                      this.state.data_mr.current_mr_status ===
+                        "PLANTSPEC UPDATED"||
+                      this.state.data_mr.current_mr_status ===
+                        "MR UPDATED") ? (
+                        <Button
+                          color="success"
+                          style={{ float: "right" }}
+                          onClick={this.requestForApproval}
+                        >
+                          {" "}
+                          Send Request
+                        </Button>
+                      ) : (
+                        <div></div>
+                      )}
+                      {(this.state.userRole.findIndex(e => e === "BAM-LDM") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1) && this.state.data_mr.current_mr_status === "MR REQUESTED" ? (
+                        // <Button color='success' style={{float : 'right'}} onClick={this.ApproveMR}>Approve</Button>
+                        <Button
+                          color="success"
+                          style={{ float: "right" }}
+                          onClick={this.toggleModalapprove}
+                        >
+                          Approve
+                        </Button>
+                      ) : (
+                        <div></div>
+                      )}
+                      {this.state.data_mr !== null && this.state.data_mr.no_plantspec !== null && this.state.data_mr.mr_status.findIndex(st => st.mr_status_name === "LOADING_PROCESS" && st.mr_status_value === "FINISH") === -1 ?
+                      (
+                        <Fragment>
+                        {((this.state.data_mr.current_mr_status === "MR UPDATED" || this.state.data_mr.current_mr_status === "MR REQUESTED" || this.state.data_mr.current_mr_status === "PLANTSPEC ASSIGNED" || this.state.data_mr.current_mr_status === "PLANTSPEC NOT ASSIGNED") || (this.state.userRole.findIndex(e => e === "BAM-LDM") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 )) && (
+                          <Fragment>
+                          <Button
+                            color="warning"
+                            style={{ float: "left" }}
+                            size="sm"
+                            onClick={this.toggleModalRevision}
+                          >
+                            Need Revise
+                          </Button>
+                          <Button
+                            color="danger"
+                            style={{ float: "left", margin: '0 10px 0 20px' }}
+                            size="sm"
+                            onClick={this.takeoutPS}
+                          >
+                            Takeout PS
+                          </Button>
+                          </Fragment>
+                        ) }
+                        </Fragment>
+                      ) : <Fragment></Fragment>}
+                      {(this.state.userRole.findIndex(e => e === "BAM-Engineering") === -1 && this.state.data_mr.mr_status.findIndex(st => st.mr_status_name === "LOADING_PROCESS" && st.mr_status_value === "FINISH") === -1) && (
+                        <Button
+                          color="danger"
+                          style={{ float: "left", margin: '0 10px 0 10px' }}
+                          size="sm"
+                          onClick={this.cancelMR}
+                        >
+                          Cancel MR
+                        </Button>
+                      )}
+                      {this.state.edit_detail === true && (
+                        <Button
+                          color="warning"
+                          style={{ float: "left", margin: '0 10px 0 10px' }}
+                          size="sm"
+                          onClick={this.updateMR}
+                        >
+                          Save Update MR
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </React.Fragment>
+              )}
               </CardFooter>
             </Card>
           </Col>

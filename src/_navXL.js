@@ -24,6 +24,12 @@ export default {
           roles : ["BAM-Engineering", "BAM-Project Planner", "BAM-Solution"],
         },
         {
+          name: 'Additional Material',
+          url: '/additional-material',
+          icon: 'icon-folder',
+          roles : ["BAM-Engineering"],
+        },
+        {
           name: 'Material Variant',
           url: '/mat-library',
           icon: 'icon-list',
@@ -83,7 +89,7 @@ export default {
     {
       name: 'Assignment',
       icon: 'icon-docs',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP", "BAM-Customer Project Manager"],
       children: [
         {
           name: 'Assignment List',
@@ -95,7 +101,13 @@ export default {
           name: 'Assignment NA List',
           url: '/assignment-list-approval',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-TPM", "BAM-Customer Project Manager"],
+          roles : ["BAM-Customer Project Manager"],
+        },
+        {
+          name: 'Assignment Approval Bulk',
+          url: '/assignment-bulk-approval',
+          icon: 'icon-list',
+          roles : ["BAM-Customer Project Manager"],
         },
         {
           name: 'Assignment List (ASP)',
@@ -132,7 +144,7 @@ export default {
     {
       name: 'Material Request',
       icon: "fas fa-tools",
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
       children: [
         {
           name: 'MR Dashboard',
@@ -144,7 +156,7 @@ export default {
           name: 'MR List',
           url: '/mr-list',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
         {
           name: 'MR PS Not Assigned',
@@ -157,6 +169,18 @@ export default {
           url: '/bulk-mr-request',
           icon: 'icon-plus',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+        },
+        {
+          name: 'MRA List',
+          url: '/mra-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
+        {
+          name: 'MRA Need Confirm',
+          url: '/mra-list-need-confirm',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
       ]
     },

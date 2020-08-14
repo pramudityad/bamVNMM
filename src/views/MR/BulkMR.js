@@ -694,7 +694,9 @@ class BulkMR extends Component {
       "mr_comment_project",
       "sent_mr_request",
       "created_based",
-      "identifier"
+      "identifier",
+      "priority_mr",
+      "week_number"
     ]);
 
     ws.addRow(["new", "XL BAM DEMO 2020",	"1",	"1",	"JKT1",	"2020-04-19",	"2020-04-21",	"2000057356", null, null, "tower_id", "JAW-JT-BBS-0001"]);

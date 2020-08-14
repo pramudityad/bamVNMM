@@ -10,6 +10,7 @@ import Excel from 'exceljs';
 import Select from 'react-select';
 import { Redirect, Link } from 'react-router-dom';
 import { Modal, ModalBody, ModalHeader, ModalFooter } from 'reactstrap';
+import {numberWithCommas} from '../../helper/basicFunction';
 
 const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
 const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
@@ -2346,8 +2347,8 @@ class DetailCPOBoq extends Component {
                           <td>{row.coupa_catalogue_item}</td>
                           {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CpoBoq-ViewWithoutPrice") === false) && (
                             <React.Fragment>
-                            <td>{row.coupa_unit_price}</td>
-                            <td>{row.coupa_total_price}</td>
+                            <td>{numberWithCommas(row.coupa_unit_price)}</td>
+                            <td>{numberWithCommas(row.coupa_total_price)}</td>
                             </React.Fragment>
                           )}
                           <td>{row.currency}</td>

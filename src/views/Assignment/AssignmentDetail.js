@@ -9,12 +9,10 @@ import {
   Input,
   CardFooter,
   Table,
-  ModalBody,
-  ModalHeader,
-  Modal,
-  ModalFooter,
 } from "reactstrap";
+import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import { Form, FormGroup, Label } from "reactstrap";
+import ModalDelete from '../components/ModalDelete';
 import axios from "axios";
 import { connect } from "react-redux";
 import Excel from "exceljs";
@@ -79,6 +77,9 @@ class AssignmentDetail extends Component {
       reschedule_note: "",
       vendor_id: null,
       vendor_email: null,
+      modal_warning_cancel_asg : false,
+      value_warning_cancel_asg : "Are you sure?",
+      modal_loading : false,
     };
     this.notifyASP = this.notifyASP.bind(this);
     this.saveBastNumber = this.saveBastNumber.bind(this);
@@ -111,7 +112,22 @@ class AssignmentDetail extends Component {
     this.handleRevisionNote = this.handleRevisionNote.bind(this);
     this.toggleModalReschedule = this.toggleModalReschedule.bind(this);
     this.handleRescheduleNote = this.handleRescheduleNote.bind(this);
+
+    this.toggleWarningCancelASG = this.toggleWarningCancelASG.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
     // this.handleChangeNotApprove = this.handleChangeNotApprove.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState(prevState => ({
+      modal_loading: !prevState.modal_loading
+    }));
+  }
+
+  toggleWarningCancelASG(e) {
+    this.setState(prevState => ({
+      modal_warning_cancel_asg: !prevState.modal_warning_cancel_asg
+    }));
   }
 
   async getDataFromAPIXL(url) {
@@ -804,11 +820,13 @@ class AssignmentDetail extends Component {
   }
 
   async CancelASG(e) {
+    this.setState({modal_warning_cancel_asg : false});
+    this.toggleLoading();
     const newDate = new Date();
     const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
     const _id = e.target.id;
     const dataAssignment = this.state.data_assignment;
-    let res = await this.patchDatatoAPINODE('/aspAssignment/requestCancelation', { "assignmentId": [_id] });
+    let res = await this.patchDatatoAPINODE('/aspAssignment/requestCancelation', { "assignmentId": [dataAssignment._id] });
     if (res !== undefined) {
       if (res.data !== undefined) {
         let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
@@ -822,14 +840,32 @@ class AssignmentDetail extends Component {
         // let sendEmail = await this.apiSendEmail(dataEmail);
         this.setState({ action_status: "success" })
       } else {
-        this.setState({ action_status: "failed" })
+        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+          if(res.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
       }
     } else {
-      this.setState({ action_status: "failed" })
+      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+        if(res.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
     }
+    this.toggleLoading();
   }
 
   async ApproveCancelASG(e) {
+    this.toggleLoading();
     const newDate = new Date();
     const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
     const _id = e.target.id;
@@ -848,14 +884,32 @@ class AssignmentDetail extends Component {
         // let sendEmail = await this.apiSendEmail(dataEmail);
         this.setState({ action_status: "success" })
       } else {
-        this.setState({ action_status: "failed" })
+        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+          if(res.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
       }
     } else {
-      this.setState({ action_status: "failed" })
+      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+        if(res.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
     }
+    this.toggleLoading();
   }
 
   async RejectCancelASG(e) {
+    this.toggleLoading();
     const newDate = new Date();
     const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
     const _id = e.target.id;
@@ -874,11 +928,28 @@ class AssignmentDetail extends Component {
         // let sendEmail = await this.apiSendEmail(dataEmail);
         this.setState({ action_status: "success" })
       } else {
-        this.setState({ action_status: "failed" })
+        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+          if(res.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
       }
     } else {
-      this.setState({ action_status: "failed" })
+      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+        if(res.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
     }
+    this.toggleLoading();
   }
 
   toggleModalRevision(e) {
@@ -1737,7 +1808,7 @@ class AssignmentDetail extends Component {
                     this.state.data_assignment.Current_Status ===
                       "ASP ASSIGNMENT NEED REVISION" ||
                     this.state.data_assignment.Current_Status ===
-                      "ASP ASSIGNMENT RE-SCHEDULE") && (
+                      "ASP ASSIGNMENT RE-SCHEDULE" && (this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
                     <Button
                       color="success"
                       style={{ float: "right" }}
@@ -1748,18 +1819,18 @@ class AssignmentDetail extends Component {
                       Approve
                     </Button>
                   )}
-                  {(this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT REQUEST FOR CANCELATION" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCEL APPROVED") && (
+                  {(this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT REQUEST FOR CANCELATION" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCEL APPROVED" && (this.state.data_assignment.SH_Assignment_No !== null || this.state.data_assignment.created_by === this.state.userId || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
                     <Button
                       color="danger"
                       size="sm"
                       style={{ float: "left" }}
                       id={this.state.data_assignment._id}
-                      onClick={this.CancelASG}
+                      onClick={this.toggleWarningCancelASG}
                     >
                       Cancel ASG
                     </Button>
                   )}
-                  {this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (
+                  {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1))&& (
                     <Button
                       color="danger"
                       size="sm"
@@ -1770,7 +1841,7 @@ class AssignmentDetail extends Component {
                       Approve Cancellation ASG
                     </Button>
                   )}
-                  {this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (
+                  {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
                     <Button
                       color="warning"
                       size="sm"
@@ -1800,45 +1871,6 @@ class AssignmentDetail extends Component {
                   {this.state.data_assignment.Current_Status ===
                     "ASP ASSIGNMENT NOTIFIED TO ASP" && (
                     <Fragment>
-                      <Button
-                        color="danger"
-                        style={{ float: "right" }}
-                        id={this.state.data_assignment._id}
-                        value={this.state.data_assignment._etag}
-                        onClick={this.toggleModalReschedule}
-                      >
-                        <i
-                          className="fa fa-calendar-alt"
-                          style={{ marginRight: "8px" }}
-                        ></i>{" "}
-                        Reschedule
-                      </Button>
-                      <Button
-                        color="warning"
-                        style={{ float: "right", marginRight: "8px" }}
-                        id={this.state.data_assignment._id}
-                        value={this.state.data_assignment._etag}
-                        onClick={this.toggleModalRevision}
-                      >
-                        <i
-                          className="fa fa-edit"
-                          style={{ marginRight: "8px" }}
-                        ></i>{" "}
-                        Need Revision
-                      </Button>
-                      <Button
-                        color="success"
-                        style={{ float: "right", marginRight: "8px" }}
-                        id={this.state.data_assignment._id}
-                        value={this.state.data_assignment._etag}
-                        onClick={this.acceptASG}
-                      >
-                        <i
-                          className="fa fa-check"
-                          style={{ marginRight: "8px" }}
-                        ></i>{" "}
-                        Accept
-                      </Button>
                       <Modal
                         isOpen={this.state.modal_revision}
                         toggle={this.toggleModalRevision}
@@ -1920,6 +1952,42 @@ class AssignmentDetail extends Component {
             )}
           </Col>
         </Row>
+
+        {/* Modal confirmation Cancel */}
+        <ModalDelete
+          isOpen={this.state.modal_warning_cancel_asg}
+          toggle={this.toggleWarningCancelASG}
+          className={"modal-danger " + this.props.className}
+          title={"Cancel Assignment"}
+          body={"This Action will cancel this Assignment. Are you sure ?"}
+        >
+          <Button color="danger" onClick={this.CancelASG} value="save">
+            Yes
+          </Button>
+          <Button color="secondary" onClick={this.toggleWarningCancelASG}>
+            Cancel
+          </Button>
+        </ModalDelete>
+        {/* Modal confirmation Cancel */}
+
+        {/* Modal Loading */}
+        <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className}>
+          <ModalBody>
+            <div style={{textAlign : 'center'}}>
+              <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+            </div>
+            <div style={{textAlign : 'center'}}>
+              Loading ...
+            </div>
+            <div style={{textAlign : 'center'}}>
+              System is processing ...
+            </div>
+          </ModalBody>
+          <ModalFooter>
+          </ModalFooter>
+        </Modal>
+        {/* end Modal Loading */}
+
       </div>
     );
   }

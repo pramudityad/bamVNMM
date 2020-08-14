@@ -850,7 +850,7 @@ class ConfigUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let typeArray = ["config_name", "program", "config_id", "config_customer_name", "sap_number", "sap_description", "config_type", "description"];
+    let typeArray = ["config_id", "config_name", "program", "config_customer_name", "sap_number", "sap_description", "config_type", "description"];
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'All Config Template.xlsx');
@@ -1010,6 +1010,9 @@ class ConfigUpload extends React.Component {
                 </Row>
                 <Row>
                   <Col>
+                  <div style={{ margin: "8px 0px" }}>
+                    <small>Showing {this.state.perPage} entries from {this.state.total_dataConfig} data</small>
+                  </div>
                     <Pagination
                       activePage={this.state.activePage}
                       itemsCountPerPage={this.state.perPage}

@@ -28,6 +28,8 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
+const dataPercentage =[20, 30, 40, 50, 60, 70, 80, 90, 100];
+
 if(Array.prototype.equals)
     console.warn("Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code.");
 // attach the .equals method to Array's prototype to call it on any array
@@ -83,6 +85,7 @@ class BulkAssignment extends Component {
     };
     this.saveDataAssignmentBulk = this.saveDataAssignmentBulk.bind(this);
     this.saveDataAssignmentBulkMigration = this.saveDataAssignmentBulkMigration.bind(this);
+    this.saveDataAssignmentBulkMigrationBAST = this.saveDataAssignmentBulkMigrationBAST.bind(this);
     this.exportFormatBulkAssignment = this.exportFormatBulkAssignment.bind(this);
     this.exportFormatBulkAssignmentMigration = this.exportFormatBulkAssignmentMigration.bind(this);
     this.handleChangeSOWType = this.handleChangeSOWType.bind(this);
@@ -274,25 +277,6 @@ class BulkAssignment extends Component {
     if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
   }
 
-  // fileHandlerAssignment = (event) => {
-  //   let fileObj = event.target.files[0];
-  //   if(fileObj !== undefined){
-  //     ExcelRenderer(fileObj, (err, rest) => {
-  //       if(err){
-  //         console.log(err);
-  //       }
-  //       else{
-  //         this.setState({
-  //           action_status : null,
-  //           action_message : null
-  //         }, () => {
-  //           this.ArrayEmptytoNull(rest.rows);
-  //         });
-  //       }
-  //     });
-  //   }
-  // }
-
   fileHandlerMigration = (input) => {
     const file = input.target.files[0];
     const reader = new FileReader();
@@ -305,7 +289,8 @@ class BulkAssignment extends Component {
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
       /* Convert array of arrays */
-      const data = XLSX.utils.sheet_to_json(ws, {header:1, devfal : null});
+      // const data = XLSX.utils.sheet_to_csv(ws, {header:1, devfal : null});
+      const data = XLSX.utils.sheet_to_json(ws, {header:1, devfal : null, raw : false});
       /* Update state */
       // this.ArrayEmptytoNull(data);
       this.setState({ action_status: null, action_message: null }, () => {
@@ -314,25 +299,6 @@ class BulkAssignment extends Component {
     };
     if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
   }
-
-  // fileHandlerMigration = (event) => {
-  //   let fileObj = event.target.files[0];
-  //   if(fileObj !== undefined){
-  //     ExcelRenderer(fileObj, (err, rest) => {
-  //       if(err){
-  //         console.log(err);
-  //       }
-  //       else{
-  //         this.setState({
-  //           action_status : null,
-  //           action_message : null
-  //         }, () => {
-  //           this.ArrayEmptytoNullMigration(rest.rows);
-  //         });
-  //       }
-  //     });
-  //   }
-  // }
 
   ArrayEmptytoNull(dataXLS){
     let newDataXLS = [];
@@ -356,21 +322,6 @@ class BulkAssignment extends Component {
     });
     this.checkingDataAssignment(newDataXLS);
   }
-  //
-  // ArrayEmptytoNull(dataXLS){
-  //   let newDataXLS = [];
-  //   for(let i = 0; i < dataXLS.length; i++){
-  //     let col = [];
-  //     for(let j = 0; j < dataXLS[0].length; j++){
-  //       col.push(this.checkValue(dataXLS[i][j]));
-  //     }
-  //     newDataXLS.push(col);
-  //   }
-  //   this.setState({
-  //     rowsXLS: newDataXLS
-  //   });
-  //   this.checkingDataAssignment(newDataXLS);
-  // }
 
   ArrayEmptytoNullMigration(dataXLS){
     let newDataXLS = [];
@@ -393,20 +344,6 @@ class BulkAssignment extends Component {
       rowsXLS : newDataXLS,
     });
   }
-
-  // ArrayEmptytoNullMigration(dataXLS){
-  //   let newDataXLS = [];
-  //   for(let i = 0; i < dataXLS.length; i++){
-  //     let col = [];
-  //     for(let j = 0; j < dataXLS[0].length; j++){
-  //       col.push(this.checkValue(dataXLS[i][j]));
-  //     }
-  //     newDataXLS.push(col);
-  //   }
-  //   this.setState({
-  //     rowsXLS: newDataXLS
-  //   });
-  // }
 
   componentDidMount(){
     this.getASPList();
@@ -552,6 +489,111 @@ class BulkAssignment extends Component {
     this.toggleLoading();
   }
 
+  async saveBastNumber(_id, dataBAST) {
+    const assignBast = {
+      "account_id": null,
+      "data": dataBAST
+    }
+    const respondAssignBast = await this.patchDatatoAPINODE(
+      "/aspAssignment/updateBastNumber/" + _id,
+      assignBast
+    );
+    if (
+      respondAssignBast.data !== undefined &&
+      respondAssignBast.status >= 200 &&
+      respondAssignBast.status <= 300
+    ) {
+      return {"success" : true, "asg_no" : dataBAST[0].Assignment_No, "message" : null}
+    } else {
+      return {"success" : false, "asg_no" : dataBAST[0].Assignment_No, "message" : respondAssignBast.response.data.error}
+    }
+  }
+
+  async prepareDataBASTMigration(dataXLS){
+    let dataBAST = [];
+    let dataNotMigration = [];
+    const asgSystemXLSIndex = dataXLS[0].findIndex(e => e === "id_assignment_doc");
+    const asgXLSIndex = dataXLS[0].findIndex(e => e === "Assignment_No");
+    const shAsgXLSIndex = dataXLS[0].findIndex(e => e === "sh_assignment_no");
+    const accountXLSIndex = dataXLS[0].findIndex(e => e === "Account_Name");
+    const acceptanceDateXLSIndex = dataXLS[0].findIndex(e => e === "ASP_Acceptance_Date");
+    const wpIdXLSIndex = dataXLS[0].findIndex(e => e === "WP_ID");
+    const projectSystemXLSIndex = dataXLS[0].findIndex(e => e === "id_project_doc");
+    const projectXLSIndex = dataXLS[0].findIndex(e => e === "Project");
+    const sowTypeXLSIndex = dataXLS[0].findIndex(e => e === "SOW_Type");
+    const bastNoXLSIndex = dataXLS[0].findIndex(e => e === "BAST_No");
+    const grTypeXLSIndex = dataXLS[0].findIndex(e => e === "GR_Type");
+    const paymentTermsXLSIndex = dataXLS[0].findIndex(e => e === "Payment_Terms");
+    const paymentTermsRatioXLSIndex = dataXLS[0].findIndex(e => e === "Payment_Terms_Ratio");
+    const grPercentageXLSIndex = dataXLS[0].findIndex(e => e === "GR_Percentage");
+    const poNumberXLSIndex = dataXLS[0].findIndex(e => e === "PO_Number");
+    const poItemXLSIndex = dataXLS[0].findIndex(e => e === "PO_Item");
+    const itemStatusXLSIndex = dataXLS[0].findIndex(e => e === "Item_Status");
+    const requestorXLSIndex = dataXLS[0].findIndex(e => e === "Requestor");
+    const uniqueASG = [];
+    for(let i = 1; i < dataXLS.length; i++){
+      const dataASGBAST = {
+        "Request_Type": "New GR",
+        "id_assignment_doc": dataXLS[i][asgSystemXLSIndex],
+        "Assignment_No": dataXLS[i][asgXLSIndex],
+        "Account_Name": "XL",
+        "ASP_Acceptance_Date": dataXLS[i][acceptanceDateXLSIndex],
+        "WP_ID": dataXLS[i][wpIdXLSIndex],
+        "id_project_doc": dataXLS[i][projectSystemXLSIndex],
+        "Project": dataXLS[i][projectXLSIndex],
+        "SOW_Type": dataXLS[i][sowTypeXLSIndex],
+        "BAST_No": dataXLS[i][bastNoXLSIndex],
+        "GR_Type": dataXLS[i][grTypeXLSIndex],
+        "Payment_Terms": dataXLS[i][paymentTermsXLSIndex],
+        "Payment_Terms_Ratio": dataXLS[i][paymentTermsRatioXLSIndex],
+        "GR_Percentage": dataXLS[i][grPercentageXLSIndex],
+        "PO_Number": dataXLS[i][poNumberXLSIndex],
+        "PO_Item": dataXLS[i][poItemXLSIndex],
+        "Item_Status": "Submit",
+        "Requestor": dataXLS[i][requestorXLSIndex] === null ? this.state.userName : dataXLS[i][requestorXLSIndex]
+      }
+      if(dataXLS[i][shAsgXLSIndex] === null){
+        dataNotMigration.push({"success" : false, "asg_no" : dataASGBAST.Assignment_No, "message" : "Not Data Migration"});
+      }
+      if(dataXLS[i][grPercentageXLSIndex] !== null && dataXLS[i][grPercentageXLSIndex] !== undefined){
+        dataASGBAST["Payment_Terms_Ratio"] = dataXLS[i][grPercentageXLSIndex].toString().replace("%","") + '%';
+        dataASGBAST["GR_Percentage"] = parseFloat(dataXLS[i][grPercentageXLSIndex].toString().replace("%",""))/100;
+      }
+      dataBAST.push(dataASGBAST);
+      if(uniqueASG.indexOf(dataASGBAST.id_assignment_doc) === -1){
+        uniqueASG.push(dataASGBAST.id_assignment_doc)
+      }
+    }
+    if(dataNotMigration.length === 0){
+      const prepare = [];
+      for(let j = 0; j < uniqueASG.length; j++){
+        const bastASG = dataBAST.filter(bst => bst.id_assignment_doc === uniqueASG[j]);
+        const resBAST = await this.saveBastNumber(uniqueASG[j], bastASG);
+        prepare.push(resBAST);
+      }
+      return prepare;
+    }else{
+      return dataNotMigration;
+    }
+  }
+
+  async saveDataAssignmentBulkMigrationBAST(){
+    this.toggleLoading();
+    const dataUploadBast = await this.prepareDataBASTMigration(this.state.rowsXLS);
+    const dataSuccess = dataUploadBast.filter(e => e.success === true);
+    const dataFailed = dataUploadBast.filter(e => e.success === false);
+    if(dataFailed.length === 0){
+      this.setState({ action_status: 'success', action_message: null });
+    }else{
+      if(dataSuccess.length ===0){
+        this.setState({ action_status: 'failed', action_message: "[ "+dataFailed.map(e => e.asg_no +" -> "+e.message).join(" ; ")+" ] => failed to add BAST Number" });
+      }else{
+        this.setState({ action_status: 'warning', action_message: "Some BAST added to Assignment but some are failed. [ "+dataFailed.map(asg => asg.asg_no +" => "+asg.message).join(" ; ")+" ] => failed to add BAST Number" });
+      }
+    }
+    this.toggleLoading();
+  }
+
   handleChangeSOWType(e){
     const value = e.target.value;
     this.setState({sow_type_selected : value});
@@ -676,6 +718,7 @@ class BulkAssignment extends Component {
               <option value="CME">CME</option>
               <option value="Power">Power</option>
               <option value="SACME">SACME</option>
+              <option value="ADDITIONAL">Additional</option>
             </select>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
@@ -707,7 +750,26 @@ class BulkAssignment extends Component {
                 <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
               </Fragment>
             )}
-
+            {this.state.userRole.includes('Admin') && (
+            <Fragment>
+              {/* <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr> */}
+              <Row>
+                <Col>
+                  <h5>Bulk BAST Migration :</h5>
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  <input type="file" onChange={this.fileHandlerMigration.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
+                  <span style={{color : 'red'}}>*</span>
+                  <Button color="success" onClick={this.saveDataAssignmentBulkMigrationBAST} style={{float : 'right'}}>
+                    Save BAST Migration
+                  </Button>
+                </Col>
+              </Row>
+              <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
+            </Fragment>
+            )}
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>
@@ -840,6 +902,25 @@ class BulkAssignment extends Component {
                     <td>RBSTRM</td>
                     <td>RBSTRM</td>
                   </tr>
+                </tbody>
+              </Table>
+              <Table hover bordered responsive size="sm" style={{width : "90%", marginLeft : '10px'}}>
+                <thead>
+                  <tr style={{backgroundColor : "rgb(11, 72, 107)", color: "white"}}>
+                    <td colSpan="2">GR Percentage</td>
+                  </tr>
+                  <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dataPercentage.map(dp =>
+                    <tr>
+                      <td>{dp}</td>
+                      <td>{dp+"%"}</td>
+                    </tr>
+                  )}
                 </tbody>
               </Table>
           </div>

@@ -110,3 +110,7 @@ export const convertDMSToDD  = (dms) => {
   } // Don't do anything for N or E
   return dd;
 }
+
+export function numberWithCommas(x) {
+    return x.toFixed(2).replace(".", ",").toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}

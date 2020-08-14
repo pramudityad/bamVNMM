@@ -73,9 +73,10 @@ class ListTSSRBoq extends Component {
     let filter_no_tssr = this.state.filter_list[6] === null ? '"no_tssr_boq":{"$exists" : 1}' : '"no_tssr_boq":{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
     let filter_no_tech = this.state.filter_list[1] === null ? '"no_tech_boq":{"$exists" : 1}' : '"no_tech_boq":{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
     let filter_project = this.state.filter_list[2] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
+    let filter_creator = this.state.filter_list[3] === null ? '"creator.email":{"$exists" : 1}' : '"creator.email":{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
     let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
     let filter_status = this.state.filter_list[5] === null ? '"approval_status":{"$exists" : 1}' : '"approval_status":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
-    let where = 'q={'+filter_no_tssr+', '+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+'}';
+    let where = 'q={'+filter_no_tssr+', '+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+', '+filter_creator+'}';
     this.getDataFromAPINODE('/tssr/getTssr?srt=_id:-1&lmt='+
     this.state.perPage +
     "&pg=" +
@@ -141,7 +142,6 @@ class ListTSSRBoq extends Component {
               <thead>
                   <tr>
                     <th>TSSR No.</th>
-                    <th>Technical BOQ Origin</th>
                     <th>Project</th>
                     <th>Creator</th>
                     <th>Ver.</th>
@@ -155,17 +155,7 @@ class ListTSSRBoq extends Component {
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText><i className="fa fa-search"></i></InputGroupText>
                             </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={6} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[1]}/>
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls">
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={1} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[1]}/>
+                            <Input type="text" placeholder="Search" name={6} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[6]}/>
                           </InputGroup>
                         </div>
                       </td>
@@ -179,7 +169,16 @@ class ListTSSRBoq extends Component {
                           </InputGroup>
                         </div>
                       </td>
-                      <td></td>
+                      <td>
+                        <div className="controls">
+                          <InputGroup className="input-prepend">
+                            <InputGroupAddon addonType="prepend">
+                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                            </InputGroupAddon>
+                            <Input type="text" placeholder="Search" name={3} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[3]}/>
+                          </InputGroup>
+                        </div>
+                      </td>
                       <td style={{width:'125px'}}>
                         <div className="controls">
                           <InputGroup className="input-prepend">
@@ -208,7 +207,6 @@ class ListTSSRBoq extends Component {
                     {this.state.list_tech_boq.map((boq,i) =>
                         <tr key={boq._id}>
                             <td style={{verticalAlign : 'middle'}}>{boq.no_tssr_boq}</td>
-                            <td style={{verticalAlign : 'middle'}}>{boq.no_tech_boq}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.project_name}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.creator[0].email}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.version}</td>
@@ -224,6 +222,9 @@ class ListTSSRBoq extends Component {
             </Table>
             <nav>
                 <div>
+                <div style={{ margin: "8px 0px" }} className="pagination">
+                  <small>Showing {this.state.perPage} entries from {this.state.totalData} data</small>
+                </div>
                 <Pagination
                     activePage={this.state.activePage}
                     itemsCountPerPage={this.state.perPage}

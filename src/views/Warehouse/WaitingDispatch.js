@@ -100,7 +100,7 @@ class WaitingDispatch extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     filter_array.push('"$or" : [{"current_mr_status": "LOADING PROCESS FINISH"}]');
-    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
       filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
     }
     let whereAnd = '{' + filter_array.join(',') + '}';
@@ -129,7 +129,7 @@ class WaitingDispatch extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     filter_array.push('"$or" : [{"current_mr_status": "LOADING PROCESS FINISH"}]');
-    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
       filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
     }
     let whereAnd = '{' + filter_array.join(',') + '}';
@@ -281,19 +281,13 @@ class WaitingDispatch extends Component {
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
                         <td>
-                          {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>
-                            j === list.cust_del.length - 1 ? custdel.cd_id : custdel.cd_id + ', '
-                          ))}
+                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_id + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_name + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>

@@ -169,6 +169,7 @@ class WHManagement extends React.Component {
       dataForm[4] = aEdit.owner;
       dataForm[6] = aEdit.latitude;
       dataForm[7] = aEdit.longitude;
+      dataForm[8] = aEdit.factory_code;
       this.setState({ DataForm: dataForm, selected_id: value });
     } else {
       this.setState({ DataForm: new Array(6).fill(null) });
@@ -205,9 +206,8 @@ class WHManagement extends React.Component {
     });
   };
 
-  getWHStockList() {    
+  getWHStockList() {
     this.toggleLoading();
-    console.log('search')
     let filter = '{"$regex" : "", "$options" : "i"}';
     if (this.state.filter_name !== "") {
       filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
@@ -222,7 +222,6 @@ class WHManagement extends React.Component {
         "&pg=" +
         this.state.activePage, this.props.dataLogin.token
     ).then((res) => {
-      // console.log("all data ", res.data);
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -245,7 +244,6 @@ class WHManagement extends React.Component {
     // switch (this.props.dataLogin.account_id) {
     //   case "xl":
     getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
-      // console.log("asp data ", res.data);
       if (res.data !== undefined) {
         this.setState({ asp_data: res.data._items });
       } else {
@@ -302,7 +300,6 @@ class WHManagement extends React.Component {
     const file = input.target.files[0];
     const reader = new FileReader();
     const rABS = !!reader.readAsBinaryString;
-    // console.log("rABS");
     reader.onload = (e) => {
       /* Parse data */
       const bstr = e.target.result;
@@ -326,14 +323,12 @@ class WHManagement extends React.Component {
     let newDataXLS = [];
     for (let i = 0; i < dataXLS.length; i++) {
       let col = [];
-      console.log('col ', col)
       for (let j = 0; j < dataXLS[0].length; j++) {
         if (typeof dataXLS[i][j] === "object") {
           let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
           if (dataObject !== null) {
             dataObject = dataObject.replace(/"/g, "");
           }
-          console.log('dataObject ', dataObject)
           col.push(dataObject);
         } else {
           col.push(this.checkValue(dataXLS[i][j]));
@@ -347,8 +342,6 @@ class WHManagement extends React.Component {
   }
 
   componentDidMount() {
-    // console.log("here ur dataLogin", this.props.dataLogin);
-    // console.log('token from asycn ', this.props.dataLogin.token);
     this.getWHStockList();
     this.getASPList();
     document.title = "Warehouse Management | BAM";
@@ -423,7 +416,6 @@ class WHManagement extends React.Component {
 
   handlePageChange(pageNumber) {
     let sortType = this.state.sortType;
-    // console.log("page handle sort ", sortType);
     switch (sortType) {
       case 1:
         this.setState({ activePage: pageNumber }, () => {
@@ -450,12 +442,10 @@ class WHManagement extends React.Component {
     this.toggleLoading();
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
-    console.log("xlsx data", JSON.stringify(BulkXLSX));
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     const res = await postDatatoAPINODE("/whManagement/createWarehouse", {
       managementData: BulkXLSX,
     }, this.props.dataLogin.token);
-    console.log("res bulk ", res.response);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -480,14 +470,12 @@ class WHManagement extends React.Component {
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    console.log("xlsx data", JSON.stringify(BulkXLSX));
     const res = await postDatatoAPINODE(
       "/whManagement/createWhManagementTruncate",
       {
         managementData: BulkXLSX,
       }, this.props.dataLogin.token
     );
-    console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -501,7 +489,6 @@ class WHManagement extends React.Component {
   handleChangeForm(e) {
     const value = e.target.value;
     const index = e.target.name;
-    console.log("value ", value, index);
     let dataForm = this.state.DataForm;
     dataForm[parseInt(index)] = value;
     this.setState({ DataForm: dataForm });
@@ -509,25 +496,25 @@ class WHManagement extends React.Component {
 
   async saveUpdate() {
     let respondSaveEdit = undefined;
-    const dataPPEdit = this.state.DataForm;
+    const dataWHEdit = this.state.DataForm;
     const objData = this.state.selected_id;
     // console.log('obj data ', objData);
-    let pp = {
-      wh_name: dataPPEdit[0],
-      wh_id: dataPPEdit[1],
-      wh_manager: dataPPEdit[2],
-      address: dataPPEdit[3],
-      owner: dataPPEdit[4],
-      latitude: dataPPEdit[6],
-      longitude: dataPPEdit[7],
+    let WH = {
+      wh_name: dataWHEdit[0],
+      wh_id: dataWHEdit[1],
+      wh_manager: dataWHEdit[2],
+      address: dataWHEdit[3],
+      owner: dataWHEdit[4],
+      latitude: dataWHEdit[6],
+      longitude: dataWHEdit[7],
+      // factory_code: dataWHEdit[8],
     };
     this.toggleLoading();
     this.toggleEdit();
     let patchData = await patchDatatoAPINODE(
       "/whManagement/UpdateOneWarehouse/" + objData,
-      { data: pp }, this.props.dataLogin.token
+      { data: WH }, this.props.dataLogin.token
     );
-    console.log("patch data ", pp);
     if (patchData === undefined) {
       patchData = {};
       patchData["data"] = undefined;
@@ -558,26 +545,25 @@ class WHManagement extends React.Component {
     this.toggleLoading();
     let poData = [];
     let respondSaveNew = undefined;
-    const dataPPEdit = this.state.DataForm;
-    let pp = {
-      wh_name: dataPPEdit[0],
-      wh_id: dataPPEdit[1],
-      wh_manager: dataPPEdit[2],
-      address: dataPPEdit[3],
-      owner: dataPPEdit[4],
-      wh_type: dataPPEdit[5],
-      latitude: dataPPEdit[6],
-      longitude: dataPPEdit[7],
+    const dataWHEdit = this.state.DataForm;
+    let WH = {
+      wh_name: dataWHEdit[0],
+      wh_id: dataWHEdit[1],
+      wh_manager: dataWHEdit[2],
+      address: dataWHEdit[3],
+      owner: dataWHEdit[4],
+      wh_type: dataWHEdit[5],
+      latitude: dataWHEdit[6],
+      longitude: dataWHEdit[7],
+      factory_code: dataWHEdit[8],
     };
-    poData.push(pp);
-    console.log("post data ", pp);
+    poData.push(WH);
     let postData = await postDatatoAPINODE(
       "/whManagement/createOneWarehouse",
       {
-        managementData: pp,
+        managementData: WH,
       }, this.props.dataLogin.token
     ).then((res) => {
-      console.log("res save one ", res);
       if (res.data !== undefined) {
         this.setState({ action_status: "success" }, () => {
           this.toggleLoading();
@@ -680,7 +666,6 @@ class WHManagement extends React.Component {
     const ws = wb.addWorksheet();
     const ws2 = wb.addWorksheet();
     const aspData = this.state.asp_data;
-    // console.log('aspData ', aspData);
 
     ws.addRow([
       "wh_name",
@@ -912,6 +897,7 @@ class WHManagement extends React.Component {
                             <th>Longitude</th>
                             <th>Owner</th>
                             <th>WH Type</th>
+                            <th>FF Code</th>
                             <th colspan="2"></th>
                             {/* <th></th> */}
                           </tr>
@@ -949,7 +935,9 @@ class WHManagement extends React.Component {
                                   <td style={{ textAlign: "center" }}>
                                     {e.wh_type}
                                   </td>
-
+                                  <td style={{ textAlign: "center" }}>
+                                    {e.factory_code}
+                                  </td>
                                   <td>
                                     <Button
                                       size="sm"
@@ -1023,16 +1011,32 @@ class WHManagement extends React.Component {
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="wh_id">Warehouse ID </Label>
-                  <Input
-                    type="text"
-                    name="1"
-                    placeholder="Warehouse ID"
-                    value={this.state.DataForm[1]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
+                <Row>
+                <Col sm="8">
+                  <FormGroup>
+                    <Label htmlFor="wh_id">Warehouse ID </Label>
+                    <Input
+                      type="text"
+                      name="1"
+                      placeholder="Warehouse ID"
+                      value={this.state.DataForm[1]}
+                      onChange={this.handleChangeForm}
+                    />
+                  </FormGroup>
+                </Col>
+                <Col sm="4">
+                  <FormGroup>
+                    <Label htmlFor="wh_id">FF Code</Label>
+                    <Input
+                      type="text"
+                      name="8"
+                      placeholder="Factory Code"
+                      value={this.state.DataForm[8]}
+                      onChange={this.handleChangeForm}
+                    />
+                  </FormGroup>
+                </Col>
+                </Row>
                 <FormGroup>
                   <Label htmlFor="wh_manager">WH Manager</Label>
                   <Input
@@ -1137,16 +1141,32 @@ class WHManagement extends React.Component {
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="wh_id">Warehouse ID </Label>
-                  <Input
-                    type="text"
-                    name="1"
-                    placeholder=""
-                    value={this.state.DataForm[1]}
-                    onChange={this.handleChangeForm}
-                  />
-                </FormGroup>
+                <Row>
+                  <Col sm="8">
+                  <FormGroup>
+                    <Label htmlFor="wh_id">Warehouse ID </Label>
+                    <Input
+                      type="text"
+                      name="1"
+                      placeholder=""
+                      value={this.state.DataForm[1]}
+                      onChange={this.handleChangeForm}
+                    />
+                  </FormGroup>
+                  </Col>
+                  <Col sm="4">
+                    <FormGroup>
+                      <Label htmlFor="wh_id">FF Code</Label>
+                      <Input
+                        type="text"
+                        name="8"
+                        placeholder="Factory Code"
+                        value={this.state.DataForm[8]}
+                        onChange={this.handleChangeForm}
+                      />
+                    </FormGroup>
+                  </Col>
+                </Row>
                 <FormGroup>
                   <Label htmlFor="wh_manager">WH Manager</Label>
                   <Input

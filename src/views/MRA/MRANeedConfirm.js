@@ -24,7 +24,7 @@ import debounce from "lodash.debounce";
 import Excel from "exceljs";
 import { saveAs } from "file-saver";
 import { connect } from "react-redux";
-import './project_css.css'
+// import './project_css.css'
 
 import ModalForm from "../components/ModalForm";
 import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
@@ -43,7 +43,7 @@ const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
 
-class OrderCreated extends Component {
+class MRANeedConfirm extends Component {
   constructor(props) {
     super(props);
 
@@ -64,32 +64,32 @@ class OrderCreated extends Component {
       action_status: null,
       action_message: null,
       modal_approve_ldm: false,
-      id_mr_selected: null,
+      id_mra_selected: null,
       selected_dsp: "",
       data_mr_selected: null,
-      modal_box_input: false,
+      modal_confirm_input: false,
       rejectNote: ""
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.downloadMRlist = this.downloadMRlist.bind(this);
-    this.getMRList = this.getMRList.bind(this);
+    this.getMRAList = this.getMRAList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
     this.ApproveMR = this.ApproveMR.bind(this);
-    this.rejectMR = this.rejectMR.bind(this);
+    this.confirmMRA = this.confirmMRA.bind(this);
     this.toggleModalapprove = this.toggleModalapprove.bind(this);
-    this.toggleBoxInput = this.toggleBoxInput.bind(this);
+    this.toggleMRAConfirmInput = this.toggleMRAConfirmInput.bind(this);
     this.handleChangeNote = this.handleChangeNote.bind(this);
   }
 
-  toggleBoxInput(e) {
+  toggleMRAConfirmInput(e) {
     if(e !== undefined){
       const id_doc = e.currentTarget.id;
-      this.setState({ id_mr_selected: id_doc });
+      this.setState({ id_mra_selected: id_doc });
     }
     this.setState(prevState => ({
-      modal_box_input: !prevState.modal_box_input
+      modal_confirm_input: !prevState.modal_confirm_input
     }));
   }
 
@@ -98,7 +98,7 @@ class OrderCreated extends Component {
     let value = e.target.value;
     if (value !== null && value.length !== 0 && value !== 0) {
       this.setState({ rejectNote: value });
-    }    
+    }
   }
 
   async getDataFromAPI(url) {
@@ -201,9 +201,9 @@ class OrderCreated extends Component {
           },
         });
       }
-      this.setState({ id_mr_selected: id_doc, data_mr_selected: dataMR });
+      this.setState({ id_mra_selected: id_doc, data_mr_selected: dataMR });
     } else {
-      this.setState({ id_mr_selected: null, data_mr_selected: null });
+      this.setState({ id_mra_selected: null, data_mr_selected: null });
     }
     this.setState((prevState) => ({
       modal_approve_ldm: !prevState.modal_approve_ldm,
@@ -242,79 +242,69 @@ class OrderCreated extends Component {
     }
   };
 
-  getMRList() {
+  getMRAList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     let filter_array = [];
     this.state.filter_list[0] !== "" &&
       filter_array.push(
-        '"mr_id":{"$regex" : "' +
+        '"mra_id":{"$regex" : "' +
           this.state.filter_list[0] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[1] !== "" &&
       filter_array.push(
-        '"project_name":{"$regex" : "' +
+        '"mr_id":{"$regex" : "' +
           this.state.filter_list[1] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[2] !== "" &&
       filter_array.push(
-        '"cust_del.cd_id":{"$regex" : "' +
+        '"project_name":{"$regex" : "' +
           this.state.filter_list[2] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[3] !== "" &&
       filter_array.push(
-        '"site_info.site_id":{"$regex" : "' +
+        '"cust_del.cd_id":{"$regex" : "' +
           this.state.filter_list[3] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[4] !== "" &&
       filter_array.push(
-        '"site_info.site_name":{"$regex" : "' +
+        '"site_info.site_id":{"$regex" : "' +
           this.state.filter_list[4] +
           '", "$options" : "i"}'
       );
-    filter_array.push('"current_mr_status":"MR REQUESTED"');
-    this.state.filter_list[6] !== "" &&
+    this.state.filter_list[5] !== "" &&
       filter_array.push(
-        '"current_milestones":{"$regex" : "' +
-          this.state.filter_list[6] +
+        '"site_info.site_name":{"$regex" : "' +
+          this.state.filter_list[5] +
           '", "$options" : "i"}'
       );
+    filter_array.push('"current_mra_status":"MRA FINISH DELIVERY"');
     this.state.filter_list[7] !== "" &&
       filter_array.push(
         '"dsp_company":{"$regex" : "' +
           this.state.filter_list[7] +
           '", "$options" : "i"}'
       );
+    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
     this.state.filter_list[8] !== "" &&
       filter_array.push(
-        '"eta":{"$regex" : "' +
+        '"updated_on":{"$regex" : "' +
           this.state.filter_list[8] +
           '", "$options" : "i"}'
       );
-    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
-    this.state.filter_list[10] !== "" &&
-      filter_array.push(
-        '"updated_on":{"$regex" : "' +
-          this.state.filter_list[10] +
-          '", "$options" : "i"}'
-      );
-    this.state.filter_list[11] !== "" &&
+    this.state.filter_list[9] !== "" &&
       filter_array.push(
         '"created_on":{"$regex" : "' +
-          this.state.filter_list[11] +
+          this.state.filter_list[9] +
           '", "$options" : "i"}'
-      );
-    this.props.match.params.whid !== undefined &&
-      filter_array.push(
-        '"origin.value" : "' + this.props.match.params.whid + '"'
       );
     let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE(
-      "/matreq?srt=_id:-1&q=" + whereAnd + "&lmt=" + maxPage + "&pg=" + page
+      "/matreq-ra/?srt=_id:-1&q=" + whereAnd + "&lmt=" + maxPage + "&pg=" + page
     ).then((res) => {
       console.log("MR List Sorted", res);
       if (res.data !== undefined) {
@@ -329,69 +319,59 @@ class OrderCreated extends Component {
     let filter_array = [];
     this.state.filter_list[0] !== "" &&
       filter_array.push(
-        '"mr_id":{"$regex" : "' +
+        '"mra_id":{"$regex" : "' +
           this.state.filter_list[0] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[1] !== "" &&
       filter_array.push(
-        '"project_name":{"$regex" : "' +
+        '"mr_id":{"$regex" : "' +
           this.state.filter_list[1] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[2] !== "" &&
       filter_array.push(
-        '"cust_del.cd_id":{"$regex" : "' +
+        '"project_name":{"$regex" : "' +
           this.state.filter_list[2] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[3] !== "" &&
       filter_array.push(
-        '"site_info.site_id":{"$regex" : "' +
+        '"cust_del.cd_id":{"$regex" : "' +
           this.state.filter_list[3] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[4] !== "" &&
       filter_array.push(
-        '"site_info.site_name":{"$regex" : "' +
+        '"site_info.site_id":{"$regex" : "' +
           this.state.filter_list[4] +
           '", "$options" : "i"}'
       );
-    filter_array.push('"current_mr_status":"MR REQUESTED"');
-    this.state.filter_list[6] !== "" &&
+    this.state.filter_list[5] !== "" &&
       filter_array.push(
-        '"current_milestones":{"$regex" : "' +
-          this.state.filter_list[6] +
+        '"site_info.site_name":{"$regex" : "' +
+          this.state.filter_list[5] +
           '", "$options" : "i"}'
       );
+    filter_array.push('"current_mra_status":"MRA FINISH DELIVERY"');
     this.state.filter_list[7] !== "" &&
       filter_array.push(
         '"dsp_company":{"$regex" : "' +
           this.state.filter_list[7] +
           '", "$options" : "i"}'
       );
+    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
     this.state.filter_list[8] !== "" &&
       filter_array.push(
-        '"eta":{"$regex" : "' +
+        '"updated_on":{"$regex" : "' +
           this.state.filter_list[8] +
           '", "$options" : "i"}'
       );
-    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
-    this.state.filter_list[10] !== "" &&
-      filter_array.push(
-        '"updated_on":{"$regex" : "' +
-          this.state.filter_list[10] +
-          '", "$options" : "i"}'
-      );
-    this.state.filter_list[11] !== "" &&
+    this.state.filter_list[9] !== "" &&
       filter_array.push(
         '"created_on":{"$regex" : "' +
-          this.state.filter_list[11] +
+          this.state.filter_list[9] +
           '", "$options" : "i"}'
-      );
-    this.props.match.params.whid !== undefined &&
-      filter_array.push(
-        '"origin.value" : "' + this.props.match.params.whid + '"'
       );
     let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE("/matreq?noPg=1&q=" + whereAnd).then((res) => {
@@ -561,13 +541,13 @@ class OrderCreated extends Component {
     }
     if (successUpdate.length !== 0) {
       this.setState({ action_status: "success" });
-      this.getMRList();
+      this.getMRAList();
       // setTimeout(function(){ window.location.reload(); }, 2000);
     }
   }
 
   ApproveMR(e) {
-    const _id = this.state.id_mr_selected;
+    const _id = this.state.id_mra_selected;
     const body = this.state.selected_dsp;
     // console.log('_id ',_id);
     // console.log('body ',body);
@@ -575,7 +555,7 @@ class OrderCreated extends Component {
       (res) => {
         if (res.data !== undefined) {
           this.setState({ action_status: "success" });
-          this.getMRList();
+          this.getMRAList();
           this.toggleModalapprove();
         } else {
           if (
@@ -603,62 +583,30 @@ class OrderCreated extends Component {
     );
   }
 
-  rejectMR(e) {
+  confirmMRA(e) {
     const id_doc = e.currentTarget.id;
     let reason = this.state.rejectNote
-    this.patchDatatoAPINODE("/matreq/rejectMatreq/" + id_doc, {"rejectNote": reason}).then((res) => {
+    this.patchDatatoAPINODE("/matreq-ra/confirmMRA/" + id_doc, {"data": {"note": reason}}).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
-        this.getMRList();
-        this.toggleBoxInput();
+        this.getMRAList();
+        this.toggleMRAConfirmInput();
       } else {
         this.setState({ action_status: "failed" });
-        this.toggleBoxInput();
+        this.toggleMRAConfirmInput();
       }
     });
   }
 
-  // async rejectMR(e) {
-  //   const newDate = new Date();
-  //   const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-  //   const _etag = e.target.value;
-  //   const _id = e.target.id;
-  //   const dataMR = this.state.mr_list.find(e => e._id === _id);
-  //   let currStatus = [
-  //     {
-  //         "mr_status_name": "MATERIAL_REQUEST",
-  //         "mr_status_value": "REJECTED",
-  //         "mr_status_date": dateNow,
-  //         "mr_status_updater": this.state.userEmail,
-  //         "mr_status_updater_id": this.state.userId
-  //     }
-  //   ];
-  //   let successUpdate = [];
-  //   let updateMR = {};
-  //   updateMR['current_milestones'] = null;
-  //   updateMR['current_mr_status'] = "MR CANCELED";
-  //   updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
-  //   let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
-  //   if(res !== undefined) {
-  //     if(res.data !== undefined) {
-  //       successUpdate.push(res.data);
-  //     }
-  //   }
-  //   if(successUpdate.length !== 0){
-  //     this.setState({action_status : "success"});
-  //     setTimeout(function(){ window.location.reload(); }, 2000);
-  //   }
-  // }
-
   componentDidMount() {
-    this.getMRList();
+    this.getMRAList();
     // this.getAllMR();
-    document.title = "Order Created | BAM";
+    document.title = "MRA List | BAM";
   }
 
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
-      this.getMRList();
+      this.getMRAList();
     });
   }
 
@@ -676,13 +624,13 @@ class OrderCreated extends Component {
   }
 
   onChangeDebounced(e) {
-    this.getMRList();
+    this.getMRAList();
     // this.getAllMR();
   }
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 10; i++) {
       searchBar.push(
         <td>
           <div className="controls" style={{ width: "150px" }}>
@@ -713,30 +661,6 @@ class OrderCreated extends Component {
   );
 
   render() {
-    function AlertProcess(props) {
-      const alert = props.alertAct;
-      const message = props.messageAct;
-      if (alert === "failed") {
-        return (
-          <div className="alert alert-danger" role="alert">
-            {message.length !== 0
-              ? message
-              : "Sorry, there was an error when we tried to save it, please reload your page and try again"}
-          </div>
-        );
-      } else {
-        if (alert === "success") {
-          return (
-            <div className="alert alert-success" role="alert">
-              {message}
-              Your action was success, please reload your page
-            </div>
-          );
-        } else {
-          return <div></div>;
-        }
-      }
-    }
 
     const downloadMR = {
       float: "right",
@@ -753,25 +677,9 @@ class OrderCreated extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: "2" }}>
-                  <i
-                    className="fa fa-align-justify"
-                    style={{ marginRight: "8px" }}
-                  ></i>{" "}
-                  Order Created
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }} ></i>
+                  MRA List
                 </span>
-                <Button
-                  style={downloadMR}
-                  outline
-                  color="success"
-                  onClick={this.downloadMRlist}
-                  size="sm"
-                >
-                  <i
-                    className="fa fa-download"
-                    style={{ marginRight: "8px" }}
-                  ></i>
-                  Download MR List
-                </Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -780,16 +688,14 @@ class OrderCreated extends Component {
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>
                         Action
                       </th>
+                      <th>MRA ID</th>
                       <th>MR ID</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
-                      <th>Site ID</th>
-                      <th>Site Name</th>
+                      <th>Tower ID</th>
+                      <th>Tower Name</th>
                       <th>Current Status</th>
-                      <th>Current Milestone</th>
                       <th>DSP</th>
-                      <th>ETA</th>
-                      <th>Created By</th>
                       <th>Updated On</th>
                       <th>Created On</th>
                     </tr>
@@ -804,44 +710,21 @@ class OrderCreated extends Component {
                     {this.state.mr_list.map((list, i) => (
                       <tr key={list._id}>
                         <td>
+                        {list.current_mra_status === "MRA FINISH DELIVERY" && (
+                          <Button outline color="success" size="sm" className="btn-pill" style={{ width: "90px" }} id={list._id} value={list._etag} onClick={this.toggleMRAConfirmInput} >
+                            >> Confirm
+                          </Button>
+                        )}
                           {/* <Button outline color="success" size="sm" className="btn-pill" style={{ width: "90px", marginBottom: "4px" }} id={list._id} value={list._etag} onClick={this.ApproveMR}><i className="fa fa-check" style={{ marginRight: "8px" }}></i>Approve</Button> */}
-                          <Button
-                            outline
-                            color="success"
-                            size="sm"
-                            className="btn-pill"
-                            style={{ width: "90px", marginBottom: "4px" }}
-                            id={list._id}
-                            value={list._etag}
-                            onClick={this.toggleModalapprove}
-                          >
-                            <i
-                              className="fa fa-check"
-                              style={{ marginRight: "8px" }}
-                            ></i>
-                            Approve
-                          </Button>
-                          <Button
-                            outline
-                            color="danger"
-                            size="sm"
-                            className="btn-pill"
-                            style={{ width: "90px" }}
-                            id={list._id}
-                            value={list._etag}
-                            onClick={this.toggleBoxInput}
-                          >
-                            <i
-                              className="fa fa-times"
-                              style={{ marginRight: "8px" }}
-                            ></i>
-                            Reject
-                          </Button>
+
                         </td>
                         <td>
-                          <Link to={"/mr-detail/" + list._id}>
-                            {list.mr_id}
+                          <Link to={"/mra-list/detail/" + list._id}>
+                            {list.mra_id}
                           </Link>
+                        </td>
+                        <td>
+                            {list.mr_id}
                         </td>
                         <td>{list.project_name}</td>
                         <td>
@@ -853,11 +736,8 @@ class OrderCreated extends Component {
                         <td>
                           {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
                         </td>
-                        <td>{list.current_mr_status}</td>
-                        <td>{list.current_milestones}</td>
+                        <td>{list.current_mra_status}</td>
                         <td>{list.dsp_company}</td>
-                        <td>{convertDateFormat(list.eta)}</td>
-                        <td></td>
                         <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
@@ -881,26 +761,26 @@ class OrderCreated extends Component {
           </Col>
         </Row>
 
-{/* Modal Loading */}
-<Modal isOpen={this.state.modal_box_input} toggle={this.toggleBoxInput} className={'modal-sm modal--box-input'}>
+        {/* Modal Loading */}
+        <Modal isOpen={this.state.modal_confirm_input} toggle={this.toggleMRAConfirmInput} className={'modal-sm modal--box-input'}>
           <ModalBody>
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label>Reject Note</Label>
+                  <Label>Confirm Note</Label>
                   <Input
                     type="text"
-                    name={this.state.id_mr_selected}
-                    placeholder="Write Reject Note"
+                    name={this.state.id_mra_selected}
+                    placeholder="Write Confirm Note"
                     onChange={this.handleChangeNote}
                     value={this.state.rejectNote}
                   />
-                </FormGroup>                
+                </FormGroup>
               </Col>
             </Row>
           </ModalBody>
           <ModalFooter>
-            <Button disabled={!this.state.rejectNote} outline color="danger" size="sm" style={{ width: "80px" }} id={this.state.id_mr_selected} onClick={this.rejectMR}>Reject MR</Button>
+            <Button disabled={!this.state.rejectNote} outline color="success" size="sm" style={{ width: "80px" }} id={this.state.id_mra_selected} onClick={this.confirmMRA}>Confirm MRA</Button>
           </ModalFooter>
         </Modal>
         {/* end Modal Loading */}
@@ -933,7 +813,7 @@ class OrderCreated extends Component {
                   className=""
                   placeholder=""
                   onChange={this.handleLDMapprove}
-                  name={this.state.id_mr_selected}
+                  name={this.state.id_mra_selected}
                 >
                   {this.state.asp_data.map((asp) => (
                     <option value={asp.Vendor_Code}>{asp.Name}</option>
@@ -963,4 +843,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(OrderCreated);
+export default connect(mapStateToProps)(MRANeedConfirm);

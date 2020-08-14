@@ -696,7 +696,7 @@ class DRMList extends React.Component {
       "system",
       "optic_rru",
       "area",
-      "atp_doc_review",
+      "atp_doc_reviewed",
       "verification_date",
       "verification_status",
       "verification_pic",
@@ -747,7 +747,7 @@ class DRMList extends React.Component {
         download_all.system,
         download_all.optic_rru,
         download_all.area,
-        download_all.atp_doc_review,
+        download_all.atp_doc_reviewed,
         download_all.verification_date,
         download_all.verification_status,
         download_all.verification_pic,
@@ -843,7 +843,7 @@ class DRMList extends React.Component {
       "system",
       "optic_rru",
       "area",
-      "atp_doc_review",
+      "atp_doc_reviewed",
       "verification_date",
       "verification_status",
       "verification_pic",
@@ -894,7 +894,7 @@ class DRMList extends React.Component {
         drm.system,
         drm.optic_rru,
         drm.area,
-        drm.atp_doc_review,
+        drm.atp_doc_reviewed,
         drm.verification_date,
         drm.verification_status,
         drm.verification_pic,
@@ -970,7 +970,7 @@ class DRMList extends React.Component {
       "system",
       "optic_rru",
       "area",
-      "atp_doc_review",
+      "atp_doc_reviewed",
       "verification_date",
       "verification_status",
       "verification_pic",
@@ -1269,7 +1269,7 @@ class DRMList extends React.Component {
                             <td>{drm.system}</td>
                             <td>{drm.optic_rru}</td>
                             <td>{drm.area}</td>
-                            <td>{convertDateFormat(drm.atp_doc_reviewed)}</td>
+                            <td>{(drm.atp_doc_reviewed === undefined || drm.atp_doc_reviewed === null ) ? null : convertDateFormat(drm.atp_doc_reviewed)}</td>
                             <td>{convertDateFormat(drm.verification_date)}</td>
                             <td>{drm.verification_status}</td>
                             <td>{drm.verification_pic}</td>

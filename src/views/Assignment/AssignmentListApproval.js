@@ -85,10 +85,15 @@ class AssignmentListApproval extends Component {
     this.state.filter_list[0] !== "" && (filter_array.push('"Assignment_No":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
     this.state.filter_list[1] !== "" && (filter_array.push('"Account_Name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
     this.state.filter_list[2] !== "" && (filter_array.push('"Project":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
-    this.state.filter_list[3] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
-    this.state.filter_list[4] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
-    filter_array.push('"$or" : [{"Current_Status":"REQUEST PM APPROVAL"}, {"Current_Status":"ASP ASSIGNMENT REQUEST FOR CANCELATION"}]');
-    this.state.filter_list[6] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
+    this.state.filter_list[3] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
+    this.state.filter_list[4] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+    this.state.filter_list[5] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
+    this.state.filter_list[7] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
+    if(this.state.filter_list[6] !== ""){
+      filter_array.push('"Current_Status":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}');
+    }else{
+      filter_array.push('"$or" : [{"Current_Status":"REQUEST PM APPROVAL"}, {"Current_Status":"ASP ASSIGNMENT REQUEST FOR CANCELATION"}]');
+    }
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
@@ -150,7 +155,7 @@ class AssignmentListApproval extends Component {
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       searchBar.push(
         <td>
           <div className="controls" style={{ width: '150px' }}>
@@ -197,6 +202,7 @@ class AssignmentListApproval extends Component {
                       <th>Assignment ID</th>
                       <th>Account Name</th>
                       <th>Project Name</th>
+                      <th>CD ID</th>
                       <th>Vendor Name Type</th>
                       <th>Terms of Payment</th>
                       <th>Assignment Status</th>
@@ -222,6 +228,9 @@ class AssignmentListApproval extends Component {
                         <td>{list.Assignment_No}</td>
                         <td>{list.Account_Name}</td>
                         <td>{list.Project}</td>
+                        <td>
+                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
+                        </td>
                         <td>{list.Vendor_Name}</td>
                         <td>{list.Payment_Terms}</td>
                         <td>{list.Current_Status}</td>
@@ -230,6 +239,9 @@ class AssignmentListApproval extends Component {
                     )}
                   </tbody>
                 </Table>
+                <div style={{ margin: "8px 0px" }}>
+                  <small>Showing {this.state.perPage} entries from {this.state.totalData} data</small>
+                </div>
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}

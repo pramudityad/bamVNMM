@@ -175,10 +175,19 @@ class DefaultLayout extends Component {
                         )} />
                     ) : (null);
                   })}
-                  {((this.state.userRole.includes("BAM-ASP") !== false || this.state.userRole.includes("BAM-ASP Management") !== false) && this.state.userRole.includes("Admin") === false) ? (
-                    <Redirect from="/" to="/assignment-list-asp" />
+                  {this.state.userRole.length === 0 ? (
+                    <Redirect from="/" to="/blank-page" />
                   ) : (
-                    <Redirect from="/" to="/dashboard" />
+                    <React.Fragment>
+                      {(
+                        (this.state.userRole.includes("BAM-ASP") !== false || this.state.userRole.includes("BAM-ASP Management") !== false) && this.state.userRole.includes("Admin") === false) ? (
+                        <Redirect from="/" to="/assignment-list-asp" />
+                      ) : (this.state.userRole.includes("BAM-Mover") !== false || this.state.userRole.includes("BAM-Mobile-Mover") !== false) ? (
+                        <Redirect from="/" to="/material-dispatch" />
+                      ) : (
+                        <Redirect from="/" to="/dashboard" />
+                      )}
+                    </React.Fragment>
                   )}
                 </Switch>
               </Suspense>

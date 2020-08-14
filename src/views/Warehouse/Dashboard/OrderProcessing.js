@@ -7,16 +7,11 @@ import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
-import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction';
-import {apiSendEmail} from '../../helper/asyncFunction';
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
-
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
-const usernameXL = 'adminbamidsuper';
-const passwordXL = 'F760qbAg2sml';
 
 const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -45,7 +40,6 @@ class OrderProcessing extends Component {
       site_FE: "",
       qty_ne: new Map(),
       qty_fe: new Map(),
-      modal_loading : false,
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -59,13 +53,6 @@ class OrderProcessing extends Component {
     this.getQtySiteFE = this.getQtySiteFE.bind(this);
     this.editQtyNE = this.editQtyNE.bind(this);
     this.editQtyFE = this.editQtyFE.bind(this);
-    this.toggleLoading = this.toggleLoading.bind(this);
-  }
-
-  toggleLoading() {
-    this.setState(prevState => ({
-      modal_loading: !prevState.modal_loading
-    }));
   }
 
   async getDataFromAPI(url) {
@@ -84,27 +71,6 @@ class OrderProcessing extends Component {
     } catch (err) {
       let respond = err;
       console.log("respond data", err);
-      return respond;
-    }
-  }
-
-  async getDataFromAPIEXEL(url){
-    console.log("url", url);
-    try {
-      let respond = await axios.get(API_URL_XL +url, {
-        headers : {'Content-Type':'application/json'},
-        auth: {
-          username: usernameXL,
-          password: passwordXL
-        },
-      })
-      if(respond.status >= 200 && respond.status < 300){
-        console.log("respond Get Data", respond);
-      }
-      return respond;
-    }catch (err) {
-      let respond = err;
-      console.log("respond Get Data", err);
       return respond;
     }
   }
@@ -172,6 +138,7 @@ class OrderProcessing extends Component {
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
+      console.log("MR List All", res);
       if (res.data !== undefined) {
         const items = res.data.data;
         this.setState({ mr_all: items });
@@ -254,46 +221,14 @@ class OrderProcessing extends Component {
     }
   }
 
-  async getDataProject(project_name){
-    const resProject = await this.getDataFromAPIEXEL('/project_sorted_non_page?where={"Project" : "'+project_name+'"}')
-    if(resProject.data !== undefined){
-      if(resProject.data._items.length === 0){
-        return undefined;
-      }else{
-        return resProject.data._items[0]
-      }
-    }
-  }
-
   async proceedMilestone(e) {
-    this.toggleLoading();
     const newDate = new Date();
     const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
     const _etag = e.target.value;
     const id_doc = e.currentTarget.id;
-    let dataMR = this.state.mr_list.find(e => e._id === id_doc);
-    let dataProject = undefined;
-    if(dataMR !== undefined){
-      dataProject = await this.getDataProject(dataMR.project_name);
-    }
     let res = await this.patchDatatoAPINODE('/matreq/finishOrderProcessing/' + id_doc, { "ps_completion_status": "COMPLETE" });
     if (res !== undefined) {
       if (res.data !== undefined) {
-
-        if(dataProject !== undefined){
-          // let linkImp = "https://dev.bam-id.e-dpm.com/mr-detail/"+id_doc;
-          let linkImp = "#";
-          const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following MR have reached the Joint Check stage<br/><br/><i>Site</i>: <b>"+dataMR.site_info.map(site_info => site_info.site_id).join(' , ')+"</b> <br/><i>Project</i>: <b>"+dataMR.project_name+"</b><br/><i>MR</i>: <b>"+dataMR.mr_id+"</b><br/><br/>order processing is completed by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the MR detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
-          let dataEmail = {
-            // "to": cpm_email+'; aminuddin.fauzan@ericsson.com',
-            "to": dataProject.Email_CPM_Name+' ;',
-            "subject":"[MR Joint Checked] MR "+dataProject.mr_id,
-            "body": bodyEmail
-          }
-          // console.log(dataEmail)
-          const sendEmail = await apiSendEmail(dataEmail);
-        }
-
         this.setState({ action_status: "success" }, () => {
           setTimeout(function () { this.getMRList(); }.bind(this), 2000);
         });
@@ -311,11 +246,9 @@ class OrderProcessing extends Component {
     } else {
       this.setState({ action_status: 'failed' });
     }
-    this.toggleLoading();
   }
 
   async submitLOM(e) {
-    this.toggleLoading();
     this.setState(prevState => ({
       modalNotComplete: !prevState.modalNotComplete
     }));
@@ -335,6 +268,7 @@ class OrderProcessing extends Component {
         if (this.state.qty_ne.has(this.state.data_material.packages[i].materials[j]._id) !== false || this.state.qty_fe.has(this.state.data_material.packages[i].materials[j]._id) !== false) {
           let material = Object.assign({}, this.state.data_material.packages[i].materials[j]);
           material["qty"] = this.state.data_material.packages[i].materials[j].site_id === this.state.site_NE.site_id ? this.state.qty_ne.get(this.state.data_material.packages[i].materials[j]._id) : this.state.qty_fe.get(this.state.data_material.packages[i].materials[j]._id);
+          console.log("material", material.material_id, material.qty);
           if (material.qty !== undefined) {
             if (material.qty !== 0 && material.qty !== "0") {
               materialData.push(material);
@@ -369,7 +303,6 @@ class OrderProcessing extends Component {
         this.setState({ action_status: 'failed' });
       }
     }
-    this.toggleLoading();
   }
 
   componentDidMount() {
@@ -404,6 +337,7 @@ class OrderProcessing extends Component {
       this.getDataFromAPINODE('/matreq/' + _id_mr).then(res => {
         if (res.data !== undefined) {
           this.setState({ data_material: res.data }, () => {
+            console.log("Data Material", this.state.data_material);
           });
           this.setState({ site_NE: this.state.data_material.site_info.find(e => e.site_title === "NE") });
           this.setState({ site_FE: this.state.data_material.site_info.find(e => e.site_title === "FE") });
@@ -429,6 +363,7 @@ class OrderProcessing extends Component {
     const name = e.target.name;
     const value = e.target.value;
     this.setState(prevState => ({ qty_ne: prevState.qty_ne.set(name, value) }));
+    console.log("qty_ne", this.state.qty_ne);
   }
 
   editQtyFE = (e) => {
@@ -632,23 +567,6 @@ class OrderProcessing extends Component {
             <Button color="primary" style={{ float: "right" }} id={this.state.data_material !== null ? this.state.data_material._id : ""} value={this.state.data_material !== null ? this.state.data_material._etag : ""} onClick={this.submitLOM}><i className="fa fa-edit" style={{ marginRight: "8px" }}></i> Submit LOM</Button>
           </ModalFooter>
         </Modal>
-        {/* Modal Loading */}
-        <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className}>
-          <ModalBody>
-            <div style={{textAlign : 'center'}}>
-              <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
-            </div>
-            <div style={{textAlign : 'center'}}>
-              Loading ...
-            </div>
-            <div style={{textAlign : 'center'}}>
-              System is processing ...
-            </div>
-          </ModalBody>
-          <ModalFooter>
-          </ModalFooter>
-        </Modal>
-        {/* end Modal Loading */}
       </div>
     );
   }

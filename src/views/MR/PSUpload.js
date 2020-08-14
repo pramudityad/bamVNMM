@@ -455,7 +455,9 @@ class PSUpload extends Component {
     }
     this.patchDatatoAPINODE('/matreq/assignPlantSpecByTssr2/'+dataMRParent._id+'/ps/'+this.state.id_tssr_selected, dataTSSR).then(res => {
       if(res.data !== undefined){
-        this.setState({ action_status : "success" });
+        this.patchDatatoAPINODE("/matreq/requestMatreq/" + dataMRParent._id).then(res => {
+          this.setState({ action_status : "success" });
+        })
       }else{
         if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
           if (res.response.data.error.message !== undefined) {
@@ -506,10 +508,10 @@ class PSUpload extends Component {
 	  			"id_cd_doc" : dataCDSelected.id_cd_doc,
 	  			"cd_id" : dataCDSelected.cd_id
 	  		}
-	    }	
+	    }
     }else{
     	if( indexCurrent === -1){
-	    
+
 	    }else{
 	    	cd_id_to_tssr.splice(indexCurrent,1);
 	    }
@@ -740,7 +742,7 @@ class PSUpload extends Component {
                         <Input type="select" name={tssr.id_tssr_boq_site_doc} value={this.state.cd_id_to_tssr_selected.get(tssr.id_tssr_boq_site_doc)} onChange={this.handleChangeCDIDtoTSSR}>
                           <option></option>
                           {this.state.list_cd_id_mr.map(e =>
-                            <option value={e.id_cd_doc} disabled={this.state.cd_id_to_tssr.find(f => f.cd_id === e.cd_id)}>{e.cd_id}</option>
+                            <option value={e.id_cd_doc}>{e.cd_id}</option>
                           )}
                         </Input>
                       </td>
