@@ -728,7 +728,7 @@ class TSSRBoq extends Component {
       }
       const dataHeader = this.state.view_tech_header_table;
 
-      let ppIdRow = ["Tower ID", "Program", "SOW", "BOQ Configuration", "SAP Number", "QTY TSSR", "Qty Delta"];
+      let ppIdRow = ["TSSR No", "Tower ID", "Program", "SOW", "BOQ Configuration", "SAP Number", "QTY TSSR", "Qty Delta"];
 
       ws.addRow(ppIdRow);
       for(let i = 0; i < dataSites.length ; i++){
@@ -739,12 +739,12 @@ class TSSRBoq extends Component {
           if(dataConfigDelta !== undefined){
             qty_delta = dataConfigDelta.qty;
           }
-          ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty, qty_delta]);
+          ws.addRow([dataTech.no_tssr_boq,dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty, qty_delta]);
         }
       }
 
       const MRFormat = await wb.xlsx.writeBuffer();
-      saveAs(new Blob([MRFormat]), 'TSSR BOQ Vertical Report.xlsx');
+      saveAs(new Blob([MRFormat]), 'TSSR BOQ Vertical '+dataTech.no_tssr_boq+' Report.xlsx');
     }
 
     exportFormatTSSRUpdate = async () =>{
@@ -1158,7 +1158,7 @@ class TSSRBoq extends Component {
       const wb = new Excel.Workbook();
       const ws = wb.addWorksheet();
 
-      ws.addRow(["bam_id", "tssr_id", "tower_id", "plant_spec_number", "bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "material_type"]);
+      ws.addRow(["bam_id", "tssr_id", "tower_id", "plant_spec_number", "config_id", "bundle_id", "bundle_name", "bundle_qty", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "material_type", "material_origin"]);
       for(let i = 0; i < dataSitePSCreate.length; i++ ){
         let dataPreview = await this.postDatatoAPINODE('/plantspec/getTssrData2', {"data" : [{"techBoqId": this.state.data_tssr_boq._id, "siteId": dataSitePSCreate[i].system_site_id}]});
         if(dataPreview.data !== undefined){
@@ -1168,7 +1168,7 @@ class TSSRBoq extends Component {
             for(let j = 0; j < respondSaveTSSR.data.materialData.length; j++){
               const material = respondSaveTSSR.data.materialData[j];
               const findBundle = respondSaveTSSR.data.packageData.find(e => e._id === material.id_mr_pp_doc);
-              ws.addRow([material._id, findBundle !== undefined ? findBundle.no_tssr_boq_site : null, findBundle !== undefined ? findBundle.site_id : null, findBundle !== undefined ? findBundle.no_plantspec : null, findBundle !== undefined ? findBundle.pp_id : null, findBundle !== undefined ? findBundle.product_name : null, findBundle !== undefined ? findBundle.program : null, material.material_id_plan, material.material_name_plan, material.material_id, material.material_name, material.uom, material.qty, findBundle !== undefined ? findBundle.product_type : null ])
+              ws.addRow([material._id, findBundle !== undefined ? findBundle.no_tssr_boq_site : null, findBundle !== undefined ? findBundle.site_id : null, findBundle !== undefined ? findBundle.no_plantspec : null, findBundle !== undefined ? findBundle.config_id : null, findBundle !== undefined ? findBundle.pp_id : null, findBundle !== undefined ? findBundle.product_name : null, findBundle !== undefined ? findBundle.qty : null, findBundle !== undefined ? findBundle.program : null, material.material_id_plan, material.material_name_plan, material.material_id, material.material_name, material.uom, material.qty, findBundle !== undefined ? findBundle.product_type : null, material.material_origin ])
             }
           }else{
             returnErrorCreate.push(dataSitePSCreate[i].site_id);

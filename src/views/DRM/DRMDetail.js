@@ -696,11 +696,7 @@ class DRMList extends React.Component {
       "system",
       "optic_rru",
       "area",
-<<<<<<< HEAD
       "atp_doc_reviewed",
-=======
-      "atp_doc_review",
->>>>>>> 2dcbce154ded558c7cfc04536e186d3abcce8a45
       "verification_date",
       "verification_status",
       "verification_pic",
@@ -751,11 +747,7 @@ class DRMList extends React.Component {
         download_all.system,
         download_all.optic_rru,
         download_all.area,
-<<<<<<< HEAD
         download_all.atp_doc_reviewed,
-=======
-        download_all.atp_doc_review,
->>>>>>> 2dcbce154ded558c7cfc04536e186d3abcce8a45
         download_all.verification_date,
         download_all.verification_status,
         download_all.verification_pic,

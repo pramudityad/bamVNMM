@@ -150,7 +150,9 @@ const LoaderPage = React.lazy(() => import('./views/DefaultView/LoaderPage'));
 
 const BlankPage = React.lazy(() => import('./containers/DefaultLayout/LoginSSO'));
 
-
+const MRAList  = React.lazy(() => import('./views/MRA/MRAList'));
+const MRANeedConfirm  = React.lazy(() => import('./views/MRA/MRANeedConfirm'));
+const MRADetail  = React.lazy(() => import('./views/MRA/MRADetail'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -318,6 +320,10 @@ const routes = [
   { path: '/prt-list/edit/:id', exact: true, name: 'PRT Edit', component: EditPRPO },
 
   { path: '/blank-page', exact: true, name: 'BlanK Page', component: BlankPage },
+
+  { path: '/mra-list', exact: true, name: 'MRA List', component: MRAList },
+  { path: '/mra-list/detail/:id', exact: true, name: 'MRA Detail', component: MRADetail },
+  { path: '/mra-list-need-confirm', exact: true, name: 'MRA Detail', component: MRANeedConfirm },
 
 ];
 

@@ -499,8 +499,8 @@ class CPODatabase extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["po_number","date","currency","payment_terms","shipping_terms", "contract", "contact"]);
-    ws.addRow(["PO0001","2020-02-21","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com"]);
+    ws.addRow(["po_number","date","expired_month","currency","payment_terms","shipping_terms", "contract", "contact"]);
+    ws.addRow(["PO0001","2020-02-21","6","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'CPO Level 1 Template.xlsx');

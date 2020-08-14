@@ -718,6 +718,7 @@ class BulkAssignment extends Component {
               <option value="CME">CME</option>
               <option value="Power">Power</option>
               <option value="SACME">SACME</option>
+              <option value="ADDITIONAL">Additional</option>
             </select>
           </CardHeader>
           <CardBody className='card-UploadBoq'>

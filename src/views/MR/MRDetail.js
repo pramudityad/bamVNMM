@@ -140,6 +140,7 @@ class MRDetail extends Component {
     this.toggleLoading = this.toggleLoading.bind(this);
     this.exportMRFormat = this.exportMRFormat.bind(this);
     this.updateMR = this.updateMR.bind(this);
+    this.downloadMaterialSerialNumberReport = this.downloadMaterialSerialNumberReport.bind(this);
   }
 
   toggleLoading(){
@@ -1213,7 +1214,16 @@ class MRDetail extends Component {
     for (let i = 0; i < dataItemMR.length; i++) {
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
-        ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, dataMR.no_shipment, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
+        if(dataMatIdx.serial_numbers !== undefined && dataMatIdx.serial_numbers.length !== 0){
+          let serial_number = dataMatIdx.serial_numbers.find(e => e.flag_name === "obd");
+          if(serial_number !== undefined){
+            for(let k = 0; k < serial_number.list_of_sn.length; k++){
+              ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, dataMR.no_shipment, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, serial_number.list_of_sn[k], null, null, null, null]);
+            }
+          }
+        }else{
+          ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, dataMR.no_shipment, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
+        }
       }
     }
 
@@ -1221,6 +1231,49 @@ class MRDetail extends Component {
     saveAs(
       new Blob([allocexport]),
       "TRACY Material MR " + dataMR.mr_id + ".xlsx"
+    );
+  }
+
+  async downloadMaterialSerialNumberReport() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataMR = this.state.data_mr;
+    const dataItemMR = this.state.list_mr_item;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    let headerRow = ["MR_ID", "SKU", "SERIAL_NUMBER", "DESCRIPTION", "SCAN_BY", "LASTEST_UPDATE_DATE_SCAN", "ACCOUNT", "WAREHOUSE"];
+    ws.addRow(headerRow);
+    let dateDispatch = null;
+    const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
+    if(dispatchData !== undefined && dispatchData.mr_status_date !== undefined && dispatchData.mr_status_date !== null){
+      let dateDispatchNew = new Date(dispatchData.mr_status_date);
+      dateDispatch = dateDispatchNew.getFullYear().toString()+(dateDispatchNew.getMonth()+1).toString().padStart(2, '0')+dateDispatchNew.getDate().toString().padStart(2, '0');
+    }
+    const dataSite = dataMR.site_info[0].site_id
+    for (let i = 0; i < dataItemMR.length; i++) {
+      for (let j = 0; j < dataItemMR[i].materials.length; j++) {
+        let dataMatIdx = dataItemMR[i].materials[j];
+        if(dataMatIdx.serial_numbers !== undefined && dataMatIdx.serial_numbers.length !== 0){
+          let serial_number = dataMatIdx.serial_numbers.find(e => e.flag_name === "obd");
+          if(serial_number !== undefined){
+            for(let k = 0; k < serial_number.list_of_sn.length; k++){
+              ws.addRow([dataMR.mr_id, dataMatIdx.material_id, serial_number.list_of_sn[k], dataMatIdx.material_name, serial_number.updated_by, serial_number.updated_on, "XL", dataMR.origin.value]);
+            }
+          }
+        }else{
+          ws.addRow([dataMR.mr_id, dataMatIdx.material_id, null, dataMatIdx.material_name, null, null, "XL", dataMR.origin.value]);
+        }
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([allocexport]),
+      "SERIAL NUMBER Material MR " + dataMR.mr_id + " REPORT.xlsx"
     );
   }
 
@@ -1775,6 +1828,14 @@ class MRDetail extends Component {
                               </div>
                             </Fragment>
                           )}
+                          <Fragment>
+                            <div className="mr-detail__flex-body--25">
+                              <div className="mr-detail__body--header-detail">
+                                <span>MRA</span>
+                              </div>
+                              <div>{this.state.data_mr["matreq-ra"] !== undefined ? this.state.data_mr["matreq-ra"].map(mra => mra.mra_id).join(", ") : null}</div>
+                            </div>
+                          </Fragment>
                         </div>
 
                         <hr className="mr-detail__line" />
@@ -1912,7 +1973,7 @@ class MRDetail extends Component {
                           <tbody>
                             {this.state.data_mr !== null && (
                               <Fragment>
-                              {(this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (
+                              {(this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1)  ? (
                                 <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'left', marginRight : '10px'}}>
                                   <DropdownToggle caret color="secondary">
                                     <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
@@ -1923,11 +1984,14 @@ class MRDetail extends Component {
                                       <DropdownItem onClick={this.downloadMaterialMRTRACY}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY Format</DropdownItem>
 
                                     )}
+                                    <DropdownItem onClick={this.downloadMaterialSerialNumberReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>SN Report</DropdownItem>
                                     <DropdownItem onClick={this.downloadMaterialMRReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MR PS</DropdownItem>
                                     <DropdownItem onClick={this.downloadMaterialMRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
                                     <DropdownItem onClick={this.downloadMaterialMRUpload2}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format NOK</DropdownItem>
                                   </DropdownMenu>
                                 </Dropdown>
+                              ) : (
+                                <Button onClick={this.downloadMaterialMRReport}>Download MR PS</Button>
                               )}
                                 {this.state.mr_site_FE !== null &&
                                 this.state.data_mr.mr_type !== "Relocation" &&
@@ -1955,9 +2019,9 @@ class MRDetail extends Component {
                                         &nbsp;
                                       </td>
                                     </tr>
-                                    {status_can_edit_material.includes(
+                                    {((this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1) && status_can_edit_material.includes(
                                       this.state.data_mr.current_mr_status
-                                    ) && (
+                                    )) && (
                                       <tr>
                                         <td style={{ fontSize: "12px" }}>
                                           Change to Material Variant :{" "}
@@ -1966,9 +2030,9 @@ class MRDetail extends Component {
                                     )}
                                   </Fragment>
                                 )}
-                                {status_can_edit_material.includes(
+                                {((this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1) && status_can_edit_material.includes(
                                   this.state.data_mr.current_mr_status
-                                ) && (
+                                )) && (
                                   <tr>
                                     <td style={{ width: "550px" }}>
                                       <input
@@ -2570,7 +2634,7 @@ class MRDetail extends Component {
                       {this.state.data_mr !== null && this.state.data_mr.no_plantspec !== null && this.state.data_mr.mr_status.findIndex(st => st.mr_status_name === "LOADING_PROCESS" && st.mr_status_value === "FINISH") === -1 ?
                       (
                         <Fragment>
-                        {((this.state.data_mr.current_mr_status === "PLANTSPEC ASSIGNED" || this.state.data_mr.current_mr_status === "PLANTSPEC NOT ASSIGNED") || (this.state.userRole.findIndex(e => e === "BAM-LDM") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 )) && (
+                        {((this.state.data_mr.current_mr_status === "MR UPDATED" || this.state.data_mr.current_mr_status === "MR REQUESTED" || this.state.data_mr.current_mr_status === "PLANTSPEC ASSIGNED" || this.state.data_mr.current_mr_status === "PLANTSPEC NOT ASSIGNED") || (this.state.userRole.findIndex(e => e === "BAM-LDM") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 )) && (
                           <Fragment>
                           <Button
                             color="warning"

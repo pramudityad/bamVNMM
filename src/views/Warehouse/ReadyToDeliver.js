@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import { Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
@@ -7,12 +8,17 @@ import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
-import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction';
+import {apiSendEmail} from '../../helper/asyncFunction';
 
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
+
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -43,6 +49,34 @@ class ReadyToDeliver extends Component {
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
     this.proceedMilestone = this.proceedMilestone.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState(prevState => ({
+      modal_loading: !prevState.modal_loading
+    }));
+  }
+
+  async getDataFromAPIEXEL(url){
+    console.log("url", url);
+    try {
+      let respond = await axios.get(API_URL_XL +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
+    }
   }
 
   async getDataFromAPI(url) {
@@ -218,9 +252,27 @@ class ReadyToDeliver extends Component {
     const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
+    let dataMR = this.state.mr_list.find(e => e._id === _id);
+    let dataProject = undefined;
+    if(dataMR !== undefined){
+      dataProject = await this.getDataProject(dataMR.project_name);
+    }
     let res = await this.patchDatatoAPINODE('/matreq/confirmRTD/' + _id);
     if (res !== undefined) {
       if (res.data !== undefined) {
+        if(dataProject !== undefined){
+          // let linkImp = "https://dev.bam-id.e-dpm.com/mr-detail/"+id_doc;
+          let linkImp = "#";
+          const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following MR have reached the Joint Check stage<br/><br/><i>Site</i>: <b>"+dataMR.site_info.map(site_info => site_info.site_id).join(' , ')+"</b> <br/><i>Project</i>: <b>"+dataMR.project_name+"</b><br/><i>MR</i>: <b>"+dataMR.mr_id+"</b><br/><br/>RTD Milestone is done by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the MR detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+          let dataEmail = {
+            // "to": cpm_email+'; aminuddin.fauzan@ericsson.com',
+            "to": dataProject.Email_CPM_Name+' ;',
+            "subject":"[MR Joint Checked] MR "+dataProject.mr_id,
+            "body": bodyEmail
+          }
+          // console.log(dataEmail)
+          const sendEmail = await apiSendEmail(dataEmail);
+        }
         this.setState({ action_status: "success" });
         this.getMRList();
         // setTimeout(function(){this.setState({action_status : null, action_message : null}) }, 2000);
@@ -402,6 +454,23 @@ class ReadyToDeliver extends Component {
             </Card>
           </Col>
         </Row>
+        {/* Modal Loading */}
+        <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className}>
+          <ModalBody>
+            <div style={{textAlign : 'center'}}>
+              <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+            </div>
+            <div style={{textAlign : 'center'}}>
+              Loading ...
+            </div>
+            <div style={{textAlign : 'center'}}>
+              System is processing ...
+            </div>
+          </ModalBody>
+          <ModalFooter>
+          </ModalFooter>
+        </Modal>
+        {/* end Modal Loading */}
       </div>
     );
   }

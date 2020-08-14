@@ -8,6 +8,7 @@ import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import {connect} from 'react-redux';
 import ActionType from '../../redux/reducer/globalActionType';
+import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -38,11 +39,21 @@ class TssrList extends Component {
       totalData : 0,
       perPage : 10,
       filter_list : {},
-      tssr_all : []
+      tssr_all : [],
+      modal_loading : false
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
+    this.getTssrListMigration = this.getTssrListMigration.bind(this);
+    this.printExcel = this.printExcel.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState(prevState => ({
+      modal_loading: !prevState.modal_loading
+    }));
   }
 
   async getDataFromAPIBAM(url) {
@@ -126,6 +137,57 @@ class TssrList extends Component {
         this.setState({tssr_list : res.data.data, totalData : totalData})
       }
     })
+  }
+
+  async getTssrListMigration(){
+    const page = this.state.activePage;
+    const maxPage = 20;
+    let arrayIDTSSR = [];
+    let filter_array = [];
+    // (this.state.filter_list["no_plantspec"] !== null && this.state.filter_list["no_plantspec"] !== undefined) && (filter_array.push('"no_plantspec":{"$regex" : "' + this.state.filter_list["no_plantspec"] + '", "$options" : "i"}'));
+    // (this.state.filter_list["project_name"] !== null && this.state.filter_list["project_name"] !== undefined) && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list["project_name"] + '", "$options" : "i"}'));
+    // (this.state.filter_list["tower_id"] !== null && this.state.filter_list["tower_id"] !== undefined) && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list["tower_id"] + '", "$options" : "i"}'));
+    // (this.state.filter_list["current_status"] !== null && this.state.filter_list["current_status"] !== undefined) && (filter_array.push('"current_status":{"$regex" : "' + this.state.filter_list["current_status"] + '", "$options" : "i"}'));
+    // (this.state.filter_list["submission_status"] !== null && this.state.filter_list["submission_status"] !== undefined) && (filter_array.push('"submission_status":{"$regex" : "' + this.state.filter_list["submission_status"] + '", "$options" : "i"}'));
+    // (this.state.filter_list["mr_id"] !== null && this.state.filter_list["mr_id"] !== undefined) && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list["mr_id"] + '", "$options" : "i"}'));
+    filter_array.push('"migration":true')
+    let whereAnd = '{' + filter_array.join(',') + '}';
+    // noPg=1&
+    // srt=_id:-1&
+    // + '&lmt=' + maxPage + '&pg=' + page
+    let dataMigrationTSSR = await this.getDataFromAPINODE('/plantspec?noPg=1&q=' + whereAnd +'&v={"_id" : 1}')
+    if(dataMigrationTSSR.data !== undefined){
+      arrayIDTSSR = dataMigrationTSSR.data.data;
+      return arrayIDTSSR;
+    }
+  }
+
+  async printExcel(){
+    this.toggleLoading();
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataTSSRMigration = await this.getTssrListMigration();
+
+    ws.addRow(["bam_id", "tssr_id", "tower_id", "plant_spec_number", "config_id", "bundle_id", "bundle_name", "bundle_qty", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "material_type", "material_origin"]);
+
+    for(let a = 0; a < dataTSSRMigration.length; a++){
+      const ps = await this.getDataFromAPINODE('/plantspec/'+dataTSSRMigration[a]._id)
+      if(ps !== undefined && ps.data !== undefined && ps.data.data){
+        const dataItemTSSR = ps.data.data.packages;
+
+        for(let i = 0; i < dataItemTSSR.length; i++){
+          for(let j = 0; j < dataItemTSSR[i].materials.length; j++){
+            let dataMatIdx = dataItemTSSR[i].materials[j];
+            ws.addRow([dataMatIdx._id, dataItemTSSR[i].no_tssr_boq_site, dataItemTSSR[i].site_id, dataItemTSSR[i].no_plantspec, dataItemTSSR[i].config_id, dataItemTSSR[i].pp_id, dataItemTSSR[i].product_name, dataItemTSSR[i].qty, dataItemTSSR[i].program, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.uom, dataMatIdx.qty, dataItemTSSR[i].product_type, dataMatIdx.material_origin ]);
+          }
+        }
+
+      }
+    }
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material TSSR Migration.xlsx');
+    this.toggleLoading();
   }
 
   getDataTower(array_tower_id){
@@ -224,6 +286,9 @@ class TssrList extends Component {
                   <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Plant Spec Group List
                 </span>
                 <Link to={'/ps-bom'}><Button color="success" style={{float : 'right'}} size="sm">Create PS</Button></Link>
+                {this.state.userRole.findIndex(e => e === "Admin") !== -1 && (
+                  <Button color="success" style={{float : 'right', marginRight : '10px'}} size="sm" onClick={this.printExcel}>Donwload PS Migration</Button>
+                )}
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -290,6 +355,23 @@ class TssrList extends Component {
             </Card>
           </Col>
         </Row>
+        {/* Modal Loading */}
+        <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className}>
+          <ModalBody>
+            <div style={{textAlign : 'center'}}>
+              <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+            </div>
+            <div style={{textAlign : 'center'}}>
+              Loading ...
+            </div>
+            <div style={{textAlign : 'center'}}>
+              System is processing ...
+            </div>
+          </ModalBody>
+          <ModalFooter>
+          </ModalFooter>
+        </Modal>
+        {/* end Modal Loading */}
       </div>
     );
   }

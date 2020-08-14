@@ -89,11 +89,12 @@ class MatInboundPlan extends React.Component {
       createModal: false,
       sortType: 0,
       sortField: "",
+      filter_search : {},
     };
     this.togglePOForm = this.togglePOForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterName = debounce(this.changeFilterName, 500);
+    this.changeFilterName = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
@@ -238,11 +239,14 @@ class MatInboundPlan extends React.Component {
   }
 
   handleChangeFilter = (e) => {
+    let search = this.state.filter_search;
+    let field = e.target.name;
     let value = e.target.value;
     if (value.length === 0) {
       value = null;
     }
-    this.setState({ filter_name: value }, () => {
+    search[field] = value;
+    this.setState({ filter_search: search }, () => {
       this.changeFilterName(value);
     });
   };
@@ -251,15 +255,20 @@ class MatInboundPlan extends React.Component {
     this.toggleLoading();
     // let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
     let filter_sku =
-      this.state.filter_name === null
-        ? '{"$exists" : 1}'
-        : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+      this.state.filter_search.sku !== null && this.state.filter_search.sku !== undefined
+        ? '{"$regex" : "' + this.state.filter_search.sku + '", "$options" : "i"}'
+        : '{"$exists" : 1}';
+    let filter_project =
+      this.state.filter_search.project !== null && this.state.filter_search.project !== undefined
+        ? '{"$regex" : "' + this.state.filter_search.project + '", "$options" : "i"}'
+        : '{"$exists" : 1}';
+    let filter_owner =
+      this.state.filter_search.owner !== null && this.state.filter_search.owner !== undefined
+        ? '{"$regex" : "' + this.state.filter_search.owner + '", "$options" : "i"}'
+        : '{"$exists" : 1}';
     let getbyWH =
       '{"wh_id":"' +
-      this.props.match.params.slug +
-      '","sku":' +
-      filter_sku +
-      "}";
+      this.props.match.params.slug +'","project_name":' +filter_project+',"owner_id":'+filter_owner+',"sku":'+filter_sku+'}';
     this.getDatafromAPINODE(
       "/whInboundPlan/getWhInboundPlan?q=" +
         getbyWH +
@@ -810,7 +819,7 @@ class MatInboundPlan extends React.Component {
         this.getListSort();
       });
     }
-    
+
   }
 
   render() {
@@ -980,16 +989,37 @@ class MatInboundPlan extends React.Component {
                           display: "inline-flex",
                         }}
                       >
-                    <input
-                      className="search-box-material"
-                      type="text"
-                      name="filter"
-                      placeholder="Search SKU"
-                      // onChange={(e) => this.SearchFilter(e)}
-                      onChange={this.handleChangeFilter}
-                      value={this.state.filter_name}
-                    />
-                    </div>  
+                      <input
+                        style={{marginLeft : '10px', marginRight : '10px'}}
+                        className="search-box-material"
+                        type="text"
+                        name="owner"
+                        placeholder="Search Owner ID"
+                        // onChange={(e) => this.SearchFilter(e)}
+                        onChange={this.handleChangeFilter}
+                        value={this.state.filter_search.owner}
+                      />
+                      <input
+                        style={{marginLeft : '10px',marginRight : '10px'}}
+                        className="search-box-material"
+                        type="text"
+                        name="project"
+                        placeholder="Search Project Name"
+                        // onChange={(e) => this.SearchFilter(e)}
+                        onChange={this.handleChangeFilter}
+                        value={this.state.filter_search.project}
+                      />
+                      <input
+                        style={{marginLeft : '10px',marginRight : '10px'}}
+                        className="search-box-material"
+                        type="text"
+                        name="sku"
+                        placeholder="Search SKU"
+                        // onChange={(e) => this.SearchFilter(e)}
+                        onChange={this.handleChangeFilter}
+                        value={this.state.filter_search.sku}
+                      />
+                    </div>
                   </Col>
                 </Row>
                 <Row>
