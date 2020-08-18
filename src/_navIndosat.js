@@ -26,15 +26,16 @@ export default {
           icon: 'icon-docs',
         },
         {
+          name: 'PR ',
+          url: '/list-pr',
+          icon: 'icon-tag',
+        },
+        {
           name: 'CPO DB',
           url: '/cpo-database',
           icon: 'icon-docs',
         },
-      //   {
-      //     name: 'Commercial BOQ ',
-      //     url: '/list-commercial',
-      //     icon: 'icon-tag',
-      //   },
+
       //   {
       //     name: 'CPO Database ',
       //     url: '/cpo-database',

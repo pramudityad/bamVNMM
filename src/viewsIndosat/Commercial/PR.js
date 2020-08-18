@@ -849,7 +849,7 @@ class CommercialBoq extends Component {
             <Col xl="12">
               <Card>
                 <CardHeader>
-                  <span style={{lineHeight :'2', fontSize : '17px'}}> Commercial BOQ </span>
+                  <span style={{lineHeight :'2', fontSize : '17px'}}> PR </span>
                   {this.state.data_comm_boq !== null && (
                     <React.Fragment>
                       <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
@@ -882,12 +882,36 @@ class CommercialBoq extends Component {
                                   // defaultOptions
                                   onChange={this.handleInputChange}
                               />
-                              </td>
+                              </td>                            
                               <td>
                                 <Button className="btn-success" style={{margin : '10px'}} color="success" onClick={this.saveCommtoAPI} >
                                   <i className="fa fa-save">&nbsp;&nbsp;</i>
                                   {this.state.data_tech_boq_selected === null ? 'Save' : this.state.data_tech_boq_sites_selected.length !== 0 ? 'Save' : 'Loading..'}
                                 </Button>
+                              </td>
+                            </tr>
+                            &nbsp;&nbsp;&nbsp;
+                            <tr>
+                            <td width="15%">Program</td>
+                              <td width="60%">
+                                <Select
+                                  cacheOptions
+                                  // options={this.state.list_tech_boq_selection}
+                                  // defaultOptions
+                                  onChange={this.handleInputChange}
+                              />
+                              </td>
+                            </tr>
+                            &nbsp;&nbsp;&nbsp;
+                            <tr>
+                            <td width="15%">Project</td>
+                              <td width="60%">
+                                <Select
+                                  cacheOptions
+                                  // options={this.state.list_tech_boq_selection}
+                                  // defaultOptions
+                                  onChange={this.handleInputChange}
+                              />
                               </td>
                             </tr>
                           </tbody>
@@ -918,7 +942,7 @@ class CommercialBoq extends Component {
                       <tbody>
                         <tr style={{fontWeight : '425', fontSize : '23px'}}>
                           <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>
-                          {this.props.match.params.id === undefined ? "CREATE" : ""} COMMERCIAL BOQ
+                          {this.props.match.params.id === undefined ? "CREATE" : ""} PR
                           </td>
                         </tr>
                         {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
@@ -1020,17 +1044,17 @@ class CommercialBoq extends Component {
                     <Table hover bordered responsive size="sm" width="100%">
                       <thead class="table-commercial__header--fixed">
                         <tr>
-                          <th>Tower ID</th>
-                          <th>Program</th>
-                          <th>SOW</th>
-                          <th>Category</th>
-                          <th>Config ID</th>
-                          <th>SAP Description</th>
-                          <th>Qty</th>
-                          <th>Unit Price after Incentive (USD)</th>
-                          <th>Unit Price after Incentive (IDR)</th>
+                          <th>Project Name</th>
+                          <th>Tax Code</th>
+                          <th>Short Text</th>
+                          <th>Item Text</th>
+                          <th>Materials Quantity</th>
+                          <th>Site Name</th>
+                          <th>Site ID</th>
+                          <th>NE ID</th>
+                          {/* <th>Unit Price after Incentive (IDR)</th>
                           <th>Total Price after Incentive (USD)</th>
-                          <th>Total Price after Incentive (IDR)</th>
+                          <th>Total Price after Incentive (IDR)</th> */}
                         </tr>
                       </thead>
                       <tbody>
@@ -1107,39 +1131,7 @@ class CommercialBoq extends Component {
                                   onChange={this.handleChangeUnitPriceUSD}
                                   value={!this.state.UnitPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive_usd : this.state.UnitPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
                                 />
-                              </td>
-                              <td style={{width : '120px'}}>
-                                <Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeUnitPriceIDR}
-                                  value={!this.state.UnitPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive : this.state.UnitPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
-                                />
-                              </td>
-                              <td style={{width : '120px'}}>
-                                {/* }<Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeTotalPriceUSD}
-                                  value={!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
-                                /> */}
-                                {!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd.toFixed(2) : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id).toFixed(2)}
-                              </td>
-                              <td style={{width : '120px'}}>
-                                {/* }<Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeTotalPriceIDR}
-                                  value={!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
-                                /> */}
-                                {!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive.toFixed(2) : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id).toFixed(2)}
-                              </td>
+                              </td>                   
                             </tr>
                           ))
                         }

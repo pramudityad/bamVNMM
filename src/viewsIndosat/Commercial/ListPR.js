@@ -262,7 +262,7 @@ class ListCommercial extends Component {
             <React.Fragment>
               <span style={{position:'absolute',marginTop:'8px'}}>Commercial BOQ List</span>
               <div className="card-header-actions" style={{marginRight:'5px'}}>
-                <Link to='/list-commercial/creation'>
+                <Link to='/list-pr/creation'>
                 <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
                 </Link>
               </div>
