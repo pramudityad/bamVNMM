@@ -47,7 +47,7 @@ const routes = [
 
   { path: '/list-pr', exact: true, name: 'List PR', component: ListPR },
   { path: '/list-pr/creation', exact: true, name: 'PR Creation', component: DetailPR },
-  { path: '/list-pr/detail/', exact: true, name: 'Detail PR', component: DetailPR },
+  { path: '/list-pr/detail/:id', exact: true, name: 'Detail PR', component: DetailPR },
   // { path: '/list-commercial/detail-po/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercialPO },
   { path: '/approval-commercial/:id', exact: true, name: 'Approval for Commercial BOQ', component: ApprovalCommercial },
   { path: '/submission-commercial/:id', exact: true, name: 'Submission Commercial BOQ', component: SubmissionCommBoq },
