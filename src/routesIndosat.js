@@ -10,9 +10,9 @@ const ListTechnical = React.lazy(() => import('./viewsIndosat/Technical/ListTech
 const DetailTechnical = React.lazy(() => import('./viewsIndosat/Technical/TechnicalBoq'));
 const SummaryBoq = React.lazy(() => import('./viewsIndosat/Technical/SummaryBoq'));
 
-const ListCommercial = React.lazy(() => import('./viewsIndosat/Commercial/ListCommercial'));
-const DetailCommercial = React.lazy(() => import('./viewsIndosat/Commercial/CommercialBoq'));
-const DetailCommercialPO = React.lazy(() => import('./viewsIndosat/Commercial/CommercialBoqPO'));
+const ListPR = React.lazy(() => import('./viewsIndosat/Commercial/ListPR'));
+const DetailPR = React.lazy(() => import('./viewsIndosat/Commercial/PR'));
+// const DetailCommercialPO = React.lazy(() => import('./viewsIndosat/Commercial/CommercialBoqPO'));
 const ApprovalCommercial = React.lazy(() => import('./viewsIndosat/Commercial/CommercialBoqApproval'));
 const SubmissionCommBoq = React.lazy(() => import('./viewsIndosat/Commercial/SubmissionCommBoq'));
 
@@ -45,10 +45,10 @@ const routes = [
   { path: '/new-technical', exact: true, name: 'Detail Technical BOQ', component: DetailTechnical },
   { path: '/summary-boq/:id', exact: true, name: 'Detail Summary BOQ', component: SummaryBoq },
 
-  { path: '/list-commercial', exact: true, name: 'List Commercial BOQ', component: ListCommercial },
-  { path: '/list-commercial/creation', exact: true, name: 'Commercial BOQ Creation', component: DetailCommercial },
-  { path: '/list-commercial/detail/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercial },
-  { path: '/list-commercial/detail-po/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercialPO },
+  { path: '/list-pr', exact: true, name: 'List PR', component: ListPR },
+  { path: '/list-pr/creation', exact: true, name: 'PR Creation', component: DetailPR },
+  { path: '/list-pr/detail/', exact: true, name: 'Detail PR', component: DetailPR },
+  // { path: '/list-commercial/detail-po/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercialPO },
   { path: '/approval-commercial/:id', exact: true, name: 'Approval for Commercial BOQ', component: ApprovalCommercial },
   { path: '/submission-commercial/:id', exact: true, name: 'Submission Commercial BOQ', component: SubmissionCommBoq },
 
