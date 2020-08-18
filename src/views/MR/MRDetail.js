@@ -1979,7 +1979,7 @@ class MRDetail extends Component {
                                     <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
                                   </DropdownToggle>
                                   <DropdownMenu>
-                                    <DropdownItem header>TSSR File</DropdownItem>
+                                    <DropdownItem header>MR File</DropdownItem>
                                     {((this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 ) && this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
                                       <DropdownItem onClick={this.downloadMaterialMRTRACY}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY Format</DropdownItem>
 

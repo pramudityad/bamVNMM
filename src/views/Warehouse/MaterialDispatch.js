@@ -1,5 +1,9 @@
 import React, { Component } from 'react';
 import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import { Dropdown,
+DropdownToggle,
+DropdownMenu,
+DropdownItem } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
@@ -33,7 +37,8 @@ class MaterialDispatch extends Component {
       totalData: 0,
       perPage: 10,
       filter_list: new Array(14).fill(""),
-      mr_all: []
+      mr_all: [],
+      dropdownOpen: new Array(10).fill(false),
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -41,6 +46,16 @@ class MaterialDispatch extends Component {
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
+    this.toggleDropdown = this.toggleDropdown.bind(this);
+  }
+
+  toggleDropdown(i) {
+    const newArray = this.state.dropdownOpen.map((element, index) => {
+      return (index === i ? !element : false);
+    });
+    this.setState({
+      dropdownOpen: newArray,
+    });
   }
 
   async getDataFromAPI(url) {
@@ -220,6 +235,51 @@ class MaterialDispatch extends Component {
     );
   }
 
+  async downloadMaterialSerialNumberReport(_id_MR) {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    let dataItemMR = [];
+    let dataMR = {};
+    let resMR = await this.getDataFromAPINODE("/matreq/" + _id_MR);
+    if (resMR.data !== undefined) {
+      dataMR = resMR.data;
+      dataItemMR = dataMR.packages;
+    }
+
+    let headerRow = ["MR_ID", "SKU", "SERIAL_NUMBER", "DESCRIPTION", "SCAN_BY", "LASTEST_UPDATE_DATE_SCAN", "ACCOUNT", "WAREHOUSE"];
+    ws.addRow(headerRow);
+    let dateDispatch = null;
+    const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
+    if(dispatchData !== undefined && dispatchData.mr_status_date !== undefined && dispatchData.mr_status_date !== null){
+      let dateDispatchNew = new Date(dispatchData.mr_status_date);
+      dateDispatch = dateDispatchNew.getFullYear().toString()+(dateDispatchNew.getMonth()+1).toString().padStart(2, '0')+dateDispatchNew.getDate().toString().padStart(2, '0');
+    }
+    const dataSite = dataMR.site_info[0].site_id
+    for (let i = 0; i < dataItemMR.length; i++) {
+      for (let j = 0; j < dataItemMR[i].materials.length; j++) {
+        let dataMatIdx = dataItemMR[i].materials[j];
+        if(dataMatIdx.serial_numbers !== undefined && dataMatIdx.serial_numbers.length !== 0){
+          let serial_number = dataMatIdx.serial_numbers.find(e => e.flag_name === "obd");
+          if(serial_number !== undefined){
+            for(let k = 0; k < serial_number.list_of_sn.length; k++){
+              ws.addRow([dataMR.mr_id, dataMatIdx.material_id, serial_number.list_of_sn[k], dataMatIdx.material_name, serial_number.updated_by, serial_number.updated_on, "XL", dataMR.origin.value]);
+            }
+          }
+        }else{
+          ws.addRow([dataMR.mr_id, dataMatIdx.material_id, null, dataMatIdx.material_name, null, null, "XL", dataMR.origin.value]);
+        }
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([allocexport]),
+      "SERIAL NUMBER Material MR " + dataMR.mr_id + " REPORT.xlsx"
+    );
+  }
+
   componentDidMount() {
     this.getMRList();
     // this.getAllMR();
@@ -321,7 +381,18 @@ class MaterialDispatch extends Component {
                           {list.current_mr_status === "LOADING PROCESS FINISH" ? (
                             "Waiting Dispatch"
                           ) : (
-                              <React.Fragment>Finish {(this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 && this.state.userRole.indexOf("BAM-Mover") === -1)&& (<Button color="info" size="sm" onClick={() => this.downloadMRTRACY(list._id)}>TRACY</Button>)}</React.Fragment>
+                              <React.Fragment>Finish {(this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 && this.state.userRole.indexOf("BAM-Mover") === -1)&& (
+                                <Dropdown size="sm" isOpen={this.state.dropdownOpen[i]} toggle={() => {this.toggleDropdown(i);}}>
+                                  <DropdownToggle caret color="secondary">
+                                    <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>File
+                                  </DropdownToggle>
+                                  <DropdownMenu>
+                                    <DropdownItem header>MR File</DropdownItem>
+                                    <DropdownItem onClick={() => this.downloadMRTRACY(list._id)}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY</DropdownItem>
+                                    <DropdownItem onClick={() => this.downloadMaterialSerialNumberReport(list._id)}> <i className="fa fa-file-text-o" aria-hidden="true"></i>SN Report</DropdownItem>
+                                  </DropdownMenu>
+                                </Dropdown>
+                              )}</React.Fragment>
                             )}
                         </td>
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>

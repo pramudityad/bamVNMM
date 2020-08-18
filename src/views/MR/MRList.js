@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import { Dropdown,DropdownToggle,DropdownMenu,DropdownItem } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
@@ -37,6 +38,7 @@ class MRList extends Component {
       filter_list: new Array(14).fill(""),
       mr_all: [],
       modal_loading: false,
+      dropdownOpen: new Array(1).fill(false),
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -45,7 +47,17 @@ class MRList extends Component {
     this.getMRList = this.getMRList.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.downloadAllMRMigration = this.downloadAllMRMigration.bind(this);
+    this.toggleDropdown = this.toggleDropdown.bind(this);
     // this.getAllMR = this.getAllMR.bind(this);
+  }
+
+  toggleDropdown(i) {
+    const newArray = this.state.dropdownOpen.map((element, index) => {
+      return (index === i ? !element : false);
+    });
+    this.setState({
+      dropdownOpen: newArray,
+    });
   }
 
   async getDataFromAPI(url) {
@@ -285,10 +297,18 @@ class MRList extends Component {
                 	<Link to={'/bulk-mr-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR Bulk</Button></Link>
                 </React.Fragment>
                 )}
-                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download MR List</Button>
-                {(this.state.userRole.findIndex(e => e === "BAM-Engineering") === -1 && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-LDM") === -1) && (
-                  <Button style={downloadMR} outline color="success" onClick={this.downloadAllMRMigration} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Format MR List Status Migration</Button>
-                )}
+                <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{ float: 'right', marginRight : '10px' }}>
+                  <DropdownToggle caret color="secondary">
+                    <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>File
+                  </DropdownToggle>
+                  <DropdownMenu>
+                    <DropdownItem header>MR File</DropdownItem>
+                    <DropdownItem onClick={() => this.downloadMRlist}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MR List</DropdownItem>
+                    {(this.state.userRole.findIndex(e => e === "BAM-Engineering") === -1 && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-LDM") === -1) && (
+                    <DropdownItem onClick={() => this.downloadAllMRMigration}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Format MR List Status Migration</DropdownItem>
+                    )}
+                  </DropdownMenu>
+                </Dropdown>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
