@@ -341,7 +341,7 @@ class ListCommercial extends Component {
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
                               <Link to={'/list-pr/detail/'+boq._id}>
                                 <Button className="btn-primary" size="sm" color="primary" style={{marginRight : '10px'}}>
-                                  <i className="fas fa-edit" aria-hidden="true"></i>&nbsp; Edit
+                                  <i className="fas fa-edit" aria-hidden="true"></i>&nbsp; Detail
                                 </Button>
                               </Link>
                               {/* }<Link to={'/approval-commercial/'+boq._id}>
@@ -349,11 +349,11 @@ class ListCommercial extends Component {
                                   <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; Approval
                                 </Button>
                               </Link> */}
-                              <Link to={'/submission-commercial/'+boq._id}>
+                              {/* <Link to={'/submission-commercial/'+boq._id}>
                                 <Button size="sm" color="secondary" style={{marginRight : '10px'}}>
                                   <i className="far fa-check-square" aria-hidden="true"></i>&nbsp; Submission
                                 </Button>
-                              </Link>
+                              </Link> */}
                             </td>
                         </tr>
                     )}
