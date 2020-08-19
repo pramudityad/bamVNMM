@@ -1200,7 +1200,7 @@ class CommercialBoq extends Component {
           "",
           "",
           "",
-          data_non_svc[i].product_name,
+          this.state.data_comm_boq.project_name,
           "TPS",
           "ZCPX",
           "500199",
@@ -1224,7 +1224,7 @@ class CommercialBoq extends Component {
           data_non_svc[i].tax_code,
           "",
           "",
-          data_non_svc[i].product_name + "-" + data_non_svc[i].pp_id,
+          data_non_svc[i].item_text + "-" + data_non_svc[i].pp_id,
           "",
           data_non_svc[i].material_quantity,
           "",
@@ -1268,7 +1268,7 @@ class CommercialBoq extends Component {
           "",
           "",
           "",
-          data_svc[i].product_name,
+          this.state.data_comm_boq.project_name,
           "TPS",
           "ZCPX",
           "500199",
@@ -1354,7 +1354,7 @@ class CommercialBoq extends Component {
           "",
           "",
           "",
-          data_svc[i].product_name + "-" + data_svc[i].pp_id,
+          data_svc[i].item_text + "-" + data_svc[i].pp_id,
           "",
           "",
           "",
@@ -1655,7 +1655,7 @@ class CommercialBoq extends Component {
                         {data_non_svc.map((row, i) => (
                           <tr key={row._id}>
                             <td style={{ verticalAlign: "middle" }}>
-                              {row.project_name}
+                              {this.state.data_comm_boq.project_name}
                             </td>
                             <td style={{ verticalAlign: "middle" }}>
                               {row.tax_code}
@@ -1664,7 +1664,7 @@ class CommercialBoq extends Component {
                               {row.short_text}
                             </td>
                             <td style={{ verticalAlign: "middle" }}>
-                              {row.product_name}-{row.pp_id}
+                              {row.item_text}-{row.pp_id}
                             </td>
                             <td style={{ verticalAlign: "middle" }}>
                               {row.material_quantity}
@@ -1684,7 +1684,7 @@ class CommercialBoq extends Component {
                           <>
                             <tr key={row._id}>
                               <td style={{ verticalAlign: "middle" }}>
-                                {row.project_name}
+                                {this.state.data_comm_boq.project_name}
                               </td>
                               <td style={{ verticalAlign: "middle" }}>
                                 {row.tax_code}
@@ -1708,7 +1708,7 @@ class CommercialBoq extends Component {
                               <td></td>
 
                               <td style={{ verticalAlign: "middle" }}>
-                                {row.product_name}-{row.pp_id}
+                                {row.item_text}-{row.pp_id}
                               </td>
                               <td></td>
                               <td></td>
