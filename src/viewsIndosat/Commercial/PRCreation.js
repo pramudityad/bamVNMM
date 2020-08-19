@@ -31,7 +31,7 @@ const passwordBAM = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class CommercialBoq extends Component {
+class PRCreation extends Component {
     constructor(props) {
       super(props);
 
@@ -338,7 +338,7 @@ class CommercialBoq extends Component {
 
     getTechBoqList(){
       //srt=_id:-1
-      this.getDataFromAPINODE('/techBoqForComm').then(res => {
+      this.getDataFromAPINODE('/techBoqList?srt=_id:-1&v={"no_tech_boq" : 1, "_id" : 1}').then(res => {
         if(res.data !== undefined){
           this.setState({list_tech_boq : res.data.data}, () => {
             this.filterTechBoq("");
@@ -348,7 +348,7 @@ class CommercialBoq extends Component {
     }
 
     async getCommBoqData(_id){
-      let getComm = await this.getDataFromAPINODE('/commBoqIsat/'+_id)
+      let getComm = await this.getDataFromAPINODE('/commBoq/'+_id)
       if(getComm.data !== undefined){
         const dataComm = getComm.data;
         this.setState({data_comm_boq : dataComm.data, data_comm_boq_items : dataComm.data.site, list_version : new Array(parseInt(dataComm.data.version)+1).fill("0")});
@@ -554,14 +554,87 @@ class CommercialBoq extends Component {
       return dataCommNew
     }
 
+    getTaxCode(product_type){
+      if(product_type.toLowerCase() === "lcm" || product_type.toLowerCase() === "svc"){
+        return "V1";
+      }else{
+        return "V0";
+      }
+    }
+
     saveCommtoAPI = async () => {
       this.toggleLoading();
-      // let dataCommNew = await this.prepareDataforSaveComm(this.state.data_tech_boq_selected);
       let dataCommNew = this.state.data_tech_boq_selected;
-      let postComm = await this.postDatatoAPINODE('/commBoq/createCommercial', {"data" : [dataCommNew]});
+      let dataItemsPR = [];
+      for(let i = 0; i < dataCommNew.techBoqSite.length; i++){
+        for(let j = 0; j < dataCommNew.techBoqSite[i].siteItem.length; j++){
+          const dataItemIdx = dataCommNew.techBoqSite[i].siteItem[j];
+          const dataItemNew = {
+              "pr_item_type": dataItemIdx.product_type,
+              "id_pp_doc": dataItemIdx.id_pp_doc,
+              "pp_id": dataItemIdx.pp_id,
+              "item_text": dataItemIdx.product_name,
+              "tax_code": this.getTaxCode(dataItemIdx.product_type),
+              "short_text": dataItemIdx.physical_group,
+              "uom": dataItemIdx.uom,
+              "site_list": [
+                  {
+                      "site_name": dataCommNew.techBoqSite[i].site_name,
+                      "site_id": dataCommNew.techBoqSite[i].site_id,
+                      "ne_id": dataCommNew.techBoqSite[i].ne_id,
+                      "id_tech_boq_doc": dataCommNew.techBoqSite[i].id_tech_boq_doc,
+                      "id_tech_boq_site_doc": dataCommNew.techBoqSite[i]._id,
+                      "no_tech_boq": dataCommNew.techBoqSite[i].no_tech_boq,
+                      "id_site_doc": dataCommNew.techBoqSite[i].id_site_doc
+                  }
+              ],
+              "material_quantity": parseFloat(dataItemIdx.qty)
+          };
+          dataItemsPR.push(dataItemNew);
+        }
+        if(dataCommNew.techBoqSite[i].id_service_product_doc !== undefined && dataCommNew.techBoqSite[i].id_service_product_doc !== null){
+          const dataItemNew = {
+              "pr_item_type": "SVC",
+              "id_pp_doc": dataCommNew.techBoqSite[i].id_service_product_doc,
+              "pp_id": dataCommNew.techBoqSite[i].service_product_name,
+              "item_text": dataCommNew.techBoqSite[i].service_product_id,
+              "tax_code": this.getTaxCode("SVC"),
+              "short_text": dataCommNew.techBoqSite[i].site_name,
+              "uom": "svc",
+              "site_list": [
+                  {
+                      "site_name": dataCommNew.techBoqSite[i].site_name,
+                      "site_id": dataCommNew.techBoqSite[i].site_id,
+                      "ne_id": dataCommNew.techBoqSite[i].ne_id,
+                      "id_tech_boq_doc": dataCommNew.techBoqSite[i].id_tech_boq_doc,
+                      "id_tech_boq_site_doc": dataCommNew.techBoqSite[i]._id,
+                      "no_tech_boq": dataCommNew.techBoqSite[i].no_tech_boq,
+                      "id_site_doc": dataCommNew.techBoqSite[i].id_site_doc
+                  }
+              ],
+              "material_quantity": parseFloat(1)
+          };
+          dataItemsPR.push(dataItemNew);
+        }
+      }
+      let dataInputan = {
+        "id_project_doc": dataCommNew.id_project_doc,
+        "project_name": dataCommNew.project_name,
+        "list_of_tech": [
+            {
+                "id_tech_boq_doc": dataCommNew._id,
+                "no_tech_boq": dataCommNew.no_tech_boq,
+                "technical_version":dataCommNew.version
+            }
+        ],
+        "item" : dataItemsPR
+      }
+      // console.log("dataInputan", JSON.stringify(dataInputan));
+      // let dataCommNew = await this.prepareDataforSaveComm(this.state.data_tech_boq_selected);
+      let postComm = await this.postDatatoAPINODE('/commBoqIsat/createCommercial', {"data" : dataInputan});
       if(postComm.data !== undefined){
         this.setState({action_status : 'success'}, () => {
-          setTimeout(function() { this.setState({redirectSign : postComm.data.cboqInfo._id })}.bind(this), 2000 );
+          // setTimeout(function() { this.setState({redirectSign : postComm.data.cboqInfo._id })}.bind(this), 2000 );
         });
       }else{
         if(postComm.response !== undefined){
@@ -655,18 +728,22 @@ class CommercialBoq extends Component {
 
     handleInputChange = (newValue) => {
       this.setState({data_tech_boq_sites_selected : [], data_tech_boq_selected : null })
-      this.getTechBoqData(newValue.value)
+      this.getTechBoqData(newValue.value);
       return newValue;
     };
 
     getTechBoqData(_id_tech){
-      this.getDataFromAPINODE('/techBoqForComm/'+_id_tech).then(res => {
+      this.toggleLoading();
+      this.getDataFromAPINODE('/techBoq/'+_id_tech+'?package=1').then(res => {
         if(res.data !== undefined){
           const dataTech = res.data;
           this.setState({data_tech_boq_selected : dataTech.data});
           if(res.data.data !== undefined){
             this.setState({data_tech_boq_sites_selected : dataTech.data.techBoqSite});
           }
+          this.toggleLoading();
+        }else{
+          this.toggleLoading();
         }
       })
     }
@@ -890,284 +967,14 @@ class CommercialBoq extends Component {
                                 </Button>
                               </td>
                             </tr>
-                            &nbsp;&nbsp;&nbsp;
-                            <tr>
-                            <td width="15%">Program</td>
-                              <td width="60%">
-                                <Select
-                                  cacheOptions
-                                  // options={this.state.list_tech_boq_selection}
-                                  // defaultOptions
-                                  onChange={this.handleInputChange}
-                              />
-                              </td>
-                            </tr>
-                            &nbsp;&nbsp;&nbsp;
-                            <tr>
-                            <td width="15%">Project</td>
-                              <td width="60%">
-                                <Select
-                                  cacheOptions
-                                  // options={this.state.list_tech_boq_selection}
-                                  // defaultOptions
-                                  onChange={this.handleInputChange}
-                              />
-                              </td>
-                            </tr>
                           </tbody>
                         </table>
                         ) : (<div></div>)}
                         {/* End Show Select BOQ Technical */}
-
-                        {/* Show import XLS */}
-                        {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
-                          <React.Fragment>
-                            <input type="file" onChange={this.fileHandlerCommercial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} />
-                              <Button style={{'float' : 'right',margin : '8px'}} color="warning" onClick={this.updateCommercial} value="save">
-                                <i className="fa fa-paste">&nbsp;&nbsp;</i>
-                                Save
-                              </Button>
-                              <Button style={{'float' : 'right',margin : '8px'}} color="secondary" onClick={this.updateCommercial} value="revision">
-                                <i className="fa fa-copy">&nbsp;&nbsp;</i>
-                                Revision
-                              </Button>
-                          </React.Fragment>
-                        )}
-                        {/* End Show import XLS */}
                       </Col>
-                     </Row>
-                     <Row>
-                    <Col sm="12" md="12">
-                    <table style={{width : '100%', marginBottom : '0px'}}>
-                      <tbody>
-                        <tr style={{fontWeight : '425', fontSize : '23px'}}>
-                          <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>
-                          {this.props.match.params.id === undefined ? "CREATE" : ""} PR
-                          </td>
-                        </tr>
-                        {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
-                          <React.Fragment>
-                            <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
-                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.data_comm_boq.no_comm_boq}</td>
-                            </tr>
-                          </React.Fragment>
-                        )}
-                      </tbody>
-                    </table>
-                    <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
-                    </Col>
                   </Row>
-
-                  <div style={{padding:"10px", fontSize:'15px'}}>
-                    {this.state.data_comm_boq !== null && (
-                      <React.Fragment>
-                        <Row>
-                          <Col sm="6" md="6">
-                            <table className="table-header">
-                              <tbody>
-                                <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                                  <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>COMMERCIAL INFORMATION</td>
-                                </tr>
-                                <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                                  <td style={{width : '150px'}}>Project </td>
-                                  <td>:</td>
-                                  <td colspan="2" style={{paddingLeft:'10px'}}>{this.state.data_comm_boq.project_name}</td>
-                                </tr>
-                                <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                                  <td>Version</td>
-                                  <td>:</td>
-                                  <td colspan="2" style={{paddingLeft:'10px'}}>
-                                    <Input type="select" value={this.state.version_selected === null? this.state.data_comm_boq.version : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "100px", height : "30px"}}>
-                                      {this.state.list_version.map((e,i) =>
-                                        <option value={i}>{i}</option>
-                                      )}
-                                    </Input>
-                                  </td>
-                                </tr>
-                                <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                                  <td>Technical Boq Ref</td>
-                                  <td>:</td>
-                                  <td colspan="2" style={{paddingLeft:'10px'}}>{this.state.data_comm_boq.list_of_tech.map(e => e.no_tech_boq + "  ")}</td>
-                                </tr>
-                                <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                                  <td></td>
-                                  <td></td>
-                                  <td></td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </Col>
-                          {/* <Col sm="6" md="6">
-                            <tbody style={{float : 'right', 'marginRight' : '100px'}}>
-                              <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                                <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>PO INFORMATION</td>
-                              </tr>
-                              <tr>
-                                <td style={{width : '100px'}}>PO Number </td>
-                                <td>: &nbsp;&nbsp;</td>
-                                <td>{this.state.data_comm_boq.po_data.map(po => po.po_number + "  ")}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </Col> */}
-                        </Row>
-                      </React.Fragment>
-                    )}
-                  </div>
                   <div class='divtable'>
-                  {this.props.match.params.id === undefined ? (
-                    <Table hover bordered responsive size="sm" width="100%">
-                      <thead class="table-commercial__header--fixed">
-                        <tr>
-                          <th>Tower ID</th>
-                          <th>Tower Name</th>
-                          <th>Config ID</th>
-                          <th>Qty Deliver</th>
-                          <th>Qty Comm</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                      {this.state.data_tech_boq_sites_selected.map(site =>
-                        site.siteItemConfig.map(conf =>
-                          <tr>
-                            <td>{site.site_id}</td>
-                            <td>{site.site_name}</td>
-                            <td>{conf.config_id}</td>
-                            <td>{conf.qty}</td>
-                            <td>{conf.qty_commercial}</td>
-                          </tr>
-                        )
-                      )}
-                      </tbody>
-                    </Table>
-                  ) : (
-                    <Table hover bordered responsive size="sm" width="100%">
-                      <thead class="table-commercial__header--fixed">
-                        <tr>
-                          <th>Project Name</th>
-                          <th>Tax Code</th>
-                          <th>Short Text</th>
-                          <th>Item Text</th>
-                          <th>Materials Quantity</th>
-                          <th>Site Name</th>
-                          <th>Site ID</th>
-                          <th>NE ID</th>
-                          {/* <th>Unit Price after Incentive (IDR)</th>
-                          <th>Total Price after Incentive (USD)</th>
-                          <th>Total Price after Incentive (IDR)</th> */}
-                        </tr>
-                      </thead>
-                      <tbody>
-                      {(this.state.version_selected !== null && this.state.data_comm_boq.version !== this.state.version_selected) ?
-                        this.state.data_comm_boq_items_version.map(site =>
-                          site.itemsVersion.map(item =>
-                            <tr>
-                              <td>{item.site_id}</td>
-                              <td>{site.program}</td>
-                              <td>{site.sow}</td>
-                              <td>{item.config_type}</td>
-                              <td>{item.config_id}</td>
-                              <td>{item.sap_description}</td>
-                              <td>{item.qty}</td>
-                              <td style={{width : '75px'}}>
-                                <Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeUnitPriceUSD}
-                                  value={!this.state.UnitPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive_usd : this.state.UnitPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
-                                />
-                              </td>
-                              <td style={{width : '200px'}}>
-                                <Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeUnitPriceIDR}
-                                  value={!this.state.UnitPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive : this.state.UnitPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
-                                />
-                              </td>
-                              <td style={{width : '100px'}}>
-                                {/* }<Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeTotalPriceUSD}
-                                  value={!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
-                                /> */}
-                                {!this.state.TotalPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive_usd : this.state.TotalPriceUSDChange.get(item.site_id+' /// '+item.config_id)}
-                              </td>
-                              <td style={{width : '200px'}}>
-                                {/* }<Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeTotalPriceIDR}
-                                  value={!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id) }
-                                /> */}
-                                {!this.state.TotalPriceIDRChange.has(item.site_id+' /// '+item.config_id) ? item.total_price_incentive : this.state.TotalPriceIDRChange.get(item.site_id+' /// '+item.config_id)}
-                              </td>
-                            </tr>
-                          )) : this.state.data_comm_boq_items.map(site =>
-                          site.items.map(item =>
-                            <tr>
-                              <td>{item.site_id}</td>
-                              <td>{site.program}</td>
-                              <td>{site.sow}</td>
-                              <td>{item.config_type}</td>
-                              <td>{item.config_id}</td>
-                              <td>{item.sap_number}</td>
-                              <td>{item.qty}</td>
-                              <td style={{width : '120px'}}>
-                                <Input
-                                  type="number"
-                                  name={item.site_id+' /// '+item.config_id}
-                                  className="BoQ-style-qty"
-                                  placeholder=""
-                                  onChange={this.handleChangeUnitPriceUSD}
-                                  value={!this.state.UnitPriceUSDChange.has(item.site_id+' /// '+item.config_id) ? item.net_price_incentive_usd : this.state.UnitPriceUSDChange.get(item.site_id+' /// '+item.config_id) }
-                                />
-                              </td>
-                            </tr>
-                          ))
-                        }
-                      </tbody>
-                    </Table>
-                  )}
                   </div>
-                  {this.state.boq_comm_API !== null &&  (
-		               <React.Fragment>
-                    <div style={{marginBottom : "20px"}}>
-                      <Row style={{paddingLeft : '10px'}}>
-                        <Col sm="6" md="7">
-                          <table className="table-footer" style={{float : 'right',marginRight : '20px'}}>
-                            <tbody>
-                              <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                                <td >Technical Indentifier &nbsp;&nbsp;&nbsp;</td>
-                                <td >: &nbsp; {this.state.data_comm_boq.list_of_tech[0].no_tech_boq} </td>
-                              </tr>
-                              <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                                <td >COM BOQ Created By &nbsp;</td>
-                                <td >: &nbsp; {this.state.data_comm_boq.creator[0].email}</td>
-                              </tr>
-                              <tr style={{fontWeight : '425', fontSize : '12px'}}>
-                                <td >COM BOQ Created Date </td>
-                                <td >: &nbsp; {this.state.data_comm_boq.created_on}</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </Col>
-                        <Col sm="6" md="5">
-
-                        </Col>
-                      </Row>
-                    </div>
-		               </React.Fragment>
-                    )}
                 </CardBody>
                 <CardFooter>
                   <Row>
@@ -1268,4 +1075,4 @@ class CommercialBoq extends Component {
     }
   }
 
-  export default connect(mapStateToProps)(CommercialBoq);
+  export default connect(mapStateToProps)(PRCreation);

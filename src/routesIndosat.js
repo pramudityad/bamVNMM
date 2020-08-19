@@ -12,6 +12,8 @@ const SummaryBoq = React.lazy(() => import('./viewsIndosat/Technical/SummaryBoq'
 
 const ListPR = React.lazy(() => import('./viewsIndosat/Commercial/ListPR'));
 const DetailPR = React.lazy(() => import('./viewsIndosat/Commercial/PR'));
+const PRCreation = React.lazy(() => import('./viewsIndosat/Commercial/PRCreation'));
+
 // const DetailCommercialPO = React.lazy(() => import('./viewsIndosat/Commercial/CommercialBoqPO'));
 const ApprovalCommercial = React.lazy(() => import('./viewsIndosat/Commercial/CommercialBoqApproval'));
 const SubmissionCommBoq = React.lazy(() => import('./viewsIndosat/Commercial/SubmissionCommBoq'));
@@ -46,8 +48,8 @@ const routes = [
   { path: '/summary-boq/:id', exact: true, name: 'Detail Summary BOQ', component: SummaryBoq },
 
   { path: '/list-pr', exact: true, name: 'List PR', component: ListPR },
-  { path: '/list-pr/creation', exact: true, name: 'PR Creation', component: DetailPR },
-  { path: '/list-pr/detail/', exact: true, name: 'Detail PR', component: DetailPR },
+  { path: '/list-pr/creation', exact: true, name: 'PR Creation', component: PRCreation },
+  { path: '/list-pr/detail/:id', exact: true, name: 'Detail PR', component: DetailPR },
   // { path: '/list-commercial/detail-po/:id', exact: true, name: 'Detail Commercial BOQ', component: DetailCommercialPO },
   { path: '/approval-commercial/:id', exact: true, name: 'Approval for Commercial BOQ', component: ApprovalCommercial },
   { path: '/submission-commercial/:id', exact: true, name: 'Submission Commercial BOQ', component: SubmissionCommBoq },

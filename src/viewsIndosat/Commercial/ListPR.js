@@ -339,7 +339,7 @@ class ListCommercial extends Component {
                               )}
                             </td> */}
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              <Link to={'/list-commercial/detail/'+boq._id}>
+                              <Link to={'/list-pr/detail/'+boq._id}>
                                 <Button className="btn-primary" size="sm" color="primary" style={{marginRight : '10px'}}>
                                   <i className="fas fa-edit" aria-hidden="true"></i>&nbsp; Edit
                                 </Button>

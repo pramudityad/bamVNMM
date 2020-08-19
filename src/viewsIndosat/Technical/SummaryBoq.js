@@ -1652,8 +1652,99 @@ class SummaryBoq extends Component {
     saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Vertical.xlsx');
   }
 
+  getTaxCode(product_type){
+    if(product_type.toLowerCase() === "lcm" || product_type.toLowerCase() === "svc"){
+      return "V1";
+    }else{
+      return "V0";
+    }
+  }
+
+  saveCommtoAPI = async () => {
+    this.toggleLoading();
+    let dataCommNew = this.state.data_tech_boq;
+    console.log("dataCommNew", dataCommNew);
+    let dataItemsPR = [];
+    for(let i = 0; i < dataCommNew.techBoqSite.length; i++){
+      for(let j = 0; j < dataCommNew.techBoqSite[i].siteItem.length; j++){
+        const dataItemIdx = dataCommNew.techBoqSite[i].siteItem[j];
+        const dataItemNew = {
+            "pr_item_type": dataItemIdx.product_type,
+            "id_pp_doc": dataItemIdx.id_pp_doc,
+            "pp_id": dataItemIdx.pp_id,
+            "item_text": dataItemIdx.product_name,
+            "tax_code": this.getTaxCode(dataItemIdx.product_type),
+            "short_text": dataItemIdx.physical_group,
+            "uom": dataItemIdx.uom,
+            "site_list": [
+                {
+                    "site_name": dataCommNew.techBoqSite[i].site_name,
+                    "site_id": dataCommNew.techBoqSite[i].site_id,
+                    "ne_id": dataCommNew.techBoqSite[i].ne_id,
+                    "id_tech_boq_doc": dataCommNew.techBoqSite[i].id_tech_boq_doc,
+                    "id_tech_boq_site_doc": dataCommNew.techBoqSite[i]._id,
+                    "no_tech_boq": dataCommNew.techBoqSite[i].no_tech_boq,
+                    "id_site_doc": dataCommNew.techBoqSite[i].id_site_doc
+                }
+            ],
+            "material_quantity": parseFloat(dataItemIdx.qty)
+        };
+        dataItemsPR.push(dataItemNew);
+      }
+      if(dataCommNew.techBoqSite[i].id_service_product_doc !== undefined && dataCommNew.techBoqSite[i].id_service_product_doc !== null){
+        const dataItemNew = {
+            "pr_item_type": "SVC",
+            "id_pp_doc": dataCommNew.techBoqSite[i].id_service_product_doc,
+            "pp_id": dataCommNew.techBoqSite[i].service_product_name,
+            "item_text": dataCommNew.techBoqSite[i].service_product_id,
+            "tax_code": this.getTaxCode("SVC"),
+            "short_text": dataCommNew.techBoqSite[i].site_name,
+            "uom": "svc",
+            "site_list": [
+                {
+                    "site_name": dataCommNew.techBoqSite[i].site_name,
+                    "site_id": dataCommNew.techBoqSite[i].site_id,
+                    "ne_id": dataCommNew.techBoqSite[i].ne_id,
+                    "id_tech_boq_doc": dataCommNew.techBoqSite[i].id_tech_boq_doc,
+                    "id_tech_boq_site_doc": dataCommNew.techBoqSite[i]._id,
+                    "no_tech_boq": dataCommNew.techBoqSite[i].no_tech_boq,
+                    "id_site_doc": dataCommNew.techBoqSite[i].id_site_doc
+                }
+            ],
+            "material_quantity": parseFloat(1)
+        };
+        dataItemsPR.push(dataItemNew);
+      }
+    }
+    let dataInputan = {
+      "id_project_doc": dataCommNew.id_project_doc,
+      "project_name": dataCommNew.project_name,
+      "list_of_tech": [
+          {
+              "id_tech_boq_doc": dataCommNew._id,
+              "no_tech_boq": dataCommNew.no_tech_boq,
+              "technical_version":dataCommNew.version
+          }
+      ],
+      "item" : dataItemsPR
+    }
+    // console.log("dataInputan", dataInputan);
+    let postComm = await this.postDatatoAPINODE('/commBoqIsat/createCommercial', {"data" : dataInputan});
+    if(postComm.data !== undefined){
+      this.setState({action_status : 'success'}, () => {
+        // setTimeout(function() { this.setState({redirectSign : postComm.data.cboqInfo._id })}.bind(this), 2000 );
+      });
+    }else{
+      if(postComm.response !== undefined){
+        this.setState({action_status : 'failed', action_message : postComm.response.error });
+      }else{
+        this.setState({action_status : 'failed' });
+      }
+    }
+    this.toggleLoading();
+  }
+
     render() {
-      console.log("length", Config_group_DEFAULT.length, Config_group_type_DEFAULT.length);
       if(this.state.redirectSign !== false){
         return (<Redirect to={'/detail-technical/'+this.state.redirectSign} />);
       }
@@ -1719,30 +1810,6 @@ class SummaryBoq extends Component {
                 <CardBody className='card-UploadBoq'>
                   <React.Fragment>
                   <div>
-
-                    {this.state.data_item.length === 0 && this.state.API_Tech.no_boq_tech === undefined && this.props.match.params.id == undefined ? (
-                      <React.Fragment>
-                      <Row></Row>
-                        <input type="file" onChange={this.fileHandlerTechnical.bind(this)} style={{"padding":"10px 10px 5px 10px","visiblity":"hidden"}} disable={this.state.format_uploader !== null}/>
-                        <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveTechBoq} disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null }>
-                          {this.state.rowsTech.length == 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
-                        </Button>
-                        <Row>
-                        <Col md="4">
-                          <div style={{display : 'flex', marginTop : '10px'}}>
-                            <span style={{width : '135px', marginTop : '10px'}}>Project :</span>
-                            <Input name="project" type="select" onChange={this.selectProject} value={this.state.project_select}>
-                                <option value=""></option>
-                                {this.state.project_all.map( project =>
-                                  <option value={project._id}>{project.Project}</option>
-                                )}
-                            </Input>
-                          </div>
-                        </Col>
-                        </Row>
-                        <hr className="upload-line"></hr>
-                      </React.Fragment>
-                    ) : (<React.Fragment></React.Fragment>)}
                     {this.state.data_tech_boq !== null ? (
                       <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>
                         <CardBody style={{padding: '5px'}}>
@@ -1896,16 +1963,6 @@ class SummaryBoq extends Component {
                       </tbody>
                     </Table>
                     ) : (<React.Fragment>
-                      {/*<div style={{display : 'inline-flex', marginBottom : '5px'}}>
-                        <span style={{padding: '4px'}}>Show per Page : </span>
-                        <Input className="select-per-page" name="PO" type="select" onChange={this.handleChangeShow} value={this.state.perPage} >
-                          <option value="5">5</option>
-                          <option value="10">10</option>
-                          <option value="25">25</option>
-                          <option value="50">50</option>
-                          <option value={this.state.data_item.length}>All</option>
-                        </Input>
-                      </div> */}
                       <TableTechnicalItem
                         dataTechBoqItem={this.state.data_tech_boq_summary_pagination}
                         TechHeader={this.state.view_tech_header_table}
@@ -1929,7 +1986,12 @@ class SummaryBoq extends Component {
 
                     </CardBody>
                   <CardFooter>
-                    <div style={{display : 'flex'}}>
+                    {this.state.data_tech_boq !== null && (
+                      <Button size="sm" className="btn-success" style={{'float' : 'left', marginRight : '10px'}} color="success" value={"1"} onClick={this.saveCommtoAPI}>
+                          Create PR
+                      </Button>
+                    )}
+                    {/*}<div style={{display : 'flex'}}>
                       {this.state.data_tech_boq !== null && (
                       <Row>
                         <Col>
@@ -1957,7 +2019,7 @@ class SummaryBoq extends Component {
                         </Col>
                        </Row>
                       )}
-                    </div>
+                    </div> */}
                   </CardFooter>
               </Card>
             </Col>
