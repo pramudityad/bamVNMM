@@ -419,7 +419,7 @@ class AssignmentListReport extends Component {
     }
     let whereAnd = "{" + filter_array.join(",") + "}";
     let getASG = await this.getDataFromAPINODE(
-      "/aspAssignment/aspassign?srt=_id:-1&q=" + whereAnd
+      "/aspAssignment/aspassign?srt=_id:-1&noPg=1&q=" + whereAnd
     );
     if (getASG.data !== undefined) {
       allAssignmentList = getASG.data.data;

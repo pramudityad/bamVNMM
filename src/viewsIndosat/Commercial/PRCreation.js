@@ -104,6 +104,7 @@ class PRCreation extends Component {
         TotalPriceUSDChange : new Map(),
         total_comm : {},
         boq_tech_select : {},
+        return_checking : null,
       };
       this.toggleLoading = this.toggleLoading.bind(this);
       this.toggleDropdown = this.toggleDropdown.bind(this);
@@ -732,20 +733,29 @@ class PRCreation extends Component {
       return newValue;
     };
 
-    getTechBoqData(_id_tech){
+    async getTechBoqData(_id_tech){
       this.toggleLoading();
-      this.getDataFromAPINODE('/techBoq/'+_id_tech+'?package=1').then(res => {
-        if(res.data !== undefined){
-          const dataTech = res.data;
-          this.setState({data_tech_boq_selected : dataTech.data});
-          if(res.data.data !== undefined){
-            this.setState({data_tech_boq_sites_selected : dataTech.data.techBoqSite});
-          }
-          this.toggleLoading();
-        }else{
-          this.toggleLoading();
+      const res = await this.getDataFromAPINODE('/techBoq/'+_id_tech+'?package=1')
+      if(res.data !== undefined){
+        const dataTech = res.data;
+        // let dataCheck = [
+        //   {
+        //     "id_tech_boq_doc":_id_tech,
+        //     "tech_boq_site":dataTech.data.techBoqSite.map(e => e._id)
+        //   }
+        // ];
+        // const resCheck = await this.postDatatoAPINODE('/commBoqIsat/checkPr', {"data" : dataCheck});
+        // if(resCheck.data !== undefined){
+        //
+        // }
+        this.setState({data_tech_boq_selected : dataTech.data});
+        if(res.data.data !== undefined){
+          this.setState({data_tech_boq_sites_selected : dataTech.data.techBoqSite});
         }
-      })
+        this.toggleLoading();
+      }else{
+        this.toggleLoading();
+      }
     }
 
     exportCommercial = async () =>{
