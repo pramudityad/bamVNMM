@@ -133,6 +133,7 @@ class CommercialBoq extends Component {
       TotalPriceUSDChange: new Map(),
       total_comm: {},
       boq_tech_select: {},
+      service_library : [],
     };
     this.toggleLoading = this.toggleLoading.bind(this);
     this.toggleDropdown = this.toggleDropdown.bind(this);
@@ -389,11 +390,16 @@ class CommercialBoq extends Component {
   async getCommBoqData(_id) {
     let getComm = await this.getDataFromAPINODE("/commBoqIsat/" + _id);
     if (getComm.data !== undefined) {
-      const dataComm = getComm.data;
-      console.log("dataComm ", dataComm);
-      this.setState({ data_comm_boq_items: dataComm.data.items, data_comm_boq: dataComm.data }, () =>
-        console.log(this.state.data_comm_boq_items)
+      this.setState({ data_comm_boq_items: getComm.data.data.items, data_comm_boq: getComm.data.data }, () =>
+        this.getServiceLibrary()
       );
+    }
+  }
+
+  async getServiceLibrary() {
+    let getSvc = await this.getDataFromAPINODE("/libser/getLibSer?noPg=1");
+    if (getSvc.data !== undefined) {
+      this.setState({ service_library: getSvc.data.data});
     }
   }
 
@@ -1398,6 +1404,16 @@ class CommercialBoq extends Component {
     );
   };
 
+  getServiceLib(svc){
+    const service_library = this.state.service_library;
+    const filter = service_library.filter(e => e.boq_service_scope === svc.item_text);
+    if(filter.length === 0){
+      return [svc];
+    }else{
+      return filter;
+    }
+  }
+
   render() {
     if (this.state.redirectSign !== false) {
       return <Redirect to={"/detail-commercial/" + this.state.redirectSign} />;
@@ -1702,19 +1718,21 @@ class CommercialBoq extends Component {
                                 {row.site_list.map((site) => site.ne_id)}
                               </td>
                             </tr>
-                            <tr>
-                              <td></td>
-                              <td></td>
-                              <td></td>
+                            {this.getServiceLib(row).map(svl => (
+                              <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
 
-                              <td style={{ verticalAlign: "middle" }}>
-                                {row.item_text}-{row.pp_id}
-                              </td>
-                              <td></td>
-                              <td></td>
-                              <td></td>
-                              <td></td>
-                            </tr>
+                                <td style={{ verticalAlign: "middle" }}>
+                                  {svl.item_text}-{svl.pp_id}
+                                </td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                              </tr>
+                            ))}
                           </>
                         ))}
                       </tbody>
