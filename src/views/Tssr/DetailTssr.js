@@ -1614,14 +1614,16 @@ class DetailTssr extends Component {
 
     let numberPSItem = 0;
     for(let a = 0; a < dataItemTSSRConfig.length; a++){
+      // numberPSItem = numberPSItem+1;
+      // ws.addRow([numberPSItem, dataItemTSSRConfig[i].bundle_name, dataItemTSSRConfig[i].bundle_id, null, null, itemTSSRBundle[i].qty, null, null, null]);
       let itemTSSRBundle = dataItemTSSR.filter(e => e.config_id === dataItemTSSRConfig[a] && e.product_type.toLowerCase() !== "svc");
       for(let i = 0; i < itemTSSRBundle.length; i++){
         numberPSItem = numberPSItem+1;
-        ws.addRow([numberPSItem, itemTSSRBundle[i].product_name, null, null, null, itemTSSRBundle[i].qty, null, null, null]);
-        for(let j = 0; j < itemTSSRBundle[i].materials.length; j++){
-          let dataMatIdx = itemTSSRBundle[i].materials[j];
-          ws.addRow([null, dataMatIdx.material_name, null, null, null, dataMatIdx.qty, null, null, null]);
-        }
+        ws.addRow([numberPSItem, itemTSSRBundle[i].product_name, itemTSSRBundle[i].pp_id, null, null, itemTSSRBundle[i].qty, null, null, null]);
+        // for(let j = 0; j < itemTSSRBundle[i].materials.length; j++){
+        //   let dataMatIdx = itemTSSRBundle[i].materials[j];
+        //   // ws.addRow([null, dataMatIdx.material_name, null, null, null, dataMatIdx.qty, null, null, null]);
+        // }
         ws.addRow([""]);
       }
     }

@@ -260,7 +260,7 @@ class ListCommercial extends Component {
         <Card>
           <CardHeader>
             <React.Fragment>
-              <span style={{position:'absolute',marginTop:'8px'}}>Commercial BOQ List</span>
+              <span style={{position:'absolute',marginTop:'8px'}}>PR Uploader List</span>
               <div className="card-header-actions" style={{marginRight:'5px'}}>
                 <Link to='/list-pr/creation'>
                 <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
@@ -277,7 +277,7 @@ class ListCommercial extends Component {
                 <thead>
                   <tr>
                       <th>Technical BOQ Origin</th>
-                      <th>Commercial BOQ Document</th>
+                      <th>PR Uploader Document</th>
                       <th>Project</th>
                       <th>Ver.</th>
                       <th style={{'width' : '300px', textAlign : 'center'}}>Action</th>
