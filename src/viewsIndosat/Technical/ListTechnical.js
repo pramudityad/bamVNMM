@@ -100,9 +100,9 @@ class ListTechnical extends Component {
     let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
     let filter_status = this.state.filter_list[5] === null ? '"approval_status":{"$exists" : 1}' : '"approval_status":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
     let where = 'q={'+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+'}';
-    this.getDataFromAPINODE('/techBoqList?srt=_id:-1&'+where).then(res => {
+    this.getDataFromAPINODE('/techBoqList?srt=_id:-1&'+where+'&lmt='+this.state.perPage+'&pg='+this.state.activePage).then(res => {
       if(res.data !== undefined){
-        this.setState({list_tech_boq : res.data.data});
+        this.setState({list_tech_boq : res.data.data, totalData : res.data.totalResults});
       }
     })
   }
@@ -338,12 +338,6 @@ class ListTechnical extends Component {
                               <Link to={'/summary-boq/'+boq._id}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Summary</Button>
                               </Link>
-                              {/*<Link to={'/approval-technical/'+boq._id}>
-                                <Button color="warning" size="sm"> <i className="fa fa-check-circle" aria-hidden="true">&nbsp;</i> Approval</Button>
-                              </Link>
-                              <Button  size="sm" color="danger" style={{color : "white"}} value={boq._id} onClick={e => this.deleteTechBoq(e, "value")}>
-                                  <i className="fa fa-trash" aria-hidden="true"></i>
-                              </Button> */}
                             </td>
                         </tr>
                     )}
@@ -354,7 +348,7 @@ class ListTechnical extends Component {
                 <Pagination
                     activePage={this.state.activePage}
                     itemsCountPerPage={this.state.perPage}
-                    totalItemsCount={this.state.totalData.total}
+                    totalItemsCount={this.state.totalData}
                     pageRangeDisplayed={5}
                     onChange={this.handlePageChange}
                     itemClass="page-item"

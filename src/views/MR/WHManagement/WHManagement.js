@@ -170,6 +170,7 @@ class WHManagement extends React.Component {
       dataForm[6] = aEdit.latitude;
       dataForm[7] = aEdit.longitude;
       dataForm[8] = aEdit.factory_code;
+      dataForm[9] = aEdit.wh_type;
       this.setState({ DataForm: dataForm, selected_id: value });
     } else {
       this.setState({ DataForm: new Array(6).fill(null) });
@@ -507,10 +508,12 @@ class WHManagement extends React.Component {
       owner: dataWHEdit[4],
       latitude: dataWHEdit[6],
       longitude: dataWHEdit[7],
-      // factory_code: dataWHEdit[8],
+      factory_code: dataWHEdit[8],
+      wh_type: dataWHEdit[9],
     };
     this.toggleLoading();
     this.toggleEdit();
+    console.log("WH Management Edit", JSON.stringify(WH));
     let patchData = await patchDatatoAPINODE(
       "/whManagement/UpdateOneWarehouse/" + objData,
       { data: WH }, this.props.dataLogin.token
@@ -1156,7 +1159,7 @@ class WHManagement extends React.Component {
                   </Col>
                   <Col sm="4">
                     <FormGroup>
-                      <Label htmlFor="wh_id">FF Code</Label>
+                      <Label htmlFor="wh_id">EF Code</Label>
                       <Input
                         type="text"
                         name="8"

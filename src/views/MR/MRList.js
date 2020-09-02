@@ -30,6 +30,8 @@ class MRList extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      vendor_name : this.props.dataLogin.vendor_name,
+      vendor_code : this.props.dataLogin.vendor_code,
       mr_list: [],
       prevPage: 0,
       activePage: 1,
@@ -123,6 +125,9 @@ class MRList extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.state.filter_list[12] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[12] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
+    }
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       console.log("MR List Sorted", res);
@@ -290,25 +295,28 @@ class MRList extends Component {
                 <span style={{ lineHeight: '2' }}>
                   <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MR List
                 </span>
-
-                {(this.state.userRole.findIndex(e => e === "BAM-Engineering") === -1 && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-LDM") === -1) && (
-                <React.Fragment>
-                	<Link to={'/mr-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR</Button></Link>
-                	<Link to={'/bulk-mr-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR Bulk</Button></Link>
+                {((this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-Mover") === -1)) && (
+                  <React.Fragment>
+                  {(this.state.userRole.findIndex(e => e === "BAM-Engineering") === -1 && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-LDM") === -1) && (
+                  <React.Fragment>
+                  	<Link to={'/mr-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR</Button></Link>
+                  	<Link to={'/bulk-mr-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR Bulk</Button></Link>
+                  </React.Fragment>
+                  )}
+                  <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{ float: 'right', marginRight : '10px' }}>
+                    <DropdownToggle caret color="secondary">
+                      <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>File
+                    </DropdownToggle>
+                    <DropdownMenu>
+                      <DropdownItem header>MR File</DropdownItem>
+                      <DropdownItem onClick={this.downloadMRlist}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MR List</DropdownItem>
+                      {(this.state.userRole.findIndex(e => e === "BAM-Engineering") === -1 && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-LDM") === -1) && (
+                      <DropdownItem onClick={this.downloadAllMRMigration}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Format MR List Status Migration</DropdownItem>
+                      )}
+                    </DropdownMenu>
+                  </Dropdown>
                 </React.Fragment>
                 )}
-                <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{ float: 'right', marginRight : '10px' }}>
-                  <DropdownToggle caret color="secondary">
-                    <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>File
-                  </DropdownToggle>
-                  <DropdownMenu>
-                    <DropdownItem header>MR File</DropdownItem>
-                    <DropdownItem onClick={() => this.downloadMRlist}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MR List</DropdownItem>
-                    {(this.state.userRole.findIndex(e => e === "BAM-Engineering") === -1 && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-LDM") === -1) && (
-                    <DropdownItem onClick={() => this.downloadAllMRMigration}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Format MR List Status Migration</DropdownItem>
-                    )}
-                  </DropdownMenu>
-                </Dropdown>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">

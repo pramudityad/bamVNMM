@@ -850,7 +850,7 @@ class PackageUpload extends React.Component {
     dataPrintSVC.map(pp => ws2.addRow([pp.pp_id, pp.product_name]));
 
     const MaterialFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MaterialFormat]), 'Config Uploader Template.xlsx');
+    saveAs(new Blob([MaterialFormat]), 'Technical Uploader Template.xlsx');
   }
 
   exportFormatTechnicalVertical = async () => {
@@ -906,8 +906,6 @@ class PackageUpload extends React.Component {
                         </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatPackage}>> Bundle Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatBundleMaterial}>> Bundle Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatTechnical} disabled={this.state.packageChecked.length === 0}>> Tehnical Template</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>

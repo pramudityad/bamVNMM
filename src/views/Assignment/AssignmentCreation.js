@@ -378,11 +378,15 @@ class AssignmentCreation extends Component {
     }
   };
 
-  handleChangeProjectXL(e){
-    let obj = this.state.list_project.find((a) => a.Project === e.value);
-    let email = obj.Email_CPM_Name;
-    this.setState({project_selected : e.value, project_name_selected : e.value, email_cpm: email});
-    return e;
+  handleChangeProjectXL(newValue){
+    if(newValue !== null){
+      let obj = this.state.list_project.find((a) => a.Project === newValue[newValue.length-1].value);
+      let email = obj.Email_CPM_Name;
+      this.setState({project_selected : newValue.map(ps => ps.value).join('///'), project_name_selected : newValue.map(ps => ps.value).join('///'), email_cpm: email});
+    }else{
+      this.setState({project_selected :  null, project_name_selected : null, email_cpm: null })
+    }
+    return newValue;
   }
 
   handleChangeTowerXL(e){
@@ -633,6 +637,7 @@ class AssignmentCreation extends Component {
                           <option value="Power">Power</option>
                           <option value="SACME">SACME</option>
                           <option value="ADDITIONAL">Additional</option>
+                          <option value="DELIVERY">Delivery</option>
                         </Input>
                       </FormGroup>
                     </Col>
@@ -644,6 +649,7 @@ class AssignmentCreation extends Component {
                         <Label>Project Name</Label>
                         <Select
                           cacheOptions
+                          isMulti
                           options={this.state.list_project_selection}
                           onChange={this.handleChangeProjectXL}
                         />

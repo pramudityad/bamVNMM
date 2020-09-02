@@ -255,7 +255,7 @@ class ReadyToDeliver extends Component {
     let dataMR = this.state.mr_list.find(e => e._id === _id);
     let dataProject = undefined;
     if(dataMR !== undefined){
-      dataProject = await this.getDataProject(dataMR.project_name);
+      // dataProject = await this.getDataProject(dataMR.project_name);
     }
     let res = await this.patchDatatoAPINODE('/matreq/confirmRTD/' + _id);
     if (res !== undefined) {

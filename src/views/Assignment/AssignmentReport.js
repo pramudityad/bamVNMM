@@ -159,6 +159,13 @@ class AssignmentListReport extends Component {
       );
       if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
         filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
+      }else{
+        this.state.filter_list[4] !== "" &&
+          filter_array.push(
+            '"Vendor_Code_Number":{"$regex" : "' +
+              this.state.filter_list[4] +
+              '", "$options" : "i"}'
+          );
       }
       let whereAnd = "{" + filter_array.join(",") + "}";
       this.getDataFromAPINODE(
@@ -225,6 +232,13 @@ class AssignmentListReport extends Component {
       );
     if((this.state.userRole.findIndex("BAM-ASP") !== -1 || this.state.userRole.findIndex("BAM-ASP Management") !== -1) && this.state.userRole.findIndex("Admin") === -1){
       filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
+    }else{
+      this.state.filter_list[4] !== "" &&
+        filter_array.push(
+          '"Vendor_Code_Number":{"$regex" : "' +
+            this.state.filter_list[4] +
+            '", "$options" : "i"}'
+        );
     }
     let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE(
@@ -233,7 +247,6 @@ class AssignmentListReport extends Component {
       if (res.data !== undefined) {
         const items = res.data.data;
         this.setState({ asg_all: items });
-        console.log("asg list", this.state.asg_all);
       }
     });
   }
@@ -272,15 +285,9 @@ class AssignmentListReport extends Component {
   handleFilterDate(e) {
     const value = e.target.value;
     const name = e.target.name;
-    this.setState(
-      (prevState) => ({
-        filter_date: {
-          ...prevState.filter_date,
-          [name]: value,
-        },
-      }),
-    );
-    console.log(this.state.filter_date);
+    let filterdate = this.state.filter_date;
+    filterdate[name] = value;
+    this.setState({filter_date : filterdate});
     if(this.state.filter_date.filter_list_date !== null && this.state.filter_date.filter_list_date2 !== null){
       this.onChangeDebounced(e)
     }
@@ -410,9 +417,9 @@ class AssignmentListReport extends Component {
     if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
       filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
     }else{
-      this.state.filter_list[7] !== "" &&
+      this.state.filter_list[4] !== "" &&
         filter_array.push(
-          '"Work_Status":{"$regex" : "' +
+          '"Vendor_Code_Number":{"$regex" : "' +
             this.state.filter_list[4] +
             '", "$options" : "i"}'
         );
@@ -432,6 +439,7 @@ class AssignmentListReport extends Component {
 
     let headerRow = [
       "Assignment ID",
+      "SH Assignment No.",
       "Project",
       "Sow Type",
       "Tower ID",
@@ -439,6 +447,7 @@ class AssignmentListReport extends Component {
       "Vendor",
       "Payment Terms",
       "Total Amount",
+      "Assignment Creator",
       "PO Number",
       "PO Item",
       "PO Date",
@@ -455,8 +464,14 @@ class AssignmentListReport extends Component {
       const custDel = allAssignmentList[i].cust_del !== undefined ?  allAssignmentList[i].cust_del.map(e => e.cd_id).join(", ") : null;
       const dataGR = dataGRAsg.filter(e => e.Assignment_No === allAssignmentList[i].Assignment_No);
       const totalAmount = allAssignmentList[i].SSOW_List.reduce((a,b) => a + b.ssow_total_price, 0);
+      let dataCreator = undefined;
+      dataCreator = allAssignmentList[i].ASP_Assignment_Status.find(st => st.status_value === "CREATED");
+      if(dataCreator !== undefined){
+        dataCreator = dataCreator.status_updater;
+      }
       let rowAdded = [
         allAssignmentList[i].Assignment_No,
+        allAssignmentList[i].SH_Assignment_No,
         allAssignmentList[i].Project,
         allAssignmentList[i].SOW_Type,
         allAssignmentList[i].Site_ID,
@@ -464,6 +479,7 @@ class AssignmentListReport extends Component {
         allAssignmentList[i].Vendor_Name,
         allAssignmentList[i].Payment_Terms,
         totalAmount,
+        dataCreator,
         allAssignmentList[i].PO_Number,
         allAssignmentList[i].PO_Item,
         allAssignmentList[i].PO_Date,

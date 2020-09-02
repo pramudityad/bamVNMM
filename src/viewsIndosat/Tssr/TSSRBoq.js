@@ -123,11 +123,11 @@ class TSSRboq extends Component {
       userEmail : this.props.dataLogin.email,
       tokenUser : this.props.dataLogin.token,
       rowsTech: [],
-      result_check_tech: null,
-      data_tech_boq : null,
-      data_tech_boq_sites : [],
-      data_tech_boq_sites_version : [],
-      data_tech_boq_sites_pagination : [],
+      result_check_tssr: null,
+      data_tssr_boq : null,
+      data_tssr_boq_sites : [],
+      data_tssr_boq_sites_version : [],
+      data_tssr_boq_sites_pagination : [],
       view_tech_header_table : {"type" : [], "name" : [], "pp_id" : []},
       view_tech_all_header_table : {"config_group_header" : [], "config_group_type_header" : []},
       list_version : [],
@@ -251,13 +251,13 @@ class TSSRboq extends Component {
   }
 
   getTechBoqData(_id_tech){
-    getDatafromAPINODE('/techBoq/'+_id_tech+'?package=1', this.props.dataLogin.token).then(res => {
+    getDatafromAPINODE('/tssr/getTssrWithDelta/'+_id_tech+'?package=1', this.props.dataLogin.token).then(res => {
       if(res.data !== undefined){
         const dataTech = res.data;
-        this.setState({data_tech_boq : dataTech.data});
+        this.setState({data_tssr_boq : dataTech.data});
         if(res.data.data !== undefined){
-          this.setState({data_tech_boq_sites : dataTech.data.techBoqSite, list_version : new Array(parseInt(dataTech.data.version)+1).fill("0")}, () => {
-            this.viewTechBoqDataISAT(dataTech.data.techBoqSite);
+          this.setState({data_tssr_boq_sites : dataTech.data.tssr_site, list_version : new Array(parseInt(dataTech.data.version)+1).fill("0")}, () => {
+            this.viewTechBoqDataISAT(dataTech.data.tssr_site);
           });
         }
       }
@@ -294,12 +294,12 @@ class TSSRboq extends Component {
     }else{
       dataTechPage = dataTechView;
     }
-    this.setState({data_tech_boq_sites_pagination : dataTechPage})
+    this.setState({data_tssr_boq_sites_pagination : dataTechPage})
   }
 
   handlePageChange(pageNumber) {
     this.setState({activePage: pageNumber}, () => {
-      this.dataViewPagination(this.state.data_tech_boq_sites);
+      this.dataViewPagination(this.state.data_tssr_boq_sites);
     });
   }
 
@@ -313,13 +313,14 @@ class TSSRboq extends Component {
       this.setState({modal_update_info : false});
     }
     this.toggleLoading();
-    const dataChecked = this.state.result_check_tech;
+    const dataChecked = this.state.result_check_tssr;
     const dataPatch = {
       "revision" : revision,
-      "sites_data" : dataChecked.tech_data,
-      "itemPackage" : true
-    }
-    let patchTech = await patchDatatoAPINODE('/techBoq/updateTechBoqData/'+this.state.data_tech_boq._id, dataPatch, this.props.dataLogin.token);
+      "itemPackage": true,
+      "tssrBoqNote": "TSSR Updated",
+      "sites_data" : dataChecked.tech_data
+    };
+    let patchTech = await patchDatatoAPINODE('/tssr/updateTssr/'+this.state.data_tssr_boq._id, dataPatch, this.props.dataLogin.token);
     if(patchTech.data !== undefined){
       this.setState({action_status : 'success'});
     }else{
@@ -331,7 +332,7 @@ class TSSRboq extends Component {
   handleChangeVersion(e){
     const value = e.target.value;
     this.setState({version_selected : value}, () => {
-      if(value !== this.state.data_tech_boq.version){
+      if(value !== this.state.data_tssr_boq.version){
         this.getVersionTechBoqData(this.props.match.params.id, value);
       }else{
         this.getTechBoqData(this.props.match.params.id);
@@ -344,7 +345,7 @@ class TSSRboq extends Component {
       if(res.data !== undefined){
         const dataTech = res.data;
         if(res.data.data !== undefined){
-          this.setState({data_tech_boq_sites_version : dataTech.data.techBoqSiteVersion}, () => {
+          this.setState({data_tssr_boq_sites_version : dataTech.data.techBoqSiteVersion}, () => {
             this.viewTechBoqDataVersion(dataTech.data.techBoqSiteVersion);
           });
         }
@@ -378,7 +379,7 @@ class TSSRboq extends Component {
     if(currValue !== undefined){
       currValue = parseInt(currValue);
     }
-    let patchData = await patchDatatoAPINODE('/techBoq/approval/'+this.state.data_tech_boq._id, {"operation":currValue}, this.props.dataLogin.token)
+    let patchData = await patchDatatoAPINODE('/techBoq/approval/'+this.state.data_tssr_boq._id, {"operation":currValue}, this.props.dataLogin.token)
     if(patchData.data !== undefined){
       this.setState({action_status : 'success'});
     }else{
@@ -501,17 +502,20 @@ class TSSRboq extends Component {
     this.setState({
       rowsTech: newDataXLS
     });
-    this.checkingFormatTech(newDataXLS);
+    this.checkingFormatTSSR(newDataXLS);
   }
 
-  async checkingFormatTech(rowsTech){
+  async checkingFormatTSSR(rowsTech){
     this.toggleLoading();
     let dataCheck = {
       "siteIdentifier": "site_id",
       "itemPackage": true,
       "techBoqData" : rowsTech
     }
-    let urlCheck = '/techBoq/checkTechBoqData';
+    let urlCheck = '/tssr/checkTssr';
+    // if(this.state.format_uploader === "Vertical"){
+    //   urlCheck = 'bamidapi/tssr/checkTssrVertical'
+    // }
     let postCheck = await postDatatoAPINODE(urlCheck, dataCheck, this.props.dataLogin.token);
     if(postCheck.data !== undefined){
       const dataCheck = postCheck.data;
@@ -526,7 +530,7 @@ class TSSRboq extends Component {
         this.setState({action_status : 'failed', action_message : '[ '+siteNew.join(', ')+' ] => Not available, please create this sites in PDB'});
         this.toggleLoading();
       }else{
-        this.setState({result_check_tech : dataCheck});
+        this.setState({result_check_tssr : dataCheck});
         this.toggleLoading();
       }
     }else{
@@ -568,7 +572,7 @@ class TSSRboq extends Component {
 
   saveTechBoq = async () => {
     this.toggleLoading();
-    const dataChecked = this.state.result_check_tech;
+    const dataChecked = this.state.result_check_tssr;
     const projectData = {
 		    "id_project_doc": this.state.project_select,
 		    "project_name": this.state.project_name_selected,
@@ -627,8 +631,8 @@ class TSSRboq extends Component {
     const wb = new Excel.Workbook()
     const ws = wb.addWorksheet()
 
-    const dataTech = this.state.data_tech_boq;
-    const dataSites = this.state.data_tech_boq_sites;
+    const dataTech = this.state.data_tssr_boq;
+    const dataSites = this.state.data_tssr_boq_sites;
     const dataHeader = this.state.view_tech_header_table;
     const DatePrint = new Date();
     const DatePrintOnly = DatePrint.getFullYear()+'-'+(DatePrint.getMonth()+1).toString().padStart(2, '0')+'-'+DatePrint.getDay().toString().padStart(2, '0');
@@ -768,12 +772,12 @@ class TSSRboq extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataTech = this.state.data_tech_boq;
+    const dataTech = this.state.data_tssr_boq;
     let dataSites = [];
     if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-      dataSites = this.state.data_tech_boq_sites_version;
+      dataSites = this.state.data_tssr_boq_sites_version;
     }else{
-      dataSites = this.state.data_tech_boq_sites;
+      dataSites = this.state.data_tssr_boq_sites;
     }
 
     const header_config = this.state.view_tech_all_header_table;
@@ -818,12 +822,12 @@ class TSSRboq extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataTech = this.state.data_tech_boq;
+    const dataTech = this.state.data_tssr_boq;
     let dataSites = [];
     if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-      dataSites = this.state.data_tech_boq_sites_version;
+      dataSites = this.state.data_tssr_boq_sites_version;
     }else{
-      dataSites = this.state.data_tech_boq_sites;
+      dataSites = this.state.data_tssr_boq_sites;
     }
 
     const header_config = this.state.view_tech_all_header_table;
@@ -885,18 +889,18 @@ class TSSRboq extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataTech = this.state.data_tech_boq;
+    const dataTech = this.state.data_tssr_boq;
     let dataSites = [];
     if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-      dataSites = this.state.data_tech_boq_sites_version;
+      dataSites = this.state.data_tssr_boq_sites_version;
     }else{
-      dataSites = this.state.data_tech_boq_sites;
+      dataSites = this.state.data_tssr_boq_sites;
     }
 
     const header_config = this.state.view_tech_header_table;
 
     let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service"];
-    let HeaderRow2 = ["Region", "Program", "Batch", "Site ID", "Site Name", "NE ID", "New Config", "Service ID", "Service Name"];
+    let HeaderRow2 = ["region", "program", "batch", "site_id", "site_name", "ne_id", "new_config", "service_product_id", "service_product_name"];
 
     header_config.type.map(e => HeaderRow1.push(e));
     header_config.pp_id.map((e, i) => HeaderRow2.push(e +" /// "+ header_config.name[i]));
@@ -935,12 +939,12 @@ class TSSRboq extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataTech = this.state.data_tech_boq;
+    const dataTech = this.state.data_tssr_boq;
     let dataSites = [];
     if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-      dataSites = this.state.data_tech_boq_sites_version;
+      dataSites = this.state.data_tssr_boq_sites_version;
     }else{
-      dataSites = this.state.data_tech_boq_sites;
+      dataSites = this.state.data_tssr_boq_sites;
     }
 
     const header_config = this.state.view_tech_header_table;
@@ -985,12 +989,12 @@ class TSSRboq extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataTech = this.state.data_tech_boq;
+    const dataTech = this.state.data_tssr_boq;
     let dataSites = [];
     if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-      dataSites = this.state.data_tech_boq_sites_version;
+      dataSites = this.state.data_tssr_boq_sites_version;
     }else{
-      dataSites = this.state.data_tech_boq_sites;
+      dataSites = this.state.data_tssr_boq_sites;
     }
     const dataHeader = this.state.view_tech_header_table;
 
@@ -1018,12 +1022,12 @@ class TSSRboq extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataTech = this.state.data_tech_boq;
+    const dataTech = this.state.data_tssr_boq;
     let dataSites = [];
     if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-      dataSites = this.state.data_tech_boq_sites_version;
+      dataSites = this.state.data_tssr_boq_sites_version;
     }else{
-      dataSites = this.state.data_tech_boq_sites;
+      dataSites = this.state.data_tssr_boq_sites;
     }
     const dataHeader = this.state.view_tech_header_table;
 
@@ -1051,12 +1055,12 @@ class TSSRboq extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const dataTech = this.state.data_tech_boq;
+    const dataTech = this.state.data_tssr_boq;
     let dataSites = [];
     if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-      dataSites = this.state.data_tech_boq_sites_version;
+      dataSites = this.state.data_tssr_boq_sites_version;
     }else{
-      dataSites = this.state.data_tech_boq_sites;
+      dataSites = this.state.data_tssr_boq_sites;
     }
     const dataHeader = this.state.view_tech_header_table;
 
@@ -1134,7 +1138,7 @@ class TSSRboq extends Component {
                             </DropdownToggle>
                             <DropdownMenu>
                               <DropdownItem header> TSSR File</DropdownItem>
-                              <DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Report</DropdownItem>
+                              {/* }<DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Report</DropdownItem> */}
                               <DropdownItem onClick={this.exportTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Horizontal</DropdownItem>
                               <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Format</DropdownItem>
                             </DropdownMenu>
@@ -1157,8 +1161,8 @@ class TSSRboq extends Component {
                       <React.Fragment>
                       <Row></Row>
                         <input type="file" onChange={this.fileHandlerTechnical.bind(this)} style={{"padding":"10px 10px 5px 10px","visiblity":"hidden"}} disable={this.state.format_uploader !== null}/>
-                        <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveTechBoq} disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null }>
-                          {this.state.rowsTech.length == 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
+                        <Button className="btn-success" style={{'float' : 'right',margin : '8px'}} color="success" onClick={this.saveTechBoq} disabled={this.state.action_status === 'failed' || this.state.result_check_tssr === null }>
+                          {this.state.rowsTech.length == 0 ? 'Save' : this.state.result_check_tssr !== null ? 'Save' : 'Loading..'}
                         </Button>
                         <Row>
                         <Col md="4">
@@ -1176,7 +1180,7 @@ class TSSRboq extends Component {
                         <hr className="upload-line"></hr>
                       </React.Fragment>
                     ) : (<React.Fragment></React.Fragment>)}
-                    {this.state.data_tech_boq !== null ? (
+                    {this.state.data_tssr_boq !== null ? (
                       <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>
                         <CardBody style={{padding: '5px'}}>
                           <Row>
@@ -1187,38 +1191,20 @@ class TSSRboq extends Component {
                                 </span>
                               </div>
                             </Col>
-                            {this.state.data_tech_boq.list_of_commercial.filter(e => e.comm_boq_status !== "OBSOLETE").length !== 0 ? (
-                              <Col>
-                                <div>
-                                  <React.Fragment>
-                                    <Button style={{'float' : 'right'}} color="warning" onClick={this.toggleUpdateInfo} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
-                                    <i className="fa fa-paste">&nbsp;&nbsp;</i>
-                                      {this.state.rowsTech.length === 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
-                                    </Button>
-                                  </React.Fragment>
-                                  <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.toggleUpdateInfo} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
-                                    <i className="fa fa-copy">&nbsp;&nbsp;</i>
-                                    {this.state.rowsTech.length === 0 ? 'Revision' : this.state.result_check_tech !== null ? 'Revision' : 'Loading..'}
+                            <Col>
+                              <div>
+                                <React.Fragment>
+                                  <Button style={{'float' : 'right'}} color="warning" onClick={this.updateTechBoq} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tssr === null}>
+                                  <i className="fa fa-paste">&nbsp;&nbsp;</i>
+                                    {this.state.rowsTech.length === 0 ? 'Save' : this.state.result_check_tssr !== null ? 'Save' : 'Loading..'}
                                   </Button>
-                                </div>
-                              </Col>
-                            ):(
-                              <Col>
-                                <div>
-                                  <React.Fragment>
-                                    <Button style={{'float' : 'right'}} color="warning" onClick={this.updateTechBoq} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
-                                    <i className="fa fa-paste">&nbsp;&nbsp;</i>
-                                      {this.state.rowsTech.length === 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
-                                    </Button>
-                                  </React.Fragment>
-                                  <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.updateTechBoq} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
-                                    <i className="fa fa-copy">&nbsp;&nbsp;</i>
-                                    {this.state.rowsTech.length === 0 ? 'Revision' : this.state.result_check_tech !== null ? 'Revision' : 'Loading..'}
-                                  </Button>
-                                </div>
-                              </Col>
-                            )}
-
+                                </React.Fragment>
+                                <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.updateTechBoq} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tssr === null}>
+                                  <i className="fa fa-copy">&nbsp;&nbsp;</i>
+                                  {this.state.rowsTech.length === 0 ? 'Revision' : this.state.result_check_tssr !== null ? 'Revision' : 'Loading..'}
+                                </Button>
+                              </div>
+                            </Col>
                           </Row>
                           {this.state.API_Tech.project_name === null ? (
                           <Row style={{marginTop : '10px'}}>
@@ -1247,7 +1233,7 @@ class TSSRboq extends Component {
 
                   </React.Fragment>
                   {/*  )} */}
-                  {this.state.data_tech_boq !== null && (
+                  {this.state.data_tssr_boq !== null && (
                     <React.Fragment>
                     <Row>
                       <Col sm="12" md="12">
@@ -1257,7 +1243,7 @@ class TSSRboq extends Component {
                             <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>TSSR BOQ</td>
                           </tr>
                           <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
-                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.data_tech_boq.no_tech_boq}</td>
+                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.data_tssr_boq.no_tssr_boq}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -1272,18 +1258,21 @@ class TSSRboq extends Component {
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Version</td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>
-                              <Input type="select" value={this.state.version_selected === null? this.state.data_tech_boq.version : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "100px", height : "30px"}}>
+                            {/* }<td style={{textAlign : 'left'}} colspan={2}>
+                              <Input type="select" value={this.state.version_selected === null? this.state.data_tssr_boq.version : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "100px", height : "30px"}}>
                                 {this.state.list_version.map((e,i) =>
                                   <option value={i}>{i}</option>
                                 )}
                               </Input>
+                            </td> */}
+                            <td>
+                              {this.state.data_tssr_boq.version}
                             </td>
                           </tr>
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Created On &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{convertDateFormatfull(this.state.data_tech_boq.created_on)}</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{convertDateFormatfull(this.state.data_tssr_boq.created_on)}</td>
                           </tr>
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>&nbsp; </td>
@@ -1302,12 +1291,12 @@ class TSSRboq extends Component {
                         <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Project </td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.project_name}</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tssr_boq.project_name}</td>
                           </tr>
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Updated On </td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{convertDateFormatfull(this.state.data_tech_boq.updated_on)}</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{convertDateFormatfull(this.state.data_tssr_boq.updated_on)}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -1316,7 +1305,7 @@ class TSSRboq extends Component {
                     </Row>
                     </React.Fragment>
                     )}
-                    {this.state.data_tech_boq_sites.length === 0 && this.state.data_tech_boq === null && this.props.match.params.id === undefined ? (
+                    {this.state.data_tssr_boq_sites.length === 0 && this.state.data_tssr_boq === null && this.props.match.params.id === undefined ? (
                     <Table hover bordered striped responsive size="sm">
                       <tbody>
                         {this.state.rowsTech.map(row =>
@@ -1329,15 +1318,15 @@ class TSSRboq extends Component {
                       </tbody>
                     </Table>
                     ) : (<React.Fragment>
-                      {(this.state.version_selected !== null && this.state.data_tech_boq.version !== this.state.version_selected) ? (
+                      {(this.state.version_selected !== null && this.state.data_tssr_boq.version !== this.state.version_selected) ? (
                         <TableTechnicalItem
-                          dataTechBoqSites={this.state.data_tech_boq_sites_version}
+                          dataTechBoqSites={this.state.data_tssr_boq_sites_version}
                           TechHeader={this.state.option_tssr_header_view === 'only_filled' ?  this.state.view_tech_header_table : this.state.view_tech_all_header_table}
                           isVersion="rollback"
                           />
                       ): (
                         <TableTechnicalItem
-                          dataTechBoqSites={this.state.data_tech_boq_sites_pagination}
+                          dataTechBoqSites={this.state.data_tssr_boq_sites_pagination}
                           TechHeader={this.state.option_tssr_header_view === 'only_filled' ?  this.state.view_tech_header_table : this.state.view_tech_all_header_table}
                         />
                       )}
@@ -1346,7 +1335,7 @@ class TSSRboq extends Component {
                           <Pagination
                               activePage={this.state.activePage}
                               itemsCountPerPage={this.state.perPage}
-                              totalItemsCount={this.state.data_tech_boq_sites.length}
+                              totalItemsCount={this.state.data_tssr_boq_sites.length}
                               pageRangeDisplayed={5}
                               onChange={this.handlePageChange}
                               itemClass="page-item"
@@ -1360,29 +1349,29 @@ class TSSRboq extends Component {
                     </CardBody>
                   {/* <CardFooter>
                     <div style={{display : 'flex'}}>
-                      {this.state.data_tech_boq !== null && (
+                      {this.state.data_tssr_boq !== null && (
                       <Row>
                         <Col>
-                          <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value={"1"} onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.approval_status !== "PRE APPROVAL"}>
-                              {this.state.data_tech_boq.approval_status === "PRE APPROVAL" ? "Submit" : "Tech Submitted"}
+                          <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value={"1"} onClick={this.approvalTechnical} disabled={this.state.data_tssr_boq.approval_status !== "PRE APPROVAL"}>
+                              {this.state.data_tssr_boq.approval_status === "PRE APPROVAL" ? "Submit" : "Tech Submitted"}
                           </Button>
                         </Col>
                        </Row>
                       )}
-                      {(this.state.data_tech_boq !== null && (this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" || this.state.data_tech_boq.approval_status === "APPROVED" )) && (
+                      {(this.state.data_tssr_boq !== null && (this.state.data_tssr_boq.approval_status === "REQUEST FOR APPROVAL" || this.state.data_tssr_boq.approval_status === "APPROVED" )) && (
                       <Row>
                         <Col>
-                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value={"2"} onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.approval_status !== 'REQUEST FOR APPROVAL'}>
-                              {this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" ? "Approve" : "Tech Approved"}
+                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value={"2"} onClick={this.approvalTechnical} disabled={this.state.data_tssr_boq.approval_status !== 'REQUEST FOR APPROVAL'}>
+                              {this.state.data_tssr_boq.approval_status === "REQUEST FOR APPROVAL" ? "Approve" : "Tech Approved"}
                           </Button>
                         </Col>
                        </Row>
                       )}
-                      {this.state.data_tech_boq !== null && (
+                      {this.state.data_tssr_boq !== null && (
                       <Row>
                         <Col>
-                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.tssr_approval_status !== "NOT SUBMITTED"}>
-                              {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" ? "Submit to TSSR" : "TSSR Submitted"}
+                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.approvalTechnical} disabled={this.state.data_tssr_boq.tssr_approval_status !== "NOT SUBMITTED"}>
+                              {this.state.data_tssr_boq.tssr_approval_status === "NOT SUBMITTED" ? "Submit to TSSR" : "TSSR Submitted"}
                           </Button>
                         </Col>
                        </Row>
