@@ -597,8 +597,8 @@ class PRCreation extends Component {
           const dataItemNew = {
               "pr_item_type": "SVC",
               "id_pp_doc": dataCommNew.techBoqSite[i].id_service_product_doc,
-              "pp_id": dataCommNew.techBoqSite[i].service_product_name,
-              "item_text": dataCommNew.techBoqSite[i].service_product_id,
+              "pp_id": dataCommNew.techBoqSite[i].service_product_id,
+              "item_text": dataCommNew.techBoqSite[i].service_product_name,
               "tax_code": this.getTaxCode("SVC"),
               "short_text": dataCommNew.techBoqSite[i].site_name,
               "uom": "svc",

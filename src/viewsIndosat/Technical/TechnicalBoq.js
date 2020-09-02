@@ -28,10 +28,6 @@ const passwordXL = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-// const Config_group_type_DEFAULT = ["General Info", "General Info", "General Info", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "SERVICE", "SERVICE", "SERVICE", "SERVICE", "SERVICE", "SERVICE", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME"]
-//
-// const Config_group_DEFAULT = ["TowerID", "Program Name", "SOW", "Config Cabinet", "qty", "Config Add L9", "qty", "Config Add L10", "qty", "Config Add L18", "qty", "Config Add L21", "qty", "Config BB 5212 (Reuse)", "qty", "Config UPG BW 1800", "qty", "Swapped Module/BB", "qty", "Config UPG BW 2100", "qty", "Config Radio B0 MIMO 2T2R", "qty", "Config Kit Radio B1 MIMO 2T2R", "qty", "Config Radio B1 MIMO 2T2R", "qty", "Config Kit Radio B3 MIMO 2T2R", "qty", "Config Radio B3 MIMO 2T2R", "qty", "Config Radio B1 MIMO 4T4R", "qty", "Config Radio B3 MIMO 4T4R", "qty", "Config Radio B1 + B3 DUAL BAND 2T2R", "qty", "Config Radio B1 + B3 DUAL BAND 4T4R", "qty", "Config Multi Sector", "qty", "Config Antenna", "qty", "Config Service 1", "qty", "Config Service 2", "qty", "Config Service 3", "qty", "Material 1 Power", "qty 1", "Material 2 Power", "qty 2", "Material 3 Power", "qty 3", "Material 4 Power", "qty 4", "Material 5 Power", "qty 5", "Service 1 Power Qty 1", "Service 2 Power", "qty 2", "Service 3 Power Qty 3", "Material 1 CME", "qty 1", "Material 2 CME", "qty 2", "Material 3 CME", "qty 3", "Material 4 CME", "qty 4", "Material 5 CME", "qty 5", "Service 1 CME", "SAP Number 1", "qty 1", "Service 2 CME", "SAP Number 2", "qty 2", "Service 3 CME", "SAP Number 3", "qty 3"];
-
 const Config_group_type_DEFAULT = ["HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "HW", "SERVICE", "SERVICE", "SERVICE", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "POWER", "CME", "CME", "CME", "CME", "CME", "CME", "CME", "CME"]
 
 const Config_group_DEFAULT = ["Config Cabinet", "Config Add L9", "Config Add L10", "Config Add L18", "Config Add L21", "Config BB 5212 (Reuse)", "Config UPG BW 1800", "Swapped Module/BB", "Config UPG BW 2100", "Config Radio B0 MIMO 2T2R", "Config Kit Radio B1 MIMO 2T2R", "Config Radio B1 MIMO 2T2R", "Config Kit Radio B3 MIMO 2T2R", "Config Radio B3 MIMO 2T2R", "Config Radio B1 MIMO 4T4R", "Config Radio B3 MIMO 4T4R", "Config Radio B1 + B3 DUAL BAND 2T2R" ,"Config Radio B1 + B3 DUAL BAND 4T4R", "Config Multi Sector", "Config Antenna", "Config Service 2", "Config Service 3", "Config Service 4", "Material 1 Power", "Material 2 Power", "Material 3 Power", "Material 4 Power", "Material 5 Power", "Service 1 Power", "Service 2 Power", "Service 3 Power", "Material 1 CME", "Material 2 CME", "Material 3 CME", "Material 4 CME", "Material 5 CME", "Service 1 CME", "Service 2 CME", "Service 3 CME"];
@@ -207,6 +203,7 @@ class TechnicalBoq extends Component {
     this.approvalTechnical = this.approvalTechnical.bind(this);
     this.handleChangeOptionView = this.handleChangeOptionView.bind(this);
     this.handleChangeFormatUploader = this.handleChangeFormatUploader.bind(this);
+    this.submitTSSR = this.submitTSSR.bind(this);
     }
 
     numberToAlphabet(number){
@@ -1350,7 +1347,7 @@ class TechnicalBoq extends Component {
     const header_config = this.state.view_tech_header_table;
 
     let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service"];
-    let HeaderRow2 = ["Region", "Program", "Batch", "Site ID", "Site Name", "NE ID", "New Config", "Service ID", "Service Name"];
+    let HeaderRow2 = ["region", "program", "batch", "site_id", "site_name", "ne_id", "new_config", "service_product_id", "service_product_name"];
 
     header_config.type.map(e => HeaderRow1.push(e));
     header_config.pp_id.map((e, i) => HeaderRow2.push(e +" /// "+ header_config.name[i]));
@@ -1532,6 +1529,29 @@ class TechnicalBoq extends Component {
 
     const MRFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+' Vertical.xlsx');
+  }
+
+  async submitTSSR(e){
+    this.toggleLoading();
+    let currValue = e.currentTarget.value;
+    if(currValue !== undefined){
+      currValue = parseInt(currValue);
+    }
+    let patchData = await this.postDatatoAPINODE('/tssr/createTssr/'+this.state.data_tech_boq._id, {"itemPackage" : true})
+    if(patchData.data !== undefined){
+      this.setState({action_status : 'success'});
+    }else{
+      if(patchData.response !== undefined){
+        if(patchData.response.data !== undefined){
+          this.setState({action_status : 'failed', action_message : JSON.stringify(patchData.response.data.error) })
+        }else{
+          this.setState({action_status : 'failed'});
+        }
+      }else{
+        this.setState({action_status : 'failed'});
+      }
+    }
+    this.toggleLoading();
   }
 
     render() {
@@ -1783,17 +1803,6 @@ class TechnicalBoq extends Component {
                       </tbody>
                     </Table>
                     ) : (<React.Fragment>
-                      {/*<div style={{display : 'inline-flex', marginBottom : '5px'}}>
-                        <span style={{padding: '4px'}}>Show per Page : </span>
-                        <Input className="select-per-page" name="PO" type="select" onChange={this.handleChangeShow} value={this.state.perPage} >
-                          <option value="5">5</option>
-                          <option value="10">10</option>
-                          <option value="25">25</option>
-                          <option value="50">50</option>
-                          <option value={this.state.data_item.length}>All</option>
-                        </Input>
-                      </div> */}
-
                       {(this.state.version_selected !== null && this.state.data_tech_boq.version !== this.state.version_selected) ? (
                         <TableTechnicalItem
                           dataTechBoqSites={this.state.data_tech_boq_sites_version}
@@ -1806,54 +1815,6 @@ class TechnicalBoq extends Component {
                           TechHeader={this.state.option_tssr_header_view === 'only_filled' ?  this.state.view_tech_header_table : this.state.view_tech_all_header_table}
                         />
                       )}
-
-                      {/*<Table hover bordered striped responsive size="sm">
-                        <thead>
-                        <tr>
-                          <th rowSpan="2" style={{verticalAlign : "middle"}}>
-                            Tower ID
-                          </th>
-                          <th rowSpan="2" style={{verticalAlign : "middle"}}>
-                            Tower Name
-                          </th>
-                          {this.state.view_tech_header_table.config_group_type_header.map(type =>
-                            <th>{type}</th>
-                          )}
-                        </tr>
-                        <tr>
-                          {this.state.view_tech_header_table.config_group_header.map(conf =>
-                            <th>{conf}</th>
-                          )}
-                        </tr>
-                        </thead>
-                        {(this.state.version_selected !== null && this.state.data_tech_boq.version !== this.state.version_selected) ? (
-                          <tbody>
-                          {this.state.data_tech_boq_sites_version.map(site =>
-                            <tr>
-                              <td>{site.site_id}</td>
-                              <td>{site.site_name}</td>
-                              {site.siteItemConfigVersion.map(conf =>
-                                <td>{conf.qty}</td>
-                              )}
-                            </tr>
-                          )}
-                          </tbody>
-                        ) : (
-                          <tbody>
-                          {this.state.data_tech_boq_sites.map(site =>
-                            <tr>
-                              <td>{site.site_id}</td>
-                              <td>{site.site_name}</td>
-                              {site.siteItemConfig.map(conf =>
-                                <td>{conf.qty}</td>
-                              )}
-                            </tr>
-                          )}
-                          </tbody>
-                        )}
-                      </Table>
-                      {/*
-                      */}
                       <nav>
                         <div>
                           <Pagination
@@ -1874,6 +1835,7 @@ class TechnicalBoq extends Component {
                   <CardFooter>
                     <div style={{display : 'flex'}}>
                       {this.state.data_tech_boq !== null && (
+                      <Fragment>
                       <Row>
                         <Col>
                           <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value={"1"} onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.approval_status !== "PRE APPROVAL"}>
@@ -1881,16 +1843,21 @@ class TechnicalBoq extends Component {
                           </Button>
                         </Col>
                        </Row>
-                      )}
-                      {(this.state.data_tech_boq !== null && (this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" || this.state.data_tech_boq.approval_status === "APPROVED" )) && (
-                      <Row>
+                      {(this.state.data_tech_boq !== null && (this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP")) ? (
                         <Col>
-                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value={"2"} onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.approval_status !== 'REQUEST FOR APPROVAL'}>
-                              {this.state.data_tech_boq.approval_status === "REQUEST FOR APPROVAL" ? "Approve" : "Tech Approved"}
+                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.submitTSSR} disabled={false}>
+                              {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP" ? "Submit to TSSR" : "TSSR Submitted"}
                           </Button>
                         </Col>
-                       </Row>
+                      ) : (
+                        <Col>
+                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" disabled={true}>
+                              {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP" ? "Submit to TSSR" : "TSSR Submitted"}
+                          </Button>
+                        </Col>
                       )}
+                      </Fragment>
+                     )}
                       {this.state.data_tech_boq !== null && (
                       <Row>
                         <Col>

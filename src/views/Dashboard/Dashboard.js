@@ -686,7 +686,7 @@ class Dashboard extends Component {
             <a style={{textDecoration:"none"}} href="https://apac.erisite.ericsson.net/apac1/pwa/"><Widget05 icon="fa fa-list-alt" color="#3d9970" header="Erisite" value="25" invert>Global Tools</Widget05></a>
           </Col>
           <Col xs="6" sm="4" lg="4">
-            <a style={{textDecoration:"none"}} href="https://apac.erisite.ericsson.net/apac1/pwa/"><Widget05 icon="fa fa-list-alt" color="#3d9970" header="LH3 / EPOD" value="25" invert>Global Tools</Widget05></a>
+            <a style={{textDecoration:"none"}} href="https://appcodeplatform.internal.ericsson.com/EPOD/Dashboard.aspx"><Widget05 icon="fa fa-list-alt" color="#3d9970" header="LH3 / EPOD" value="25" invert>Global Tools</Widget05></a>
           </Col>
           <Col xs="6" sm="4" lg="4">
             <a style={{textDecoration:"none"}} href="https://apac.erisite.ericsson.net/apac1/pwa/"><Widget05 icon="fa fa-list-alt" color="#3d9970" header="TRACY" value="25" invert>Global Tools</Widget05></a>

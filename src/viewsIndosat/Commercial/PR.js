@@ -397,7 +397,7 @@ class CommercialBoq extends Component {
   }
 
   async getServiceLibrary() {
-    let getSvc = await this.getDataFromAPINODE("/libser/getLibSer?noPg=1");
+    let getSvc = await this.getDataFromAPINODE("/libser/getLibSer?lmt=20&pg=1");
     if (getSvc.data !== undefined) {
       this.setState({ service_library: getSvc.data.data});
     }
@@ -1130,7 +1130,7 @@ class CommercialBoq extends Component {
     const data_non_svc = data_info_item.filter(function (row) {
       return row.pr_item_type !== "SVC";
     });
-    console.log('data_non_svc ',data_non_svc)
+    const dataNonSVC = [...new Set(data_non_svc.map(({ pp_id }) => pp_id))]
     const data_svc = data_info_item.filter(function (row) {
       return row.pr_item_type === "SVC";
     });
@@ -1201,69 +1201,72 @@ class CommercialBoq extends Component {
     ws.addRow(headerPackage);
     // non svc
     if ((data_non_svc !== null) & (data_non_svc !== undefined)) {
-      for (let i = 0; i < data_non_svc.length; i++) {
-        ws.addRow([
-          "",
-          "",
-          "",
-          this.state.data_comm_boq.project_name,
-          "TPS",
-          "ZCPX",
-          "500199",
-          "Anders Rian, Mr",
-          "0021",
-          "DDP",
-          "Indosat",
-          "",
-          "30004416",
-          "A10",
-          "This PO is included in Collective no.:  XXXXX",
-          "",
-          "",
-          "",
-          "",
-          "RAN / Access NSAS",
-          "",
-          "",
-          "",
-          "",
-          data_non_svc[i].tax_code,
-          "",
-          "",
-          data_non_svc[i].item_text + "-" + data_non_svc[i].pp_id,
-          "",
-          data_non_svc[i].material_quantity,
-          "",
-          "",
-          "1000",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "1920",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          data_non_svc[i].site_list[0].site_name,
-          data_non_svc[i].site_list[0].site_id,
-          data_non_svc[i].site_list[0].ne_id
-        ]);
+      for (let i = 0; i < dataNonSVC.length; i++) {
+        const dataItem = data_non_svc.filter(dns => dns.pp_id === dataNonSVC[i]);
+        if(dataItem.length !== 0){
+          ws.addRow([
+            "",
+            "",
+            "",
+            this.state.data_comm_boq.project_name,
+            "TPS",
+            "ZCPX",
+            "500199",
+            "Anders Rian, Mr",
+            "0021",
+            "DDP",
+            "Indosat",
+            "",
+            "30004416",
+            "A10",
+            "This PO is included in Collective no.:  XXXXX",
+            "",
+            "",
+            "",
+            "",
+            "RAN / Access NSAS",
+            "",
+            "",
+            "",
+            "",
+            dataItem[0].tax_code,
+            "",
+            "",
+            dataItem[0].item_text + "-" + data_non_svc[i].pp_id,
+            "",
+            dataItem.reduce((a,b) => a + b.material_quantity, 0),
+            "",
+            "",
+            "1000",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "1920",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            null,
+            null,
+            null,
+          ]);
+        }
       }
     }
 
@@ -1332,85 +1335,130 @@ class CommercialBoq extends Component {
           data_svc[i].site_list[0].site_id,
           data_svc[i].site_list[0].ne_id
         ]);
-        ws.addRow([
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          data_svc[i].item_text + "-" + data_svc[i].pp_id,
-          "",
-          "",
-          "",
-          "",
-          "1000",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "1920",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-        ]);
+        const svcLib = this.getServiceLib(data_svc[i]);
+        for(let j = 0; j < svcLib.length; j++){
+          ws.addRow([
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            svcLib[j].pr_uploader_description,
+            "",
+            "",
+            "",
+            "",
+            "1000",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "1920",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+          ]);
+        }
+
       }
     }
 
     const comFormat = await wb.xlsx.writeBuffer();
     saveAs(
       new Blob([comFormat]),
-      "PR " + this.state.data_comm_boq.no_comm_boq + " Format.xlsx"
+      "PR " + this.state.data_comm_boq.no_comm_boq + " Uploader.xlsx"
     );
   };
 
   getServiceLib(svc){
+    let svcLib = svc;
+    svcLib["pr_uploader_description"] = svc.pp_id + "-"+svc.item_text;
     const service_library = this.state.service_library;
-    const filter = service_library.filter(e => e.boq_service_scope === svc.item_text);
+    const filter = service_library.filter(e => e.boq_service_scope.toString().trim() === svc.item_text.toString().trim());
     if(filter.length === 0){
       return [svc];
     }else{
       return filter;
+    }
+  }
+
+  getItemUniqandQtyTotal(pp_id){
+    let row = {}
+    const data_item = this.state.data_comm_boq_items.filter(e => e.pp_id === pp_id);
+    if(data_item.length !== 0){
+      row = data_item[0];
+      row["material_qty_total"] = data_item.reduce((a,b) => a + b.material_quantity, 0);
+      return (
+        <tr key={row._id}>
+          <td style={{ verticalAlign: "middle" }}>
+            {this.state.data_comm_boq.project_name}
+          </td>
+          <td style={{ verticalAlign: "middle" }}>
+            {row.tax_code}
+          </td>
+          <td style={{ verticalAlign: "middle" }}>
+            {row.short_text}
+          </td>
+          <td style={{ verticalAlign: "middle" }}>
+            {row.item_text}-{row.pp_id}
+          </td>
+          <td style={{ verticalAlign: "middle" }}>
+            {row.material_qty_total}
+          </td>
+          <td style={{ verticalAlign: "middle" }}>
+
+          </td>
+          <td style={{ verticalAlign: "middle" }}>
+
+          </td>
+          <td style={{ verticalAlign: "middle" }}>
+
+          </td>
+        </tr>
+      )
+    }else{
+      return <Fragment></Fragment>;
     }
   }
 
@@ -1446,6 +1494,7 @@ class CommercialBoq extends Component {
     const data_non_svc = this.state.data_comm_boq_items.filter(function (row) {
       return row.pr_item_type !== "SVC";
     });
+    const dataNonSVC = [...new Set(data_non_svc.map(({ pp_id }) => pp_id))]
     const data_svc = this.state.data_comm_boq_items.filter(function (row) {
       return row.pr_item_type === "SVC";
     });
@@ -1459,7 +1508,7 @@ class CommercialBoq extends Component {
           <Col xl="12">
             <Card>
               <CardHeader>
-                <span style={{ lineHeight: "2", fontSize: "17px" }}> PR </span>
+                <span style={{ lineHeight: "2", fontSize: "17px" }}> PR Uploader</span>
                 {this.state.data_comm_boq_items !== null && (
                   <React.Fragment>
                     <Dropdown
@@ -1546,7 +1595,7 @@ class CommercialBoq extends Component {
                             {this.props.match.params.id === undefined
                               ? "CREATE"
                               : ""}{" "}
-                            PR
+                            PR Uploader
                           </td>
                         </tr>
                         {this.state.data_comm_boq !== null &&
@@ -1603,7 +1652,7 @@ class CommercialBoq extends Component {
                                     fontWeight: "500",
                                   }}
                                 >
-                                  COMMERCIAL INFORMATION
+                                  PR UPLOADER INFORMATION
                                 </td>
                               </tr>
                               <tr
@@ -1636,19 +1685,6 @@ class CommercialBoq extends Component {
                             </tbody>
                           </table>
                         </Col>
-                        {/* <Col sm="6" md="6">
-                            <tbody style={{float : 'right', 'marginRight' : '100px'}}>
-                              <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                                <td colSpan="4" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>PO INFORMATION</td>
-                              </tr>
-                              <tr>
-                                <td style={{width : '100px'}}>PO Number </td>
-                                <td>: &nbsp;&nbsp;</td>
-                                <td>{this.state.data_comm_boq.po_data.map(po => po.po_number + "  ")}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </Col> */}
                       </Row>
                     </React.Fragment>
                   )}
@@ -1668,33 +1704,8 @@ class CommercialBoq extends Component {
                         </tr>
                       </thead>
                       <tbody>
-                        {data_non_svc.map((row, i) => (
-                          <tr key={row._id}>
-                            <td style={{ verticalAlign: "middle" }}>
-                              {this.state.data_comm_boq.project_name}
-                            </td>
-                            <td style={{ verticalAlign: "middle" }}>
-                              {row.tax_code}
-                            </td>
-                            <td style={{ verticalAlign: "middle" }}>
-                              {row.short_text}
-                            </td>
-                            <td style={{ verticalAlign: "middle" }}>
-                              {row.item_text}-{row.pp_id}
-                            </td>
-                            <td style={{ verticalAlign: "middle" }}>
-                              {row.material_quantity}
-                            </td>
-                            <td style={{ verticalAlign: "middle" }}>
-                              {row.site_list.map((site) => site.site_name)}
-                            </td>
-                            <td style={{ verticalAlign: "middle" }}>
-                              {row.site_list.map((site) => site.site_id)}
-                            </td>
-                            <td style={{ verticalAlign: "middle" }}>
-                              {row.site_list.map((site) => site.ne_id)}
-                            </td>
-                          </tr>
+                        {dataNonSVC.map((row, i) => (
+                          this.getItemUniqandQtyTotal(row)
                         ))}
                         {data_svc.map((row, i) => (
                           <>
@@ -1725,7 +1736,7 @@ class CommercialBoq extends Component {
                                 <td></td>
 
                                 <td style={{ verticalAlign: "middle" }}>
-                                  {svl.item_text}-{svl.pp_id}
+                                  {svl.pr_uploader_description}
                                 </td>
                                 <td></td>
                                 <td></td>

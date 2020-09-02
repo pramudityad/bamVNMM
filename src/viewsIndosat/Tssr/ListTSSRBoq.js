@@ -70,14 +70,21 @@ class ListTSSRBoq extends Component {
   }
 
   getTechBoqList(){
+    let filter_no_tssr = this.state.filter_list[6] === null ? '"no_tssr_boq":{"$exists" : 1}' : '"no_tssr_boq":{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
     let filter_no_tech = this.state.filter_list[1] === null ? '"no_tech_boq":{"$exists" : 1}' : '"no_tech_boq":{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
     let filter_project = this.state.filter_list[2] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
+    let filter_creator = this.state.filter_list[3] === null ? '"creator.email":{"$exists" : 1}' : '"creator.email":{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
     let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
     let filter_status = this.state.filter_list[5] === null ? '"approval_status":{"$exists" : 1}' : '"approval_status":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
-    let where = 'q={'+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+'}';
-    this.getDataFromAPINODE('/techBoqList?srt=_id:-1&'+where).then(res => {
+    let where = 'q={'+filter_no_tssr+', '+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+', '+filter_creator+'}';
+    this.getDataFromAPINODE('/tssr/getTssr?srt=_id:-1&lmt='+
+    this.state.perPage +
+    "&pg=" +
+    this.state.activePage).then(res => {
       if(res.data !== undefined){
-        this.setState({list_tech_boq : res.data.data});
+        this.setState({list_tech_boq : res.data.data, prevPage: this.state.activePage, totalData: res.data.totalResults});
+      } else {
+        this.setState({ list_tech_boq: [], prevPage: this.state.activePage, totalData: 0})
       }
     })
   }

@@ -9,6 +9,7 @@ import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
 import AsyncSelect from 'react-select/async';
+import Select from 'react-select';
 // import debounce from 'lodash.debounce';
 import debounce from "debounce-promise";
 
@@ -75,7 +76,7 @@ class TssrBOM extends Component {
       action_status : null,
       action_message : null,
       redirectSign : false,
-      project_selected : null,
+      project_selected : [],
       project_name_selected : null,
       list_site_selected : null,
       list_site_tech_boq_selected : null,
@@ -86,6 +87,7 @@ class TssrBOM extends Component {
       change_qty_ps : new Map(),
       list_tssr_selected : [],
       data_tssr_selected : [],
+      list_project_selection : [],
     };
     this.saveTssrBOM = this.saveTssrBOM.bind(this);
     this.handleChangeProject = this.handleChangeProject.bind(this);
@@ -94,6 +96,7 @@ class TssrBOM extends Component {
     this.loadOptions = this.loadOptions.bind(this);
     this.previewTSSRtoPS = this.previewTSSRtoPS.bind(this);
     this.removeSiteTSSR = this.removeSiteTSSR.bind(this);
+    this.handleChangeProjectXL = this.handleChangeProjectXL.bind(this);
   }
 
   async getDataFromAPINODEWithParams(url) {
@@ -283,7 +286,9 @@ class TssrBOM extends Component {
   getDataProject() {
     this.getDatafromAPIXL('/project_sorted_non_page').then( resProject => {
       if(resProject.data !== undefined){
-        this.setState({ list_project : resProject.data._items })
+        this.setState({ list_project : resProject.data._items }, () => {
+          this.filterDataProject(resProject.data._items);
+        })
       }
     })
   }
@@ -296,6 +301,21 @@ class TssrBOM extends Component {
       }
     })
   }
+
+  filterDataProject = (inputValue) => {
+    const list = [];
+    this.state.list_project.map(i =>
+        list.push({'label' : i.Project, 'value' : i._id})
+    )
+    this.setState({list_project_selection : list})
+    if(inputValue.length === 0){
+      return list;
+    }else{
+      return this.state.list_project_selection.filter(i =>
+        i.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    }
+  };
 
   prepareView(dataSiteTech){
     let dataTech = dataSiteTech;
@@ -311,40 +331,6 @@ class TssrBOM extends Component {
     this.setState({dataTech :dataTech });
   }
 
-  fileHandlerMaterial = (event) => {
-    let fileObj = event.target.files[0];
-    if(fileObj !== undefined){
-      ExcelRenderer(fileObj, (err, rest) => {
-        if(err){
-          console.log(err);
-        }
-        else{
-          this.setState({
-            action_status : null,
-            action_message : null
-          }, () => {
-            this.ArrayEmptytoNull(rest.rows);
-          });
-        }
-      });
-    }
-  }
-
-  ArrayEmptytoNull(dataXLS) {
-    let newDataXLS = [];
-    for(let i = 0; i < dataXLS.length; i++) {
-      let col = [];
-      for(let j = 0; j < dataXLS[1].length; j++) {
-        col.push(this.checkValue(dataXLS[i][j]));
-      }
-      newDataXLS.push(col);
-    }
-    this.setState({
-      rowsXLS: newDataXLS
-    });
-    this.formatDataTSSR(newDataXLS);
-  }
-
   handleChangeProject(e) {
     const value = e.target.value;
     const index = e.target.selectedIndex;
@@ -354,6 +340,15 @@ class TssrBOM extends Component {
     });
   }
 
+  handleChangeProjectXL(e){
+    if(e !== null){
+      this.setState({project_selected : e, project_name_selected : e.map(e => e.value).join("///") });
+    }else{
+      this.setState({project_selected :  [], project_name_selected : null })
+    }
+    return e;
+  }
+
   handleChangeSiteTSSR(e) {
     const value = e.value;
     const text = e.label;
@@ -361,178 +356,15 @@ class TssrBOM extends Component {
     let dataArrayTssr = this.state.list_tssr_selected;
     dataArrayTssr.push({"site_selected" : value, "id_tssr_boq_doc" : e.id_tssr_boq_doc, "label" : text});
     this.setState({list_site_selected : value, list_site_tech_boq_selected : e.id_tssr_boq_doc, list_tssr_selected : dataArrayTssr }, () => {
-      // this.getDataTech();
+
     });
   }
 
   removeSiteTSSR(_id_site){
-    // const _id_site = e.target.value;
     console.log("_id_site", _id_site);
     let dataArrayTssr = this.state.list_tssr_selected;
     dataArrayTssr = dataArrayTssr.filter(e => e.site_selected != _id_site);
     this.setState({list_tssr_selected : dataArrayTssr});
-  }
-
-  formatDataTSSR = async(dataXLS) => {
-    let action_message = "";
-    let actionStatus = null;
-    let SitesOfTSSRNew = [];
-    this.setState({waiting_status : 'loading'});
-    const staticHeader = ["site_title", "site_id", "site_name"];
-    const staticHeaderXLS = dataXLS[1].filter((e,n) => n < 3);
-    if(staticHeaderXLS.equals(staticHeader) !== true){
-      actionStatus = "failed"
-      this.setState({action_status : "failed", action_message : action_message + "Please check your upload format or Package Number"});
-    }
-    if(actionStatus !== "failed"){
-      let dataPackage = [];
-      const index_item = 3;
-      let RespondGetPP = [];
-      const ppid_upload = [];
-      let pp_id_special = [];
-      for(let j = index_item ; j < dataXLS[1].length; j++){
-        let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
-        if(Array.isArray(idXLSIndex) == true){
-          idXLSIndex = idXLSIndex.join();
-          if(idXLSIndex.includes("\"")){
-            pp_id_special.push(idXLSIndex);
-          }else{
-            ppid_upload.push(idXLSIndex);
-          }
-        }
-      }
-      RespondGetPP = await this.getAllPP(ppid_upload, pp_id_special);
-      this.setState({waiting_status : null});
-      if(RespondGetPP.length !== 0){
-        dataPackage = RespondGetPP;
-      }
-      let id_PP = new Map();
-      let _id_PP = new Map();
-      let pp_key = new Map();
-      let pp_name = new Map();
-      let group_PP = new Map();
-      let pp_cust_num = new Map();
-      let physical_group = new Map();
-      let pp_type = new Map();
-      let pp_unit = new Map();
-      let data_duplicated = [];
-      let data_undefined = [];
-      let dataAllnull = [];
-      let siteIDNull = [];
-      for(let j = index_item ; j < dataXLS[1].length; j++){
-        let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
-        if(Array.isArray(idXLSIndex) == true){
-          idXLSIndex = idXLSIndex.join();
-        }
-        let get_id_PP = dataPackage.find(PP => PP.pp_id === idXLSIndex);
-        let cekAllZero = dataXLS.map( e => this.checkValuetoZero(e[j]) ).filter( (e,n) => n>1);
-        if(cekAllZero.every( e => e == 0)){
-          dataAllnull.push(idXLSIndex);
-        }
-        if(get_id_PP === undefined){
-          data_undefined.push(idXLSIndex)
-        }else{
-          if(id_PP.get(idXLSIndex) === undefined){
-            id_PP.set(idXLSIndex, get_id_PP.pp_id);
-            pp_key.set(idXLSIndex, get_id_PP.pp_key);
-            _id_PP.set(idXLSIndex, get_id_PP._id);
-            group_PP.set(idXLSIndex, get_id_PP.pp_group)
-            pp_name.set(idXLSIndex, get_id_PP.product_name);
-            pp_cust_num.set(idXLSIndex, get_id_PP.pp_cust_number);
-            physical_group.set(idXLSIndex, get_id_PP.physical_group)
-            pp_type.set(idXLSIndex, get_id_PP.product_type);
-            pp_unit.set(idXLSIndex, get_id_PP.uom);
-          }else{
-            data_duplicated.push(idXLSIndex);
-          }
-        }
-      }
-      if(data_undefined.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and <br />" : "";
-        action_message = "Please check your upload format or Package Number in "+data_undefined.join(", ")+twoSentence+action_message;
-      }
-      if(data_duplicated.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and <br />" : "";
-        action_message = action_message+twoSentence+" There are Duplicated PP in "+data_duplicated.join(", ");
-      }
-      let siteSaveFormat = [];
-      let siteError = [];
-      for(let i = 2; i < dataXLS.length; i++){
-        if(this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]) !== null && this.state.action_status !== "failed" && actionStatus !== "failed"){
-          let packageDatas = []
-          for(let j = index_item ; j < dataXLS[1].length; j++){
-            let dataXLSIndex = dataXLS[1][j].split(" /// ",1).join();
-            if(dataAllnull.includes(dataXLSIndex) === false){
-              let package_data = {
-                "id_pp_doc" : _id_PP.get(dataXLSIndex),
-                "pp_id" : dataXLSIndex,
-                "pp_group" : group_PP.get(dataXLSIndex),
-                "pp_cust_number" : pp_cust_num.get(dataXLSIndex),
-                "product_name" : pp_name.get(dataXLSIndex).toString(),
-                "physical_group" : physical_group.get(dataXLSIndex),
-                "product_type" : pp_type.get(dataXLSIndex),
-                "uom" : pp_unit.get(dataXLSIndex),
-                "qty" : this.checkValuetoZero(dataXLS[i][j]),
-                "version" : "0",
-                "deleted" : 0,
-                "created_by" : this.state.userId,
-                "updated_by" : this.state.userId
-              }
-              packageDatas.push(package_data);
-            }
-          }
-          let siteID = this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]).toString();
-          let SiteBOQTech = {
-            "account_id" : "1",
-            "site_id" : siteID,
-            "site_name" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]),
-            "site_title" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_title')]),
-            "list_of_site_items" : packageDatas,
-            "version" : "0",
-            "created_by" : this.state.userId,
-            "updated_by" : this.state.userId,
-            "deleted" : 0
-          }
-          if(SiteBOQTech.site_name !== null){
-            SiteBOQTech["site_name"] = SiteBOQTech.site_name.toString();
-          }
-          if(SiteBOQTech.site_title !== null){
-            SiteBOQTech["site_title"] = SiteBOQTech.site_title.toString();
-          }
-          if(siteID.length === 0){
-            siteIDNull.push(null);
-          }
-          if(siteSaveFormat.find(e => e === SiteBOQTech.site_id) !== undefined){
-            siteError.push(SiteBOQTech.site_id);
-          }
-          siteSaveFormat.push(SiteBOQTech.site_id);
-          SitesOfTSSRNew.push(SiteBOQTech);
-        }
-      }
-      if(siteIDNull.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and " : "";
-        action_message = action_message+twoSentence+"Site ID cant NULL";
-      }
-      if(siteError.length !== 0){
-        actionStatus = "failed";
-        let twoSentence = action_message.length !== 0 ? "and " : "";
-        action_message = action_message+twoSentence+"There are duplicate site";
-      }
-      if(actionStatus === 'failed'){
-        if(action_message.length === 0){
-          action_message = null;
-        }
-        this.setState({action_status : "failed", action_message : action_message});
-      }
-      if(actionStatus !== 'failed'){
-        this.setState({action_message : null});
-      }
-    }
-    this.setState({dataTssrUpload : SitesOfTSSRNew});
-    return SitesOfTSSRNew;
   }
 
   async getAllPP(array_PP, array_PP_sepcial){
@@ -581,50 +413,6 @@ class TssrBOM extends Component {
     return numberTSSR;
   }
 
-  // async saveTssrBOM(){
-  //   let site_items = [], each_site_item = {};
-  //   this.state.dataTech.listOfPackage.map(pp => {
-  //     each_site_item = {
-  //       "id_pp_doc": pp.id_pp_doc,
-  //       "pp_id": pp.pp_id,
-  //       "product_name": pp.product_name,
-  //       "pp_group": pp.product_name,
-  //       "pp_cust_number": pp.pp_id,
-  //       "physical_group": pp.physical_group,
-  //       "product_type": pp.product_type,
-  //       "uom": pp.uom,
-  //       "qty": !this.state.change_qty_ps.has(pp.pp_id) ? pp.qty : this.state.change_qty_ps.get(pp.pp_id).length === 0 ? 0 : this.state.change_qty_ps.get(pp.pp_id),
-  //     }
-  //     site_items.push(each_site_item);
-  //   })
-  //   let tssrData = {
-  //     "tssr_info" : {
-  //       "no_tssr_boq": "",
-  //       "id_boq_tech_doc" : this.state.dataTech.id_tssr_boq_doc,
-  //       "no_boq_tech" : this.state.dataTech.no_tech_boq,
-  //       "id_project_doc" : this.state.dataTech.id_project_doc,
-  //       "project_name" : this.state.dataTech.project_name
-  //     },
-  //     "sites_data" : [
-  //       {
-  //         "site_info" : {
-  //           "site_title" : "NE",
-  //           "site_id" : this.state.dataTech.site_id,
-  //           "site_name" : this.state.dataTech.site_name,
-  //           "id_site_doc" : "5e99545b8c02d7501b1ae8bf"
-  //         },
-  //         "site_items" : site_items
-  //       }
-  //     ]
-  //   }
-  //   const respondSaveTSSR = await this.postDatatoAPINODE('/createTssrData', tssrData);
-  //   if(respondSaveTSSR.data !== undefined && respondSaveTSSR.status >= 200 && respondSaveTSSR.status <= 300 ){
-  //     this.setState({ action_status : 'success', action_message : 'PS has been saved successfully!' });
-  //   } else{
-  //     this.setState({ action_status : 'failed' });
-  //   }
-  // }
-
   async saveTssrBOM(){
     // setTimeout(function () { this.setState({redirectSign : "5ec2d5bb5ac433f42df7401a"}); }.bind(this), 2000);
     const respondSaveTSSR = await this.postDatatoAPINODE('/plantspec/createPlantspec2', {"psData" : this.state.data_tssr_selected});
@@ -650,26 +438,15 @@ class TssrBOM extends Component {
     this.setState(prevState => ({ change_qty_ps: prevState.change_qty_ps.set(name, value) }));
   }
 
-  // filterSiteTSSR = (inputValue) => {
-  //   const list = [];
-  //   let list_site_api = this.state.list_site.filter(i =>
-  //     i.site_id.toLowerCase().includes(inputValue.toLowerCase()) || i.no_tech_boq.toLowerCase().includes(inputValue.toLowerCase())
-  //   )
-  //   list_site_api.map(site =>
-  //       list.push({'value' : site._id, 'label' : site.site_id +" ("+site.no_tech_boq+")"})
-  //   )
-  //   this.setState({list_site_selection : list});
-  //   return this.state.list_site_selection.filter(i =>
-  //     i.label.toLowerCase().includes(inputValue.toLowerCase())
-  //   );
-  // };
-
   filterSiteTSSR = async(inputValue) => {
     if(!inputValue || inputValue.length < 3 ) {
       return [];
     } else {
       let site_tssr_list = [];
-      const getSiteTSSR = await this.getDataFromAPINODE('/plantspec/getTechnicalByProjectId2/'+this.state.project_selected+'?siteId='+inputValue);
+      // /bamidapi/plantspec/getTechnicalByMultiProjectId?project=["5df99ce5face981b7ace8822","5df99ce5face981b7ace8822"]
+      const dataProjectiddoc = this.state.project_selected.map(e => e.value).join('", "')
+      // const getSiteTSSR = await this.getDataFromAPINODE('/plantspec/getTechnicalByProjectId2/'+this.state.project_selected+'?siteId='+inputValue);
+      const getSiteTSSR = await this.getDataFromAPINODE('/plantspec/getTechnicalByMultiProjectId?project=["'+dataProjectiddoc+'"]&siteId='+inputValue);
       if(getSiteTSSR !== undefined && getSiteTSSR.data !== undefined) {
         getSiteTSSR.data.data.map(site =>
           site_tssr_list.push({'value' : site._id, 'label' : "PS "+site.no_tssr_boq+"-"+site.site_id +" ("+site.program+")", 'id_tssr_boq_doc' : site.id_tssr_boq_doc })
@@ -737,12 +514,12 @@ class TssrBOM extends Component {
                     :
                   </td>
                   <td>
-                    <Input style={{marginTop : '10px', marginBottom : '10px'}} name="project" type="select" onChange={this.handleChangeProject} value={this.state.project_selected}>
-                      <option value={null} selected disabled hidden></option>
-                      {this.state.list_project.map( project =>
-                        <option value={project._id}>{project.Project}</option>
-                      )}
-                    </Input>
+                    <Select
+                      cacheOptions
+                      isMulti
+                      options={this.state.list_project_selection}
+                      onChange={this.handleChangeProjectXL}
+                    />
                   </td>
                 </tr>
                 <tr>
@@ -770,7 +547,7 @@ class TssrBOM extends Component {
                           loadOptions={debounce(this.loadOptions, 500)}
                           defaultOptions
                           onChange={this.handleChangeSiteTSSR}
-                          isDisabled={this.state.list_tssr_selected.length >= 2}
+                          isDisabled={this.state.list_tssr_selected.length >= 2 || this.state.project_selected.length > 3}
                         />
                         </td>
                       )}

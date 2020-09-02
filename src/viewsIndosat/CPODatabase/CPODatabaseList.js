@@ -495,7 +495,7 @@ class CPODatabase extends React.Component {
                   <div>
                     {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
                       <div>
-                        <Button block color="success" onClick={this.toggleAddNew} id="toggleCollapse1">
+                        <Button block color="success" onClick={this.togglePOForm} id="toggleCollapse1">
                           <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> New
                           </Button>
                       </div>

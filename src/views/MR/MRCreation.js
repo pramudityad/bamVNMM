@@ -380,7 +380,13 @@ class MRCreation extends Component {
   };
 
   handleChangeProjectXL(e){
-    this.setState({project_selected : e.value, project_name_selected : e.value })
+    if(e !== null){
+      this.setState({project_selected : e.map(e => e.value).join("///"), project_name_selected : e.map(e => e.value).join("///") }, () => {
+        console.log("project_name_selected", this.state.project_name_selected);
+      })
+    }else{
+      this.setState({project_selected :  null, project_name_selected : null })
+    }
     return e;
   }
 
@@ -593,6 +599,7 @@ class MRCreation extends Component {
                     <Label>Project</Label>
                       <Select
                         cacheOptions
+                        isMulti
                         options={this.state.list_project_selection}
                         onChange={this.handleChangeProjectXL}
                       />

@@ -41,6 +41,11 @@ class TableTechnicalItem extends React.Component{
       super(props);
   }
 
+  filterPerProductType(product_type){
+    const dataTechItem = this.props.dataTechBoqItem;
+    return dataTechItem.filter(e => e.product_type === product_type);
+  }
+
   getSummaryRow(row_data_item, region, program){
     let qtyIdx;
     const dataItemIdx = row_data_item.qty_side.filter(e => e.region === region);
@@ -108,29 +113,32 @@ class TableTechnicalItem extends React.Component{
         </tr>
         </thead>
         <tbody>
-        {this.props.dataTechBoqItem.map(item =>
-          <tr>
-            <td>{item.product_type}</td>
-            <td>{item.product_name}</td>
-            <td>{item.ordering}</td>
-            <td>{item.inf_code}</td>
-            <td>{item.total_qty}</td>
-            {this.props.TechHeader.region.map(region =>
-              <Fragment>
-                {this.getSummaryRow(item, region)}
-              </Fragment>
-            )}
-            {this.props.TechHeader.program.map(program =>
-              <Fragment>
-                {this.props.TechHeader.region.map(region =>
-                  <Fragment>
-                    {this.getSummaryRow(item, region, program )}
-                  </Fragment>
-                )}
-              </Fragment>
-            )}
-          </tr>
+        {this.props.productType.map(pt =>
+          this.filterPerProductType(pt).map(item =>
+            <tr>
+              <td>{item.product_type}</td>
+              <td>{item.product_name}</td>
+              <td>{item.ordering}</td>
+              <td>{item.inf_code}</td>
+              <td>{item.total_qty}</td>
+              {this.props.TechHeader.region.map(region =>
+                <Fragment>
+                  {this.getSummaryRow(item, region)}
+                </Fragment>
+              )}
+              {this.props.TechHeader.program.map(program =>
+                <Fragment>
+                  {this.props.TechHeader.region.map(region =>
+                    <Fragment>
+                      {this.getSummaryRow(item, region, program )}
+                    </Fragment>
+                  )}
+                </Fragment>
+              )}
+            </tr>
+          )
         )}
+
         </tbody>
       </Table>
     )
@@ -206,6 +214,7 @@ class SummaryBoq extends Component {
       modal_update_info : false,
       loading_checking : null,
       format_uploader : null,
+      product_type_uniq : [],
     };
     this.toggleUpdateInfo = this.toggleUpdateInfo.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -231,7 +240,7 @@ class SummaryBoq extends Component {
     this.exportFormatTechnical = this.exportFormatTechnical.bind(this);
     this.exportFormatTechnicalCommercial = this.exportFormatTechnicalCommercial.bind(this);
     this.exportFormatTechnicalNew = this.exportFormatTechnicalNew.bind(this);
-    this.exportTechnicalHorizontal = this.exportTechnicalHorizontal.bind(this);
+    this.exportTechnicalSummaryBOQ = this.exportTechnicalSummaryBOQ.bind(this);
     this.exportFormatTechnicalVertical = this.exportFormatTechnicalVertical.bind(this);
     this.approvalTechnical = this.approvalTechnical.bind(this);
     this.handleChangeOptionView = this.handleChangeOptionView.bind(this);
@@ -519,6 +528,8 @@ class SummaryBoq extends Component {
       let dataSummary = [];
       const dataTechItem = data_sites.map( e => e.siteItem).reduce((l, n) => l.concat(n), []);
       const dataTechItemNSVC = dataTechItem.filter(e => e.product_type !== "SVC");
+      let product_type_uniq = [...new Set(dataTechItem.map(({ product_type }) => product_type))];
+      product_type_uniq.push("Service");
       let techRegionUniq = [...new Set(data_sites.map(({ region }) => region))];
       let techProgramUniq = [...new Set(data_sites.map(({ program }) => program))];
       let techServiceUniqID = [...new Set(data_sites.map(({ service_product_id }) => service_product_id))];
@@ -547,7 +558,6 @@ class SummaryBoq extends Component {
         dataFilterIdx["region_program"] = regionProgram;
         dataTechSitePerRegional.push(dataFilterIdx);
       }
-      console.log("dataTechSitePerRegional", dataTechSitePerRegional);
       for(let i = 0; i < techItemUniqID.length; i++){
         let dataSummaryIdx = {};
         let dataQtyRegion = [];
@@ -561,10 +571,10 @@ class SummaryBoq extends Component {
         dataSummaryIdx["total_qty"] = itemTechFilter.reduce((a,b) => a + b.qty, 0);
         for(let j = 0; j < dataTechSitePerRegional.length; j++){
           let regionItemIdx = dataTechSitePerRegional[j];
-          let qtyItmReg = regionItemIdx.item_list.filter(e => e.pp_id === techItemUniqID[j]).reduce((a,b) => a + b.qty, 0);
+          let qtyItmReg = (regionItemIdx.item_list.filter(e => e.pp_id === techItemUniqID[i])).reduce((a,b) => a + b.qty, 0);
           dataQtyRegion.push({"region" : techRegionUniq[j], "qty" : qtyItmReg});
           for(let k = 0; k < regionItemIdx.region_program.length; k++){
-            const qtyItmRegProgram = regionItemIdx.region_program[k].item_list.filter(e => e.pp_id === techItemUniqID[j]).reduce((a,b) => a + b.qty, 0);
+            const qtyItmRegProgram = regionItemIdx.region_program[k].item_list.filter(e => e.pp_id === techItemUniqID[i]).reduce((a,b) => a + b.qty, 0);
             dataQtyRegion.push({"region" : techRegionUniq[j], "qty" : qtyItmReg, "program" : regionItemIdx.region_program[k].program});
           }
         }
@@ -592,9 +602,9 @@ class SummaryBoq extends Component {
         dataSummaryIdx["qty_side"] = dataQtyRegion;
         dataSummary.push(dataSummaryIdx);
       }
-      console.log("dataTechSitePerRegional dataSummary", dataSummary);
+      console.log("dataSummary", dataSummary);
       const Header = {"program" : techProgramUniq, "region" : techRegionUniq};
-      this.setState({view_tech_header_table : Header, data_tech_boq_summary : dataSummary}, () => {
+      this.setState({view_tech_header_table : Header, data_tech_boq_summary : dataSummary, product_type_uniq : product_type_uniq}, () => {
         this.dataViewPagination(dataSummary);
       });
     }else{
@@ -1453,11 +1463,36 @@ class SummaryBoq extends Component {
     saveAs(new Blob([MRFormat]), 'Technical BOQ Uploader Template.xlsx');
   }
 
-  exportTechnicalHorizontal = async () =>{
+  exportTechnicalSummaryBOQ = async () =>{
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
     const dataTech = this.state.data_tech_boq;
+    const dataTechSummary = this.state.data_tech_boq_summary;
+    const dataSummaryHeader = this.state.view_tech_header_table;
+    const dataProductTypeUniq = this.state.product_type_uniq;
+
+    let headerRow = ["PP Type", "Product Description", "Ordering", "INF Code", "Total"];
+    dataSummaryHeader.region.map(reg => headerRow.push(reg));
+    ws.addRow(headerRow);
+
+    for(let i = 0; i < dataProductTypeUniq.length; i++){
+      const dataSummaryType = dataTechSummary.filter(ts => ts.product_type === dataProductTypeUniq[i]);
+      for(let j = 0; j < dataSummaryType.length; j++){
+        let listRow = [dataSummaryType[j].product_type, dataSummaryType[j].product_name, dataSummaryType[j].ordering, dataSummaryType[j].inf_code, dataSummaryType[j].total_qty];
+        for(let k = 0; k < dataSummaryHeader.region.length; k++){
+          let qtyIdx = 0;
+          const qtySiteIdx = dataSummaryType[j].qty_side.find(qs => qs.region === dataSummaryHeader.region[k] && qs.program === undefined);
+          if(qtySiteIdx !== undefined){
+            qtyIdx = qtySiteIdx.qty;
+          }
+          listRow.push(qtyIdx);
+        }
+        ws.addRow(listRow);
+      }
+    }
+
+
     let dataSites = [];
     if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
       dataSites = this.state.data_tech_boq_summary_version;
@@ -1465,42 +1500,8 @@ class SummaryBoq extends Component {
       dataSites = this.state.data_tech_boq_summary;
     }
 
-    const header_config = this.state.view_tech_header_table;
-
-    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service"];
-    let HeaderRow2 = ["Region", "Program", "Batch", "Site ID", "Site Name", "NE ID", "New Config", "Service ID", "Service Name"];
-
-    header_config.type.map(e => HeaderRow1.push(e));
-    header_config.pp_id.map((e, i) => HeaderRow2.push(e +" /// "+ header_config.name[i]));
-
-    ws.addRow(HeaderRow1);
-    ws.addRow(HeaderRow2);
-    for(let i = 0; i < dataSites.length ; i++){
-      let qtyItem = []
-      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-        for(let j = 0; j < header_config.pp_id.length; j++ ){
-          let dataItemIdx = dataSites[i].siteItemVersion.find(e => e.pp_id === header_config.pp_id[j]);
-          if(dataItemIdx !== undefined){
-            qtyItem.push(dataItemIdx.qty);
-          }else{
-            qtyItem.push(null);
-          }
-        }
-      }else{
-        for(let j = 0; j < header_config.pp_id.length; j++ ){
-          let dataItemIdx = dataSites[i].siteItem.find(e => e.pp_id === header_config.pp_id[j]);
-          if(dataItemIdx !== undefined){
-            qtyItem.push(dataItemIdx.qty);
-          }else{
-            qtyItem.push(null);
-          }
-        }
-      }
-      ws.addRow([dataSites[i].region, dataSites[i].program, dataSites[i].batch, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].ne_id, dataSites[i].new_config, dataSites[i].service_product_id, dataSites[i].service_product_name].concat(qtyItem));
-    }
-
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Technical BOQ '+dataTech.no_tech_boq+'.xlsx');
+    saveAs(new Blob([MRFormat]), 'Technical Summary BOQ '+dataTech.no_tech_boq+'.xlsx');
   }
 
   exportFormatTechnicalHorizontal = async () =>{
@@ -1663,7 +1664,6 @@ class SummaryBoq extends Component {
   saveCommtoAPI = async () => {
     this.toggleLoading();
     let dataCommNew = this.state.data_tech_boq;
-    console.log("dataCommNew", dataCommNew);
     let dataItemsPR = [];
     for(let i = 0; i < dataCommNew.techBoqSite.length; i++){
       for(let j = 0; j < dataCommNew.techBoqSite[i].siteItem.length; j++){
@@ -1695,8 +1695,8 @@ class SummaryBoq extends Component {
         const dataItemNew = {
             "pr_item_type": "SVC",
             "id_pp_doc": dataCommNew.techBoqSite[i].id_service_product_doc,
-            "pp_id": dataCommNew.techBoqSite[i].service_product_name,
-            "item_text": dataCommNew.techBoqSite[i].service_product_id,
+            "pp_id": dataCommNew.techBoqSite[i].service_product_id,
+            "item_text": dataCommNew.techBoqSite[i].service_product_name,
             "tax_code": this.getTaxCode("SVC"),
             "short_text": dataCommNew.techBoqSite[i].site_name,
             "uom": "svc",
@@ -1797,9 +1797,7 @@ class SummaryBoq extends Component {
                             </DropdownToggle>
                             <DropdownMenu>
                               <DropdownItem header> Technical File</DropdownItem>
-                              <DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Report</DropdownItem>
-                              <DropdownItem onClick={this.exportTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Horizontal</DropdownItem>
-                              <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> Technical Format</DropdownItem>
+                              <DropdownItem onClick={this.exportTechnicalSummaryBOQ}> <i className="fa fa-file-text-o" aria-hidden="true"></i> SUmmary BOQ Export</DropdownItem>
                             </DropdownMenu>
                           </Dropdown>
                         </Col>
@@ -1967,6 +1965,7 @@ class SummaryBoq extends Component {
                         dataTechBoqItem={this.state.data_tech_boq_summary_pagination}
                         TechHeader={this.state.view_tech_header_table}
                         dataTechSites={this.state.data_tech_boq_sites}
+                        productType={this.state.product_type_uniq}
                       />
                       <nav>
                         <div>

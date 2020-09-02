@@ -17,6 +17,10 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
+const usernameXL = "adminbamidsuper";
+const passwordXL = "F760qbAg2sml";
+
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
@@ -56,6 +60,7 @@ class PSUpload extends Component {
         list_tssr_from_ps : [],
         list_cd_id_mr : [],
         modal_assign_ps : false,
+        wbs_cd_id_data : [],
     };
     this.handleChangeTSSR = this.handleChangeTSSR.bind(this);
     this.getQtyTssrPPNE = this.getQtyTssrPPNE.bind(this);
@@ -231,6 +236,26 @@ class PSUpload extends Component {
     }
   }
 
+  async getDatafromAPIXL(url){
+    try {
+      let respond = await axios.get(API_URL_XL +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
+    }
+  }
+
   toggleAssign(e) {
     this.setState((prevState) => ({
       modal_assign_ps: !prevState.modal_assign_ps,
@@ -274,14 +299,25 @@ class PSUpload extends Component {
         this.setState({ data_mr : resMR.data }, () => {
           this.getListTssrAll();
           if(resMR.data.cust_del !== undefined){
-            console.log("resMR.data.cust_del", resMR.data.cust_del);
-            this.setState({list_cd_id_mr : resMR.data.cust_del })
+            this.setState({list_cd_id_mr : resMR.data.cust_del }, () => {
+              this.getDataCDID(resMR.data.cust_del.map(e => e.cd_id));
+            })
           }else{
             this.setState({list_cd_id_mr : [] })
           }
         });
       }
     })
+  }
+
+  async getDataCDID(array_cd_id){
+    if(array_cd_id.length !== 0){
+      let array_in_cdid = '"'+array_cd_id.join('", "')+'"';
+      const getWPID = await this.getDatafromAPIXL('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}');
+      if(getWPID !== undefined && getWPID.data !== undefined) {
+        this.setState({ wbs_cd_id_data : getWPID.data._items});
+      }
+    }
   }
 
   getDataTssr(_id_tssr){
@@ -446,6 +482,38 @@ class PSUpload extends Component {
 
   async connectMRtoTSSR(){
     const dataMRParent = this.state.data_mr;
+    const dataPS = this.state.data_tssr;
+    const dataCDID = this.state.wbs_cd_id_data;
+    const selectedCD = this.state.cd_id_to_tssr;
+    let matOBDStat = [];
+    dataPS.packages.forEach((pp) => {
+      let wbsSite = null;
+      const dataCDSite = selectedCD.find(sc => sc.id_tssr_boq_site_doc === pp.id_tssr_boq_site_doc);
+      wbsSite = dataCDID.find(wbs => wbs.WP_ID === dataCDSite.cd_id);
+      if(wbsSite !== undefined){
+        wbsSite = wbsSite.C1003_WBS_HW;
+      }
+      pp.materials.forEach((mat) => {
+        const dataOBD = {
+           "MRF": dataMRParent.mr_id,
+           "Submit_by": dataMRParent.mr_status[0].mr_status_updater,
+           "Network_Order": null,
+           "Material": mat.material_id,
+           "Plant": dataMRParent.origin.value,
+           "Storage_Location": dataMRParent.origin.value,
+           "WBS_Element_from": wbsSite,
+           "WBS_Element_to": wbsSite,
+           "Qty": mat.qty,
+           "Delivery_Date": dataMRParent.etd.toString().slice(0,10),
+           "Shipping_point": null,
+           "Work_Status": null,
+           "OBD": null,
+           "Material_document": null,
+           "Error_Message": null,
+        };
+        matOBDStat.push(dataOBD);
+      });
+    });
     this.setState({modal_assign_ps : false})
     let dataTSSR = {};
     if(this.state.cd_id_to_tssr.length !== 0){
@@ -516,7 +584,6 @@ class PSUpload extends Component {
 	    	cd_id_to_tssr.splice(indexCurrent,1);
 	    }
     }
-    console.log("cd_id_to_tssr", cd_id_to_tssr)
     this.setState({cd_id_to_tssr : cd_id_to_tssr})
     this.setState((prevState) => ({
       cd_id_to_tssr_selected: prevState.cd_id_to_tssr_selected.set(name, value),
