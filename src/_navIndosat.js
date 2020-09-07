@@ -10,6 +10,11 @@ export default {
           icon: 'icon-folder',
         },
         {
+          name: 'Config Library',
+          url: '/config-library',
+          icon: 'icon-folder',
+        },
+        {
           name: 'Service Library',
           url: '/svc-library',
           icon: 'icon-folder',

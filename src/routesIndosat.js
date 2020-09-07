@@ -5,6 +5,7 @@ const Dashboard = React.lazy(() => import('./views/Dashboard'));
 
 const ProductPackage = React.lazy(() => import('./viewsIndosat/ProductPackage/PackageUpload'));
 const ServiceLibrary = React.lazy(() => import('./viewsIndosat/SVC/ServiceLibrary'));
+const ConfigManager = React.lazy(() => import('./viewsIndosat/Configlib/Configlibrary'));
 
 const ListTechnical = React.lazy(() => import('./viewsIndosat/Technical/ListTechnical'));
 const DetailTechnical = React.lazy(() => import('./viewsIndosat/Technical/TechnicalBoq'));
@@ -39,6 +40,7 @@ const routes = [
   { path: '/dashboard', name: 'Dashboard', component: Dashboard },
 
   { path: '/product-package', exact: true, name: 'Product Package Manager', component: ProductPackage },
+  { path: '/config-library', exact: true, name: 'Config Library/LCM Library (HOS)', component: ConfigManager },
 
   { path: '/svc-library', exact: true, name: 'Service Library', component: ServiceLibrary },
 
