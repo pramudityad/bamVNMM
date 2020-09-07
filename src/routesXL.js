@@ -84,6 +84,8 @@ const PRPOCreation = React.lazy(() => import('./views/PRPO/CreatePRPO'));
 const ListPRPO = React.lazy(() => import('./views/PRPO/ListPRPO'));
 const DetailPRPO = React.lazy(() => import('./views/PRPO/DetailPRPO'));
 const EditPRPO = React.lazy(() => import('./views/PRPO/EditPRPO'));
+const FMSUploader = React.lazy(() => import('./views/Assignment/FMSupload'));
+
 
 const ListTechnical = React.lazy(() => import('./views/Technical/ListTechnical'));
 const DetailTechnical = React.lazy(() => import('./views/Technical/TechnicalBoq'));
@@ -318,12 +320,15 @@ const routes = [
   { path: '/prt-list', exact: true, name: 'PRT List', component: ListPRPO },
   { path: '/prt-list/detail/:id', exact: true, name: 'PRT Detail', component: DetailPRPO },
   { path: '/prt-list/edit/:id', exact: true, name: 'PRT Edit', component: EditPRPO },
+  { path: '/pod-uploader', exact: true, name: 'POD Uploader', component: FMSUploader },
 
   { path: '/blank-page', exact: true, name: 'BlanK Page', component: BlankPage },
 
   { path: '/mra-list', exact: true, name: 'MRA List', component: MRAList },
   { path: '/mra-list/detail/:id', exact: true, name: 'MRA Detail', component: MRADetail },
   { path: '/mra-list-need-confirm', exact: true, name: 'MRA Detail', component: MRANeedConfirm },
+
+
 
 ];
 

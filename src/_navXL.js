@@ -133,6 +133,12 @@ export default {
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
         },
+        {
+          name: 'POD Uploader',
+          url: '/pod-uploader',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
+        },
       ]
     },
     {
