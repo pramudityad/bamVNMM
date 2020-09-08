@@ -33,6 +33,8 @@ class WarehouseDashboardExt extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      vendor_name : this.props.dataLogin.vendor_name,
+      vendor_code : this.props.dataLogin.vendor_code,
       collapse: true,
       fadeIn: true,
       timeout: 300,
@@ -194,8 +196,13 @@ class WarehouseDashboardExt extends Component {
 
   getWHStockList() {
     this.toggleLoading();
-    this.getDatafromAPINODE('/whManagement/warehouse?noPg=1&q={"$or" : [{"wh_type":{"$regex" : "asp", "$options" : "i"}}, {"wh_type":{"$regex" : "dsp", "$options" : "i"}} ]}').then((res) => {
-      console.log("all data ", res.data);
+    let filter_array = [];
+    filter_array.push('"$or" : [{"wh_type":{"$regex" : "asp", "$options" : "i"}}, {"wh_type":{"$regex" : "dsp", "$options" : "i"}} ]');
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") !== -1 && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('"owner" : "'+this.state.vendor_code+'"');
+    }
+    let whereAnd = '{' + filter_array.join(',') + '}';
+    this.getDatafromAPINODE('/whManagement/warehouse?noPg=1&q='+whereAnd).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -316,7 +323,7 @@ class WarehouseDashboardExt extends Component {
                         <p>{e.owner}</p>
                       </CardBody>
                       <CardFooter>
-                        <Row className="align-items-center">           
+                        <Row className="align-items-center">
                           <Col col="2" xl className="mb-3 mb-xl-0">
                           <Link
                               to={{

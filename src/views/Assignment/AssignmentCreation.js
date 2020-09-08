@@ -482,7 +482,7 @@ class AssignmentCreation extends Component {
     } else {
       let wp_id_list = [];
       // const getSSOWID = await this.getDataFromAPIEXEL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
-      const getWPID = await this.getDataFromAPIEXEL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      const getWPID = await this.getDataFromAPIEXEL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}&projection={"WP_ID":1,"WP_Name":1,"CD_Info_Project_Name":1,"CD_Info_Project":1}');
       if(getWPID !== undefined && getWPID.data !== undefined) {
         this.setState({list_cd_id : getWPID.data._items});
         getWPID.data._items.map(wp =>

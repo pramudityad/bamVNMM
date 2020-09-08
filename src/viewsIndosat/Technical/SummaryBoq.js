@@ -245,6 +245,7 @@ class SummaryBoq extends Component {
     this.approvalTechnical = this.approvalTechnical.bind(this);
     this.handleChangeOptionView = this.handleChangeOptionView.bind(this);
     this.handleChangeFormatUploader = this.handleChangeFormatUploader.bind(this);
+    // this.handleChangePersonal
     }
 
     numberToAlphabet(number){
@@ -1664,10 +1665,11 @@ class SummaryBoq extends Component {
   saveCommtoAPI = async () => {
     this.toggleLoading();
     let dataCommNew = this.state.data_tech_boq;
+    let dataTechperRegion = this.dataCommNew.techBoqSite.filter(ts => ts.region === "BODETABEK")
     let dataItemsPR = [];
-    for(let i = 0; i < dataCommNew.techBoqSite.length; i++){
-      for(let j = 0; j < dataCommNew.techBoqSite[i].siteItem.length; j++){
-        const dataItemIdx = dataCommNew.techBoqSite[i].siteItem[j];
+    for(let i = 0; i < dataTechperRegion.length; i++){
+      for(let j = 0; j < dataTechperRegion[i].siteItem.length; j++){
+        const dataItemIdx = dataTechperRegion[i].siteItem[j];
         const dataItemNew = {
             "pr_item_type": dataItemIdx.product_type,
             "id_pp_doc": dataItemIdx.id_pp_doc,
@@ -1678,37 +1680,37 @@ class SummaryBoq extends Component {
             "uom": dataItemIdx.uom,
             "site_list": [
                 {
-                    "site_name": dataCommNew.techBoqSite[i].site_name,
-                    "site_id": dataCommNew.techBoqSite[i].site_id,
-                    "ne_id": dataCommNew.techBoqSite[i].ne_id,
-                    "id_tech_boq_doc": dataCommNew.techBoqSite[i].id_tech_boq_doc,
-                    "id_tech_boq_site_doc": dataCommNew.techBoqSite[i]._id,
-                    "no_tech_boq": dataCommNew.techBoqSite[i].no_tech_boq,
-                    "id_site_doc": dataCommNew.techBoqSite[i].id_site_doc
+                    "site_name": dataTechperRegion[i].site_name,
+                    "site_id": dataTechperRegion[i].site_id,
+                    "ne_id": dataTechperRegion[i].ne_id,
+                    "id_tech_boq_doc": dataTechperRegion[i].id_tech_boq_doc,
+                    "id_tech_boq_site_doc": dataTechperRegion[i]._id,
+                    "no_tech_boq": dataTechperRegion[i].no_tech_boq,
+                    "id_site_doc": dataTechperRegion[i].id_site_doc
                 }
             ],
             "material_quantity": parseFloat(dataItemIdx.qty)
         };
         dataItemsPR.push(dataItemNew);
       }
-      if(dataCommNew.techBoqSite[i].id_service_product_doc !== undefined && dataCommNew.techBoqSite[i].id_service_product_doc !== null){
+      if(dataTechperRegion[i].id_service_product_doc !== undefined && dataTechperRegion[i].id_service_product_doc !== null){
         const dataItemNew = {
             "pr_item_type": "SVC",
-            "id_pp_doc": dataCommNew.techBoqSite[i].id_service_product_doc,
-            "pp_id": dataCommNew.techBoqSite[i].service_product_id,
-            "item_text": dataCommNew.techBoqSite[i].service_product_name,
+            "id_pp_doc": dataTechperRegion[i].id_service_product_doc,
+            "pp_id": dataTechperRegion[i].service_product_id,
+            "item_text": dataTechperRegion[i].service_product_name,
             "tax_code": this.getTaxCode("SVC"),
-            "short_text": dataCommNew.techBoqSite[i].site_name,
+            "short_text": dataTechperRegion[i].site_name,
             "uom": "svc",
             "site_list": [
                 {
-                    "site_name": dataCommNew.techBoqSite[i].site_name,
-                    "site_id": dataCommNew.techBoqSite[i].site_id,
-                    "ne_id": dataCommNew.techBoqSite[i].ne_id,
-                    "id_tech_boq_doc": dataCommNew.techBoqSite[i].id_tech_boq_doc,
-                    "id_tech_boq_site_doc": dataCommNew.techBoqSite[i]._id,
-                    "no_tech_boq": dataCommNew.techBoqSite[i].no_tech_boq,
-                    "id_site_doc": dataCommNew.techBoqSite[i].id_site_doc
+                    "site_name": dataTechperRegion[i].site_name,
+                    "site_id": dataTechperRegion[i].site_id,
+                    "ne_id": dataTechperRegion[i].ne_id,
+                    "id_tech_boq_doc": dataTechperRegion[i].id_tech_boq_doc,
+                    "id_tech_boq_site_doc": dataTechperRegion[i]._id,
+                    "no_tech_boq": dataTechperRegion[i].no_tech_boq,
+                    "id_site_doc": dataTechperRegion[i].id_site_doc
                 }
             ],
             "material_quantity": parseFloat(1)

@@ -187,7 +187,7 @@ export default {
     {
       name: 'Warehouse',
       icon: 'fas fa-boxes',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASPWarehouse"],
       children: [
         {
           name: 'Dashboard EID',
@@ -199,7 +199,7 @@ export default {
           name: 'Dashboard ASP/DSP',
           url: '/wh-dashboard-ext',
           icon: 'icon-speedometer',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASPWarehouse"],
         },
         {
           name: 'Warehouse Management',
