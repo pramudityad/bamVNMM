@@ -67,6 +67,25 @@ export const postDatatoAPINODE = async (url, data, props) => {
   }
 };
 
+export const postDatatoAPINODEdata = async (url, data, props) => {
+  try {
+    let respond = await axios.post(API_URL_NODE + url, data, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: "Bearer " + props,
+      },
+    });
+    if (respond.status >= 200 && respond.status < 300) {
+      console.log("respond Post Data", respond);
+    }
+    return respond;
+  } catch (err) {
+    let respond = err;
+    console.log("respond Post Data err", err);
+    return respond;
+  }
+};
+
 export const patchDatatoAPINODE = async (url, data, props) => {
   try {
     let respond = await axios.patch(API_URL_NODE + url, data, {

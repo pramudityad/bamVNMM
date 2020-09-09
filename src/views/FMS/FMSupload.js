@@ -17,7 +17,9 @@ import AsyncSelect from "react-select/async";
 import Select from "react-select";
 import { Redirect } from "react-router-dom";
 import ModalCreateNew from "../components/ModalCreateNew";
-import { getDatafromAPIEXEL } from "../../helper/asyncFunction";
+import Loading from '../components/Loading'
+
+import { getDatafromAPIEXEL, postDatatoAPINODE, postDatatoAPINODEdata } from "../../helper/asyncFunction";
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
@@ -87,15 +89,17 @@ class FMSupload extends Component {
       can_edit_ssow: false,
       identifier_by: "cd_id",
       email_cpm: null,
-      SSOW_List_out: [
-        {
-          cd_id: "",
-        },
+      cd_selected: [
+        // {
+        //   id_cd_doc: "",
+        //   cd_id: ""
+        // },
       ],
       createModal: false,
     };
 
     this.loadOptionsCDID = this.loadOptionsCDID.bind(this);
+    this.handlemultipleCD = this.handlemultipleCD.bind(this);
   }
 
   componentDidMount() {
@@ -224,7 +228,7 @@ class FMSupload extends Component {
       if(getWPID !== undefined && getWPID.data !== undefined) {
         this.setState({list_cd_id : getWPID.data._items});
         getWPID.data._items.map(wp =>
-          wp_id_list.push({'value' : wp.WP_ID , 'label' : wp.WP_ID +" ( "+wp.WP_Name+" )", 'project' : wp.CD_Info_Project_Name}))
+          wp_id_list.push({'value' : wp.WP_ID , 'label' : wp.WP_ID +" ( "+wp.WP_Name+" )", 'project' : wp.CD_Info_Project_Name, 'id' : wp._id}))
       }
       this.setState({project_name : wp_id_list[0].project})
       return wp_id_list;
@@ -312,9 +316,48 @@ class FMSupload extends Component {
     );
   };
 
-  handlemultipleCD = (e) => {
-    return e;
+  handlemultipleCD = (cdlist) => {
+    let cd_array = [];
+    if( cdlist !== undefined && cdlist !== null ){
+      cdlist.map(e => cd_array.push({id_cd_doc: e.id, cd_id: e.value}));     
+      this.setState({ cd_selected: cd_array}, () => console.log(this.state.cd_selected)) 
+    }else{
+      this.setState({ cd_selected: [] }, () => console.log(this.state.cd_selected)) 
+    }
+  }
+
+  toggleLoading = () => {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
   };
+
+  postPOD = async () => {
+    this.toggleLoading();
+    this.togglecreateModal();
+    let fileDocument = new FormData(); 
+    await fileDocument.append('fileDocument', this.state.inputan_file);
+    await fileDocument.append('cdIdList', JSON.stringify(this.state.cd_selected));
+    // let post_body = {
+    //   cdIdList: this.state.cd_selected,
+    //   fileDocument
+    // }
+    const respostPOD = await postDatatoAPINODEdata('/erisitePodFile/createPodFile', fileDocument, this.state.tokenUser);
+    if (
+      respostPOD.data !== undefined &&
+      respostPOD.status >= 200 &&
+      respostPOD.status <= 300
+    ) {
+      this.setState({
+        action_status: "success",
+        action_message: "Upload Succeed, please check in POD List",
+      });
+      this.toggleLoading();
+    } else {
+      this.setState({ action_status: "failed" });
+        this.toggleLoading();
+    }
+  }
 
   render() {
     if (this.state.redirect_sign !== false) {
@@ -359,6 +402,7 @@ class FMSupload extends Component {
                   color="success"
                   style={{ float: "right" }}
                   onClick={this.togglecreateModal}
+                  disabled={this.state.cd_selected.length === 0}
                 >
                   <i class="fas fa-upload"></i> Upload File
                 </Button>
@@ -398,13 +442,20 @@ class FMSupload extends Component {
               color="success"
               className="btn-pill"
               // disabled={this.state.rowsXLS.length === 0}
-              // onClick={this.saveMatStockWHBulk}
+              onClick={this.postPOD}
               style={{ height: "30px", width: "100px" }}
             >
               Submit
             </Button>{" "}
           </ModalFooter>
         </ModalCreateNew>
+
+        {/* Modal Loading */}
+        <Loading isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm modal--loading "}>
+        </Loading>
+        {/* end Modal Loading */}
       </div>
     );
   }

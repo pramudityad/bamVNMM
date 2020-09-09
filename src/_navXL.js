@@ -134,8 +134,8 @@ export default {
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
         },
         {
-          name: 'POD Uploader',
-          url: '/pod-uploader',
+          name: 'POD List',
+          url: '/pod-list',
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
         },
