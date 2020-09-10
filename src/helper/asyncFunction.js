@@ -48,6 +48,26 @@ export const getDatafromAPINODE = async (url, props) => {
   }
 };
 
+export const getDatafromAPINODEFile = async (url, props, con_type) => {
+  try {
+    let respond = await axios.get(API_URL_NODE + url, {
+      headers: {
+        responseType: 'blob',
+        "Content-Type": con_type,
+        Authorization: "Bearer " + props,
+      },
+    });
+    if (respond.status >= 200 && respond.status < 300) {
+      console.log("respond Post Data", respond);
+    }
+    return respond;
+  } catch (err) {
+    let respond = err;
+    console.log("respond Post Data err", err);
+    return respond;
+  }
+};
+
 export const postDatatoAPINODE = async (url, data, props) => {
   try {
     let respond = await axios.post(API_URL_NODE + url, data, {
