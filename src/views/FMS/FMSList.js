@@ -19,6 +19,8 @@ import { saveAs } from "file-saver";
 import { connect } from "react-redux";
 import { getDatafromAPINODE } from "../../helper/asyncFunction";
 
+const arrayFilter = ["no_pod", "cust_del.cd_id", "created_by", "created_on"]
+
 class ListFMS extends Component {
   constructor(props) {
     super(props);
@@ -55,8 +57,14 @@ class ListFMS extends Component {
   getPRTList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
+    let filter_array = [];
+    (this.state.filter_list["no_pod"] !== null && this.state.filter_list["no_pod"] !== undefined) && (filter_array.push('"no_pod":{"$regex" : "' + this.state.filter_list["no_pod"] + '", "$options" : "i"}'));
+    (this.state.filter_list["cust_del.cd_id"] !== null && this.state.filter_list["cust_del.cd_id"] !== undefined) && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list["cust_del.cd_id"] + '", "$options" : "i"}'));
+    (this.state.filter_list["created_by"] !== null && this.state.filter_list["created_by"] !== undefined) && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list["created_by"] + '", "$options" : "i"}'));
+    (this.state.filter_list["created_on"] !== null && this.state.filter_list["created_on"] !== undefined) && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list["created_on"] + '", "$options" : "i"}'));    
+    let whereAnd = '{' + filter_array.join(',') + '}';
     getDatafromAPINODE(
-      "/erisitePodFile?srt=_id:-1&" + "lmt=" + maxPage + "&pg=" + page,
+      "/erisitePodFile?srt=_id:-1&q=" + whereAnd + '&lmt=' + maxPage + '&pg=' + page,
       this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
@@ -69,7 +77,7 @@ class ListFMS extends Component {
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < arrayFilter.length; i++) {
       searchBar.push(
         <td>
           <div className="controls" style={{ width: "150px" }}>
@@ -79,7 +87,7 @@ class ListFMS extends Component {
                   <i className="fa fa-search"></i>
                 </InputGroupText>
               </InputGroupAddon>
-              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[i]} name={i} size="sm" />
+              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[arrayFilter[i]]} name={arrayFilter[i]} size="sm" />
               {/* <Input type="text" placeholder="Search" size="sm" /> */}
             </InputGroup>
           </div>

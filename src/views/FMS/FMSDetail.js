@@ -102,13 +102,13 @@ class DetailFMS extends Component {
                   outline
                   color="info"
                   size="sm"
-                  onClick={this.exportPRT}
+                  // onClick={this.exportPRT}
                 >
                   <i
                     className="fa fa-download"
                     style={{ marginRight: "8px" }}
                   ></i>
-                  POD Format
+                  POD File
                 </Button>
               </CardHeader>
               <CardBody>
