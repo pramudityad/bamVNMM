@@ -85,6 +85,11 @@ const ListPRPO = React.lazy(() => import('./views/PRPO/ListPRPO'));
 const DetailPRPO = React.lazy(() => import('./views/PRPO/DetailPRPO'));
 const EditPRPO = React.lazy(() => import('./views/PRPO/EditPRPO'));
 
+const FMSUploader = React.lazy(() => import('./views/FMS/FMSupload'));
+const FMSList = React.lazy(() => import('./views/FMS/FMSList'));
+const FMSDetail = React.lazy(() => import('./views/FMS/FMSDetail'));
+
+
 const ListTechnical = React.lazy(() => import('./views/Technical/ListTechnical'));
 const DetailTechnical = React.lazy(() => import('./views/Technical/TechnicalBoq'));
 const ApprovalTechnical = React.lazy(() => import('./views/Technical/TechnicalBoqApproval'));
@@ -319,11 +324,17 @@ const routes = [
   { path: '/prt-list/detail/:id', exact: true, name: 'PRT Detail', component: DetailPRPO },
   { path: '/prt-list/edit/:id', exact: true, name: 'PRT Edit', component: EditPRPO },
 
+  { path: '/pod-list/uploader', exact: true, name: 'POD Uploader', component: FMSUploader },
+  { path: '/pod-list', exact: true, name: 'POD List', component: FMSList },
+  { path: '/pod-list/detail/:id', exact: true, name: 'POD Detail', component: FMSDetail },
+
   { path: '/blank-page', exact: true, name: 'BlanK Page', component: BlankPage },
 
   { path: '/mra-list', exact: true, name: 'MRA List', component: MRAList },
   { path: '/mra-list/detail/:id', exact: true, name: 'MRA Detail', component: MRADetail },
   { path: '/mra-list-need-confirm', exact: true, name: 'MRA Detail', component: MRANeedConfirm },
+
+
 
 ];
 
