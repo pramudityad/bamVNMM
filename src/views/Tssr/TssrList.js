@@ -20,7 +20,7 @@ const passwordXL = "F760qbAg2sml";
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const arrayFilter = ["no_plantspec", "project_name", "tower_id", "current_status", "submission_status", "mr_id"]
+const arrayFilter = ["no_plantspec", "project_name", "tower_id", "region", "current_status", "submission_status", "mr_id"]
 
 class TssrList extends Component {
   constructor(props) {
@@ -122,6 +122,7 @@ class TssrList extends Component {
     (this.state.filter_list["no_plantspec"] !== null && this.state.filter_list["no_plantspec"] !== undefined) && (filter_array.push('"no_plantspec":{"$regex" : "' + this.state.filter_list["no_plantspec"] + '", "$options" : "i"}'));
     (this.state.filter_list["project_name"] !== null && this.state.filter_list["project_name"] !== undefined) && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list["project_name"] + '", "$options" : "i"}'));
     (this.state.filter_list["tower_id"] !== null && this.state.filter_list["tower_id"] !== undefined) && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list["tower_id"] + '", "$options" : "i"}'));
+    (this.state.filter_list["region"] !== null && this.state.filter_list["region"] !== undefined) && (filter_array.push('"site_info.region":{"$regex" : "' + this.state.filter_list["region"] + '", "$options" : "i"}'));
     (this.state.filter_list["current_status"] !== null && this.state.filter_list["current_status"] !== undefined) && (filter_array.push('"current_status":{"$regex" : "' + this.state.filter_list["current_status"] + '", "$options" : "i"}'));
     (this.state.filter_list["submission_status"] !== null && this.state.filter_list["submission_status"] !== undefined) && (filter_array.push('"submission_status":{"$regex" : "' + this.state.filter_list["submission_status"] + '", "$options" : "i"}'));
     (this.state.filter_list["mr_id"] !== null && this.state.filter_list["mr_id"] !== undefined) && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list["mr_id"] + '", "$options" : "i"}'));
@@ -230,7 +231,7 @@ class TssrList extends Component {
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < arrayFilter.length+1; i++) {
+    for (let i = 0; i < arrayFilter.length; i++) {
       searchBar.push(
         <td>
           <div className="controls">
