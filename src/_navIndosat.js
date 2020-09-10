@@ -51,16 +51,16 @@ export default {
           url: '/list-tssr-boq',
           icon: 'icon-docs',
         },
-      {
-         name: 'CR',
-         url: '/cr-detail',
-         icon: 'icon-drawer',
-       },
-       {
-        name: 'Plant Spec List',
-        url: '/ps-list',
-        icon: 'icon-menu',
-      },
+        {
+           name: 'CR',
+           url: '/cr-detail',
+           icon: 'icon-drawer',
+         },
+         {
+          name: 'Plant Spec List',
+          url: '/ps-list',
+          icon: 'icon-menu',
+        },
       ]
     }
   ],

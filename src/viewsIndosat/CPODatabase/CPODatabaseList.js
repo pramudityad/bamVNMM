@@ -58,6 +58,7 @@ class CPODatabase extends React.Component {
       POForm: new Array(5).fill(null),
       collapse: false,
       selected_id: "",
+      inputan_file : null,
     }
     this.togglePOForm = this.togglePOForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -69,6 +70,7 @@ class CPODatabase extends React.Component {
     this.saveNewPO = this.saveNewPO.bind(this);
     this.toggleEdit = this.toggleEdit.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
+    this.handleInputFile = this.handleInputFile.bind(this);
 
   }
 
@@ -142,6 +144,28 @@ class CPODatabase extends React.Component {
     }
   }
 
+  async postDataFormData(url, form){
+    for (var value of form.values()) {
+       console.log("test api", value);
+    }
+    try {
+      let respond = await axios.post(API_URL_NODE +url, form, {
+        headers: {
+          'Content-Type':'multipart/form-data',
+          'Authorization': 'Bearer ' + this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Form data", respond);
+      }
+      console.log("respond Post Form data", respond);
+      return respond;
+    }catch (err) {
+      let respond = undefined;
+      console.log("respond Post Form data", err);
+      return respond;
+    }
+  }
 
   changeFilterName(value) {
     this.getPODataList();
@@ -421,6 +445,14 @@ class CPODatabase extends React.Component {
     }
   }
 
+  handleInputFile = e => {
+    let fileUpload = null;
+    if(e !== undefined && e.target !== undefined && e.target.files !== undefined){
+      fileUpload = e.target.files[0];
+    }
+    this.setState({inputan_file : fileUpload});
+  }
+
   async saveNewPO() {
     this.togglePOForm();
     this.toggleLoading();
@@ -429,15 +461,40 @@ class CPODatabase extends React.Component {
     const dataPPNew = this.state.POForm;
     const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
     const po_num = dataPPNew[0];
-    let pp = {
-      "po_number": po_num.toString(),
-      "po_year": dataPPNew[1],
-      "currency": dataPPNew[2],
-      "value": dataPPNew[3],
-      "number_of_sites": dataPPNew[4]
+    // let pp = {
+    //   "po_number": po_num.toString(),
+    //   "po_year": dataPPNew[1],
+    //   "currency": dataPPNew[2],
+    //   "value": dataPPNew[3],
+    //   "number_of_sites": dataPPNew[4]
+    // }
+    let po = {
+      "byForm": true,
+      "dataForm": {
+        "po_number": "test1235",
+        "date": "2020-09-01 22:22:22",
+        "revision_number": "REV12",
+        "contract_number": "CN1",
+        "pr_sc_number": "232",
+        "delivery_term_location": "2322",
+        "expired_date": "2020-12-01 22:22:22"
+      },
+      "fileDocument": this.state.inputan_file
     }
-    poData.push(pp);
-    let postData = await this.postDatatoAPIEXEL('/po_op', pp)
+    const dataForm = new FormData();
+    await dataForm.append('byForm', true);
+    const json = JSON.stringify(po.dataForm);
+    const blob = new Blob([json], {
+      type: 'application/json'
+    });
+    await dataForm.append('dataForm', JSON.stringify(po.dataForm));
+    console.log("blob", blob);
+    console.log("this.state.inputan_file", this.state.inputan_file);
+    await dataForm.append('fileDocument', this.state.inputan_file);
+    console.log("this.state.inputan_file fd", dataForm.get("fileDocument"));
+
+    // poData.push(pp);
+    let postData = await this.postDataFormData('/cpodb/createCpoDbIsat', dataForm)
       .then(res => {
         if (res.data !== undefined) {
           this.toggleLoading();
@@ -638,6 +695,10 @@ class CPODatabase extends React.Component {
                 <FormGroup>
                   <Label htmlFor="number_of_sites" >Number of Sites</Label>
                   <Input type="number" min="0" name="4" placeholder="" value={this.state.POForm[4]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="number_of_sites" >File</Label>
+                  <input type="file" style={{"margin":"10px 10px 5px 20px","visiblity":"hidden"}} onChange={this.handleInputFile}/>
                 </FormGroup>
               </Col>
             </Row>
