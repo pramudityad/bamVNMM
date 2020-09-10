@@ -126,6 +126,7 @@ class TSSRBoq extends Component {
         data_tssr_boq : null,
         data_tssr_boq_sites : [],
         data_tssr_boq_sites_pagination : [],
+        data_tssr_boq_sites_version : [],
         tssr_config_comment : new Map(),
         tssr_config_qty : new Map(),
         tssr_comment : null,
@@ -143,7 +144,6 @@ class TSSRBoq extends Component {
         list_tech_boq_selection : [],
         data_tssr_boq_selected : null,
         data_tssr_boq_sites_selected : [],
-        list_version : [],
 
         activePage : 1,
         perPage : 10,
@@ -208,6 +208,7 @@ class TSSRBoq extends Component {
         result_check_tssr : {},
         array_site_ps_creation : [],
         data_tower : [],
+        list_version : [],
       };
       this.saveDataTSSR = this.saveDataTSSR.bind(this);
       this.toggleAlert = this.toggleAlert.bind(this);
@@ -232,6 +233,7 @@ class TSSRBoq extends Component {
       this.onExited = this.onExited.bind(this);
 
       this.psBulkCreation = this.psBulkCreation.bind(this);
+      this.handleChangeVersion = this.handleChangeVersion.bind(this);
     }
 
     checkValueReturn(value1, value2){
@@ -602,7 +604,7 @@ class TSSRBoq extends Component {
           const dataTech = res.data;
           this.setState({data_tssr_boq : dataTech.data});
           if(res.data.data !== undefined){
-            this.setState({data_tssr_boq_sites : dataTech.data.tssr_site}, () => {
+            this.setState({data_tssr_boq_sites : dataTech.data.tssr_site, list_version : new Array(parseInt(dataTech.data.version)+1).fill(null)}, () => {
               this.viewTechBoqData(dataTech.data.tssr_site);
               this.getAllTowerRegion(dataTech.data.tssr_site.map(site => site.site_id))
               this.dataViewPagination(this.state.data_tssr_boq_sites);
@@ -679,6 +681,32 @@ class TSSRBoq extends Component {
       }
     }
 
+    viewTechBoqDataVersion(data_sites){
+      if(data_sites.length !== 0){
+        const configId = data_sites[0].siteItemConfigVersion.map(e => e.config_id);
+        const typeHeader = data_sites[0].siteItemConfigVersion.map(e => "CONFIG");
+        let all_config = data_sites.map(value => value.siteItemConfigVersion.map(child => child)).reduce((l, n) => l.concat(n), []);
+        let config_group_avail_uniq = [...new Set(all_config.map(({ config_group }) => config_group))];
+        let config_group_non_default = [];
+        let config_group_type_avail = [];
+        let config_group_type_non_default = [];
+        for(let i = 0 ; i < config_group_avail_uniq.length; i++){
+          let findConfigGroupType = all_config.find(e => e.config_group === config_group_avail_uniq[i]).config_group_type;
+          config_group_type_avail.push(findConfigGroupType);
+          if(Config_group_DEFAULT.includes(config_group_avail_uniq[i])!== true){
+            config_group_non_default.push(config_group_avail_uniq[i]);
+            config_group_type_non_default.push(findConfigGroupType);
+          }
+        }
+        let config_group_all = Config_group_DEFAULT.concat(config_group_non_default);
+        let config_group_type_all = Config_group_type_DEFAULT.concat(config_group_type_non_default);
+
+        this.setState({view_tech_header_table : {"config_group_header" : config_group_avail_uniq, "config_group_type_header" : config_group_type_avail }, view_tech_all_header_table : {"config_group_header" : config_group_all, "config_group_type_header" : config_group_type_all } }, () => {
+          // this.dataViewPagination(data_sites);
+        });
+      }
+    }
+
     dataViewPagination(dataTechView){
       let perPage = this.state.perPage;
       let dataTechPage = [];
@@ -692,9 +720,16 @@ class TSSRBoq extends Component {
     }
 
     handlePageChange(pageNumber) {
-      this.setState({activePage: pageNumber}, () => {
-        this.dataViewPagination(this.state.data_tssr_boq_sites);
-      });
+      if(this.state.version_selected !== null && this.state.data_tssr_boq.version !== this.state.version_selected){
+        this.setState({activePage: pageNumber}, () => {
+          this.dataViewPagination(this.state.data_tssr_boq_sites_version);
+        });
+      }else{
+        this.setState({activePage: pageNumber}, () => {
+          this.dataViewPagination(this.state.data_tssr_boq_sites);
+        });
+      }
+
     }
 
     handleChangeCommentConfig = (e) => {
@@ -881,55 +916,6 @@ class TSSRBoq extends Component {
       this.toggleLoading();
     }
 
-    // exportFormatTSSRHorizontalWithDRM = async () =>{
-    //   const wb = new Excel.Workbook();
-    //   const ws = wb.addWorksheet();
-    //
-    //   const dataTech = this.state.data_tssr_boq;
-    //   let dataSites = [];
-    //   if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-    //     dataSites = this.state.data_tssr_boq_sites_version;
-    //   }else{
-    //     dataSites = this.state.data_tssr_boq_sites;
-    //   }
-    //
-    //   const header_config = this.state.view_tech_header_table;
-    //
-    //   let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
-    //   let HeaderRow2 = ["Tower ID", "Program", "SOW", "Priority"];
-    //
-    //   let headerDRM = ["Actual RBS DATA", "Actual DU", "RU B0 (900)", "RU B1 (2100)", "RU B3 (1800) ", "RU B8 (900)", "RU B1B3", "RU Band Agnostic", "Remarks Need CR/Go as SoW Original", "Existing Antenna (type)", "ANTENNA_HEIGHT ", "Scenario RAN", "Dismantle Antenna", "Dismantle RU", "Dismantele Accessories", "Dismantle DU", "Dismantle RBS/Encl", "EXISTING DAN SCENARIO IMPLEMENTASI RBS ", "DRM FINAL (MODULE)", "DRM Final Radio", "DRM Final SOW Cabinet", "DRM FINAL (SOW G9/U9/L9)", "DRM FINAL (SOW G18/L18)", "DRM FINAL (SOW U21/L21)", "DRM FINAL (ANTENNA TYPE)", "PLAN ANTENNA AZIMUTH", "PLAN ANTENNA ET/MT", "Module", "Cabinet", "Radio", "Power RRU", "Antenna", "Dismantle", "System", "Optic RRU", "Area", "VERIFICATION (DATE)", "VERIFICATION (STATUS)", "VERIFICATION PIC", "ISSUED DETAIL", "CR Flag engineering"]
-    //
-    //   header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
-    //   header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
-    //
-    //   headerDRM.map(e => HeaderRow1.push("DRM"));
-    //   HeaderRow2 = HeaderRow2.concat(headerDRM);
-    //
-    //   ws.addRow(HeaderRow1);
-    //   ws.addRow(HeaderRow2);
-    //   for(let i = 0; i < dataSites.length ; i++){
-    //     let qtyConfig = []
-    //     for(let j = 0; j < header_config.config_group_header.length; j++ ){
-    //       let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
-    //       if(dataConfigIdx !== undefined){
-    //         let idx_config_qty = dataConfigIdx.tssr_notes === undefined ? dataConfigIdx.qty : dataConfigIdx.tssr_notes.length !== 0 ? dataConfigIdx.tssr_notes[dataConfigIdx.tssr_notes.length-1].suggested_qty : dataConfigIdx.qty;
-    //         qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, idx_config_qty]);
-    //       }else{
-    //         qtyConfig = qtyConfig.concat([null, null]);
-    //       }
-    //     }
-    //     let drm = this.getDataDRM(dataSites[i].site_id, dataSites[i].program);
-    //     ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].priority, dataSites[i].sow]
-    //       .concat(qtyConfig)
-    //       .concat([drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering])
-    //     );
-    //   }
-    //
-    //   const TSSRDRM = await wb.xlsx.writeBuffer();
-    //   saveAs(new Blob([TSSRDRM]), 'TSSR '+dataTech.no_tech_boq+' Report with DRM.xlsx');
-    // }
-
     exportFormatTSSRHorizontalWithDRM = async () =>{
       const wb = new Excel.Workbook();
       const ws = wb.addWorksheet();
@@ -1016,13 +1002,24 @@ class TSSRBoq extends Component {
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         for(let j = 0; j < header_config.config_group_header.length; j++ ){
-          let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
-          if(dataConfigIdx !== undefined){
-            let idx_config_qty = dataConfigIdx.qty;
-            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, idx_config_qty]);
+          if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+            let dataConfigIdx = dataSites[i].siteItemConfigVersion.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+            if(dataConfigIdx !== undefined){
+              let idx_config_qty = dataConfigIdx.qty;
+              qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, idx_config_qty]);
+            }else{
+              qtyConfig = qtyConfig.concat([null, null]);
+            }
           }else{
-            qtyConfig = qtyConfig.concat([null, null]);
+            let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+            if(dataConfigIdx !== undefined){
+              let idx_config_qty = dataConfigIdx.qty;
+              qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, idx_config_qty]);
+            }else{
+              qtyConfig = qtyConfig.concat([null, null]);
+            }
           }
+
         }
         let drm = this.getDataDRM(dataSites[i].site_id, dataSites[i].program);
         ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].priority]
@@ -1032,7 +1029,12 @@ class TSSRBoq extends Component {
       }
 
       const TSSRDRM = await wb.xlsx.writeBuffer();
-      saveAs(new Blob([TSSRDRM]), 'TSSR '+dataTech.no_tssr_boq+' Format.xlsx');
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        saveAs(new Blob([TSSRDRM]), 'TSSR '+dataTech.no_tssr_boq+' Ver. '+this.state.version_selected+' Format.xlsx');
+      }else{
+        saveAs(new Blob([TSSRDRM]), 'TSSR '+dataTech.no_tssr_boq+' Format.xlsx');
+      }
+
     }
 
     exportDRMofTSSR= async () =>{
@@ -1185,6 +1187,33 @@ class TSSRBoq extends Component {
       this.toggleLoading();
     }
 
+    handleChangeVersion(e){
+      const value = e.target.value;
+      this.setState({version_selected : value}, () => {
+        if(value !== this.state.data_tssr_boq.version){
+          this.getVersionTechBoqData(this.props.match.params.id, value);
+        }else{
+          this.getTechBoqData(this.props.match.params.id);
+        }
+      });
+    }
+
+    getVersionTechBoqData(_id_tech, ver){
+      this.getDataFromAPINODE('/tssr/getTssrVersion/'+_id_tech+'/ver/'+ver).then(res => {
+        if(res.data !== undefined){
+          const dataTech = res.data;
+          if(res.data.data !== undefined){
+            this.setState({data_tssr_boq_sites_version : dataTech.data.tssr_site}, () => {
+              this.viewTechBoqDataVersion(dataTech.data.tssr_site);
+              this.getAllTowerRegion(dataTech.data.tssr_site.map(site => site.site_id))
+              this.dataViewPagination(this.state.data_tssr_boq_sites_version);
+              this.getDRMData(dataTech.data.tssr_site, dataTech.data.project_name);
+            });
+          }
+        }
+      })
+    }
+
     render() {
       let viewDataDRM = {};
       return (
@@ -1276,6 +1305,10 @@ class TSSRBoq extends Component {
                             <tr style={{fontWeight : '390', fontSize : '10px', fontStyle:'oblique'}}>
                               <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Status : {this.state.data_tssr_boq.current_status}</td>
                             </tr>
+                            <tr style={{fontWeight : '390', fontSize : '10px', fontStyle:'oblique'}}>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Current Version : {this.state.data_tssr_boq.version}
+                              </td>
+                            </tr>
                           </React.Fragment>
                         )}
                       </tbody>
@@ -1283,6 +1316,22 @@ class TSSRBoq extends Component {
                     <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
                     </Col>
                   </Row>
+                  {this.state.data_tssr_boq !== null && (
+                  <Row>
+                    <Col sm="12" md="12">
+                      <div>
+                      <span>
+                        Version :
+                      </span>
+                      <Input type="select" value={this.state.version_selected === null? this.state.data_tssr_boq.version : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "100px", height : "30px", display : 'inline-grid'}}>
+                        {this.state.list_version.map((e,i) =>
+                          <option value={i}>{i}</option>
+                        )}
+                      </Input>
+                      </div>
+                    </Col>
+                  </Row>
+                  )}
                   {this.state.view_drm === "tssr" && (
                     <div class='divtable'>
                       <Table hover bordered striped responsive size="sm" width="100%">
@@ -1295,24 +1344,50 @@ class TSSRBoq extends Component {
                             <th>Config</th>
                             <th>SAP Number</th>
                             <th>Qty TSSR</th>
-                            <th>Qty Delta</th>
+                            {this.state.version_selected !== null && this.state.data_tssr_boq.version !== this.state.version_selected ? (
+                              <Fragment></Fragment>
+                            ) : (
+                              <th>Qty Delta</th>
+                            )}
+
                           </tr>
                         </thead>
                         <tbody>
-                        {this.state.data_tssr_boq_sites_pagination.map(site =>
-                          site.siteItemConfig.map(conf =>
-                              <tr>
-                                <td>{site.site_id}</td>
-                                <td>{this.state.data_tower.find(twr => twr.tower_id === site.site_id) !== undefined ? this.state.data_tower.find(twr => twr.tower_id === site.site_id).region : null }</td>
-                                <td>{site.program}</td>
-                                <td>{site.sow}</td>
-                                <td>{conf.config_id}</td>
-                                <td>{conf.sap_number}</td>
-                                <td>{conf.qty}</td>
-                                <td>{site.siteItemConfigDelta.find(e => e.config_group_type === conf.config_group_type && e.config_group === conf.config_group) !== undefined ? site.siteItemConfigDelta.find(e => e.config_group_type === conf.config_group_type && e.config_group === conf.config_group).qty : null}</td>
-                              </tr>
-                          )
-                        )}
+                        {this.state.version_selected !== null && this.state.data_tssr_boq.version !== this.state.version_selected ? (
+                          <Fragment>
+                            {this.state.data_tssr_boq_sites_version.length !== 0 && this.state.data_tssr_boq_sites_pagination !== undefined ? this.state.data_tssr_boq_sites_version.map(site =>
+                              site.siteItemConfigVersion.map(conf =>
+                                  <tr>
+                                    <td>{site.site_id}</td>
+                                    <td>{this.state.data_tower.find(twr => twr.tower_id === site.site_id) !== undefined ? this.state.data_tower.find(twr => twr.tower_id === site.site_id).region : null }</td>
+                                    <td>{site.program}</td>
+                                    <td>{site.sow}</td>
+                                    <td>{conf.config_id}</td>
+                                    <td>{conf.sap_number}</td>
+                                    <td>{conf.qty}</td>
+                                  </tr>
+                              )
+                            ) : <></>}
+                          </Fragment>
+                        ) : (
+                          <Fragment>
+                            {this.state.data_tssr_boq_sites_pagination.map(site =>
+                              site.siteItemConfig.map(conf =>
+                                  <tr>
+                                    <td>{site.site_id}</td>
+                                    <td>{this.state.data_tower.find(twr => twr.tower_id === site.site_id) !== undefined ? this.state.data_tower.find(twr => twr.tower_id === site.site_id).region : null }</td>
+                                    <td>{site.program}</td>
+                                    <td>{site.sow}</td>
+                                    <td>{conf.config_id}</td>
+                                    <td>{conf.sap_number}</td>
+                                    <td>{conf.qty}</td>
+                                    <td>{site.siteItemConfigDelta.find(e => e.config_group_type === conf.config_group_type && e.config_group === conf.config_group) !== undefined ? site.siteItemConfigDelta.find(e => e.config_group_type === conf.config_group_type && e.config_group === conf.config_group).qty : null}</td>
+                                  </tr>
+                              )
+                            )}
+                          </Fragment>
+                        ) }
+
                         </tbody>
                       </Table>
                     </div>
@@ -1368,10 +1443,19 @@ class TSSRBoq extends Component {
                           </tr>
                         </thead>
                         <tbody>
-                        <TableTSSRHorizontal
-                          dataTechBoqSites={this.state.data_tssr_boq_sites_pagination}
-                          configHeader={this.state.view_tech_all_header_table}
-                        />
+                        {this.state.version_selected !== null && this.state.data_tssr_boq.version !== this.state.version_selected ? (
+                          <TableTSSRHorizontal
+                            dataTechBoqSites={this.state.data_tssr_boq_sites_pagination}
+                            configHeader={this.state.view_tech_all_header_table}
+                            isVersion={"rollback"}
+                          />
+                        ) : (
+                          <TableTSSRHorizontal
+                            dataTechBoqSites={this.state.data_tssr_boq_sites_pagination}
+                            configHeader={this.state.view_tech_all_header_table}
+                          />
+                        ) }
+
                         {this.state.data_tssr_boq_sites_pagination.map(site =>
                           site.siteItemConfig.map(conf =>
                               <tr>

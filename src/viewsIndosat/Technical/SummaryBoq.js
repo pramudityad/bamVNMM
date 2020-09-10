@@ -1674,7 +1674,7 @@ class SummaryBoq extends Component {
     this.toggleLoading();
     let dataCommNew = this.state.data_tech_boq;
     const regionSelected = this.state.region_selected;
-    let dataTechperRegion = this.dataCommNew.techBoqSite.filter(ts => ts.region === regionSelected)
+    let dataTechperRegion = dataCommNew.techBoqSite.filter(ts => ts.region === regionSelected)
     let dataItemsPR = [];
     for(let i = 0; i < dataTechperRegion.length; i++){
       for(let j = 0; j < dataTechperRegion[i].siteItem.length; j++){

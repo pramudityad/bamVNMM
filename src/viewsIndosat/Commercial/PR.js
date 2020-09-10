@@ -1407,7 +1407,7 @@ class CommercialBoq extends Component {
     const comFormat = await wb.xlsx.writeBuffer();
     saveAs(
       new Blob([comFormat]),
-      "PR " + this.state.data_comm_boq.no_comm_boq + " Uploader.xlsx"
+      "PR " + this.state.data_comm_boq.no_comm_boq +" "+data_info_item[0].region+ " Uploader.xlsx"
     );
   };
 
@@ -1433,6 +1433,9 @@ class CommercialBoq extends Component {
         <tr key={row._id}>
           <td style={{ verticalAlign: "middle" }}>
             {this.state.data_comm_boq.project_name}
+          </td>
+          <td style={{ verticalAlign: "middle" }}>
+            {row.region}
           </td>
           <td style={{ verticalAlign: "middle" }}>
             {row.tax_code}
@@ -1678,9 +1681,11 @@ class CommercialBoq extends Component {
                               <tr
                                 style={{ fontWeight: "425", fontSize: "15px" }}
                               >
-                                <td></td>
-                                <td></td>
-                                <td></td>
+                                <td>Region</td>
+                                <td>:</td>
+                                <td colSpan="2"style={{ paddingLeft: "10px" }}>
+                                  {this.state.data_comm_boq_items.length > 0 ? this.state.data_comm_boq_items[0].region : null}
+                                </td>
                               </tr>
                             </tbody>
                           </table>
@@ -1694,6 +1699,7 @@ class CommercialBoq extends Component {
                       <thead class="table-commercial__header--fixed">
                         <tr>
                           <th>Project Name</th>
+                          <th>Region</th>
                           <th>Tax Code</th>
                           <th>Short Text</th>
                           <th>Item Text</th>
@@ -1714,6 +1720,9 @@ class CommercialBoq extends Component {
                                 {this.state.data_comm_boq.project_name}
                               </td>
                               <td style={{ verticalAlign: "middle" }}>
+                                {row.region}
+                              </td>
+                              <td style={{ verticalAlign: "middle" }}>
                                 {row.tax_code}
                               </td>
                               <td style={{ verticalAlign: "middle" }}>
@@ -1731,6 +1740,7 @@ class CommercialBoq extends Component {
                             </tr>
                             {this.getServiceLib(row).map(svl => (
                               <tr>
+                                <td></td>
                                 <td></td>
                                 <td></td>
                                 <td></td>
