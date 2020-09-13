@@ -126,6 +126,7 @@ class TSSRBoq extends Component {
         data_tssr_boq : null,
         data_tssr_boq_sites : [],
         data_tssr_boq_sites_pagination : [],
+        data_tssr_boq_version : {},
         data_tssr_boq_sites_version : [],
         tssr_config_comment : new Map(),
         tssr_config_qty : new Map(),
@@ -209,6 +210,7 @@ class TSSRBoq extends Component {
         array_site_ps_creation : [],
         data_tower : [],
         list_version : [],
+
       };
       this.saveDataTSSR = this.saveDataTSSR.bind(this);
       this.toggleAlert = this.toggleAlert.bind(this);
@@ -1189,7 +1191,7 @@ class TSSRBoq extends Component {
 
     handleChangeVersion(e){
       const value = e.target.value;
-      this.setState({version_selected : value}, () => {
+      this.setState({version_selected : value, data_tssr_boq_sites : [], data_tssr_boq_sites_version : [], data_tssr_boq_sites_pagination : [], data_tssr_boq_version : {}}, () => {
         if(value !== this.state.data_tssr_boq.version){
           this.getVersionTechBoqData(this.props.match.params.id, value);
         }else{
@@ -1203,11 +1205,13 @@ class TSSRBoq extends Component {
         if(res.data !== undefined){
           const dataTech = res.data;
           if(res.data.data !== undefined){
-            this.setState({data_tssr_boq_sites_version : dataTech.data.tssr_site}, () => {
+            this.setState({data_tssr_boq_version : dataTech.data, data_tssr_boq_sites_version : dataTech.data.tssr_site}, () => {
               this.viewTechBoqDataVersion(dataTech.data.tssr_site);
-              this.getAllTowerRegion(dataTech.data.tssr_site.map(site => site.site_id))
+              if(dataTech.data.tssr_site.length !== 0){
+                this.getAllTowerRegion(dataTech.data.tssr_site.map(site => site.site_id));
+                this.getDRMData(dataTech.data.tssr_site, dataTech.data.project_name);
+              }
               this.dataViewPagination(this.state.data_tssr_boq_sites_version);
-              this.getDRMData(dataTech.data.tssr_site, dataTech.data.project_name);
             });
           }
         }
@@ -1309,29 +1313,36 @@ class TSSRBoq extends Component {
                               <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Current Version : {this.state.data_tssr_boq.version}
                               </td>
                             </tr>
+                            <tr style={{fontWeight : '390', fontSize : '10px', fontStyle:'oblique'}}>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Updated by : {this.state.data_tssr_boq.updater[0].email}
+                              </td>
+                            </tr>
                           </React.Fragment>
                         )}
                       </tbody>
                     </table>
+                    {this.state.data_tssr_boq !== null && (
+                    <Row>
+                      <Col sm="12" md="12">
+                        <div style={{marginBottom : '5px'}}>
+                        <span style={{marginRight : '10px'}}>
+                          Version :
+                        </span>
+                        <Input type="select" value={this.state.version_selected === null? this.state.data_tssr_boq.version : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "100px", height : "30px", display : 'inline-grid'}}>
+                          {this.state.list_version.map((e,i) =>
+                            <option value={i}>{i}</option>
+                          )}
+                        </Input>
+                        <span style={{marginLeft : '10px'}}>
+                        {this.state.data_tssr_boq_version.updater !== undefined ? "Updated by "+this.state.data_tssr_boq_version.updater[0].email : null }
+                        </span>
+                        </div>
+                      </Col>
+                    </Row>
+                    )}
                     <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
                     </Col>
                   </Row>
-                  {this.state.data_tssr_boq !== null && (
-                  <Row>
-                    <Col sm="12" md="12">
-                      <div>
-                      <span>
-                        Version :
-                      </span>
-                      <Input type="select" value={this.state.version_selected === null? this.state.data_tssr_boq.version : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "100px", height : "30px", display : 'inline-grid'}}>
-                        {this.state.list_version.map((e,i) =>
-                          <option value={i}>{i}</option>
-                        )}
-                      </Input>
-                      </div>
-                    </Col>
-                  </Row>
-                  )}
                   {this.state.view_drm === "tssr" && (
                     <div class='divtable'>
                       <Table hover bordered striped responsive size="sm" width="100%">
@@ -1355,7 +1366,7 @@ class TSSRBoq extends Component {
                         <tbody>
                         {this.state.version_selected !== null && this.state.data_tssr_boq.version !== this.state.version_selected ? (
                           <Fragment>
-                            {this.state.data_tssr_boq_sites_version.length !== 0 && this.state.data_tssr_boq_sites_pagination !== undefined ? this.state.data_tssr_boq_sites_version.map(site =>
+                            {this.state.data_tssr_boq_sites_version.length !== 0 && this.state.data_tssr_boq_sites_pagination !== undefined ? this.state.data_tssr_boq_sites_pagination.map(site =>
                               site.siteItemConfigVersion.map(conf =>
                                   <tr>
                                     <td>{site.site_id}</td>

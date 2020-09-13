@@ -186,7 +186,7 @@ class PackageUpload extends React.Component {
       filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
     }
     // let filter = this.state.filter_name === ""  ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
-    let whereOr = '{"$or" : [{"product_name": ' + filter + '}, {"pp_cust_number": ' + filter + '}, {"physical_group": ' + filter + '}]}';
+    let whereOr = '{"$or" : [{"product_name": ' + filter + '}, {"pp_cust_number": ' + filter + '}, {"physical_group": ' + filter + '}, {"product_type": ' + filter + '}]}';
     // let whereOr = '{"$or" : [{"product_name": ' + filter + '}]}';
     this.getDatafromAPINODE('/productpackage?q=' + whereOr + '&lmt=' + this.state.perPage + '&pg=' + this.state.activePage)
       .then(res => {
@@ -1019,6 +1019,11 @@ class PackageUpload extends React.Component {
                         </tbody>
                       </table>
                     </div>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <span> View {this.state.product_package.length} data from total {this.state.total_dataParent} data </span>
                   </Col>
                 </Row>
                 <Row>

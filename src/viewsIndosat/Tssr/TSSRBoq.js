@@ -932,7 +932,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+'.xlsx');
+    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tssr_boq+'.xlsx');
   }
 
   exportFormatTechnicalHorizontal = async () =>{
@@ -982,7 +982,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Format.xlsx');
+    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tssr_boq+' Format.xlsx');
   }
 
   exportFormatTechnicalVerticalUploader = async () =>{
@@ -1136,12 +1136,14 @@ class TSSRboq extends Component {
                             <DropdownToggle caret color="secondary" size="sm">
                               <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download TSSR File
                             </DropdownToggle>
-                            <DropdownMenu>
-                              <DropdownItem header> TSSR File</DropdownItem>
-                              {/* }<DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Report</DropdownItem> */}
-                              <DropdownItem onClick={this.exportTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Horizontal</DropdownItem>
-                              <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Format</DropdownItem>
-                            </DropdownMenu>
+                            {this.state.data_tssr_boq !== null && (
+                              <DropdownMenu>
+                                <DropdownItem header> TSSR File</DropdownItem>
+                                {/* }<DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Report</DropdownItem> */}
+                                <DropdownItem onClick={this.exportTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Horizontal</DropdownItem>
+                                <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Format</DropdownItem>
+                              </DropdownMenu>
+                            )}
                           </Dropdown>
                         </Col>
                         <Col>

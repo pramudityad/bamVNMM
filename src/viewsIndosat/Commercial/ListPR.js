@@ -190,9 +190,9 @@ class ListCommercial extends Component {
     let filter_project = this.state.filter_list[3] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
     let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
     let where = '&q={'+filter_no_comm+', '+filter_project+', '+filter_ver+'}';
-    this.getDataFromAPINODE('/commBoq?srt=_id:-1'+where).then(res => {
+    this.getDataFromAPINODE('/commBoq?srt=_id:-1'+where+'&lmt='+this.state.perPage+'&pg='+this.state.activePage).then(res => {
       if(res.data !== undefined){
-        this.setState({list_comm_boq : res.data.data});
+        this.setState({list_comm_boq : res.data.data, totalData : res.data.totalResults});
       }
     })
   }
@@ -200,7 +200,7 @@ class ListCommercial extends Component {
   handlePageChange(pageNumber) {
     // console.log(`active page is ${pageNumber}`);
     this.setState({activePage: pageNumber}, () => {
-      this.getListBoQ();
+      this.getCommBoqList();
     });
   }
 
@@ -305,16 +305,6 @@ class ListCommercial extends Component {
                         </InputGroup>
                       </div>
                     </td>
-                    {/* }<td>
-                      <div className="controls">
-                        <InputGroup className="input-prepend">
-                          <InputGroupAddon addonType="prepend">
-                            <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                          </InputGroupAddon>
-                          <Input type="text" placeholder="Search" name={4} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[6]}/>
-                        </InputGroup>
-                      </div>
-                    </td> */}
                     <td>
                     </td>
                     <td>
@@ -329,42 +319,26 @@ class ListCommercial extends Component {
                             <td style={{verticalAlign : 'middle'}}>{boq.no_comm_boq}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>{boq.project_name}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center", width : '100px'}}>{boq.version}</td>
-                            {/* }<td style={{verticalAlign : 'middle'}}>
-                              {boq.approval_status === "PRE APPROVAL" || boq.approval_status === "R" ? (
-                                <span className="boq-tech-status-PA">{boq.approval_status}</span>
-                              ) : boq.approval_status === "WA" ? (
-                                <span className="boq-tech-status-WA">{boq.approval_status}</span>
-                              ) : (
-                                <span className="boq-tech-status-A">{boq.approval_status}</span>
-                              )}
-                            </td> */}
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
                               <Link to={'/list-pr/detail/'+boq._id}>
                                 <Button className="btn-primary" size="sm" color="primary" style={{marginRight : '10px'}}>
                                   <i className="fas fa-edit" aria-hidden="true"></i>&nbsp; Detail
                                 </Button>
                               </Link>
-                              {/* }<Link to={'/approval-commercial/'+boq._id}>
-                                <Button size="sm" color="warning" style={{marginRight : '10px'}}>
-                                  <i className="fa fa-check-square-o" aria-hidden="true"></i>&nbsp; Approval
-                                </Button>
-                              </Link> */}
-                              {/* <Link to={'/submission-commercial/'+boq._id}>
-                                <Button size="sm" color="secondary" style={{marginRight : '10px'}}>
-                                  <i className="far fa-check-square" aria-hidden="true"></i>&nbsp; Submission
-                                </Button>
-                              </Link> */}
                             </td>
                         </tr>
                     )}
                 </tbody>
             </Table>
+            <Col>
+              <span> View {this.state.list_comm_boq.length} data from total {this.state.totalData} data </span>
+            </Col>
             <nav>
                 <div>
                 <Pagination
                     activePage={this.state.activePage}
                     itemsCountPerPage={this.state.perPage}
-                    totalItemsCount={this.state.totalData.total}
+                    totalItemsCount={this.state.totalData}
                     pageRangeDisplayed={5}
                     onChange={this.handlePageChange}
                     itemClass="page-item"
