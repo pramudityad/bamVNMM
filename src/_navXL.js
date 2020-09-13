@@ -133,12 +133,6 @@ export default {
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
         },
-        {
-          name: 'POD List',
-          url: '/pod-list',
-          icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
-        },
       ]
     },
     {
@@ -188,12 +182,18 @@ export default {
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
+        {
+          name: 'POD List',
+          url: '/pod-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
+        },
       ]
     },
     {
       name: 'Warehouse',
       icon: 'fas fa-boxes',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASPWarehouse"],
       children: [
         {
           name: 'Dashboard EID',
@@ -205,7 +205,7 @@ export default {
           name: 'Dashboard ASP/DSP',
           url: '/wh-dashboard-ext',
           icon: 'icon-speedometer',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASPWarehouse"],
         },
         {
           name: 'Warehouse Management',

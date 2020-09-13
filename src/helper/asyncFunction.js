@@ -51,9 +51,9 @@ export const getDatafromAPINODE = async (url, props) => {
 export const getDatafromAPINODEFile = async (url, props, con_type) => {
   try {
     let respond = await axios.get(API_URL_NODE + url, {
+      responseType: 'blob',
       headers: {
-        responseType: 'blob',
-        "Content-Type": con_type,
+        // "Content-Type": con_type,
         Authorization: "Bearer " + props,
       },
     });

@@ -70,7 +70,7 @@ class ListTSSRBoq extends Component {
   }
 
   getTechBoqList(){
-    let filter_no_tssr = this.state.filter_list[6] === null ? '"no_tssr_boq":{"$exists" : 1}' : '"no_tssr_boq":{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
+    let filter_no_tssr = this.state.filter_list[0] === null ? '"no_tssr_boq":{"$exists" : 1}' : '"no_tssr_boq":{"$regex" : "'+this.state.filter_list[0]+'", "$options" : "i"}';
     let filter_no_tech = this.state.filter_list[1] === null ? '"no_tech_boq":{"$exists" : 1}' : '"no_tech_boq":{"$regex" : "'+this.state.filter_list[1]+'", "$options" : "i"}';
     let filter_project = this.state.filter_list[2] === null ? '"project_name":{"$exists" : 1}' : '"project_name":{"$regex" : "'+this.state.filter_list[2]+'", "$options" : "i"}';
     let filter_creator = this.state.filter_list[3] === null ? '"creator.email":{"$exists" : 1}' : '"creator.email":{"$regex" : "'+this.state.filter_list[3]+'", "$options" : "i"}';
@@ -141,7 +141,8 @@ class ListTSSRBoq extends Component {
             <Table hover bordered striped responsive size="sm">
               <thead>
                   <tr>
-                    <th>TSSR BOQ Origin</th>
+                    <th>TSSR BOQ No.</th>
+                    <th>TECH BOQ Origin</th>
                     <th>Project</th>
                     <th>Creator</th>
                     <th>Ver.</th>
@@ -149,6 +150,16 @@ class ListTSSRBoq extends Component {
                     <th style={{'width' : '225px', textAlign : 'center'}}>Action</th>
                   </tr>
                   <tr>
+                    <td>
+                      <div className="controls">
+                        <InputGroup className="input-prepend">
+                          <InputGroupAddon addonType="prepend">
+                            <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                          </InputGroupAddon>
+                          <Input type="text" placeholder="Search" name={0} size="sm" onChange={this.handleFilterList} value={this.state.filter_list[0]}/>
+                        </InputGroup>
+                      </div>
+                    </td>
                       <td>
                         <div className="controls">
                           <InputGroup className="input-prepend">
@@ -197,6 +208,7 @@ class ListTSSRBoq extends Component {
               <tbody>
                     {this.state.list_tech_boq.map((boq,i) =>
                         <tr key={boq._id}>
+                            <td style={{verticalAlign : 'middle'}}>{boq.no_tssr_boq}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.no_tech_boq}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.project_name}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.creator[0].email}</td>
@@ -214,12 +226,15 @@ class ListTSSRBoq extends Component {
                     )}
                 </tbody>
             </Table>
+            <Col>
+              <span> View {this.state.list_tech_boq.length} data from total {this.state.totalData} data </span>
+            </Col>
             <nav>
                 <div>
                 <Pagination
                     activePage={this.state.activePage}
                     itemsCountPerPage={this.state.perPage}
-                    totalItemsCount={this.state.totalData.total}
+                    totalItemsCount={this.state.totalData}
                     pageRangeDisplayed={5}
                     onChange={this.handlePageChange}
                     itemClass="page-item"

@@ -204,7 +204,7 @@ class SVCLibrary extends React.Component {
       this.state.filter_list === null
         ? '{"$exists" : 1}'
         : '{"$regex" : "' + this.state.filter_list + '", "$options" : "i"}';
-    let whereAnd = '{"service_id": ' + filter + "}";
+    let whereAnd = '{"$or" : [{"service_id": ' + filter + '},{"boq_service_scope": ' + filter + '},{"description": ' + filter + '},{"pr_uploader_description": ' + filter + '},{"service_product": ' + filter + '}]}';
     // console.log("filter whereand ".whereAnd);
     getDatafromAPINODE(
       "/libser/getLibSer?q=" +
@@ -488,27 +488,6 @@ class SVCLibrary extends React.Component {
             onlyParent[i][this.getIndex(dataHeader, "Description")]
           ),
         };
-        // if (aa._id !== undefined && aa._id !== null) {
-        //   aa["_id"] = aa._id.toString();
-        // }
-        // if (aa.boq_service_scope !== undefined && aa.boq_service_scope !== null) {
-        //   aa["boq_service_scope"] = aa.boq_service_scope.toString();
-        // }
-        // if (aa.service_id !== undefined && aa.service_id !== null) {
-        //   aa["service_id"] = aa.service_id.toString();
-        // }
-        // if (aa.service_product !== undefined && aa.service_product !== null) {
-        //   aa["service_product"] = aa.service_product.toString();
-        // }
-        // if (aa.pr_uploader_description !== undefined && aa.pr_uploader_description !== null) {
-        //   aa["pr_uploader_description"] = aa.pr_uploader_description.toString();
-        // }
-        // if (aa.unit_price !== undefined && aa.unit_price !== null) {
-        //   aa["unit_price"] = aa.unit_price();
-        // }
-        // if (aa.description !== undefined && aa.description !== null) {
-        //   aa["description"] = aa.description.toString();
-        // }
         data_array.push(aa);
       }
       console.log('data xlsx ',JSON.stringify(data_array));
@@ -754,18 +733,6 @@ class SVCLibrary extends React.Component {
                             </DropdownItem>
                           </DropdownMenu>
                         </Dropdown>
-                        {/* <Button
-                          block
-                          color="success"
-                          onClick={this.togglecreateModal}
-                          // id="toggleCollapse1"
-                        >
-                          <i className="fa fa-plus-square" aria-hidden="true">
-                            {" "}
-                            &nbsp;{" "}
-                          </i>{" "}
-                          New
-                        </Button> */}
                       </div>
                     ) : (
                       ""
@@ -799,11 +766,6 @@ class SVCLibrary extends React.Component {
                     </Dropdown>
                   </div>
                 </div>
-                {/* <div>
-                  <Button color="primary" style={{ float: 'right' }} onClick={this.toggleMatStockForm}>
-                    <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form
-                  </Button>
-                </div> */}
               </CardHeader>
 
               <CardBody>
@@ -886,7 +848,6 @@ class SVCLibrary extends React.Component {
                             </th>
                             <th>PR Uploader Service Description</th>
                             <th>Unit Price</th>
-                            {/* <th></th> */}
                             <th colSpan="2"></th>
                           </tr>
                         </thead>
@@ -898,8 +859,6 @@ class SVCLibrary extends React.Component {
                                 className="fixbody"
                                 key={e._id}
                               >
-                                {/* <td align="center"><Checkbox name={e._id} checked={this.state.packageChecked.get(e._id)} onChange={this.handleChangeChecklist} value={e} /></td> */}
-                                {/* <td style={{ textAlign: "center" }}> */}
                                 <td>{e.boq_service_scope}</td>
                                 <td style={{ textAlign: "center" }}>
                                   {e.service_id}
@@ -949,6 +908,11 @@ class SVCLibrary extends React.Component {
                         </tbody>
                       </Table>
                     </div>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <span> View {this.state.all_data.length} data from total {this.state.total_dataParent} data </span>
                   </Col>
                 </Row>
                 <Row>
@@ -1028,7 +992,7 @@ class SVCLibrary extends React.Component {
                     value={this.state.modalNew[4]}
                     onChange={this.handleChangeForm}
                   />
-                </FormGroup>                
+                </FormGroup>
               </Col>
             </Row>
           </ModalBody>
@@ -1099,7 +1063,7 @@ class SVCLibrary extends React.Component {
                     value={this.state.modalNew[4]}
                     onChange={this.handleChangeForm}
                   />
-                </FormGroup>  
+                </FormGroup>
               </Col>
             </Row>
           </ModalBody>

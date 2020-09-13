@@ -190,6 +190,13 @@ class MaterialDispatch extends Component {
     saveAs(new Blob([allocexport]), 'Material Dispatch.xlsx');
   }
 
+  async getDataWH(wh_id){
+    let resWH = await this.getDataFromAPINODE('/whManagement/warehouse?q={"wh_id" : "'+wh_id+'"}&v={"wh_id":1,"factory_code":1}');
+    if(resWH !== undefined && resWH.data !== undefined){
+      return resWH.data.data[0];
+    }
+  }
+
   async downloadMRTRACY(_id_MR){
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -197,12 +204,16 @@ class MaterialDispatch extends Component {
 
     let dataItemMR = [];
     let dataMR = {};
-    let resMR = await this.getDataFromAPINODE("/matreq/" + _id_MR);
+    const resMR = await this.getDataFromAPINODE("/matreq/" + _id_MR);
     if (resMR.data !== undefined) {
       dataMR = resMR.data;
       dataItemMR = dataMR.packages;
     }
-
+    let dataWH = {}
+    const getWH = await this.getDataWH(dataMR.origin.value);
+    if (getWH !== undefined) {
+      dataWH = getWH
+    }
     let headerRow = ["REC_TYPE", "FILLER", "COMP_CD", "CUST_DELIV_NO", "CUST_ID", "CUST_CNTRY_CD", "ETA_SHP_DT", "SHP_DT", "SITE_LOC_ID", "SITE_CNTRY_CD", "SEND_SYSTEM", "SEND_UNIT", "SALES_GRP", "PRNO ", "SHP_NO", "END_CUST_NM", "END_CUST_ID", "CUST_NM", "SALES_ORD_NO", "PACK_ID", "PURCH_ORD_NO", "SER_NO", "CIN", "GI_Type", "Shp_Pnt", "Plant_ID"];
     ws.addRow(headerRow);
     let dateDispatch = null;
@@ -222,11 +233,11 @@ class MaterialDispatch extends Component {
           let serial_number = dataMatIdx.serial_numbers.find(e => e.flag_name === "obd");
           if(serial_number !== undefined){
             for(let k = 0; k < serial_number.list_of_sn.length; k++){
-              ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, shipTracy, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, serial_number.list_of_sn[k], null, null, null, null]);
+              ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", dataWH.factory_code, null, dataMatIdx.material_id, shipTracy, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, serial_number.list_of_sn[k], null, null, null, null]);
             }
           }
         }else{
-          ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, shipTracy, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
+          ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", dataWH.factory_code, null, dataMatIdx.material_id, shipTracy, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
         }
       }
     }

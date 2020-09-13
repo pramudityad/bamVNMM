@@ -164,6 +164,9 @@ class PSList extends Component {
                     )}
                   </tbody>
                 </Table>
+                <Col>
+                  <span> View {this.state.tssr_list.length} data from total {this.state.totalData} data </span>
+                </Col>
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}

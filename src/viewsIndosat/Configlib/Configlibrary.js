@@ -50,10 +50,13 @@ class ConfigLibrary extends React.Component {
       dropdownOpen: new Array(6).fill(false),
       modalPPForm: false,
       PPForm: new Array(9).fill(null),
+      PPAddVariant : {"materials" : []},
       collapse: false,
       modalPPFedit: false,
       packageChecked_all: false,
-      packageChecked_page: false
+      packageChecked_page: false,
+      lcm_hos_library_selected : new Map(),
+      hos_variant_name : null,
     }
     this.togglePPForm = this.togglePPForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -71,8 +74,11 @@ class ConfigLibrary extends React.Component {
     this.downloadAll = this.downloadAll.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
     this.saveNewPP = this.saveNewPP.bind(this);
-    this.togglePPedit = this.togglePPedit.bind(this);
+    this.togglePPVariant = this.togglePPVariant.bind(this);
     this.saveUpdatePP = this.saveUpdatePP.bind(this);
+    this.handleChangeMaterialHosSelected = this.handleChangeMaterialHosSelected.bind(this);
+    this.handleChangeHosVariantName = this.handleChangeHosVariantName.bind(this);
+    this.saveNewVariant = this.saveNewVariant.bind(this);
   }
   toggle(i) {
     const newArray = this.state.dropdownOpen.map((element, index) => {
@@ -185,9 +191,7 @@ class ConfigLibrary extends React.Component {
     if (this.state.filter_name !== "") {
       filter = '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
     }
-    // let filter = this.state.filter_name === ""  ? '{"$exists" : 1}' : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
-    let whereOr = '{"$or" : [{"product_name": ' + filter + '}, {"pp_cust_number": ' + filter + '}, {"physical_group": ' + filter + '}]}';
-    // let whereOr = '{"$or" : [{"product_name": ' + filter + '}]}';
+    let whereOr = '{"$or" : [{"product_name": ' + filter + '}, {"pp_cust_number": ' + filter + '}, {"physical_group": ' + filter + '}, {"product_type": ' + filter + '}, {"material_hos.hos_list.hos_name": ' + filter + '}]}';
     this.getDatafromAPINODE('/productpackage?q=' + whereOr + '&lmt=' + this.state.perPage + '&pg=' + this.state.activePage)
       .then(res => {
         if (res.data !== undefined) {
@@ -370,18 +374,25 @@ class ConfigLibrary extends React.Component {
     let productPackageXLS = this.state.rowsXLS;
     let isPackage = true;
     let headerRow = [];
-    for (let i = 0; i < productPackageXLS[0].length; i++) {
-      let value = productPackageXLS[0][i];
-      value = value.replace("bundle_id", "pp_id");
-      value = value.replace("bundle_name", "product_name");
-      value = value.replace("bundle_type", "product_type");
-      value = value.replace("bundle_unit", "package_unit");
-      value = value.replace("bundle_group", "pp_group");
-      headerRow.push(value);
-    }
+    // for (let i = 0; i < productPackageXLS[0].length; i++) {
+    //   let value = productPackageXLS[0][i];
+    //   value = value.replace("bundle_id", "pp_id");
+    //   value = value.replace("bundle_name", "product_name");
+    //   value = value.replace("bundle_type", "product_type");
+    //   value = value.replace("bundle_unit", "package_unit");
+    //   value = value.replace("bundle_group", "pp_group");
+    //   headerRow.push(value);
+    // }
     productPackageXLS[0] = headerRow;
+    productPackageXLS = [
+        {
+            "pp_id":"PPIDZERO1",
+            "material_id":"MDID002",
+            "hos":"1"
+        }
+    ]
     if (isPackage === true) {
-      const postPackage = await this.postDatatoAPINODE('/productpackage/packageWithMaterial', { "data": productPackageXLS })
+      const postPackage = await this.patchDatatoAPINODE('/productpackage/inputHos', { "data": productPackageXLS })
         .then(res => {
           if (res.data !== undefined) {
             this.setState({ action_status: 'success' });
@@ -507,7 +518,7 @@ class ConfigLibrary extends React.Component {
 
   componentDidMount() {
     this.getPackageDataAPI();
-    this.getPackageDataAPI_all();
+    // this.getPackageDataAPI_all();
     document.title = 'Product Package | BAM';
   }
 
@@ -588,24 +599,19 @@ class ConfigLibrary extends React.Component {
     }));
   }
 
-  togglePPedit(e) {
+  togglePPVariant(e) {
     const modalPPFedit = this.state.modalPPFedit;
     if (modalPPFedit === false) {
       const value = e.currentTarget.value;
       const ppEdit = this.state.product_package.find(e => e.pp_id === value);
-      let dataForm = this.state.PPForm;
-      dataForm[0] = ppEdit.pp_id;
-      dataForm[1] = ppEdit.product_name;
-      dataForm[2] = ppEdit.uom;
-      dataForm[3] = ppEdit.product_type;
-      dataForm[4] = ppEdit.physical_group;
-      dataForm[5] = ppEdit.pp_cust_number;
-      dataForm[6] = ppEdit.pp_group;
-      dataForm[7] = ppEdit.notes;
-      dataForm[8] = ppEdit.price;
-      this.setState({ PPForm: dataForm });
+      let PPAddVariant = this.state.PPAddVariant;
+      PPAddVariant["_id"] = ppEdit._id;
+      PPAddVariant["pp_id"] = ppEdit.pp_id;
+      PPAddVariant["product_name"] = ppEdit.product_name;
+      PPAddVariant["materials"] = ppEdit.materials;
+      this.setState({ PPAddVariant: PPAddVariant });
     } else {
-      this.setState({ PPForm: new Array(9).fill(null) });
+      this.setState({ PPAddVariant: {"materials" : []}, hos_variant_name : null, lcm_hos_library_selected : new Map() });
     }
     this.setState(prevState => ({
       modalPPFedit: !prevState.modalPPFedit
@@ -635,7 +641,7 @@ class ConfigLibrary extends React.Component {
       "pp_group": this.checkValue(dataPPEdit[6])
     }
     this.toggleLoading();
-    this.togglePPedit();
+    this.togglePPVariant();
     if (pp.pp_group === undefined || pp.pp_group === null) {
       pp["pp_group"] = pp.product_name;
     } else {
@@ -889,6 +895,45 @@ class ConfigLibrary extends React.Component {
     saveAs(new Blob([BundleMaterial]), 'Product Package Material Uploader Template.xlsx');
   }
 
+  handleChangeMaterialHosSelected(e){
+    const value = e.target.checked;
+    const name = e.target.name;
+    this.setState(prevState => ({ lcm_hos_library_selected: prevState.lcm_hos_library_selected.set(name, value) }));
+  }
+
+  handleChangeHosVariantName(e){
+    const value = e.target.value;
+    const name = e.target.name;
+    this.setState({hos_variant_name : value})
+  }
+
+  async saveNewVariant(){
+    let dataSaveMatVar = [];
+    const dataPP = this.state.PPAddVariant;
+    const dataMatVar = this.state.lcm_hos_library_selected;
+    for(let i = 0; i < dataPP.materials.length; i++){
+      if(dataMatVar.has(dataPP.materials[i]._id) === true && dataMatVar.get(dataPP.materials[i]._id) === true){
+        dataSaveMatVar.push(
+          {
+            "id_pp_doc":dataPP._id,
+            "pp_id":dataPP.pp_id,
+            "id_mc_doc":dataPP.materials[i]._id,
+            "material_id":dataPP.materials[i].material_id,
+            "hos_name":this.state.hos_variant_name,
+          }
+        )
+      }
+    }
+    console.log("hos ps", JSON.stringify({ "data": dataSaveMatVar }));
+    const postPackage = await this.patchDatatoAPINODE('/productpackage/inputHos', { "data": dataSaveMatVar });
+    if(postPackage !== undefined && postPackage.data !== undefined){
+      this.setState({action_status : 'success', action_message : null})
+    }else{
+      this.setState({action_status : 'failed', action_message : null})
+    }
+    this.togglePPVariant();
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -897,7 +942,7 @@ class ConfigLibrary extends React.Component {
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{ marginTop: '8px', position: 'absolute' }}>Config Library/LCM Library (HOS)</span>
+                <span style={{ marginTop: '8px', position: 'absolute' }}>LCM Library (HOS)</span>
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
@@ -939,9 +984,8 @@ class ConfigLibrary extends React.Component {
                     </div>
                   </CardBody>
                   <CardFooter>
-                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackageOneShot} style={{ marginRight: '10px' }}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE</Button>
-                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveProductPackage}> <i className="fa fa-refresh" aria-hidden="true"> </i> &nbsp;Update </Button>
-                    <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button>
+                    <Button color="success" size="sm" onClick={this.saveProductPackageOneShot} style={{ marginRight: '10px' }}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE</Button>
+                    <Button color="primary" style={{ float: 'right' }} onClick={this.togglePPForm}> &nbsp;Form</Button>
                   </CardFooter>
                 </Card>
               </Collapse>
@@ -965,37 +1009,30 @@ class ConfigLibrary extends React.Component {
                       <table hover bordered responsive size="sm" width='100%'>
                         <thead style={{ backgroundColor: '#c6f569' }}>
                           <tr align="center">
-                            <th>
+                            {/*}<th>
                               <Checkbox name={"all"} checked={this.state.packageChecked_page} onChange={this.handleChangeChecklistPage} />
-                            </th>
-                            <th style={{ minWidth: '150px' }}>PP variant Name</th>
-                            <th>PP Code</th>
+                            </th> */}
+                            <th style={{ minWidth: '150px' }}>PP ID</th>
                             <th>PP Name</th>
                             <th>Material Name</th>
-                            <th>Mat ID</th>
-                            {/* <th>Ordering</th>
-                            <th>INF Code</th>
-                            <th>Physical Group</th>
-                            <th>Product Type /Material Origin</th> */}
-                            <th></th>
+                            <th>Material ID</th>
+                            <th>PP Variant</th>
+                            <th>Action</th>
                           </tr>
                         </thead>
                         <tbody>
                           {this.state.product_package.map(pp =>
                             <React.Fragment key={pp._id + "frag"}>
                               <tr style={{ backgroundColor: '#E5FCC2' }} className='fixbody' key={pp._id}>
-                                <td align="center"><Checkbox name={pp._id} checked={this.state.packageChecked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>
-                                <td colSpan="2" style={{ textAlign: 'left' }}>{pp.product_name}</td>
+                                {/* }<td align="center"><Checkbox name={pp._id} checked={this.state.packageChecked.get(pp._id)} onChange={this.handleChangeChecklist} value={pp} /></td>*/}
                                 <td style={{ textAlign: 'left' }}>{pp.pp_id}</td>
-                                <td style={{ textAlign: 'center' }}>{pp.uom}</td>
+                                <td style={{ textAlign: 'left' }}>{pp.product_name}</td>
                                 <td style={{ textAlign: 'left' }}></td>
-                                <td style={{ textAlign: 'center' }}>{pp.ordering}</td>
-                                <td style={{ textAlign: 'center' }}>{pp.inf_code}</td>
-                                <td style={{ textAlign: 'center' }}>{pp.physical_group}</td>
-                                <td style={{ textAlign: 'center' }}>{pp.product_type}</td>
+                                <td style={{ textAlign: 'center' }}></td>
+                                <td style={{ textAlign: 'center' }}></td>
                                 <td>
-                                  <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
-                                    <i className="fas fa-edit" aria-hidden="true"></i>
+                                  <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPVariant} title='Edit'>
+                                    Add Hos
                                   </Button>
                                 </td>
                               </tr>
@@ -1005,12 +1042,9 @@ class ConfigLibrary extends React.Component {
                                   <td style={{ textAlign: 'left' }}></td>
                                   <td style={{ textAlign: 'left' }}>{mat.material_name}</td>
                                   <td style={{ textAlign: 'left' }}>{mat.material_id}</td>
-                                  <td style={{ textAlign: 'center' }}>{mat.uom}</td>
-                                  <td style={{ textAlign: 'center' }}>{mat.qty}</td>
-                                  <td style={{ textAlign: 'left' }}></td>
-                                  <td style={{ textAlign: 'left' }}></td>
-                                  <td style={{ textAlign: 'left' }}></td>
-                                  <td style={{ textAlign: 'center' }}>{mat.material_origin}</td>
+                                  <td style={{ textAlign: 'center' }}>{
+                                    pp.material_hos !== undefined && pp.material_hos.find(mh => mh.material_id === mat.material_id) !== undefined ? pp.material_hos.find(mh => mh.material_id === mat.material_id).hos_list.filter(hlf => hlf.hos_name !== undefined).map(hl => hl.hos_name).join(", ") : null
+                                  }</td>
                                   <td></td>
                                 </tr>
                               )}
@@ -1019,6 +1053,11 @@ class ConfigLibrary extends React.Component {
                         </tbody>
                       </table>
                     </div>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <span> View {this.state.product_package.length} data from total {this.state.total_dataParent} data </span>
                   </Col>
                 </Row>
                 <Row>
@@ -1113,56 +1152,48 @@ class ConfigLibrary extends React.Component {
         {/*  Modal New PP*/}
 
         {/* Modal Edit PP */}
-        <Modal isOpen={this.state.modalPPFedit} toggle={this.togglePPedit} className="modal--form">
+        <Modal isOpen={this.state.modalPPFedit} toggle={this.togglePPVariant} className="modal--form">
           <ModalHeader>Form Update Product Package</ModalHeader>
           <ModalBody>
             <Row>
               <Col sm="12">
                 <FormGroup>
-                  <Label htmlFor="pp_key">Package ID</Label>
-                  <Input type="text" name="0" placeholder="" value={this.state.PPForm[0]} onChange={this.handleChangeForm} disabled />
+                  <Label htmlFor="pp_key">PP ID</Label>
+                  <Input type="text" name="0" placeholder="" value={this.state.PPAddVariant.pp_id} disabled />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="package_name" >Name</Label>
-                  <Input type="text" name="1" placeholder="" value={this.state.PPForm[1]} onChange={this.handleChangeForm} />
+                  <Label htmlFor="package_name" >Product Name</Label>
+                  <Input type="text" name="1" placeholder="" value={this.state.PPAddVariant.product_name} disabled />
                 </FormGroup>
-                <FormGroup row>
-                  <Col xs="4">
-                    <FormGroup>
-                      <Label htmlFor="unit" >Unit</Label>
-                      <Input type="text" name="2" placeholder="" value={this.state.PPForm[2]} onChange={this.handleChangeForm} />
-                    </FormGroup>
-                  </Col>
-                  <Col xs="4">
-                    <FormGroup>
-                      <Label htmlFor="product_type" >Type</Label>
-                      <Input type="text" name="3" placeholder="" value={this.state.PPForm[3]} onChange={this.handleChangeForm} />
-                    </FormGroup>
-                  </Col>
-                  <Col xs="4">
-                    <FormGroup>
-                      <Label htmlFor="physical_group" >Physical Group</Label>
-                      <Input type="text" name="4" placeholder="" value={this.state.PPForm[4]} onChange={this.handleChangeForm} />
-                    </FormGroup>
-                  </Col>
+                <FormGroup>
+                  <Label htmlFor="package_name" >HoS Variant Name</Label>
+                  <Input type="text" name="hos_name" placeholder="" value={this.state.hos_variant_name} onChange={this.handleChangeHosVariantName} />
                 </FormGroup>
                 <FormGroup row>
                   <Col xs="12">
                     <FormGroup>
-                      <Label htmlFor="pp_id" >Package Number (Group)</Label>
-                      <Input type="text" name="5" placeholder="" value={this.state.PPForm[5]} onChange={this.handleChangeForm} />
+                      <Label htmlFor="pp_id" >Material</Label>
+                      <Table striped bordered size="sm">
+                        <tbody>
+                          {this.state.PPAddVariant.materials.map(ppf =>
+                            <tr>
+                              <td>{ppf.material_id}</td>
+                              <td>{ppf.material_name}</td>
+                              <td>
+                                <Checkbox name={ppf._id} checked={this.state.lcm_hos_library_selected.get(ppf._id)} onChange={this.handleChangeMaterialHosSelected} />
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </Table>
                     </FormGroup>
                   </Col>
-                </FormGroup>
-                <FormGroup>
-                  <Label htmlFor="pp_group" >Package Name (Group)</Label>
-                  <Input type="text" name="6" placeholder="" value={this.state.PPForm[6]} onChange={this.handleChangeForm} />
                 </FormGroup>
               </Col>
             </Row>
           </ModalBody>
           <ModalFooter>
-            <Button color="success" onClick={this.saveUpdatePP}>Update</Button>
+            <Button color="success" onClick={this.saveNewVariant}>Save Variant</Button>
           </ModalFooter>
         </Modal>
         {/*  Modal Edit PP*/}

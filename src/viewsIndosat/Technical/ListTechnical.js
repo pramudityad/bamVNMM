@@ -219,21 +219,6 @@ class ListTechnical extends Component {
     const now_date = NowDate.getFullYear()+"/"+(NowDate.getMonth()+1)+"/"+NowDate.getDate();
     return DateNow;
   }
-  //
-  // toggleDelete(e){
-  //   let value = null;
-  //   this.setState(prevState => ({
-  //     modal_delete: !prevState.modal_delete
-  //   }));
-  //   if(e !== undefined){
-  //     if(e.currentTarget.value === undefined){
-  //       value = e.target.value;
-  //     }else{
-  //       value = e.currentTarget.value;
-  //     }
-  //   }
-  //   this.setState({modal_delete_noBOQ : value})
-  // }
 
   deleteTechBoq(e){
     const _id_tech = e.currentTarget.value;
@@ -343,6 +328,9 @@ class ListTechnical extends Component {
                     )}
                 </tbody>
             </Table>
+            <Col>
+              <span> View {this.state.list_tech_boq.length} data from total {this.state.totalData} data </span>
+            </Col>
             <nav>
                 <div>
                 <Pagination

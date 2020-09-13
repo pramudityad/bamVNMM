@@ -1545,7 +1545,7 @@ class MRDetail extends Component {
                   ></i>
                   MR Detail
                 </span>
-                {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 ) && (
+                {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && (
                   <Fragment>{/* }<Button style={{float : 'right', marginRight: "8px"}} size="sm" color="warning" onClick={this.changeEditable}>Edit MR Detail</Button> */}</Fragment>
                 )}
                 <Button
@@ -1986,14 +1986,14 @@ class MRDetail extends Component {
                           <tbody>
                             {this.state.data_mr !== null && (
                               <Fragment>
-                              {(this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1)  ? (
+                              {(this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1)  ? (
                                 <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'left', marginRight : '10px'}}>
                                   <DropdownToggle caret color="secondary">
                                     <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
                                   </DropdownToggle>
                                   <DropdownMenu>
                                     <DropdownItem header>MR File</DropdownItem>
-                                    {((this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 ) && this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
+                                    {((this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1 ) && this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
                                       <DropdownItem onClick={this.downloadMaterialMRTRACY}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY Format</DropdownItem>
 
                                     )}
@@ -2032,7 +2032,7 @@ class MRDetail extends Component {
                                         &nbsp;
                                       </td>
                                     </tr>
-                                    {((this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1) && status_can_edit_material.includes(
+                                    {((this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && status_can_edit_material.includes(
                                       this.state.data_mr.current_mr_status
                                     )) && (
                                       <tr>
@@ -2043,7 +2043,7 @@ class MRDetail extends Component {
                                     )}
                                   </Fragment>
                                 )}
-                                {((this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1) && status_can_edit_material.includes(
+                                {((this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && status_can_edit_material.includes(
                                   this.state.data_mr.current_mr_status
                                 )) && (
                                   <tr>
@@ -2611,7 +2611,7 @@ class MRDetail extends Component {
                 )}
               </CardBody>
               <CardFooter>
-              {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 ) && (
+              {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && (
                 <React.Fragment>
                   {this.state.data_mr !== null && (
                     <div>

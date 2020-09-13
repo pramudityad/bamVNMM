@@ -31,6 +31,7 @@ class DetailFMS extends Component {
     this.state = {
       all_data: [],
     };
+    this.exportPRT = this.exportPRT.bind(this);
     // bind
   }
   // function
@@ -45,25 +46,17 @@ class DetailFMS extends Component {
       (res) => {
         if (res.data !== undefined) {
           this.setState({ all_data: res.data.data });
-          console.log("getPRTDetail ", this.state.all_data);
         }
       }
     );
   }
 
-  exportPRT = () => {
+  async exportPRT() {
     const data_prt = this.state.all_data;
-    getDatafromAPINODEFile('/erisitePodFile/getDocument/' + this.props.match.params.id, this.props.dataLogin.token, data_prt.file_document.mime_type).then(function (response) {
-      let blob = JSON.stringify(response.data)
-      return blob;
-      // console.log(response.data)
-  }
-)
-.then(function(blob) {
-  saveAs(blob, data_prt.file_document.system_name);
-})
-    // .then(blob => saveAs(blob, data_prt.file_document.system_name))
-    .catch(err =>  console.log(err))
+    const resFile = await getDatafromAPINODEFile('/erisitePodFile/getDocument/' + this.props.match.params.id, this.props.dataLogin.token, data_prt.file_document.mime_type);
+    if(resFile !== undefined){
+      saveAs(new Blob([resFile.data], {type:data_prt.file_document.mime_type}),  data_prt.file_document.system_name);
+    }
   }
 
   render() {
@@ -88,8 +81,8 @@ class DetailFMS extends Component {
                     style={{ marginRight: "8px" }}
                   ></i>
                   POD Detail
-                </span> 
-                
+                </span>
+
                 &nbsp;&nbsp;&nbsp;
                 <Button
                   style={{ marginRight: "8px", float: "right" }}
@@ -123,8 +116,8 @@ class DetailFMS extends Component {
                           />
                         </Col>
                       </FormGroup>
-                      
-                        
+
+
                         {all_data.cust_del !== undefined && all_data.cust_del !== null && all_data.cust_del.map((a, i) => (
                             <FormGroup row>
                             <Label sm={2}>CD ID {i+1}</Label>
@@ -138,12 +131,12 @@ class DetailFMS extends Component {
                             onChange={this.handleInput}
                             />
                             </Col>
-                            </FormGroup>  
-                        ))}                       
-                                          
+                            </FormGroup>
+                        ))}
+
                     </Form>
                   </Col>
-                  </Row>                                      
+                  </Row>
               </CardBody>
               <CardFooter></CardFooter>
             </Card>
