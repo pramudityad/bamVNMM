@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { Card, CardHeader, CardBody, Row, Col, Button, Input, CardFooter } from 'reactstrap';
-import { Link } from "react-router-dom";
 import { Form, FormGroup, Label } from 'reactstrap';
 import axios from 'axios';
 import { connect } from 'react-redux';
@@ -19,7 +18,7 @@ const passwordXL = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class DSADetail extends Component {
+class DSAEdit extends Component {
   constructor(props) {
     super(props);
 
@@ -405,20 +404,7 @@ class DSADetail extends Component {
               {this.state.data_dsa !== null && (
                 <Card>
                   <CardHeader>
-                    <span style={{ lineHeight: '2', fontSize: '17px' }}><i className="fa fa-info-circle" style={{ marginLeft: "8px" }}></i>DSA Detail ({this.state.data_dsa.dsa_number})</span>
-                    <Link to={'/dsa-edit/' + this.props.match.params.id}>
-                <Button
-                  style={{ marginRight: "8px", float: "right" }}                  
-                  color="warning"
-                  size="sm"
-                >
-                  <i
-                    className="fas fa-edit"
-                    style={{ marginRight: "8px" }}
-                  ></i>
-                  Edit
-                </Button>
-                </Link>
+                    <span style={{ lineHeight: '2', fontSize: '17px' }}><i className="fa fa-info-circle" style={{ marginRight: "8px" }}></i>DSA Detail ({this.state.data_dsa.dsa_number})</span>
                   </CardHeader>
                   <CardBody>
                     <Form>
@@ -691,4 +677,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(DSADetail);
+export default connect(mapStateToProps)(DSAEdit);
