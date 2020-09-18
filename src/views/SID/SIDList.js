@@ -18,6 +18,7 @@ import Excel from "exceljs";
 import { saveAs } from "file-saver";
 import { connect } from "react-redux";
 import { getDatafromAPINODE, getDatafromAPINODEFile } from "../../helper/asyncFunction";
+import Loading from '../components/Loading'
 
 const arrayFilter = ["no_SID", "cust_del.cd_id", "created_by", "created_on"];
 
@@ -37,6 +38,7 @@ class SIDList extends Component {
       activePage: 1,
       totalData: 0,
       perPage: 10,
+      modal_loading: false,
     };
     // bind
   }
@@ -52,6 +54,12 @@ class SIDList extends Component {
     this.setState({ activePage: pageNumber }, () => {
       this.getPRTList();
     });
+  }
+
+  toggleLoading = () => {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
   }
 
   getPRTList() {
@@ -154,11 +162,18 @@ class SIDList extends Component {
   };
 
   getSIDFile = async (e) => {
-    let i = e.target.value
-    const data_prt = this.state.all_data;    
-    const resFile = await getDatafromAPINODEFile('/erisiteSidFile/getDocument/' + this.props.match.params.id, this.props.dataLogin.token, data_prt[i].file_document.mime_type);
-    if(resFile !== undefined){
-      saveAs(new Blob([resFile.data], {type:data_prt[i].file_document.mime_type}),  data_prt[i].file_document.system_name);
+    e.preventDefault()
+    e.persist();
+    const i = e.target.name  
+    const id = e.target.value
+    console.log(i, id)
+    const data_prt = this.state.all_data;  
+    console.log(data_prt[i])
+    if(data_prt[i] !== undefined)  {
+      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + id, this.props.dataLogin.token, data_prt[i].file_document.mime_type);
+      if(resFile !== undefined){
+        saveAs(new Blob([resFile.data], {type:data_prt[i].file_document.mime_type}), data_prt[i].file_document.system_name);
+      }
     }
   }
 
@@ -323,7 +338,7 @@ class SIDList extends Component {
                     {this.state.all_data.map((list, i) => (
                       <tr key={i}>
                         <td>
-                          <Button size="sm" value={i} onClick={this.getSIDFile}>
+                          <Button size="sm" value={list._id} name={i} onClick={this.getSIDFile}>
                             <i className="fa fa-download"></i>
                           </Button>
                         </td>
@@ -348,6 +363,13 @@ class SIDList extends Component {
             </Card>
           </Col>
         </Row>
+
+                {/* Modal Loading */}
+                <Loading isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm modal--loading "}>
+        </Loading>
+        {/* end Modal Loading */}
       </div>
     );
   }
