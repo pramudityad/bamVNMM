@@ -59,12 +59,12 @@ export const getDatafromAPINODE = async (url, props) => {
       },
     });
     if (respond.status >= 200 && respond.status < 300) {
-      console.log("respond Post Data", respond);
+      console.log("respond GET Data", respond);
     }
     return respond;
   } catch (err) {
     let respond = err;
-    console.log("respond Post Data err", err);
+    console.log("respond GET Data err", err);
     return respond;
   }
 };

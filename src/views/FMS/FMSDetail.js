@@ -18,7 +18,7 @@ import { Link } from "react-router-dom";
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import Loading from "../components/Loading";
-import { getDatafromAPINODE, getDatafromAPINODEFile } from "../../helper/asyncFunction";
+import { getDatafromAPINODE, getDatafromAPINODEFile, getDatafromAPIEXEL, patchDatatoAPINODE } from "../../helper/asyncFunction";
 
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
@@ -30,8 +30,11 @@ class DetailFMS extends Component {
 
     this.state = {
       all_data: [],
+      cd_id_data : [],
+      ready_to_sync_true : [],
     };
     this.exportPRT = this.exportPRT.bind(this);
+    this.ReadyToSync = this.ReadyToSync.bind(this);
     // bind
   }
   // function
@@ -45,7 +48,11 @@ class DetailFMS extends Component {
     getDatafromAPINODE("/erisitePodFile/" + _id, this.props.dataLogin.token).then(
       (res) => {
         if (res.data !== undefined) {
-          this.setState({ all_data: res.data.data });
+          this.setState({ all_data: res.data.data }, () => {
+            if(res.data.data.cust_del !== undefined){
+              this.getDataCDID(res.data.data.cust_del.map(cd => cd.cd_id), res.data.data.source_ms_date );
+            }
+          });
         }
       }
     );
@@ -59,7 +66,52 @@ class DetailFMS extends Component {
     }
   }
 
+  async getDataCDID(array_cd_id, source_ms_date){
+    let array_in_cdid = '"'+array_cd_id.join('", "')+'"';
+    let projection = '&projection={"WP_ID" : 1, "CD_Info_Project_Name" : 1, "'+source_ms_date+'" : 1}'
+    const getWPID = await getDatafromAPIEXEL('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}'+projection);
+    if(getWPID !== undefined && getWPID.data !== undefined) {
+      this.setState({ cd_id_data : getWPID.data._items});
+    }
+  }
+
+  viewCDIDTable(cd_id, source_ms_date){
+    const dataCDID = this.state.cd_id_data.find(cd => cd.WP_ID === cd_id);
+    if(dataCDID !== undefined){
+      let dataArrayTrue = this.state.ready_to_sync_true;
+      if(dataCDID[source_ms_date] !== undefined && dataCDID[source_ms_date] !== null && dataCDID[source_ms_date].length > 0){
+        dataArrayTrue.push(true);
+        // this.setState({ready_to_sync_true : dataArrayTrue})
+      }
+      return(
+        <tr>
+          <td>{cd_id}</td>
+          <td>{dataCDID.CD_Info_Project_Name}</td>
+          <td>{dataCDID[source_ms_date]}</td>
+        </tr>
+      )
+    }else{
+      return (
+        <tr>
+          <td>{cd_id}</td>
+          <td></td>
+          <td></td>
+        </tr>
+      )
+    }
+  }
+
+  async ReadyToSync(){
+    const dataSync = await patchDatatoAPINODE('/erisitePodFile/readyToSync/'+this.props.match.params.id, {}, this.props.dataLogin.token);
+    if(dataSync !== undefined && dataSync.data !== undefined){
+      this.setState({action_status : 'success'})
+    }else{
+      this.setState({action_status : 'failed'})
+    }
+  }
+
   render() {
+    console.log()
     const { all_data } = this.state;
     return (
       <div className="animated fadeIn">
@@ -104,7 +156,20 @@ class DetailFMS extends Component {
                     <h5><b>General Information</b></h5>
                     <Form>
                       <FormGroup row>
-                        <Label sm={2}>POD ID</Label>
+                        <Label sm={1}>Project</Label>
+                        <Col sm={6}>
+                          <Input
+                          readOnly
+                            type="text"
+                            //placeholder="POD ID"
+                            name={"project"}
+                            value={all_data.project_name}
+                            onChange={this.handleInput}
+                          />
+                        </Col>
+                      </FormGroup>
+                      <FormGroup row>
+                        <Label sm={1}>POD ID</Label>
                         <Col sm={6}>
                           <Input
                           readOnly
@@ -115,10 +180,20 @@ class DetailFMS extends Component {
                             onChange={this.handleInput}
                           />
                         </Col>
+                        <Label sm={1}>Status</Label>
+                        <Col sm={4}>
+                          <Input
+                          readOnly
+                            type="text"
+                            //placeholder="POD ID"
+                            name={"status"}
+                            value={all_data.status}
+                          />
+                        </Col>
                       </FormGroup>
 
 
-                        {all_data.cust_del !== undefined && all_data.cust_del !== null && all_data.cust_del.map((a, i) => (
+                        {/*}{all_data.cust_del !== undefined && all_data.cust_del !== null && all_data.cust_del.map((a, i) => (
                             <FormGroup row>
                             <Label sm={2}>CD ID {i+1}</Label>
                             <Col sm={6}>
@@ -132,14 +207,32 @@ class DetailFMS extends Component {
                             />
                             </Col>
                             </FormGroup>
-                        ))}
+                        ))} */}
 
                     </Form>
                   </Col>
                   </Row>
+                  <Row>
+                    <Col md="8">
+                    <Table responsive striped bordered size="sm">
+                      <thead>
+                        <tr>
+                          <th>CD ID</th>
+                          <th>Project</th>
+                          <th>{all_data.source_ms_date}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {all_data.cust_del !== undefined && all_data.cust_del !== null && all_data.cust_del.map((a, i) =>
+                          this.viewCDIDTable(a.cd_id, all_data.source_ms_date)
+                        )}
+                      </tbody>
+                    </Table>
+                    </Col>
+                  </Row>
               </CardBody>
               <CardFooter>
-                <Button color="success" size="sm"> 
+                <Button color="success" size="sm" onClick={this.ReadyToSync}>
                   Ready to Sync
                 </Button>
               </CardFooter>

@@ -84,6 +84,7 @@ class FMSupload extends Component {
       identifier_by: "cd_id",
       email_cpm: null,
       project_all : [],
+      roles_milestone : [],
       cd_selected: [
         // {
         //   id_cd_doc: "",
@@ -96,14 +97,15 @@ class FMSupload extends Component {
 
     this.loadOptionsCDID = this.loadOptionsCDID.bind(this);
     this.handlemultipleCD = this.handlemultipleCD.bind(this);
-    this.handleChangeForm = this.handleChangeForm.bind(this);
+    // this.handleChangeForm = this.handleChangeForm.bind(this);
     this.selectProject = this.selectProject.bind(this);
+    this.handleChangeFormSelect = this.handleChangeFormSelect.bind(this);
   }
 
   componentDidMount() {
     document.title = "POD Upload | BAM";
     this.getDataProject();
-
+    this.getDataRolesMilestone();
   }
 
   getDataProject(){
@@ -114,12 +116,20 @@ class FMSupload extends Component {
     })
   }
 
+  getDataRolesMilestone(){
+    getDatafromAPIEXEL('/rules_sorted_non_page?where={"rule_type": "Erisite POD Upload and Actualization"}').then( resp => {
+      if(resp !== undefined){
+        this.setState({roles_milestone : resp.data._items});
+      }
+    })
+  }
+
   selectProject(e){
     const value = e.target.value;
     const index = e.target.selectedIndex;
     const text = e.target[index].text;
-    this.setState({project_select : value, project_name_selected : text}, () => {
-      console.log(this.state.project_select, this.state.project_name_selected)
+    this.setState({project_selected : value, project_name_selected : text}, () => {
+      console.log(this.state.project_selected, this.state.project_name_selected)
     });
   }
 
@@ -244,10 +254,14 @@ class FMSupload extends Component {
   postPOD = async () => {
     this.toggleLoading();
     this.togglecreateModal();
+    const dataRules = await this.state.roles_milestone.find(rm => rm._id === this.state.form_fms.milestone);
     let fileDocument = new FormData();
     await fileDocument.append('id_project_doc', this.state.project_selected);
     await fileDocument.append('project_name', this.state.project_name_selected);
     await fileDocument.append('ms_target', this.state.form_fms.milestone);
+    await fileDocument.append('source_ms_date', dataRules.rules);
+    await fileDocument.append('source_ms_file', dataRules.source_file);
+    await fileDocument.append('source_ms_file_status', dataRules.source);
     await fileDocument.append('fileDocument', this.state.inputan_file);
     await fileDocument.append('cdIdList', JSON.stringify(this.state.cd_selected));
     const respostPOD = await postDatatoAPINODEdata('/erisitePodFile/createPodFile', fileDocument, this.state.tokenUser);
@@ -267,11 +281,14 @@ class FMSupload extends Component {
     }
   }
 
-  handleChangeForm(e){
+  handleChangeFormSelect(e){
     let dataForm = this.state.form_fms;
     const name = e.target.name;
     const value = e.target.value;
+    const index = e.target.selectedIndex;
+    const text = e.target[index].text;
     dataForm[name] = value;
+    dataForm[name+"_name"] = text;
     this.setState({form_fms : dataForm});
   }
 
@@ -300,7 +317,7 @@ class FMSupload extends Component {
                     <Col md="6">
                       <FormGroup style={{ paddingLeft: "16px" }}>
                         <Label>Project</Label>
-                        <Input name="project" type="select" onChange={this.selectProject} value={this.state.project_select}>
+                        <Input name="project" type="select" onChange={this.selectProject} value={this.state.project_selected}>
                             <option value=""></option>
                             {this.state.project_all.map( project =>
                               <option value={project._id}>{project.Project}</option>
@@ -327,11 +344,12 @@ class FMSupload extends Component {
                     <Col md="6">
                       <FormGroup style={{ paddingLeft: "16px" }}>
                         <Label>Milestone</Label>
-                        <Input
-                          type="text"
-                          name="milestone" value={this.state.form_fms.milestone} onChange={this.handleChangeForm}
-                          id="milestone"
-                        />
+                        <Input name="milestone" id="milestone" type="select" onChange={this.handleChangeFormSelect} value={this.state.form_fms.milestone} >
+                            <option value=""></option>
+                            {this.state.roles_milestone.map( rm =>
+                              <option value={rm._id}>{rm.target}</option>
+                            )}
+                        </Input>
                       </FormGroup>
                     </Col>
                   </Row>
