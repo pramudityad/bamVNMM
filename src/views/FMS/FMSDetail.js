@@ -138,7 +138,11 @@ class DetailFMS extends Component {
                   </Col>
                   </Row>
               </CardBody>
-              <CardFooter></CardFooter>
+              <CardFooter>
+                <Button color="success" size="sm"> 
+                  Ready to Sync
+                </Button>
+              </CardFooter>
             </Card>
           </Col>
         </Row>

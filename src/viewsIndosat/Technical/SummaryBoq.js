@@ -23,8 +23,8 @@ const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
 const API_URL_ISAT = 'https://api-dev.isat.pdb.e-dpm.com/isatapi';
-const usernameXL = 'adminbamidsuper';
-const passwordXL = 'F760qbAg2sml';
+const usernameISAT = 'adminbamidsuper';
+const passwordISAT = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -370,8 +370,8 @@ class SummaryBoq extends Component {
       let respond = await axios.get(API_URL_ISAT+url, {
         headers: {'Content-Type':'application/json'},
         auth: {
-          username: usernameXL,
-          password: passwordXL
+          username: usernameISAT,
+          password: passwordISAT
         }
       });
       if(respond.status >= 200 && respond.status < 300) {

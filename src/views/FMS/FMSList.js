@@ -38,6 +38,7 @@ class ListFMS extends Component {
       totalData: 0,
       perPage: 10,
     };
+    this.handlePageChange = this.handlePageChange.bind(this);
     // bind
   }
 
@@ -61,7 +62,7 @@ class ListFMS extends Component {
     (this.state.filter_list["no_pod"] !== null && this.state.filter_list["no_pod"] !== undefined) && (filter_array.push('"no_pod":{"$regex" : "' + this.state.filter_list["no_pod"] + '", "$options" : "i"}'));
     (this.state.filter_list["cust_del.cd_id"] !== null && this.state.filter_list["cust_del.cd_id"] !== undefined) && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list["cust_del.cd_id"] + '", "$options" : "i"}'));
     (this.state.filter_list["created_by"] !== null && this.state.filter_list["created_by"] !== undefined) && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list["created_by"] + '", "$options" : "i"}'));
-    (this.state.filter_list["created_on"] !== null && this.state.filter_list["created_on"] !== undefined) && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list["created_on"] + '", "$options" : "i"}'));    
+    (this.state.filter_list["created_on"] !== null && this.state.filter_list["created_on"] !== undefined) && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list["created_on"] + '", "$options" : "i"}'));
     let whereAnd = '{' + filter_array.join(',') + '}';
     getDatafromAPINODE(
       "/erisitePodFile?srt=_id:-1&q=" + whereAnd + '&lmt=' + maxPage + '&pg=' + page,
@@ -263,7 +264,7 @@ class ListFMS extends Component {
                       <th>POD ID</th>
                       <th>CD ID</th>
                       <th>Created By</th>
-                      <th>Created On</th>                
+                      <th>Created On</th>
                     </tr>
                     <tr>{this.loopSearchBar()}</tr>
                   </thead>
@@ -288,9 +289,9 @@ class ListFMS extends Component {
                           </Link>
                         </td>
                         <td>{list.no_pod}</td>
-                        <td>{list.cust_del.map(e => e.cd_id)}</td>
+                        <td>{list.cust_del.map(e => e.cd_id).join(", ")}</td>
                         <td>{list.created_by}</td>
-                        <td>{list.created_on}</td>                    
+                        <td>{list.created_on}</td>
                       </tr>
                     ))}
                   </tbody>

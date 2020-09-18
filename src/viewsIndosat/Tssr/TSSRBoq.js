@@ -24,8 +24,8 @@ const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
 const API_URL_ISAT = 'https://api-dev.isat.pdb.e-dpm.com/isatapi';
-const usernameXL = 'adminbamidsuper';
-const passwordXL = 'F760qbAg2sml';
+const usernameISAT = 'adminbamidsuper';
+const passwordISAT = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -281,7 +281,7 @@ class TSSRboq extends Component {
         this.dataViewPagination(data_sites);
       });
     }else{
-      this.setState({action_status : "failed", action_message : "There is error, please select other TSSR BOQ"});
+      this.setState({action_status : "failed", action_message : "There is error, please select other BOQ Reservation"});
     }
   }
 
@@ -370,7 +370,7 @@ class TSSRboq extends Component {
         this.dataViewPagination(data_sites);
       });
     }else{
-      this.setState({action_status : "failed", action_message : "There is error, please select other TSSR BOQ"});
+      this.setState({action_status : "failed", action_message : "There is error, please select other BOQ Reservation"});
     }
   }
 
@@ -404,7 +404,7 @@ class TSSRboq extends Component {
     this.patchDatatoAPI('/boq_tech_op/'+dataTech._id, data_Project, dataTech._etag).then( res => {
       if(res !== undefined){
         if(res.data !== undefined){
-          this.setState({action_message : "Your project have been assign to TSSR BOQ ", action_status : 'success'}, () => {
+          this.setState({action_message : "Your project have been assign to BOQ Reservation ", action_status : 'success'}, () => {
             setTimeout(function(){ window.location.reload(); }, 3000);
           });
         }
@@ -460,6 +460,7 @@ class TSSRboq extends Component {
 
   componentDidMount(){
     this.getTechBoqData(this.props.match.params.id);
+    
   }
 
 
@@ -696,7 +697,7 @@ class TSSRboq extends Component {
     ws.getCell('H7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
 
     ws.mergeCells('A9:I9');
-    ws.getCell('A9').value = 'TSSR BOQ';
+    ws.getCell('A9').value = 'BOQ Reservation';
     ws.getCell('A9').font  = { size: 14, bold : true };
     ws.getCell('A9').alignment  = {vertical: 'middle', horizontal: 'center' };
     ws.getCell('A9').border = {bottom: {style:'double'} };
@@ -759,7 +760,7 @@ class TSSRboq extends Component {
     }
 
     const techFormat = await wb.xlsx.writeBuffer()
-    saveAs(new Blob([techFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Report.xlsx')
+    saveAs(new Blob([techFormat]), 'BOQ Reservation '+dataTech.no_tech_boq+' Report.xlsx')
   }
 
   toggleLoading(){
@@ -815,7 +816,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Uploader Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'BOQ Reservation '+dataTech.no_tech_boq+' Uploader Template.xlsx');
   }
 
   exportFormatTechnicalCommercial = async () =>{
@@ -865,7 +866,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Uploader Commercial Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'BOQ Reservation '+dataTech.no_tech_boq+' Uploader Commercial Template.xlsx');
   }
 
   exportFormatTechnicalNew = async () =>{
@@ -882,7 +883,7 @@ class TSSRboq extends Component {
     ws.addRow(HeaderRow2);
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'TSSR BOQ Uploader Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'BOQ Reservation Uploader Template.xlsx');
   }
 
   exportTechnicalHorizontal = async () =>{
@@ -932,7 +933,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tssr_boq+'.xlsx');
+    saveAs(new Blob([MRFormat]), 'BOQ Reservation '+dataTech.no_tssr_boq+'.xlsx');
   }
 
   exportFormatTechnicalHorizontal = async () =>{
@@ -982,7 +983,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tssr_boq+' Format.xlsx');
+    saveAs(new Blob([MRFormat]), 'BOQ Reservation '+dataTech.no_tssr_boq+' Format.xlsx');
   }
 
   exportFormatTechnicalVerticalUploader = async () =>{
@@ -1015,7 +1016,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Vertical Uploader.xlsx');
+    saveAs(new Blob([MRFormat]), 'BOQ Reservation '+dataTech.no_tech_boq+' Vertical Uploader.xlsx');
   }
 
   exportFormatTechnicalVerticalUploaderCommercial = async () =>{
@@ -1048,7 +1049,7 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Vertical Uploader.xlsx');
+    saveAs(new Blob([MRFormat]), 'BOQ Reservation '+dataTech.no_tech_boq+' Vertical Uploader.xlsx');
   }
 
   exportFormatTechnicalVertical = async () =>{
@@ -1081,13 +1082,13 @@ class TSSRboq extends Component {
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'TSSR BOQ '+dataTech.no_tech_boq+' Vertical.xlsx');
+    saveAs(new Blob([MRFormat]), 'BOQ Reservation '+dataTech.no_tech_boq+' Vertical.xlsx');
   }
 
     render() {
       console.log("length", Config_group_DEFAULT.length, Config_group_type_DEFAULT.length);
       if(this.state.redirectSign !== false){
-        return (<Redirect to={'/detail-TSSR BOQ/'+this.state.redirectSign} />);
+        return (<Redirect to={'/detail-BOQ Reservation/'+this.state.redirectSign} />);
       }
 
       function AlertProcess(props){
@@ -1125,20 +1126,20 @@ class TSSRboq extends Component {
                 <CardHeader>
                   {this.state.data_item.length === 0 && this.state.API_Tech.no_boq_tech === undefined && this.props.match.params.id == undefined ? (
                     <React.Fragment>
-                      <span>Create TSSR BOQ</span>
+                      <span>Create BOQ Reservation</span>
                     </React.Fragment>
                   ) : (
                     <React.Fragment>
-                      <span style={{marginTop:'3px', position:'absolute'}}>Detail TSSR BOQ</span>
+                      <span style={{marginTop:'3px', position:'absolute'}}>Detail BOQ Reservation</span>
                       <div className="card-header-actions" style={{display:'inline-flex'}}>
                         <Col>
                           <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}}>
                             <DropdownToggle caret color="secondary" size="sm">
-                              <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download TSSR File
+                              <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download BOQ File
                             </DropdownToggle>
                             {this.state.data_tssr_boq !== null && (
                               <DropdownMenu>
-                                <DropdownItem header> TSSR File</DropdownItem>
+                                <DropdownItem header> BOQ File</DropdownItem>
                                 {/* }<DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Report</DropdownItem> */}
                                 <DropdownItem onClick={this.exportTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Horizontal</DropdownItem>
                                 <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Format</DropdownItem>
@@ -1242,7 +1243,7 @@ class TSSRboq extends Component {
                       <table style={{width : '100%', marginBottom : '0px', marginLeft : '10px'}}>
                         <tbody>
                           <tr style={{fontWeight : '425', fontSize : '23px'}}>
-                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>TSSR BOQ</td>
+                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>BOQ Reservation</td>
                           </tr>
                           <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
                             <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.data_tssr_boq.no_tssr_boq}</td>
@@ -1410,7 +1411,7 @@ class TSSRboq extends Component {
           <Modal isOpen={this.state.modal_update_info} toggle={this.toggleUpdateInfo} className={'modal-sm ' + this.props.className}>
             <ModalBody>
               <div style={{textAlign : 'center', margin : '15px 0 20px 0'}}>
-                <span style={{fontWeight : '500', fontSize : '15px'}}>Update this TSSR BOQ can delete Commercial BOQ related with this TSSR BOQ </span>
+                <span style={{fontWeight : '500', fontSize : '15px'}}>Update this BOQ Reservation can delete Commercial BOQ related with this BOQ Reservation </span>
               </div>
               <div style={{textAlign : 'center', margin : '15px 0 20px 0'}}>
                 <span style={{fontWeight : '500', fontSize : '15px'}}></span>

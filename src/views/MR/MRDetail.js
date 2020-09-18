@@ -2620,7 +2620,7 @@ class MRDetail extends Component {
                       this.state.data_mr.current_mr_status ===
                         "PLANTSPEC UPDATED"||
                       this.state.data_mr.current_mr_status ===
-                        "MR UPDATED") ? (
+                        "MR UPDATED"  || this.state.data_mr.current_mr_status === "MR REJECTED") ? (
                         <Button
                           color="success"
                           style={{ float: "right" }}

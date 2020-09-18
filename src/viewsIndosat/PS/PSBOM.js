@@ -12,15 +12,15 @@ import AsyncSelect from 'react-select/async';
 // import debounce from 'lodash.debounce';
 import debounce from "debounce-promise";
 
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const DefaultNotif = React.lazy(() => import('../../viewsIndosat/DefaultView/DefaultNotif'));
 
 const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
 const API_URL_ISAT = 'https://api-dev.isat.pdb.e-dpm.com/isatapi';
-const usernameXLApi = 'adminbamidsuper';
-const passwordXLApi = 'F760qbAg2sml';
+const usernameISATApi = 'adminbamidsuper';
+const passwordISATApi = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -129,8 +129,8 @@ class PSBOM extends Component {
       let respond = await axios.get(API_URL_ISAT +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernameXLApi,
-          password: passwordXLApi
+          username: usernameISATApi,
+          password: passwordISATApi
         },
       })
       if(respond.status >= 200 && respond.status < 300){

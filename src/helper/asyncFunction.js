@@ -3,10 +3,11 @@ import React from "react";
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
+const API_URL_ISAT = "https://api-dev.isat.pdb.e-dpm.com/isatapi";
 const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
 
-const usernameXL = "adminbamidsuper";
-const passwordXL = "F760qbAg2sml";
+const usernameEVE = "adminbamidsuper";
+const passwordEVE = "F760qbAg2sml";
 
 // EXCEL
 export const getDatafromAPIEXEL = async (url) => {
@@ -14,8 +15,8 @@ export const getDatafromAPIEXEL = async (url) => {
       let respond = await axios.get(API_URL_XL + url, {
         headers: { "Content-Type": "application/json" },
         auth: {
-          username: usernameXL,
-          password: passwordXL,
+          username: usernameEVE,
+          password: passwordEVE,
         },
       });
       if (respond.status >= 200 && respond.status < 300) {
@@ -28,6 +29,26 @@ export const getDatafromAPIEXEL = async (url) => {
       return respond;
     }
   }
+
+  export const getDatafromAPIISAT = async (url) => {
+      try {
+        let respond = await axios.get(API_URL_ISAT + url, {
+          headers: { "Content-Type": "application/json" },
+          auth: {
+            username: usernameEVE,
+            password: passwordEVE,
+          },
+        });
+        if (respond.status >= 200 && respond.status < 300) {
+          console.log("respond Get Data", respond);
+        }
+        return respond;
+      } catch (err) {
+        let respond = err;
+        console.log("respond Get Data", err);
+        return respond;
+      }
+    }
 
 export const getDatafromAPINODE = async (url, props) => {
   try {

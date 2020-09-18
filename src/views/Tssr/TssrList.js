@@ -214,6 +214,7 @@ class TssrList extends Component {
 
   componentDidMount() {
     this.getTssrList();
+    this.getDataFromAPINODE('/userspool/usersByRole?q={"name": "BAM-Account Team"}');
     document.title = 'TSSR List | BAM';
   }
 

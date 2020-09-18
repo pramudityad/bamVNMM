@@ -73,15 +73,9 @@ class FMSupload extends Component {
       list_activity_selected: null,
       project_name: null,
       asp_list: [],
-      create_assignment_form: new Array(69).fill(null),
       // creation_ssow_form : new Array(1).fill({}),
       list_cd_id: [],
       creation_ssow_form: [],
-      list_tower: [],
-      list_project: [],
-      list_tower_selection: [],
-      list_project_selection: [],
-      tower_selected_id: null,
       project_selected: null,
       project_name_selected: null,
       preview_data_assignment: null,
@@ -89,6 +83,7 @@ class FMSupload extends Component {
       can_edit_ssow: false,
       identifier_by: "cd_id",
       email_cpm: null,
+      project_all : [],
       cd_selected: [
         // {
         //   id_cd_doc: "",
@@ -96,126 +91,40 @@ class FMSupload extends Component {
         // },
       ],
       createModal: false,
+      form_fms : {},
     };
 
     this.loadOptionsCDID = this.loadOptionsCDID.bind(this);
     this.handlemultipleCD = this.handlemultipleCD.bind(this);
+    this.handleChangeForm = this.handleChangeForm.bind(this);
+    this.selectProject = this.selectProject.bind(this);
   }
 
   componentDidMount() {
     document.title = "POD Upload | BAM";
-    // this.getDataTower();
-    // this.getDataProject();
-    // this.loadOptionsASP();
+    this.getDataProject();
+
   }
 
-  async previewData() {
-    const dataXLS = [
-      [
-        "id",
-        "project",
-        "sow_type",
-        "created_based",
-        "vendor_code",
-        "vendor_name",
-        "payment_terms",
-        "identifier",
-      ],
-      [
-        "new",
-        this.state.project_name_selected,
-        this.state.create_assignment_form[16],
-        this.state.identifier_by,
-        this.state.create_assignment_form[67],
-        this.state.create_assignment_form[66],
-        this.state.create_assignment_form[15],
-        this.state.tower_selected_id,
-      ],
-    ];
-    const dataXLSASG = {
-      includeSsow: this.state.can_edit_ssow === true ? true : false,
-      data: dataXLS,
-    };
-    const respondCheckingASG = await this.postDatatoAPINODE(
-      "/aspAssignment/aspAssignmentByActivity",
-      dataXLSASG
-    );
-    if (
-      respondCheckingASG.data !== undefined &&
-      respondCheckingASG.status >= 200 &&
-      respondCheckingASG.status <= 300
-    ) {
-      let dataChecking = respondCheckingASG.data.data[0];
-      if (dataChecking.operation === "INVALID") {
-        this.setState({
-          action_status: "failed",
-          action_message: dataChecking.activity_status,
-        });
-      } else {
-        this.setState(
-          { assignment_ssow_upload: dataChecking, creation_ssow_form: [] },
-          () => {
-            if (
-              dataChecking.SSOW_List !== undefined &&
-              dataChecking.SSOW_List.length !== 0
-            ) {
-              this.setState({ creation_ssow_form: dataChecking.SSOW_List });
-              this.setState({ action_status: null, action_message: null });
-            } else {
-              this.setState({ creation_ssow_form: [{}] });
-            }
-          }
-        );
+  getDataProject(){
+    getDatafromAPIEXEL('/project_sorted_non_page').then( resp => {
+      if(resp !== undefined){
+        this.setState({project_all : resp.data._items});
       }
-    } else {
-      if (
-        respondCheckingASG.response !== undefined &&
-        respondCheckingASG.response.data !== undefined &&
-        respondCheckingASG.response.data.error !== undefined
-      ) {
-        if (respondCheckingASG.response.data.error.message !== undefined) {
-          this.setState({
-            action_status: "failed",
-            action_message: respondCheckingASG.response.data.error.message,
-          });
-        } else {
-          this.setState({
-            action_status: "failed",
-            action_message: respondCheckingASG.response.data.error,
-          });
-        }
-      } else {
-        this.setState({ action_status: "failed" });
-      }
-    }
+    })
+  }
+
+  selectProject(e){
+    const value = e.target.value;
+    const index = e.target.selectedIndex;
+    const text = e.target[index].text;
+    this.setState({project_select : value, project_name_selected : text}, () => {
+      console.log(this.state.project_select, this.state.project_name_selected)
+    });
   }
 
   async postAssignment() {
     const dataForm = this.state.create_assignment_form;
-  }
-
-  async handleChangeForm(e) {
-    // const name = e.target.value;
-    const index = e.target.name;
-    const code = e.target.key;
-    // const value = e.target.value;
-    let dataForm = this.state.create_assignment_form;
-    const value = e.target.value;
-    const indexSel = e.target.selectedIndex;
-    const name = e.target[indexSel].text;
-    dataForm[parseInt(index)] = value;
-    if (index === "14") {
-      const getDataASP = this.state.asp_list.find(
-        (e) => e.Vendor_Code === value
-      );
-      let dataForm = this.state.create_assignment_form;
-      dataForm[66] = name;
-      dataForm[67] = value;
-      dataForm[68] = getDataASP !== undefined ? getDataASP.Email : "";
-    }
-    this.setState({ create_assignment_form: dataForm }, () => {
-      console.log("Assignment Form", this.state.create_assignment_form);
-    });
   }
 
   async loadOptionsCDID(inputValue) {
@@ -224,7 +133,7 @@ class FMSupload extends Component {
     } else {
       let wp_id_list = [];
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
-      const getWPID = await getDatafromAPIEXEL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      const getWPID = await getDatafromAPIEXEL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}, "CD_Info_Project_Name" : "'+this.state.project_name_selected+'"}');
       if(getWPID !== undefined && getWPID.data !== undefined) {
         this.setState({list_cd_id : getWPID.data._items});
         getWPID.data._items.map(wp =>
@@ -319,10 +228,10 @@ class FMSupload extends Component {
   handlemultipleCD = (cdlist) => {
     let cd_array = [];
     if( cdlist !== undefined && cdlist !== null ){
-      cdlist.map(e => cd_array.push({id_cd_doc: e.id, cd_id: e.value}));     
-      this.setState({ cd_selected: cd_array}, () => console.log(this.state.cd_selected)) 
+      cdlist.map(e => cd_array.push({id_cd_doc: e.id, cd_id: e.value}));
+      this.setState({ cd_selected: cd_array}, () => console.log(this.state.cd_selected))
     }else{
-      this.setState({ cd_selected: [] }, () => console.log(this.state.cd_selected)) 
+      this.setState({ cd_selected: [] }, () => console.log(this.state.cd_selected))
     }
   }
 
@@ -335,13 +244,12 @@ class FMSupload extends Component {
   postPOD = async () => {
     this.toggleLoading();
     this.togglecreateModal();
-    let fileDocument = new FormData(); 
+    let fileDocument = new FormData();
+    await fileDocument.append('id_project_doc', this.state.project_selected);
+    await fileDocument.append('project_name', this.state.project_name_selected);
+    await fileDocument.append('ms_target', this.state.form_fms.milestone);
     await fileDocument.append('fileDocument', this.state.inputan_file);
     await fileDocument.append('cdIdList', JSON.stringify(this.state.cd_selected));
-    // let post_body = {
-    //   cdIdList: this.state.cd_selected,
-    //   fileDocument
-    // }
     const respostPOD = await postDatatoAPINODEdata('/erisitePodFile/createPodFile', fileDocument, this.state.tokenUser);
     if (
       respostPOD.data !== undefined &&
@@ -357,6 +265,14 @@ class FMSupload extends Component {
       this.setState({ action_status: "failed" });
         this.toggleLoading();
     }
+  }
+
+  handleChangeForm(e){
+    let dataForm = this.state.form_fms;
+    const name = e.target.name;
+    const value = e.target.value;
+    dataForm[name] = value;
+    this.setState({form_fms : dataForm});
   }
 
   render() {
@@ -383,6 +299,19 @@ class FMSupload extends Component {
                   <Row>
                     <Col md="6">
                       <FormGroup style={{ paddingLeft: "16px" }}>
+                        <Label>Project</Label>
+                        <Input name="project" type="select" onChange={this.selectProject} value={this.state.project_select}>
+                            <option value=""></option>
+                            {this.state.project_all.map( project =>
+                              <option value={project._id}>{project.Project}</option>
+                            )}
+                        </Input>
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md="6">
+                      <FormGroup style={{ paddingLeft: "16px" }}>
                         <Label>CD ID</Label>
                         <AsyncSelect
                           isMulti
@@ -390,6 +319,18 @@ class FMSupload extends Component {
                         loadOptions={this.loadOptionsCDID}
                         defaultOptions
                         onChange={this.handlemultipleCD}
+                        />
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md="6">
+                      <FormGroup style={{ paddingLeft: "16px" }}>
+                        <Label>Milestone</Label>
+                        <Input
+                          type="text"
+                          name="milestone" value={this.state.form_fms.milestone} onChange={this.handleChangeForm}
+                          id="milestone"
                         />
                       </FormGroup>
                     </Col>

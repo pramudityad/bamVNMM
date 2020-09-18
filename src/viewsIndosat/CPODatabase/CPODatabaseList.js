@@ -22,9 +22,9 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value })
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
 );
 
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const DefaultNotif = React.lazy(() => import('../../viewsIndosat/DefaultView/DefaultNotif'));
 
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const API_URL_ISAT = 'https://api-dev.isat.pdb.e-dpm.com/isatapi';
 const usernameBAM = 'adminbamidsuper';
 const passwordBAM = 'F760qbAg2sml';
 
@@ -329,7 +329,7 @@ class CPODatabase extends React.Component {
   handleChangeForm(e) {
     const value = e.target.value;
     const index = e.target.name;
-    let dataForm = this.state.DataForm;
+    let dataForm = this.state.POForm;
     dataForm[parseInt(index)] = value;
     this.setState({ DataForm: dataForm });
   }
@@ -662,15 +662,15 @@ class CPODatabase extends React.Component {
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="value" >Contact Number</Label>
-                  <Input type="text" placeholder="3" value={this.state.POForm[3]} onChange={this.handleChangeForm} />
+                  <Input type="text" name="3" value={this.state.POForm[3]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="value" >PR SC Number</Label>
-                  <Input type="text" placeholder="4" value={this.state.POForm[4]} onChange={this.handleChangeForm} />
+                  <Input type="text" name="4" value={this.state.POForm[4]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="value" >Delivery Term Loc</Label>
-                  <Input type="text" placeholder="5" value={this.state.POForm[5]} onChange={this.handleChangeForm} />
+                  <Input type="text" name="5" value={this.state.POForm[5]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="po_year" >Expired Date</Label>

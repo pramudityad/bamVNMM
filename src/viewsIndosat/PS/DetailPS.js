@@ -9,7 +9,7 @@ import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
 import Select from 'react-select';
 
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const DefaultNotif = React.lazy(() => import('../../viewsIndosat/DefaultView/DefaultNotif'));
 
 const API_URL_BMS_Phil = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
@@ -23,9 +23,9 @@ const API_URL_PDB_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const usernameTselApi = 'adminbamidsuper';
 const passwordTselApi = 'F760qbAg2sml';
 
-const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
-const usernameXL = "adminbamidsuper";
-const passwordXL = "F760qbAg2sml";
+const API_URL_ISAT = "https://api-dev.isat.pdb.e-dpm.com/isatapi";
+const usernameISAT = "adminbamidsuper";
+const passwordISAT = "F760qbAg2sml";
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -321,11 +321,11 @@ class DetailPS extends Component {
 
   async getDatafromAPIXL(url){
     try {
-      let respond = await axios.get(API_URL_XL +url, {
+      let respond = await axios.get(API_URL_ISAT +url, {
         headers : {'Content-Type':'application/json'},
         auth: {
-          username: usernameXL,
-          password: passwordXL
+          username: usernameISAT,
+          password: passwordISAT
         },
       })
       if(respond.status >= 200 && respond.status < 300){

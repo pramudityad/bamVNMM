@@ -12,7 +12,7 @@ import { saveAs } from 'file-saver';
 import Excel from 'exceljs';
 import { connect } from 'react-redux';
 
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const DefaultNotif = React.lazy(() => import('../../viewsIndosat/DefaultView/DefaultNotif'));
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
@@ -942,7 +942,7 @@ class ConfigLibrary extends React.Component {
           <Col xl="12">
             <Card style={{}}>
               <CardHeader>
-                <span style={{ marginTop: '8px', position: 'absolute' }}>LCM Library (HOS)</span>
+                <span style={{ marginTop: '8px', position: 'absolute' }}>Product Package Variant</span>
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
                   <div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
@@ -993,7 +993,7 @@ class ConfigLibrary extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: '10px' }}>
-                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Config Library List</span>
+                      <span style={{ fontSize: '20px', fontWeight: '500' }}>Product Package Library List</span>
                       <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
                       <span style={{marginRight: '10px'}}>
                       <Checkbox name={"all"} checked={this.state.packageChecked_all} onChange={this.handleChangeChecklistAll} />Select All
@@ -1032,7 +1032,7 @@ class ConfigLibrary extends React.Component {
                                 <td style={{ textAlign: 'center' }}></td>
                                 <td>
                                   <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPVariant} title='Edit'>
-                                    Add Hos
+                                    Add Variant
                                   </Button>
                                 </td>
                               </tr>
@@ -1071,11 +1071,6 @@ class ConfigLibrary extends React.Component {
                       itemClass="page-item"
                       linkClass="page-link"
                     />
-                  </Col>
-                  <Col>
-                    <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
-                      <Button color="warning" disabled={this.state.packageChecked.length === 0} onClick={this.exportTSSRFormat}> <i className="fa fa-download" aria-hidden="true"> </i> &nbsp; Download PS Format</Button>
-                    </div>
                   </Col>
                 </Row>
                 <Row>
@@ -1166,7 +1161,7 @@ class ConfigLibrary extends React.Component {
                   <Input type="text" name="1" placeholder="" value={this.state.PPAddVariant.product_name} disabled />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="package_name" >HoS Variant Name</Label>
+                  <Label htmlFor="package_name" >PP Variant Name</Label>
                   <Input type="text" name="hos_name" placeholder="" value={this.state.hos_variant_name} onChange={this.handleChangeHosVariantName} />
                 </FormGroup>
                 <FormGroup row>
