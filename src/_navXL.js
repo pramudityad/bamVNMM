@@ -133,6 +133,12 @@ export default {
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
         },
+        {
+          name: 'SID List',
+          url: '/sid-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
+        },
       ]
     },
     {
