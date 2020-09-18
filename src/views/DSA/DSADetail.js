@@ -408,7 +408,7 @@ class DSADetail extends Component {
                     <span style={{ lineHeight: '2', fontSize: '17px' }}><i className="fa fa-info-circle" style={{ marginLeft: "8px" }}></i>DSA Detail ({this.state.data_dsa.dsa_number})</span>
                     <Link to={'/dsa-edit/' + this.props.match.params.id}>
                 <Button
-                  style={{ marginRight: "8px", float: "right" }}                  
+                  style={{ marginLeft: "18px", float: "left" }}                  
                   color="warning"
                   size="sm"
                 >
