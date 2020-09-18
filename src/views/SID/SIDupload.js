@@ -10,29 +10,22 @@ import {
   CardFooter,
   ModalFooter,
 } from "reactstrap";
-import { Form, FormGroup, Label } from "reactstrap";
-import axios from "axios";
+import { Form, FormGroup, Label, Table } from "reactstrap";
 import { connect } from "react-redux";
 import AsyncSelect from "react-select/async";
 import Select from "react-select";
 import { Redirect } from "react-router-dom";
 import ModalCreateNew from "../components/ModalCreateNew";
-import Loading from '../components/Loading'
+import Loading from "../components/Loading";
 
-import { getDatafromAPIEXEL, postDatatoAPINODE, postDatatoAPINODEdata } from "../../helper/asyncFunction";
+import {
+  getDatafromAPIEXEL,
+  postDatatoAPINODE,
+  postDatatoAPINODEdata,
+} from "../../helper/asyncFunction";
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
-
-const API_URL_tsel = "https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi";
-const username_tsel = "adminbamidsuper";
-const password_tsel = "F760qbAg2sml";
-
-const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
-const usernameXL = "adminbamidsuper";
-const passwordXL = "F760qbAg2sml";
-
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 const Checkbox = ({
   type = "checkbox",
@@ -53,7 +46,7 @@ const Checkbox = ({
   />
 );
 
-class FMSupload extends Component {
+class SIDupload extends Component {
   constructor(props) {
     super(props);
 
@@ -89,12 +82,7 @@ class FMSupload extends Component {
       can_edit_ssow: false,
       identifier_by: "cd_id",
       email_cpm: null,
-      cd_selected: [
-        // {
-        //   id_cd_doc: "",
-        //   cd_id: ""
-        // },
-      ],
+      cd_selected: {},
       createModal: false,
     };
 
@@ -219,18 +207,28 @@ class FMSupload extends Component {
   }
 
   async loadOptionsCDID(inputValue) {
-    if(!inputValue) {
+    if (!inputValue) {
       return [];
     } else {
       let wp_id_list = [];
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
-      const getWPID = await getDatafromAPIEXEL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}');
-      if(getWPID !== undefined && getWPID.data !== undefined) {
-        this.setState({list_cd_id : getWPID.data._items});
-        getWPID.data._items.map(wp =>
-          wp_id_list.push({'value' : wp.WP_ID , 'label' : wp.WP_ID +" ( "+wp.WP_Name+" )", 'project' : wp.CD_Info_Project_Name, 'id' : wp._id}))
+      const getWPID = await getDatafromAPIEXEL(
+        '/custdel_sorted_non_page?where={"WP_ID":{"$regex":"' +
+          inputValue +
+          '", "$options":"i"}}'
+      );
+      if (getWPID !== undefined && getWPID.data !== undefined) {
+        this.setState({ list_cd_id: getWPID.data._items });
+        getWPID.data._items.map((wp) =>
+          wp_id_list.push({
+            value: wp.WP_ID,
+            label: wp.WP_ID + " ( " + wp.WP_Name + " )",
+            project: wp.CD_Info_Project_Name,
+            id: wp._id,
+          })
+        );
       }
-      this.setState({project_name : wp_id_list[0].project})
+      this.setState({ project_name: wp_id_list[0].project });
       return wp_id_list;
     }
   }
@@ -317,14 +315,51 @@ class FMSupload extends Component {
   };
 
   handlemultipleCD = (cdlist) => {
-    let cd_array = [];
-    if( cdlist !== undefined && cdlist !== null ){
-      cdlist.map(e => cd_array.push({id_cd_doc: e.id, cd_id: e.value}));     
-      this.setState({ cd_selected: cd_array}, () => console.log(this.state.cd_selected)) 
-    }else{
-      this.setState({ cd_selected: [] }, () => console.log(this.state.cd_selected)) 
+    if (cdlist !== undefined && cdlist !== null) {
+      // cdlist.map((e) => cd_array.push({ id_cd_doc: e.id, cd_id: e.value }));
+      this.setState({ cd_selected: { id_cd_doc: cdlist.id, cd_id: cdlist.value,  } }, () =>
+        console.log(this.state.cd_selected)
+      );
+    } else {
+      this.setState({ cd_selected: {} }, () =>
+        console.log(this.state.cd_selected)
+      );
     }
-  }
+  };
+
+  displayCDInfo = () => {
+    let _id = this.state.cd_selected.id_cd_doc;
+    let cdInfo = this.state.list_cd_id.find(e => e._id === _id)
+    console.log('cdInfo ', cdInfo)
+    if (cdInfo === undefined){
+      return(<></>)
+    }else {
+      return (
+        <>
+          <Table hover bordered responsive size="sm" width="100%">
+            <thead class="table-commercial__header--fixed">
+              <tr>
+                <th>Project Name</th>
+                <th>Program</th>
+                <th>SOW</th>
+                {/* <th>Qty Deliver</th>
+                <th>Qty Comm</th> */}
+              </tr>
+            </thead>
+            <tbody>
+                  <tr>
+                    <td>{cdInfo.CD_Info_Project_Name}</td>
+                    <td>{cdInfo.CD_Info_Program}</td>
+                    <td>{cdInfo.CD_Info_SOW_Type}</td>
+                    {/* <td>{conf.qty}</td>
+                    <td>{conf.qty_commercial}</td> */}
+                  </tr>
+            </tbody>
+          </Table>
+        </>
+      );
+    }   
+  };
 
   toggleLoading = () => {
     this.setState((prevState) => ({
@@ -335,10 +370,17 @@ class FMSupload extends Component {
   postPOD = async () => {
     this.toggleLoading();
     this.togglecreateModal();
-    let fileDocument = new FormData(); 
-    await fileDocument.append('fileDocument', this.state.inputan_file);
-    await fileDocument.append('cdIdList', JSON.stringify(this.state.cd_selected));
-    const respostPOD = await postDatatoAPINODEdata('/erisitePodFile/createPodFile', fileDocument, this.state.tokenUser);
+    let fileDocument = new FormData();
+    await fileDocument.append("fileDocument", this.state.inputan_file);
+    await fileDocument.append(
+      "cdIdList",
+      JSON.stringify([this.state.cd_selected])
+    );
+    const respostPOD = await postDatatoAPINODEdata(
+      "/sidFile/createSidFile",
+      fileDocument,
+      this.state.tokenUser
+    );
     if (
       respostPOD.data !== undefined &&
       respostPOD.status >= 200 &&
@@ -351,9 +393,9 @@ class FMSupload extends Component {
       this.toggleLoading();
     } else {
       this.setState({ action_status: "failed" });
-        this.toggleLoading();
+      this.toggleLoading();
     }
-  }
+  };
 
   render() {
     if (this.state.redirect_sign !== false) {
@@ -371,26 +413,28 @@ class FMSupload extends Component {
               <CardHeader>
                 <span style={{ lineHeight: "2", fontSize: "17px" }}>
                   <i className="fa fa-edit" style={{ marginRight: "8px" }}></i>
-                  FMS Upload
+                  SID Upload
                 </span>
               </CardHeader>
               <CardBody>
                 <Form>
                   <Row>
-                    <Col md="6">
+                    <Col md="4">
                       <FormGroup style={{ paddingLeft: "16px" }}>
                         <Label>CD ID</Label>
                         <AsyncSelect
-                          isMulti
+                        // isMulti
                           cacheOptions
-                        loadOptions={this.loadOptionsCDID}
-                        defaultOptions
-                        onChange={this.handlemultipleCD}
+                          loadOptions={this.loadOptionsCDID}
+                          defaultOptions
+                          onChange={this.handlemultipleCD}
                         />
                       </FormGroup>
                     </Col>
                   </Row>
                 </Form>
+                {/* {this.state.cd_selected === undefined ? "" : this.displayCDInfo() } */}
+                {this.state.cd_selected === {} ? "": this.displayCDInfo()}
               </CardBody>
               <CardFooter>
                 <Button
@@ -447,10 +491,11 @@ class FMSupload extends Component {
         </ModalCreateNew>
 
         {/* Modal Loading */}
-        <Loading isOpen={this.state.modal_loading}
+        <Loading
+          isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
-          className={"modal-sm modal--loading "}>
-        </Loading>
+          className={"modal-sm modal--loading "}
+        ></Loading>
         {/* end Modal Loading */}
       </div>
     );
@@ -464,4 +509,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(FMSupload);
+export default connect(mapStateToProps)(SIDupload);

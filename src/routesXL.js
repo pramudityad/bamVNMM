@@ -89,6 +89,8 @@ const FMSUploader = React.lazy(() => import('./views/FMS/FMSupload'));
 const FMSList = React.lazy(() => import('./views/FMS/FMSList'));
 const FMSDetail = React.lazy(() => import('./views/FMS/FMSDetail'));
 
+const SIDUploader = React.lazy(() => import('./views/SID/SIDupload'));
+const SIDList = React.lazy(() => import('./views/SID/SIDList'));
 
 const ListTechnical = React.lazy(() => import('./views/Technical/ListTechnical'));
 const DetailTechnical = React.lazy(() => import('./views/Technical/TechnicalBoq'));
@@ -327,6 +329,9 @@ const routes = [
   { path: '/pod-list/uploader', exact: true, name: 'POD Uploader', component: FMSUploader },
   { path: '/pod-list', exact: true, name: 'POD List', component: FMSList },
   { path: '/pod-list/detail/:id', exact: true, name: 'POD Detail', component: FMSDetail },
+
+  { path: '/sid-list/uploader', exact: true, name: 'SID Uploader', component: SIDUploader },
+  { path: '/sid-list', exact: true, name: 'SID List', component: SIDList },
 
   { path: '/blank-page', exact: true, name: 'BlanK Page', component: BlankPage },
 
