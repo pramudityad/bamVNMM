@@ -329,7 +329,7 @@ class FMSupload extends Component {
                   <Row>
                     <Col md="6">
                       <FormGroup style={{ paddingLeft: "16px" }}>
-                        <Label>CD ID</Label>
+                        <Label>WP ID</Label>
                         <AsyncSelect
                           isMulti
                           cacheOptions

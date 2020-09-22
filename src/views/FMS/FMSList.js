@@ -262,7 +262,7 @@ class ListFMS extends Component {
                         Action
                       </th>
                       <th>POD ID</th>
-                      <th>CD ID</th>
+                      <th>WP ID</th>
                       <th>Created By</th>
                       <th>Created On</th>
                     </tr>

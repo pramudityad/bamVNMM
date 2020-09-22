@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
 import {
   Card,
   CardHeader,
@@ -32,6 +32,7 @@ class DetailFMS extends Component {
       all_data: [],
       cd_id_data : [],
       ready_to_sync_true : [],
+      action_message : null,
     };
     this.exportPRT = this.exportPRT.bind(this);
     this.ReadyToSync = this.ReadyToSync.bind(this);
@@ -71,7 +72,17 @@ class DetailFMS extends Component {
     let projection = '&projection={"WP_ID" : 1, "CD_Info_Project_Name" : 1, "'+source_ms_date+'" : 1}'
     const getWPID = await getDatafromAPIEXEL('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}'+projection);
     if(getWPID !== undefined && getWPID.data !== undefined) {
-      this.setState({ cd_id_data : getWPID.data._items});
+      const dataCD_ID = getWPID.data._items;
+      let dataArrayTrue = [];
+      this.setState({ cd_id_data : getWPID.data._items}, () => {
+        for(let i = 0; i < dataCD_ID.length; i++){
+          const dataCDID = dataCD_ID[i];
+          if(dataCDID[source_ms_date] !== undefined && dataCDID[source_ms_date] !== null && dataCDID[source_ms_date].length > 0){
+            dataArrayTrue.push(true);
+            this.setState({ready_to_sync_true : dataArrayTrue})
+          }
+        }
+      });
     }
   }
 
@@ -79,10 +90,6 @@ class DetailFMS extends Component {
     const dataCDID = this.state.cd_id_data.find(cd => cd.WP_ID === cd_id);
     if(dataCDID !== undefined){
       let dataArrayTrue = this.state.ready_to_sync_true;
-      if(dataCDID[source_ms_date] !== undefined && dataCDID[source_ms_date] !== null && dataCDID[source_ms_date].length > 0){
-        dataArrayTrue.push(true);
-        // this.setState({ready_to_sync_true : dataArrayTrue})
-      }
       return(
         <tr>
           <td>{cd_id}</td>
@@ -195,7 +202,7 @@ class DetailFMS extends Component {
 
                         {/*}{all_data.cust_del !== undefined && all_data.cust_del !== null && all_data.cust_del.map((a, i) => (
                             <FormGroup row>
-                            <Label sm={2}>CD ID {i+1}</Label>
+                            <Label sm={2}>WP ID {i+1}</Label>
                             <Col sm={6}>
                             <Input
                             readOnly
@@ -217,7 +224,7 @@ class DetailFMS extends Component {
                     <Table responsive striped bordered size="sm">
                       <thead>
                         <tr>
-                          <th>CD ID</th>
+                          <th>WP ID</th>
                           <th>Project</th>
                           <th>{all_data.source_ms_date}</th>
                         </tr>
@@ -232,9 +239,15 @@ class DetailFMS extends Component {
                   </Row>
               </CardBody>
               <CardFooter>
-                <Button color="success" size="sm" onClick={this.ReadyToSync}>
-                  Ready to Sync
-                </Button>
+              {all_data.status === "POD FILE SAVED" && (
+                <Fragment>
+                {this.state.cd_id_data.length !== 0 && (
+                  <Button color={this.state.ready_to_sync_true.length !== all_data.cust_del.length ? "warning" : "success"} size="sm" onClick={this.ReadyToSync} disabled={this.state.ready_to_sync_true.length !== all_data.cust_del.length}>
+                    {this.state.ready_to_sync_true.length !== all_data.cust_del.length ? "Can't Sync to erisite because "+all_data.source_ms_date+" from some WP ID not yet filled" : "Ready to Sync" }
+                  </Button>
+                )}
+                </Fragment>
+              )}
               </CardFooter>
             </Card>
           </Col>
