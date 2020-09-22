@@ -134,20 +134,20 @@ class ListTSSRBoq extends Component {
         <Card>
           <CardHeader>
             <React.Fragment>
-              <span style={{marginTop:'8px'}}>TSSR BOQ List</span>
+              <span style={{marginTop:'8px'}}>BOQ Reservation List</span>
             </React.Fragment>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <Table hover bordered striped responsive size="sm">
               <thead>
                   <tr>
-                    <th>TSSR BOQ No.</th>
+                    <th>BOQ Reservation No.</th>
                     <th>TECH BOQ Origin</th>
                     <th>Project</th>
                     <th>Creator</th>
                     <th>Ver.</th>
-                    <th style={{'width' : '150px', textAlign : 'center'}}>TSSR Status</th>
-                    <th style={{'width' : '225px', textAlign : 'center'}}>Action</th>
+                    <th style={{textAlign : 'center'}}>Status</th>
+                    <th style={{width : '150px', textAlign : 'center'}}>Action</th>
                   </tr>
                   <tr>
                     <td>

@@ -547,7 +547,6 @@ class TssrBOM extends Component {
                           loadOptions={debounce(this.loadOptions, 500)}
                           defaultOptions
                           onChange={this.handleChangeSiteTSSR}
-                          isDisabled={this.state.list_tssr_selected.length >= 2 || this.state.project_selected.length > 3}
                         />
                         </td>
                       )}

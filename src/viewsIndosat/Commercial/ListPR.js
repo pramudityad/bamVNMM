@@ -9,7 +9,7 @@ import { Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import {connect} from 'react-redux';
 import debounce from 'lodash.debounce';
 
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const DefaultNotif = React.lazy(() => import('../../viewsIndosat/DefaultView/DefaultNotif'));
 
 //const API_URL = 'http://localhost:5000/smartapi';
 const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
