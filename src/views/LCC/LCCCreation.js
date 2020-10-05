@@ -17,7 +17,7 @@ const passwordXL = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class LCCCreation extends Component {
+class DSACreation extends Component {
   constructor(props) {
     super(props);
 
@@ -1004,4 +1004,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(LCCCreation);
+export default connect(mapStateToProps)(DSACreation);

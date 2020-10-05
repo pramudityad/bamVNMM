@@ -96,6 +96,10 @@ const DetailTssrMatrix = React.lazy(() => import('./views/TssrMatrix/UploadTSSRM
 const NewTssrMatrix = React.lazy(() => import('./views/TssrMatrix/TSSRbyTech'));
 const DSAList = React.lazy(() => import('./views/DSA/DSAList'));
 const DSADetail = React.lazy(() => import('./views/DSA/DSADetail'));
+const LCCList = React.lazy(() => import('./views/LCC/LCCList'));
+const LCCDetail = React.lazy(() => import('./views/LCC/LCCDetail'));
+const LCCCreation = React.lazy(() => import('./views/LCC/LCCCreation'));
+
 const BulkChangeApproval = React.lazy(() => import('./views/MR/ListChangeApproval'));
 const BulkApproval = React.lazy(() => import('./views/MR/ListBulkApproval'));
 const ListOrdering = React.lazy(() => import('./views/Ordering/ListOrdering'));
@@ -234,6 +238,11 @@ const routes = [
   { path: '/assign-bast/:id', exact: true, name: 'Assign Bast', component: AssignBast },
   { path: '/dsa-list', exact: true, name: 'DSA List', component: DSAList },
   { path: '/dsa-detail/:id', exact: true, name: 'DSA Detail', component: DSADetail },
+
+  { path: '/lcc-list', exact: true, name: 'LCC List', component: LCCList },
+  { path: '/lcc-detail/:id', exact: true, name: 'LCC Detail', component: LCCDetail },
+  { path: '/lcc-creation', exact: true, name: 'LCC Creation', component: LCCCreation },
+
   { path: '/ordering-list', exact: true, name: 'Ordering List', component: ListOrdering },
   { path: '/ordering-detail/:id', exact: true, name: 'Ordering Detail', component: DetailOrdering },
 
