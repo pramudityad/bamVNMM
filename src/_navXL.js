@@ -226,6 +226,12 @@ export default {
       roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
     },
     {
+      name: 'LCC List',
+      url: '/lcc-list',
+      icon: 'icon-list',
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+    },
+    {
       title: true,
       name: 'MR Process',
       roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
