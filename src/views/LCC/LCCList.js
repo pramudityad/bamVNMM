@@ -7,7 +7,7 @@ import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
-
+import { getDatafromAPINODE } from "../../helper/asyncFunction";
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
@@ -50,11 +50,12 @@ class LCCList extends Component {
   getDSAList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPI('/mr_sorted?where={"dsa_number":{"$exists" : 1, "$ne" : null}}&max_results=' + maxPage + '&page=' + page).then(res => {
-      console.log("DSA List Sorted", res);
+    // this.getDataFromAPI('/mr_sorted?where={"dsa_number":{"$exists" : 1, "$ne" : null}}&max_resu.envlts=' + maxPage + '&page=' + page).then(res => {
+      getDatafromAPINODE('/lccDsa?where=&max_results=' + maxPage + '&page=' + page, this.props.dataLogin.token).then(res => {
+      console.log("LCC List Sorted", res);
       if (res.data !== undefined) {
-        const items = res.data._items;
-        const totalData = res.data._meta;
+        const items = res.data.data;
+        const totalData = res.data.totalResults;
         this.setState({ dsa_list: items, totalData: totalData });
       }
     })
@@ -62,7 +63,7 @@ class LCCList extends Component {
 
   componentDidMount() {
     this.getDSAList();
-    document.title = 'DSA List | BAM';
+    document.title = 'LCC List | BAM';
   }
 
   handlePageChange(pageNumber) {
@@ -90,22 +91,21 @@ class LCCList extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: '2' }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> DSA List
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> LCC List
                 </span>
-                <Link to={'/dsa-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create DSA</Button></Link>
-                <Button style={downloadDSA} outline color="success" size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download DSA List</Button>
+                <Link to={'/lcc-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create LCC</Button></Link>
+                <Button style={downloadDSA} outline color="success" size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download LCC List</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
-                      <th>DSA Number</th>
-                      <th>DSA Total Value</th>
-                      <th>From</th>
-                      <th>To</th>
-                      <th>Volume</th>
-                      <th>Weight</th>
+                      <th>LCC ID</th>
+                      <th>PO</th>
+                      <th>PO Desc</th>
+                      <th>Status</th>
+                      <th>Date</th>
                     </tr>
                     <tr>
                       <td>
@@ -157,39 +157,30 @@ class LCCList extends Component {
                             <Input type="text" placeholder="Search" name={4} size="sm" />
                           </InputGroup>
                         </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={5} size="sm" />
-                          </InputGroup>
-                        </div>
-                      </td>
+                      </td>              
                     </tr>
                   </thead>
                   <tbody>
-                    {this.state.dsa_list.length === 0 && (
+                    {this.state.dsa_list !== undefined && this.state.dsa_list.length === 0 && (
                       <tr>
                         <td colSpan="7">No Data Available</td>
                       </tr>
                     )}
-                    {this.state.dsa_list.map((list, i) =>
-                      <tr key={list._id}>
+                    {this.state.dsa_list !== undefined && this.state.dsa_list.map((list, i) =>
+                     <React.Fragment key={list._id + "frag"}>
+                      <tr>
                         <td>
-                          <Link to={'/dsa-detail/' + list._id}>
+                          <Link to={'/lcc-detail/' + list._id}>
                             <Button style={{ width: "90px" }} outline color="info" size="sm">Detail</Button>
                           </Link>
                         </td>
-                        <td>{list.dsa_number}</td>
-                        <td>{list.dsa_total_value}</td>
-                        <td>{list.origin === undefined ? "" : list.origin.value}</td>
-                        <td>{list.site_info[0].site_id}</td>
-                        <td>{list.dimension_volume}</td>
-                        <td>{list.dimension_weight}</td>
+                        <td>{list.no_lcc}</td>
+                        <td>{list.po_cust_desc}</td>
+                        <td>{list.desc}</td>
+                        <td>{list.status}</td>
+                        <td>{list.lcc_date}</td>
                       </tr>
+                      </React.Fragment>
                     )}
                   </tbody>
                 </Table>
