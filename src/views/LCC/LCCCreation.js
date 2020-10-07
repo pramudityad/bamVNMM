@@ -21,6 +21,10 @@ import {
   getDatafromAPIEXEL,
 } from "../../helper/asyncFunction";
 
+const DefaultNotif = React.lazy(() =>
+  import("../../views/DefaultView/DefaultNotif")
+);
+
 class CreateLCC extends Component {
   constructor(props) {
     super(props);
@@ -41,12 +45,11 @@ class CreateLCC extends Component {
     // bind
     this.handleInput = this.handleInput.bind(this);
     this.handleInputProject = this.handleInputProject.bind(this);
-    this.postPRT = this.postPRT.bind(this);
-    this.addSSOW = this.addSSOW.bind(this);
+    this.postLCC = this.postLCC.bind(this);
   }
 
   componentDidMount() {
-    document.title = "PRT Creation | BAM";
+    document.title = "LCC Creation | BAM";
     this.getDataProject();
   }
 
@@ -122,7 +125,7 @@ class CreateLCC extends Component {
     }
   };
 
-  async postPRT() {
+  async postLCC() {
     const Dataform = this.state.Dataform
     let prt_data = {
       budget: Dataform["budget"],
@@ -142,30 +145,22 @@ class CreateLCC extends Component {
         this.setState({ action_status: "success" }, () => {});
       } else {
         this.setState({
-          action_status: "failed",
+          action_status: "failed", action_message: "Create LCC Success"
         });
       }
     });
   }
 
-  addSSOW() {
-    this.setState({
-      SSOW_List_out: this.state.SSOW_List_out.concat([
-        { ssow: "", service_code: "", ssow_qty: "" },
-      ]),
-    });
-  }
-
-  deleteSSOW = (idx) => () => {
-    this.setState({
-      SSOW_List_out: this.state.SSOW_List_out.filter((s, sidx) => idx !== sidx),
-    });
-  };
 
   render() {
     const { Dataform, SSOW_List_out } = this.state;
     return (
       <div className="animated fadeIn">
+         <Row className="row-alert-fixed">
+          <Col xs="12" lg="12">
+            <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
+          </Col>
+        </Row>
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -188,7 +183,7 @@ class CreateLCC extends Component {
                         <Col sm={10}>
                           <Input
                             type="text"
-                            // placeholder="PRT ID"
+                            // placeholder="LCC ID"
                             name={"po_cust_desc"}
                             value={Dataform.po_cust_desc}
                             onChange={this.handleInput}
@@ -252,7 +247,7 @@ class CreateLCC extends Component {
                   type="submit"
                   color="success"
                   style={{ float: "right" }}
-                  onClick={this.postPRT}
+                  onClick={this.postLCC}
                 >
                   <i className="fa fa-plus" style={{ marginRight: "8px" }}></i>{" "}
                   Create

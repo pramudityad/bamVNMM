@@ -20,8 +20,13 @@ import Loading from "../components/Loading";
 import {
   postDatatoAPINODE,
   patchDatatoAPINODE,
-  getDatafromAPINODE
+  getDatafromAPINODE,
+  getDatafromAPIEXEL
 } from "../../helper/asyncFunction";
+
+const DefaultNotif = React.lazy(() =>
+  import("../../views/DefaultView/DefaultNotif")
+);
 
 class DetailLCC extends Component {
   constructor(props) {
@@ -29,6 +34,7 @@ class DetailLCC extends Component {
 
     this.state = {
       all_data: [],
+      asp_data: [],
       POdata: [
 
       ],
@@ -38,8 +44,7 @@ class DetailLCC extends Component {
       selected_vendor: "",
     };
     // bind
-    this.handleInput = this.handleInput.bind(this);
-    this.handleInputProject = this.handleInputProject.bind(this);
+
     this.postPO = this.postPO.bind(this);
     this.addSSOW = this.addSSOW.bind(this);
   }
@@ -47,6 +52,18 @@ class DetailLCC extends Component {
   componentDidMount() {
     document.title = "PRT Creation | BAM";
     this.getPRTDetail(this.props.match.params.id);
+    this.getASPList();
+
+  }
+
+  getASPList() {
+    getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ asp_data: res.data._items });
+      } else {
+        this.setState({ asp_data: [] });
+      }
+    });
   }
 
   getPRTDetail(_id) {
@@ -61,21 +78,8 @@ class DetailLCC extends Component {
   }
 
 
-  handleInput(e) {
-    const value = e.target.value;
-    const name = e.target.name;
-    this.setState(
-      (prevState) => ({
-        Dataform: {
-          ...prevState.Dataform,
-          [name]: value,
-        },
-      }),
-      () => console.log(this.state.Dataform)
-    );
-  }
 
-  handleInputssow = (idx) => (e) => {
+  handleinputPO = (idx) => (e) => {
     const value = e.target.value;
     const name = e.target.name;
     const newSSOW = this.state.POdata.map((ssow_data, sidx) => {
@@ -91,50 +95,29 @@ class DetailLCC extends Component {
       () => console.log(this.state.POdata)
     );
   };
+  
+  handleInputVendor= (idx) => (e) => {
+    const value = e.target.value;    
+    const value_name = e.target.options[e.target.selectedIndex].text 
+    const name = e.target.name;
 
-  handleInputProject(e) {
-    const value = e.value;
-    const _id = e._id;
-    // const name = e.name;
+    const DataPO = this.state.POdata
+    const newSSOW = this.state.POdata.map((ssow_data, sidx) => {
+      if (idx !== sidx) return ssow_data;
+
+      return { ...ssow_data, ["vendor_code"] :value, ["vendor_name"] :value_name};
+    });
+
     this.setState(
-      (prevState) => ({
-        Dataform: {
-          ...prevState.Dataform,
-          ["project_name"]: value,
-          ["id_project_doc"]: _id,
-        },
-      }),
-      () => console.log(this.state.Dataform)
+      {
+        POdata: newSSOW,
+      },
+      () => console.log(this.state.POdata)
     );
-  }
-
-
-  filterDataProject = (inputValue) => {
-    const list = [];
-    this.state.list_project.map((i) =>
-      list.push({ label: i.Project, value: i.Project, _id: i._id })
-    );
-    this.setState({ list_project_selection: list });
-    if (inputValue.length === 0) {
-      return list;
-    } else {
-      return this.state.list_project_selection.filter((i) =>
-        i.label.toLowerCase().includes(inputValue.toLowerCase())
-      );
-    }
   };
 
   async postPO() {
-    // const Dataform = this.state.Dataform
-    // let po_data = {
-    //   no_lcc: Dataform["no_lcc"],
-    //   dsp_value: Dataform["dsp_value"],
-    //   dsp_prebook: Dataform['dsp_prebook'],
-    //   dsp_actual: Dataform["dsp_actual"],
-    //   vendor_name: Dataform["vendor_name"],
-    //   vendor_code: Dataform['vendor_code']
-    // };
-    // console.log("data prt", po_data);
+
     const post = postDatatoAPINODE(
       "/poDsa/createPo",
       { data: this.state.POdata },
@@ -142,10 +125,10 @@ class DetailLCC extends Component {
     ).then((res) => {
       console.log(" res post single ", res);
       if (res.data !== undefined) {
-        this.setState({ action_status: "success" }, () => {});
+        this.setState({ action_status: "success", action_message: "success" }, () => {});
       } else {
         this.setState({
-          action_status: "failed",
+          action_status: "failed", action_message: "failed"
         });
       }
     });
@@ -165,10 +148,10 @@ class DetailLCC extends Component {
     ).then((res) => {
       console.log(" res post single ", res);
       if (res.data !== undefined) {
-        this.setState({ action_status: "success" }, () => {});
+        this.setState({ action_status: "success", action_message: "success" }, () => {});
       } else {
         this.setState({
-          action_status: "failed",
+          action_status: "failed",action_message: "failed"
         });
       }
     });
@@ -180,6 +163,7 @@ class DetailLCC extends Component {
       POdata: this.state.POdata.concat([
         {
           no_lcc: Dataform["no_lcc"],
+          no_po: "",
           dsp_value: "",
           dsp_prebook: "",
           dsp_actual: "",
@@ -196,7 +180,7 @@ class DetailLCC extends Component {
     });
   };
 
-  toggleDelete=(e) => {
+  toogleConf=(e) => {
     const modalDelete = this.state.danger;
     if (modalDelete === false) {
       const _id = e.currentTarget.value;
@@ -217,20 +201,20 @@ class DetailLCC extends Component {
     }));
   }
 
-  DeleteData = async () => {
+  ApprovePO = async () => {
     let objData = {
       _id: this.state.selected_id
     }
     // this.toggleLoading();
-    this.toggleDelete();
+    this.toogleConf();
     const DelData = patchDatatoAPINODE(
       "/poDsa/updatePo",{data:[objData]}, this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
-        this.setState({ action_status: "success" });
+        this.setState({ action_status: "success", action_message: "success" });
         // this.toggleLoading();
       } else {
-        this.setState({ action_status: "failed" }, () => {
+        this.setState({ action_status: "failed", action_message: "failed" }, () => {
           // this.toggleLoading();
         });
       }
@@ -241,13 +225,18 @@ class DetailLCC extends Component {
     const { all_data } = this.state;
     return (
       <div className="animated fadeIn">
+         <Row className="row-alert-fixed">
+          <Col xs="12" lg="12">
+            <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
+          </Col>
+        </Row>
         <Row>
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: "2", fontSize: "17px" }}>
                   <i className="fa fa-edit" style={{ marginRight: "8px" }}></i>
-                  LCC Creation
+                  LCC Detail
                 </span>
               </CardHeader>
               <CardBody>
@@ -343,44 +332,41 @@ class DetailLCC extends Component {
                     {this.state.POdata.map((ssow_data, idx) => (
                   <Row xs="4">
                     <Col md="4">
-                      Value
+                      No PO
+                      <Input
+                        type="text"
+                        placeholder={`No PO #${idx + 1}`}
+                        name={"no_po"}
+                        value={ssow_data.no_po}
+                        onChange={this.handleinputPO(idx)}
+                      />
+                    </Col>  
+                    <Col md="4">
+                      Amount
                       <Input
                         type="number"
-                        placeholder={`Value #${idx + 1}`}
+                        placeholder={`Amount #${idx + 1}`}
                         name={"dsp_value"}
                         value={ssow_data.dsp_value}
-                        onChange={this.handleInputssow(idx)}
+                        onChange={this.handleinputPO(idx)}
                       />
-                    </Col>
-                    <Col md="4">
-                      Prebook
-                      <Input
-                        type="number"
-                        placeholder={`Prebook #${idx + 1}`}
-                        name={"dsp_prebook"}
-                        value={ssow_data.dsp_prebook}
-                        onChange={this.handleInputssow(idx)}
-                      />
-                    </Col>
-                    <Col md="2">
-                      Actual
-                      <Input
-                        type="number"
-                        placeholder={`Actual #${idx + 1}`}
-                        name={"dsp_actual"}
-                        value={ssow_data.dsp_actual}
-                        onChange={this.handleInputssow(idx)}
-                      />
-                    </Col>
+                    </Col>               
                     <Col md="2">
                       Vendor Name
                       <Input
-                        type="text"
+                        type="select"
                         placeholder={`Vendor Name #${idx + 1}`}
-                        name={"vendor_name"}
-                        value={ssow_data.vendor_name}
-                        onChange={this.handleInputssow(idx)}
-                      />
+                        name={"vendor_code"}
+                        value={ssow_data.vendor_code}
+                        onChange={this.handleInputVendor(idx)}
+                      >
+<option value="" disabled selected hidden>
+                            Select Vendor Name
+                          </option>
+                                              {this.state.asp_data.map((asp) => (
+                      <option value={asp.Vendor_Code}>{asp.Name}</option>
+                    ))}
+                      </Input>
                     </Col>
                     <Col md="4">
                       Vendor Code
@@ -390,7 +376,7 @@ class DetailLCC extends Component {
                         placeholder={`Vendor Code #${idx + 1}`}
                         name={"vendor_code"}
                         value={ssow_data.vendor_code}
-                        onChange={this.handleInputssow(idx)}
+                        onChange={this.handleinputPO(idx)}
                       />
                     </Col>
                     
@@ -412,6 +398,7 @@ class DetailLCC extends Component {
                     </Col>
                   </Row>
                 ))}
+                {' '}
                   <Table hover bordered responsive size="sm" width="100%">
                     <thead class="table-commercial__header--fixed">
                       <tr>
@@ -419,7 +406,7 @@ class DetailLCC extends Component {
                         <th>Status</th>
                         <th>Vendor Name</th>
                         <th>Vendor Code</th>
-                        <th>Value</th>
+                        <th>Amount</th>
                         <th>Prebook</th>
                         <th>Actual</th> 
                         <th>Action</th>     
@@ -445,7 +432,7 @@ class DetailLCC extends Component {
                                       color="info"
                                       value={e._id}
                                       name={e.no_po_dsa}
-                                      onClick={this.toggleDelete}
+                                      onClick={this.toogleConf}
                                       title="Delete"
                                     >
                                       <i
@@ -488,15 +475,15 @@ class DetailLCC extends Component {
         {/* Modal confirmation appv po */}
         <ModalDelete
           isOpen={this.state.danger}
-          toggle={this.toggleDelete}
+          toggle={this.toogleConf}
           className={this.props.className}
           title={"Approve "+ this.state.selected_name+ " for " + this.state.selected_vendor}
           body={"Are you sure ?"}
         >
-          <Button color="danger" onClick={this.DeleteData}>
+          <Button color="success" onClick={this.ApprovePO}>
             Yes
           </Button>
-          <Button color="secondary" onClick={this.toggleDelete}>
+          <Button color="secondary" onClick={this.toogleConf}>
             Cancel
           </Button>
         </ModalDelete>
