@@ -40,6 +40,7 @@ class DSACreation extends Component {
 
     this.loadOptionsMR = this.loadOptionsMR.bind(this);
     this.loadOptionsDSA = this.loadOptionsDSA.bind(this);
+    this.loadOptionsPO = this.loadOptionsPO.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
     this.submitDSA = this.submitDSA.bind(this);
   }
@@ -151,7 +152,7 @@ class DSACreation extends Component {
     this.setState({ network_number: getNN.data._items[0].CD_Info_Network_Number });
     // this.setState({network_number : "test1234971"});
     let dataForm = this.state.create_dsa_form;
-    dataForm[0] = dataMR.mr_id + "D";
+    dataForm[0] = "DSA"+dataMR.mr_id;
     dataForm[1] = dataMR.project_name;
     dataForm[2] = dataMR.dsp_company;
     dataForm[3] = dataMR.job_order_number;
@@ -174,6 +175,22 @@ class DSACreation extends Component {
     } else {
       let dsa_list = [];
       const getDSA = await this.getDataFromAPIXL('/dsa_price_sorted?where={"dsa_price_id":{"$regex":"' + inputValue + '", "$options":"i"}}');
+      if (getDSA !== undefined && getDSA.data !== undefined) {
+        this.setState({ list_dsa_selection: getDSA.data._items }, () =>
+          getDSA.data._items.map(dsa =>
+            dsa_list.push({ 'label': dsa.dsa_price_id !== undefined ? dsa.dsa_price_id : null, 'value': dsa._id })))
+      }
+      return dsa_list;
+    }
+  }
+
+  async loadOptionsPO(inputValue) {
+    if (!inputValue) {
+      this.setState({ list_dsa_selection: [] });
+      return [];
+    } else {
+      let dsa_list = [];
+      const getDSA = await this.getDataFromAPINODE('/poDsa?where={"po_dsa_no":{"$regex":"' + inputValue + '", "$options":"i"}}');
       if (getDSA !== undefined && getDSA.data !== undefined) {
         this.setState({ list_dsa_selection: getDSA.data._items }, () =>
           getDSA.data._items.map(dsa =>
@@ -258,7 +275,7 @@ class DSACreation extends Component {
             <Label>Service Master</Label>
             <AsyncSelect
               cacheOptions
-              loadOptions={debounce(this.loadOptionsDSA, 500)}
+              loadOptions={this.loadOptionsDSA}
               defaultOptions
               onChange={this.handleChangeDSA}
               name="16"
@@ -667,6 +684,8 @@ class DSACreation extends Component {
     let updateDSA = {
       "dsa_number": dataForm[0],
       "job_order_number": dataForm[3],
+      "id_po_dsa_doc" : "",
+      "no_po_dsa" : "",
       "po_for_dsp": dataForm[4],
       "po_item_number": dataForm[6],
       "dimension_volume": dataForm[12],
@@ -694,7 +713,7 @@ class DSACreation extends Component {
       ]
     };
     console.log('to be posted', JSON.stringify(updateDSA));
-    let res = await this.patchDatatoAPINODE('/matreq/dsaCreation/' + _id, { "account_id": "2", "data": updateDSA });
+    let res = await this.patchDatatoAPINODE('/matreq/dsaCreation/' + _id, { "account_id": "2", "submitType" : 0, "data": updateDSA });
     if (res !== undefined) {
       if (res.data !== undefined) {
         successUpdate.push(res.data);
@@ -766,6 +785,13 @@ class DSACreation extends Component {
                         </FormGroup>
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>PO for DSP</Label>
+                          <AsyncSelect
+                            cacheOptions
+                            loadOptions={this.loadOptionsPO}
+                            defaultOptions
+                            onChange={this.handleChangeDSA}
+                            name="16"
+                          />
                           <Input type="text" name="4" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.po_for_dsp : ""} onChange={this.handleChangeForm} />
                         </FormGroup>
                       </Col>

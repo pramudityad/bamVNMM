@@ -112,6 +112,7 @@ class AssignmentDetail extends Component {
     this.handleRevisionNote = this.handleRevisionNote.bind(this);
     this.toggleModalReschedule = this.toggleModalReschedule.bind(this);
     this.handleRescheduleNote = this.handleRescheduleNote.bind(this);
+    this.ResyncNNandACT = this.ResyncNNandACT.bind(this);
 
     this.toggleWarningCancelASG = this.toggleWarningCancelASG.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -974,6 +975,23 @@ class AssignmentDetail extends Component {
     this.setState({ reschedule_note: value });
   }
 
+  async ResyncNNandACT(e){
+    const dataPatch = await this.patchDatatoAPINODE('/aspAssignment/resyncNnActCodePdb/'+this.state.data_assignment._id, {})
+    if(dataPatch !== undefined && dataPatch.data !== undefined){
+      this.setState({action_status : 'success'});
+    }else{
+      if (dataPatch.response !== undefined && dataPatch.response.data !== undefined && dataPatch.response.data.error !== undefined) {
+        if (dataPatch.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: dataPatch.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: dataPatch.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -1011,6 +1029,16 @@ class AssignmentDetail extends Component {
                       style={{ marginRight: "8px" }}
                     ></i>
                     Assignment Format
+                  </Button>
+                  <Button
+                    style={{ marginRight: "8px", float: "right" }}
+                    outline
+                    color="secondary"
+                    size="sm"
+                    onClick={this.ResyncNNandACT}
+                    size="sm"
+                  >
+                    Resync NN and ACT Code
                   </Button>
                 </CardHeader>
                 <CardBody>
