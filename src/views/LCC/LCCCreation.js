@@ -179,7 +179,7 @@ class CreateLCC extends Component {
                     </h5>
                     <Form>
                       <FormGroup row>
-                        <Label sm={2}>PO</Label>
+                        <Label sm={2}>PO Cust Desc</Label>
                         <Col sm={10}>
                           <Input
                             type="text"
@@ -191,7 +191,7 @@ class CreateLCC extends Component {
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>PO Desc</Label>
+                        <Label sm={2}>Desc</Label>
                         <Col sm={10}>
                           <Input
                             type="text"
@@ -237,7 +237,7 @@ class CreateLCC extends Component {
                             onChange={this.handleInput}
                           />
                         </Col>
-                      </FormGroup>                                        
+                      </FormGroup>
                     </Form>
                   </Col>
                 </Row>

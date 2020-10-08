@@ -113,6 +113,8 @@ const DSADetail = React.lazy(() => import('./views/DSA/DSADetail'));
 const DSAEdit = React.lazy(() => import('./views/DSA/DSAEdit2'));
 const LCCList = React.lazy(() => import('./views/LCC/LCCList'));
 const LCCDetail = React.lazy(() => import('./views/LCC/LCCDetail'));
+const LCCEdit = React.lazy(() => import('./views/LCC/LCCEdit'));
+
 const LCCCreation = React.lazy(() => import('./views/LCC/LCCCreation'));
 
 const BulkChangeApproval = React.lazy(() => import('./views/MR/ListChangeApproval'));
@@ -279,6 +281,8 @@ const routes = [
 
   { path: '/lcc-list', exact: true, name: 'LCC List', component: LCCList },
   { path: '/lcc-detail/:id', exact: true, name: 'LCC Detail', component: LCCDetail },
+  { path: '/lcc-edit/:id', exact: true, name: 'LCC Edit', component: LCCEdit },
+
   { path: '/lcc-creation', exact: true, name: 'LCC Creation', component: LCCCreation },
 
   { path: '/ordering-list', exact: true, name: 'Ordering List', component: ListOrdering },

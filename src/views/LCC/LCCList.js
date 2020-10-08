@@ -102,8 +102,8 @@ class LCCList extends Component {
                     <tr>
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
                       <th>LCC ID</th>
-                      <th>PO</th>
-                      <th>PO Desc</th>
+                      <th>PO Cust Desc</th>
+                      <th>Desc</th>
                       <th>Status</th>
                       <th>Date</th>
                     </tr>
@@ -157,7 +157,7 @@ class LCCList extends Component {
                             <Input type="text" placeholder="Search" name={4} size="sm" />
                           </InputGroup>
                         </div>
-                      </td>              
+                      </td>
                     </tr>
                   </thead>
                   <tbody>

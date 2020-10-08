@@ -11,11 +11,13 @@ import {
   Form,
   FormGroup,
   Label,
-  Table
+  Table, Modal, ModalFooter
 } from "reactstrap";
 import { connect } from "react-redux";
-import { Link } from "react-router-dom";
+import Select from "react-select";
 import ModalDelete from "../components/ModalDelete";
+import ModalCreateNew from "../components/ModalCreateNew";
+
 import Loading from "../components/Loading";
 import {
   postDatatoAPINODE,
@@ -28,20 +30,22 @@ const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
 
-class DetailLCC extends Component {
+class EditLCC extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      all_data: [],
+      all_data: {},
+      po_data: {},
       asp_data: [],
       POdata: [
 
       ],
       danger: false,
       selected_id: "",
-      selected_name: "",
+      selected_data: {},
       selected_vendor: "",
+      edit_modal: false,
     };
     // bind
 
@@ -117,7 +121,6 @@ class DetailLCC extends Component {
   };
 
   async postPO() {
-
     const post = postDatatoAPINODE(
       "/poDsa/createPo",
       { data: this.state.POdata },
@@ -129,6 +132,52 @@ class DetailLCC extends Component {
       } else {
         this.setState({
           action_status: "failed", action_message: "failed"
+        });
+      }
+    });
+  }
+
+  UpdateLCC = async () => {
+    const Dataform = this.state.Dataform
+    let lcc_data = {
+      _id: this.props.match.params.id,
+      desc: this.state.all_data.desc,
+      budget: this.state.all_data.budget
+    };
+    const post = patchDatatoAPINODE(
+      "/lccDsa/updateLcc",
+      { data:[lcc_data] },
+      this.props.dataLogin.token
+    ).then((res) => {
+      console.log(" res post single ", res);
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success", action_message: "success" }, () => {});
+      } else {
+        this.setState({
+          action_status: "failed",action_message: "failed"
+        });
+      }
+    });
+  }
+
+  UpdatePO= async () => {
+    let ponew_data = {
+      _id: this.state.selected_id,
+      dsp_value: this.state.po_data.dsp_value,
+      vendor_name: this.state.po_data.vendor_name,
+      vendor_code: this.state.po_data.vendor_code
+    };
+    const post = patchDatatoAPINODE(
+      "/poDsa/updatePo",
+      { data:[ponew_data] },
+      this.props.dataLogin.token
+    ).then((res) => {
+      console.log(" res post single ", res);
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success", action_message: "success" }, () => {});
+      } else {
+        this.setState({
+          action_status: "failed",action_message: "failed"
         });
       }
     });
@@ -201,6 +250,26 @@ class DetailLCC extends Component {
     }));
   }
 
+  toogleEdit=(e) => {
+    const modalEdit = this.state.edit_modal;
+    if (modalEdit === false) {
+      const _id = e.currentTarget.value;
+      const name = this.state.all_data.po.find(e => e._id === _id)
+      this.setState({
+        edit_modal: !this.state.edit_modal,
+        selected_id: _id,
+        selected_data: name,
+      });
+    } else {
+      this.setState({
+        edit_modal: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalEdit: !prevState.modalEdit,
+    }));
+  }
+
   ApprovePO = async () => {
     let objData = {
       _id: this.state.selected_id
@@ -221,6 +290,50 @@ class DetailLCC extends Component {
     });
   };
 
+  handleInput = (e) => {
+    const value = e.target.value;
+    const name = e.target.name;
+    this.setState(
+      (prevState) => ({
+        all_data: {
+          ...prevState.all_data,
+          [name]: value,
+        },
+      }),
+      () => console.log(this.state.all_data)
+    );
+  }
+
+  handleInputPO = (e) => {
+    const value = e.target.value;
+    const name = e.target.name;
+    this.setState(
+      (prevState) => ({
+        po_data: {
+          ...prevState.po_data,
+          [name]: value,
+        },
+      }),
+      () => console.log(this.state.po_data)
+    );
+  }
+
+  handleInputPOVendor = (e) => {
+    const value = e.target.value;
+    const name = e.target.name;
+    const value_name = e.target.options[e.target.selectedIndex].text
+
+    this.setState(
+      (prevState) => ({
+        po_data: {
+          ...prevState.po_data,
+          ["vendor_code"]: value, ["vendor_name"] : value_name
+        },
+      }),
+      () => console.log(this.state.po_data)
+    );
+  }
+
   render() {
     const { all_data } = this.state;
     return (
@@ -236,22 +349,10 @@ class DetailLCC extends Component {
               <CardHeader>
                 <span style={{ lineHeight: "2", fontSize: "17px" }}>
                   <i className="fa fa-edit" style={{ marginRight: "8px" }}></i>
-                  LCC Detail
+                  LCC Edit
                 </span>
 
-                <Link to={'/lcc-edit/' + all_data._id}>
-                <Button
-                  style={{ marginRight: "8px", float: "right" }}                  
-                  color="warning"
-                  size="sm"
-                >
-                  <i
-                    className="fas fa-edit"
-                    style={{ marginRight: "8px" }}
-                  ></i>
-                  Edit
-                </Button>
-                </Link>
+               
               </CardHeader>
               <CardBody>
                 <Row>
@@ -278,11 +379,11 @@ class DetailLCC extends Component {
                         <Label sm={2}>Desc</Label>
                         <Col sm={10}>
                           <Input
-                          readOnly
+                          
                             type="text"
                             // placeholder="Site ID"
                             name={"desc"}
-                            value={all_data.desc}
+                            defaultValue={all_data.desc}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -291,11 +392,11 @@ class DetailLCC extends Component {
                         <Label sm={2}>Budget</Label>
                         <Col sm={10}>
                           <Input
-                          readOnly
+                          
                             type="text"
                             // placeholder="Site Name"
                             name={"budget"}
-                            value={all_data.budget}
+                            defaultValue={all_data.budget}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -405,11 +506,11 @@ class DetailLCC extends Component {
                   ))}
                   </Col>
                   <Col style={{marginBottom : '10px', marginTop : '10px'}}>
-                  {all_data.status === "Approved" ? (
+                  {/* {all_data.status === "Approved" ? (
                     <Button color="primary" size="sm" onClick={this.addSSOW}>
                       <i className="fa fa-plus">&nbsp;</i> PO
                     </Button>
-                  ):("")}
+                  ):("")} */}
                   </Col>
                 {' '}
                   <Table hover bordered responsive size="sm" width="100%">
@@ -446,10 +547,24 @@ class DetailLCC extends Component {
                             value={e._id}
                             name={e.no_po_dsa}
                             onClick={this.toogleConf}
-                            title="Delete"
+                            title="Approve"
                           >
                             <i
                               className="fa fa-check"
+                              aria-hidden="true"
+                            ></i>
+                          </Button>
+                        </td>
+                        <td><Button
+                            size="sm"
+                            color="default"
+                            value={e._id}
+                            name={e.no_po_dsa}
+                            onClick={this.toogleEdit}
+                            title="Edit"
+                          >
+                            <i
+                              className="fa fa-edit"
                               aria-hidden="true"
                             ></i>
                           </Button>
@@ -471,16 +586,18 @@ class DetailLCC extends Component {
                 >
                   <i className="fa fa-plus" style={{ marginRight: "8px" }}></i>{" "}
                   Approve
-                </Button>):(<Button
-                  type="submit"
-                  color="success"
-                  style={{ float: "right" }}
-                  onClick={this.postPO}
-                  disabled={this.state.POdata.length === 0}
-                >
-                  <i className="fa fa-plus" style={{ marginRight: "8px" }}></i>{" "}
-                  Create PO
-                </Button>)}
+                </Button>):(
+                  <>
+                <Button
+                type="submit"
+                color="warning"
+                style={{ float: "right" }}
+                onClick={this.UpdateLCC}
+              >
+                Update LCC
+              </Button>                  
+                </>
+                )}
               </CardFooter>
             </Card>
           </Col>
@@ -501,6 +618,78 @@ class DetailLCC extends Component {
             Cancel
           </Button>
         </ModalDelete>
+
+
+        {/* Modal edit  po */}
+        <ModalCreateNew
+          isOpen={this.state.edit_modal}
+          toggle={this.toogleEdit}
+          className={this.props.className}
+          title={"Edit "+ this.state.selected_data.no_po_dsa}
+          // body={"Are you sure ?"}
+        >
+             <div>
+          <Row form>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Amount</Label>
+                      <Input
+                        type="number"
+                        id={"dsp_value"}
+                        name={"dsp_value"}
+                        defaultValue={this.state.selected_data.dsp_value}
+                        onChange={this.handleInputPO}
+                      ></Input>
+                    </FormGroup>
+                  </Col>
+                </Row>
+                <Row form>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Vendor Name</Label>
+                      <Input
+                        type="select"
+                        id={"vendor_code"}
+                        name={"vendor_code"}
+                        defaultValue={this.state.selected_data.vendor_name}
+                        onChange={this.handleInputPOVendor}
+                      >
+                        <option value="" disabled selected hidden>
+                              Select Vendor Name
+                            </option>
+                        {this.state.asp_data.map((asp) => (
+                        <option value={asp.Vendor_Code}>{asp.Name}</option>
+                        ))}
+                      </Input>
+                    </FormGroup>
+                  </Col>
+                </Row>
+                <Row form>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Vendor Code</Label>
+                      <Input
+                      readOnly
+                        type="text"
+                        id={"vendor_code"}
+                        name={"vendor_code"}
+                        defaultValue={this.state.po_data.vendor_code}
+                        onChange={this.handleInputPOVendor}
+                      ></Input>
+                    </FormGroup>
+                  </Col>
+                </Row>
+          </div>
+          <ModalFooter>
+          <Button color="success" onClick={this.UpdatePO}>
+            Update PO
+          </Button>
+          <Button color="secondary" onClick={this.toogleEdit}>
+            Cancel
+          </Button>
+          </ModalFooter>
+          
+        </ModalCreateNew>
       </div>
     );
   }
@@ -513,4 +702,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(DetailLCC);
+export default connect(mapStateToProps)(EditLCC);
