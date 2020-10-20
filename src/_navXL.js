@@ -220,6 +220,12 @@ export default {
       ]
     },
     {
+      name: 'SID List',
+      url: '/sid-list',
+      icon: 'icon-list',
+      roles : ["BAM-Engineering"],
+    },
+    {
       name: 'DSA List',
       url: '/dsa-list',
       icon: 'icon-list',

@@ -73,6 +73,7 @@ class AssignmentCreation extends Component {
     this.loadOptionsActivityNumber = this.loadOptionsActivityNumber.bind(this);
     this.handleChangeActivity = this.handleChangeActivity.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
+    this.handleChangeFormText = this.handleChangeFormText.bind(this);
     this.postAssignment = this.postAssignment.bind(this);
     this.handleChangeProjectXL = this.handleChangeProjectXL.bind(this);
     this.handleChangeTowerXL = this.handleChangeTowerXL.bind(this);
@@ -289,8 +290,8 @@ class AssignmentCreation extends Component {
   async saveDataASG(){
     this.toggleLoading();
     let dataXLS = [
-      ["id","project","sow_type", "created_based", "vendor_code","vendor_name", "payment_terms","identifier"],
-      ["new", this.state.project_name_selected, this.state.create_assignment_form[16], this.state.identifier_by, this.state.create_assignment_form[67], this.state.create_assignment_form[66], this.state.create_assignment_form[15], this.state.tower_selected_id]
+      ["id","project","sow_type", "created_based", "vendor_code","vendor_name", "payment_terms","identifier","assignment_remark"],
+      ["new", this.state.project_name_selected, this.state.create_assignment_form[16], this.state.identifier_by, this.state.create_assignment_form[67], this.state.create_assignment_form[66], this.state.create_assignment_form[15], this.state.tower_selected_id,this.state.create_assignment_form[17]]
     ];
     const listSSOW = this.state.creation_ssow_form;
     listSSOW.filter(e =>e.sow_type !== undefined).map((e,idx) => dataXLS[0].push("ssow_"+(e.sow_type.toLowerCase())+"_id_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_activity_number_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_unit_"+(idx+1).toString(), "ssow_"+(e.sow_type.toLowerCase())+"_quantity_"+(idx+1).toString() ));
@@ -459,6 +460,37 @@ class AssignmentCreation extends Component {
     this.setState({create_assignment_form : dataForm}, () => {
       console.log("Assignment Form", this.state.create_assignment_form);
     });
+  }
+
+  async handleChangeForm(e) {
+    // const name = e.target.value;
+    const index = e.target.name;
+    const code = e.target.key;
+    // const value = e.target.value;
+    let dataForm = this.state.create_assignment_form;
+    const value = e.target.value;
+    const indexSel = e.target.selectedIndex;
+    const name = e.target[indexSel].text;
+    dataForm[parseInt(index)] = value;
+    if(index === "14") {
+      const getDataASP = this.state.asp_list.find(e => e.Vendor_Code === value);
+      let dataForm = this.state.create_assignment_form;
+      dataForm[66] = name;
+      dataForm[67] = value;
+      dataForm[68] = getDataASP !== undefined ? getDataASP.Email : "";
+    }
+    this.setState({create_assignment_form : dataForm}, () => {
+      console.log("Assignment Form", this.state.create_assignment_form);
+    });
+  }
+
+  async handleChangeFormText(e) {
+    // const name = e.target.value;
+    let dataForm = this.state.create_assignment_form;
+    const index = e.target.name;
+    const value = e.target.value;
+    dataForm[parseInt(index)] = value;
+    this.setState({create_assignment_form : dataForm});
   }
 
   async loadOptionsTowerID(inputValue) {
@@ -685,6 +717,10 @@ class AssignmentCreation extends Component {
                           <option value="7030">70% - 30%</option>
                           <option value="6040">60% - 40%</option>
                         </Input>
+                      </FormGroup>
+                      <FormGroup style={{paddingLeft: "16px"}}>
+                        <Label>Assignment Remarks</Label>
+                        <Input type="textarea" name="17" onChange={this.handleChangeFormText} value={this.state.create_assignment_form[17]} />
                       </FormGroup>
                     </Col>
                   </Row>

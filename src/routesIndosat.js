@@ -89,6 +89,28 @@ const WHDashboardExtDet = React.lazy(() => import('./viewsIndosat/Warehouse/Dash
 const MaterialStock  = React.lazy(() => import('./viewsIndosat/Warehouse/MatStock'));
 const MaterialInboundPlan  = React.lazy(() => import('./viewsIndosat/Warehouse/MatInboundPlan'));
 
+const DSACreation = React.lazy(() => import('./viewsIndosat/DSA/DSACreation'));
+const DSAList = React.lazy(() => import('./viewsIndosat/DSA/DSAList'));
+const DSADetail = React.lazy(() => import('./viewsIndosat/DSA/DSADetail'));
+const DSAEdit = React.lazy(() => import('./viewsIndosat/DSA/DSAEdit2'));
+
+const LCCList = React.lazy(() => import('./viewsIndosat/LCC/LCCList'));
+const LCCDetail = React.lazy(() => import('./viewsIndosat/LCC/LCCDetail'));
+const LCCCreation = React.lazy(() => import('./viewsIndosat/LCC/LCCCreation'));
+const LCCEdit = React.lazy(() => import('./viewsIndosat/LCC/LCCEdit'));
+
+const SIDUploader = React.lazy(() => import('./viewsIndosat/SID/SIDupload'));
+const SIDList = React.lazy(() => import('./viewsIndosat/SID/SIDList'));
+
+const PRPOCreation = React.lazy(() => import('./viewsIndosat/PRPO/CreatePRPO'));
+const ListPRPO = React.lazy(() => import('./viewsIndosat/PRPO/ListPRPO'));
+const DetailPRPO = React.lazy(() => import('./viewsIndosat/PRPO/DetailPRPO'));
+const EditPRPO = React.lazy(() => import('./viewsIndosat/PRPO/EditPRPO'));
+
+const MRAList  = React.lazy(() => import('./viewsIndosat/MRA/MRAList'));
+const MRANeedConfirm  = React.lazy(() => import('./viewsIndosat/MRA/MRANeedConfirm'));
+const MRADetail  = React.lazy(() => import('./viewsIndosat/MRA/MRADetail'));
+
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -125,7 +147,7 @@ const routes = [
   { path: '/ps-detail/:id', name: 'Plant Spec BOM', component: PSBOMDetail },
 
   { path: '/cr-detail', exact: true, name: 'CR Detail', component: CRDetail },
-  
+
   { path: '/mr-dashboard-global', exact: true, name: 'Material Request Dashboard', component: MRDashboardGlob },
   { path: '/mr-list', exact: true, name: 'MR List', component: MRList },
   { path: '/mr-na-list', exact: true, name: 'MR List Not Assign', component: MRNAList },
@@ -176,6 +198,28 @@ const routes = [
   { path: '/wh-dashboard-ext/wh-gi-ext-per-wh/:whid', exact: true, name: 'GI External Detail', component: GIExternal },
 
   { path: '/shipment-list', exact: true, name: 'Shipment List', component: ShipmentList },
+
+  { path: '/dsa-creation', exact: true, name: 'DSA Creation', component: DSACreation },
+  { path: '/dsa-list', exact: true, name: 'DSA List', component: DSAList },
+  { path: '/dsa-detail/:id', exact: true, name: 'DSA Detail', component: DSADetail },
+  { path: '/dsa-edit/:id', exact: true, name: 'DSA Edit', component: DSAEdit },
+
+  { path: '/lcc-list', exact: true, name: 'LCC List', component: LCCList },
+  { path: '/lcc-detail/:id', exact: true, name: 'LCC Detail', component: LCCDetail },
+  { path: '/lcc-creation', exact: true, name: 'LCC Creation', component: LCCCreation },
+  { path: '/lcc-edit/:id', exact: true, name: 'LCC Creation', component: LCCEdit },
+
+  { path: '/sid-list/uploader', exact: true, name: 'SID Uploader', component: SIDUploader },
+  { path: '/sid-list', exact: true, name: 'SID List', component: SIDList },
+
+  { path: '/prt-list/creation', exact: true, name: 'PRT Creation', component: PRPOCreation },
+  { path: '/prt-list', exact: true, name: 'PRT List', component: ListPRPO },
+  { path: '/prt-list/detail/:id', exact: true, name: 'PRT Detail', component: DetailPRPO },
+  { path: '/prt-list/edit/:id', exact: true, name: 'PRT Edit', component: EditPRPO },
+
+  { path: '/mra-list', exact: true, name: 'MRA List', component: MRAList },
+  { path: '/mra-list/detail/:id', exact: true, name: 'MRA Detail', component: MRADetail },
+  { path: '/mra-list-need-confirm', exact: true, name: 'MRA Detail', component: MRANeedConfirm },
 
 ];
 

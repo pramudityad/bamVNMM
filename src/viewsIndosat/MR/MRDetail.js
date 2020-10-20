@@ -35,6 +35,7 @@ import { saveAs } from "file-saver";
 import { ExcelRenderer } from "react-excel-renderer";
 import "./MatStyle.css";
 import ModalForm from "../components/ModalForm";
+import { getDatafromAPINODEFile } from "../../helper/asyncFunction";
 
 import {convertDateFormatfull} from '../../helper/basicFunction'
 
@@ -112,9 +113,12 @@ class MRDetail extends Component {
       revision_note: "",
       wbs_cd_id_data : [],
       location_mr : {},
-      dropdownOpen: new Array(1).fill(false),
+      dropdownOpen: new Array(2).fill(false),
       modal_loading : false,
       dsp_list : [],
+      sid_file: [],
+      abd_file: [],
+      mot_type:null,
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
@@ -141,6 +145,7 @@ class MRDetail extends Component {
     this.exportMRFormat = this.exportMRFormat.bind(this);
     this.updateMR = this.updateMR.bind(this);
     this.downloadMaterialSerialNumberReport = this.downloadMaterialSerialNumberReport.bind(this);
+    this.handleMotType = this.handleMotType.bind(this);
   }
 
   toggleLoading(){
@@ -470,6 +475,7 @@ class MRDetail extends Component {
           }
           if(this.state.data_mr.cust_del !== undefined){
             this.getDataCDID(this.state.data_mr.cust_del.map(e => e.cd_id));
+            this.getSIDNumber(this.state.data_mr.cust_del.map(e => e.cd_id));
           }
           this.setState(
             { mr_pp: resMR.data.packages },
@@ -486,6 +492,34 @@ class MRDetail extends Component {
         });
       }
     });
+  }
+
+  async getSIDNumber(arrayCDID) {
+    const page = 1;
+    const maxPage = 1;
+    let dataSID = [];
+    let dataABD = [];
+    for(let i = 0; i < arrayCDID.length; i++){
+      let filter_array = [];
+      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"type" : {"$ne" : "ABD"}');
+      let whereAnd = "{" + filter_array.join(",") + "}";
+      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
+      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
+        dataSID.push(res.data.data[0])
+      }
+    }
+    for(let i = 0; i < arrayCDID.length; i++){
+      let filter_array = [];
+      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"type" : "ABD"');
+      let whereAnd = "{" + filter_array.join(",") + "}";
+      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
+      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
+        dataABD.push(res.data.data[0])
+      }
+    }
+    this.setState({sid_file : dataSID, abd_file : dataABD});
   }
 
   getWHOrigin(wh_id){
@@ -774,6 +808,7 @@ class MRDetail extends Component {
     if(this.state.data_mr.dsp_company !== null && this.state.data_mr.dsp_company !== undefined){
       body = {"dsp_company_code" : this.state.data_mr.dsp_company_code, "dsp_company": this.state.data_mr.dsp_company}
     }
+    body = {...body, "motType" : this.state.mot_type}
     // console.log('_id ',_id);
     // console.log('body ',body);
     this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id,  body ).then(
@@ -1511,6 +1546,36 @@ class MRDetail extends Component {
     this.toggleLoading();
   }
 
+  getSIDFile = async (e) => {
+    e.preventDefault()
+    e.persist();
+    const _id = e.target.value;
+    const dataSID = this.state.sid_file.find(sf => sf._id === _id);
+    if(dataSID !== undefined)  {
+      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
+      if(resFile !== undefined){
+        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+      }
+    }
+  }
+
+  getABDFile = async (e) => {
+    e.preventDefault()
+    e.persist();
+    const _id = e.currentTarget.value;
+    const dataSID = this.state.abd_file.find(sf => sf._id === _id);
+    if(dataSID !== undefined)  {
+      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
+      if(resFile !== undefined){
+        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+      }
+    }
+  }
+
+  handleMotType(e){
+    this.setState({mot_type : e.target.value});
+  }
+
   render() {
     const background = {
       backgroundColor: "#e3e3e3",
@@ -1542,6 +1607,27 @@ class MRDetail extends Component {
                 </span>
                 {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && (
                   <Fragment>{/* }<Button style={{float : 'right', marginRight: "8px"}} size="sm" color="warning" onClick={this.changeEditable}>Edit MR Detail</Button> */}</Fragment>
+                )}
+                {(this.state.sid_file.length !== 0 || this.state.abd_file.length !== 0) ? (
+                  <Dropdown size="sm" isOpen={this.state.dropdownOpen[1]} toggle={() => {this.toggleDropdown(1);}} style={{float : 'right', marginRight : '10px'}}>
+                    <DropdownToggle caret color="secondary">
+                      <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download SID File
+                    </DropdownToggle>
+                    <DropdownMenu>
+                      <DropdownItem header>SID File</DropdownItem>
+                      {this.state.sid_file.map(sf =>
+                        <DropdownItem value={sf._id} onClick={this.getSIDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
+                      )}
+                      <DropdownItem header>ABD File</DropdownItem>
+                      {(this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && this.state.abd_file.map(sf =>
+                        <DropdownItem value={sf._id} onClick={this.getABDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
+                      )}
+                    </DropdownMenu>
+                  </Dropdown>
+                ) : (
+                  <Button size="sm" style={{float : 'right', marginRight : '10px'}}>
+                    no data SID or ABD
+                  </Button>
                 )}
                 <Button
                   style={{ marginRight: "8px", float: "right" }}
@@ -2027,7 +2113,7 @@ class MRDetail extends Component {
                                         &nbsp;
                                       </td>
                                     </tr>
-                                    {((this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && status_can_edit_material.includes(
+                                    {((this.state.userRole.findIndex(e => e === "BAM-Implementation Manager") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Coordinator") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ) && status_can_edit_material.includes(
                                       this.state.data_mr.current_mr_status
                                     )) && (
                                       <tr>
@@ -2575,7 +2661,7 @@ class MRDetail extends Component {
                 )}
               </CardBody>
               <CardFooter>
-              {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && (
+              {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && ((this.state.userRole.findIndex(e => e === "LDM") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Manager") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Coordinator") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ))) && (
                 <React.Fragment>
                   {this.state.data_mr !== null && (
                     <div>
@@ -2611,7 +2697,7 @@ class MRDetail extends Component {
                       {this.state.data_mr !== null && this.state.data_mr.no_plantspec !== null && this.state.data_mr.mr_status.findIndex(st => st.mr_status_name === "LOADING_PROCESS" && st.mr_status_value === "FINISH") === -1 ?
                       (
                         <Fragment>
-                        {((this.state.data_mr.current_mr_status === "MR UPDATED" || this.state.data_mr.current_mr_status === "MR REQUESTED" || this.state.data_mr.current_mr_status === "PLANTSPEC ASSIGNED" || this.state.data_mr.current_mr_status === "PLANTSPEC NOT ASSIGNED") || (this.state.userRole.findIndex(e => e === "BAM-LDM") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 )) && (
+                        {((this.state.data_mr.current_mr_status === "MR UPDATED" || this.state.data_mr.current_mr_status === "MR REQUESTED" || this.state.data_mr.current_mr_status === "PLANTSPEC ASSIGNED" || this.state.data_mr.current_mr_status === "PLANTSPEC NOT ASSIGNED") || (this.state.userRole.findIndex(e => e === "BAM-Implementation Manager") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Coordinator") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 )) && (
                           <Fragment>
                           <Button
                             color="warning"
@@ -2718,6 +2804,7 @@ class MRDetail extends Component {
               />
             </FormGroup>
           ) : (
+            <Fragment>
             <FormGroup>
               <Label htmlFor="total_box">DSP Company</Label>
               <Input
@@ -2731,6 +2818,16 @@ class MRDetail extends Component {
                 ))}
               </Input>
             </FormGroup>
+            <FormGroup>
+              <Label htmlFor="total_box">MOT Type</Label>
+              <Input type="select" name={"0 /// sub_category"} onChange={this.handleMotType} value={this.state.mot_type}>
+                <option value="" disabled selected hidden></option>
+                <option value="MOT-Land">MOT-Land</option>
+                <option value="MOT-Air">MOT-Air</option>
+                <option value="MOT-Sea">MOT-Sea</option>
+              </Input>
+            </FormGroup>
+            </Fragment>
           )}
           </Col>
           <div style={{ justifyContent: "center", alignSelf: "center" }}>

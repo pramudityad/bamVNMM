@@ -12,6 +12,8 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
+const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
 class DSAList extends Component {
   constructor(props) {
     super(props);
@@ -47,14 +49,33 @@ class DSAList extends Component {
     }
   }
 
+  async getDataFromAPINODE(url) {
+    try {
+      let respond = await axios.get(API_URL_NODE + url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.props.dataLogin.token
+        },
+      });
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond data", err);
+      return respond;
+    }
+  }
+
   getDSAList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    this.getDataFromAPI('/mr_sorted?where={"dsa_number":{"$exists" : 1, "$ne" : null}}&max_results=' + maxPage + '&page=' + page).then(res => {
+    this.getDataFromAPINODE('/matreq?srt=_id:-1&q={"dsa_number":{"$exists" : 1, "$ne" : null}}&lmt=' + maxPage + '&pg=' + page).then(res => {
       console.log("DSA List Sorted", res);
       if (res.data !== undefined) {
-        const items = res.data._items;
-        const totalData = res.data._meta;
+        const items = res.data.data;
+        const totalData = res.data.totalResults;
         this.setState({ dsa_list: items, totalData: totalData });
       }
     })
@@ -102,8 +123,8 @@ class DSAList extends Component {
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
                       <th>DSA Number</th>
                       <th>DSA Total Value</th>
-                      <th>From</th>
-                      <th>To</th>
+                      <th>Current Status</th>
+                      <th>Vendor</th>
                       <th>Volume</th>
                       <th>Weight</th>
                     </tr>
@@ -185,18 +206,21 @@ class DSAList extends Component {
                         </td>
                         <td>{list.dsa_number}</td>
                         <td>{list.dsa_total_value}</td>
-                        <td>{list.origin === undefined ? "" : list.origin.value}</td>
-                        <td>{list.site_info[0].site_id}</td>
+                        <td>{list.current_dsa_status}</td>
+                        <td>{list.dsp_company}</td>
                         <td>{list.dimension_volume}</td>
                         <td>{list.dimension_weight}</td>
                       </tr>
                     )}
                   </tbody>
                 </Table>
+                <div style={{ margin: "8px 0px" }} className="pagination">
+                  <small>Showing {this.state.dsa_list.length} entries from {this.state.totalData} data</small>
+                </div>
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData.total}
+                  totalItemsCount={this.state.totalData}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"

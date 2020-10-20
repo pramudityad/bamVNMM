@@ -11,7 +11,7 @@ import Select from 'react-select';
 import { Redirect, Link } from 'react-router-dom';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import {convertDateFormatfull} from '../../helper/basicFunction'
-import {getDatafromAPINODE, postDatatoAPINODE, patchDatatoAPINODE} from '../../helper/asyncFunction'
+import {getDatafromAPINODE, postDatatoAPINODE, patchDatatoAPINODE, getDatafromAPIISAT} from '../../helper/asyncFunction'
 
 
 const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
@@ -55,6 +55,15 @@ class TableTechnicalItem extends React.Component{
     }
   }
 
+  getDataCD(site_id, project_po, project){
+    const dataCDIdx = this.props.dataCD.find(e => e.CD_Info_Project_Name === project && e.Site_Info_SiteID_NE_Actual === site_id && e.Project_PO === project_po);
+    if(dataCDIdx !== undefined){
+      return dataCDIdx.CD_Info_System_Key
+    }else{
+      return null
+    }
+  }
+
   render(){
     return(
       <Table hover bordered striped responsive size="sm">
@@ -68,6 +77,12 @@ class TableTechnicalItem extends React.Component{
           </th>
           <th rowSpan="2" style={{verticalAlign : "middle"}}>
             Site ID
+          </th>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            Project PO
+          </th>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            System Key
           </th>
           <th rowSpan="2" style={{verticalAlign : "middle"}}>
             Service
@@ -92,6 +107,8 @@ class TableTechnicalItem extends React.Component{
             <td>{site.region}</td>
             <td>{site.program}</td>
             <td>{site.site_id}</td>
+            <td>{site.project_po}</td>
+            <td>{this.getDataCD(site.site_id, site.project_po, site.project_name)}</td>
             <td>{site.service_product_name}</td>
             {(this.props.isVersion === "rollback") ? (
               this.props.TechHeader.pp_id.map((pp_id,i) =>
@@ -178,6 +195,7 @@ class TSSRboq extends Component {
       modal_update_info : false,
       loading_checking : null,
       format_uploader : null,
+      data_from_cd : [],
     };
     this.toggleUpdateInfo = this.toggleUpdateInfo.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -258,6 +276,7 @@ class TSSRboq extends Component {
         if(res.data.data !== undefined){
           this.setState({data_tssr_boq_sites : dataTech.data.tssr_site, list_version : new Array(parseInt(dataTech.data.version)+1).fill("0")}, () => {
             this.viewTechBoqDataISAT(dataTech.data.tssr_site);
+            this.getDataSystemKey(dataTech.data.tssr_site);
           });
         }
       }
@@ -283,6 +302,27 @@ class TSSRboq extends Component {
     }else{
       this.setState({action_status : "failed", action_message : "There is error, please select other BOQ Reservation"});
     }
+  }
+
+  async getDataSystemKey(array_dataSite){
+    let arraySite = array_dataSite.filter(ads => ads.project_po !== undefined && ads.project_po !== null && ads.project_po.length !== 0);
+    let array_or = [];
+    let dataSite =[];
+    let getNumberPage = Math.ceil(arraySite.length / 25);
+    for(let i = 0 ; i < getNumberPage; i++){
+      let DataPaginationSite = arraySite.slice(i * 25, (i+1)*25);
+      DataPaginationSite.map(ais => array_or.push('{"Project_PO" : "'+ais.project_po+'", "CD_Info_Project_Name" : "'+ais.project_name+'","Site_Info_SiteID_NE_Actual" : "'+ais.site_id+'"}'))
+      let arrayIdSite = array_or.join('", "');
+      let where_id_Site = '?where={"$or": ['+arrayIdSite+']}&projection={"Project_PO":1,"CD_Info_Project_Name":1,"Site_Info_SiteID_NE_Actual":1,"CD_Info_System_Key":1}';
+      let resSite = await getDatafromAPIISAT('/custdel_op'+where_id_Site);
+      if(resSite !== undefined){
+        if(resSite.data !== undefined){
+          dataSite = dataSite.concat(resSite.data._items);
+        }
+      }
+    }
+    this.setState({ data_from_cd:dataSite});
+    // const getData = await this.getDatafromAPIISAT()
   }
 
   dataViewPagination(dataTechView){
@@ -460,7 +500,7 @@ class TSSRboq extends Component {
 
   componentDidMount(){
     this.getTechBoqData(this.props.match.params.id);
-    
+
   }
 
 
@@ -886,6 +926,15 @@ class TSSRboq extends Component {
     saveAs(new Blob([MRFormat]), 'BOQ Reservation Uploader Template.xlsx');
   }
 
+  getDataCD(site_id, project_po, project){
+    const dataCDIdx = this.state.data_from_cd.find(e => e.CD_Info_Project_Name === project && e.Site_Info_SiteID_NE_Actual === site_id && e.Project_PO === project_po);
+    if(dataCDIdx !== undefined){
+      return dataCDIdx.CD_Info_System_Key
+    }else{
+      return null
+    }
+  }
+
   exportTechnicalHorizontal = async () =>{
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -900,8 +949,8 @@ class TSSRboq extends Component {
 
     const header_config = this.state.view_tech_header_table;
 
-    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service"];
-    let HeaderRow2 = ["region", "program", "batch", "site_id", "site_name", "ne_id", "new_config", "service_product_id", "service_product_name"];
+    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service"];
+    let HeaderRow2 = ["region", "program", "batch", "site_id", "site_name", "project_po", "system_key", "ne_id", "new_config", "service_product_id", "service_product_name"];
 
     header_config.type.map(e => HeaderRow1.push(e));
     header_config.pp_id.map((e, i) => HeaderRow2.push(e +" /// "+ header_config.name[i]));
@@ -929,7 +978,7 @@ class TSSRboq extends Component {
           }
         }
       }
-      ws.addRow([dataSites[i].region, dataSites[i].program, dataSites[i].batch, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].ne_id, dataSites[i].new_config, dataSites[i].service_product_id, dataSites[i].service_product_name].concat(qtyItem));
+      ws.addRow([dataSites[i].region, dataSites[i].program, dataSites[i].batch, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].project_po, this.getDataCD(dataSites[i].site_id,dataSites[i].project_po,dataSites[i].project_name), dataSites[i].ne_id, dataSites[i].new_config, dataSites[i].service_product_id, dataSites[i].service_product_name].concat(qtyItem));
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
@@ -950,8 +999,8 @@ class TSSRboq extends Component {
 
     const header_config = this.state.view_tech_header_table;
 
-    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service"];
-    let HeaderRow2 = ["region", "program", "batch", "site_id", "site_name", "ne_id", "new_config", "service_product_id", "service_product_name"];
+    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service"];
+    let HeaderRow2 = ["region", "program", "batch", "site_id", "site_name", "project_po", "ne_id", "new_config", "service_product_id", "service_product_name"];
 
     header_config.type.map(e => HeaderRow1.push(e));
     header_config.pp_id.map((e, i) => HeaderRow2.push(e +" /// "+ header_config.name[i]));
@@ -979,7 +1028,7 @@ class TSSRboq extends Component {
           }
         }
       }
-      ws.addRow([dataSites[i].region, dataSites[i].program, dataSites[i].batch, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].ne_id, dataSites[i].new_config, dataSites[i].service_product_id, dataSites[i].service_product_name].concat(qtyItem));
+      ws.addRow([dataSites[i].region, dataSites[i].program, dataSites[i].batch, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].project_po, dataSites[i].ne_id, dataSites[i].new_config, dataSites[i].service_product_id, dataSites[i].service_product_name].concat(qtyItem));
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
@@ -1147,11 +1196,13 @@ class TSSRboq extends Component {
                             )}
                           </Dropdown>
                         </Col>
+                        {(this.state.userRole.includes('BAM-Engineering') === true || this.state.userRole.includes('BAM-Project Controller') === true || this.state.userRole.includes('Admin') === true ) && (
                         <Col>
                           <Button block color="primary" onClick={this.toggleUpload} id="toggleCollapse1" size="sm">
                             Update
                           </Button>
                         </Col>
+                        )}
                       </div>
                     </React.Fragment>
                   )}
@@ -1278,10 +1329,9 @@ class TSSRboq extends Component {
                             <td style={{textAlign : 'left'}} colspan={2}>{convertDateFormatfull(this.state.data_tssr_boq.created_on)}</td>
                           </tr>
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>&nbsp; </td>
-                              <td></td>
-                              <td></td>
-                              <td style={{paddingLeft:'5px'}}></td>
+                            <td style={{textAlign : 'left'}}>Created By </td>
+                            <td style={{textAlign : 'left'}}>:</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tssr_boq.creator[this.state.data_tssr_boq.creator.length-1].email}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -1300,6 +1350,11 @@ class TSSRboq extends Component {
                             <td style={{textAlign : 'left'}}>Updated On </td>
                             <td style={{textAlign : 'left'}}>:</td>
                             <td style={{textAlign : 'left'}} colspan={2}>{convertDateFormatfull(this.state.data_tssr_boq.updated_on)}</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td style={{textAlign : 'left'}}>Updated By </td>
+                            <td style={{textAlign : 'left'}}>:</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tssr_boq.updater[this.state.data_tssr_boq.updater.length-1].email}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -1331,6 +1386,7 @@ class TSSRboq extends Component {
                         <TableTechnicalItem
                           dataTechBoqSites={this.state.data_tssr_boq_sites_pagination}
                           TechHeader={this.state.option_tssr_header_view === 'only_filled' ?  this.state.view_tech_header_table : this.state.view_tech_all_header_table}
+                          dataCD={this.state.data_from_cd}
                         />
                       )}
                       <nav>

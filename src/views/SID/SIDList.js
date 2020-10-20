@@ -20,7 +20,7 @@ import { connect } from "react-redux";
 import { getDatafromAPINODE, getDatafromAPINODEFile } from "../../helper/asyncFunction";
 import Loading from '../components/Loading'
 
-const arrayFilter = ["no_SID", "cust_del.cd_id", "created_by", "created_on"];
+const arrayFilter = ["no_sid", "cust_del.cd_id", "site_info.site_id", "site_info.site_name", "cust_del.project_name", "created_by", "created_on"];
 
 class SIDList extends Component {
   constructor(props) {
@@ -39,7 +39,11 @@ class SIDList extends Component {
       totalData: 0,
       perPage: 10,
       modal_loading: false,
+      type_uploader_selected : "SID",
     };
+    this.handlePageChange = this.handlePageChange.bind(this);
+    this.downloadAllSIDFile = this.downloadAllSIDFile.bind(this);
+    this.handleChangeTypeUploader = this.handleChangeTypeUploader.bind(this);
     // bind
   }
 
@@ -66,34 +70,20 @@ class SIDList extends Component {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     let filter_array = [];
-    this.state.filter_list["no_SID"] !== null &&
-      this.state.filter_list["no_SID"] !== undefined &&
-      filter_array.push(
-        '"no_SID":{"$regex" : "' +
-          this.state.filter_list["no_SID"] +
-          '", "$options" : "i"}'
-      );
-    this.state.filter_list["cust_del.cd_id"] !== null &&
-      this.state.filter_list["cust_del.cd_id"] !== undefined &&
-      filter_array.push(
-        '"cust_del.cd_id":{"$regex" : "' +
-          this.state.filter_list["cust_del.cd_id"] +
-          '", "$options" : "i"}'
-      );
-    this.state.filter_list["created_by"] !== null &&
-      this.state.filter_list["created_by"] !== undefined &&
-      filter_array.push(
-        '"created_by":{"$regex" : "' +
-          this.state.filter_list["created_by"] +
-          '", "$options" : "i"}'
-      );
-    this.state.filter_list["created_on"] !== null &&
-      this.state.filter_list["created_on"] !== undefined &&
-      filter_array.push(
-        '"created_on":{"$regex" : "' +
-          this.state.filter_list["created_on"] +
-          '", "$options" : "i"}'
-      );
+    for(let i = 0; i < arrayFilter.length; i++){
+      this.state.filter_list[arrayFilter[i]] !== null &&
+        this.state.filter_list[arrayFilter[i]] !== undefined &&
+        filter_array.push(
+          '"'+arrayFilter[i]+'":{"$regex" : "' +
+            this.state.filter_list[arrayFilter[i]] +
+            '", "$options" : "i"}'
+        );
+    }
+    if(this.state.type_uploader_selected !== "SID"){
+      filter_array.push('"type" : "'+this.state.type_uploader_selected+'"');
+    }else{
+      filter_array.push('"type" : {"$ne" : "ABD"}');
+    }
     let whereAnd = "{" + filter_array.join(",") + "}";
     getDatafromAPINODE(
       "/sidFile?srt=_id:-1&q=" +
@@ -164,96 +154,53 @@ class SIDList extends Component {
   getSIDFile = async (e) => {
     e.preventDefault()
     e.persist();
-    const i = e.target.name  
-    const id = e.target.value
-    console.log(i, id)
-    const data_prt = this.state.all_data;  
-    console.log(data_prt[i])
-    if(data_prt[i] !== undefined)  {
-      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + id, this.props.dataLogin.token, data_prt[i].file_document.mime_type);
+    const i = e.target.name;
+    const id = e.currentTarget.value;
+    const data_prt = this.state.all_data.find(ad => ad._id === id);
+    if(data_prt !== undefined)  {
+      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + id, this.props.dataLogin.token, data_prt.file_document.mime_type);
       if(resFile !== undefined){
-        saveAs(new Blob([resFile.data], {type:data_prt[i].file_document.mime_type}), data_prt[i].file_document.system_name);
+        saveAs(new Blob([resFile.data], {type:data_prt.file_document.mime_type}), data_prt.file_document.file_name);
       }
     }
   }
 
-  downloadAll = async () => {
-    let allAssignmentList = this.state.all_data;
+  async downloadAllSIDFile() {
+    let allSIDList = [];
+    let filter_array = [];
+    if(this.state.type_uploader_selected !== "SID"){
+      filter_array.push('"type" : "'+this.state.type_uploader_selected+'"');
+    }else{
+      filter_array.push('"type" : {"$ne" : "ABD"}');
+    }
+    let whereAnd = "{" + filter_array.join(",") + "}";
+    let getSID = await getDatafromAPINODE(
+      "/sidFile?srt=_id:-1&noPg=1&q="+whereAnd, this.props.dataLogin.token
+    );
+    if (getSID.data !== undefined) {
+      allSIDList = getSID.data.data;
+    }
 
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let headerRow = [
-      "assignment_id",
-      "project",
-      "sow_type",
-      "created_based",
-      "vendor_code",
-      "vendor_name",
-      "payment_terms",
-      "identifier",
-      "ssow_rbs_id_1",
-      "ssow_rbs_activity_number_1",
-      "ssow_rbs_unit_1",
-      "ssow_rbs_quantity_1",
-      "ssow_rbs_id_2",
-      "ssow_rbs_activity_number_2",
-      "ssow_rbs_unit_2",
-      "ssow_rbs_quantity_2",
-      "ssow_rbs_id_3",
-      "ssow_rbs_activity_number_3",
-      "ssow_rbs_unit_3",
-      "ssow_rbs_quantity_3",
-      "ssow_rbs_id_4",
-      "ssow_rbs_activity_number_4",
-      "ssow_rbs_unit_4",
-      "ssow_rbs_quantity_4",
-      "ssow_rbs_id_5",
-      "ssow_rbs_activity_number_5",
-      "ssow_rbs_unit_5",
-      "ssow_rbs_quantity_5",
-      "ssow_trm_id_1",
-      "ssow_trm_activity_number_1",
-      "ssow_trm_unit_1",
-      "ssow_trm_quantity_1",
-      "ssow_trm_id_2",
-      "ssow_trm_activity_number_2",
-      "ssow_trm_unit_2",
-      "ssow_trm_quantity_2",
-      "ssow_trm_id_3",
-      "ssow_trm_activity_number_3",
-      "ssow_trm_unit_3",
-      "ssow_trm_quantity_3",
-      "ssow_trm_id_4",
-      "ssow_trm_activity_number_4",
-      "ssow_trm_unit_4",
-      "ssow_trm_quantity_4",
-      "ssow_trm_id_5",
-      "ssow_trm_activity_number_5",
-      "ssow_trm_unit_5",
-      "ssow_trm_quantity_5",
-    ];
+    let headerRow = ["no_sid", "cd_id", "tower_id", "tower_name", "project", "created_by", "created_on", "file_name"];
     ws.addRow(headerRow);
 
-    // for (let i = 0; i < allAssignmentList.length; i++) {
-    //   let rowAdded = [allAssignmentList[i].Assignment_No, allAssignmentList[i].Project, allAssignmentList[i].SOW_Type, "tower_id", allAssignmentList[i].Vendor_Code_Number, allAssignmentList[i].Vendor_Name, allAssignmentList[i].Payment_Terms, allAssignmentList[i].Site_ID];
-    //   let rbs_ssow = allAssignmentList[i].SSOW_List.filter(item => item.sow_type === "RBS");
-    //   for (let j = 0; j < rbs_ssow.length; j++) {
-    //     rowAdded.push(rbs_ssow[j].ssow_id, rbs_ssow[j].ssow_activity_number, rbs_ssow[j].ssow_unit, rbs_ssow[j].ssow_qty);
-    //   }
-    //   for (let k = 0; k < 5 - rbs_ssow.length; k++) {
-    //     rowAdded.push("", "", "", "");
-    //   }
-    //   let trm_ssow = allAssignmentList[i].SSOW_List.filter(item => item.sow_type === "TRM");
-    //   for (let j = 0; j < trm_ssow.length; j++) {
-    //     rowAdded.push(trm_ssow[j].ssow_id, trm_ssow[j].ssow_activity_number, trm_ssow[j].ssow_unit, trm_ssow[j].ssow_qty);
-    //   }
-    //   ws.addRow(rowAdded);
-    // }
-
+    for (let i = 0; i < allSIDList.length; i++) {
+      let rowAdded = [allSIDList[i].no_sid, allSIDList[i].cust_del.map((e) => e.cd_id).toString(), allSIDList[i].site_info !== undefined && allSIDList[i].site_info!== null && allSIDList[i].site_info.map((e) => e.site_id).toString(), allSIDList[i].site_info !== undefined && allSIDList[i].site_info!== null && allSIDList[i].site_info.map((e) => e.site_name).toString(), allSIDList[i].cust_del.map((e) => e.project_name).toString(), allSIDList.created_by,
+      allSIDList[i].created_on.slice(0,10), allSIDList[i].file_document.file_name];
+      ws.addRow(rowAdded);
+    }
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "SID List.xlsx");
-  };
+    saveAs(new Blob([allocexport]), this.state.type_uploader_selected+' REPORT.xlsx');
+  }
+
+  handleChangeTypeUploader(e){
+    this.setState({type_uploader_selected : e.target.value}, () => {
+      this.getPRTList();
+    });
+  }
 
   loading = () => (
     <div className="animated fadeIn pt-1 text-center">Loading...</div>
@@ -276,7 +223,7 @@ class SIDList extends Component {
                     className="fa fa-align-justify"
                     style={{ marginRight: "8px" }}
                   ></i>{" "}
-                  SID List
+                  {this.state.type_uploader_selected} List
                 </span>
                 <Link to={"/SID-list/uploader"}>
                   <Button color="success" style={{ float: "right" }} size="sm">
@@ -284,46 +231,50 @@ class SIDList extends Component {
                       className="fa fa-plus-square"
                       style={{ marginRight: "8px" }}
                     ></i>
-                    Create SID
+                    Create Uploader
                   </Button>
                 </Link>
-                {/* <Link to={"/bulk-assignment-creation"}>
-                  <Button
-                    color="success"
-                    style={{ float: "right", marginRight: "8px" }}
-                    size="sm"
-                  >
-                    <i
-                      className="fa fa-plus-square"
-                      style={{ marginRight: "8px" }}
-                    ></i>
-                    Create PRT Bulk
-                  </Button>
-                </Link> */}
                 <Button
-                  style={downloadAssignment}
+                  style={{ float : 'right', marginRight: "8px" }}
                   outline
                   color="success"
                   size="sm"
-                  onClick={this.downloadAll}
+                  onClick={this.downloadAllSIDFile}
                 >
                   <i
                     className="fa fa-download"
                     style={{ marginRight: "8px" }}
                   ></i>
-                  Download SID List
+                  Download {this.state.type_uploader_selected} List
                 </Button>
-                {/* <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignment} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download SID List</Button> */}
               </CardHeader>
               <CardBody>
+                <Row style={{marginBottom : '20px'}}>
+                <Col md="1">
+                  <span>Type : </span>
+                </Col>
+                <Col md="2">
+                  <Input type="select" onChange={this.handleChangeTypeUploader} value={this.state.type_uploader_selected}>
+                    <option value="SID">
+                      SID
+                    </option>
+                    <option value="ABD">
+                      ABD
+                    </option>
+                  </Input>
+                </Col>
+                </Row>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>
                         Attachment
                       </th>
-                      <th>SID ID</th>
+                      <th>{this.state.type_uploader_selected} ID</th>
                       <th>CD ID</th>
+                      <th>Tower ID</th>
+                      <th>Tower Name</th>
+                      <th>Project Name</th>
                       <th>Created By</th>
                       <th>Created On</th>
                     </tr>
@@ -341,15 +292,23 @@ class SIDList extends Component {
                           <Button size="sm" value={list._id} name={i} onClick={this.getSIDFile}>
                             <i className="fa fa-download"></i>
                           </Button>
+                          <br />
+                          <span>{list.file_document.file_name}</span>
                         </td>
                         <td>{list.no_sid}</td>
                         <td>{list.cust_del.map((e) => e.cd_id)}</td>
+                        <td>{list.site_info !== undefined && list.site_info!== null && list.site_info.map((e) => e.site_id)}</td>
+                        <td>{list.site_info !== undefined && list.site_info!== null && list.site_info.map((e) => e.site_name)}</td>
+                        <td>{list.cust_del.map((e) => e.project_name)}</td>
                         <td>{list.created_by}</td>
-                        <td>{list.created_on}</td>
+                        <td>{list.created_on.slice(0,10)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </Table>
+                <div style={{ margin: "8px 0px" }} className="pagination">
+                  <small>Showing {this.state.all_data.length} entries from {this.state.totalData} data</small>
+                </div>
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}

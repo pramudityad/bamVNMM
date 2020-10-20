@@ -234,7 +234,7 @@ class ListTechnical extends Component {
           <CardHeader>
             <React.Fragment>
               <span style={{marginTop:'8px'}}>Technical BOQ List</span>
-              {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
+              {(this.state.userRole.includes('BAM-Engineering') === true || this.state.userRole.includes('Admin') === true ) ? (
                 <div className="card-header-actions" style={{marginRight:'5px'}}>
                     <Link to='/new-technical'>
                     <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>

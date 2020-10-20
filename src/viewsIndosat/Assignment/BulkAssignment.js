@@ -611,9 +611,9 @@ class BulkAssignment extends Component {
     if(sow_type === "RBSTRM"){
       indexSSOW = 5;
     }
-    let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
+    let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier", "assignment_remark"];
     if(this.state.uploadan_type === "without Predefined SSOW"){
-      let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier"];
+      let headerRow = ["id","project","sow_type", "created_based", "vendor_code","vendor_name","payment_terms","identifier", "assignment_remark"];
       if(sow_type === "RBSTRM"){
         for(let idx = 1; idx <= indexSSOW; idx++){
           headerRow.push("ssow_rbs_id_"+idx.toString(), "ssow_rbs_activity_number_"+idx.toString(), "ssow_rbs_unit_"+idx.toString(), "ssow_rbs_quantity_"+idx.toString() );
@@ -622,17 +622,17 @@ class BulkAssignment extends Component {
           headerRow.push("ssow_trm_id_"+idx.toString(), "ssow_trm_activity_number_"+idx.toString(), "ssow_trm_unit_"+idx.toString(), "ssow_trm_quantity_"+idx.toString() );
         }
         ws.addRow(headerRow);
-        ws.addRow(["new","ISAT AOP 2019","RBSTRM", "cd_id", 2000057356,"PT NEXWAVE","5050","XISAT2009171","1.1.1.N","3022917","pc",3,"1.1.4.N","3022962",null,2,null,null,null,null,null,null,null,null,null,null,null,null,"1.1.1.T", "3022917", "Site", 2, null,null,null,null]);
+        ws.addRow(["new","ISAT AOP 2019","RBSTRM", "cd_id", 2000057356,"PT NEXWAVE","5050","XISAT2009171","Remarks","1.1.1.N","3022917","pc",3,"1.1.4.N","3022962",null,2,null,null,null,null,null,null,null,null,null,null,null,null,"1.1.1.T", "3022917", "Site", 2, null,null,null,null]);
       }else{
         for(let idx = 1; idx <= indexSSOW; idx++){
           headerRow.push("ssow_"+(sow_type.toLowerCase())+"_id_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_activity_number_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_unit_"+idx.toString(), "ssow_"+(sow_type.toLowerCase())+"_quantity_"+idx.toString() );
         }
         ws.addRow(headerRow);
-        ws.addRow(["new","ISAT AOP 2019",sow_type, "cd_id", 2000057356,"PT NEXWAVE","5050","XISAT2009171","1.1.1.N","3022917","pc",3,"1.1.4.N","3022962",null,2,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]);
+        ws.addRow(["new","ISAT AOP 2019",sow_type, "cd_id", 2000057356,"PT NEXWAVE","5050","XISAT2009171","Remarks","1.1.1.N","3022917","pc",3,"1.1.4.N","3022962",null,2,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]);
       }
     }else{
       ws.addRow(headerRow);
-      ws.addRow(["new","ISAT AOP 2019",sow_type, "cd_id", 2000057356,"PT NEXWAVE","5050","XISAT2009171"]);
+      ws.addRow(["new","ISAT AOP 2019",sow_type, "cd_id", 2000057356,"PT NEXWAVE","5050","XISAT2009171","Remarks"]);
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();

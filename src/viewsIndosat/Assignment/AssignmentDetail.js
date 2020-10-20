@@ -9,6 +9,10 @@ import {
   Input,
   CardFooter,
   Table,
+  Dropdown,
+  DropdownToggle,
+  DropdownMenu,
+  DropdownItem
 } from "reactstrap";
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import { Form, FormGroup, Label } from "reactstrap";
@@ -20,6 +24,7 @@ import { saveAs } from "file-saver";
 import "./assignment.css";
 import AsyncSelect from "react-select/async";
 import debounce from "lodash.debounce";
+import { getDatafromAPINODEFile } from "../../helper/asyncFunction";
 
 import {apiSendEmail} from '../../helper/asyncFunction'
 
@@ -80,6 +85,9 @@ class AssignmentDetail extends Component {
       modal_warning_cancel_asg : false,
       value_warning_cancel_asg : "Are you sure?",
       modal_loading : false,
+      sid_file : [],
+      abd_file : [],
+      dropdownOpen: new Array(2).fill(false),
     };
     this.notifyASP = this.notifyASP.bind(this);
     this.saveBastNumber = this.saveBastNumber.bind(this);
@@ -116,6 +124,15 @@ class AssignmentDetail extends Component {
     this.toggleWarningCancelASG = this.toggleWarningCancelASG.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     // this.handleChangeNotApprove = this.handleChangeNotApprove.bind(this);
+  }
+
+  toggleDropdown(i) {
+    const newArray = this.state.dropdownOpen.map((element, index) => {
+      return (index === i ? !element : false);
+    });
+    this.setState({
+      dropdownOpen: newArray,
+    });
   }
 
   toggleLoading() {
@@ -264,10 +281,39 @@ class AssignmentDetail extends Component {
     this.getDataFromAPINODE("/aspAssignment/aspassign/" + _id_Assignment).then(
       (resAsg) => {
         if (resAsg.data !== undefined) {
+          this.getSIDNumber(resAsg.data.data.cust_del.map(cd => cd.cd_id));
           this.setState({ data_assignment: resAsg.data.data });
         }
       }
     );
+  }
+
+  async getSIDNumber(arrayCDID) {
+    const page = 1;
+    const maxPage = 1;
+    let dataSID = [];
+    let dataABD = [];
+    for(let i = 0; i < arrayCDID.length; i++){
+      let filter_array = [];
+      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"type" : {"$ne" : "ABD"}');
+      let whereAnd = "{" + filter_array.join(",") + "}";
+      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
+      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
+        dataSID.push(res.data.data[0])
+      }
+    }
+    for(let i = 0; i < arrayCDID.length; i++){
+      let filter_array = [];
+      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"type" : "ABD"');
+      let whereAnd = "{" + filter_array.join(",") + "}";
+      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
+      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
+        dataABD.push(res.data.data[0])
+      }
+    }
+    this.setState({sid_file : dataSID, abd_file : dataABD});
   }
 
   handleBastAssign = (e) => {
@@ -974,6 +1020,32 @@ class AssignmentDetail extends Component {
     this.setState({ reschedule_note: value });
   }
 
+  getSIDFile = async (e) => {
+    e.preventDefault()
+    e.persist();
+    const _id = e.target.value;
+    const dataSID = this.state.sid_file.find(sf => sf._id === _id);
+    if(dataSID !== undefined)  {
+      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
+      if(resFile !== undefined){
+        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+      }
+    }
+  }
+
+  getABDFile = async (e) => {
+    e.preventDefault()
+    e.persist();
+    const _id = e.currentTarget.value;
+    const dataSID = this.state.abd_file.find(sf => sf._id === _id);
+    if(dataSID !== undefined)  {
+      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
+      if(resFile !== undefined){
+        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+      }
+    }
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -1012,6 +1084,27 @@ class AssignmentDetail extends Component {
                     ></i>
                     Assignment Format
                   </Button>
+                  {(this.state.sid_file.length !== 0 || this.state.abd_file.length !== 0) ? (
+                    <Dropdown size="sm" isOpen={this.state.dropdownOpen[1]} toggle={() => {this.toggleDropdown(1);}} style={{float : 'right', marginRight : '10px'}}>
+                      <DropdownToggle caret color="secondary">
+                        <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download SID File
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem header>SID File</DropdownItem>
+                        {this.state.sid_file.map(sf =>
+                          <DropdownItem value={sf._id} onClick={this.getSIDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
+                        )}
+                        <DropdownItem header>ABD File</DropdownItem>
+                        {(this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && this.state.abd_file.map(sf =>
+                          <DropdownItem value={sf._id} onClick={this.getABDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
+                        )}
+                      </DropdownMenu>
+                    </Dropdown>
+                  ) : (
+                    <Button size="sm" style={{float : 'right', marginRight : '10px'}}>
+                      no data SID or ABD
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardBody>
                   <Form>
@@ -1395,6 +1488,7 @@ class AssignmentDetail extends Component {
                               paddingRight: "16px",
                             }}
                           >
+                          {(this.state.userRole.includes('BAM-Implementation Manager') === true || this.state.userRole.includes('BAM-Implementation Coordinator') === true || this.state.userRole.includes('Admin') === true ) && (
                             <div style={{ marginBottom: "10px" }}>
                               <Checkbox
                                 name="editable"
@@ -1403,6 +1497,7 @@ class AssignmentDetail extends Component {
                               />
                               <span>Editable</span>
                             </div>
+                          )}
                           </Row>
                           {this.state.can_edit_ssow ? (
                             <Fragment>
@@ -1808,7 +1903,7 @@ class AssignmentDetail extends Component {
                     this.state.data_assignment.Current_Status ===
                       "ASP ASSIGNMENT NEED REVISION" ||
                     this.state.data_assignment.Current_Status ===
-                      "ASP ASSIGNMENT RE-SCHEDULE" && (this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
+                      "ASP ASSIGNMENT RE-SCHEDULE" && (this.state.userRole.findIndex(e => e === "BAM-Implementation Manager") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Coordinator") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
                     <Button
                       color="success"
                       style={{ float: "right" }}
@@ -1853,7 +1948,7 @@ class AssignmentDetail extends Component {
                     </Button>
                   )}
                   {this.state.data_assignment.Current_Status ===
-                    "PM APPROVE" && (
+                    "PM APPROVE" && (this.state.userRole.findIndex(e => e === "Admin") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Manager") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Coordinator") !== -1) && (
                     <Button
                       color="primary"
                       style={{ float: "right" }}

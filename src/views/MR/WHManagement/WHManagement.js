@@ -171,6 +171,9 @@ class WHManagement extends React.Component {
       dataForm[7] = aEdit.longitude;
       dataForm[8] = aEdit.factory_code;
       dataForm[9] = aEdit.wh_type;
+      dataForm[10] = aEdit.city;
+      dataForm[11] = aEdit.region;
+      dataForm[12] = aEdit.post_code;
       this.setState({ DataForm: dataForm, selected_id: value });
     } else {
       this.setState({ DataForm: new Array(6).fill(null) });
@@ -510,6 +513,9 @@ class WHManagement extends React.Component {
       longitude: dataWHEdit[7],
       factory_code: dataWHEdit[8],
       wh_type: dataWHEdit[9],
+      city : dataWHEdit[10],
+      region: dataWHEdit[11],
+      post_code : dataWHEdit[12],
     };
     this.toggleLoading();
     this.toggleEdit();
@@ -559,6 +565,9 @@ class WHManagement extends React.Component {
       latitude: dataWHEdit[6],
       longitude: dataWHEdit[7],
       factory_code: dataWHEdit[8],
+      city : dataWHEdit[10],
+      region: dataWHEdit[11],
+      post_code : dataWHEdit[12],
     };
     poData.push(WH);
     let postData = await postDatatoAPINODE(
@@ -615,10 +624,14 @@ class WHManagement extends React.Component {
       "Warehouse ID",
       "WH Manager",
       "Address",
+      "City",
+      "Region",
+      "Post Code",
       "Latitude",
       "Longitude",
       "Owner",
       "WH Type",
+      "EF Code",
     ];
     ws.addRow(headerRow);
 
@@ -633,15 +646,19 @@ class WHManagement extends React.Component {
         list.wh_id,
         list.wh_manager,
         list.address,
+        list.city,
+        list.region,
+        list.post_code,
         list.latitude,
         list.longitude,
         list.owner,
         list.wh_type,
+        list.factory_code,
       ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All Warehouse.xlsx");
+    saveAs(new Blob([allocexport]), "All List.xlsx");
   }
 
   DeleteData = async () => {
@@ -675,14 +692,18 @@ class WHManagement extends React.Component {
       "wh_id",
       "wh_manager",
       "address",
+      "city",
+      "region",
+      "post_code",
       "latitude",
       "longitude",
       "owner",
       "wh_type",
+      "factory_code",
     ]);
-    ws.addRow(["Jakarta", "JKT1", "Asep", "Priuk", 0, 0, "EID", "Internal"]);
-    ws.addRow(["Jakarta2", "JKT1", "Asep", "Priuk", 0, 0, "2000175941", "dsp"]);
-    ws.addRow(["Jakarta3", "JKT1", "Asep", "Priuk", 0, 0, "2000175941", "asp"]);
+    ws.addRow(["Jakarta", "JKT1", "Asep", "Priuk","JKT","Jabo","12351", 0, 0, "EID", "Internal","EF6"]);
+    ws.addRow(["Jakarta2", "JKT1", "Asep", "Priuk","JKT","Jabo","12351", 0, 0, "2000175941", "dsp","EF6"]);
+    ws.addRow(["Jakarta3", "JKT1", "Asep", "Priuk","JKT","Jabo","12351", 0, 0, "2000175941", "asp","EF6"]);
 
     ws2.addRow(["Vendor Name", "Vendor Code"]);
     ws2.addRow(["EID", "Internal"]);
@@ -1061,6 +1082,42 @@ class WHManagement extends React.Component {
                   />
                 </FormGroup>
                 <FormGroup>
+                  <Label htmlFor="address">City</Label>
+                  <Input
+                    type="text"
+                    name="10"
+                    placeholder="City"
+                    value={this.state.DataForm[10]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <Row>
+                <Col sm="8">
+                  <FormGroup>
+                    <Label htmlFor="wh_id">Region</Label>
+                    <Input
+                      type="text"
+                      name="11"
+                      placeholder="Region"
+                      value={this.state.DataForm[11]}
+                      onChange={this.handleChangeForm}
+                    />
+                  </FormGroup>
+                </Col>
+                <Col sm="4">
+                  <FormGroup>
+                    <Label htmlFor="wh_id">Post Code</Label>
+                    <Input
+                      type="text"
+                      name="12"
+                      placeholder="Post Code"
+                      value={this.state.DataForm[12]}
+                      onChange={this.handleChangeForm}
+                    />
+                  </FormGroup>
+                </Col>
+                </Row>
+                <FormGroup>
                   <Label htmlFor="latitude">Latitude</Label>
                   <Input
                     type="number"
@@ -1190,6 +1247,42 @@ class WHManagement extends React.Component {
                     onChange={this.handleChangeForm}
                   />
                 </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="address">City</Label>
+                  <Input
+                    type="text"
+                    name="10"
+                    placeholder="City"
+                    value={this.state.DataForm[10]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <Row>
+                <Col sm="8">
+                  <FormGroup>
+                    <Label htmlFor="wh_id">Region</Label>
+                    <Input
+                      type="text"
+                      name="11"
+                      placeholder="Region"
+                      value={this.state.DataForm[11]}
+                      onChange={this.handleChangeForm}
+                    />
+                  </FormGroup>
+                </Col>
+                <Col sm="4">
+                  <FormGroup>
+                    <Label htmlFor="wh_id">Post Code</Label>
+                    <Input
+                      type="text"
+                      name="12"
+                      placeholder="Post Code"
+                      value={this.state.DataForm[12]}
+                      onChange={this.handleChangeForm}
+                    />
+                  </FormGroup>
+                </Col>
+                </Row>
                 <FormGroup>
                   <Label htmlFor="owner">Owner</Label>
                   <Input

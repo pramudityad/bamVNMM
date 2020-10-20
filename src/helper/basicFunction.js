@@ -42,7 +42,6 @@ export const convertDateFormat = (jsondate) => {
 
 // full dateformat hh:mm:ss
 export const convertDateFormatfull = (jsondate) => {
-  console.log("jsondate", jsondate);
   if(jsondate !== undefined && jsondate !== null){
     let date = new Date(jsondate);
     let year = date.getFullYear();
