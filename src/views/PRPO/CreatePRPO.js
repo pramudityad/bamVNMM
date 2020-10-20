@@ -498,6 +498,8 @@ class CreatePRPO extends Component {
                             <option value="IDR">IDR</option>
                             <option value="USD">USD</option>
                             <option value="EUR">EUR</option>
+                            <option value="CNY">CNY</option>
+                            <option value="SEK">SEK</option>
                           </Input>
                         </Col>
                       </FormGroup>
@@ -581,7 +583,7 @@ class CreatePRPO extends Component {
                   </Col>
                 </Row>
                 {/* pr status */}
-                <Row>
+                {/*}<Row>
                   <Col>
                     <h5>
                       <b>PR Status</b>
@@ -673,169 +675,7 @@ class CreatePRPO extends Component {
                       </FormGroup>
                     </Form>
                   </Col>
-                </Row>
-                {/* prpo info */}
-                <Row>
-                  <Col>
-                    <h5>
-                      <b>GR Information</b>
-                    </h5>
-                    <Form>
-                      <FormGroup row>
-                        <Label sm={2}>BAST No DP</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="BAST No DP"
-                            name={"bast_no_dp"}
-                            value={Dataform.bast_no_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR DP</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="checkbox"
-                            placeholder="Req GR DP"
-                            name={"req_gr_dp"}
-                            value={Dataform.req_gr_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR by DP</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="Req GR by DP"
-                            name={"req_gr_by_dp"}
-                            value={Dataform.req_gr_by_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR Date DP</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="date"
-                            placeholder="Req GR Date DP"
-                            name={"req_gr_date_dp"}
-                            value={Dataform.req_gr_date_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req Revision DP</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="checkbox"
-                            placeholder="Req Revision DP"
-                            name={"req_revision_dp"}
-                            value={Dataform.req_revision_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Revision Done DP</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="checkbox"
-                            placeholder="Revision Done DP"
-                            name={"revision_done_dp"}
-                            value={Dataform.revision_done_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>BAST No Final</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="BAST No Final"
-                            name={"bast_no_final"}
-                            value={Dataform.bast_no_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                    </Form>
-                  </Col>
-                </Row>
-                {/* gr information */}
-                <Row>
-                  <Col>
-                    {/* <h5>GR Information</h5> */}
-                    <Form>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR Final</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="checkbox"
-                            placeholder="Req GR Final"
-                            name={"req_gr_final"}
-                            value={Dataform.req_gr_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR by Final</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="Req GR by Final"
-                            name={"req_gr_by_final"}
-                            value={Dataform.req_gr_by_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR Date Final</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="date"
-                            placeholder=""
-                            name={"req_gr_date_final"}
-                            value={Dataform.req_gr_date_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req Revision Final</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="checkbox"
-                            placeholder="Req Revision Final"
-                            name={"req_revision_final"}
-                            value={Dataform.req_revision_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Revision Done</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="checkbox"
-                            placeholder="Area"
-                            name={"revision_done_final"}
-                            value={Dataform.revision_done_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                    </Form>
-                  </Col>
-                </Row>
+                </Row> */}
               </CardBody>
               <CardFooter>
                 <Button

@@ -6,6 +6,8 @@ import { connect } from 'react-redux';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import './assignment.css';
+import { getDatafromAPINODEFile } from "../../helper/asyncFunction";
+import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem} from "reactstrap";
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -34,7 +36,10 @@ class AssignmentDetailASP extends Component {
       modal_revision: false,
       revision_note: "",
       modal_reschedule: false,
-      reschedule_note: ""
+      reschedule_note: "",
+      sid_file : [],
+      abd_file : [],
+      dropdownOpen: new Array(2).fill(false),
     }
     this.notifyASP = this.notifyASP.bind(this);
     this.saveBastNumber = this.saveBastNumber.bind(this);
@@ -46,6 +51,15 @@ class AssignmentDetailASP extends Component {
     this.handleRevisionNote = this.handleRevisionNote.bind(this);
     this.toggleModalReschedule = this.toggleModalReschedule.bind(this);
     this.handleRescheduleNote = this.handleRescheduleNote.bind(this);
+  }
+
+  toggleDropdown(i) {
+    const newArray = this.state.dropdownOpen.map((element, index) => {
+      return (index === i ? !element : false);
+    });
+    this.setState({
+      dropdownOpen: newArray,
+    });
   }
 
   async getDataFromAPI(url) {
@@ -169,9 +183,28 @@ class AssignmentDetailASP extends Component {
   getDataAssignment(_id_Assignment) {
     this.getDataFromAPINODE('/aspAssignment/aspassign/' + _id_Assignment).then(resAsg => {
       if (resAsg.data !== undefined) {
+        this.getSIDNumber(resAsg.data.data.cust_del.map(cd => cd.cd_id));
         this.setState({ data_assignment: resAsg.data.data });
       }
     })
+  }
+
+  async getSIDNumber(arrayCDID) {
+    const page = 1;
+    const maxPage = 1;
+    let dataSID = [];
+    let dataABD = [];
+    for(let i = 0; i < arrayCDID.length; i++){
+      let filter_array = [];
+      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"type" : {"$ne" : "ABD"}');
+      let whereAnd = "{" + filter_array.join(",") + "}";
+      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
+      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
+        dataSID.push(res.data.data[0])
+      }
+    }
+    this.setState({sid_file : dataSID});
   }
 
   handleBastAssign = (e) => {
@@ -440,6 +473,19 @@ class AssignmentDetailASP extends Component {
     this.setState({ reschedule_note: value })
   }
 
+  getSIDFile = async (e) => {
+    e.preventDefault()
+    e.persist();
+    const _id = e.currentTarget.value;
+    const dataSID = this.state.sid_file.find(sf => sf._id === _id);
+    if(dataSID !== undefined)  {
+      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
+      if(resFile !== undefined){
+        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+      }
+    }
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -454,6 +500,23 @@ class AssignmentDetailASP extends Component {
               <Card>
                 <CardHeader>
                   <span style={{ lineHeight: '2', fontSize: '17px' }}><i className="fa fa-info-circle" style={{ marginRight: "8px" }}></i>Assignment Detail ({this.state.data_assignment.Assignment_No})</span>
+                  {this.state.sid_file.length !== 0 ? (
+                    <Dropdown size="sm" isOpen={this.state.dropdownOpen[1]} toggle={() => {this.toggleDropdown(1);}} style={{float : 'right', marginRight : '10px'}}>
+                      <DropdownToggle caret color="secondary">
+                        <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download SID File
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem header>SID File</DropdownItem>
+                        {this.state.sid_file.map(sf =>
+                          <DropdownItem value={sf._id} onClick={this.getSIDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
+                        )}
+                      </DropdownMenu>
+                    </Dropdown>
+                  )  : (
+                    <Button size="sm" style={{float : 'right', marginRight : '10px'}}>
+                      no data SID
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardBody>
                   <Form>

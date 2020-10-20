@@ -84,14 +84,16 @@ class SIDupload extends Component {
       email_cpm: null,
       cd_selected: {},
       createModal: false,
+      type_uploader_selected : "SID",
     };
 
     this.loadOptionsCDID = this.loadOptionsCDID.bind(this);
     this.handlemultipleCD = this.handlemultipleCD.bind(this);
+    this.handleChangeTypeUploader = this.handleChangeTypeUploader.bind(this);
   }
 
   componentDidMount() {
-    document.title = "POD Upload | BAM";
+    document.title = "SID Upload | BAM";
     // this.getDataTower();
     // this.getDataProject();
     // this.loadOptionsASP();
@@ -213,9 +215,9 @@ class SIDupload extends Component {
       let wp_id_list = [];
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
       const getWPID = await getDatafromAPIEXEL(
-        '/custdel_sorted_non_page?where={"WP_ID":{"$regex":"' +
+        '/custdel_op?where={"WP_ID":{"$regex":"' +
           inputValue +
-          '", "$options":"i"}}'
+          '", "$options":"i"}}&projection={"WP_ID":1,"CD_Info_Project_Name":1,"CD_Info_Project":1,"Project_Code":1,"Tower_Info_TowerID_NE":1,"Tower_Info_TowerName_NE":1,"WP_Name":1}'
       );
       if (getWPID !== undefined && getWPID.data !== undefined) {
         this.setState({ list_cd_id: getWPID.data._items });
@@ -339,18 +341,18 @@ class SIDupload extends Component {
           <Table hover bordered responsive size="sm" width="100%">
             <thead class="table-commercial__header--fixed">
               <tr>
+                <th>CD ID</th>
                 <th>Project Name</th>
-                <th>Program</th>
-                <th>SOW</th>
+                <th>Project Code</th>
                 {/* <th>Qty Deliver</th>
                 <th>Qty Comm</th> */}
               </tr>
             </thead>
             <tbody>
                   <tr>
+                    <td>{cdInfo.WP_ID}</td>
                     <td>{cdInfo.CD_Info_Project_Name}</td>
-                    <td>{cdInfo.CD_Info_Program}</td>
-                    <td>{cdInfo.CD_Info_SOW_Type}</td>
+                    <td>{cdInfo.Project_Code}</td>
                     {/* <td>{conf.qty}</td>
                     <td>{conf.qty_commercial}</td> */}
                   </tr>
@@ -358,7 +360,7 @@ class SIDupload extends Component {
           </Table>
         </>
       );
-    }   
+    }
   };
 
   toggleLoading = () => {
@@ -370,12 +372,29 @@ class SIDupload extends Component {
   postPOD = async () => {
     this.toggleLoading();
     this.togglecreateModal();
+    let _id = this.state.cd_selected.id_cd_doc;
+    let cdInfo = this.state.list_cd_id.find(e => e._id === _id);
+    const dataCDID = {
+      id_cd_doc : _id,
+      cd_id : cdInfo.WP_ID,
+      id_project_doc : cdInfo.CD_Info_Project,
+      project_name : cdInfo.CD_Info_Project_Name,
+      project_code : cdInfo.Project_Code
+    }
+    const dataSite = {
+      id_site_doc : null,
+      site_id : cdInfo.Tower_Info_TowerID_NE,
+      site_ne_id : cdInfo.Tower_Info_TowerID_NE,
+      site_name : cdInfo.Tower_Info_TowerName_NE
+    }
     let fileDocument = new FormData();
     await fileDocument.append("fileDocument", this.state.inputan_file);
     await fileDocument.append(
       "cdIdList",
-      JSON.stringify([this.state.cd_selected])
+      JSON.stringify([Object.assign({}, this.state.cd_selected, dataCDID)])
     );
+    await fileDocument.append("site_info", JSON.stringify([dataSite]));
+    await fileDocument.append("type", JSON.stringify(this.state.type_uploader_selected));
     const respostPOD = await postDatatoAPINODEdata(
       "/sidFile/createSidFile",
       fileDocument,
@@ -388,7 +407,7 @@ class SIDupload extends Component {
     ) {
       this.setState({
         action_status: "success",
-        action_message: "Upload Succeed, please check in POD List",
+        action_message: "Upload Succeed",
       });
       this.toggleLoading();
     } else {
@@ -396,6 +415,10 @@ class SIDupload extends Component {
       this.toggleLoading();
     }
   };
+
+  handleChangeTypeUploader(e){
+    this.setState({type_uploader_selected : e.target.value});
+  }
 
   render() {
     if (this.state.redirect_sign !== false) {
@@ -421,10 +444,24 @@ class SIDupload extends Component {
                   <Row>
                     <Col md="4">
                       <FormGroup style={{ paddingLeft: "16px" }}>
+                        <Label>Type</Label>
+                          <Input type="select" onChange={this.handleChangeTypeUploader} value={this.state.type_uploader_selected}>
+                            <option value="SID">
+                              SID
+                            </option>
+                            <option value="ABD">
+                              ABD
+                            </option>
+                          </Input>
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md="4">
+                      <FormGroup style={{ paddingLeft: "16px" }}>
                         <Label>CD ID</Label>
                         <AsyncSelect
                         // isMulti
-                          cacheOptions
                           loadOptions={this.loadOptionsCDID}
                           defaultOptions
                           onChange={this.handlemultipleCD}

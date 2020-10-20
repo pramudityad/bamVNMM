@@ -68,7 +68,8 @@ class OrderCreated extends Component {
       selected_dsp: "",
       data_mr_selected: null,
       modal_box_input: false,
-      rejectNote: ""
+      rejectNote: "",
+      mot_type : null,
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -81,6 +82,7 @@ class OrderCreated extends Component {
     this.toggleModalapprove = this.toggleModalapprove.bind(this);
     this.toggleBoxInput = this.toggleBoxInput.bind(this);
     this.handleChangeNote = this.handleChangeNote.bind(this);
+    this.handleMotType = this.handleMotType.bind(this);
   }
 
   toggleBoxInput(e) {
@@ -98,7 +100,7 @@ class OrderCreated extends Component {
     let value = e.target.value;
     if (value !== null && value.length !== 0 && value !== 0) {
       this.setState({ rejectNote: value });
-    }    
+    }
   }
 
   async getDataFromAPI(url) {
@@ -164,7 +166,7 @@ class OrderCreated extends Component {
     }
   }
 
-  async getDatafromAPIEXEL(url) {
+  async getDatafromAPIISAT(url) {
     try {
       let respond = await axios.get(API_URL_ISAT + url, {
         headers: { "Content-Type": "application/json" },
@@ -213,7 +215,7 @@ class OrderCreated extends Component {
   getASPList() {
     // switch (this.props.dataLogin.account_id) {
     //   case "xl":
-    this.getDatafromAPIEXEL('/vendor_data_non_page?where={"Type":"DSP"}').then(
+    this.getDatafromAPIISAT('/vendor_data_non_page?where={"Type":"DSP"}').then(
       (res) => {
         console.log("asp data ", res.data);
         if (res.data !== undefined) {
@@ -568,7 +570,8 @@ class OrderCreated extends Component {
 
   ApproveMR(e) {
     const _id = this.state.id_mr_selected;
-    const body = this.state.selected_dsp;
+    let body = this.state.selected_dsp;
+    body = {...body, "motType" : this.state.mot_type}
     // console.log('_id ',_id);
     // console.log('body ',body);
     this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id, body).then(
@@ -617,38 +620,6 @@ class OrderCreated extends Component {
       }
     });
   }
-
-  // async rejectMR(e) {
-  //   const newDate = new Date();
-  //   const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-  //   const _etag = e.target.value;
-  //   const _id = e.target.id;
-  //   const dataMR = this.state.mr_list.find(e => e._id === _id);
-  //   let currStatus = [
-  //     {
-  //         "mr_status_name": "MATERIAL_REQUEST",
-  //         "mr_status_value": "REJECTED",
-  //         "mr_status_date": dateNow,
-  //         "mr_status_updater": this.state.userEmail,
-  //         "mr_status_updater_id": this.state.userId
-  //     }
-  //   ];
-  //   let successUpdate = [];
-  //   let updateMR = {};
-  //   updateMR['current_milestones'] = null;
-  //   updateMR['current_mr_status'] = "MR CANCELED";
-  //   updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
-  //   let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
-  //   if(res !== undefined) {
-  //     if(res.data !== undefined) {
-  //       successUpdate.push(res.data);
-  //     }
-  //   }
-  //   if(successUpdate.length !== 0){
-  //     this.setState({action_status : "success"});
-  //     setTimeout(function(){ window.location.reload(); }, 2000);
-  //   }
-  // }
 
   componentDidMount() {
     this.getMRList();
@@ -707,6 +678,10 @@ class OrderCreated extends Component {
     }
     return searchBar;
   };
+
+  handleMotType(e){
+    this.setState({mot_type : e.target.value});
+  }
 
   loading = () => (
     <div className="animated fadeIn pt-1 text-center">Loading...</div>
@@ -895,7 +870,7 @@ class OrderCreated extends Component {
                     onChange={this.handleChangeNote}
                     value={this.state.rejectNote}
                   />
-                </FormGroup>                
+                </FormGroup>
               </Col>
             </Row>
           </ModalBody>
@@ -912,6 +887,7 @@ class OrderCreated extends Component {
           className={"modal-sm modal--box-input modal__delivery--ldm-approve"}
         >
           <Col>
+          handleMotType
             {this.state.data_mr_selected !== null &&
             this.state.data_mr_selected !== undefined &&
             this.state.data_mr_selected.dsp_company !== null ? (
@@ -926,6 +902,7 @@ class OrderCreated extends Component {
                 />
               </FormGroup>
             ) : (
+              <React.Fragment>
               <FormGroup>
                 <Label htmlFor="total_box">DSP Company</Label>
                 <Input
@@ -935,11 +912,22 @@ class OrderCreated extends Component {
                   onChange={this.handleLDMapprove}
                   name={this.state.id_mr_selected}
                 >
+                  <option value="" disabled selected hidden></option>
                   {this.state.asp_data.map((asp) => (
                     <option value={asp.Vendor_Code}>{asp.Name}</option>
                   ))}
                 </Input>
               </FormGroup>
+              <FormGroup>
+                <Label htmlFor="total_box">MOT Type</Label>
+                <Input type="select" name={"0 /// sub_category"} onChange={this.handleMotType} value={this.state.mot_type}>
+                  <option value="" disabled selected hidden></option>
+                  <option value="MOT-Land">MOT-Land</option>
+                  <option value="MOT-Air">MOT-Air</option>
+                  <option value="MOT-Sea">MOT-Sea</option>
+                </Input>
+              </FormGroup>
+              </React.Fragment>
             )}
           </Col>
           <div style={{ justifyContent: "center", alignSelf: "center" }}>

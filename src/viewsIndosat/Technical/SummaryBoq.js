@@ -1732,6 +1732,7 @@ class SummaryBoq extends Component {
     let dataInputan = {
       "id_project_doc": dataCommNew.id_project_doc,
       "project_name": dataCommNew.project_name,
+      "region" : regionSelected,
       "list_of_tech": [
           {
               "id_tech_boq_doc": dataCommNew._id,

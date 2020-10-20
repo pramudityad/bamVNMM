@@ -1043,7 +1043,7 @@ class ConfigLibrary extends React.Component {
                                   <td style={{ textAlign: 'left' }}>{mat.material_name}</td>
                                   <td style={{ textAlign: 'left' }}>{mat.material_id}</td>
                                   <td style={{ textAlign: 'center' }}>{
-                                    pp.material_hos !== undefined && pp.material_hos.find(mh => mh.material_id === mat.material_id) !== undefined ? pp.material_hos.find(mh => mh.material_id === mat.material_id).hos_list.filter(hlf => hlf.hos_name !== undefined).map(hl => hl.hos_name).join(", ") : null
+                                    pp.material_hos !== undefined && pp.material_hos !== null && pp.material_hos.find(mh => mh.material_id === mat.material_id) !== undefined ? pp.material_hos.find(mh => mh.material_id === mat.material_id).hos_list.filter(hlf => hlf.hos_name !== undefined).map(hl => hl.hos_name).join(", ") : null
                                   }</td>
                                   <td></td>
                                 </tr>

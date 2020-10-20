@@ -733,7 +733,7 @@ class TechnicalBoq extends Component {
 
   getProjectAll(){
     this.getDataFromAPIXL('/project_sorted_non_page').then( resp => {
-      if(resp !== undefined){
+      if(resp !== undefined && resp.data !== undefined){
         this.setState({project_all : resp.data._items});
       }
     })
@@ -1614,11 +1614,13 @@ class TechnicalBoq extends Component {
                             </DropdownMenu>
                           </Dropdown>
                         </Col>
+                        {(this.state.userRole.includes('BAM-Engineering') === true || this.state.userRole.includes('Admin') === true ) && (
                         <Col>
                           <Button block color="primary" onClick={this.toggleUpload} id="toggleCollapse1" size="sm">
                             Update
                           </Button>
                         </Col>
+                        )}
                       </div>
                     </React.Fragment>
                   )}

@@ -73,6 +73,7 @@ class PackageUpload extends React.Component {
     this.saveNewPP = this.saveNewPP.bind(this);
     this.togglePPedit = this.togglePPedit.bind(this);
     this.saveUpdatePP = this.saveUpdatePP.bind(this);
+    this.exportFormatBundleMaterial = this.exportFormatBundleMaterial.bind(this);
   }
   toggle(i) {
     const newArray = this.state.dropdownOpen.map((element, index) => {
@@ -869,12 +870,29 @@ class PackageUpload extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
+    const dataPP = this.state.packageSelected;
+
     // ws.addRow(["pp_id", "product_name", "product_type", "physical_group", "package_unit", "pp_group", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
     ws.addRow(["pp_id", "product_name", "product_type", "physical_group", "package_unit", "pp_group", "ordering",	"inf_code", "material_id", "material_name", "material_type", "material_origin", "material_unit", "material_qty"]);
-    ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "EAB", "INF CODE 1", "MDID002", "Material 2", "active_material", "EAB", "pc", 1]);
-    ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "EAB", "INF CODE 1", "MDID003", "Material 3", "active_material", "EAB", "meter", 100.5]);
-    ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "EAB", "INF CODE 1", "MDID006", "Material 6", "active_material", "EAB", "pc", 100]);
-    ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "EAB", "INF CODE 1", "MDID007", "Material 7", "active_material", "EAB", "pc", 4]);
+
+    if(dataPP.length !== 0){
+      for (let i = 0; i < dataPP.length; i++) {
+        if(dataPP[i].materials.length !== 0){
+          for (let j = 0; j < dataPP[i].materials.length; j++) {
+            let matIndex = dataPP[i].materials[j];
+            ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, dataPP[i].product_type, dataPP[i].physical_group, dataPP[i].uom, dataPP[i].pp_group, dataPP[i].ordering, dataPP[i].inf_code, matIndex.material_id, matIndex.material_name, matIndex.material_type, matIndex.material_origin, matIndex.uom, matIndex.qty])
+          }
+        }else{
+          ws.addRow([dataPP[i].pp_id, dataPP[i].product_name, dataPP[i].product_type, dataPP[i].physical_group, dataPP[i].uom, dataPP[i].pp_group, dataPP[i].ordering, dataPP[i].inf_code])
+        }
+      }
+    }else{
+      ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "EAB", "INF CODE 1", "MDID002", "Material 2", "active_material", "EAB", "pc", 1]);
+      ws.addRow(["PPID2001", "Package Satu", "HW", "Radio", "unit", "Radio 2", "EAB", "INF CODE 1", "MDID003", "Material 3", "active_material", "EAB", "meter", 100.5]);
+      ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "EAB", "INF CODE 1", "MDID006", "Material 6", "active_material", "EAB", "pc", 100]);
+      ws.addRow(["PPID2002", "Package Dua", "HW", "Radio", "unit", "Radio 3", "EAB", "INF CODE 1", "MDID007", "Material 7", "active_material", "EAB", "pc", 4]);
+    }
+
 
     const BundleMaterial = await wb.xlsx.writeBuffer();
     saveAs(new Blob([BundleMaterial]), 'Product Package Material Uploader Template.xlsx');

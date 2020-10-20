@@ -51,7 +51,7 @@ class LCCList extends Component {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     // this.getDataFromAPI('/mr_sorted?where={"dsa_number":{"$exists" : 1, "$ne" : null}}&max_resu.envlts=' + maxPage + '&page=' + page).then(res => {
-      getDatafromAPINODE('/lccDsa?where=&max_results=' + maxPage + '&page=' + page, this.props.dataLogin.token).then(res => {
+      getDatafromAPINODE('/lccDsa?srt=_id:-1&where=&max_results=' + maxPage + '&page=' + page, this.props.dataLogin.token).then(res => {
       console.log("LCC List Sorted", res);
       if (res.data !== undefined) {
         const items = res.data.data;
@@ -94,7 +94,6 @@ class LCCList extends Component {
                   <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> LCC List
                 </span>
                 <Link to={'/lcc-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create LCC</Button></Link>
-                <Button style={downloadDSA} outline color="success" size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download LCC List</Button>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -102,8 +101,8 @@ class LCCList extends Component {
                     <tr>
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
                       <th>LCC ID</th>
-                      <th>PO</th>
-                      <th>PO Desc</th>
+                      <th>PO Cust Desc</th>
+                      <th>Desc</th>
                       <th>Status</th>
                       <th>Date</th>
                     </tr>
@@ -157,7 +156,7 @@ class LCCList extends Component {
                             <Input type="text" placeholder="Search" name={4} size="sm" />
                           </InputGroup>
                         </div>
-                      </td>              
+                      </td>
                     </tr>
                   </thead>
                   <tbody>
@@ -184,10 +183,13 @@ class LCCList extends Component {
                     )}
                   </tbody>
                 </Table>
+                <div style={{ margin: "8px 0px" }} className="pagination">
+                  <small>Showing {this.state.dsa_list.length} entries from {this.state.totalData} data</small>
+                </div>
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData.total}
+                  totalItemsCount={this.state.totalData}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"
