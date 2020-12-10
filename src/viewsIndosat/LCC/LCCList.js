@@ -12,6 +12,8 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
+const arrayFilter = ["no_lcc", "po_cust_desc", "desc", "status", "lcc_date"];
+
 class LCCList extends Component {
   constructor(props) {
     super(props);
@@ -22,9 +24,11 @@ class LCCList extends Component {
       activePage: 1,
       totalData: 0,
       perPage: 10,
+      filter_list : [],
     }
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.getDSAList = this.getDSAList.bind(this);
+    this.getLCCList = this.getLCCList.bind(this);
+    this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
   }
 
   async getDataFromAPI(url) {
@@ -47,12 +51,16 @@ class LCCList extends Component {
     }
   }
 
-  getDSAList() {
+  getLCCList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
-    // this.getDataFromAPI('/mr_sorted?where={"dsa_number":{"$exists" : 1, "$ne" : null}}&max_resu.envlts=' + maxPage + '&page=' + page).then(res => {
-      getDatafromAPINODE('/lccDsa?where=&max_results=' + maxPage + '&page=' + page, this.props.dataLogin.token).then(res => {
-      console.log("LCC List Sorted", res);
+    let filter_array = [];
+    for(let i = 0; i < arrayFilter.length; i++){
+      this.state.filter_list[arrayFilter[i]] !== null && this.state.filter_list[arrayFilter[i]] !== undefined &&
+        filter_array.push('"'+arrayFilter[i]+'":{"$regex" : "' +   this.state.filter_list[arrayFilter[i]] + '", "$options" : "i"}');
+    }
+    let whereAnd = "{" + filter_array.join(",") + "}";
+      getDatafromAPINODE('/lccDsa?srt=_id:-1&q='+whereAnd+'&lmt=' + maxPage + '&pg=' + page, this.props.dataLogin.token).then(res => {
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
@@ -62,15 +70,53 @@ class LCCList extends Component {
   }
 
   componentDidMount() {
-    this.getDSAList();
+    this.getLCCList();
     document.title = 'LCC List | BAM';
   }
 
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
-      this.getDSAList();
+      this.getLCCList();
     });
   }
+
+  handleFilterList = (e) => {
+    const index = e.target.name;
+    let value = e.target.value;
+    if (value.length === 0) {
+      value = null;
+    }
+    let dataFilter = this.state.filter_list;
+    dataFilter[index] = value;
+    this.setState({ filter_list: dataFilter, activePage: 1 }, () => {
+      this.onChangeDebounced(e);
+    });
+  };
+
+  onChangeDebounced = (e) => {
+    this.getLCCList();
+  };
+
+  loopSearchBar = () => {
+    let searchBar = [];
+    for (let i = 0; i < arrayFilter.length; i++) {
+      searchBar.push(
+        <td>
+          <div className="controls" style={{ width: "150px" }}>
+            <InputGroup className="input-prepend">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>
+                  <i className="fa fa-search"></i>
+                </InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[arrayFilter[i]]} name={arrayFilter[i]} size="sm" />
+            </InputGroup>
+          </div>
+        </td>
+      );
+    }
+    return searchBar;
+  };
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
@@ -106,58 +152,7 @@ class LCCList extends Component {
                       <th>Status</th>
                       <th>Date</th>
                     </tr>
-                    <tr>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={0} size="sm" />
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={1} size="sm" />
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={2} size="sm" />
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={3} size="sm" />
-                          </InputGroup>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="controls" style={tableWidth}>
-                          <InputGroup className="input-prepend">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText><i className="fa fa-search"></i></InputGroupText>
-                            </InputGroupAddon>
-                            <Input type="text" placeholder="Search" name={4} size="sm" />
-                          </InputGroup>
-                        </div>
-                      </td>
-                    </tr>
+                    <tr>{this.loopSearchBar()}</tr>
                   </thead>
                   <tbody>
                     {this.state.dsa_list !== undefined && this.state.dsa_list.length === 0 && (
@@ -183,10 +178,13 @@ class LCCList extends Component {
                     )}
                   </tbody>
                 </Table>
+                <div style={{ margin: "8px 0px" }} className="pagination">
+                  <small>Showing {this.state.dsa_list.length} entries from {this.state.totalData} data</small>
+                </div>
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData.total}
+                  totalItemsCount={this.state.totalData}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"

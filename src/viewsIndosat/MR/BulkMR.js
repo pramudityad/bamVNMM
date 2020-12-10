@@ -696,10 +696,12 @@ class BulkMR extends Component {
       "created_based",
       "identifier",
       "priority_mr",
-      "week_number"
+      "week_number",
+      "sow_type"
     ]);
 
-    ws.addRow(["new", "ISAT AOP 2019",	"1",	"1",	"JKT1",	"2020-10-19",	"YYYY-MM-DD",	"DSP", null, null, "cd_id", "XISAT2009171"]);
+    ws.addRow(["new", "ISAT AOP 2019",	"1",	"1",	"JKT1",	"2020-10-19",	"YYYY-MM-DD",	"DSP", null, null, "cd_id", "XISAT2009171", null, null, "RBS"]);
+    ws.addRow(["new", "ISAT AOP 2019",	"1",	"1",	"JKT1",	"2020-10-19",	"YYYY-MM-DD",	"DSP", null, null, "cd_id", "XISAT2009171TRM", null, null, "TRM"]);
 
     const MRFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MRFormat]), 'MR Uploader Template.xlsx');

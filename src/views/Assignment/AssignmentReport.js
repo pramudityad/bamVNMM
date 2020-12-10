@@ -157,15 +157,11 @@ class AssignmentListReport extends Component {
           this.state.filter_list[7] +
           '", "$options" : "i"}'
       );
-      if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
-        filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
+      if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+        filter_array.push('"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP", "$and" : [{"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT REQUEST FOR CANCELATION"}}, {"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT CANCELED"}}]');
+        filter_array.push('"$or" : [{"Vendor_Code_Number" : "'+this.state.vendor_code+'"}, {"Vendor_Name" : "'+this.state.vendor_name+'"}]');
       }else{
-        this.state.filter_list[4] !== "" &&
-          filter_array.push(
-            '"Vendor_Code_Number":{"$regex" : "' +
-              this.state.filter_list[4] +
-              '", "$options" : "i"}'
-          );
+            this.state.filter_list[4] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
       }
       let whereAnd = "{" + filter_array.join(",") + "}";
       this.getDataFromAPINODE(
@@ -230,16 +226,12 @@ class AssignmentListReport extends Component {
           this.state.filter_list[7] +
           '", "$options" : "i"}'
       );
-    if((this.state.userRole.findIndex("BAM-ASP") !== -1 || this.state.userRole.findIndex("BAM-ASP Management") !== -1) && this.state.userRole.findIndex("Admin") === -1){
-      filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
-    }else{
-      this.state.filter_list[4] !== "" &&
-        filter_array.push(
-          '"Vendor_Code_Number":{"$regex" : "' +
-            this.state.filter_list[4] +
-            '", "$options" : "i"}'
-        );
-    }
+      if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+        filter_array.push('"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP", "$and" : [{"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT REQUEST FOR CANCELATION"}}, {"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT CANCELED"}}]');
+        filter_array.push('"$or" : [{"Vendor_Code_Number" : "'+this.state.vendor_code+'"}, {"Vendor_Name" : "'+this.state.vendor_name+'"}]');
+      }else{
+            this.state.filter_list[4] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+      }
     let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE(
       "/aspAssignment/aspassign?srt=_id:-1&noPg=1&q=" + whereAnd
@@ -414,16 +406,12 @@ class AssignmentListReport extends Component {
           this.state.filter_list[7] +
           '", "$options" : "i"}'
       );
-    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
-      filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
-    }else{
-      this.state.filter_list[4] !== "" &&
-        filter_array.push(
-          '"Vendor_Code_Number":{"$regex" : "' +
-            this.state.filter_list[4] +
-            '", "$options" : "i"}'
-        );
-    }
+      if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+        filter_array.push('"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP", "$and" : [{"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT REQUEST FOR CANCELATION"}}, {"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT CANCELED"}}]');
+        filter_array.push('"$or" : [{"Vendor_Code_Number" : "'+this.state.vendor_code+'"}, {"Vendor_Name" : "'+this.state.vendor_name+'"}]');
+      }else{
+            this.state.filter_list[4] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+      }
     let whereAnd = "{" + filter_array.join(",") + "}";
     let getASG = await this.getDataFromAPINODE(
       "/aspAssignment/aspassign?srt=_id:-1&noPg=1&q=" + whereAnd
@@ -443,12 +431,19 @@ class AssignmentListReport extends Component {
       "Project",
       "Sow Type",
       "Tower ID",
+      "Tower Name",
       "CD ID",
       "Vendor",
       "Payment Terms",
       "Total Amount",
       "Assignment Creator",
+      "Created On",
       "Current Status",
+      "ASP Accepted By",
+      "ASP Accepted On",
+      "Acceptence Status",
+      "Assignment Remarks",
+      "PR Number",
       "PO Number",
       "PO Item",
       "PO Date",
@@ -470,30 +465,42 @@ class AssignmentListReport extends Component {
       if(dataCreator !== undefined){
         dataCreator = dataCreator.status_updater;
       }
+      let dataAccepted = {};
+      const dataAcceptedFind = allAssignmentList[i].ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED");
+      if(dataAcceptedFind !== undefined){
+        dataAccepted = dataAcceptedFind;
+      }
       let rowAdded = [
         allAssignmentList[i].Assignment_No,
         allAssignmentList[i].SH_Assignment_No,
         allAssignmentList[i].Project,
         allAssignmentList[i].SOW_Type,
         allAssignmentList[i].Site_ID,
+        allAssignmentList[i].Site_Name,
         custDel,
         allAssignmentList[i].Vendor_Name,
         allAssignmentList[i].Payment_Terms,
         totalAmount,
         dataCreator,
+        allAssignmentList[i].created_on.slice(0, 10),
         allAssignmentList[i].Current_Status,
+        dataAccepted.status_updater,
+        dataAccepted.status_date !== undefined ? dataAccepted.status_date.slice(0, 10) : null,
+        allAssignmentList[i].Request_Type,
+        allAssignmentList[i].Assignment_Remark,
+        allAssignmentList[i].PR_for_ASP,
         allAssignmentList[i].PO_Number,
         allAssignmentList[i].PO_Item,
         allAssignmentList[i].PO_Date,
         allAssignmentList[i].BAST_No[0], allAssignmentList[i].BAST_No[1],
       ];
       if(dataGR[0] !== undefined){
-        rowAdded.push(dataGR[0].Requestor, dataGR[0].created_on, dataGR[0].GR_Document_No, dataGR[0].GR_Document_Date)
+        rowAdded.push(dataGR[0].Requestor, new Date(dataGR[0].created_on), dataGR[0].GR_Document_No, dataGR[0].GR_Document_Date)
       }else{
         rowAdded.push(null,null,null,null)
       }
       if(dataGR[1] !== undefined){
-        rowAdded.push(dataGR[1].Requestor, dataGR[1].created_on, dataGR[1].GR_Document_No, dataGR[1].GR_Document_Date)
+        rowAdded.push(dataGR[1].Requestor, new Date(dataGR[1].created_on), dataGR[1].GR_Document_No, dataGR[1].GR_Document_Date)
       }else{
         rowAdded.push(null,null,null,null)
       }
@@ -506,6 +513,35 @@ class AssignmentListReport extends Component {
         ssow.ssow_qty
       ))
       ws.addRow(rowAdded);
+      const getRowLast = ws.lastRow._number;
+      if(allAssignmentList[i].created_on !== undefined && allAssignmentList[i].created_on !== null){
+        ws.getCell("L"+getRowLast).value = new Date(allAssignmentList[i].created_on);
+        ws.getCell("L"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
+      if(dataAccepted.status_date !== undefined && dataAccepted.status_date !== null){
+        ws.getCell("O"+getRowLast).value = new Date(dataAccepted.status_date);
+        ws.getCell("O"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
+      if(allAssignmentList[i].PO_Date !== undefined && allAssignmentList[i].PO_Date !== null){
+        ws.getCell("U"+getRowLast).value = new Date(allAssignmentList[i].PO_Date);
+        ws.getCell("U"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
+      if(dataGR[0] !== undefined && dataGR[0].created_on !== null && dataGR[1].created_on !== undefined){
+        ws.getCell("Y"+getRowLast).numFmt = new Date(dataGR[0].created_on);
+        ws.getCell("Y"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
+      if(dataGR[0] !== undefined && dataGR[0].GR_Document_Date !== null && dataGR[1].GR_Document_Date !== undefined){
+        ws.getCell("AA"+getRowLast).numFmt = new Date(dataGR[0].GR_Document_Date);
+        ws.getCell("AA"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
+      if(dataGR[1] !== undefined && dataGR[1].created_on !== null && dataGR[1].created_on !== undefined){
+        ws.getCell("AC"+getRowLast).numFmt = new Date(dataGR[1].created_on);
+        ws.getCell("AC"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
+      if(dataGR[1] !== undefined && dataGR[1].GR_Document_Date !== null && dataGR[1].GR_Document_Date !== undefined){
+        ws.getCell("AE"+getRowLast).numFmt = new Date(dataGR[1].GR_Document_Date);
+        ws.getCell("AE"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -564,16 +600,12 @@ class AssignmentListReport extends Component {
           this.state.filter_list[7] +
           '", "$options" : "i"}'
       );
-    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
-      filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
-    }else{
-      this.state.filter_list[7] !== "" &&
-        filter_array.push(
-          '"Work_Status":{"$regex" : "' +
-            this.state.filter_list[4] +
-            '", "$options" : "i"}'
-        );
-    }
+      if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+        filter_array.push('"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP", "$and" : [{"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT REQUEST FOR CANCELATION"}}, {"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT CANCELED"}}]');
+        filter_array.push('"$or" : [{"Vendor_Code_Number" : "'+this.state.vendor_code+'"}, {"Vendor_Name" : "'+this.state.vendor_name+'"}]');
+      }else{
+            this.state.filter_list[4] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+      }
     filter_array.push('"PO_Number" : {"$ne" : null}');
     let whereAnd = "{" + filter_array.join(",") + "}";
     let getASG = await this.getDataFromAPINODE(

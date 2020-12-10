@@ -79,6 +79,9 @@ class MRCreation extends Component {
     this.loadOptionsTowerID = this.loadOptionsTowerID.bind(this);
     this.loadOptionsCDID = this.loadOptionsCDID.bind(this);
 
+    this.loadOptionsMRID = this.loadOptionsMRID.bind(this);
+    this.handleChangeMRID = this.handleChangeMRID.bind(this);
+
     this.toggleLoading = this.toggleLoading.bind(this);
   }
 
@@ -264,10 +267,24 @@ class MRCreation extends Component {
       const newDate = new Date();
       const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
       let list_site = [];
-      let dataXLS = [
-        ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "mr_comment_project", "sent_mr_request", "created_based", "identifier", "priority_mr", "week_number"],
-        ["new", this.state.project_name_selected, this.selectMRType(dataForm[3]), this.selectDeliveryType(dataForm[4]), dataForm[8], this.selectedDatetoFormat(dataForm[5]), this.selectedDatetoFormat(dataForm[6]), dataForm[7], "", "", this.state.identifier_by, this.state.tower_selected_id, dataForm[10], dataForm[11]]
-      ]
+      let dataXLS = [];
+      if(dataForm[3] === "Replacement"){
+        dataXLS = [
+          ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "mr_comment_project", "sent_mr_request", "created_based", "identifier", "priority_mr", "week_number", "note_orn", "replacement_related"],
+          ["new", this.state.project_name_selected, this.selectMRType(dataForm[3]), this.selectDeliveryType(dataForm[4]), dataForm[8], this.selectedDatetoFormat(dataForm[5]), this.selectedDatetoFormat(dataForm[6]), dataForm[7], "", "", this.state.identifier_by, this.state.tower_selected_id, dataForm[10], dataForm[11], dataForm[12], dataForm[13]]
+        ]
+      }else{
+        dataXLS = [
+          ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "mr_comment_project", "sent_mr_request", "created_based", "identifier", "priority_mr", "week_number"],
+          ["new", this.state.project_name_selected, this.selectMRType(dataForm[3]), this.selectDeliveryType(dataForm[4]), dataForm[8], this.selectedDatetoFormat(dataForm[5]), this.selectedDatetoFormat(dataForm[6]), dataForm[7], "", "", this.state.identifier_by, this.state.tower_selected_id, dataForm[10], dataForm[11]]
+        ]
+      }
+      if(this.selectDeliveryType(dataForm[4]) === "A1" || this.selectDeliveryType(dataForm[4]) === "A2" || this.selectDeliveryType(dataForm[4]) === "B1" || this.selectDeliveryType(dataForm[4]) === "C1" ){
+        dataXLS = [
+          ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "mr_comment_project", "sent_mr_request", "created_based", "identifier", "priority_mr", "week_number", "destination_warehouse"],
+          ["new", this.state.project_name_selected, this.selectMRType(dataForm[3]), this.selectDeliveryType(dataForm[4]), dataForm[8], this.selectedDatetoFormat(dataForm[5]), this.selectedDatetoFormat(dataForm[6]), dataForm[7], "", "", this.state.identifier_by, this.state.tower_selected_id, dataForm[10], dataForm[11], dataForm[9]]
+        ]
+      }
       const respondCheckingMR = await this.postDatatoAPINODE('/matreq/matreqByActivity', {"data" : dataXLS});
       if(respondCheckingMR.data !== undefined && respondCheckingMR.status >= 200 && respondCheckingMR.status <= 300 ) {
         const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', {"data" : respondCheckingMR.data.data });
@@ -460,11 +477,37 @@ class MRCreation extends Component {
     return e
   }
 
+  async loadOptionsMRID(inputValue) {
+    if(!inputValue) {
+      return [];
+    } else {
+      let wp_id_list = [];
+      const getWPID = await this.getDataFromAPINODE('/matreq?q={"mr_id":{"$regex":"'+inputValue+'", "$options":"i"}}&v={"mr_id" : 1}');
+      if(getWPID !== undefined && getWPID.data !== undefined) {
+        this.setState({list_cd_id : getWPID.data.data});
+        wp_id_list.push({'value' : null , 'label' : null})
+        getWPID.data.data.map(wp =>
+          wp_id_list.push({'value' : wp._id , 'label' : wp.mr_id}))
+      }
+      return wp_id_list;
+    }
+  }
+
+  handleChangeMRID(e){
+    const cd_id_number = e.value;
+    let dataForm = this.state.create_mr_form;
+    dataForm[13] = e.label;
+    this.setState({create_mr_form : dataForm});
+    return e
+  }
+
   showHide(e) {
     if(e.target.value === "Relocation") {
       this.setState({toggle_display : "relocation"});
     } else if(e.target.value === "Return") {
       this.setState({toggle_display : "return"});
+    } else if(e.target.value === "Replacement") {
+      this.setState({toggle_display : "replacement"});
     } else {
       this.setState({toggle_display : "new"});
     }
@@ -485,6 +528,15 @@ class MRCreation extends Component {
       case "Outstanding":
         delType = 4;
         break;
+      case "Replacement":
+        delType = 5;
+        break;
+      case "Return Excess":
+        delType = 6;
+        break;
+      case "Return Faulty":
+        delType = 7;
+        break;
       default:
         delType = 1;
     }
@@ -503,8 +555,17 @@ class MRCreation extends Component {
       case "Site to Site":
         delType = 3;
         break;
+      case "Port to Warehouse":
+        delType = "A1";
+        break;
+      case "Warehouse to Port":
+        delType = "A2";
+        break;
       case "Warehouse to Warehouse":
-        delType = 4;
+        delType = "B1";
+        break;
+      case "Warehouse to Scrap":
+        delType = "C1";
         break;
       default:
         delType = 1;
@@ -521,9 +582,9 @@ class MRCreation extends Component {
   }
 
   render() {
-    if(this.state.redirectSign !== false){
-      return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);
-    }
+    // if(this.state.redirectSign !== false){
+    //   return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);
+    // }
     return (
       <div>
         <Row className="row-alert-fixed">
@@ -549,6 +610,9 @@ class MRCreation extends Component {
                       <option value="Upgrade">Upgrade</option>
                       <option value="Additional">Additional</option>
                       <option value="Outstanding">Outstanding</option>
+                      <option value="Replacement">Replacement</option>
+                      <option value="Return Excess">Return Excess (WH to WH)</option>
+                      <option value="Return Faulty">Return Faulty (WH to WH)</option>
                     </Input>
                   </FormGroup>
                 </Col>
@@ -559,8 +623,15 @@ class MRCreation extends Component {
                       <option value="" disabled selected hidden>Select MR Delivery Type</option>
                       <option value="Warehouse to Site" hidden={this.state.toggle_display !== "new"}>Warehouse to Site</option>
                       <option value="Site to Warehouse" hidden={this.state.toggle_display !== "return"}>Site to Warehouse</option>
-                      <option value="Site to Site" hidden={this.state.toggle_display !== "relocation"}>Site to Site</option>
-                      <option value="Warehouse to Warehouse" hidden={this.state.toggle_display !== "relocation"}>Warehouse to Warehouse</option>
+                      <option value="Site to Site" hidden={this.state.toggle_display !== "replacement"}>Site to Site</option>
+                      {(this.state.create_mr_form[3] === "New" || this.state.create_mr_form[3] === "Return Excess" || this.state.create_mr_form[3] === "Return Faulty") && (
+                        <Fragment>
+                          <option value="Warehouse to Warehouse" hidden={this.state.toggle_display !== "new"}>Warehouse to Warehouse</option>
+                          <option value="Port to Warehouse" hidden={this.state.toggle_display !== "new"}>Port to Warehouse</option>
+                          <option value="Warehouse to Port" hidden={this.state.toggle_display !== "new"}>Warehouse to Port</option>
+                          <option value="Warehouse to Scrap" hidden={this.state.toggle_display !== "new"}>Warehouse to Scrap</option>
+                        </Fragment>
+                      )}
                     </Input>
                   </FormGroup>
                 </Col>
@@ -646,20 +717,19 @@ class MRCreation extends Component {
                     <Input type="text" name="8" onChange={this.handleChangeFormMRCreation} hidden={this.state.toggle_display !== "return"} />
                   </FormGroup>
                 </Col>
-                <Col md={6} hidden={this.state.toggle_display === "new"}>
-                  <FormGroup>
-                    <Label>Destination</Label>
-                    <Input type="select" name="9" value={this.state.create_mr_form[9]} onChange={this.handleChangeFormMRCreation}>
-                      <option value="" disabled selected hidden>Select Destination</option>
-                      <option value={"JKT"}>Jakarta</option>
-                      <option value={"MKS"}>Makassar</option>
-                      <option value={"PLB"}>Palembang</option>
-                      <option value={"PKB"}>Pekanbaru</option>
-                      <option value={"PDG"}>Padang</option>
-                      <option value={"MND"}>Manado</option>
-                    </Input>
-                  </FormGroup>
-                </Col>
+                {(this.state.create_mr_form[4] === "Warehouse to Warehouse" || this.state.create_mr_form[4] === "Warehouse to Port" || this.state.create_mr_form[4] === "Warehouse to Scrap") && (
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Destination</Label>
+                      <Input type="select" name="9" value={this.state.create_mr_form[9]} onChange={this.handleChangeFormMRCreation}>
+                        <option value="" disabled selected hidden>Select Destination</option>
+                        {this.state.list_warehouse.map(e =>
+                          <option value={e.wh_id}>{e.wh_id +" - "+e.wh_name}</option>
+                        )}
+                      </Input>
+                    </FormGroup>
+                  </Col>
+                )}
               </Row>
               <Row form>
                 <Col md={3}>
@@ -710,6 +780,30 @@ class MRCreation extends Component {
                   </FormGroup>
                 </Col>
               </Row>
+              {this.state.create_mr_form[3] === "Replacement" && (
+                <Row form>
+                  <Col md={4}>
+                    <FormGroup>
+                      <Label>Note Replacement</Label>
+                      <Input
+                        type="text"
+                        name="12" value={this.state.create_mr_form[12]} onChange={this.handleChangeFormMRCreation}
+                        style={this.state.validation_form.etd === false ? {borderColor : 'red'} : {}}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={4}>
+                    <FormGroup>
+                      <Label>MR Related</Label>
+                      <AsyncSelect
+                        loadOptions={this.loadOptionsMRID}
+                        defaultOptions
+                        onChange={this.handleChangeMRID}
+                      />
+                    </FormGroup>
+                  </Col>
+                </Row>
+              )}
             </Form>
           </CardBody>
           <CardFooter>

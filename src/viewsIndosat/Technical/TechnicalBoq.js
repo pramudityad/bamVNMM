@@ -55,18 +55,38 @@ class TableTechnicalItem extends React.Component{
       <Table hover bordered striped responsive size="sm">
         <thead>
         <tr>
+          {this.props.boqType === "MW" && (
+            <th rowSpan="2" style={{verticalAlign : "middle"}}>
+              Link ID
+            </th>
+          )}
           <th rowSpan="2" style={{verticalAlign : "middle"}}>
             Region
           </th>
+          {this.props.boqType === "MW" && (
+            <th rowSpan="2" style={{verticalAlign : "middle"}}>
+              Region FE
+            </th>
+          )}
           <th rowSpan="2" style={{verticalAlign : "middle"}}>
             Program
           </th>
           <th rowSpan="2" style={{verticalAlign : "middle"}}>
             Site ID
           </th>
+          {this.props.boqType === "MW" && (
+            <th rowSpan="2" style={{verticalAlign : "middle"}}>
+              Site ID FE
+            </th>
+          )}
           <th rowSpan="2" style={{verticalAlign : "middle"}}>
             Service
           </th>
+          {this.props.boqType === "MW" && (
+            <th rowSpan="2" style={{verticalAlign : "middle"}}>
+              Service FE
+            </th>
+          )}
           {this.props.TechHeader.pp_id.map(pp_id =>
             <Fragment>
               <th>{pp_id}</th>
@@ -84,10 +104,22 @@ class TableTechnicalItem extends React.Component{
         <tbody>
         {this.props.dataTechBoqSites.map(site =>
           <tr>
+            {this.props.boqType === "MW" && (
+              <td>{site.link_id}</td>
+            )}
             <td>{site.region}</td>
+            {this.props.boqType === "MW" && (
+              <td>{site.region_fe}</td>
+            )}
             <td>{site.program}</td>
             <td>{site.site_id}</td>
+            {this.props.boqType === "MW" && (
+              <td>{site.site_id_fe}</td>
+            )}
             <td>{site.service_product_name}</td>
+            {this.props.boqType === "MW" && (
+              <td>{site.service_product_name_fe}</td>
+            )}
             {(this.props.isVersion === "rollback") ? (
               this.props.TechHeader.pp_id.map((pp_id,i) =>
                 this.getTechnicalRow(site.siteItemVersion, pp_id)
@@ -173,6 +205,7 @@ class TechnicalBoq extends Component {
       modal_update_info : false,
       loading_checking : null,
       format_uploader : null,
+      boq_type : 'nonMW',
     };
     this.toggleUpdateInfo = this.toggleUpdateInfo.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -450,7 +483,7 @@ class TechnicalBoq extends Component {
     this.getDataFromAPINODE('/techBoq/'+_id_tech+'?package=1').then(res => {
       if(res.data !== undefined){
         const dataTech = res.data;
-        this.setState({data_tech_boq : dataTech.data});
+        this.setState({data_tech_boq : dataTech.data, boq_type : dataTech.data.tech_boq_type});
         if(res.data.data !== undefined){
           this.setState({data_tech_boq_sites : dataTech.data.techBoqSite, list_version : new Array(parseInt(dataTech.data.version)+1).fill("0")}, () => {
             this.viewTechBoqDataISAT(dataTech.data.techBoqSite);
@@ -510,10 +543,13 @@ class TechnicalBoq extends Component {
     }
     this.toggleLoading();
     const dataChecked = this.state.result_check_tech;
-    const dataPatch = {
+    let dataPatch = {
       "revision" : revision,
       "sites_data" : dataChecked.tech_data,
       "itemPackage" : true
+    }
+    if(this.state.boq_type === "MW"){
+      dataPatch = {...dataPatch, ...{"techBoqType":"MW"}}
     }
     let patchTech = await this.patchDatatoAPINODE('/techBoq/updateTechBoqData/'+this.state.data_tech_boq._id, dataPatch);
     if(patchTech.data !== undefined){
@@ -787,6 +823,9 @@ class TechnicalBoq extends Component {
       "siteIdentifier": "site_id",
       "itemPackage": true,
       "techBoqData" : rowsTech
+    }
+    if(this.state.boq_type === "MW"){
+      dataCheck = {...dataCheck, ...{"techBoqType":"MW"}}
     }
     let urlCheck = '/techBoq/checkTechBoqData';
     let postCheck = await this.postDatatoAPINODE(urlCheck, dataCheck);
@@ -1345,15 +1384,24 @@ class TechnicalBoq extends Component {
     }
 
     const header_config = this.state.view_tech_header_table;
+    if(this.state.boq_type === "MW"){
+      let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service", "Service", "Service"];
+      let HeaderRow2 = ["region", "region_fe", "program", "batch", "site_id", "site_name", "ne_id", "site_id_fe", "site_name_fe", "fe_id", "new_config", "service_product_id", "service_product_name", "service_product_id_fe", "service_product_name_fe"];
 
-    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service"];
-    let HeaderRow2 = ["region", "program", "batch", "site_id", "site_name", "ne_id", "new_config", "service_product_id", "service_product_name"];
+      header_config.type.map(e => HeaderRow1.push(e));
+      header_config.pp_id.map((e, i) => HeaderRow2.push(e +" /// "+ header_config.name[i]));
+      ws.addRow(HeaderRow1);
+      ws.addRow(HeaderRow2);
+    }else{
+      let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service"];
+      let HeaderRow2 = ["region", "program", "batch", "site_id", "site_name", "ne_id", "new_config", "service_product_id", "service_product_name"];
 
-    header_config.type.map(e => HeaderRow1.push(e));
-    header_config.pp_id.map((e, i) => HeaderRow2.push(e +" /// "+ header_config.name[i]));
+      header_config.type.map(e => HeaderRow1.push(e));
+      header_config.pp_id.map((e, i) => HeaderRow2.push(e +" /// "+ header_config.name[i]));
+      ws.addRow(HeaderRow1);
+      ws.addRow(HeaderRow2);
+    }
 
-    ws.addRow(HeaderRow1);
-    ws.addRow(HeaderRow2);
     for(let i = 0; i < dataSites.length ; i++){
       let qtyItem = []
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
@@ -1375,7 +1423,12 @@ class TechnicalBoq extends Component {
           }
         }
       }
-      ws.addRow([dataSites[i].region, dataSites[i].program, dataSites[i].batch, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].ne_id, dataSites[i].new_config, dataSites[i].service_product_id, dataSites[i].service_product_name].concat(qtyItem));
+      if(this.state.boq_type === "MW"){
+        ws.addRow([dataSites[i].region, dataSites[i].region_fe, dataSites[i].program, dataSites[i].batch, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].ne_id, dataSites[i].site_id_fe, dataSites[i].site_name_fe, dataSites[i].fe_id, dataSites[i].new_config, dataSites[i].service_product_id, dataSites[i].service_product_name, dataSites[i].service_product_id_fe, dataSites[i].service_product_name_fe].concat(qtyItem));
+      }else{
+        ws.addRow([dataSites[i].region, dataSites[i].program, dataSites[i].batch, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].ne_id, dataSites[i].new_config, dataSites[i].service_product_id, dataSites[i].service_product_name].concat(qtyItem));
+      }
+
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
@@ -1396,14 +1449,24 @@ class TechnicalBoq extends Component {
 
     const header_config = this.state.view_tech_header_table;
 
-    let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service"];
-    let HeaderRow2 = ["region", "program", "batch", "site_id", "site_name", "ne_id", "new_config", "service_product_id", "service_product_name"];
+    if(this.state.boq_type === "MW"){
+      let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service", "Service", "Service"];
+      let HeaderRow2 = ["region", "region_fe", "program", "batch", "site_id", "site_name", "ne_id", "site_id_fe", "site_name_fe", "fe_id", "new_config", "service_product_id", "service_product_name", "service_product_id_fe", "service_product_name_fe"];
 
-    header_config.type.map(e => HeaderRow1.push(e));
-    header_config.pp_id.map((e, i) => HeaderRow2.push(e +" /// "+ header_config.name[i]));
+      header_config.type.map(e => HeaderRow1.push(e));
+      header_config.pp_id.map((e, i) => HeaderRow2.push(e +" /// "+ header_config.name[i]));
+      ws.addRow(HeaderRow1);
+      ws.addRow(HeaderRow2);
+    }else{
+      let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service"];
+      let HeaderRow2 = ["region", "program", "batch", "site_id", "site_name", "ne_id", "new_config", "service_product_id", "service_product_name"];
 
-    ws.addRow(HeaderRow1);
-    ws.addRow(HeaderRow2);
+      header_config.type.map(e => HeaderRow1.push(e));
+      header_config.pp_id.map((e, i) => HeaderRow2.push(e +" /// "+ header_config.name[i]));
+      ws.addRow(HeaderRow1);
+      ws.addRow(HeaderRow2);
+    }
+
     for(let i = 0; i < dataSites.length ; i++){
       let qtyItem = []
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
@@ -1425,7 +1488,11 @@ class TechnicalBoq extends Component {
           }
         }
       }
-      ws.addRow([dataSites[i].region, dataSites[i].program, dataSites[i].batch, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].ne_id, dataSites[i].new_config, dataSites[i].service_product_id, dataSites[i].service_product_name].concat(qtyItem));
+      if(this.state.boq_type === "MW"){
+        ws.addRow([dataSites[i].region, dataSites[i].region_fe, dataSites[i].program, dataSites[i].batch, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].ne_id, dataSites[i].site_id_fe, dataSites[i].site_name_fe, dataSites[i].fe_id, dataSites[i].new_config, dataSites[i].service_product_id, dataSites[i].service_product_name, dataSites[i].service_product_id_fe, dataSites[i].service_product_name_fe].concat(qtyItem));
+      }else{
+        ws.addRow([dataSites[i].region, dataSites[i].program, dataSites[i].batch, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].ne_id, dataSites[i].new_config, dataSites[i].service_product_id, dataSites[i].service_product_name].concat(qtyItem));
+      }
     }
 
     const MRFormat = await wb.xlsx.writeBuffer();
@@ -1555,7 +1622,6 @@ class TechnicalBoq extends Component {
   }
 
     render() {
-      console.log("length", Config_group_DEFAULT.length, Config_group_type_DEFAULT.length);
       if(this.state.redirectSign !== false){
         return (<Redirect to={'/detail-technical/'+this.state.redirectSign} />);
       }
@@ -1599,7 +1665,7 @@ class TechnicalBoq extends Component {
                     </React.Fragment>
                   ) : (
                     <React.Fragment>
-                      <span style={{marginTop:'3px', position:'absolute'}}>Detail Technical BOQ</span>
+                      <span style={{marginTop:'3px', position:'absolute'}}>Detail Technical BOQ {this.state.boq_type === "MW" && 'Transmission'}</span>
                       <div className="card-header-actions" style={{display:'inline-flex'}}>
                         <Col>
                           <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}}>
@@ -1730,7 +1796,7 @@ class TechnicalBoq extends Component {
                       <table style={{width : '100%', marginBottom : '0px', marginLeft : '10px'}}>
                         <tbody>
                           <tr style={{fontWeight : '425', fontSize : '23px'}}>
-                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>TECHNICAL BOQ</td>
+                            <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>TECHNICAL BOQ {this.state.boq_type === "MW" && 'TRANSMISSION'}</td>
                           </tr>
                           <tr style={{fontWeight : '390', fontSize : '15px', fontStyle:'oblique'}}>
                             <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Doc : {this.state.data_tech_boq.no_tech_boq}</td>
@@ -1810,11 +1876,13 @@ class TechnicalBoq extends Component {
                           dataTechBoqSites={this.state.data_tech_boq_sites_version}
                           TechHeader={this.state.option_tssr_header_view === 'only_filled' ?  this.state.view_tech_header_table : this.state.view_tech_all_header_table}
                           isVersion="rollback"
+                          boqType={this.state.boq_type}
                           />
                       ): (
                         <TableTechnicalItem
                           dataTechBoqSites={this.state.data_tech_boq_sites_pagination}
                           TechHeader={this.state.option_tssr_header_view === 'only_filled' ?  this.state.view_tech_header_table : this.state.view_tech_all_header_table}
+                          boqType={this.state.boq_type}
                         />
                       )}
                       <nav>

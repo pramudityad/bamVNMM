@@ -23,7 +23,7 @@ import {
   postDatatoAPINODE,
   patchDatatoAPINODE,
   getDatafromAPINODE,
-  getDatafromAPIEXEL
+  getDatafromAPIISAT
 } from "../../helper/asyncFunction";
 
 const DefaultNotif = React.lazy(() =>
@@ -61,7 +61,7 @@ class EditLCC extends Component {
   }
 
   getASPList() {
-    getDatafromAPIEXEL("/vendor_data_non_page").then((res) => {
+    getDatafromAPIISAT("/vendor_data_non_page").then((res) => {
       if (res.data !== undefined) {
         this.setState({ asp_data: res.data._items });
       } else {

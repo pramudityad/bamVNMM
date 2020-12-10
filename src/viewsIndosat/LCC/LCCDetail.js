@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
 import {
   Card,
   CardHeader,
@@ -22,9 +22,13 @@ import {
   postDatatoAPINODE,
   patchDatatoAPINODE,
   getDatafromAPINODE,
-  getDatafromAPIEXEL
+  getDatafromAPIISAT,
+  getDatafromAPINODEFile
 } from "../../helper/asyncFunction";
 import axios from 'axios';
+import { saveAs } from 'file-saver';
+import Excel from 'exceljs';
+import * as XLSX from 'xlsx';
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -39,24 +43,32 @@ class DetailLCC extends Component {
     super(props);
 
     this.state = {
+      userRole: this.props.dataLogin.role,
+      userId: this.props.dataLogin._id,
+      userName: this.props.dataLogin.userName,
+      userEmail: this.props.dataLogin.email,
+      tokenUser: this.props.dataLogin.token,
       all_data: [],
       asp_data: [],
       action_status : null,
       action_message: null,
       amount_lcc : {},
       amount_po : [],
-      POdata: [
-
-      ],
+      POdata: [],
       danger: false,
       selected_id: "",
       selected_name: "",
       selected_vendor: "",
+      file_po_mapping:[],
+      dangerOffline : false,
     };
     // bind
 
     this.postPO = this.postPO.bind(this);
     this.addSSOW = this.addSSOW.bind(this);
+    this.exportFormatMappingCDIDtoPO = this.exportFormatMappingCDIDtoPO.bind(this);
+    this.fileHandlerPOMapping = this.fileHandlerPOMapping.bind(this);
+    this.poMapping = this.poMapping.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -87,7 +99,7 @@ class DetailLCC extends Component {
   }
 
   getASPList() {
-    getDatafromAPIEXEL('/vendor_data_non_page?where={"Type": "DSP"}').then((res) => {
+    getDatafromAPIISAT('/vendor_data_non_page?where={"Type": "DSP"}').then((res) => {
       if (res.data !== undefined) {
         this.setState({ asp_data: res.data._items });
       } else {
@@ -214,21 +226,24 @@ class DetailLCC extends Component {
     const Dataform = this.state.Dataform
     let po_data = {
       _id: this.props.match.params.id,
-      status: "Approved"
     };
-    console.log("data prt", po_data);
     const post = patchDatatoAPINODE(
-      "/lccDsa/updateLcc",
-      { data:[po_data] },
+      "/lccDsa/approvalLcc",
+      { approvalCheck : true, data:[po_data] },
       this.props.dataLogin.token
     ).then((res) => {
-      console.log(" res post single ", res);
       if (res.data !== undefined) {
-        this.setState({ action_status: "success", action_message: "success" }, () => {});
+        this.setState({ action_status: "success", action_message: null }, () => {});
       } else {
-        this.setState({
-          action_status: "failed",action_message: "failed"
-        });
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
       }
     });
   }
@@ -287,17 +302,175 @@ class DetailLCC extends Component {
       "/poDsa/approvalPo",{approval : true, data:[objData]}, this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
-        this.setState({ action_status: "success", action_message: "success" });
+        this.setState({ action_status: "success", action_message: null });
         // this.toggleLoading();
       } else {
-        this.setState({ action_status: "failed", action_message: "failed" }, () => {
-          // this.toggleLoading();
-        });
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
+      }
+    });
+  };
+
+  getDSAFile = async (e) => {
+    e.preventDefault()
+    e.persist();
+    const i = e.target.name;
+    const id = e.currentTarget.value;
+    const data_lcc = this.state.all_data;
+    if(data_lcc.file_document !== undefined && data_lcc.file_document !== null)  {
+      const resFile = await getDatafromAPINODEFile('/lccDsa/getLccDocument/' + data_lcc._id, this.props.dataLogin.token, data_lcc.file_document.mime_type);
+      if(resFile !== undefined){
+        saveAs(new Blob([resFile.data], {type:data_lcc.file_document.mime_type}), data_lcc.file_document.file_name);
+      }
+    }
+  }
+
+  exportFormatMappingCDIDtoPO = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPO = this.state.all_data.po;
+
+    ws.addRow(["po_dsa","cd_id"]);
+    if(dataPO !== undefined){
+      for(let i =0; i < dataPO.length; i++){
+        ws.addRow([dataPO[i].no_po_dsa, null]);
+      }
+    }
+
+    const PPFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([PPFormat]), 'LCC '+this.state.all_data.no_lcc+' CD ID mapping to PO.xlsx');
+  }
+
+  checkValue(props){
+    //Swap undefined to null
+    if( typeof props === 'undefined' ) {
+      return null;
+    }else{
+      return props;
+    }
+  }
+
+  fileHandlerPOMapping = (input) => {
+    const file = input.target.files[0];
+    const reader = new FileReader();
+    const rABS = !!reader.readAsBinaryString;
+    reader.onload = (e) => {
+      /* Parse data */
+      const bstr = e.target.result;
+      const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array', cellDates:true});
+      /* Get first worksheet */
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      /* Convert array of arrays */
+      const data = XLSX.utils.sheet_to_json(ws, {header:1, devfal : null});
+      /* Update state */
+      this.setState({ action_status: null, action_message: null }, () => {
+        this.ArrayEmptytoNull(data);
+      });
+    };
+    if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
+  }
+
+  ArrayEmptytoNull(dataXLS){
+    let newDataXLS = [];
+    for(let i = 0; i < dataXLS.length; i++){
+      let col = [];
+      for(let j = 0; j < dataXLS[0].length; j++){
+        if(typeof dataXLS[i][j] === "object"){
+          let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
+          if(dataObject !== null){
+            dataObject = dataObject.replace(/"/g, "");
+          }
+          col.push(dataObject);
+        }else{
+          col.push(this.checkValue(dataXLS[i][j]));
+        }
+      }
+      newDataXLS.push(col);
+    }
+    this.setState({
+      file_po_mapping : newDataXLS,
+    });
+  }
+
+  async poMapping() {
+    const post = patchDatatoAPINODE(
+      "/lccDsa/mapPoCdId/"+this.props.match.params.id,
+      {data : this.state.file_po_mapping},
+      this.props.dataLogin.token
+    ).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" }, () => {});
+      } else {
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
+      }
+    });
+  }
+
+  toogleOffline=(e) => {
+    const modalDelete = this.state.dangerOffline;
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      const name = this.state.all_data.po.find(e => e._id === _id)
+      this.setState({
+        dangerOffline: !this.state.dangerOffline,
+        selected_id: _id,
+        selected_name: name.no_po_dsa,
+        selected_vendor: name.vendor_name
+      });
+    } else {
+      this.setState({
+        dangerOffline: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete: !prevState.modalDelete,
+    }));
+  }
+
+  OfflinePO = async () => {
+    let objData = {
+      _id: this.state.selected_id
+    }
+    this.toogleOffline();
+    const DelData = patchDatatoAPINODE(
+      "/poDsa/offlinePo/"+this.state.selected_id, {}, this.props.dataLogin.token
+    ).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success"});
+        // this.toggleLoading();
+      } else {
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
       }
     });
   };
 
   render() {
+    console.log(this.state.file_po_mapping);
     const { all_data } = this.state;
     return (
       <div className="animated fadeIn">
@@ -312,7 +485,7 @@ class DetailLCC extends Component {
               <CardHeader>
                 <span style={{ lineHeight: "2", fontSize: "17px" }}>
                   <i className="fa fa-edit" style={{ marginRight: "8px" }}></i>
-                  LCC Detail
+                  LCC Detail {all_data.no_lcc}
                 </span>
                 <Link to={'/lcc-edit/' + all_data._id}>
                   <Button style={{ marginRight: "8px", float: "right" }} color="warning" size="sm" >
@@ -320,6 +493,9 @@ class DetailLCC extends Component {
                     Edit
                   </Button>
                 </Link>
+                <Button style={{ marginRight: "8px", float: "right" }} size="sm" color="secondary" onClick={this.exportFormatMappingCDIDtoPO}>
+                  Download Format Mapping
+                </Button>
               </CardHeader>
               <CardBody>
                 <Row>
@@ -363,7 +539,7 @@ class DetailLCC extends Component {
                             type="text"
                             // placeholder="Site Name"
                             name={"budget"}
-                            value={all_data.budget}
+                            value={all_data.budget !== undefined && all_data.budget.toLocaleString()}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -376,7 +552,7 @@ class DetailLCC extends Component {
                             type="text"
                             // placeholder="Quotation Number"
                             name={"prebook"}
-                            value={this.state.amount_lcc.amount_prebook}
+                            value={this.state.amount_lcc.amount_prebook !== undefined && this.state.amount_lcc.amount_prebook.toLocaleString()}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -389,9 +565,17 @@ class DetailLCC extends Component {
                             type="text"
                             // placeholder="Signum PM"
                             name={"actual"}
-                            value={this.state.amount_lcc.amount_actualize}
+                            value={this.state.amount_lcc.amount_actualize !== undefined && this.state.amount_lcc.amount_actualize.toLocaleString()}
                             onChange={this.handleInput}
                           />
+                        </Col>
+                      </FormGroup>
+                      <FormGroup row>
+                        <Label sm={2}>LCC File</Label>
+                        <Col sm={10}>
+                        <Button size="sm" color="info" onClick={this.getDSAFile}>
+                          File Download
+                        </Button>
                         </Col>
                       </FormGroup>
                     </Form>
@@ -401,7 +585,78 @@ class DetailLCC extends Component {
                   <Col>
                   <h5><b>PO Number</b></h5>
                   </Col>
+                  <br />
                   <div class='divtable'>
+                {' '}
+                <Col>
+                <FormGroup row>
+                  <Label sm={2}>PO Mapping</Label>
+                  <Col sm={5}>
+                    <input
+                      type="file"
+                      onChange={this.fileHandlerPOMapping}
+                    />
+                  </Col>
+                  <Col sm={5}>
+                    <Button onClick={this.poMapping} size="sm">
+                      PO Mapping
+                    </Button>
+                  </Col>
+
+                </FormGroup>
+                </Col>
+                  <Table hover bordered responsive size="sm" width="100%">
+                    <thead class="table-commercial__header--fixed">
+                      <tr>
+                        <th>PO ID</th>
+                        <th>Status</th>
+                        <th>CD ID</th>
+                        <th>Vendor Name</th>
+                        <th>Vendor Code</th>
+                        <th>Amount</th>
+                        <th>Prebook</th>
+                        <th>Actual</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {all_data.po !== undefined && all_data.po.length === 0 && (
+                      <tr>
+                        <td colSpan="8">No Data Available</td>
+                      </tr>
+                    )}
+                    {all_data.po !== undefined && all_data.po.map(e =>
+                      <Fragment>
+                      <tr style={{backgroundColor : 'rgba(187,222,251 ,1)'}}>
+                        <td>{e.no_po_dsa}</td>
+                        <td>{e.status}</td>
+                        <td></td>
+                        <td>{e.vendor_name}</td>
+                        <td>{e.vendor_code}</td>
+                        <td>{e.dsp_value.toLocaleString()}</td>
+                        <td>{this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa) !== undefined ? this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa).amount_prebook.toLocaleString() : null }</td>
+                        <td>{this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa) !== undefined ? this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa).amount_actualize.toLocaleString() : null }</td>
+                        <td>
+                          {e.status !== "Online" && (
+                            <Button size="sm" color="info" value={e._id} name={e.no_po_dsa} onClick={this.toogleConf} title="Online" >
+                              <i className="fa fa-check" aria-hidden="true" ></i>
+                            </Button>
+                          )}
+                          {e.status === "Online" && (
+                            <Button size="sm" color="danger" value={e._id} name={e.no_po_dsa} onClick={this.toogleOffline} title="Online" >
+                              <i className="fa fa-times" aria-hidden="true" ></i>
+                            </Button>
+                          )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>CD ID : </td>
+                          <td colSpan="9">{e.cust_del != undefined ? e.cust_del.map(cd => cd.cd_id).join(", ") : null}</td>
+                        </tr>
+                      </Fragment>
+                    )}
+                    </tbody>
+                  </Table>
                   <Col>
                   {this.state.POdata.map((ssow_data, idx) => (
                     <Row>
@@ -472,66 +727,18 @@ class DetailLCC extends Component {
                     </Row>
                   ))}
                   </Col>
+                  {all_data.status === "Approved" && (
                   <Col style={{marginBottom : '10px', marginTop : '10px'}}>
                     <Button color="primary" size="sm" onClick={this.addSSOW}>
                       <i className="fa fa-plus">&nbsp;</i> PO
                     </Button>
                   </Col>
-                {' '}
-                  <Table hover bordered responsive size="sm" width="100%">
-                    <thead class="table-commercial__header--fixed">
-                      <tr>
-                        <th>PO ID</th>
-                        <th>Status</th>
-                        <th>Vendor Name</th>
-                        <th>Vendor Code</th>
-                        <th>Amount</th>
-                        <th>Prebook</th>
-                        <th>Actual</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    {all_data.po !== undefined && all_data.po.length === 0 && (
-                      <tr>
-                        <td colSpan="8">No Data Available</td>
-                      </tr>
-                    )}
-                    {all_data.po !== undefined && all_data.po.map(e =>
-                      <tr>
-                      <td>{e.no_po_dsa}</td>
-                      <td>{e.status}</td>
-                      <td>{e.vendor_name}</td>
-                      <td>{e.vendor_code}</td>
-                      <td>{e.dsp_value}</td>
-                      <td>{this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa) !== undefined ? this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa).amount_prebook : null }</td>
-                      <td>{this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa) !== undefined ? this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa).amount_actualize : null }</td>
-                      <td>
-                        {e.status !== "Online" && (
-                        <Button
-                            size="sm"
-                            color="info"
-                            value={e._id}
-                            name={e.no_po_dsa}
-                            onClick={this.toogleConf}
-                            title="Delete"
-                          >
-                            <i
-                              className="fa fa-check"
-                              aria-hidden="true"
-                            ></i>
-                          </Button>
-                        )}
-                        </td>
-                      </tr>
-                    )}
-                    </tbody>
-                  </Table>
+                )}
                 </div>
                 </Row>
               </CardBody>
               <CardFooter>
-              {all_data.status !== "Approved" && (
+              {(all_data.status !== "Approved" && (this.state.userRole.findIndex(ur => ur === "Admin") !== -1 || this.state.userRole.findIndex(ur => ur === "BAM-LDM") !== -1 || this.state.userRole.findIndex(ur => ur === "BAM-LDM Admin") !== -1) )&& (
                 <Button
                   type="submit"
                   color="success"
@@ -543,7 +750,7 @@ class DetailLCC extends Component {
                   Approve
                 </Button>
               )}
-
+              {all_data.status === "Approved" && (
                 <Button
                   type="submit"
                   color="success"
@@ -555,6 +762,7 @@ class DetailLCC extends Component {
                   <i className="fa fa-plus" style={{ marginRight: "8px" }}></i>{" "}
                   Create PO
                 </Button>
+              )}
               </CardFooter>
             </Card>
           </Col>
@@ -572,6 +780,22 @@ class DetailLCC extends Component {
             Yes
           </Button>
           <Button color="secondary" onClick={this.toogleConf}>
+            Cancel
+          </Button>
+        </ModalDelete>
+
+        {/* Modal confirmation Offline po */}
+        <ModalDelete
+          isOpen={this.state.dangerOffline}
+          toggle={this.toogleOffline}
+          className={this.props.className}
+          title={"Offline "+ this.state.selected_name+ " for " + this.state.selected_vendor}
+          body={"Are you sure ?"}
+        >
+          <Button color="success" onClick={this.OfflinePO}>
+            Yes
+          </Button>
+          <Button color="secondary" onClick={this.toogleOffline}>
             Cancel
           </Button>
         </ModalDelete>

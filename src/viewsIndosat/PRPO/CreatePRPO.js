@@ -200,30 +200,11 @@ class CreatePRPO extends Component {
       approval_status: "NOT APPROVED",
       approval_date: "",
       total_price: this.state.Dataform.total_price,
-      pr_number: this.state.Dataform.pr_number,
-      pr_date: this.state.Dataform.pr_date,
-      pr_inserted_by: this.state.Dataform.pr_inserted_by,
-      po_number: this.state.Dataform.po_number,
-      po_date: this.state.Dataform.po_date,
-      po_inserted_by: this.state.Dataform.po_inserted_by,
-      po_item: this.state.Dataform.po_item,
-      bast_no_dp: this.state.Dataform.bast_no_dp,
-      req_gr_dp: this.state.Dataform.req_gr_dp,
-      req_gr_by_dp: this.state.Dataform.req_gr_by_dp,
-      req_gr_date_dp: this.state.Dataform.req_gr_date_dp,
-      req_revision_dp: this.state.Dataform.req_revision_dp,
-      revision_done_dp: this.state.Dataform.revision_done_dp,
-      bast_no_final: this.state.Dataform.bast_no_final,
-      req_gr_final: this.state.Dataform.req_gr_by_final,
-      req_gr_by_final: this.state.Dataform.req_gr_by_final,
-      req_gr_date_final: this.state.Dataform.req_gr_date_final,
-      req_revision_final: this.state.Dataform.req_revision_final,
-      revision_done_final: this.state.Dataform.revision_done_final,
       deleted: 0,
       SSOW_List: this.state.SSOW_List_out,
     };
     console.log("data prt", prt_data);
-    const post = postDatatoAPINODE(
+    const post = await postDatatoAPINODE(
       "/prt/createOnePrt",
       { prt_data },
       this.props.dataLogin.token

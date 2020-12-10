@@ -47,6 +47,7 @@ class LCCCreation extends Component {
       section_3_form : [],
       po_selected : {},
       modal_loading:false,
+      dsa_creation_status : null,
     }
 
     this.loadOptionsMR = this.loadOptionsMR.bind(this);
@@ -153,11 +154,11 @@ class LCCCreation extends Component {
       return [];
     } else {
       let mr_list = [];
-      const getMR = await this.getDataFromAPINODE('/matreq?srt=_id:-1&q={"mr_id":{"$regex":"' + inputValue + '", "$options":"i"}}&v={"mr_id":1}');
+      const getMR = await this.getDataFromAPINODE('/matreq?srt=_id:-1&q={"mr_id":{"$regex":"' + inputValue + '", "$options":"i"}}&v={"mr_id":1, "dsa_number":1}');
       if (getMR !== undefined && getMR.data !== undefined) {
         this.setState({ list_mr_selection: getMR.data.data }, () =>
           getMR.data.data.map(mr =>
-            mr_list.push({ 'label': mr.mr_id !== undefined ? mr.mr_id : null, 'value': mr._id })))
+            mr_list.push({ 'label': mr.mr_id !== undefined ? mr.mr_id : null, 'value': mr._id, 'dsa_number' : mr.dsa_number })))
       }
       return mr_list;
     }
@@ -173,8 +174,11 @@ class LCCCreation extends Component {
     } else {
       this.setState({ destination: dataMR.site_info[0].site_id });
     }
+    this.setState({dsa_creation_status : newValue.dsa_number })
     const getNN = await this.getDataFromAPIXL('/custdel_sorted_non_page?where={"WP_ID":"' + dataMR.cust_del[0].cd_id + '"}');
-    this.setState({ network_number: getNN.data._items[0].CD_Info_Network_Number });
+    if(getNN !== undefined && getNN.data !== undefined && getNN.data._items !== 0){
+      this.setState({ network_number: getNN.data._items[0].CD_Info_Network_Number });
+    }
     let dataForm = this.state.create_dsa_form;
     dataForm[0] = "DSA"+dataMR.mr_id;
     dataForm[1] = dataMR.project_name;
@@ -202,7 +206,7 @@ class LCCCreation extends Component {
       return [];
     } else {
       let dsa_list = [];
-      const getDSA = await this.getDataFromAPIXL('/dsa_price_sorted?where={"dsa_price_id":{"$regex":"' + inputValue + '", "$options":"i"}}');
+      const getDSA = await this.getDataFromAPIXL('/dsa_price_sorted?where={"dsa_price_id":{"$regex":"' + inputValue + '", "$options":"i"}, "vendor_code_actual" : "'+this.state.list_mr_selected.dsp_company_code+'"}');
       if (getDSA !== undefined && getDSA.data !== undefined) {
         this.setState({ list_dsa_selection: getDSA.data._items }, () =>
           getDSA.data._items.map(dsa =>
@@ -342,7 +346,7 @@ class LCCCreation extends Component {
           <FormGroup>
             <Label>Details</Label>
             <Input type="select" name={"0 /// sub_category"} onChange={this.handleChangeFormSection1} value={form_list[0].sub_category}>
-              <option value="" disabled selected hidden>MOT</option>
+              <option value="" disabled selected hidden>Select MOT</option>
               <option value="MOT-Land">MOT-Land</option>
               <option value="MOT-Air">MOT-Air</option>
               <option value="MOT-Sea">MOT-Sea</option>
@@ -363,7 +367,7 @@ class LCCCreation extends Component {
         <Col md="2" style={{ margin: "0", padding: "4px" }}>
           <FormGroup>
             <Label>Price</Label>
-            <Input type="text" name={"0 /// price"} value={form_list[0].price} readOnly />
+            <Input type="text" name={"0 /// price"} value={form_list[0].price !== undefined ? form_list[0].price.toLocaleString() : 0} readOnly />
           </FormGroup>
         </Col>
         <Col md="1" style={{ margin: "0", padding: "4px" }}>
@@ -375,7 +379,7 @@ class LCCCreation extends Component {
         <Col md="2" style={{ margin: "0", padding: "4px" }}>
           <FormGroup>
             <Label>Total Price</Label>
-            <Input type="text" name={"0 /// total_price"} readOnly value={form_list[0].total_price} />
+            <Input type="text" name={"0 /// total_price"} readOnly value={form_list[0].total_price !== undefined ? form_list[0].total_price.toLocaleString() : null} />
           </FormGroup>
         </Col>
         <Col md="2" style={{ margin: "0", padding: "4px" }}>
@@ -441,7 +445,7 @@ class LCCCreation extends Component {
           <Col md="2" style={{ margin: "0", padding: "4px" }}>
             <FormGroup>
               <Label>Price</Label>
-              <Input type="text" name={i+" /// price"} value={form_list[i].price} readOnly />
+              <Input type="text" name={i+" /// price"} value={form_list[i].price !== undefined ? form_list[i].price.toLocaleString() : null} readOnly />
             </FormGroup>
           </Col>
           <Col md="1" style={{ margin: "0", padding: "4px" }}>
@@ -453,7 +457,7 @@ class LCCCreation extends Component {
           <Col md="2" style={{ margin: "0", padding: "4px" }}>
             <FormGroup>
               <Label>Total Price</Label>
-              <Input type="text" name={i+" /// total_price"} readOnly value={form_list[i].total_price} />
+              <Input type="text" name={i+" /// total_price"} readOnly value={form_list[i].total_price !== undefined ? form_list[i].total_price.toLocaleString() : null} />
             </FormGroup>
           </Col>
           <Col md="2" style={{ margin: "0", padding: "4px" }}>
@@ -573,7 +577,7 @@ class LCCCreation extends Component {
           <Col md="2" style={{ margin: "0", padding: "4px" }}>
             <FormGroup>
               <Label>Price</Label>
-              <Input type="text" name={i+" /// price"} value={form_list[i].price} readOnly />
+              <Input type="text" name={i+" /// price"} value={form_list[i].price !== undefined ? form_list[i].price.toLocaleString() : null} readOnly />
             </FormGroup>
           </Col>
           <Col md="1" style={{ margin: "0", padding: "4px" }}>
@@ -585,7 +589,7 @@ class LCCCreation extends Component {
           <Col md="2" style={{ margin: "0", padding: "4px" }}>
             <FormGroup>
               <Label>Total Price</Label>
-              <Input type="text" name={i+" /// total_price"} readOnly value={form_list[i].total_price} />
+              <Input type="text" name={i+" /// total_price"} readOnly value={form_list[i].total_price !== undefined ? form_list[i].total_price.toLocaleString() : null} />
             </FormGroup>
           </Col>
           <Col md="2" style={{ margin: "0", padding: "4px" }}>
@@ -644,9 +648,9 @@ class LCCCreation extends Component {
     // if(dataForm[197] !== undefined && dataForm[197] !== null && dataForm[197].length !== 0 && !isNaN(dataForm[197])){
     //   totalValue = parseFloat(dataForm[197]);
     // }
-    let totalSec1 = dataSection1.filter(ds => ds.total_price !== undefined && ds.total_price !== null && ds.total_price.length !== 0).reduce((a,b) => a+parseFloat(b.total_price), 0);
-    let totalSec2 = dataSection2.filter(ds => ds.total_price !== undefined && ds.total_price !== null && ds.total_price.length !== 0).reduce((a,b) => a+parseFloat(b.total_price), 0);
-    let totalSec3 = dataSection3.filter(ds => ds.price !== undefined && ds.price !== null && ds.price.length !== 0 ).reduce((a,b) => a+parseFloat(b.price), 0);
+    let totalSec1 = dataSection1.filter(ds => ds.total_price !== undefined && ds.total_price !== null && ds.total_price.length !== 0 && !isNaN(ds.total_price)).reduce((a,b) => a+parseFloat(b.total_price), 0);
+    let totalSec2 = dataSection2.filter(ds => ds.total_price !== undefined && ds.total_price !== null && ds.total_price.length !== 0 && !isNaN(ds.total_price)).reduce((a,b) => a+parseFloat(b.total_price), 0);
+    let totalSec3 = dataSection3.filter(ds => ds.price !== undefined && ds.price !== null && ds.price.length !== 0 && !isNaN(ds.price)).reduce((a,b) => a+parseFloat(b.price), 0);
     totalValue = totalSec1+totalSec2+totalSec3;
     dataForm[197] = parseFloat(totalValue);
     this.setState({create_dsa_form : totalValue});
@@ -736,7 +740,6 @@ class LCCCreation extends Component {
     const dataSection1 = this.state.section_1_form;
     const dataSection2 = this.state.section_2_form;
     const dataSection3 = this.state.section_3_form;
-    console.log("dataSection1", dataSection1);
     let section_1 = [];
     if (dataSection1[0].sub_category !== undefined ) {
       section_1.push(
@@ -744,9 +747,9 @@ class LCCCreation extends Component {
           "category": "MOT",
           "sub_category": dataSection1[0].sub_category,
           "service_master": dataSection1[0].service_master,
-          "price": dataSection1[0].price,
-          "qty": dataSection1[0].qty,
-          "total_price": dataSection1[0].total_price,
+          "price": isNaN(dataSection1[0].price) ? 0 : dataSection1[0].price,
+          "qty": isNaN(dataSection1[0].qty) ? 0 : dataSection1[0].qty,
+          "total_price": isNaN(dataSection1[0].total_price) ? 0 : dataSection1[0].total_price,
           "short_text": dataSection1[0].short_text,
           "long_text": dataSection1[0].long_text
         }
@@ -770,13 +773,13 @@ class LCCCreation extends Component {
         "category": dataSection1[i].sub_category,
         "sub_category": dataSection1[i].sub_category,
         "service_master": dataSection1[i].service_master,
-        "price": dataSection1[i].price,
-        "qty": dataSection1[i].qty,
-        "total_price": dataSection1[i].total_price,
+        "price": isNaN(dataSection1[i].price) ? 0 : dataSection1[i].price,
+        "qty": isNaN(dataSection1[i].qty) ? 0 : dataSection1[i].qty,
+        "total_price": isNaN(dataSection1[i].total_price) ? 0 : dataSection1[i].total_price,
         "short_text": dataSection1[i].short_text,
         "long_text": dataSection1[i].long_text
       }
-      if (dataSection1[i].sub_category !== null && dataSection1[i].sub_category.length !== 0) {
+      if (dataSection1[i].sub_category !== undefined && dataSection1[i].sub_category !== null && dataSection1[i].sub_category.length !== 0 && dataSection1[i].service_master !== undefined && dataSection1[i].service_master !== null) {
         section_1.push(data_section_1);
       }
     }
@@ -784,9 +787,9 @@ class LCCCreation extends Component {
       "category": "Flat Community",
       "sub_category": null,
       "service_master": dataForm[52],
-      "price": dataForm[53],
-      "qty": dataForm[54],
-      "total_price": dataForm[55],
+      "price": isNaN(dataForm[53]) ? 0 : dataForm[53],
+      "qty": isNaN(dataForm[54]) ? 0 : dataForm[54],
+      "total_price": isNaN(dataForm[55]) ? 0 : dataForm[55],
       "short_text": dataForm[56],
       "long_text": dataForm[57]
     }
@@ -800,13 +803,13 @@ class LCCCreation extends Component {
         "category": dataSection2[i].sub_category,
         "sub_category": null,
         "service_master": dataSection2[i].service_master,
-        "price": dataSection2[i].price,
-        "qty": dataSection2[i].qty,
-        "total_price": dataSection2[i].total_price,
+        "price": isNaN(dataSection2[i].price) ? 0 : dataSection2[i].price,
+        "qty": isNaN(dataSection2[i].qty) ? 0 : dataSection2[i].qty,
+        "total_price": isNaN(dataSection2[i].total_price) ? 0 : dataSection2[i].total_price,
         "short_text": dataSection2[i].short_text,
         "long_text": dataSection2[i].long_text
       }
-      if (dataSection2[i].sub_category !== null && dataSection2[i].sub_category.length !== 0) {
+      if (dataSection2[i].sub_category !== undefined && dataSection2[i].sub_category !== null && dataSection2[i].sub_category.length !== 0 && dataSection2[i].service_master !== undefined && dataSection2[i].service_master !== null) {
         section_2.push(data_section_2);
       }
     }
@@ -816,60 +819,73 @@ class LCCCreation extends Component {
       let data_section_3 = {
         "type_of_cost": dataSection3[i].type_of_cost,
         "description": dataSection3[i].description,
-        "price": dataSection3[i].price
+        "price": isNaN(dataSection3[i].price) ? 0 : dataSection3[i].price
       }
-      if (dataSection3[i].type_of_cost !== null && dataSection3[i].type_of_cost.length !== 0) {
+      if (dataSection3[i].type_of_cost !== undefined && dataSection3[i].type_of_cost !== null && dataSection3[i].type_of_cost.length !== 0) {
         section_3.push(data_section_3);
       }
     }
-    let updateDSA = {
-      "dsa_number": dataForm[0],
-      "job_order_number": dataForm[3],
-      "id_po_dsa_doc" : this.state.list_mr_selected.po_dsa_list[0]._id,
-      "no_po_dsa" : this.state.list_mr_selected.po_dsa_list[0].no_po_dsa,
-      "po_for_dsp": this.state.list_mr_selected.po_dsa_list[0].no_po_dsa,
-      "po_dsa_status": this.state.list_mr_selected.po_dsa_status,
-      "po_dsa_status_message": this.state.list_mr_selected.po_dsa_status_message,
-      "po_item_number": dataForm[6],
-      "dimension_volume": dataForm[12],
-      "dimension_weight": dataForm[13],
-      "primary_section": section_1,
-      "second_section": {
-        "po_number": dataForm[63],
-        "service_details": section_2,
-      },
-      "third_section": {
-        "po_number": dataForm[160],
-        "dac_number": dataForm[161],
-        "service_details": section_3
-      },
-      "dsa_total_value": dataForm[197],
-      "current_dsa_status": "DSA CREATED",
-      "dsa_status": [
-        {
-          "dsa_status_name": "DSA",
-          "dsa_status_value": "CREATED",
-          "dsa_status_date": dateNow,
-          "dsa_status_updater": this.state.userEmail,
-          "dsa_status_updater_id": this.state.userId
+    if(this.state.list_mr_selected.po_dsa_list !== undefined && this.state.list_mr_selected.po_dsa_list !== null && this.state.list_mr_selected.po_dsa_list.length !== 0){
+      let updateDSA = {
+        "dsa_number": dataForm[0],
+        "job_order_number": dataForm[3],
+        "id_po_dsa_doc" : this.state.list_mr_selected.po_dsa_list[0]._id,
+        "no_po_dsa" : this.state.list_mr_selected.po_dsa_list[0].no_po_dsa,
+        "po_for_dsp": this.state.list_mr_selected.po_dsa_list[0].no_po_dsa,
+        "po_dsa_status": this.state.list_mr_selected.po_dsa_status,
+        "po_dsa_status_message": this.state.list_mr_selected.po_dsa_status_message,
+        "po_item_number": dataForm[6],
+        "dimension_volume": dataForm[12],
+        "dimension_weight": dataForm[13],
+        "primary_section": section_1,
+        "second_section": {
+          "po_number": dataForm[63],
+          "service_details": section_2,
+        },
+        "third_section": {
+          "po_number": dataForm[160],
+          "dac_number": dataForm[161],
+          "service_details": section_3
+        },
+        "dsa_total_value": dataForm[197],
+        "current_dsa_status": "DSA CREATED",
+        "dsa_status": [
+          {
+            "dsa_status_name": "DSA",
+            "dsa_status_value": "CREATED",
+            "dsa_status_date": dateNow,
+            "dsa_status_updater": this.state.userEmail,
+            "dsa_status_updater_id": this.state.userId
+          }
+        ]
+      };
+      if(updateDSA.primary_section.length === 0){
+        this.setState({ action_status: 'failed', action_message: "Please fill Section 1"});
+      }else{
+        if(updateDSA.primary_section[0].sub_category !== null && updateDSA.primary_section[0].service_master === null){
+          this.setState({ action_status: 'failed', action_message: "Please fill Section 1"});
+        }else{
+          let res = await this.patchDatatoAPINODE('/matreq/dsaCreation/' + _id, { "account_id": "2", "mrCategory" : "Reguler", "submitType" : 0, "data": updateDSA });
+          if (res !== undefined && res.data !== undefined) {
+            this.setState({ action_status: "success", action_message: 'New DSA has been created!' });
+          }else{
+            if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+              if (res.response.data.error.message !== undefined) {
+                this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+              } else {
+                this.setState({ action_status: 'failed', action_message: res.response.data.error });
+              }
+            } else {
+              this.setState({ action_status: 'failed' });
+            }
+          }
         }
-      ]
-    };
-    // console.log('to be posted', JSON.stringify(updateDSA));
-    let res = await this.patchDatatoAPINODE('/matreq/dsaCreation/' + _id, { "account_id": "2", "submitType" : 0, "data": updateDSA });
-    if (res !== undefined && res.data !== undefined) {
-      this.setState({ action_status: "success", action_message: 'New DSA has been created!' });
-    }else{
-      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
-        if (res.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-        } else {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
-        }
-      } else {
-        this.setState({ action_status: 'failed' });
       }
+    }else{
+      this.setState({ action_status: 'failed', action_message: "There is no PO related to this DSA MR" });
     }
+
+    // console.log('to be posted', JSON.stringify(updateDSA));
   }
 
   componentDidMount() {
@@ -909,6 +925,28 @@ class LCCCreation extends Component {
                           />
                         </FormGroup>
                       </Col>
+                      {this.state.dsa_creation_status !== undefined && this.state.dsa_creation_status !== null && (
+                        <Col md="3">
+                          <FormGroup style={{ paddingLeft: "16px" }}>
+                            <Label>&nbsp;</Label>
+                            <Input readOnly value={"DSA Already Created => "+this.state.dsa_creation_status} style={{color : 'rgba(229,57,53 ,1)', fontWeight : '600'}}/>
+                          </FormGroup>
+                        </Col>
+                      )}
+                    </Row>
+                    <Row>
+                      <Col md="3">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>WP ID</Label>
+                          <Input readOnly value={this.state.list_mr_selected !== null && this.state.list_mr_selected.cust_del !== undefined ? this.state.list_mr_selected.cust_del.map(e => e.cd_id).join(", ") : ""}/>
+                        </FormGroup>
+                      </Col>
+                      <Col md="3">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Current Status MR</Label>
+                          <Input readOnly value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.current_mr_status : ""}/>
+                        </FormGroup>
+                      </Col>
                     </Row>
                     <h5>MR INFORMATION</h5>
                     <Row>
@@ -930,10 +968,6 @@ class LCCCreation extends Component {
                     <Row>
                       <Col md="3">
                         <FormGroup style={{ paddingLeft: "16px" }}>
-                          <Label>Job Order Number</Label>
-                          <Input type="text" name="3" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.job_order_number : ""} onChange={this.handleChangeForm} />
-                        </FormGroup>
-                        <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>PO for DSP</Label>
                           <Input type="text" value={this.state.list_mr_selected.po_dsa_list !== undefined ? this.state.list_mr_selected.po_dsa_list.map(pdl => pdl.no_po_dsa).join(", ") : null} readOnly />
                           {this.state.list_mr_selected.po_dsa_status === "INVALID" && (<span style={{color : "rgba(194,24,91 ,1)" , fontWeight : '600'}}>{this.state.list_mr_selected.po_dsa_status_message}</span>)}
@@ -944,10 +978,10 @@ class LCCCreation extends Component {
                           <Label>Network Number</Label>
                           <Input type="text" name="network_number" readOnly value={this.state.network_number !== null ? this.state.network_number : ""} />
                         </FormGroup>
-                        <FormGroup style={{ paddingLeft: "16px" }}>
+                        {/* }<FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>PO Item Number</Label>
                           <Input type="text" name="6" value={this.state.list_mr_selected !== null ? this.state.list_mr_selected.po_item_number : ""} onChange={this.handleChangeForm} />
-                        </FormGroup>
+                        </FormGroup> */}
                       </Col>
                     </Row>
                     <h5>PO UTILIZATION</h5>
@@ -969,6 +1003,23 @@ class LCCCreation extends Component {
                     </Row>
                     <h5>DETAIL</h5>
                     <Row>
+                      <Col md="2">
+                        <h6>Destination</h6>
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>From</Label>
+                          <Input type="text" name="10" value={this.state.list_mr_selected.origin !== undefined ? this.state.list_mr_selected.origin.title + " " + this.state.list_mr_selected.origin.value : ""} onChange={this.handleChangeForm} readOnly />
+                        </FormGroup>
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>To {this.state.list_mr_selected.mr_type !== undefined && (this.state.list_mr_selected.mr_type === "New" || this.state.list_mr_selected.mr_type === null) ? "(Site ID NE)" : "(Warehouse)"}</Label>
+                          <Input type="text" name="11" value={this.state.list_mr_selected.site_info !== undefined && this.state.list_mr_selected.site_info.find(si => si.site_title === "NE") !== undefined ? this.state.list_mr_selected.site_info.find(si => si.site_title === "NE").site_id : null} onChange={this.handleChangeForm} readOnly />
+                        </FormGroup>
+                        {this.state.list_mr_selected.site_info !== undefined ? this.state.list_mr_selected.site_info[1] !== undefined && this.state.list_mr_selected.mr_type !== "Return" && this.state.list_mr_selected.mr_type !== "Relocation" ? (
+                          <FormGroup style={{ paddingLeft: "16px" }}>
+                            <Label>To (Site ID FE)</Label>
+                            <Input type="text" name="11" value={this.state.list_mr_selected.site_info !== undefined && this.state.list_mr_selected.site_info.find(si => si.site_title === "FE") !== undefined ? this.state.list_mr_selected.site_info.find(si => si.site_title === "FE").site_id : null} onChange={this.handleChangeForm} readOnly />
+                          </FormGroup>
+                        ) : (<div></div>) : (<div></div>)}
+                      </Col>
                       <Col md="3">
                         <h6>Destination</h6>
                         <FormGroup style={{ paddingLeft: "16px" }}>
@@ -976,22 +1027,42 @@ class LCCCreation extends Component {
                           <Input type="text" name="10" value={this.state.list_mr_selected.origin !== undefined ? this.state.list_mr_selected.origin.title + " " + this.state.list_mr_selected.origin.value : ""} onChange={this.handleChangeForm} readOnly />
                         </FormGroup>
                         <FormGroup style={{ paddingLeft: "16px" }}>
-                          <Label>To {this.state.list_mr_selected.mr_type !== undefined && (this.state.list_mr_selected.mr_type === "New" || this.state.list_mr_selected.mr_type === null) ? "(Site NE)" : "(Warehouse)"}</Label>
-                          <Input type="text" name="11" value={this.state.destination} onChange={this.handleChangeForm} readOnly />
+                          <Label>To {this.state.list_mr_selected.mr_type !== undefined && (this.state.list_mr_selected.mr_type === "New" || this.state.list_mr_selected.mr_type === null) ? "(Site Name NE)" : "(Warehouse)"}</Label>
+                          <Input type="text" name="11" value={this.state.list_mr_selected.site_info !== undefined && this.state.list_mr_selected.site_info.find(si => si.site_title === "NE") !== undefined ? this.state.list_mr_selected.site_info.find(si => si.site_title === "NE").site_name : null} onChange={this.handleChangeForm} readOnly />
                         </FormGroup>
                         {this.state.list_mr_selected.site_info !== undefined ? this.state.list_mr_selected.site_info[1] !== undefined && this.state.list_mr_selected.mr_type !== "Return" && this.state.list_mr_selected.mr_type !== "Relocation" ? (
                           <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>To (Site FE)</Label>
-                            <Input type="text" name="11" value={this.state.list_mr_selected.site_info !== undefined ? this.state.list_mr_selected.site_info[1].site_id : ""} onChange={this.handleChangeForm} readOnly />
+                            <Label>To (Site Name FE)</Label>
+                            <Input type="text" name="11" value={this.state.list_mr_selected.site_info !== undefined && this.state.list_mr_selected.site_info.find(si => si.site_title === "FE") !== undefined ? this.state.list_mr_selected.site_info.find(si => si.site_title === "FE").site_name : null} onChange={this.handleChangeForm} readOnly />
                           </FormGroup>
                         ) : (<div></div>) : (<div></div>)}
                       </Col>
-                      <Col md="3">
-                        <h6>Dimension</h6>
+                      <Col md="2">
+                        <h6>Destination</h6>
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>From</Label>
+                          <Input type="text" name="10" value={this.state.list_mr_selected.origin !== undefined ? this.state.list_mr_selected.origin.title + " " + this.state.list_mr_selected.origin.value : ""} onChange={this.handleChangeForm} readOnly />
+                        </FormGroup>
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>To {this.state.list_mr_selected.mr_type !== undefined && (this.state.list_mr_selected.mr_type === "New" || this.state.list_mr_selected.mr_type === null) ? "(Coordinate NE)" : "(Warehouse)"}</Label>
+                          <Input type="textarea" name="11" value={this.state.list_mr_selected.site_info !== undefined && this.state.list_mr_selected.site_info.find(si => si.site_title === "NE") !== undefined ? "Lat : "+this.state.list_mr_selected.site_info.find(si => si.site_title === "NE").site_latitude+" ; Long : "+this.state.list_mr_selected.site_info.find(si => si.site_title === "NE").site_longitude : null} onChange={this.handleChangeForm} readOnly />
+                        </FormGroup>
+                        {this.state.list_mr_selected.site_info !== undefined ? this.state.list_mr_selected.site_info[1] !== undefined && this.state.list_mr_selected.mr_type !== "Return" && this.state.list_mr_selected.mr_type !== "Relocation" ? (
+                          <FormGroup style={{ paddingLeft: "16px" }}>
+                            <Label>To (Coordinate FE)</Label>
+                            <Input type="textarea" name="11" value={this.state.list_mr_selected.site_info !== undefined && this.state.list_mr_selected.site_info.find(si => si.site_title === "FE") !== undefined ? "Lat : "+this.state.list_mr_selected.site_info.find(si => si.site_title === "FE").site_latitude+" ; Long : "+this.state.list_mr_selected.site_info.find(si => si.site_title === "FE").site_longitude : null} onChange={this.handleChangeForm} readOnly />
+                          </FormGroup>
+                        ) : (<div></div>) : (<div></div>)}
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col md="2">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Vol (m<sup>3</sup>)</Label>
                           <Input type="number" name="12" onChange={this.handleChangeForm} />
                         </FormGroup>
+                      </Col>
+                      <Col md="2">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Weight (Kg)</Label>
                           <Input type="number" name="13" onChange={this.handleChangeForm} />
@@ -999,7 +1070,7 @@ class LCCCreation extends Component {
                       </Col>
                     </Row>
                     {this.loopSection1(this.state.section_1_form)}
-                    <h5>SECTION 2 (For additional services which are not covered in PO and not available in contract)</h5>
+                    <h5>SECTION 2 (For additional services which are covered in PO and available in contract)</h5>
                     <Row>
                       <Col md="12">
                       {this.loopSection2(this.state.section_2_form)}
@@ -1015,108 +1086,6 @@ class LCCCreation extends Component {
                       </Col>
                     </Row>
                     {this.loopSection3(this.state.section_3_form)}
-                    {/* }<h5>RETURN TO WAREHOUSE DELIVERY</h5>
-                    <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
-                      <Col md="1" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Label>Return Delivery</Label>
-                          <Input type="text" name="182" onChange={this.handleChangeForm} />
-                        </FormGroup>
-                      </Col>
-                      <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Label>Service Master</Label>
-                          <AsyncSelect
-                            cacheOptions
-                            loadOptions={debounce(this.loadOptionsDSA, 500)}
-                            defaultOptions
-                            onChange={this.handleChangeDSA}
-                            name={183}
-                          />
-                        </FormGroup>
-                      </Col>
-                      <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Label>Price</Label>
-                          <Input type="text" name="184" value={this.state.create_dsa_form[184] !== null ? this.state.create_dsa_form[184] : ""} readOnly />
-                        </FormGroup>
-                      </Col>
-                      <Col md="1" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Label>Quantity</Label>
-                          <Input type="number" name="185" value={this.state.create_dsa_form[185] !== null ? this.state.create_dsa_form[185] : ""} onChange={this.handleChangeForm} />
-                        </FormGroup>
-                      </Col>
-                      <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Label>Total Price</Label>
-                          <Input type="text" name="186" value={this.state.create_dsa_form[186] !== null ? this.state.create_dsa_form[186] : ""} readOnly />
-                        </FormGroup>
-                      </Col>
-                      <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Label>Short Text</Label>
-                          <Input type="text" name="187" value={this.state.create_dsa_form[187] !== null ? this.state.create_dsa_form[187] : ""} readOnly />
-                        </FormGroup>
-                      </Col>
-                      <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Label>Long Text</Label>
-                          <Input type="textarea" name="188" rows="1" value={this.state.create_dsa_form[188] !== null ? this.state.create_dsa_form[188] : ""} readOnly />
-                        </FormGroup>
-                      </Col>
-                    </Row>
-                    <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
-                      <Col md="1" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Input type="text" name="189" onChange={this.handleChangeForm} />
-                        </FormGroup>
-                      </Col>
-                      <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <AsyncSelect
-                            cacheOptions
-                            loadOptions={debounce(this.loadOptionsDSA, 500)}
-                            defaultOptions
-                            onChange={this.handleChangeDSA}
-                            name={190}
-                          />
-                        </FormGroup>
-                      </Col>
-                      <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Input type="text" name="191" value={this.state.create_dsa_form[191] !== null ? this.state.create_dsa_form[191] : ""} readOnly />
-                        </FormGroup>
-                      </Col>
-                      <Col md="1" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Input type="number" name="192" value={this.state.create_dsa_form[192] !== null ? this.state.create_dsa_form[192] : ""} onChange={this.handleChangeForm} />
-                        </FormGroup>
-                      </Col>
-                      <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Input type="text" name="193" value={this.state.create_dsa_form[193] !== null ? this.state.create_dsa_form[193] : ""} readOnly />
-                        </FormGroup>
-                      </Col>
-                      <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Input type="text" name="194" value={this.state.create_dsa_form[194] !== null ? this.state.create_dsa_form[194] : ""} readOnly />
-                        </FormGroup>
-                      </Col>
-                      <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                        <FormGroup>
-                          <Input type="textarea" name="195" rows="1" value={this.state.create_dsa_form[195] !== null ? this.state.create_dsa_form[195] : ""} readOnly />
-                        </FormGroup>
-                      </Col>
-                    </Row>
-                    <h5>POD FILE</h5>
-                    <Row style={{ paddingLeft: "16px" }}>
-                      <Col md="3">
-                        <FormGroup>
-                          <Input type="textarea" readOnly value="This field is reserved for POD file" />
-                        </FormGroup>
-                      </Col>
-                    </Row>*/}
                     <h5 style={{ display: "none" }}>DSA UPDATE</h5>
                     <Row style={{ paddingLeft: "16px", display: "none" }}>
                       <Col md="1" style={{ paddingLeft: "16px" }}>
@@ -1139,7 +1108,7 @@ class LCCCreation extends Component {
                       <Col md="2" style={{ margin: "0", paddingLeft: "16px" }}>
                         <FormGroup>
                           <Label>Total Value</Label>
-                          <Input type="text" name="197" value={this.state.create_dsa_form[197] !== null ? this.state.create_dsa_form[197] : ""} readOnly />
+                          <Input type="text" name="197" value={this.state.create_dsa_form[197] !== null ? this.state.create_dsa_form[197].toLocaleString() : ""} readOnly />
                         </FormGroup>
                       </Col>
                     </Row>

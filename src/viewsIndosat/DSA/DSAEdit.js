@@ -11,7 +11,7 @@ const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
-const API_URL_ISAT = 'https://api-dev.isat.pdb.e-dpm.com/isatapi';
+const API_URL_XL = 'https://api-dev.isat.pdb.e-dpm.com/isatapi';
 const usernameXL = 'adminbamidsuper';
 const passwordXL = 'F760qbAg2sml';
 
@@ -66,7 +66,7 @@ class DSACreation extends Component {
 
   async getDataFromAPIXL(url) {
     try {
-      let respond = await axios.get(API_URL_ISAT + url, {
+      let respond = await axios.get(API_URL_XL + url, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
           username: usernameXL,
@@ -694,7 +694,7 @@ class DSACreation extends Component {
       ]
     };
     console.log('to be posted', JSON.stringify(updateDSA));
-    let res = await this.patchDatatoAPINODE('/matreq/dsaCreation/' + _id, { "account_id": "3", "data": updateDSA });
+    let res = await this.patchDatatoAPINODE('/matreq/dsaCreation/' + _id, { "account_id": "2", "data": updateDSA });
     if (res !== undefined) {
       if (res.data !== undefined) {
         successUpdate.push(res.data);

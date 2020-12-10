@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import { Card, CardHeader, CardBody, Row, Col, Button, Input, CardFooter, ModalFooter } from 'reactstrap';
 import { Form, FormGroup, Label } from 'reactstrap';
 import axios from 'axios';
@@ -42,6 +42,7 @@ class DSAEdit extends Component {
       actualModal : false,
       action_status : null,
       action_message : null,
+      reactual_note : " ",
     }
     this.toggleActualModal = this.toggleActualModal.bind(this);
     this.submitDSA = this.submitDSA.bind(this);
@@ -56,6 +57,7 @@ class DSAEdit extends Component {
     this.addListSection3 = this.addListSection3.bind(this);
     this.addListSection2 = this.addListSection2.bind(this);
     this.handleChangeFormSectionNonDetail3 = this.handleChangeFormSectionNonDetail3.bind(this);
+    this.handleChangeReactualNote = this.handleChangeReactualNote.bind(this);
   }
 
   toggleActualModal = () => {
@@ -174,9 +176,9 @@ class DSAEdit extends Component {
     let dataSection3 = dataSec.third_section.service_details;
     let dataForm = this.state.create_dsa_form;
     let totalValue = 0;
-    let totalSec1 = dataSection1.filter(ds => ds.total_price !== undefined && ds.total_price !== null && ds.total_price.length !== 0).reduce((a,b) => a+parseFloat(b.total_price), 0);
-    let totalSec2 = dataSection2.filter(ds => ds.total_price !== undefined && ds.total_price !== null && ds.total_price.length !== 0).reduce((a,b) => a+parseFloat(b.total_price), 0);
-    let totalSec3 = dataSection3.filter(ds => ds.price !== undefined && ds.price !== null && ds.price.length !== 0 ).reduce((a,b) => a+parseFloat(b.price), 0);
+    let totalSec1 = dataSection1.filter(ds => ds.total_price !== undefined && ds.total_price !== null && ds.total_price.length !== 0 && !isNaN(ds.total_price)).reduce((a,b) => a+parseFloat(b.total_price), 0);
+    let totalSec2 = dataSection2.filter(ds => ds.total_price !== undefined && ds.total_price !== null && ds.total_price.length !== 0 && !isNaN(ds.total_price)).reduce((a,b) => a+parseFloat(b.total_price), 0);
+    let totalSec3 = dataSection3.filter(ds => ds.price !== undefined && ds.price !== null && ds.price.length !== 0 && !isNaN(ds.price)).reduce((a,b) => a+parseFloat(b.price), 0);
     totalValue = parseFloat(totalSec1)+parseFloat(totalSec2)+parseFloat(totalSec3);
     dataSec["dsa_total_value"] = totalValue;
     this.setState({data_dsa : dataSec});
@@ -568,25 +570,6 @@ class DSAEdit extends Component {
     this.setState({ data_dsa: dataSec });
   }
 
-  // handleChangeDSASection3 = async (newValue, e) => {
-  //   let dataSec = this.state.data_dsa;
-  //   let idxField = e.name.split(" /// ")
-  //   let idx = idxField[0];
-  //   let field = idxField[1];
-  //   if (field === "service_master") {
-  //     let dataDSA = this.state.list_dsa_selection.find(e => e._id === newValue.value);
-  //     dataSec["primary_section"][parseInt(idx)]['service_master'] = dataDSA.dsa_price_id;
-  //     dataSec["primary_section"][parseInt(idx)]['price'] = dataDSA.price;
-  //     dataSec["primary_section"][parseInt(idx)]['qty'] = 0;
-  //     dataSec["primary_section"][parseInt(idx)]['total_price'] = 0;
-  //     dataSec["primary_section"][parseInt(idx)]['short_text'] = dataDSA.short_text;
-  //     dataSec["primary_section"][parseInt(idx)]['long_text'] = dataDSA.long_text;
-  //   }
-  //   this.setState({ data_dsa: dataSec }, ()=>{
-  //     this.countTotalValue();
-  //   });
-  // };
-
   loopSection3 = () => {
     let section_3 = [];
     for (let i = 0; i < this.state.data_dsa.third_section.service_details.length; i++) {
@@ -673,9 +656,9 @@ class DSAEdit extends Component {
             "category": "MOT",
             "sub_category": dataForm.primary_section[i].sub_category,
             "service_master": dataForm.primary_section[i].service_master,
-            "price": dataForm.primary_section[i].price,
-            "qty": dataForm.primary_section[i].qty,
-            "total_price": dataForm.primary_section[i].total_price,
+            "price": isNaN(dataForm.primary_section[i].price) ? 0 : dataForm.primary_section[i].price,
+            "qty": isNaN(dataForm.primary_section[i].qty) ? 0 : dataForm.primary_section[i].qty,
+            "total_price": isNaN(dataForm.primary_section[i].total_price) ? 0 : dataForm.primary_section[i].total_price,
             "short_text": dataForm.primary_section[i].short_text,
             "long_text": dataForm.primary_section[i].long_text
           }
@@ -683,14 +666,14 @@ class DSAEdit extends Component {
       }
     }
     for(let i = 1; i < dataForm.primary_section.length; i++){
-      if(dataForm.primary_section[i].category !== null){
+      if(dataForm.primary_section[i].category !== undefined && dataForm.primary_section[i].category !== null && dataForm.primary_section[i].service_master !== undefined && dataForm.primary_section[i].service_master !== null){
         section_1.push(
           {
             "category": dataForm.primary_section[i].category,
             "sub_category": dataForm.primary_section[i].category,
             "service_master": dataForm.primary_section[i].service_master,
-            "price": dataForm.primary_section[i].price,
-            "qty": dataForm.primary_section[i].qty,
+            "price": isNaN(dataForm.primary_section[i].price) ? 0 : dataForm.primary_section[i].price,
+            "qty": isNaN(dataForm.primary_section[i].qty) ? 0 : dataForm.primary_section[i].qty,
             "total_price": dataForm.primary_section[i].total_price,
             "short_text": dataForm.primary_section[i].short_text,
             "long_text": dataForm.primary_section[i].long_text
@@ -702,20 +685,22 @@ class DSAEdit extends Component {
     let section_2 = [];
 
     for(let i = 0; i < dataForm.second_section.service_details.length; i++){
-      if(dataForm.second_section.service_details[i].category !== null){
+      if(dataForm.second_section.service_details[i].category !== undefined && dataForm.second_section.service_details[i].category !== null && dataForm.second_section.service_details[i].service_master !== undefined && dataForm.second_section.service_details[i].service_master !== null ){
+
         section_2.push(
           {
             "category": dataForm.second_section.service_details[i].category,
             "sub_category": null,
             "service_master": dataForm.second_section.service_details[i].service_master,
-            "price": dataForm.second_section.service_details[i].price,
-            "qty": dataForm.second_section.service_details[i].qty,
-            "total_price": dataForm.second_section.service_details[i].total_price,
+            "price": isNaN(dataForm.second_section.service_details[i].price) ? 0 : dataForm.second_section.service_details[i].price,
+            "qty": isNaN(dataForm.second_section.service_details[i].qty) ? 0 : dataForm.second_section.service_details[i].qty,
+            "total_price": isNaN(dataForm.second_section.service_details[i].total_price) ? 0 : dataForm.second_section.service_details[i].total_price,
             "short_text": dataForm.second_section.service_details[i].short_text,
             "long_text": dataForm.second_section.service_details[i].long_text
           }
         )
       }
+
     }
 
 
@@ -726,7 +711,7 @@ class DSAEdit extends Component {
           {
             "type_of_cost":  dataForm.third_section.service_details[i].type_of_cost,
             "description": dataForm.third_section.service_details[i].description,
-            "price": dataForm.third_section.service_details[i].price
+            "price": isNaN(dataForm.third_section.service_details[i].price) ? 0 : dataForm.third_section.service_details[i].price,
           }
         )
       }
@@ -753,10 +738,10 @@ class DSAEdit extends Component {
       "dsa_total_value": dataForm.dsa_total_value,
     };
     let fileDocument = new FormData();
+    await fileDocument.append('mrCategory', "Reguler");
     await fileDocument.append('submitType', parseInt(0));
     await fileDocument.append('data', JSON.stringify(updateDSA));
     await fileDocument.append('account_id', "2");
-    console.log('to be posted', this.state.inputan_file);
     let res = await this.patchDatatoAPINODE('/matreq/updateDsa/' + this.props.match.params.id, fileDocument);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
@@ -776,6 +761,7 @@ class DSAEdit extends Component {
 
   updateDSAAcutalize = async (e) => {
     const dataForm = this.state.data_dsa;
+    this.toggleActualModal();
     const newDate = new Date();
     const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
     let successUpdate = [];
@@ -788,9 +774,9 @@ class DSAEdit extends Component {
             "category": "MOT",
             "sub_category": dataForm.primary_section[i].sub_category,
             "service_master": dataForm.primary_section[i].service_master,
-            "price": dataForm.primary_section[i].price,
-            "qty": dataForm.primary_section[i].qty,
-            "total_price": dataForm.primary_section[i].total_price,
+            "price": isNaN(dataForm.primary_section[i].price) ? 0 : dataForm.primary_section[i].price,
+            "qty": isNaN(dataForm.primary_section[i].qty) ? 0 : dataForm.primary_section[i].qty,
+            "total_price": isNaN(dataForm.primary_section[i].total_price) ? 0 : dataForm.primary_section[i].total_price,
             "short_text": dataForm.primary_section[i].short_text,
             "long_text": dataForm.primary_section[i].long_text
           }
@@ -798,14 +784,14 @@ class DSAEdit extends Component {
       }
     }
     for(let i = 1; i < dataForm.primary_section.length; i++){
-      if(dataForm.primary_section[i].category !== null){
+      if(dataForm.primary_section[i].category !== undefined && dataForm.primary_section[i].category !== null && dataForm.primary_section[i].service_master !== undefined && dataForm.primary_section[i].service_master !== null){
         section_1.push(
           {
             "category": dataForm.primary_section[i].category,
             "sub_category": dataForm.primary_section[i].category,
             "service_master": dataForm.primary_section[i].service_master,
-            "price": dataForm.primary_section[i].price,
-            "qty": dataForm.primary_section[i].qty,
+            "price": isNaN(dataForm.primary_section[i].price) ? 0 : dataForm.primary_section[i].price,
+            "qty": isNaN(dataForm.primary_section[i].qty) ? 0 : dataForm.primary_section[i].qty,
             "total_price": dataForm.primary_section[i].total_price,
             "short_text": dataForm.primary_section[i].short_text,
             "long_text": dataForm.primary_section[i].long_text
@@ -817,20 +803,22 @@ class DSAEdit extends Component {
     let section_2 = [];
 
     for(let i = 0; i < dataForm.second_section.service_details.length; i++){
-      if(dataForm.second_section.service_details[i].category !== null){
+      if(dataForm.second_section.service_details[i].category !== undefined && dataForm.second_section.service_details[i].category !== null && dataForm.second_section.service_details[i].service_master !== undefined && dataForm.second_section.service_details[i].service_master !== null ){
+
         section_2.push(
           {
             "category": dataForm.second_section.service_details[i].category,
             "sub_category": null,
             "service_master": dataForm.second_section.service_details[i].service_master,
-            "price": dataForm.second_section.service_details[i].price,
-            "qty": dataForm.second_section.service_details[i].qty,
-            "total_price": dataForm.second_section.service_details[i].total_price,
+            "price": isNaN(dataForm.second_section.service_details[i].price) ? 0 : dataForm.second_section.service_details[i].price,
+            "qty": isNaN(dataForm.second_section.service_details[i].qty) ? 0 : dataForm.second_section.service_details[i].qty,
+            "total_price": isNaN(dataForm.second_section.service_details[i].total_price) ? 0 : dataForm.second_section.service_details[i].total_price,
             "short_text": dataForm.second_section.service_details[i].short_text,
             "long_text": dataForm.second_section.service_details[i].long_text
           }
         )
       }
+
     }
 
 
@@ -841,7 +829,7 @@ class DSAEdit extends Component {
           {
             "type_of_cost":  dataForm.third_section.service_details[i].type_of_cost,
             "description": dataForm.third_section.service_details[i].description,
-            "price": dataForm.third_section.service_details[i].price
+            "price": isNaN(dataForm.third_section.service_details[i].price) ? 0 : dataForm.third_section.service_details[i].price,
           }
         )
       }
@@ -872,7 +860,10 @@ class DSAEdit extends Component {
     await fileDocument.append('data', JSON.stringify(updateDSA));
     await fileDocument.append('dsa_documents', this.state.inputan_file);
     await fileDocument.append('account_id', "2");
-    console.log('to be posted', this.state.inputan_file);
+    await fileDocument.append('mrCategory', "Reguler");
+    if(dataForm.dsa_status.find(ds => ds.dsa_status_value === "REJECTED") !== undefined){
+      await fileDocument.append('updateNote', this.state.reactual_note)
+    }
     let res = await this.patchDatatoAPINODE('/matreq/updateDsa/' + this.props.match.params.id, fileDocument);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
@@ -1013,7 +1004,7 @@ class DSAEdit extends Component {
       return [];
     } else {
       let dsa_list = [];
-      const getDSA = await this.getDataFromAPIXL('/dsa_price_sorted?where={"dsa_price_id":{"$regex":"' + inputValue + '", "$options":"i"}}');
+      const getDSA = await this.getDataFromAPIXL('/dsa_price_sorted?where={"dsa_price_id":{"$regex":"' + inputValue + '", "$options":"i"}, "vendor_code_actual" :"'+this.state.data_dsa.dsp_company_code+'"}');
       if (getDSA !== undefined && getDSA.data !== undefined) {
         this.setState({ list_dsa_selection: getDSA.data._items }, () =>
           getDSA.data._items.map(dsa =>
@@ -1068,6 +1059,11 @@ class DSAEdit extends Component {
     );
   };
 
+  handleChangeReactualNote(e){
+    const value = e.target.value;
+    this.setState({reactual_note : value});
+  }
+
   render() {
     return (
       <div className="animated fadeIn" style={{ overflow: "scroll" }}>
@@ -1113,10 +1109,6 @@ class DSAEdit extends Component {
                       </Row>
                       <Row>
                         <Col md="3">
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>Job Order Number</Label>
-                            <Input type="text" name="job_order_number" defaultValue={this.state.data_dsa.job_order_number} onChange={this.handleChangeFormSectionLevel2}/>
-                          </FormGroup>
                           <FormGroup style={{ paddingLeft: "16px" }}>
                             <Label>PO for DSP</Label>
                             <AsyncSelect
@@ -1176,17 +1168,6 @@ class DSAEdit extends Component {
                             </FormGroup>
                           ) : (<div></div>) : (<div></div>)}
                         </Col>
-                        <Col md="3">
-                          <h6>Dimension</h6>
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>Vol (m<sup>3</sup>)</Label>
-                            <Input type="dimension_volume" name="12" defaultValue={this.state.data_dsa.dimension_volume} onChange={this.handleChangeFormSectionLevel2}/>
-                          </FormGroup>
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>Weight (Kg)</Label>
-                            <Input type="dimension_weight" name="13" defaultValue={this.state.data_dsa.dimension_weight} onChange={this.handleChangeFormSectionLevel2}/>
-                          </FormGroup>
-                        </Col>
                       </Row>
                       <Row>
                         <Col md="6">
@@ -1196,8 +1177,22 @@ class DSAEdit extends Component {
                           </FormGroup>
                         </Col>
                       </Row>
+                      <Row>
+                        <Col md="2">
+                          <FormGroup style={{ paddingLeft: "16px" }}>
+                            <Label>Vol (m<sup>3</sup>)</Label>
+                            <Input type="text" name="dimension_volume" defaultValue={this.state.data_dsa.dimension_volume} onChange={this.handleChangeFormSectionLevel2}/>
+                          </FormGroup>
+                        </Col>
+                        <Col md="2">
+                          <FormGroup style={{ paddingLeft: "16px" }}>
+                            <Label>Weight (Kg)</Label>
+                            <Input type="text" name="dimension_weight" defaultValue={this.state.data_dsa.dimension_weight} onChange={this.handleChangeFormSectionLevel2}/>
+                          </FormGroup>
+                        </Col>
+                      </Row>
                       {this.loopSection1()}
-                      <h5>SECTION 2 (For additional services which are not covered in PO and not available in contract)</h5>
+                      <h5>SECTION 2 (For additional services which are covered in PO and available in contract)</h5>
                       {this.loopSection2()}
                       <h5>SECTION 3 (For additional services which are not covered in PO and not available in contract)</h5>
                       <Row>
@@ -1210,88 +1205,6 @@ class DSAEdit extends Component {
                       </Row>
                       {this.loopSection3()}
                       <div></div>
-                      {/* }<h5>RETURN TO WAREHOUSE DELIVERY</h5>
-                      <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
-                        <Col md="1" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Label>Return Delivery</Label>
-                            <Input type="text" onChange={this.handleChangeForm} />
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Label>Service Master</Label>
-                            <Input type="text" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Label>Price</Label>
-                            <Input type="text" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="1" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Label>Quantity</Label>
-                            <Input type="text" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Label>Total Price</Label>
-                            <Input type="text" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Label>Short Text</Label>
-                            <Input type="text" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Label>Long Text</Label>
-                            <Input type="textarea" rows="1" readOnly />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                      <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
-                        <Col md="1" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Input type="text" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Input type="text" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Input type="text" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="1" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Input type="text" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Input type="text" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Input type="text" readOnly />
-                          </FormGroup>
-                        </Col>
-                        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Input type="textarea" rows="1" readOnly />
-                          </FormGroup>
-                        </Col>
-                      </Row> */}
                       <h5 style={{ display: "none" }}>DSA UPDATE</h5>
                       <Row style={{ paddingLeft: "16px", display: "none" }}>
                         <Col md="1" style={{ paddingLeft: "16px" }}>
@@ -1314,7 +1227,7 @@ class DSAEdit extends Component {
                         <Col md="2" style={{ margin: "0", paddingLeft: "16px" }}>
                           <FormGroup>
                             <Label>Total Value</Label>
-                            <Input type="text" readOnly value={this.state.data_dsa.dsa_total_value} />
+                            <Input type="text" readOnly value={this.state.data_dsa.dsa_total_value.toLocaleString()} />
                           </FormGroup>
                         </Col>
                       </Row>
@@ -1339,6 +1252,18 @@ class DSAEdit extends Component {
           <div>
             <table>
               <tbody>
+                {(this.state.data_dsa !== null && this.state.data_dsa.dsa_status !== undefined && this.state.data_dsa.dsa_status.find(ds => ds.dsa_status_value === "REJECTED") !== undefined) && (
+                  <Fragment>
+                  <tr>
+                    <td>Reactual Note</td>
+                  </tr>
+                  <tr>
+                    <td colSpan="3">
+                      <Input type="textarea" style={{marginBottom : '20px'}} onChange={this.handleChangeReactualNote} value={this.state.reactual_note} />
+                    </td>
+                  </tr>
+                  </Fragment>
+                )}
                 <tr>
                   <td colSpan="3">Please upload the document</td>
                 </tr>

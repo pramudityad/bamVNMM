@@ -8,7 +8,8 @@ import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
 import ActionType from '../../redux/reducer/globalActionType';
-import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction';
+import {getDatafromAPIISAT} from '../../helper/asyncFunction';
 
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
@@ -91,7 +92,7 @@ class MRNAList extends Component {
     this.state.filter_list[2] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
     this.state.filter_list[3] !== "" && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
     this.state.filter_list[4] !== "" && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
-    filter_array.push('"$or" : [{"current_mr_status":"PLANTSPEC NOT ASSIGNED"}, {"no_plantspec":null}]');
+    filter_array.push('"$and" : [{"$or" : [{"current_mr_status":"PLANTSPEC NOT ASSIGNED"}, {"no_plantspec":null}]}, {"current_mr_status": {"$ne" :"MR CANCELED"}}] ');
     this.state.filter_list[6] !== "" && (filter_array.push('"site_info.site_region":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
     this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
     this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
@@ -101,6 +102,7 @@ class MRNAList extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.state.filter_list[12] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[12] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
+    filter_array.push('"$and" : [{"mr_delivery_type_code" : {"$ne" : "A1" }}, {"mr_delivery_type_code" : {"$ne" : "A2" }}, {"mr_delivery_type_code" : {"$ne" : "B1" }}, {"mr_delivery_type_code" : {"$ne" : "C1" }}]')
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       console.log("MR List Sorted", res);
@@ -112,7 +114,8 @@ class MRNAList extends Component {
     })
   }
 
-  getAllMR() {
+  async getAllMR() {
+    let mrList = [];
     let filter_array = [];
     this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
     this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
@@ -129,14 +132,17 @@ class MRNAList extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.state.filter_list[12] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[12] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
+    filter_array.push('"$and" : [{"mr_delivery_type_code" : {"$ne" : "A1" }}, {"mr_delivery_type_code" : {"$ne" : "A2" }}, {"mr_delivery_type_code" : {"$ne" : "B1" }}, {"mr_delivery_type_code" : {"$ne" : "C1" }}]')
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
-      console.log("MR List All", res);
-      if (res.data !== undefined) {
-        const items = res.data.data;
-        this.setState({ mr_all: items });
-      }
-    })
+    let res = await this.getDataFromAPINODE('/matreq?srt=_id:-1&noPg=1&q=' + whereAnd)
+    if (res.data !== undefined) {
+      const items = res.data.data;
+      mrList = res.data.data;
+      return mrList;
+      // this.setState({ mr_all: items });
+    }else{
+      return [];
+    }
   }
 
   numToSSColumn(num) {
@@ -150,26 +156,65 @@ class MRNAList extends Component {
     return s || undefined;
   }
 
-  async downloadMRlist() {
-    const wb = new Excel.Workbook();
-    const ws = wb.addWorksheet();
 
-    const allMR = this.state.mr_all;
-
-    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Created By", "Updated On", "Created On"];
-    ws.addRow(headerRow);
-
-    for (let i = 1; i < headerRow.length + 1; i++) {
-      ws.getCell(this.numToSSColumn(i) + '1').font = { size: 11, bold: true };
+    async getDataCDID(data_mr){
+      let arrayCD = [];
+      arrayCD = data_mr.map( e => e.cust_del).reduce((l, n) => l.concat(n), []);
+      let array_cd_id = [...new Set(arrayCD.map(({ cd_id }) => cd_id))];
+      let dataCDID =[];
+      let getNumberPage = Math.ceil(array_cd_id.length / 20);
+      for(let i = 0 ; i < getNumberPage; i++){
+        let DataPaginationWPID = array_cd_id.slice(i * 20, (i+1)*20);
+        let array_in_cdid = '"'+DataPaginationWPID.join('", "')+'"';
+        let projection = '&projection={"WP_ID" : 1, "C1043_WBS_HW" : 1, "C1023_WBS_HWAC" : 1, "C1033_WBS_LCM" : 1, "C1003_WBS_PNRO" : 1, "C1053_WBS_SW" : 1, "C1063_C1053_WBS_PS" : 1, "C1066_C1053_WBS_ANC" : 1, "C1034_WBS_PowHW_Site_Basis" : 1, "C1035_WBS_PowLCM_Site_Basis" : 1, "C1036_WBS_Kathrein" : 1}'
+        const getWPID = await getDatafromAPIISAT('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}'+projection, this.state.tokenUser);
+        if(getWPID !== undefined && getWPID.data !== undefined) {
+          dataCDID = dataCDID.concat(getWPID.data._items);
+        }
+      }
+      return dataCDID;
     }
 
-    for (let i = 0; i < allMR.length; i++) {
-      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0].site_id, allMR[i].site_info[0].site_name, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
-    }
+    async downloadMRlist() {
+      const wb = new Excel.Workbook();
+      const ws = wb.addWorksheet();
 
-    const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'MR List.xlsx');
-  }
+      const allMR = await this.getAllMR();
+
+      let dataCDID = [];
+      if(allMR.cust_del !== undefined){
+        dataCDID = await this.getDataCDID(allMR);
+      }
+
+      let headerRow = ["MR ID", "MR MITT ID","MR Type","MR Delivery Type", "Project Name", "CD ID", "Project PO", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "MR MITT Created On", "MR MITT Created By","Updated On", "Created On", "WBS HW", "WBS HWAC (License)", "WBS LCM", "WBS PNRO", "WBS SW", "WBS PS", "WBS ANC"];
+      ws.addRow(headerRow);
+
+      for (let i = 1; i < headerRow.length + 1; i++) {
+        ws.getCell(this.numToSSColumn(i) + '1').font = { size: 11, bold: true };
+      }
+
+      for (let i = 0; i < allMR.length; i++) {
+        let dataCDIDIdx = {};
+        if(allMR[i].cust_del[0] !== undefined){
+          dataCDIDIdx = dataCDID.find(dc => dc.WP_ID === allMR[i].cust_del[0].cd_id);
+          if(dataCDIDIdx === undefined){
+            dataCDIDIdx = {};
+          }
+        }
+
+        const creator_mr_mitt = allMR[i].mr_status.find(e => e.mr_status_name === "PLANTSPEC" && e.mr_status_value === "NOT ASSIGNED");
+        ws.addRow([allMR[i].mr_id, allMR[i].mr_mitt_no, allMR[i].mr_type, allMR[i].mr_delivery_type, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id, allMR[i].project_po, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, new Date(allMR[i].eta), creator_mr_mitt !== undefined ? new Date(creator_mr_mitt.mr_status_date) : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mr_status_updater : null, new Date(allMR[i].updated_on), new Date(allMR[i].created_on), dataCDIDIdx.C1043_WBS_HW, dataCDIDIdx.C1023_WBS_HWAC, dataCDIDIdx.C1033_WBS_LCM, dataCDIDIdx.C1003_WBS_PNRO, dataCDIDIdx.C1053_WBS_SW, dataCDIDIdx.C1063_C1053_WBS_PS, dataCDIDIdx.C1066_C1053_WBS_ANC]);
+        const getRowLast = ws.lastRow._number;
+        ws.getCell("M"+getRowLast).numFmt = "YYYY-MM-DD";
+        ws.getCell("Q"+getRowLast).numFmt = "YYYY-MM-DD";
+        ws.getCell("P"+getRowLast).numFmt = "YYYY-MM-DD";
+        if(creator_mr_mitt !== undefined && creator_mr_mitt !== null){
+          ws.getCell("N"+getRowLast).numFmt = "YYYY-MM-DD";
+        }
+      }
+      const allocexport = await wb.xlsx.writeBuffer();
+      saveAs(new Blob([allocexport]), 'MR List PlantSpec Not Assigned.xlsx');
+    }
 
   componentDidMount() {
     this.props.SidebarMinimizer(true);
@@ -309,7 +354,7 @@ class MRNAList extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries</small>
+                  <small>Showing {this.state.mr_list.length} entries from {this.state.totalData} data</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}

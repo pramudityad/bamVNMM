@@ -44,6 +44,8 @@ class CreateLCC extends Component {
       creation_ssow_form: [],
       modal_loading: false,
       inputan_file:null,
+      action_status : null,
+      action_message : null,
     };
     // bind
     this.handleInput = this.handleInput.bind(this);

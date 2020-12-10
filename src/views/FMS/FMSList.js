@@ -17,9 +17,18 @@ import Pagination from "react-js-pagination";
 import Excel from "exceljs";
 import { saveAs } from "file-saver";
 import { connect } from "react-redux";
-import { getDatafromAPINODE } from "../../helper/asyncFunction";
+import { getDatafromAPINODE, postDatatoAPINODE } from "../../helper/asyncFunction";
 
-const arrayFilter = ["no_pod", "cust_del.cd_id", "created_by", "created_on"]
+const DefaultNotif = React.lazy(() =>
+  import("../../views/DefaultView/DefaultNotif")
+);
+
+const arrayFilter = ["cust_del.cd_id", "no_pod", "site_info.site_id", "site_info.site_name", "status", "status_erisite", "created_by", "created_on"];
+
+const tokenErisite = "WU5IOFV5eUFZT0NaWU4yMXJkcUpKZ2V0UkhzYTpoUDgxZUkyRjRfTjZOOXlNZXJEWG5RTUJvZFlh";
+const urlErisiteLogin = "https://api-nonprod.erisite.ericsson.net/token";
+
+const urlErisiteStatus = "https://api-nonprod.erisite.ericsson.net/sb-erisite/1.0.0/api/activities/fullstructure?SystemRecordID="
 
 class ListFMS extends Component {
   constructor(props) {
@@ -31,6 +40,8 @@ class ListFMS extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      action_status : null,
+      action_message : null,
       all_data: [],
       filter_list : {},
       prevPage: 0,
@@ -61,6 +72,8 @@ class ListFMS extends Component {
     let filter_array = [];
     (this.state.filter_list["no_pod"] !== null && this.state.filter_list["no_pod"] !== undefined) && (filter_array.push('"no_pod":{"$regex" : "' + this.state.filter_list["no_pod"] + '", "$options" : "i"}'));
     (this.state.filter_list["cust_del.cd_id"] !== null && this.state.filter_list["cust_del.cd_id"] !== undefined) && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list["cust_del.cd_id"] + '", "$options" : "i"}'));
+    (this.state.filter_list["site_info.site_id"] !== null && this.state.filter_list["site_info.site_id"] !== undefined) && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list["site_info.site_id"] + '", "$options" : "i"}'));
+    (this.state.filter_list["site_info.site_name"] !== null && this.state.filter_list["site_info.site_name"] !== undefined) && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list["site_info.site_name"] + '", "$options" : "i"}'));
     (this.state.filter_list["created_by"] !== null && this.state.filter_list["created_by"] !== undefined) && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list["created_by"] + '", "$options" : "i"}'));
     (this.state.filter_list["created_on"] !== null && this.state.filter_list["created_on"] !== undefined) && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list["created_on"] + '", "$options" : "i"}'));
     let whereAnd = '{' + filter_array.join(',') + '}';
@@ -116,82 +129,63 @@ class ListFMS extends Component {
     // this.getAllMR();
   }
 
+  async getPRTListAll() {
+    let dataResult = [];
+    const page = this.state.activePage;
+    const maxPage = this.state.perPage;
+    let filter_array = [];
+    (this.state.filter_list["no_pod"] !== null && this.state.filter_list["no_pod"] !== undefined) && (filter_array.push('"no_pod":{"$regex" : "' + this.state.filter_list["no_pod"] + '", "$options" : "i"}'));
+    (this.state.filter_list["cust_del.cd_id"] !== null && this.state.filter_list["cust_del.cd_id"] !== undefined) && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list["cust_del.cd_id"] + '", "$options" : "i"}'));
+    (this.state.filter_list["site_info.site_id"] !== null && this.state.filter_list["site_info.site_id"] !== undefined) && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list["site_info.site_id"] + '", "$options" : "i"}'));
+    (this.state.filter_list["site_info.site_name"] !== null && this.state.filter_list["site_info.site_name"] !== undefined) && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list["site_info.site_name"] + '", "$options" : "i"}'));
+    (this.state.filter_list["created_by"] !== null && this.state.filter_list["created_by"] !== undefined) && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list["created_by"] + '", "$options" : "i"}'));
+    (this.state.filter_list["created_on"] !== null && this.state.filter_list["created_on"] !== undefined) && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list["created_on"] + '", "$options" : "i"}'));
+    let whereAnd = '{' + filter_array.join(',') + '}';
+    const res = await getDatafromAPINODE("/erisitePodFile?noPg=1&srt=_id:-1&q=" + whereAnd + '&lmt=' + maxPage + '&pg=' + page,this.props.dataLogin.token);
+    if (res !== undefined && res.data !== undefined) {
+      dataResult = res.data.data;
+    }
+    return dataResult;
+  }
+
   downloadAll = async () => {
     let allAssignmentList = this.state.all_data;
 
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
+    let dataPOD = await this.getPRTListAll();
+
     let headerRow = [
-      "assignment_id",
-      "project",
-      "sow_type",
-      "created_based",
-      "vendor_code",
-      "vendor_name",
-      "payment_terms",
-      "identifier",
-      "ssow_rbs_id_1",
-      "ssow_rbs_activity_number_1",
-      "ssow_rbs_unit_1",
-      "ssow_rbs_quantity_1",
-      "ssow_rbs_id_2",
-      "ssow_rbs_activity_number_2",
-      "ssow_rbs_unit_2",
-      "ssow_rbs_quantity_2",
-      "ssow_rbs_id_3",
-      "ssow_rbs_activity_number_3",
-      "ssow_rbs_unit_3",
-      "ssow_rbs_quantity_3",
-      "ssow_rbs_id_4",
-      "ssow_rbs_activity_number_4",
-      "ssow_rbs_unit_4",
-      "ssow_rbs_quantity_4",
-      "ssow_rbs_id_5",
-      "ssow_rbs_activity_number_5",
-      "ssow_rbs_unit_5",
-      "ssow_rbs_quantity_5",
-      "ssow_trm_id_1",
-      "ssow_trm_activity_number_1",
-      "ssow_trm_unit_1",
-      "ssow_trm_quantity_1",
-      "ssow_trm_id_2",
-      "ssow_trm_activity_number_2",
-      "ssow_trm_unit_2",
-      "ssow_trm_quantity_2",
-      "ssow_trm_id_3",
-      "ssow_trm_activity_number_3",
-      "ssow_trm_unit_3",
-      "ssow_trm_quantity_3",
-      "ssow_trm_id_4",
-      "ssow_trm_activity_number_4",
-      "ssow_trm_unit_4",
-      "ssow_trm_quantity_4",
-      "ssow_trm_id_5",
-      "ssow_trm_activity_number_5",
-      "ssow_trm_unit_5",
-      "ssow_trm_quantity_5",
+      "POD ID", "WP ID", "WP ID ERISITE", "Tower ID", "Tower Name", "STATUS", "PROJECT", "MILESTONE", "POD STATUS", "WP ID SYNC STATUS", "WP ID ERISITE STATUS", "CREATED BY", "CREATED ON"
     ];
     ws.addRow(headerRow);
 
-    // for (let i = 0; i < allAssignmentList.length; i++) {
-    //   let rowAdded = [allAssignmentList[i].Assignment_No, allAssignmentList[i].Project, allAssignmentList[i].SOW_Type, "tower_id", allAssignmentList[i].Vendor_Code_Number, allAssignmentList[i].Vendor_Name, allAssignmentList[i].Payment_Terms, allAssignmentList[i].Site_ID];
-    //   let rbs_ssow = allAssignmentList[i].SSOW_List.filter(item => item.sow_type === "RBS");
-    //   for (let j = 0; j < rbs_ssow.length; j++) {
-    //     rowAdded.push(rbs_ssow[j].ssow_id, rbs_ssow[j].ssow_activity_number, rbs_ssow[j].ssow_unit, rbs_ssow[j].ssow_qty);
-    //   }
-    //   for (let k = 0; k < 5 - rbs_ssow.length; k++) {
-    //     rowAdded.push("", "", "", "");
-    //   }
-    //   let trm_ssow = allAssignmentList[i].SSOW_List.filter(item => item.sow_type === "TRM");
-    //   for (let j = 0; j < trm_ssow.length; j++) {
-    //     rowAdded.push(trm_ssow[j].ssow_id, trm_ssow[j].ssow_activity_number, trm_ssow[j].ssow_unit, trm_ssow[j].ssow_qty);
-    //   }
-    //   ws.addRow(rowAdded);
-    // }
+    for(let i = 0; i < dataPOD.length; i++ ){
+      for(let j = 0; j < dataPOD[i].cust_del.length; j++ ){
+        ws.addRow([dataPOD[i].no_pod, dataPOD[i].cust_del[j].cd_id, dataPOD[i].cust_del[j].wp_id_erisite, dataPOD[i].site_info !== undefined ? dataPOD[i].site_info.map(e => e.site_id).join(", ") : null,
+        dataPOD[i].site_info !== undefined ? dataPOD[i].site_info.map(e => e.site_name).join(", ") : null, dataPOD[i].status, dataPOD[i].project_name, dataPOD[i].ms_target, dataPOD[i].sync_status !== null && dataPOD[i].sync_status !== undefined ? dataPOD[i].sync_status : dataPOD[i].status, dataPOD[i].cust_del[j].sync_status, dataPOD[i].cust_del[j].status_erisite, dataPOD[i].created_by, dataPOD[i].created_on]);
+      }
+    }
 
     const allocexport = await wb.xlsx.writeBuffer();
     saveAs(new Blob([allocexport]), "POD List.xlsx");
+  };
+
+  syncErisitePOD = async () => {
+    this.setState({action_status : null, action_message: null});
+    const dataPODList = this.state.all_data;
+    let dataPost = dataPODList.filter(dpl =>  dpl.status === "COMPLETE TO SYNC").map(dpl => dpl._id);
+    if(dataPost.length === 0){
+      this.setState({action_status : 'success', action_message : 'Cannot sync erisite status cause there are no POD already Sync to erisite'});
+    }else{
+      const post = await postDatatoAPINODE('/erisitePodFile/resyncErisiteStatus', {podId : dataPost} ,this.props.dataLogin.token);
+      if(post !== undefined && post.data !== undefined){
+        this.setState({action_status : 'success'});
+      }else{
+        this.setState({action_status : 'failed'})
+      }
+    }
   };
 
   loading = () => (
@@ -206,6 +200,10 @@ class ListFMS extends Component {
 
     return (
       <div className="animated fadeIn">
+        <DefaultNotif
+          actionMessage={this.state.action_message}
+          actionStatus={this.state.action_status}
+        />
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -226,30 +224,11 @@ class ListFMS extends Component {
                     Create POD
                   </Button>
                 </Link>
-                {/* <Link to={"/bulk-assignment-creation"}>
-                  <Button
-                    color="success"
-                    style={{ float: "right", marginRight: "8px" }}
-                    size="sm"
-                  >
-                    <i
-                      className="fa fa-plus-square"
-                      style={{ marginRight: "8px" }}
-                    ></i>
-                    Create PRT Bulk
-                  </Button>
-                </Link> */}
-                <Button
-                  style={downloadAssignment}
-                  outline
-                  color="success"
-                  size="sm"
-                  onClick={this.downloadAll}
-                >
-                  <i
-                    className="fa fa-download"
-                    style={{ marginRight: "8px" }}
-                  ></i>
+                <Button style={{ float: "right",marginRight: "8px" }} size="sm" outline color="primary" size="sm" onClick={this.syncErisitePOD}>
+                  <i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Erisite Sync Status
+                </Button>
+                <Button style={downloadAssignment} outline color="success" size="sm" onClick={this.downloadAll} >
+                  <i className="fa fa-download" style={{ marginRight: "8px" }} ></i>
                   Download POD List
                 </Button>
                 {/* <Button style={downloadAssignment} outline color="success" onClick={this.downloadAllAssignment} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download POD List</Button> */}
@@ -258,11 +237,16 @@ class ListFMS extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2" style={{ verticalAlign: "middle" }}>
+                      <th style={{ verticalAlign: "middle" }}>
                         Action
                       </th>
                       <th>POD ID</th>
-                      <th>WP ID</th>
+                      <th>Tower ID</th>
+                      <th>Tower Name</th>
+                      <th>Status</th>
+                      <th>Erisite Status</th>
+                      <th>Milestone</th>
+                      <th>Project</th>
                       <th>Created By</th>
                       <th>Created On</th>
                     </tr>
@@ -275,6 +259,7 @@ class ListFMS extends Component {
                       </tr>
                     )}
                     {this.state.all_data.map((list, i) => (
+                      <React.Fragment>
                       <tr key={i}>
                         <td>
                           <Link to={"/pod-list/detail/" + list._id}>
@@ -289,10 +274,30 @@ class ListFMS extends Component {
                           </Link>
                         </td>
                         <td>{list.no_pod}</td>
-                        <td>{list.cust_del.map(e => e.cd_id).join(", ")}</td>
+                        <td>{list.site_info !== undefined && list.site_info.map(e => e.site_id).join(", ")}</td>
+                        <td>{list.site_info !== undefined && list.site_info.map(e => e.site_name).join(", ")}</td>
+                        <td>{list.sync_status !== undefined && list.sync_status !== null ? list.sync_status : list.status}</td>
+                        <td>{list.status_erisite}</td>
+                        <td>{list.ms_target}</td>
+                        <td>{list.project_name}</td>
                         <td>{list.created_by}</td>
                         <td>{list.created_on}</td>
                       </tr>
+                      {list.cust_del.map((ecd,i) =>
+                        <tr style={{backgroundColor: 'rgba(88,153,217,0.3)'}}>
+                          {i === 0 && (
+                            <td rowSpan={list.cust_del.length}>WP ID</td>
+                          )}
+                          <td colSpan="3" style={{textAlign : 'left'}}>{ecd.cd_id}</td>
+                          <td>{ecd.sync_status}</td>
+                          <td>{ecd.status_erisite}</td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                      )}
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </Table>

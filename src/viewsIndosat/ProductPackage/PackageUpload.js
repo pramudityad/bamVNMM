@@ -845,6 +845,35 @@ class PackageUpload extends React.Component {
     saveAs(new Blob([MaterialFormat]), 'Technical Uploader Template.xlsx');
   }
 
+  exportFormatTechnicalMW = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPrint = this.state.packageSelected;
+    console.log('pp selected', dataPrint);
+
+    let rowArray = ["General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "General Info", "Service", "Service", "Service", "Service"];
+    let typeArray = ["region", "region_fe", "program", "batch", "site_id", "site_name", "ne_id", "site_id_fe", "site_name_fe", "fe_id", "new_config", "service_product_id", "service_product_name", "service_product_id_fe", "service_product_name_fe"];
+
+    let dataPrintPP = dataPrint.filter(e => e.product_type !== "SVC");
+
+    typeArray = typeArray.concat(dataPrintPP.map(pp => pp.pp_id + " /// " + pp.product_name));
+    rowArray = rowArray.concat(dataPrintPP.map(pp => pp.product_type));
+
+    ws.addRow(rowArray);
+    ws.addRow(typeArray);
+
+    const ws2 = wb.addWorksheet();
+
+    let dataPrintSVC = dataPrint.filter(e => e.product_type === "SVC");
+
+    ws2.addRow(["service_product_id", "service_product_name"]);
+    dataPrintSVC.map(pp => ws2.addRow([pp.pp_id, pp.product_name]));
+
+    const MaterialFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MaterialFormat]), 'Technical Uploader Template.xlsx');
+  }
+
   exportFormatTechnicalVertical = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -898,6 +927,45 @@ class PackageUpload extends React.Component {
     saveAs(new Blob([BundleMaterial]), 'Product Package Material Uploader Template.xlsx');
   }
 
+  exportFormatPSDismantle = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPrint = this.state.packageSelected;
+
+    let headArray = ["bundle_id", "bundle_name", "qty", "category"];
+    let confArray = ["bundle_id", "bundle_name", "qty", "TWH"];
+    let conf2Array = ["bundle_id", "bundle_name", "qty", "TST"];
+
+    ws.addRow(headArray);
+    ws.addRow(confArray);
+    ws.addRow(conf2Array);
+
+    const ws2 = wb.addWorksheet();
+
+    ws2.addRow(["bundle_id", "bundle_name"]);
+    dataPrint.map(pp => ws2.addRow([pp.pp_id, pp.product_name]));
+
+    const MaterialFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MaterialFormat]), 'PS Dismantle Uploader Template.xlsx');
+  }
+
+  exportFormatPSWarehouse = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPrint = this.state.packageSelected;
+
+    let headArray = ["bundle_id", "bundle_name", "qty"];
+
+    ws.addRow(headArray);
+
+    dataPrint.map(pp => ws.addRow([pp.pp_id, pp.product_name]));
+
+    const MaterialFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MaterialFormat]), 'PS Warehouse Uploader Template.xlsx');
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -917,6 +985,9 @@ class PackageUpload extends React.Component {
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatBundleMaterial}>> Bundle Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatTechnical} disabled={this.state.packageChecked.length === 0}>> Tehnical Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatTechnicalMW} disabled={this.state.packageChecked.length === 0}>> Tehnical Transmission Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatPSDismantle} disabled={this.state.packageChecked.length === 0}>> PS Dismantle Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatPSWarehouse} disabled={this.state.packageChecked.length === 0}>> PS Warehouse Template</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>

@@ -93,6 +93,7 @@ class FMSupload extends Component {
       ],
       createModal: false,
       form_fms : {},
+      site_selected : [],
     };
 
     this.loadOptionsCDID = this.loadOptionsCDID.bind(this);
@@ -143,11 +144,13 @@ class FMSupload extends Component {
     } else {
       let wp_id_list = [];
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
-      const getWPID = await getDatafromAPIEXEL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}, "CD_Info_Project_Name" : "'+this.state.project_name_selected+'"}');
+      const getWPID = await getDatafromAPIEXEL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}, "CD_Info_Project_Name" : "'+this.state.project_name_selected+'"}&projection={"WP_ID":1,"WP_Name":1,"CD_Info_Project_Name":1,"CD_Info_Project":1,"Site_Info_SiteID_NE":1,"Tower_Info_TowerID_NE":1,"Tower_Info_TowerID_NE":1,"Tower_Info_TowerName_NE":1,"Tower_Info_Province_NE":1, "WP_ID_Erisite":1}');
       if(getWPID !== undefined && getWPID.data !== undefined) {
         this.setState({list_cd_id : getWPID.data._items});
         getWPID.data._items.map(wp =>
-          wp_id_list.push({'value' : wp.WP_ID , 'label' : wp.WP_ID +" ( "+wp.WP_Name+" )", 'project' : wp.CD_Info_Project_Name, 'id' : wp._id}))
+          wp_id_list.push({'value' : wp.WP_ID , 'label' : wp.WP_ID +" ( "+wp.WP_Name+" )", 'project' : wp.CD_Info_Project_Name, 'id' : wp._id, 'WP_ID_Erisite' : wp.WP_ID_Erisite,
+          'Site_Info_SiteID_NE': null, 'Site_Info_SiteID_NE_Actual': wp.Tower_Info_TowerID_NE, 'Site_Info_SiteID_Value_NE': wp.Tower_Info_TowerID_NE, 'Site_Info_SiteName_NE_Actual': wp.Tower_Info_TowerName_NE, 'Activity_Region': wp.Tower_Info_Province_NE
+        }))
       }
       this.setState({project_name : wp_id_list[0].project})
       return wp_id_list;
@@ -237,9 +240,12 @@ class FMSupload extends Component {
 
   handlemultipleCD = (cdlist) => {
     let cd_array = [];
+    let site_selected = [];
+    console.log("cdlist", cdlist);
     if( cdlist !== undefined && cdlist !== null ){
-      cdlist.map(e => cd_array.push({id_cd_doc: e.id, cd_id: e.value}));
-      this.setState({ cd_selected: cd_array}, () => console.log(this.state.cd_selected))
+      cdlist.map(e => cd_array.push({id_cd_doc: e.id, cd_id: e.value, wp_id_erisite : e.WP_ID_Erisite !== undefined ? e.WP_ID_Erisite : null}));
+      cdlist.map(e => site_selected.push({id_site_doc: e.Site_Info_SiteID_NE, site_id: e.Site_Info_SiteID_NE_Actual, site_ne_id: e.Site_Info_SiteID_Value_NE, site_name: e.Site_Info_SiteName_NE_Actual, site_region: e.Activity_Region}));
+      this.setState({ cd_selected: cd_array, site_selected : site_selected}, () => console.log(this.state.cd_selected))
     }else{
       this.setState({ cd_selected: [] }, () => console.log(this.state.cd_selected))
     }
@@ -258,12 +264,13 @@ class FMSupload extends Component {
     let fileDocument = new FormData();
     await fileDocument.append('id_project_doc', this.state.project_selected);
     await fileDocument.append('project_name', this.state.project_name_selected);
-    await fileDocument.append('ms_target', this.state.form_fms.milestone);
+    await fileDocument.append('ms_target', dataRules.target);
     await fileDocument.append('source_ms_date', dataRules.rules);
     await fileDocument.append('source_ms_file', dataRules.source_file);
     await fileDocument.append('source_ms_file_status', dataRules.source);
     await fileDocument.append('fileDocument', this.state.inputan_file);
     await fileDocument.append('cdIdList', JSON.stringify(this.state.cd_selected));
+    await fileDocument.append('siteInfo', JSON.stringify(this.state.site_selected));
     const respostPOD = await postDatatoAPINODEdata('/erisitePodFile/createPodFile', fileDocument, this.state.tokenUser);
     if (
       respostPOD.data !== undefined &&
@@ -276,7 +283,15 @@ class FMSupload extends Component {
       });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed" });
+      if (respostPOD.response !== undefined && respostPOD.response.data !== undefined && respostPOD.response.data.error !== undefined) {
+        if (respostPOD.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respostPOD.response.data.error.message) });
+        } else {
+          this.setState({ action_status: 'failed', action_message: respostPOD.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
         this.toggleLoading();
     }
   }

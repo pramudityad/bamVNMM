@@ -1,12 +1,13 @@
-import React, { Component } from 'react';
-import { Card, CardHeader, CardBody, Row, Col, Button, Input, CardFooter } from 'reactstrap';
+import React, { Component, Fragment } from 'react';
+import { Card, CardHeader, CardBody, Row, Table, Col, Button, Input, CardFooter } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import { Link } from "react-router-dom";
 import { Form, FormGroup, Label } from 'reactstrap';
 import axios from 'axios';
 import { connect } from 'react-redux';
-import { postDatatoAPINODEdata } from "../../helper/asyncFunction";
+import { postDatatoAPINODEdata, getDatafromAPINODEFile } from "../../helper/asyncFunction";
 import ModalCreateNew from "../components/ModalCreateNew";
+import { saveAs } from "file-saver";
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -16,13 +17,13 @@ const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
 const username_tsel = 'adminbamidsuper';
 const password_tsel = 'F760qbAg2sml';
 
-const API_URL_ISAT = 'https://api-dev.isat.pdb.e-dpm.com/isatapi';
+const API_URL_XL = 'https://api-dev.isat.pdb.e-dpm.com/isatapi';
 const usernameXL = 'adminbamidsuper';
 const passwordXL = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const DefaultNotif = React.lazy(() => import('../../viewsIndosat/DefaultView/DefaultNotif'));
+const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
 class DSADetail extends Component {
   constructor(props) {
@@ -45,6 +46,9 @@ class DSADetail extends Component {
       reject_note : null,
       action_message : null,
       action_status : null,
+      gr_data : {},
+      view_dsa_timeline : 'Hide',
+      reactual_note : " ",
     }
 
     this.submitDSA = this.submitDSA.bind(this);
@@ -53,6 +57,9 @@ class DSADetail extends Component {
     this.toggleApproveModal = this.toggleApproveModal.bind(this);
     this.toggleRejectModal = this.toggleRejectModal.bind(this);
     this.handleRejectNote = this.handleRejectNote.bind(this);
+    this.handleChangeGR = this.handleChangeGR.bind(this);
+    this.handleChangeTimeline = this.handleChangeTimeline.bind(this);
+    this.handleChangeReactualNote = this.handleChangeReactualNote.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -97,7 +104,7 @@ class DSADetail extends Component {
 
   async getDataFromAPIXL(url) {
     try {
-      let respond = await axios.get(API_URL_ISAT + url, {
+      let respond = await axios.get(API_URL_XL + url, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
           username: usernameXL,
@@ -149,11 +156,9 @@ class DSADetail extends Component {
           this.setState({ destination: this.state.data_dsa.site_info[0].site_id });
         }
         this.getDataFromAPIXL('/custdel_sorted_non_page?where={"WP_ID":"' + this.state.data_dsa.cust_del[0].cd_id + '"}').then(res => {
-          if(res !== undefined && res.data !== undefined && res.data._items.length > 0){
-            let nn = res.data._items[0] !== undefined ? res.data._items[0].CD_Info_Network_Number : "";
-            if (res.data !== undefined) {
-              this.setState({ network_number: nn });
-            }
+          let nn = res.data._items[0] !== undefined ? res.data._items[0].CD_Info_Network_Number : "";
+          if (res.data !== undefined) {
+            this.setState({ network_number: nn });
           }
         })
       }
@@ -191,7 +196,7 @@ class DSADetail extends Component {
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label3}
-                <Input type="text" readOnly value={this.state.data_dsa.primary_section[i].price}></Input>
+                <Input type="text" readOnly value={this.state.data_dsa.primary_section[i].price.toLocaleString()}></Input>
               </FormGroup>
             </Col>
             <Col md="1" style={{ margin: "0", padding: "4px" }}>
@@ -203,7 +208,7 @@ class DSADetail extends Component {
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label5}
-                <Input type="text" readOnly value={this.state.data_dsa.primary_section[i].total_price}></Input>
+                <Input type="text" readOnly value={this.state.data_dsa.primary_section[i].total_price.toLocaleString()}></Input>
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
@@ -256,7 +261,7 @@ class DSADetail extends Component {
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label3}
-                <Input type="text" readOnly value={this.state.data_dsa.second_section.service_details[i].price}></Input>
+                <Input type="text" readOnly value={this.state.data_dsa.second_section.service_details[i].price.toLocaleString()}></Input>
               </FormGroup>
             </Col>
             <Col md="1" style={{ margin: "0", padding: "4px" }}>
@@ -268,7 +273,7 @@ class DSADetail extends Component {
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label5}
-                <Input type="text" readOnly value={this.state.data_dsa.second_section.service_details[i].total_price}></Input>
+                <Input type="text" readOnly value={this.state.data_dsa.second_section.service_details[i].total_price.toLocaleString()}></Input>
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
@@ -442,9 +447,7 @@ class DSADetail extends Component {
     if (e !== undefined && e.target !== undefined && e.target.files !== undefined ) {
       fileUpload = e.target.files[0];
     }
-    this.setState({ inputan_file: fileUpload }, () =>
-      console.log(this.state.inputan_file)
-    );
+    this.setState({ inputan_file: fileUpload });
   };
 
   async patchDataFiletoAPINode(url, file, _etag){
@@ -471,13 +474,18 @@ class DSADetail extends Component {
     await fileDocument.append('submitType', parseInt(1));
     await fileDocument.append('data', JSON.stringify({}));
     await fileDocument.append('dsa_documents', this.state.inputan_file);
-    await fileDocument.append('account_id', "3");
+    await fileDocument.append('account_id', "2");
+    if(dataForm.dsa_status.find(ds => ds.dsa_status_value === "REJECTED") !== undefined){
+      await fileDocument.append('updateNote', this.state.reactual_note)
+    }
+    this.setState({actualModal : false});
     let res = await this.patchDataFiletoAPINode('/matreq/updateDsa/' + this.props.match.params.id, fileDocument);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
     } else {
       if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
         if (res.response.data.error.message !== undefined) {
+
           this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
         } else {
           this.setState({ action_status: 'failed', action_message: res.response.data.error });
@@ -505,6 +513,7 @@ class DSADetail extends Component {
     const approveDSA = {
       "valueApprove" : typeApproval === "reject" ? 0 : 1,
       "roleApprove" : this.state.role_approval_selected,
+      "notesValue" : this.state.reject_note,
     }
     console.log("approve", approveDSA)
     let res = await this.patchDatatoAPINODE('/matreq/approveDsa/' + this.props.match.params.id, approveDSA);
@@ -521,6 +530,60 @@ class DSADetail extends Component {
         this.setState({ action_status: 'failed' });
       }
     }
+  }
+
+  getDSAFile = async (e) => {
+    e.preventDefault()
+    e.persist();
+    const i = e.target.name;
+    const id = e.currentTarget.value;
+    const data_dsa = this.state.data_dsa;
+    if(data_dsa.dsa_documents !== undefined && data_dsa.dsa_documents.length !== 0)  {
+      const resFile = await getDatafromAPINODEFile('/matreq/getDsaDocument/' + data_dsa._id, this.props.dataLogin.token, data_dsa.dsa_documents[0].mime_type);
+      if(resFile !== undefined){
+        saveAs(new Blob([resFile.data], {type:data_dsa.dsa_documents[0].mime_type}), data_dsa.dsa_documents[0].file_name);
+      }
+    }
+  }
+
+  handleChangeGR(e){
+    const name = e.target.name;
+    const value = e.target.value
+    this.setState(
+      (prevState) => ({
+        gr_data: {
+          ...prevState.gr_data,
+          [name]: value
+        },
+      })
+    );
+  }
+
+  submitGRNumber= async (e) =>{
+    let res = await this.patchDatatoAPINODE('/matreq/updateGRDsa/' + this.props.match.params.id, {data : this.state.gr_data});
+    if (res.data !== undefined) {
+      this.setState({ action_status: "success" });
+    } else {
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
+  handleChangeTimeline(e){
+    const value = e.target.value;
+    this.setState({view_dsa_timeline : value});
+  }
+
+  handleChangeReactualNote(e){
+    const value = e.target.value;
+    this.setState({reactual_note : value});
   }
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
@@ -540,17 +603,40 @@ class DSADetail extends Component {
                 <Card>
                   <CardHeader>
                     <span style={{ lineHeight: '2', fontSize: '15px' }}><i className="fa fa-info-circle" style={{ marginLeft: "8px" }}></i>DSA Detail ({this.state.data_dsa.dsa_number})</span>
-                    <Link to={'/dsa-edit/' + this.props.match.params.id}>
-                      <Button style={{ marginLeft: "100px" }} color="warning" size="sm" >
-                        <i className="fas fa-edit" style={{ marginRight: "8px" }} ></i>
-                        Edit
-                      </Button>
-                    </Link>
+                    {(this.state.userRole.findIndex(e => e === "Admin") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && (
+                      <Link to={'/dsa-edit/' + this.props.match.params.id}>
+                        <Button style={{ marginLeft: "100px" }} color="warning" size="sm" >
+                          <i className="fas fa-edit" style={{ marginRight: "8px" }} ></i>
+                          Edit
+                        </Button>
+                      </Link>
+                    )}
                   </CardHeader>
                   <CardBody>
                     <Row>
                       <Col md="12">
                         <Form>
+                          <Row>
+                            <Col md="3">
+                              <FormGroup style={{ paddingLeft: "16px" }}>
+                                <Label>Current DSA Status</Label>
+                                <Input type="text" readOnly value={this.state.data_dsa.current_dsa_status}></Input>
+                              </FormGroup>
+                            </Col>
+
+                            <Col md="2">
+                              <FormGroup style={{ paddingLeft: "16px" }}>
+                                <Label>Note</Label>
+                                <Input type="textarea" readOnly value={this.state.data_dsa.dsa_remark}></Input>
+                              </FormGroup>
+                            </Col>
+                            <Col md="2">
+                              <FormGroup style={{ paddingLeft: "16px" }}>
+                                <Label>Reactualized Note</Label>
+                                <Input type="textarea" readOnly value={this.state.data_dsa.dsa_update_note}></Input>
+                              </FormGroup>
+                            </Col>
+                          </Row>
                           <Row>
                             <Col md="3">
                               <FormGroup style={{ paddingLeft: "16px" }}>
@@ -560,8 +646,14 @@ class DSADetail extends Component {
                             </Col>
                             <Col md="3">
                               <FormGroup style={{ paddingLeft: "16px" }}>
-                                <Label>Status</Label>
-                                <Input type="text" readOnly value={this.state.data_dsa.current_dsa_status}></Input>
+                                <Label>WP ID</Label>
+                                <Input type="text" readOnly value={this.state.data_dsa.cust_del.map(cd => cd.cd_id).join(", ")}></Input>
+                              </FormGroup>
+                            </Col>
+                            <Col md="3">
+                              <FormGroup style={{ paddingLeft: "16px" }}>
+                                <Label>Current MR Status</Label>
+                                <Input type="text" readOnly value={this.state.data_dsa.current_mr_status}></Input>
                               </FormGroup>
                             </Col>
                           </Row>
@@ -598,10 +690,6 @@ class DSADetail extends Component {
                                 <Label>Network Number</Label>
                                 <Input type="text" name="network_number" readOnly value={this.state.network_number} />
                               </FormGroup>
-                              <FormGroup style={{ paddingLeft: "16px" }}>
-                                <Label>PO Item Number</Label>
-                                <Input type="text" name="6" readOnly value={this.state.data_dsa.po_item_number} />
-                              </FormGroup>
                             </Col>
                           </Row>
                           <h5>PO UTILIZATION</h5>
@@ -623,6 +711,23 @@ class DSADetail extends Component {
                           </Row>
                           <h5>DETAIL</h5>
                           <Row>
+                            <Col md="2">
+                              <h6>Destination</h6>
+                              <FormGroup style={{ paddingLeft: "16px" }}>
+                                <Label>From</Label>
+                                <Input type="text" name="10" value={this.state.data_dsa.origin !== undefined ? this.state.data_dsa.origin.value : ""} onChange={this.handleChangeForm} readOnly />
+                              </FormGroup>
+                              <FormGroup style={{ paddingLeft: "16px" }}>
+                                <Label>To {this.state.data_dsa !== null && (this.state.data_dsa.mr_type === "New" || this.state.data_dsa.mr_type === null) ? "(Site ID NE)" : "(Warehouse)"}</Label>
+                                <Input type="text" name="11" value={this.state.data_dsa.site_info.find(si => si.site_title === "NE") !== undefined ? this.state.data_dsa.site_info.find(si => si.site_title === "NE").site_id : null} onChange={this.handleChangeForm} readOnly />
+                              </FormGroup>
+                              {this.state.data_dsa !== null ? this.state.data_dsa.site_info[1] !== undefined && this.state.data_dsa.mr_type !== "Return" && this.state.data_dsa.mr_type !== "Relocation" ? (
+                                <FormGroup style={{ paddingLeft: "16px" }}>
+                                  <Label>To (Site ID FE)</Label>
+                                  <Input type="text" name="11" value={this.state.data_dsa.site_info.find(si => si.site_title === "FE") !== undefined ? this.state.data_dsa.site_info.find(si => si.site_title === "FE").site_id : null} onChange={this.handleChangeForm} readOnly />
+                                </FormGroup>
+                              ) : (<div></div>) : (<div></div>)}
+                            </Col>
                             <Col md="3">
                               <h6>Destination</h6>
                               <FormGroup style={{ paddingLeft: "16px" }}>
@@ -630,26 +735,32 @@ class DSADetail extends Component {
                                 <Input type="text" name="10" value={this.state.data_dsa.origin !== undefined ? this.state.data_dsa.origin.value : ""} onChange={this.handleChangeForm} readOnly />
                               </FormGroup>
                               <FormGroup style={{ paddingLeft: "16px" }}>
-                                <Label>To {this.state.data_dsa !== null && (this.state.data_dsa.mr_type === "New" || this.state.data_dsa.mr_type === null) ? "(Site NE)" : "(Warehouse)"}</Label>
-                                <Input type="text" name="11" value={this.state.destination} onChange={this.handleChangeForm} readOnly />
+                                <Label>To {this.state.data_dsa !== null && (this.state.data_dsa.mr_type === "New" || this.state.data_dsa.mr_type === null) ? "(Site Name NE)" : "(Warehouse)"}</Label>
+                                <Input type="textarea" name="11" value={this.state.data_dsa.site_info.find(si => si.site_title === "NE") !== undefined ? this.state.data_dsa.site_info.find(si => si.site_title === "NE").site_name : null} onChange={this.handleChangeForm} readOnly />
+                              </FormGroup>
+                              {this.state.data_dsa !== null ? this.state.data_dsa.site_info[1] !== undefined && this.state.data_dsa.mr_type !== "Return" && this.state.data_dsa.mr_type !== "Relocation" ? (
+                                <FormGroup style={{ paddingLeft: "16px" }}>
+                                  <Label>To (Site Name FE)</Label>
+                                  <Input type="textarea" name="11" value={this.state.data_dsa.site_info.find(si => si.site_title === "FE") !== undefined ? this.state.data_dsa.site_info.find(si => si.site_title === "FE").site_name : null} onChange={this.handleChangeForm} readOnly />
+                                </FormGroup>
+                              ) : (<div></div>) : (<div></div>)}
+                            </Col>
+                            <Col md="2">
+                              <h6>Destination</h6>
+                              <FormGroup style={{ paddingLeft: "16px" }}>
+                                <Label>From</Label>
+                                <Input type="text" name="10" value={this.state.data_dsa.origin !== undefined ? this.state.data_dsa.origin.value : ""} onChange={this.handleChangeForm} readOnly />
+                              </FormGroup>
+                              <FormGroup style={{ paddingLeft: "16px" }}>
+                                <Label>To {this.state.data_dsa !== null && (this.state.data_dsa.mr_type === "New" || this.state.data_dsa.mr_type === null) ? "(Coordinate NE)" : "(Warehouse)"}</Label>
+                                <Input type="textarea" name="11" value={this.state.data_dsa.site_info.find(si => si.site_title === "NE") !== undefined ? "Lat : " +this.state.data_dsa.site_info.find(si => si.site_title === "NE").site_latitude+" ; Long : "+this.state.data_dsa.site_info.find(si => si.site_title === "NE").site_longitude : null} onChange={this.handleChangeForm} readOnly />
                               </FormGroup>
                               {this.state.data_dsa !== null ? this.state.data_dsa.site_info[1] !== undefined && this.state.data_dsa.mr_type !== "Return" && this.state.data_dsa.mr_type !== "Relocation" ? (
                                 <FormGroup style={{ paddingLeft: "16px" }}>
                                   <Label>To (Site FE)</Label>
-                                  <Input type="text" name="11" value={this.state.data_dsa !== null ? this.state.data_dsa.site_info[1].site_id : ""} onChange={this.handleChangeForm} readOnly />
+                                  <Input type="textarea" name="11" value={this.state.data_dsa.site_info.find(si => si.site_title === "FE") !== undefined ? "Lat : " +this.state.data_dsa.site_info.find(si => si.site_title === "FE").site_latitude+" ; Long : "+this.state.data_dsa.site_info.find(si => si.site_title === "FE").site_longitude : null} onChange={this.handleChangeForm} readOnly />
                                 </FormGroup>
                               ) : (<div></div>) : (<div></div>)}
-                            </Col>
-                            <Col md="3">
-                              <h6>Dimension</h6>
-                              <FormGroup style={{ paddingLeft: "16px" }}>
-                                <Label>Vol (m<sup>3</sup>)</Label>
-                                <Input type="number" name="12" readOnly value={this.state.data_dsa.dimension_volume} />
-                              </FormGroup>
-                              <FormGroup style={{ paddingLeft: "16px" }}>
-                                <Label>Weight (Kg)</Label>
-                                <Input type="number" name="13" readOnly value={this.state.data_dsa.dimension_weight} />
-                              </FormGroup>
                             </Col>
                           </Row>
                           <Row>
@@ -661,18 +772,32 @@ class DSADetail extends Component {
                             </Col>
                           </Row>
                           <Row>
+                            <Col md="2">
+                              <FormGroup style={{ paddingLeft: "16px" }}>
+                                <Label>Vol (m<sup>3</sup>)</Label>
+                                <Input type="number" name="12" readOnly value={this.state.data_dsa.dimension_volume} />
+                              </FormGroup>
+                            </Col>
+                            <Col md="2">
+                              <FormGroup style={{ paddingLeft: "16px" }}>
+                                <Label>Weight (Kg)</Label>
+                                <Input type="number" name="13" readOnly value={this.state.data_dsa.dimension_weight} />
+                              </FormGroup>
+                            </Col>
+                          </Row>
+                          <Row>
                             <Col md="12">
                             {this.loopSection1()}
                             </Col>
                           </Row>
-                          <h5>SECTION 2 (For additional services which are not covered in PO and not available in contract)</h5>
+                          <h5>SECTION 2 (For additional services which are covered in PO and available in contract)</h5>
                           <Row>
-                            <Col md="3">
-                              <FormGroup style={{ paddingLeft: "16px" }}>
-                                <Label>PO for Section 2</Label>
-                                <Input type="text" readOnly value={this.state.data_dsa.third_section.po_number} />
-                              </FormGroup>
+                            <Col md="12">
+                            {this.loopSection2()}
                             </Col>
+                          </Row>
+                          <h5>SECTION 3 (For additional services which are not covered in PO and not available in contract)</h5>
+                          <Row>
                             <Col md="3">
                               <FormGroup style={{ paddingLeft: "16px" }}>
                                 <Label>DAC Number</Label>
@@ -684,7 +809,7 @@ class DSADetail extends Component {
                           <h5>POD FILE</h5>
                           <Row style={{ paddingLeft: "16px" }}>
                             <Col md="3">
-                              <Button size="sm" color="info">
+                              <Button size="sm" color="info" onClick={this.getDSAFile}>
                                 File Download
                               </Button>
                             </Col>
@@ -706,35 +831,92 @@ class DSADetail extends Component {
                               </FormGroup>
                             </Col>
                           </Row>
-                          <h5>DSA SUMMARY</h5>
+                          <h5 style={{marginTop : '10px'}}>DSA SUMMARY</h5>
                           <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
                             <Col md="2" style={{ margin: "0", paddingLeft: "16px" }}>
                               <FormGroup>
                                 <Label>Total Value</Label>
-                                <Input type="text" readOnly value={this.state.data_dsa.dsa_total_value} />
+                                <Input type="text" readOnly value={this.state.data_dsa.dsa_total_value.toLocaleString()} />
                               </FormGroup>
                             </Col>
                           </Row>
+                          <h5 style={{marginTop : '10px'}}>GR</h5>
+                          <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
+                            <Col md="2" style={{ margin: "0", paddingLeft: "16px" }}>
+                              <FormGroup>
+                                <Label>GR Number</Label>
+                                {this.state.data_dsa.dsa_gr_no !== undefined && this.state.data_dsa.dsa_gr_no !== null ? (
+                                  <Input type="text" name="grNumber" value={this.state.data_dsa.dsa_gr_no} readOnly />
+                                ) : (this.state.userRole.findIndex(e => e === "Admin") !== -1 || this.state.userRole.findIndex(e => e === "BAM-LDM Admin") !== -1) ? (
+                                  <Input type="text" name="grNumber" value={this.state.gr_data.grNumber} onChange={this.handleChangeGR} />
+                                ) : (
+                                  <Input type="text" name="grNumber" value={this.state.data_dsa.dsa_gr_no} readOnly />
+                                )}
+                              </FormGroup>
+                              {this.state.data_dsa.current_dsa_status === "DSA LDM ADMIN APPROVED" && (
+                                <Button size="sm" onClick={this.submitGRNumber} color="primary" disabled={this.state.gr_data.grNumber === undefined || this.state.gr_data.grNumber.length === 0}>
+                                  Submit GR Number
+                                </Button>
+                              )}
+                            </Col>
+                          </Row>
+                          <h5 style={{marginTop : '10px'}}>DSA Timeline</h5>
+                          {this.state.view_dsa_timeline === "Hide" ? (
+                            <Fragment>
+                              <Button size="sm" value="Show" style={{ marginLeft: "16px" }} onClick={this.handleChangeTimeline}>Show DSA Timeline</Button>
+                            </Fragment>
+                          ) : (
+                            <Fragment>
+                              <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
+                                <Col md="6" style={{ margin: "0", paddingLeft: "16px" }}>
+                                  <Table responsive striped bordered size="sm">
+                                    <thead>
+                                      <tr>
+                                        <th>Status</th>
+                                        <th>Actor</th>
+                                        <th>Date</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {this.state.data_dsa.dsa_status !== undefined && this.state.data_dsa.dsa_status.map(ds =>
+                                        <tr>
+                                          <td>{ds.dsa_status_name+" "+ds.dsa_status_value}</td>
+                                          <td>{ds.dsa_status_updater}</td>
+                                          <td>{ds.dsa_status_date.slice(0,10)}</td>
+                                        </tr>
+                                      )}
+
+                                    </tbody>
+                                  </Table>
+                                </Col>
+                              </Row>
+                              <Button size="sm" value="Hide" style={{ marginLeft: "16px" }} onClick={this.handleChangeTimeline}>Hide DSA Timeline</Button>
+                            </Fragment>
+                          )}
+
                         </Form>
                       </Col>
                     </Row>
                   </CardBody>
                   <CardFooter>
-                    {/*<Button color="primary" id={this.state.data_dsa._id} value={this.state.data_dsa._etag} onClick={this.submitDSA} hidden={this.state.data_dsa.current_dsa_status === "DSA SUBMITTED" || this.state.data_dsa.current_dsa_status === "DSA APPROVED"}><i className="fa fa-check" style={{ marginRight: "8px" }}></i> Submit DSA</Button> */}
-                    {(this.state.data_dsa.current_dsa_status!== "DSA ACTUALIZED" && this.state.data_dsa.current_dsa_status !== "DSA LDM APPROVED" && this.state.data_dsa.current_dsa_status !== "DSA LDM ADMIN APPROVED") && (
+                    {((this.state.userRole.findIndex(e => e === "Admin") !== -1 || this.state.userRole.findIndex(e => e === "BAM-LDM Admin") !== -1 || this.state.userRole.findIndex(e => e === "BAM-LDM") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.data_dsa.current_dsa_status!== "DSA ACTUALIZED" && this.state.data_dsa.current_dsa_status !== "DSA LDM APPROVED" && this.state.data_dsa.current_dsa_status !== "DSA LDM ADMIN APPROVED" && this.state.data_dsa.current_dsa_status !== "GR DONE") && (
                       <Button color="primary" size="sm" id={this.state.data_dsa._id} value={this.state.data_dsa._etag} onClick={this.toggleActualModal} hidden={this.state.data_dsa.current_dsa_status === "DSA CREATED" || this.state.data_dsa.current_dsa_status === "DSA UPDATED" || this.state.data_dsa.current_dsa_status === "DSA APPROVED" || this.state.data_dsa.current_dsa_status === "DSA NEED REVISION"}><i className="fa fa-check" style={{ marginRight: "8px" }}></i> State to Actual</Button>
                     )}
-                    {this.state.data_dsa.current_dsa_status === "DSA ACTUALIZED" && (
-                      <React.Fragment>
-                        <Button color="primary" id={this.state.data_dsa._id} size="sm" value={"LDM"} onClick={this.toggleApproveModal} style={{margin : '0px 5px 0px 5px'}}>Approve LDM</Button>
-                        <Button color="primary" id={this.state.data_dsa._id} size="sm" value={"LDM"} onClick={this.toggleRejectModal} style={{margin : '0px 5px 0px 5px'}}>Reject LDM</Button>
-                      </React.Fragment>
-                    )}
-                    {this.state.data_dsa.current_dsa_status === "DSA LDM APPROVED" && (
-                      <React.Fragment>
-                        <Button color="primary" id={this.state.data_dsa._id} size="sm" value={"LDM-Admin"} onClick={this.toggleApproveModal} style={{margin : '0px 5px 0px 5px'}}>Approve LDM Admin</Button>
-                        <Button color="primary" id={this.state.data_dsa._id} size="sm" value={"LDM-Admin"} onClick={this.toggleRejectModal} style={{margin : '0px 5px 0px 5px'}}>Reject LDM Admin</Button>
-                      </React.Fragment>
+                    {(this.state.userRole.findIndex(e => e === "Admin") !== -1 || this.state.userRole.findIndex(e => e === "BAM-LDM Admin") !== -1 || this.state.userRole.findIndex(e => e === "BAM-LDM") !== -1) && (
+                      <Fragment>
+                      {(this.state.data_dsa.current_dsa_status === "DSA ACTUALIZED" && (this.state.userRole.findIndex(e => e === "Admin") !== -1 || this.state.userRole.findIndex(e => e === "BAM-LDM") !== -1)) && (
+                        <React.Fragment>
+                          <Button color="primary" id={this.state.data_dsa._id} size="sm" value={"LDM"} onClick={this.toggleApproveModal} style={{margin : '0px 5px 0px 5px'}}>Approve LDM</Button>
+                          <Button color="primary" id={this.state.data_dsa._id} size="sm" value={"LDM"} onClick={this.toggleRejectModal} style={{margin : '0px 5px 0px 5px'}}>Reject LDM</Button>
+                        </React.Fragment>
+                      )}
+                      {this.state.data_dsa.current_dsa_status === "DSA LDM APPROVED" && (this.state.userRole.findIndex(e => e === "Admin") !== -1 || this.state.userRole.findIndex(e => e === "BAM-LDM Admin") !== -1) && (
+                        <React.Fragment>
+                          <Button color="primary" id={this.state.data_dsa._id} size="sm" value={"LDM-Admin"} onClick={this.toggleApproveModal} style={{margin : '0px 5px 0px 5px'}}>Approve LDM Admin</Button>
+                          <Button color="primary" id={this.state.data_dsa._id} size="sm" value={"LDM-Admin"} onClick={this.toggleRejectModal} style={{margin : '0px 5px 0px 5px'}}>Reject LDM Admin</Button>
+                        </React.Fragment>
+                      )}
+                      </Fragment>
                     )}
                   </CardFooter>
                 </Card>
@@ -752,6 +934,23 @@ class DSADetail extends Component {
           <div>
             <table>
               <tbody>
+
+                {(this.state.data_dsa !== null && this.state.data_dsa.dsa_status !== undefined && this.state.data_dsa.dsa_status.find(ds => ds.dsa_status_value === "REJECTED") !== undefined) && (
+                  <Fragment>
+                  <tr>
+                    <td>Reactual Note</td>
+                  </tr>
+                  <tr>
+                    <td colSpan="3">
+                      <Input type="textarea" style={{marginBottom : '20px'}} onChange={this.handleChangeReactualNote} value={this.state.reactual_note} />
+                    </td>
+                  </tr>
+                  </Fragment>
+                )}
+                <tr>
+                  <td>
+                  </td>
+                </tr>
                 <tr>
                   <td colSpan="3">Please upload the document</td>
                 </tr>

@@ -418,7 +418,7 @@ class LOMList extends Component {
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{convertDateFormat(list.eta)}</td>
-                        <td></td>
+                        <td>{list.creator.map(c => c.email)}</td>
                         <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>

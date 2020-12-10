@@ -20,7 +20,7 @@ const passwordXL = "F760qbAg2sml";
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const arrayFilter = ["no_plantspec", "project_name", "tower_id", "region", "current_status", "submission_status", "mr_id"]
+const arrayFilter = ["no_plantspec", "project_name", "tower_id", "current_status", "submission_status", "mr_id"]
 
 class TssrList extends Component {
   constructor(props) {
@@ -47,6 +47,7 @@ class TssrList extends Component {
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.getTssrListMigration = this.getTssrListMigration.bind(this);
     this.printExcel = this.printExcel.bind(this);
+    this.printExcelListPS = this.printExcelListPS.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
   }
 
@@ -65,9 +66,6 @@ class TssrList extends Component {
           password: password
         }
       });
-      if(respond.status >= 200 && respond.status < 300) {
-        console.log("respond data", respond);
-      }
       return respond;
     } catch(err) {
       let respond = err;
@@ -84,9 +82,6 @@ class TssrList extends Component {
           'Authorization': 'Bearer '+this.state.tokenUser
         },
       });
-      if(respond.status >= 200 && respond.status < 300) {
-        console.log("respond data", respond);
-      }
       return respond;
     } catch(err) {
       let respond = err;
@@ -104,9 +99,6 @@ class TssrList extends Component {
           password: passwordXL
         },
       })
-      if(respond.status >= 200 && respond.status < 300){
-        console.log("respond Get Data", respond);
-      }
       return respond;
     }catch (err) {
       let respond = err;
@@ -122,7 +114,6 @@ class TssrList extends Component {
     (this.state.filter_list["no_plantspec"] !== null && this.state.filter_list["no_plantspec"] !== undefined) && (filter_array.push('"no_plantspec":{"$regex" : "' + this.state.filter_list["no_plantspec"] + '", "$options" : "i"}'));
     (this.state.filter_list["project_name"] !== null && this.state.filter_list["project_name"] !== undefined) && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list["project_name"] + '", "$options" : "i"}'));
     (this.state.filter_list["tower_id"] !== null && this.state.filter_list["tower_id"] !== undefined) && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list["tower_id"] + '", "$options" : "i"}'));
-    (this.state.filter_list["region"] !== null && this.state.filter_list["region"] !== undefined) && (filter_array.push('"site_info.region":{"$regex" : "' + this.state.filter_list["region"] + '", "$options" : "i"}'));
     (this.state.filter_list["current_status"] !== null && this.state.filter_list["current_status"] !== undefined) && (filter_array.push('"current_status":{"$regex" : "' + this.state.filter_list["current_status"] + '", "$options" : "i"}'));
     (this.state.filter_list["submission_status"] !== null && this.state.filter_list["submission_status"] !== undefined) && (filter_array.push('"submission_status":{"$regex" : "' + this.state.filter_list["submission_status"] + '", "$options" : "i"}'));
     (this.state.filter_list["mr_id"] !== null && this.state.filter_list["mr_id"] !== undefined) && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list["mr_id"] + '", "$options" : "i"}'));
@@ -151,7 +142,7 @@ class TssrList extends Component {
     // (this.state.filter_list["current_status"] !== null && this.state.filter_list["current_status"] !== undefined) && (filter_array.push('"current_status":{"$regex" : "' + this.state.filter_list["current_status"] + '", "$options" : "i"}'));
     // (this.state.filter_list["submission_status"] !== null && this.state.filter_list["submission_status"] !== undefined) && (filter_array.push('"submission_status":{"$regex" : "' + this.state.filter_list["submission_status"] + '", "$options" : "i"}'));
     // (this.state.filter_list["mr_id"] !== null && this.state.filter_list["mr_id"] !== undefined) && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list["mr_id"] + '", "$options" : "i"}'));
-    filter_array.push('"migration":true')
+    // filter_array.push('"migration":true')
     let whereAnd = '{' + filter_array.join(',') + '}';
     // noPg=1&
     // srt=_id:-1&
@@ -191,6 +182,59 @@ class TssrList extends Component {
     this.toggleLoading();
   }
 
+  async getPSListReport(){
+    const page = this.state.activePage;
+    const maxPage = 20;
+    let arrayIDTSSR = [];
+    let filter_array = [];
+    // (this.state.filter_list["no_plantspec"] !== null && this.state.filter_list["no_plantspec"] !== undefined) && (filter_array.push('"no_plantspec":{"$regex" : "' + this.state.filter_list["no_plantspec"] + '", "$options" : "i"}'));
+    // (this.state.filter_list["project_name"] !== null && this.state.filter_list["project_name"] !== undefined) && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list["project_name"] + '", "$options" : "i"}'));
+    // (this.state.filter_list["tower_id"] !== null && this.state.filter_list["tower_id"] !== undefined) && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list["tower_id"] + '", "$options" : "i"}'));
+    // (this.state.filter_list["current_status"] !== null && this.state.filter_list["current_status"] !== undefined) && (filter_array.push('"current_status":{"$regex" : "' + this.state.filter_list["current_status"] + '", "$options" : "i"}'));
+    // (this.state.filter_list["submission_status"] !== null && this.state.filter_list["submission_status"] !== undefined) && (filter_array.push('"submission_status":{"$regex" : "' + this.state.filter_list["submission_status"] + '", "$options" : "i"}'));
+    // (this.state.filter_list["mr_id"] !== null && this.state.filter_list["mr_id"] !== undefined) && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list["mr_id"] + '", "$options" : "i"}'));
+    // filter_array.push('"migration":true')
+    let whereAnd = '{' + filter_array.join(',') + '}';
+    // noPg=1&
+    // srt=_id:-1&
+    // + '&lmt=' + maxPage + '&pg=' + page
+    let dataMigrationTSSR = await this.getDataFromAPINODE('/plantspec?noPg=1&srt=_id:-1&q=' + whereAnd)
+    if(dataMigrationTSSR.data !== undefined){
+      arrayIDTSSR = dataMigrationTSSR.data.data;
+      return arrayIDTSSR;
+    }
+  }
+
+  async printExcelListPS(){
+    this.toggleLoading();
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataTSSRMigration = await this.getPSListReport();
+
+    ws.addRow(["PS Group No.", "Project Name", "Tower ID", "Tower Name", "Region", "Current Status", "Submission Status", "MR Related","Created By"]);
+
+    for(let i = 0; i < dataTSSRMigration.length; i++){
+      let CreatedBy = null;
+      let dataSite = {};
+      if(dataTSSRMigration[i].plantspec_status !== undefined){
+        CreatedBy = dataTSSRMigration[i].plantspec_status.find(pst => pst.status_value === "CREATED");
+        if(CreatedBy !== undefined){
+          CreatedBy = CreatedBy.status_updater;
+        }else{
+          CreatedBy = null;
+        }
+      }
+      if(dataTSSRMigration[i].site_info !== undefined && dataTSSRMigration[i].site_info.length !== 0){
+        dataSite = dataTSSRMigration[i].site_info[0];
+      }
+      ws.addRow([dataTSSRMigration[i].no_plantspec, dataTSSRMigration[i].project_name, dataSite.site_id, dataSite.site_name, dataSite.region, dataTSSRMigration[i].current_status, dataTSSRMigration[i].submission_status, dataTSSRMigration[i].mr_id, CreatedBy]);
+    }
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'PS List Report.xlsx');
+    this.toggleLoading();
+  }
+
   getDataTower(array_tower_id){
     console.log("array_tower_id", array_tower_id)
     let array_tower = '"'+array_tower_id.join('", "')+'"';
@@ -214,7 +258,6 @@ class TssrList extends Component {
 
   componentDidMount() {
     this.getTssrList();
-    this.getDataFromAPINODE('/userspool/usersByRole?q={"name": "BAM-Account Team"}');
     document.title = 'TSSR List | BAM';
   }
 
@@ -232,7 +275,7 @@ class TssrList extends Component {
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < arrayFilter.length; i++) {
+    for (let i = 0; i < arrayFilter.length+1; i++) {
       searchBar.push(
         <td>
           <div className="controls">
@@ -289,7 +332,10 @@ class TssrList extends Component {
                 </span>
                 <Link to={'/ps-bom'}><Button color="success" style={{float : 'right'}} size="sm">Create PS</Button></Link>
                 {this.state.userRole.findIndex(e => e === "Admin") !== -1 && (
-                  <Button color="success" style={{float : 'right', marginRight : '10px'}} size="sm" onClick={this.printExcel}>Donwload PS Migration</Button>
+                  <Button color="success" style={{float : 'right', marginRight : '10px'}} size="sm" onClick={this.printExcel}>Download PS Migration</Button>
+                )}
+                {this.state.userRole.findIndex(e => e === "Admin") !== -1 && (
+                  <Button color="success" style={{float : 'right', marginRight : '10px'}} size="sm" onClick={this.printExcelListPS}>Download PS List</Button>
                 )}
               </CardHeader>
               <CardBody>
@@ -317,7 +363,7 @@ class TssrList extends Component {
                         {list.site_info[0] !== undefined ? (
                           <React.Fragment>
                             <td>{list.site_info[0].site_id}</td>
-                            <td>{this.state.data_tower.find(dt => dt.tower_id === list.site_info[0].site_id ) !== undefined ? this.state.data_tower.find(dt => dt.tower_id === list.site_info[0].site_id ).region : null}</td>
+                            <td>{list.site_info[0].region}</td>
                           </React.Fragment>
                         ) : (
                           <React.Fragment>

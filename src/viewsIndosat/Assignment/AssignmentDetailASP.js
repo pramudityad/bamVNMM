@@ -13,6 +13,8 @@ import {  Dropdown,
   DropdownItem
 } from "reactstrap";
 
+import Loading from '../components/Loading';
+
 const DefaultNotif = React.lazy(() => import('../../viewsIndosat/DefaultView/DefaultNotif'));
 
 const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
@@ -34,8 +36,9 @@ class AssignmentDetailASP extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      action_status: null,
       action_message: null,
-      action_message: null,
+      modal_loading: false,
       bast_assign_form: new Map(),
       modal_revision: false,
       revision_note: "",
@@ -54,6 +57,13 @@ class AssignmentDetailASP extends Component {
     this.handleRevisionNote = this.handleRevisionNote.bind(this);
     this.toggleModalReschedule = this.toggleModalReschedule.bind(this);
     this.handleRescheduleNote = this.handleRescheduleNote.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
   }
 
   toggleDropdown(i) {
@@ -284,8 +294,9 @@ class AssignmentDetailASP extends Component {
   }
 
   async acceptASG(e) {
+    this.toggleLoading();
     let successUpdate = [];
-    const _id = e.target.id;
+    const _id = e.currentTarget.id;
     const dataAssignment = this.state.data_assignment;
     let res = await this.patchDatatoAPINODE('/aspAssignment/acceptAspAssignment/' + _id);
     let creatorEmail = null;
@@ -293,29 +304,35 @@ class AssignmentDetailASP extends Component {
     if(creator !== undefined){
       creatorEmail = creator.status_updater;
     }
-    if (res !== undefined) {
-      if (res.data !== undefined) {
-        if(creatorEmail !== null){
-          let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
-          const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been approved by ASP, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is approved by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
-          let dataEmail = {
-            "to": creatorEmail,
-            // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
-            "subject":"[APPROVED by ASP] Assignment "+dataAssignment.Assignment_No,
-            "body": bodyEmail
-          }
-          let sendEmail = await this.apiSendEmail(dataEmail);
+    if (res !== undefined && res.data !== undefined) {
+      if(creatorEmail !== null){
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
+        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been approved by ASP, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is approved by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let dataEmail = {
+          "to": creatorEmail,
+          // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
+          "subject":"[APPROVED by ASP] Assignment "+dataAssignment.Assignment_No,
+          "body": bodyEmail
         }
-        this.setState({ action_status: "success", action_status : null })
-      } else {
-        this.setState({ action_status: "failed" })
+        let sendEmail = await this.apiSendEmail(dataEmail);
       }
+      this.setState({ action_status: "success", action_message : null })
     } else {
-      this.setState({ action_status: "failed" })
+      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+        if(res.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
     }
+    this.toggleLoading();
   }
 
   async revisionASG(e) {
+    this.toggleLoading();
     if (this.state.revision_note === "") {
       alert("Note cannot be empty!");
     } else {
@@ -330,8 +347,7 @@ class AssignmentDetailASP extends Component {
         creatorEmail = creator.status_updater;
       }
       let res = await this.patchDatatoAPINODE('/aspAssignment/reviseAspAssignment/' + _id, { "note": this.state.revision_note });
-      if (res !== undefined) {
-        if (res.data !== undefined) {
+      if (res !== undefined && res.data !== undefined) {
           if(creatorEmail !== null){
             let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
             const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been requested for Revision by ASP, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for revision by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.revision_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
@@ -344,17 +360,24 @@ class AssignmentDetailASP extends Component {
             let sendEmail = await this.apiSendEmail(dataEmail);
           }
           this.setState({ action_status: "success" })
-        } else {
-          this.setState({ action_status: "failed" })
-        }
       } else {
-        this.setState({ action_status: "failed" })
+        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+          if(res.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
       }
       this.toggleModalRevision();
     }
+    this.toggleLoading();
   }
 
   async rescheduleASG(e) {
+    this.toggleLoading();
     if (this.state.reschedule_note === "") {
       alert("Note cannot be empty!");
     } else {
@@ -369,28 +392,33 @@ class AssignmentDetailASP extends Component {
         creatorEmail = creator.status_updater;
       }
       let res = await this.patchDatatoAPINODE('/aspAssignment/reScheduleAspAssignment/' + _id, { "note": this.state.reschedule_note });
-      if (res !== undefined) {
-        if (res.data !== undefined) {
-          if(creatorEmail !== null){
-            let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
-            const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been requested for Reschedule by ASP, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for reschedule by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.reschedule_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
-            let dataEmail = {
-              "to": creatorEmail,
-              // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
-              "subject":"[Request Reschedule by ASP] Assignment "+dataAssignment.Assignment_No,
-              "body": bodyEmail
-            }
-            let sendEmail = await this.apiSendEmail(dataEmail);
+      if (res !== undefined && res.data !== undefined) {
+        if(creatorEmail !== null){
+          let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
+          const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been requested for Reschedule by ASP, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for reschedule by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.reschedule_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+          let dataEmail = {
+            "to": creatorEmail,
+            // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
+            "subject":"[Request Reschedule by ASP] Assignment "+dataAssignment.Assignment_No,
+            "body": bodyEmail
           }
-          this.setState({ action_status: "success" })
-        } else {
-          this.setState({ action_status: "failed" })
+          let sendEmail = await this.apiSendEmail(dataEmail);
         }
+        this.setState({ action_status: "success" })
       } else {
-        this.setState({ action_status: "failed" })
+        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+          if(res.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
       }
       this.toggleModalReschedule();
     }
+    this.toggleLoading();
   }
 
   async saveBastNumber() {
@@ -533,12 +561,31 @@ class AssignmentDetailASP extends Component {
                         </FormGroup>
                       </Col>
                     </Row>
+                    <Row>
+                      <Col md="6">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Remark</Label>
+                          <Input type="textarea" readOnly value={this.state.data_assignment.Assignment_Remark} ></Input>
+                        </FormGroup>
+                      </Col>
+                    </Row>
                     <h5 style={{ marginTop: "16px" }}>PROJECT</h5>
                     <Row>
                       <Col md="6">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Project Name</Label>
                           <Input type="text" name="project_name" readOnly value={this.state.data_assignment.Project} />
+                        </FormGroup>
+                      </Col>
+                      <Col md="6">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Project PO</Label>
+                          <Input
+                            type="text"
+                            name="project_name"
+                            readOnly
+                            value={this.state.data_assignment.cust_del.map(cd => cd.project_po).join(", ")}
+                          />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -633,10 +680,24 @@ class AssignmentDetailASP extends Component {
                       </Col>
                     </Row>
                     <Row>
+                      <Col md="6">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Assignment Accepted by</Label>
+                          <Input type="text" name="pr" readOnly value={this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED") !== undefined ? this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED").status_updater : null} />
+                        </FormGroup>
+                      </Col>
+                      <Col md="3">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Assignment Accepted On</Label>
+                          <Input type="text" name="pr_created_by" value={this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED") !== undefined ? this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED").status_date.slice(0, 10) : null} readOnly />
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    <Row>
                       <Col md="4">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>PR</Label>
-                          <Input type="text" name="pr" readOnly />
+                          <Input type="text" name="pr" readOnly value={this.state.data_assignment.PR_for_ASP}/>
                         </FormGroup>
                       </Col>
                       <Col md="4">
@@ -747,7 +808,7 @@ class AssignmentDetailASP extends Component {
                   </Form>
                 </CardBody>
                 <CardFooter>
-                  {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT NOTIFIED TO ASP" && (this.state.userRole.findIndex(e => e === "BAM-Implementation Manager") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Coordinator") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
+                  {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT NOTIFIED TO ASP" && (this.state.userRole.findIndex(e => e === "BAM-Implementation Manager") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Coordinator") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1)) && (
                     <Fragment>
                       <Button color="danger" style={{ float: "right" }} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.toggleModalReschedule}><i className="fa fa-calendar-alt" style={{ marginRight: "8px" }}></i> Reschedule</Button>
                       <Button color="warning" style={{ float: "right", marginRight: "8px" }} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.toggleModalRevision}><i className="fa fa-edit" style={{ marginRight: "8px" }}></i> Need Revision</Button>
@@ -779,6 +840,12 @@ class AssignmentDetailASP extends Component {
             )}
           </Col>
         </Row>
+        {/* Modal Loading */}
+        <Loading isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm modal--loading "}>
+        </Loading>
+        {/* end Modal Loading */}
       </div>
     );
   }

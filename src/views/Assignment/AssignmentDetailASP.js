@@ -283,7 +283,7 @@ class AssignmentDetailASP extends Component {
 
   async acceptASG(e) {
     let successUpdate = [];
-    const _id = e.target.id;
+    const _id = e.currentTarget.id;
     const dataAssignment = this.state.data_assignment;
     let res = await this.patchDatatoAPINODE('/aspAssignment/acceptAspAssignment/' + _id);
     let creatorEmail = null;
@@ -631,6 +631,20 @@ class AssignmentDetailASP extends Component {
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>SSOW Type</Label>
                           <Input type="text" name="ssow_type" readOnly value={this.state.data_assignment.SOW_Type} />
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col md="6">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Assignment Accepted by</Label>
+                          <Input type="text" name="pr" readOnly value={this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED") !== undefined ? this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED").status_updater : null} />
+                        </FormGroup>
+                      </Col>
+                      <Col md="3">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Assignment Accepted On</Label>
+                          <Input type="text" name="pr_created_by" value={this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED") !== undefined ? this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED").status_date.slice(0, 10) : null} readOnly />
                         </FormGroup>
                       </Col>
                     </Row>

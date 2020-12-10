@@ -171,9 +171,39 @@ const MRADetail  = React.lazy(() => import('./views/MRA/MRADetail'));
 
 const MRDisList = React.lazy(() => import('./views/MRDismantle/MRDisList'));
 const MRDisCreation = React.lazy(() => import('./views/MRDismantle/MRDisCreation'));
+const MRDisDetail = React.lazy(() => import('./views/MRDismantle/MRDisDetail'));
+
+const MRDisNAList = React.lazy(() => import('./views/MRDismantle/MRDisNAList'));
+const PSAssigntoMR = React.lazy(() => import('./views/MRDismantle/PSAssigntoMR'));
+
+const LDMApprovalDismantle = React.lazy(() => import('./views/MRDismantle/LDMApprovalDismantle'));
+const MRDismantleConfirmWH = React.lazy(() => import('./views/MRDismantle/MRDismantleConfirmWH'));
 
 const PSDisList = React.lazy(() => import('./views/MRDismantle/PSDisList'));
 const PSDisCreation = React.lazy(() => import('./views/MRDismantle/PSDisCreation'));
+const PSDisDetail = React.lazy(() => import('./views/MRDismantle/PSDisDetail'));
+
+
+const SHFList = React.lazy(() => import('./views/SHF/SHFList'));
+
+const PSWHList = React.lazy(() => import('./views/MRtoWarehouse/PSWarehouseList'));
+const PSWHCreation = React.lazy(() => import('./views/MRtoWarehouse/PSWarehouseCreation'));
+const PSWHDetail = React.lazy(() => import('./views/MRtoWarehouse/PSWarehouseDetail'));
+
+const MRWHList = React.lazy(() => import('./views/MRtoWarehouse/ListMRWarehouse'));
+const MRWHNAList = React.lazy(() => import('./views/MRtoWarehouse/MRWHNAList'));
+const AssingPStoMRWH = React.lazy(() => import('./views/MRtoWarehouse/AssingPStoMRWH'));
+const MRWHDismantle = React.lazy(() => import('./views/MRtoWarehouse/MRWHDismantle'));
+const MRWHConfirm = React.lazy(() => import('./views/MRtoWarehouse/MRWHConfirm'));
+// const PSDisCreation = React.lazy(() => import('./views/MRDismantle/PSDisCreation'));
+const DSAMigration = React.lazy(() => import('./views/DSA/DSAMigration'));
+
+const DSADCreation = React.lazy(() => import('./views/DSADismantle/DSADCreation'));
+const DSADList = React.lazy(() => import('./views/DSADismantle/DSADList'));
+const DSADDetail = React.lazy(() => import('./views/DSADismantle/DSADDetail'));
+const DSADEdit = React.lazy(() => import('./views/DSADismantle/DSADEdit2'));
+
+const MRDismantleBulk = React.lazy(() => import('./views/MRDismantle/MRDismantleBulk'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -363,9 +393,42 @@ const routes = [
   { path: '/mra-list/detail/:id', exact: true, name: 'MRA Detail', component: MRADetail },
   { path: '/mra-list-need-confirm', exact: true, name: 'MRA Detail', component: MRANeedConfirm },
 
-  { path: '/dismantle/ps-dis-list', exact: true, name: 'PS Dismantle List', component: PSDisList },
-  { path: '/dismantle/ps-dis-creation', exact: true, name: 'PS Dismantle Creation', component: PSDisCreation },
+  { path: '/srn/ps-srn-list', exact: true, name: 'PS SRN List', component: PSDisList },
+  { path: '/srn/ps-srn-creation', exact: true, name: 'MR SRN Creation', component: PSDisCreation },
+  { path: '/srn/ps-srn-detail/:id', exact: true, name: 'MR SRN Detail', component: PSDisDetail },
 
+  { path: '/srn/mr-srn-list', exact: true, name: 'MRA List', component: MRDisList },
+  { path: '/srn/mr-srn-creation', exact: true, name: 'MRA Creation', component: MRDisCreation },
+  { path: '/srn/mr-srn-detail/:id', exact: true, name: 'MRA Detail', component: MRDisDetail },
+
+  { path: '/srn/mr-srn-na-list', exact: true, name: 'MR Not Assigne PS SRN List', component: MRDisNAList },
+
+  { path: '/srn/mr-srn-na-list/:id', exact: true, name: 'PS Assign to MR SRN Detail', component: PSAssigntoMR },
+
+  { path: '/srn/mr-srn-need-approval-ldm-list', exact: true, name: 'MRA Need Approval LDM List', component: LDMApprovalDismantle },
+
+  { path: '/srn/mr-srn-need-confirm-list', exact: true, name: 'MRA Need Confirm WH List', component: MRDismantleConfirmWH },
+
+  { path: '/shf-list', exact: true, name: 'SHF List', component: SHFList },
+
+  { path: '/toWH/ps-wh-list', exact: true, name: 'PS WH List', component: PSWHList },
+  { path: '/toWH/ps-wh-creation', exact: true, name: 'PS WH Creation', component: PSWHCreation },
+  { path: '/toWH/ps-wh-detail/:id', exact: true, name: 'PS WH Detail', component: PSWHDetail },
+
+  { path: '/toWH/mr-wh-list', exact: true, name: 'MR WH List', component: MRWHList },
+  { path: '/toWH/mr-wh-na-list', exact: true, name: 'MR WH NA List', component: MRWHNAList },
+  { path: '/toWH/mr-wh-na-detail/:id', exact: true, name: 'MR WH NA Detail', component: AssingPStoMRWH },
+  { path: '/toWH/mr-wh-dispatch', exact: true, name: 'MR WH Dispatch', component: MRWHDismantle },
+  { path: '/toWH/mr-wh-confirm-wh', exact: true, name: 'MR WH Confirm Warehouse', component: MRWHConfirm },
+
+  { path: '/dsa-migration', exact: true, name: 'DSA Migration', component: DSAMigration },
+
+  { path: '/dsa-srn-creation', exact: true, name: 'DSA Return Creation', component: DSADCreation },
+  { path: '/dsa-srn-list', exact: true, name: 'DSA Return List', component: DSADList },
+  { path: '/dsa-srn-detail/:id', exact: true, name: 'DSA Return Detail', component: DSADDetail },
+  { path: '/dsa-srn-edit/:id', exact: true, name: 'DSA Return Edit', component: DSADEdit },
+
+  { path: '/srn/mr-srn-creation-bulk', exact: true, name: 'MR Return Creation', component: MRDismantleBulk },
 
 ];
 

@@ -521,7 +521,6 @@ class Dashboard extends Component {
       pendingMR : 0,
       pendingASG : 0,
       POExpired : 0,
-      queryPOExpired : '',
     };
   }
 
@@ -595,7 +594,6 @@ class Dashboard extends Component {
     let today = new Date();
     today.setDate(today.getDate()-120);
     let dateExpired = today.getFullYear().toString()+"-"+(today.getMonth()+1).toString().padStart(2, '0')+"-"+today.getDate().toString().padStart(2, '0');
-    this.setState({queryPOExpired : 'q={"date" : {"$lte":"'+dateExpired+' 0:0:0"}}'});
     this.getDataFromAPINODE('/cpodb/getCpoDb?srt=_id:-1&lmt=1&pg=1&q={"date" : {"$lte":"'+dateExpired+' 0:0:0"}}')
       .then(res => {
         if (res.data !== undefined) {
@@ -656,7 +654,7 @@ class Dashboard extends Component {
           </Col>
 
           <Col xs="12" sm="6" lg="3">
-          <Link to={'/cpo-database/'}>
+          <Link to={'/cpo-database'}>
             <Card className="text-white bg-danger">
               <CardBody className="pb-0">
                 <div className="text-value">{this.state.POExpired}</div>
@@ -686,7 +684,7 @@ class Dashboard extends Component {
             <a style={{textDecoration:"none"}} href="https://apac.erisite.ericsson.net/apac1/pwa/"><Widget05 icon="fa fa-list-alt" color="#3d9970" header="Erisite" value="25" invert>Global Tools</Widget05></a>
           </Col>
           <Col xs="6" sm="4" lg="4">
-            <a style={{textDecoration:"none"}} href="https://appcodeplatform.internal.ericsson.com/EPOD/Dashboard.aspx"><Widget05 icon="fa fa-list-alt" color="#3d9970" header="LH3 / EPOD" value="25" invert>Global Tools</Widget05></a>
+            <a style={{textDecoration:"none"}} href="https://ericssoncustomerorderdashboard.ericsson.net/login"><Widget05 icon="fa fa-list-alt" color="#3d9970" header="LH3 / EPOD" value="25" invert>Global Tools</Widget05></a>
           </Col>
           <Col xs="6" sm="4" lg="4">
             <a style={{textDecoration:"none"}} href="https://apac.erisite.ericsson.net/apac1/pwa/"><Widget05 icon="fa fa-list-alt" color="#3d9970" header="TRACY" value="25" invert>Global Tools</Widget05></a>

@@ -119,6 +119,7 @@ class MRDetail extends Component {
       sid_file: [],
       abd_file: [],
       mot_type:null,
+      product_package_ps_mw : [],
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
@@ -384,7 +385,7 @@ class MRDetail extends Component {
     }
   }
 
-  async getDatafromAPIXL(url){
+  async getDatafromAPIISAT(url){
     try {
       let respond = await axios.get(API_URL_ISAT +url, {
         headers : {'Content-Type':'application/json'},
@@ -543,8 +544,8 @@ class MRDetail extends Component {
 
   async getDataCDID(array_cd_id){
     let array_in_cdid = '"'+array_cd_id.join('", "')+'"';
-    let projection = '&projection={"WP_ID" : 1, "C1003_WBS_HW" : 1, "C1008_WBS_HWAC" : 1, "C1013_WBS_LCM" : 1, "C1018_WBS_PNRO" : 1, "C1024_WBS_PNDO" : 1, "C1032_WBS_HW_Bulk" : 1, "C1033_WBS_LCM_Bulk" : 1, "C1034_WBS_PowHW_Site_Basis" : 1, "C1035_WBS_PowLCM_Site_Basis" : 1, "C1036_WBS_Kathrein" : 1}'
-    const getWPID = await this.getDatafromAPIXL('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}'+projection);
+    let projection = '&projection={"WP_ID" : 1, "C1043_WBS_HW" : 1, "C1023_WBS_HWAC" : 1, "C1033_WBS_LCM" : 1, "C1003_WBS_PNRO" : 1, "C1053_WBS_SW" : 1, "C1063_C1053_WBS_PS" : 1, "C1066_C1053_WBS_ANC" : 1, "C1034_WBS_PowHW_Site_Basis" : 1, "C1035_WBS_PowLCM_Site_Basis" : 1, "C1036_WBS_Kathrein" : 1}'
+    const getWPID = await this.getDatafromAPIISAT('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}'+projection);
     if(getWPID !== undefined && getWPID.data !== undefined) {
       this.setState({ wbs_cd_id_data : getWPID.data._items});
     }
@@ -610,20 +611,20 @@ class MRDetail extends Component {
     }
   }
 
+  uniqObjectArray(array, field){
+    let arrUniq = [];
+    array.map(arr =>
+      !arrUniq.find(au => au[field] === arr[field]) && arrUniq.push(Object.assign(arr))
+    )
+    return arrUniq;
+  }
+
   prepareView() {
     const mr_data = this.state.data_mr;
     const data_pp = this.state.mr_pp;
-    // let list_mr_id_item = [...new Set(data_pp.map(({ pp_id}) => pp_id))];
     let list_mr_item = [];
     let site_NE = undefined;
     let site_FE = undefined;
-    // const data_pp_uniq = [...new Set(data_pp.map(({ id_pp_doc}) => id_pp_doc))];
-    // for(let i = 0; i < list_mr_id_item.length; i++){
-    //   let idxItem = data_pp.find(e => e.pp_id === list_mr_id_item[i]);
-    //   if(idxItem !== undefined){
-    //     list_mr_item.push(idxItem);
-    //   }
-    // }
     this.setState({ list_mr_item: data_pp });
     if (mr_data.site_info.length !== 0) {
       site_NE = mr_data.site_info.find((e) => e.site_title === "NE");
@@ -638,6 +639,42 @@ class MRDetail extends Component {
       let data_pp_FE = data_pp.filter((e) => e.site_id === site_FE.site_id);
       site_FE["mr_pp"] = data_pp_FE;
       this.setState({ mr_site_FE: site_FE });
+    }
+    if(mr_data.sow_type === "TRM"){
+      let dataPS = Object.assign({}, mr_data);
+      let dataPPPS = dataPS.packages;
+      let dataPPNE = dataPPPS.filter(ne => ne.site_title === "NE");
+      let dataPPMW = []
+      for(let i = 0; i < dataPPNE.length; i++){
+        let dataNEIdx = Object.assign({}, dataPPNE[i]);
+        const dataFEIdx = dataPPPS.find(fe => fe.site_title === "FE" && fe.id_pp_doc === dataPPNE[i].id_pp_doc );
+        const dataFEIdxCopy = Object.assign({}, dataFEIdx);
+        const materialConcat = dataPPNE[i].materials.concat(dataFEIdxCopy.materials);
+        const materialConcatNE = materialConcat.filter(mc => mc.site_title === "NE");
+        let materialConcatUniq = this.uniqObjectArray(JSON.parse(JSON.stringify(materialConcat)), "id_mc_doc");
+        for(let j = 0; j < materialConcatUniq.length; j++){
+          let materialConcatNE = materialConcat.find(mcf => mcf.site_title === "NE" && mcf.id_mc_doc === materialConcatUniq[j].id_mc_doc);
+          let materialConcatFE = materialConcat.find(mcf => mcf.site_title === "FE" && mcf.id_mc_doc === materialConcatUniq[j].id_mc_doc);
+          if(materialConcatNE !== undefined){
+            materialConcatUniq[j]["qty"] = materialConcatNE.qty;
+            materialConcatUniq[j]["_id_ne"] = materialConcatNE._id;
+          }else{
+            materialConcatUniq[j]["qty"] = 0;
+          }
+          if(materialConcatFE !== undefined){
+            materialConcatUniq[j]["qty_fe"] = materialConcatFE.qty;
+            materialConcatUniq[j]["_id_fe"] = materialConcatFE._id;
+          }else{
+            materialConcatUniq[j]["qty_fe"] = 0;
+          }
+        }
+        dataNEIdx["_id_ne"] = dataNEIdx._id;
+        dataNEIdx["_id_fe"] = dataFEIdxCopy._id;
+        dataNEIdx["qty_fe"] = dataFEIdxCopy.qty;
+        dataNEIdx["materials"] = materialConcatUniq;
+        dataPPMW.push(dataNEIdx);
+      }
+      this.setState({ product_package_ps_mw : dataPPMW});
     }
   }
 
@@ -710,7 +747,7 @@ class MRDetail extends Component {
 
   getDSPList() {
     this.toggleLoading();
-    this.getDatafromAPIXL('/vendor_data_non_page?where={"Type":"ASP"}').then(res => {
+    this.getDatafromAPIISAT('/vendor_data_non_page?where={"Type":"ASP"}').then(res => {
       if(res.data !== undefined) {
         const items = res.data._items;
         this.setState({dsp_list : items});
@@ -1422,24 +1459,18 @@ class MRDetail extends Component {
     if(dataCDWBSbyCDID !== undefined){
       return (
         <Fragment>
-          <td>{dataCDWBSbyCDID.C1003_WBS_HW}</td>
-          <td>{dataCDWBSbyCDID.C1008_WBS_HWAC}</td>
-          <td>{dataCDWBSbyCDID.C1013_WBS_LCM}</td>
-          <td>{dataCDWBSbyCDID.C1018_WBS_PNRO}</td>
-          <td>{dataCDWBSbyCDID.C1024_WBS_PNDO}</td>
-          <td>{dataCDWBSbyCDID.C1032_WBS_HW_Bulk}</td>
-          <td>{dataCDWBSbyCDID.C1033_WBS_LCM_Bulk}</td>
-          <td>{dataCDWBSbyCDID.C1034_WBS_PowHW_Site_Basis}</td>
-          <td>{dataCDWBSbyCDID.C1035_WBS_PowLCM_Site_Basis}</td>
-          <td>{dataCDWBSbyCDID.C1036_WBS_Kathrein}</td>
+          <td>{dataCDWBSbyCDID.C1043_WBS_HW}</td>
+          <td>{dataCDWBSbyCDID.C1023_WBS_HWAC}</td>
+          <td>{dataCDWBSbyCDID.C1033_WBS_LCM}</td>
+          <td>{dataCDWBSbyCDID.C1003_WBS_PNRO}</td>
+          <td>{dataCDWBSbyCDID.C1053_WBS_SW}</td>
+          <td>{dataCDWBSbyCDID.C1063_C1053_WBS_PS}</td>
+          <td>{dataCDWBSbyCDID.C1066_C1053_WBS_ANC}</td>
         </Fragment>
       )
     }else{
       return(
         <Fragment>
-          <td></td>
-          <td></td>
-          <td></td>
           <td></td>
           <td></td>
           <td></td>
@@ -1736,6 +1767,18 @@ class MRDetail extends Component {
                             Project Name : {this.state.data_mr.project_name}
                           </td>
                         </tr>
+                        <tr>
+                          <td
+                            colSpan="4"
+                            style={{
+                              fontSize: "15px",
+                              textAlign: "center",
+                              color: "rgba(59,134,134,1)",
+                            }}
+                          >
+                            MR Type : {this.state.data_mr.mr_type}
+                          </td>
+                        </tr>
                         {(this.state.data_mr.mr_mitt_no != undefined && this.state.data_mr.mr_mitt_no !== null) && (
                           <tr>
                             <td
@@ -1865,6 +1908,14 @@ class MRDetail extends Component {
                               {this.state.data_mr.no_shipment}
                             </div>
                           </div>
+                          <div>
+                            <div className="mr-detail__body--header-detail">
+                              <span>Project PO</span>
+                            </div>
+                            <div>
+                              {this.state.data_mr.cust_del.map(dm => dm.project_po).join(', ')}
+                            </div>
+                          </div>
                           {(this.state.data_mr.mr_note !== undefined && this.state.data_mr.mr_note.find(e => e.title === "RE-ROUTE") !== undefined) && (
                             <div>
                               <div className="mr-detail__body--header-detail">
@@ -1912,16 +1963,32 @@ class MRDetail extends Component {
                                 <div className="mr-detail__body--header-detail">
                                   <span>Site ID FE</span>
                                 </div>
-                                <div>{this.state.mr_site_NE.site_id}</div>
+                                <div>{this.state.mr_site_FE.site_id}</div>
                               </div>
                               <div className="mr-detail__flex-body--25">
                                 <div className="mr-detail__body--header-detail">
                                   <span>Site Name FE</span>
                                 </div>
-                                <div>{this.state.mr_site_NE.site_name}</div>
+                                <div>{this.state.mr_site_FE.site_name}</div>
                               </div>
                             </Fragment>
                           )}
+                          {(this.state.data_mr.mr_delivery_type_code === "A1" || this.state.data_mr.mr_delivery_type_code === "A2" || this.state.data_mr.mr_delivery_type_code === "B1" ||this.state.data_mr.mr_delivery_type_code === "C1") && (
+                            <Fragment>
+                              <div className="mr-detail__flex-body--25">
+                                <div className="mr-detail__body--header-detail">
+                                  <span>Destination</span>
+                                </div>
+                                <div>{this.state.data_mr["destination"] !== undefined ? this.state.data_mr["destination"].value : null}</div>
+                              </div>
+                              <div className="mr-detail__flex-body--25">
+                                <div className="mr-detail__body--header-detail">
+                                  <span>Destination Name</span>
+                                </div>
+                                <div>{this.state.data_mr["destination"] !== undefined ? this.state.data_mr["destination"].name : null}</div>
+                              </div>
+                            </Fragment>
+                          ) }
                           <Fragment>
                             <div className="mr-detail__flex-body--25">
                               <div className="mr-detail__body--header-detail">
@@ -1950,12 +2017,9 @@ class MRDetail extends Component {
                                             <th>WBS HWAC (License)</th>
                                             <th>WBS LCM</th>
                                             <th>WBS PNRO</th>
-                                            <th>WBS PNDO</th>
-                                            <th>WBS HW Bulk</th>
-                                            <th>WBS LCM Bulk</th>
-                                            <th>WBS PowHW Site Basis</th>
-                                            <th>WBS PowLCM Site Basis</th>
-                                            <th>WBS Kathrein</th>
+                                            <th>WBS SW</th>
+                                            <th>WBS PS</th>
+                                            <th>WBS ANC</th>
                                           </tr>
                                         </thead>
                                         <tbody>
@@ -2010,10 +2074,7 @@ class MRDetail extends Component {
                                         </td>
                                       )}
                                       <td>: &nbsp;</td>
-                                      {this.state.data_mr.mr_type ===
-                                        "Relocation" ||
-                                      this.state.data_mr.mr_type ===
-                                        "Return" ? (
+                                      {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
                                         <td style={{ width: "150px" }}>
                                           {this.state.data_mr.destination.value}
                                         </td>
@@ -2021,9 +2082,7 @@ class MRDetail extends Component {
                                         <td>{this.state.mr_site_NE.site_id}</td>
                                       )}
                                     </tr>
-                                    {this.state.data_mr.mr_type !==
-                                      "Relocation" &&
-                                    this.state.data_mr.mr_type !== "Return" ? (
+                                    {this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
                                       <tr>
                                         <td style={{ width: "150px" }}>
                                           Site Name NE
@@ -2035,6 +2094,28 @@ class MRDetail extends Component {
                                       </tr>
                                     ) : (
                                       ""
+                                    )}
+                                    {this.state.data_mr !== null && this.state.data_mr.sow_type === "TRM" && (
+                                      <Fragment>
+                                      <tr>
+                                        <td style={{ width: "150px" }}>
+                                          Site ID NE
+                                        </td>
+                                        <td>:</td>
+                                        <td>
+                                          {this.state.mr_site_FE.site_id}
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td style={{ width: "150px" }}>
+                                          Site Name NE
+                                        </td>
+                                        <td>:</td>
+                                        <td>
+                                          {this.state.mr_site_FE.site_name}
+                                        </td>
+                                      </tr>
+                                      </Fragment>
                                     )}
                                     <tr>
                                       <td style={{ width: "150px" }}>
@@ -2091,20 +2172,7 @@ class MRDetail extends Component {
                                 this.state.data_mr.mr_type !== "Relocation" &&
                                 this.state.data_mr.mr_type !== "Return" ? (
                                   <Fragment>
-                                    <tr>
-                                      <td style={{ width: "200px" }}>
-                                        Site ID FE
-                                      </td>
-                                      <td>: &nbsp;</td>
-                                      <td>{this.state.mr_site_FE.site_id}</td>
-                                    </tr>
-                                    <tr>
-                                      <td style={{ width: "200px" }}>
-                                        Site Name FE
-                                      </td>
-                                      <td>:</td>
-                                      <td>{this.state.mr_site_FE.site_name}</td>
-                                    </tr>
+
                                   </Fragment>
                                 ) : (
                                   <Fragment>
@@ -2157,8 +2225,14 @@ class MRDetail extends Component {
                       </Col>
                     </Row>
                     <hr className="upload-line-ordering"></hr>
-                    <div>PlantSpec Group No : {this.state.data_mr !== null ? (<Link to={'/ps-list/'+this.state.data_mr.id_plantspec_doc}>{this.state.data_mr.no_plantspec}</Link>) : ""}</div>
+                    {this.state.data_mr !== null && (this.state.data_mr.mr_delivery_type_code === "A1" || this.state.data_mr.mr_delivery_type_code === "A2" || this.state.data_mr.mr_delivery_type_code === "B1" || this.state.data_mr.mr_delivery_type_code === "C1" ) ? (
+                      <div>PlantSpec Warehouse No : {this.state.data_mr !== null ? (<Link to={'/ps-list/'+this.state.data_mr.id_plantspec_doc}>{this.state.data_mr.no_plantspec}</Link>) : ""}</div>
+                    ) : (
+                      <div>PlantSpec Group No : {this.state.data_mr !== null ? (<Link to={'/ps-list/'+this.state.data_mr.id_plantspec_doc}>{this.state.data_mr.no_plantspec}</Link>) : ""}</div>
+                    )}
+                    {this.state.data_mr !== null && (this.state.data_mr.mr_delivery_type_code === "A1" || this.state.data_mr.mr_delivery_type_code !== "A2" && this.state.data_mr.mr_delivery_type_code !== "B1" && this.state.data_mr.mr_delivery_type_code !== "C1" ) ? (
                     <div className="divtable2">
+                    {(this.state.data_mr !== null && this.state.data_mr.sow_type !== "TRM") ? (
                       <Table hover bordered striped responsive size="sm">
                         <thead
                           style={{ backgroundColor: "#0B486B", color: "white" }}
@@ -2278,7 +2352,7 @@ class MRDetail extends Component {
                         status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
                           <tbody>
                             {this.state.mr_site_NE !== null &&
-                              this.state.list_mr_item.filter(e => e.product_type.toLowerCase() !== "svc").map((pp) => (
+                              this.state.list_mr_item.filter(e => e.product_type.toLowerCase() !== "svc" && e.product_type.toLowerCase() !== "hwac" && e.product_type.toLowerCase() !== "sw").map((pp) => (
                                 <Fragment>
                                   <tr
                                     style={{ backgroundColor: "#E5FCC2" }}
@@ -2466,96 +2540,311 @@ class MRDetail extends Component {
                           </tbody>
                         )}
                       </Table>
-                    </div>
-                    <div>Material LOM</div>
-                    <div className="divtable2">
+                    ) : (
                       <Table hover bordered striped responsive size="sm">
-                        <thead style={{ backgroundColor: "#0B486B", color: "white" }} className="table-mr__header--fixed">
-                          <th
-                            rowSpan="2"
-                            className="fixedhead"
-                            style={{
-                              width: "250px",
-                              verticalAlign: "middle",
-                            }}
-                          >
-                            PP / Material Code
-                          </th>
-                          <th
-                            rowSpan="2"
-                            className="fixedhead"
-                            style={{ verticalAlign: "middle" }}
-                          >
-                            PP / Material Name
-                          </th>
-                          <th
-                            rowSpan="2"
-                            className="fixedhead"
-                            style={{ width: "75px", verticalAlign: "middle" }}
-                          >
-                            Unit
-                          </th>
-                          <th
-                            rowSpan="2"
-                            className="fixedhead"
-                            style={{
-                              width: "100px",
-                              verticalAlign: "middle",
-                            }}
-                          >
-                            Total Qty per PP
-                          </th>
-                          <th
-                            rowSpan="2"
-                            className="fixedhead"
-                            style={{
-                              width: "100px",
-                              verticalAlign: "middle",
-                            }}
-                          >
-                            State
-                          </th>
+                        <thead style={{ backgroundColor: "#0B486B", color: "white" }} className="table-mr__header--fixed" >
+                          <tr>
+                            <th rowSpan="2" className="fixedhead" style={{ width: "250px", verticalAlign: "middle", }} >
+                              PP / Material Code
+                            </th>
+                            <th rowSpan="2" className="fixedhead" style={{ verticalAlign: "middle" }} >
+                              PP / Material Name
+                            </th>
+                            <th rowSpan="2" className="fixedhead" style={{ width: "75px", verticalAlign: "middle" }} >
+                              Program
+                            </th>
+                            <th rowSpan="2" className="fixedhead" style={{ width: "75px", verticalAlign: "middle" }} >
+                              Unit
+                            </th>
+                            <th colSpan="2" className="fixedhead" style={{ width: "100px", verticalAlign: "middle", }} >
+                              Total Qty per PP
+                            </th>
+                            {this.state.data_mr !== null && status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
+                              <Fragment>
+                                <th rowSpan="2" className="fixedhead" style={{ width: "100px", verticalAlign: "middle", }} >
+                                  Material in Warehouse
+                                </th>
+                                <th rowSpan="2" className="fixedhead" style={{ width: "100px", verticalAlign: "middle", }} >
+                                  Material Plan
+                                </th>
+                                <th rowSpan="2" className="fixedhead" style={{ width: "100px", verticalAlign: "middle", }} >
+                                  Availability
+                                </th>
+                              </Fragment>
+                            ) : (
+                              <Fragment></Fragment>
+                            )}
+                            <th rowSpan="2" className="fixedhead" style={{verticalAlign: "middle" }}>
+                              PS No. / Material Source
+                            </th>
+                          </tr>
+                          {this.state.data_mr !== null && this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
+                            <tr>
+                              <th className="fixedhead" style={{ width: "100px", verticalAlign: "middle"}} >
+                                Site NE
+                              </th>
+                              <th className="fixedhead" style={{ width: "100px", verticalAlign: "middle"}} >
+                                SITE FE
+                              </th>
+                            </tr>
+                          ) : (
+                            <Fragment></Fragment>
+                          )}
                         </thead>
-                        <tbody>
-                          {(this.state.data_mr !== null && this.state.data_mr.lom_packages !== undefined) && (
-                            <Fragment>
-                              {this.state.data_mr.lom_packages.map(pp =>
+                        {this.state.data_mr !== null && status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
+                          <tbody>
+                            {this.state.product_package_ps_mw.filter(e => e.product_type.toLowerCase() !== "svc").map((pp) => (
                                 <Fragment>
-                                  <tr
-                                    style={{ backgroundColor: "#E5FCC2" }}
-                                    className="fixbody"
-                                  >
+                                  <tr style={{ backgroundColor: "#E5FCC2" }} className="fixbody" >
                                     <td style={{ textAlign: "left" }}>
                                       {pp.pp_id}
                                     </td>
                                     <td>{pp.product_name}</td>
+                                    <td>{pp.program}</td>
                                     <td>{pp.uom}</td>
-                                    <td>{pp.qty}</td>
-                                    <td>{pp.process}</td>
+                                    <td align="center">
+                                      {pp.qty}
+                                    </td>
+                                    <td align="center">
+                                      {pp.qty_fe}
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>{pp.no_tssr_boq_site}</td>
                                   </tr>
-                                  {pp.lom_materials.map(mm =>
-                                    <Fragment>
-                                      <tr style={{
-                                        backgroundColor:
-                                          "rgba(248,246,223, 0.5)",
-                                      }}>
-                                        <td style={{ textAlign: "right" }}>
-                                          {mm.material_id}
-                                        </td>
-                                        <td>{mm.material_name}</td>
-                                        <td>{mm.uom}</td>
-                                        <td>{mm.qty}</td>
-                                        <td></td>
-                                      </tr>
-                                    </Fragment>
-                                  )}
+                                  {pp.materials.map((material) => (
+                                    <tr style={{ backgroundColor: "rgba(248,246,223, 0.5)", }} className="fixbody" >
+                                      <td style={{ textAlign: "right" }}>
+                                        {material.material_id}
+                                      </td>
+                                      <td style={{ textAlign: "left" }}>
+                                        {material.material_name}
+                                      </td>
+                                      <td></td>
+                                      <td>{material.uom}</td>
+                                      <td align="center" >
+                                        {material.qty}
+                                      </td>
+                                      <td align="center" >
+                                        {material.qty_fe}
+                                      </td>
+                                      <td align="center">
+                                        { (qty_wh = this.state.material_wh.find( (e) => e.sku === material.material_id ) !== undefined
+                                            ? this.state.material_wh.find( (e) => e.sku === material.material_id ).qty_sku.toFixed(2) : 0)
+                                        }
+                                      </td>
+                                      <td align="center">
+                                        { (qty_inbound = this.state.material_inbound.find( (e) => e.sku === material.material_id ) !== undefined
+                                          ? this.state.material_inbound.find((e) => e.sku === material.material_id).qty_sku.toFixed(2): 0)
+                                        }
+                                      </td>
+                                      <td align="center">
+                                        {material.qty < qty_wh ? "OK" : "NOK"}
+                                      </td>
+                                      <td>{material.source_material}</td>
+                                    </tr>
+                                  ))}
                                 </Fragment>
-                              )}
-                            </Fragment>
-                          )}
-                        </tbody>
+                              ))}
+                            {this.state.data_mr === null ? (
+                              <tr>
+                                <td colSpan="5">Loading...</td>
+                              </tr>
+                            ) : ( this.state.data_mr.current_mr_status === "NOT ASSIGNED" && (
+                                <tr>
+                                  <td colSpan="5">PS not Assigned</td>
+                                </tr>
+                              )
+                            )}
+                          </tbody>
+                        ) : (
+                          <tbody>
+                            {this.state.product_package_ps_mw.map((pp) => (
+                                <Fragment>
+                                  <tr style={{ backgroundColor: "#E5FCC2" }} className="fixbody" >
+                                    <td style={{ textAlign: "left" }}>
+                                      {pp.pp_id}
+                                    </td>
+                                    <td>{pp.product_name}</td>
+                                    <td>{pp.program}</td>
+                                    <td>{pp.uom}</td>
+                                    <td align="center">{pp.qty}</td>
+                                    <td align="center">{pp.qty_fe}</td>
+                                    <td>{pp.no_tssr_boq_site}</td>
+                                  </tr>
+                                  {pp.materials.map((material) => (
+                                    <tr style={{ backgroundColor: "rgba(248,246,223, 0.5)", }} className="fixbody" >
+                                      <td style={{ textAlign: "right" }}>
+                                        {material.material_id}
+                                      </td>
+                                      <td style={{ textAlign: "left" }}>
+                                        {material.material_name}
+                                      </td>
+                                      <td></td>
+                                      <td>{material.uom}</td>
+                                      <td align="center" colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{material.qty}</td>
+                                      <td align="center" colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{material.qty_fe}</td>
+                                      <td>{material.source_material}</td>
+                                    </tr>
+                                  ))}
+                                </Fragment>
+                              ))}
+                            {this.state.data_mr === null ? (
+                              <tr>
+                                <td colSpan="5">Loading...</td>
+                              </tr>
+                            ) : ( this.state.data_mr.current_mr_status === "NOT ASSIGNED" && (
+                                <tr>
+                                  <td colSpan="5">PS not Assigned</td>
+                                </tr>
+                              )
+                            )}
+                          </tbody>
+                        )}
                       </Table>
+                    )}
                     </div>
+                    ) : (
+                      <div className="divtable2">
+                        <Table hover bordered striped responsive size="sm">
+                          <thead style={{ backgroundColor: "#0B486B", color: "white" }} className="table-mr__header--fixed">
+                            <tr>
+                              <th>PP / Material Code</th>
+                              <th>PP / Material Name</th>
+                              <th>Unit</th>
+                              <th>Qty</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {this.state.data_mr !== null && this.state.data_mr.packages.map(mp =>
+                              <Fragment>
+                              <tr style={{backgroundColor : "rgba(78,205,196,1)"}}>
+                                <td>{mp.pp_id}</td>
+                                <td>{mp.product_name}</td>
+                                <td>{mp.uom}</td>
+                                <td>{mp.qty}</td>
+                              </tr>
+                              {mp.materials.map(mpm =>
+                                <tr style={{backgroundColor:"rgba(248,246,223, 0.5)"}}>
+                                  <td style={{textAlign : 'right'}}>{mpm.material_id}</td>
+                                  <td style={{textAlign : 'left'}}>{mpm.material_name}</td>
+                                  <td>{mpm.uom}</td>
+                                  <td>{mpm.qty}</td>
+                                </tr>
+                              )}
+                              </Fragment>
+                            )}
+                          </tbody>
+                        </Table>
+                      </div>
+                    )}
+                    {this.state.data_mr !== null && (this.state.data_mr.mr_delivery_type_code === "A1" || this.state.data_mr.mr_delivery_type_code !== "A2" && this.state.data_mr.mr_delivery_type_code !== "B1" && this.state.data_mr.mr_delivery_type_code !== "C1" ) ? (
+                      <Fragment>
+                      </Fragment>
+                    ) : (
+                      <Fragment>
+                      <div>Material LOM</div>
+                      <div className="divtable2">
+                        <Table hover bordered striped responsive size="sm">
+                          <thead style={{ backgroundColor: "#0B486B", color: "white" }} className="table-mr__header--fixed">
+                            <th rowSpan="2"
+                              className="fixedhead"
+                              style={{
+                                width: "250px",
+                                verticalAlign: "middle",
+                              }}
+                            >
+                              PP / Material Code
+                            </th>
+                            <th
+                              rowSpan="2"
+                              className="fixedhead"
+                              style={{ verticalAlign: "middle" }}
+                            >
+                              PP / Material Name
+                            </th>
+                            <th
+                              rowSpan="2"
+                              className="fixedhead"
+                              style={{ width: "75px", verticalAlign: "middle" }}
+                            >
+                              Unit
+                            </th>
+                            <th
+                              rowSpan="2"
+                              className="fixedhead"
+                              style={{
+                                width: "100px",
+                                verticalAlign: "middle",
+                              }}
+                            >
+                              Total Qty per PP
+                            </th>
+                            {this.state.data_mr !== null && this.state.data_mr.sow_type === "TRM" && (
+                              <th rowSpan="2" className="fixedhead" style={{width: "100px", verticalAlign: "middle" }}>
+                                Site Title
+                              </th>
+                            )}
+                            <th
+                              rowSpan="2"
+                              className="fixedhead"
+                              style={{
+                                width: "100px",
+                                verticalAlign: "middle",
+                              }}
+                            >
+                              State
+                            </th>
+                          </thead>
+                          <tbody>
+                            {(this.state.data_mr !== null && this.state.data_mr.lom_packages !== undefined) && (
+                              <Fragment>
+                                {this.state.data_mr.lom_packages.map(pp =>
+                                  <Fragment>
+                                    <tr
+                                      style={{ backgroundColor: "#E5FCC2" }}
+                                      className="fixbody"
+                                    >
+                                      <td style={{ textAlign: "left" }}>
+                                        {pp.pp_id}
+                                      </td>
+                                      <td>{pp.product_name}</td>
+                                      <td>{pp.uom}</td>
+                                      <td>{pp.qty}</td>
+                                      {this.state.data_mr !== null && this.state.data_mr.sow_type === "TRM" && (
+                                        <td>{pp.site_title}</td>
+                                      )}
+                                      <td>{pp.process}</td>
+                                    </tr>
+                                    {pp.lom_materials.map(mm =>
+                                      <Fragment>
+                                        <tr style={{
+                                          backgroundColor:
+                                            "rgba(248,246,223, 0.5)",
+                                        }}>
+                                          <td style={{ textAlign: "right" }}>
+                                            {mm.material_id}
+                                          </td>
+                                          <td>{mm.material_name}</td>
+                                          <td>{mm.uom}</td>
+                                          <td>{mm.qty}</td>
+                                          {this.state.data_mr !== null && this.state.data_mr.sow_type === "TRM" && (
+                                            <td>{pp.site_title +" => "+pp.site_id}</td>
+                                          )}
+                                          <td></td>
+                                        </tr>
+                                      </Fragment>
+                                    )}
+                                  </Fragment>
+                                )}
+                              </Fragment>
+                            )}
+                          </tbody>
+                        </Table>
+                      </div>
+                      </Fragment>
+                    )}
                   </Fragment>
                 )}
                 {this.state.tabs_submenu[2] === true && (

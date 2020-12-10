@@ -239,7 +239,7 @@ class WaitingDispatch extends Component {
                 <span style={{ lineHeight: '2' }}>
                   <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> Material Dispatch
                 </span>
-                <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download MR List</Button>
+                
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -293,7 +293,7 @@ class WaitingDispatch extends Component {
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{convertDateFormat(list.eta)}</td>
-                        <td></td>
+                        <td>{list.creator.map(c => c.email)}</td>
                         <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
@@ -301,7 +301,7 @@ class WaitingDispatch extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries</small>
+                  <small>Showing {this.state.mr_list.length} entries from {this.state.totalData} data</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}

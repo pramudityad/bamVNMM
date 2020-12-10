@@ -94,118 +94,10 @@ class SIDupload extends Component {
 
   componentDidMount() {
     document.title = "SID Upload | BAM";
-    // this.getDataTower();
-    // this.getDataProject();
-    // this.loadOptionsASP();
-  }
-
-  async previewData() {
-    const dataXLS = [
-      [
-        "id",
-        "project",
-        "sow_type",
-        "created_based",
-        "vendor_code",
-        "vendor_name",
-        "payment_terms",
-        "identifier",
-      ],
-      [
-        "new",
-        this.state.project_name_selected,
-        this.state.create_assignment_form[16],
-        this.state.identifier_by,
-        this.state.create_assignment_form[67],
-        this.state.create_assignment_form[66],
-        this.state.create_assignment_form[15],
-        this.state.tower_selected_id,
-      ],
-    ];
-    const dataXLSASG = {
-      includeSsow: this.state.can_edit_ssow === true ? true : false,
-      data: dataXLS,
-    };
-    const respondCheckingASG = await this.postDatatoAPINODE(
-      "/aspAssignment/aspAssignmentByActivity",
-      dataXLSASG
-    );
-    if (
-      respondCheckingASG.data !== undefined &&
-      respondCheckingASG.status >= 200 &&
-      respondCheckingASG.status <= 300
-    ) {
-      let dataChecking = respondCheckingASG.data.data[0];
-      if (dataChecking.operation === "INVALID") {
-        this.setState({
-          action_status: "failed",
-          action_message: dataChecking.activity_status,
-        });
-      } else {
-        this.setState(
-          { assignment_ssow_upload: dataChecking, creation_ssow_form: [] },
-          () => {
-            if (
-              dataChecking.SSOW_List !== undefined &&
-              dataChecking.SSOW_List.length !== 0
-            ) {
-              this.setState({ creation_ssow_form: dataChecking.SSOW_List });
-              this.setState({ action_status: null, action_message: null });
-            } else {
-              this.setState({ creation_ssow_form: [{}] });
-            }
-          }
-        );
-      }
-    } else {
-      if (
-        respondCheckingASG.response !== undefined &&
-        respondCheckingASG.response.data !== undefined &&
-        respondCheckingASG.response.data.error !== undefined
-      ) {
-        if (respondCheckingASG.response.data.error.message !== undefined) {
-          this.setState({
-            action_status: "failed",
-            action_message: respondCheckingASG.response.data.error.message,
-          });
-        } else {
-          this.setState({
-            action_status: "failed",
-            action_message: respondCheckingASG.response.data.error,
-          });
-        }
-      } else {
-        this.setState({ action_status: "failed" });
-      }
-    }
   }
 
   async postAssignment() {
     const dataForm = this.state.create_assignment_form;
-  }
-
-  async handleChangeForm(e) {
-    // const name = e.target.value;
-    const index = e.target.name;
-    const code = e.target.key;
-    // const value = e.target.value;
-    let dataForm = this.state.create_assignment_form;
-    const value = e.target.value;
-    const indexSel = e.target.selectedIndex;
-    const name = e.target[indexSel].text;
-    dataForm[parseInt(index)] = value;
-    if (index === "14") {
-      const getDataASP = this.state.asp_list.find(
-        (e) => e.Vendor_Code === value
-      );
-      let dataForm = this.state.create_assignment_form;
-      dataForm[66] = name;
-      dataForm[67] = value;
-      dataForm[68] = getDataASP !== undefined ? getDataASP.Email : "";
-    }
-    this.setState({ create_assignment_form: dataForm }, () => {
-      console.log("Assignment Form", this.state.create_assignment_form);
-    });
   }
 
   async loadOptionsCDID(inputValue) {
@@ -232,57 +124,6 @@ class SIDupload extends Component {
       }
       this.setState({ project_name: wp_id_list[0].project });
       return wp_id_list;
-    }
-  }
-
-  async loadOptionsSSOWID(inputValue) {
-    if (!inputValue || inputValue.length < 2) {
-      return [];
-    } else {
-      let ssow_id_list = [];
-      // const getSSOWID = await this.getDataFromAPIEXEL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
-      const getSSOWID = await this.getDataFromAPIEXEL(
-        '/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"' +
-          inputValue +
-          '", "$options":"i"}}'
-      );
-      if (getSSOWID !== undefined && getSSOWID.data !== undefined) {
-        getSSOWID.data._items.map((ssow) =>
-          ssow_id_list.push({
-            label: "(" + ssow.sow_type + ") " + ssow.ssow_id,
-            value: ssow.ssow_id,
-            sow_type: ssow.sow_type,
-            ssow_unit: ssow.ssow_type,
-            description: ssow.description,
-          })
-        );
-      }
-      return ssow_id_list;
-    }
-  }
-
-  async loadOptionsActivityNumber(inputValue) {
-    if (!inputValue || inputValue.length < 2) {
-      return [];
-    } else {
-      let act_number_list = [];
-      const getActNumber = await this.getDataFromAPIEXEL(
-        '/ssow_activity_number_sorted_nonpage?where={"activity_number":{"$regex":"' +
-          inputValue +
-          '", "$options":"i"}}'
-      );
-      if (getActNumber !== undefined && getActNumber.data !== undefined) {
-        getActNumber.data._items.map((act_number) =>
-          act_number_list.push({
-            label:
-              act_number.activity_number !== undefined
-                ? act_number.activity_number
-                : null,
-            value: act_number.activity_number,
-          })
-        );
-      }
-      return act_number_list;
     }
   }
 
@@ -344,8 +185,6 @@ class SIDupload extends Component {
                 <th>CD ID</th>
                 <th>Project Name</th>
                 <th>Project Code</th>
-                {/* <th>Qty Deliver</th>
-                <th>Qty Comm</th> */}
               </tr>
             </thead>
             <tbody>
@@ -353,8 +192,6 @@ class SIDupload extends Component {
                     <td>{cdInfo.WP_ID}</td>
                     <td>{cdInfo.CD_Info_Project_Name}</td>
                     <td>{cdInfo.Project_Code}</td>
-                    {/* <td>{conf.qty}</td>
-                    <td>{conf.qty_commercial}</td> */}
                   </tr>
             </tbody>
           </Table>
@@ -369,7 +206,7 @@ class SIDupload extends Component {
     }));
   };
 
-  postPOD = async () => {
+  postSID = async () => {
     this.toggleLoading();
     this.togglecreateModal();
     let _id = this.state.cd_selected.id_cd_doc;
@@ -395,15 +232,15 @@ class SIDupload extends Component {
     );
     await fileDocument.append("site_info", JSON.stringify([dataSite]));
     await fileDocument.append("type", JSON.stringify(this.state.type_uploader_selected));
-    const respostPOD = await postDatatoAPINODEdata(
+    const respostSID = await postDatatoAPINODEdata(
       "/sidFile/createSidFile",
       fileDocument,
       this.state.tokenUser
     );
     if (
-      respostPOD.data !== undefined &&
-      respostPOD.status >= 200 &&
-      respostPOD.status <= 300
+      respostSID.data !== undefined &&
+      respostSID.status >= 200 &&
+      respostSID.status <= 300
     ) {
       this.setState({
         action_status: "success",
@@ -411,7 +248,15 @@ class SIDupload extends Component {
       });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed" });
+      if (respostSID.response !== undefined && respostSID.response.data !== undefined && respostSID.response.data.error !== undefined) {
+        if (respostSID.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: respostSID.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: respostSID.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
       this.toggleLoading();
     }
   };
@@ -519,7 +364,7 @@ class SIDupload extends Component {
               color="success"
               className="btn-pill"
               // disabled={this.state.rowsXLS.length === 0}
-              onClick={this.postPOD}
+              onClick={this.postSID}
               style={{ height: "30px", width: "100px" }}
             >
               Submit

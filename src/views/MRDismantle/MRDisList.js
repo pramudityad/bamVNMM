@@ -20,6 +20,8 @@ const password = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
+const array_field = ["mra_id", "mra_type", "mrd_category", "project_name", "cust_del.cd_id", "site_info.site_id", "site_info.site_name", "site_info.site_region", "destination.value", "site_info.site_name", "site_info.site_region", "current_mra_status", "asp_company_dismantle", "dsp_company", "creator.email", "created_on"]
+
 class MRDisList extends Component {
   constructor(props) {
     super(props);
@@ -32,25 +34,25 @@ class MRDisList extends Component {
       tokenUser: this.props.dataLogin.token,
       vendor_name : this.props.dataLogin.vendor_name,
       vendor_code : this.props.dataLogin.vendor_code,
-      mr_list: [],
+      mr_dis_list: [],
       prevPage: 0,
       activePage: 1,
       totalData: 0,
       perPage: 10,
-      filter_list: new Array(14).fill(""),
-      mr_all: [],
+      filter_list: {},
+      ps_dis_all: [],
       modal_loading: false,
       dropdownOpen: new Array(1).fill(false),
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
-    this.downloadMRlist = this.downloadMRlist.bind(this);
-    this.getMRList = this.getMRList.bind(this);
+    this.downloadMRList = this.downloadMRList.bind(this);
+    this.getMRAList = this.getMRAList.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
-    this.downloadAllMRMigration = this.downloadAllMRMigration.bind(this);
     this.toggleDropdown = this.toggleDropdown.bind(this);
-    // this.getAllMR = this.getAllMR.bind(this);
+    this.downloadMRAStatusMigration = this.downloadMRAStatusMigration.bind(this);
+    // this.getAllPSDis = this.getAllPSDis.bind(this);
   }
 
   toggleDropdown(i) {
@@ -107,64 +109,76 @@ class MRDisList extends Component {
     }));
   }
 
-  getMRList() {
+  getMRAList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     let filter_array = [];
-    this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
-    this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
-    this.state.filter_list[2] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
-    this.state.filter_list[3] !== "" && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
-    this.state.filter_list[4] !== "" && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
-    this.state.filter_list[5] !== "" && (filter_array.push('"current_mr_status":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
-    this.state.filter_list[6] !== "" && (filter_array.push('"current_milestones":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
-    this.state.filter_list[7] !== "" && (filter_array.push('"site_info.site_region":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
-    this.state.filter_list[8] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
-    this.state.filter_list[9] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
-    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
-    this.state.filter_list[11] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
-    this.state.filter_list[12] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[12] + '", "$options" : "i"}'));
-    this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
+    for(let i = 0; i < array_field.length; i++){
+      if(this.state.filter_list[array_field[i]] !== undefined && this.state.filter_list[array_field[i]] !== null){
+        filter_array.push('"'+array_field[i]+'":{"$regex" : "' + this.state.filter_list[array_field[i]] + '", "$options" : "i"}');
+      }
+    }
     if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
       filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
     }
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('""asp_company_dismantle"," : "'+this.state.vendor_name+'"');
+    }
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
-      console.log("MR List Sorted", res);
+    this.getDataFromAPINODE('/matreq-srn?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
-        this.setState({ mr_list: items, totalData: totalData });
+        this.setState({ mr_dis_list: items, totalData: totalData });
       }
     })
   }
 
-  async getAllMR() {
-    let mrList = [];
+  async getAllMRAList() {
     let filter_array = [];
-    this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
-    this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
-    this.state.filter_list[2] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
-    this.state.filter_list[3] !== "" && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
-    this.state.filter_list[4] !== "" && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
-    this.state.filter_list[5] !== "" && (filter_array.push('"current_mr_status":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
-    this.state.filter_list[6] !== "" && (filter_array.push('"current_milestones":{"$regex" : "' + this.state.filter_list[6] + '", "$options" : "i"}'));
-    this.state.filter_list[7] !== "" && (filter_array.push('"site_info.site_region":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
-    this.state.filter_list[8] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
-    this.state.filter_list[9] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
-    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
-    this.state.filter_list[11] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
-    this.state.filter_list[12] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[12] + '", "$options" : "i"}'));
-    this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
+    for(let i = 0; i < array_field.length; i++){
+      if(this.state.filter_list[array_field[i]] !== undefined && this.state.filter_list[array_field[i]] !== null){
+        filter_array.push('"'+array_field[i]+'":{"$regex" : "' + this.state.filter_list[array_field[i]] + '", "$options" : "i"}');
+      }
+    }
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
+    }
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('""asp_company_dismantle"," : "'+this.state.vendor_name+'"');
+    }
     let whereAnd = '{' + filter_array.join(',') + '}';
-    let res = await this.getDataFromAPINODE('/matreq?srt=_id:-1&noPg=1&q=' + whereAnd)
-    if (res.data !== undefined) {
-      const items = res.data.data;
-      mrList = res.data.data;
-      return mrList;
-      // this.setState({ mr_all: items });
+    let items = [];
+    const res = await this.getDataFromAPINODE('/matreq-srn?noPg=1&srt=_id:-1&q=' + whereAnd)
+    if (res !== undefined && res.data !== undefined) {
+      items = res.data.data;
+      return items = res.data.data;
     }else{
-      return [];
+      return items;
+    }
+  }
+
+  async getAllMRAListFS() {
+    let filter_array = [];
+    for(let i = 0; i < array_field.length; i++){
+      if(this.state.filter_list[array_field[i]] !== undefined && this.state.filter_list[array_field[i]] !== null){
+        filter_array.push('"'+array_field[i]+'":{"$regex" : "' + this.state.filter_list[array_field[i]] + '", "$options" : "i"}');
+      }
+    }
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
+    }
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('""asp_company_dismantle"," : "'+this.state.vendor_name+'"');
+    }
+    let whereAnd = '{' + filter_array.join(',') + '}';
+    let items = [];
+    const res = await this.getDataFromAPINODE('/matreq-srn?noPg=1&srt=_id:-1&q=' + whereAnd+'&v={"mra_id":1}')
+    if (res !== undefined && res.data !== undefined) {
+      items = res.data.data;
+      return items = res.data.data;
+    }else{
+      return items;
     }
   }
 
@@ -179,34 +193,11 @@ class MRDisList extends Component {
     return s || undefined;
   }
 
-  async downloadMRlist() {
-    this.toggleLoading();
-    const wb = new Excel.Workbook();
-    const ws = wb.addWorksheet();
-
-    const allMR = await this.getAllMR();
-
-    let headerRow = ["MR ID", "MR MITT ID","MR Type","MR Delivery Type", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "MR MITT Created On", "MR MITT Created By","Updated On", "Created On"];
-    ws.addRow(headerRow);
-
-    for (let i = 1; i < headerRow.length + 1; i++) {
-      ws.getCell(this.numToSSColumn(i) + '1').font = { size: 11, bold: true };
-    }
-
-    for (let i = 0; i < allMR.length; i++) {
-      const creator_mr_mitt = allMR[i].mr_status.find(e => e.mr_status_name === "PLANTSPEC" && e.mr_status_value === "NOT ASSIGNED");
-      ws.addRow([allMR[i].mr_id, allMR[i].mr_mitt_no, allMR[i].mr_type, allMR[i].mr_delivery_type, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, creator_mr_mitt !== undefined ? creator_mr_mitt.mr_status_date : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mr_status_updater : null, allMR[i].updated_on, allMR[i].created_on])
-    }
-    this.toggleLoading();
-    const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'MR List.xlsx');
-  }
-
   componentDidMount() {
     this.props.SidebarMinimizer(true);
-    this.getMRList();
-    // this.getAllMR();
-    document.title = 'MR List | BAM';
+    this.getMRAList();
+    // this.getAllPSDis();
+    document.title = 'MRA List | BAM';
   }
 
   componentWillUnmount() {
@@ -215,53 +206,87 @@ class MRDisList extends Component {
 
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
-      this.getMRList();
+      this.getMRAList();
     });
   }
 
   handleFilterList(e) {
     const index = e.target.name;
     let value = e.target.value;
-    if (value !== "" && value.length === 0) {
-      value = "";
+    if (value !== null && value.length === 0) {
+      value = null;
     }
     let dataFilter = this.state.filter_list;
-    dataFilter[parseInt(index)] = value;
+    dataFilter[index] = value;
     this.setState({ filter_list: dataFilter, activePage: 1 }, () => {
       this.onChangeDebounced(e);
     })
   }
 
-  async downloadAllMRMigration() {
-    let allMRList = [];
-    let getMR = await this.getDataFromAPINODE('/matreq?noPg=1&srt=_id:-1&q={"mr_mitt_no" : {"$exists" : 1}, "mr_mitt_no" : {"$ne" : null}}');
-    if (getMR.data !== undefined) {
-      allMRList = getMR.data.data;
-    }
-
+  async downloadMRList() {
+    this.toggleLoading();
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let headerRow = ["mr_bam_id","mr_mitt_no","ps_mitt_no","plantspec_assigned_date","plantspec_assigned_by","mr_requested_date","mr_requested_by","mr_approved_date","mr_approved_by","order_processing_finish_date","order_processing_finish_by","rtd_confirmed_date","rtd_confirmed_by","joint_check_finish_date","joint_check_finish_by","loading_process_finish_date","loading_process_finish_by","mr_dispatch_date","mr_dispatch_by","mr_on_site_date","mr_on_site_by"];
+    const allMR = await this.getAllMRAList();
+
+    let headerRow = ["MRA ID", "MRA SH ID", "MRA Type","MRA Category", "Project Name", "CD ID", "Origin ID", "Origin Name",  "Destination ID", "Destination Name", "Current Status", "Current Milestone", "Dismantle By", "Delivery By", "ETA", "MRA SH Created On", "MRA SH Created By","Updated On", "Created On"];
     ws.addRow(headerRow);
 
-    for (let i = 0; i < allMRList.length; i++) {
-      let rowAdded = [allMRList[i].mr_id, allMRList[i].mr_mitt_no];
-      ws.addRow(rowAdded);
+    for (let i = 1; i < headerRow.length + 1; i++) {
+      ws.getCell(this.numToSSColumn(i) + '1').font = { size: 11, bold: true };
     }
 
+    for (let i = 0; i < allMR.length; i++) {
+      const creator_mr_mitt = allMR[i].mra_status.find(e => e.mra_status_name === "PLANTSPEC SRN" && e.mra_status_value === "NOT ASSIGNED");
+      const dataPrimary = [allMR[i].mra_id, allMR[i].mra_sh_id, allMR[i].mra_type, allMR[i].mrd_category, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id]
+      const dataOrigin = [allMR[i].site_info.find(si => si.srn_title === "Origin") !== undefined ? allMR[i].site_info.find(si => si.srn_title === "Origin").site_id : null, allMR[i].site_info.find(si => si.srn_title === "Origin") !== undefined ? allMR[i].site_info.find(si => si.srn_title === "Origin").site_name : null];
+      const dataDestination = [allMR[i].mrd_category === "To Warehouse" ? allMR[i].destination.value : allMR[i].site_info.find(si => si.srn_title === "Destination") !== undefined ? allMR[i].site_info.find(si => si.srn_title === "Destination").site_id : null, allMR[i].mrd_category === "To Warehouse" ? null : allMR[i].site_info.find(si => si.srn_title === "Destination") !== undefined ? allMR[i].site_info.find(si => si.srn_title === "Destination").site_name : null];
+      const dataCommon = [allMR[i].current_mra_status, allMR[i].current_milestones, allMR[i].asp_company_dismantle, allMR[i].dsp_company, allMR[i].eta !== undefined ? new Date(allMR[i].eta) : null, creator_mr_mitt !== undefined ? new Date(creator_mr_mitt.mra_status_date) : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mra_status_updater : null, new Date(allMR[i].updated_on), new Date(allMR[i].created_on)];
+      ws.addRow(dataPrimary.concat(dataOrigin).concat(dataDestination).concat(dataCommon));
+      const getRowLast = ws.lastRow._number;
+      ws.getCell("M"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("O"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("P"+getRowLast).numFmt = "YYYY-MM-DD";
+      if(creator_mr_mitt !== undefined && creator_mr_mitt !== null){
+        ws.getCell("L"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
+    }
+    this.toggleLoading();
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'MR List For Status Migration from SH Template.xlsx');
+    saveAs(new Blob([allocexport]), 'MRA List.xlsx');
+  }
+
+  async downloadMRAStatusMigration() {
+    this.toggleLoading();
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const allMR = await this.getAllMRAListFS();
+
+    let headerRow = ["MRD_ID_BAM", "LDM_Approve_By", "LDM_Approve_Date", "Deliver_By", "Start_Delivery_By", "Start_Delivery_Date", "Start_Delivery_Phone", "End_Delivery_By", "End_Delivery_Date", "End_Delivery_Phone", "Material_On_Warehouse_By", "Material_On_Warehouse_Date"];
+    ws.addRow(headerRow);
+
+    for (let i = 1; i < headerRow.length + 1; i++) {
+      ws.getCell(this.numToSSColumn(i) + '1').font = { size: 11, bold: true };
+    }
+
+    for (let i = 0; i < allMR.length; i++) {
+      ws.addRow([allMR[i].mra_id]);
+    }
+    this.toggleLoading();
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'MRA Status Migration.xlsx');
   }
 
   onChangeDebounced(e) {
-    this.getMRList();
-    // this.getAllMR();
+    this.getMRAList();
+    // this.getAllPSDis();
   }
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < 13; i++) {
+    for (let i = 0; i < array_field.length; i++) {
       searchBar.push(
         <td>
           <div className="controls" style={{ width: '150px' }}>
@@ -269,7 +294,7 @@ class MRDisList extends Component {
               <InputGroupAddon addonType="prepend">
                 <InputGroupText><i className="fa fa-search"></i></InputGroupText>
               </InputGroupAddon>
-              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[i]} name={i} size="sm" />
+              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[array_field[i]]} name={array_field[i]} size="sm" />
             </InputGroup>
           </div>
         </td>
@@ -281,7 +306,7 @@ class MRDisList extends Component {
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
 
   render() {
-    const downloadMR = {
+    const downloadMRA = {
       float: 'right',
       marginRight: '10px'
     }
@@ -293,47 +318,44 @@ class MRDisList extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: '2' }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MR List
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MRA List
                 </span>
                 {((this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-Mover") === -1)) && (
                   <React.Fragment>
-                  {(this.state.userRole.findIndex(e => e === "BAM-Engineering") === -1 && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-LDM") === -1) && (
-                  <React.Fragment>
-                  	<Link to={'/mr-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR</Button></Link>
-                  	<Link to={'/bulk-mr-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR Bulk</Button></Link>
-                  </React.Fragment>
-                  )}
                   <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{ float: 'right', marginRight : '10px' }}>
                     <DropdownToggle caret color="secondary">
                       <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>File
                     </DropdownToggle>
                     <DropdownMenu>
-                      <DropdownItem header>MR File</DropdownItem>
-                      <DropdownItem onClick={this.downloadMRlist}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MR List</DropdownItem>
-                      {(this.state.userRole.findIndex(e => e === "BAM-Engineering") === -1 && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-LDM") === -1) && (
-                      <DropdownItem onClick={this.downloadAllMRMigration}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Format MR List Status Migration</DropdownItem>
-                      )}
+                      <DropdownItem header>MRA File</DropdownItem>
+                      <DropdownItem onClick={this.downloadMRList}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MRA List</DropdownItem>
+                      <DropdownItem onClick={this.downloadMRAStatusMigration}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MRA Status Migration Template</DropdownItem>
                     </DropdownMenu>
                   </Dropdown>
                 </React.Fragment>
                 )}
+                <Link to={'/srn/mr-srn-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MRA </Button></Link>
+                <Link to={'/srn/mr-srn-creation-bulk'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MRA Bulk </Button></Link>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th>MR ID</th>
+                      <th>MRA ID</th>
+                      <th>MRA Type</th>
+                      <th>Category</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
-                      <th>Site ID</th>
-                      <th>Site Name</th>
+                      <th>Tower ID Origin</th>
+                      <th>Tower Name Origin</th>
+                      <th>Region Origin</th>
+                      <th>Destination ID</th>
+                      <th>Destination Name</th>
+                      <th>Destination Region</th>
                       <th>Current Status</th>
-                      <th>Current Milestone</th>
-                      <th>Region</th>
-                      <th>DSP</th>
-                      <th>ETA</th>
+                      <th>Dismantle By</th>
+                      <th>Delivery By</th>
                       <th>Created By</th>
-                      <th>Updated On</th>
                       <th>Created On</th>
                     </tr>
                     <tr>
@@ -341,33 +363,28 @@ class MRDisList extends Component {
                     </tr>
                   </thead>
                   <tbody>
-                    {this.state.mr_list.length === 0 && (
+                    {this.state.mr_dis_list.length === 0 && (
                       <tr>
-                        <td colSpan="15">No Data Available</td>
+                        <td colSpan="16">No Data Available</td>
                       </tr>
                     )}
-                    {this.state.mr_list.map((list, i) =>
+                    {this.state.mr_dis_list.map((list, i) =>
                       <tr key={list._id}>
-                        <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
+                        <td><Link to={'/srn/mr-srn-detail/'+list._id}>{list.mra_id}</Link></td>
+                        <td>{list.mra_type}</td>
+                        <td>{list.mrd_category}</td>
                         <td>{list.project_name}</td>
-                        <td>
-                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
-                        </td>
-                        <td>
-                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
-                        </td>
-                        <td>
-                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
-                        </td>
-                        <td>{list.current_mr_status}</td>
-                        <td>{list.current_milestones}</td>
-                        <td>
-                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_region).join(' , '))}
-                        </td>
+                        <td>{list.cust_del !== undefined ? list.cust_del.map(cd => cd.cd_id).join(", ") : null}</td>
+                        <td>{list.site_info.find(si => si.srn_title === "Origin") !== undefined ? list.site_info.find(si => si.srn_title === "Origin").site_id : null }</td>
+                        <td>{list.site_info.find(si => si.srn_title === "Origin") !== undefined ? list.site_info.find(si => si.srn_title === "Origin").site_name : null}</td>
+                        <td>{list.site_info.find(si => si.srn_title === "Origin") !== undefined ? list.site_info.find(si => si.srn_title === "Origin").site_region : null}</td>
+                        <td>{list.mrd_category === "To Warehouse" ? list.destination.value : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_id : null }</td>
+                        <td>{list.mrd_category === "To Warehouse" ? null : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_name : null}</td>
+                        <td>{list.mrd_category === "To Warehouse" ? null : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_region : null}</td>
+                        <td>{list.current_mra_status}</td>
+                        <td>{list.asp_company_dismantle}</td>
                         <td>{list.dsp_company}</td>
-                        <td>{convertDateFormat(list.eta)}</td>
                         <td>{list.creator.map(e => e.email)}</td>
-                        <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
                     )}

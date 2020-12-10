@@ -31,6 +31,8 @@ const password = "F760qbAg2sml";
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
+const array_field = ["shipment_id", "no_shipment", "transporter", "truck_no", "driver", "driver_phone"]
+
 const Checkbox = ({
   type = "checkbox",
   name,
@@ -237,8 +239,15 @@ class ShipmentList extends Component {
   getShipmentList() {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
+    let filter_array = [];
+    for(let i = 0; i < array_field.length; i++){
+      if(this.state.filter_list[array_field[i]] !== null && this.state.filter_list[array_field[i]] !== undefined){
+        filter_array.push('"'+array_field[i]+'":{"$regex" : "' + this.state.filter_list[array_field[i]] + '", "$options" : "i"}');
+      }
+    }
+    let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE(
-      "/matreqShipment?srt=_id:-1&lmt=" + maxPage + "&pg=" + page
+      "/matreqShipment?srt=_id:-1&q="+ whereAnd +"&lmt=" + maxPage + "&pg=" + page
     ).then((res) => {
       if (res.data !== undefined) {
         const items = res.data.data;
@@ -402,11 +411,12 @@ class ShipmentList extends Component {
   handleFilterList(e) {
     const index = e.target.name;
     let value = e.target.value;
-    if (value !== "" && value.length === 0) {
-      value = "";
+    if (value === "" || value.length === 0) {
+      value = null;
     }
     let dataFilter = this.state.filter_list;
-    dataFilter[parseInt(index)] = value;
+    dataFilter[index] = value;
+    console.log("dataFilter", dataFilter);
     this.setState({ filter_list: dataFilter, activePage: 1 }, () => {
       this.onChangeDebounced(e);
     });
@@ -449,6 +459,25 @@ class ShipmentList extends Component {
   loading = () => (
     <div className="animated fadeIn pt-1 text-center">Loading...</div>
   );
+
+  loopSearchBar = () => {
+    let searchBar = [];
+    for (let i = 0; i < array_field.length; i++) {
+      searchBar.push(
+        <td>
+          <div className="controls" style={{ width: '150px' }}>
+            <InputGroup className="input-prepend">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+              </InputGroupAddon>
+              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[array_field[i]]} name={array_field[i]} size="sm" />
+            </InputGroup>
+          </div>
+        </td>
+      )
+    }
+    return searchBar;
+  }
 
   render() {
     function AlertProcess(props) {
@@ -688,13 +717,16 @@ class ShipmentList extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th>Action</th>
+                      <th rowSpan="2">Action</th>
                       <th>Shipment Number</th>
                       <th>Shipment ID</th>
                       <th>Transporter</th>
                       <th>Plat Nomer</th>
                       <th>Driver</th>
                       <th>Driver Phone</th>
+                    </tr>
+                    <tr>
+                      {this.loopSearchBar()}
                     </tr>
                   </thead>
                   <tbody>

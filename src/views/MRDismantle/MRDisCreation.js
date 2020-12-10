@@ -7,12 +7,13 @@ import { connect } from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
 import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
+import { getDatafromAPIEXEL, postDatatoAPINODE, getDatafromAPINODE} from "../../helper/asyncFunction";
+import * as XLSX from 'xlsx';
+import Excel from 'exceljs';
+import { saveAs } from 'file-saver';
+import debounce from "lodash.debounce";
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
-
-const API_URL_BMS_Phil = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
-const usernamePhilApi = 'pdbdash';
-const passwordPhilApi = 'rtkO6EZLkxL1';
 
 const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
@@ -38,48 +39,33 @@ class MRDisCreation extends Component {
       userName : this.props.dataLogin.userName,
       userEmail : this.props.dataLogin.email,
       tokenUser : this.props.dataLogin.token,
-      list_tower : [],
-      list_project : [],
-      list_tower_selection : [],
-      list_project_selection : [],
-      list_warehouse : [],
-      form_checking : {},
-        create_mr_form : new Array(9).fill(null),
-        create_mr_name_form : new Array(9).fill(null),
-        list_cd_id : [],
-        cd_id_selected : null,
-        data_cd_id_selected : null,
-        project_selected : null,
-        project_name_selected : null,
-        list_tssr : [],
-        list_tssr_for_selection : [],
-        id_tssr_selected : null,
-        data_tssr_selected : null,
-        tssr_BOM_data_NE : null,
-        tssr_BOM_data_FE : null,
-        list_pp_material_tssr : [],
-        redirectSign : false,
-        action_status : null,
-        action_message : null,
-        toggle_display : "new",
-        identifier_by : "tower_id",
-        tower_selected_id : null,
-        dsp_list : [],
-        validation_form : {},
-    };
-    this.saveMRtoAPI = this.saveMRtoAPI.bind(this);
-    this.handleChangeFormMRCreation = this.handleChangeFormMRCreation.bind(this);
-    this.handleChangeMRType = this.handleChangeMRType.bind(this);
-    this.handleChangeProject = this.handleChangeProject.bind(this);
-    this.handleChangeCD = this.handleChangeCD.bind(this);
-    this.showHide = this.showHide.bind(this);
-    this.handleChangeProjectXL = this.handleChangeProjectXL.bind(this);
-    this.handleChangeTowerXL = this.handleChangeTowerXL.bind(this);
-    this.handleChangeIdentifierBy = this.handleChangeIdentifierBy.bind(this);
-    this.loadOptionsTowerID = this.loadOptionsTowerID.bind(this);
-    this.loadOptionsCDID = this.loadOptionsCDID.bind(this);
+      redirectSign : false,
+      validation_form : {},
+      action_status : null,
+      action_message : null,
 
+      project_selected : null,
+      project_name_selected : null,
+      project_all : [],
+      form_creation : {},
+      wp_list : [],
+      rowsXLS : [],
+      list_warehouse : [],
+      list_dsp : [],
+      list_asg_selection : [],
+      inputan_file : null,
+    };
+    this.handleChangeProject = this.handleChangeProject.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
+    this.loadOptionsWPID = this.loadOptionsWPID.bind(this);
+    this.loadOptionsWPIDDestination = this.loadOptionsWPIDDestination.bind(this);
+    this.handleChangeWPID = this.handleChangeWPID.bind(this);
+    this.handleChangeWPIDDestination = this.handleChangeWPIDDestination.bind(this);
+    this.handleChangeText = this.handleChangeText.bind(this);
+    this.handleChangeDropdown = this.handleChangeDropdown.bind(this);
+    this.saveMRDis = this.saveMRDis.bind(this);
+    this.loadOptionsASG = this.loadOptionsASG.bind(this);
+    this.handleChangeASG = this.handleChangeASG.bind(this);
   }
 
   toggleLoading() {
@@ -108,25 +94,6 @@ class MRDisCreation extends Component {
     }
   }
 
-  async getDatafromAPIBMS(url){
-    try {
-      let respond = await axios.get(API_URL_BMS_Phil +url, {
-        headers : {'Content-Type':'application/json'},
-        auth: {
-          username: usernamePhilApi,
-          password: passwordPhilApi
-        },
-      })
-      if(respond.status >= 200 && respond.status < 300){
-        console.log("respond Get Data", respond);
-      }
-      return respond;
-    }catch (err) {
-      let respond = err;
-      console.log("respond Get Data", err);
-      return respond;
-    }
-  }
 
   async getDatafromAPIXL(url){
     try {
@@ -167,237 +134,48 @@ class MRDisCreation extends Component {
     }
   }
 
-  getDataCD(){
-    this.getDatafromAPIXL('/custdel_op').then( resCD => {
-      if(resCD.data !== undefined){
-        this.setState({ list_cd_id : resCD.data._items })
-      }
-    })
-  }
+  // MRA 
 
-  getDataCDProject(){
-    const project_id = this.state.data_cd_id_selected.CD_Info_Project;
-    this.getDatafromAPIXL('/project_op/'+project_id).then( resCD => {
-      if(resCD.data !== undefined){
-        this.setState({ project_selected : resCD.data._id, project_name_selected : resCD.data.Project })
-      }
-    })
-  }
+  exportFormatPSDismantle = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
 
-  handleChangeIdentifierBy(e){
-    const value = e.target.value;
-    this.setState({identifier_by : value});
-  }
+    ws.addRow(["bundle_id","bundle_name","qty","category"]);
 
-  handleChangeTSSR = (newValue) => {
-    const _id_tssr = newValue.value;
-    const data_tssr_selection = this.state.list_tssr.find(e => e._id === _id_tssr);
-    this.setState({id_tssr_selected : _id_tssr, data_tssr_selected : data_tssr_selection }, () => {
-      this.getTSSRBOM();
-    });
-  }
-
-  handleChangeMRType(e) {
-    const value = e.target.value;
-    this.setState({mr_type : value });
-  }
-
-  handleChangeFormMRCreation(e){
-    const value = e.target.value;
-    const index = e.target.name;
-    let dataForm = this.state.create_mr_form;
-    dataForm[parseInt(index)] = value;
-    const indexOpt = e.target.selectedIndex;
-    if(indexOpt !== undefined){
-      let dataFormName = this.state.create_mr_name_form;
-      const textOpt = e.target[indexOpt].text;
-      dataFormName[parseInt(index)] = textOpt;
-      this.setState({create_mr_name_form : dataFormName});
-    }
-    this.setState({create_mr_form : dataForm}, () => {
-      console.log("PPForm", this.state.create_mr_form, this.state.create_mr_name_form);
-    });
-  }
-
-  preparingDataMR(){
-    const dateNow = new Date();
-    const dataRandom = Math.floor(Math.random() * 100).toString().padStart(4, '0');
-    const numberTSSR = dateNow.getFullYear().toString()+(dateNow.getMonth()+1).toString().padStart(2, '0')+dateNow.getDate().toString().padStart(2, '0')+dataRandom.toString();
-    return numberTSSR;
-  }
-
-  selectedDatetoFormat(date){
-    let dateSplit = date.split("-");
-    return dateSplit[0]+"-"+dateSplit[1]+"-"+dateSplit[2]
-  }
-
-  handleCheckingForm() {
-    const dataForm = this.state.create_mr_form;
-    const dataFormName = this.state.create_mr_name_form;
-    let dataValidate = {};
-    let checkerror = [];
-    let dataFormHeader = ["project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "created_based", "identifier"];
-    let dataFormInputan = [this.state.project_name_selected, dataForm[3], dataForm[4], dataForm[8], dataForm[5], dataForm[6], dataForm[7], this.state.identifier_by, this.state.tower_selected_id];
-    for (let i = 0; i < dataFormHeader.length; i++) {
-      if (dataFormInputan[i] === undefined || dataFormInputan[i] === null) {
-        dataValidate[dataFormHeader[i]] = false;
-        checkerror.push(false);
-      }
-    }
-    this.setState({ validation_form: dataValidate });
-    if (checkerror.length !== 0) {
-      return true
-    } else {
-      return false
-    }
-  }
-
-  async saveMRtoAPI(){
-    this.toggleLoading();
-    this.setState({action_status : null, action_message : null});
-    const dataCD = this.state.data_cd_id_selected;
-    const dataForm = this.state.create_mr_form;
-    const dataFormName = this.state.create_mr_name_form;
-    const dataValidation = await this.handleCheckingForm();
-    if(dataValidation !== true){
-      const numberingMR = this.preparingDataMR();
-      const newDate = new Date();
-      const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-      let list_site = [];
-      let dataXLS = [
-        ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "mr_comment_project", "sent_mr_request", "created_based", "identifier", "priority_mr", "week_number"],
-        ["new", this.state.project_name_selected, this.selectMRType(dataForm[3]), this.selectDeliveryType(dataForm[4]), dataForm[8], this.selectedDatetoFormat(dataForm[5]), this.selectedDatetoFormat(dataForm[6]), dataForm[7], "", "", this.state.identifier_by, this.state.tower_selected_id, dataForm[10], dataForm[11]]
-      ]
-      const respondCheckingMR = await this.postDatatoAPINODE('/matreq/matreqByActivity', {"data" : dataXLS});
-      if(respondCheckingMR.data !== undefined && respondCheckingMR.status >= 200 && respondCheckingMR.status <= 300 ) {
-        const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', {"data" : respondCheckingMR.data.data });
-        if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
-          this.setState({ action_status : 'success', action_message: null }, () => {
-            if(respondSaveMR.data.new !== undefined && respondSaveMR.data.new.length !== 0){
-              setTimeout(function() { this.setState({redirectSign : respondSaveMR.data.new[0]._id })}.bind(this), 2000 );
-            }
-          });
-        } else{
-          if(respondSaveMR.response !== undefined && respondSaveMR.response.data !== undefined && respondSaveMR.response.data.error !== undefined){
-            if(respondSaveMR.response.data.error.message !== undefined){
-              this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error.message });
-            }else{
-              this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error });
-            }
-          }else{
-            this.setState({ action_status: 'failed' });
-          }
-        }
-      }else{
-        if(respondCheckingMR.response !== undefined && respondCheckingMR.response.data !== undefined && respondCheckingMR.response.data.error !== undefined){
-          if(respondCheckingMR.response.data.error.message !== undefined){
-            this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error.message });
-          }else{
-            this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error });
-          }
-        }else{
-          this.setState({ action_status: 'failed' });
-        }
-      }
-    }
-    this.toggleLoading();
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'MRA  Template.xlsx');
   }
 
   componentDidMount(){
-    // this.getDataCD();
-    // this.getDataTower();
-    this.getDSPList();
-    this.getDataProject();
     this.getDataWarehouse();
-    document.title = "MR Creation | BAM"
+    this.getDSPList();
+    document.title = "MRA  Creation | BAM"
   }
 
-  getDSPList() {
-    this.getDatafromAPIXL('/vendor_data_non_page?where={"Type":"ASP"}').then(res => {
-      if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({dsp_list : items});
-      }
-    })
-  }
-
-  getDataTower(){
-    this.getDatafromAPIXL('/tower_site_sorted_non_page?projection={"tower_id" : 1}').then( resTower => {
-      if(resTower.data !== undefined){
-        this.setState({ list_tower : resTower.data._items }, () => {
-          this.filterDataTower("");
-        })
+  getProjectAll(){
+    getDatafromAPIEXEL('/project_sorted_non_page').then( resp => {
+      if(resp !== undefined){
+        this.setState({project_all : resp.data._items});
       }
     })
   }
 
   getDataWarehouse(){
-    this.getDataFromAPINODE('/whManagement/warehouse?q={"wh_type":{"$regex" : "internal", "$options" : "i"}}').then( resWH => {
+    getDatafromAPINODE('/whManagement/warehouse?q={"wh_type":{"$regex" : "internal", "$options" : "i"}}', this.state.tokenUser).then( resWH => {
       if(resWH.data !== undefined){
         this.setState({ list_warehouse : resWH.data.data })
       }
     })
   }
 
-  getDataProject(){
-    this.getDatafromAPIXL('/project_sorted_non_page').then( resProject => {
-      if(resProject.data !== undefined){
-        this.setState({ list_project : resProject.data._items }, () => {
-          this.filterDataProject("");
-        })
+  getDSPList() {
+    getDatafromAPIEXEL('/vendor_data_non_page?where={"Type":"ASP"}').then(res => {
+      if(res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({list_dsp : items});
       }
     })
   }
-
-  filterDataTower = (inputValue) => {
-    const list = [];
-    this.state.list_tower.map(i =>
-        list.push({'label' : i.tower_id, 'value' : i.tower_id})
-    )
-    this.setState({list_tower_selection : list})
-    if(inputValue.length === 0){
-      return list;
-    }else{
-      return this.state.list_tower_selection.filter(i =>
-        i.label.toLowerCase().includes(inputValue.toLowerCase())
-      );
-    }
-  };
-
-  filterDataProject = (inputValue) => {
-    const list = [];
-    this.state.list_project.map(i =>
-        list.push({'label' : i.Project, 'value' : i.Project})
-    )
-    this.setState({list_project_selection : list})
-    if(inputValue.length === 0){
-      return list;
-    }else{
-      return this.state.list_project_selection.filter(i =>
-        i.label.toLowerCase().includes(inputValue.toLowerCase())
-      );
-    }
-  };
-
-  handleChangeProjectXL(e){
-    if(e !== null){
-      this.setState({project_selected : e.map(e => e.value).join("///"), project_name_selected : e.map(e => e.value).join("///") }, () => {
-        console.log("project_name_selected", this.state.project_name_selected);
-      })
-    }else{
-      this.setState({project_selected :  null, project_name_selected : null })
-    }
-    return e;
-  }
-
-  // handleChangeTowerXL(e){
-  //   let dataForm = this.state.create_mr_form;
-  //   let dataFormName = this.state.create_mr_name_form;
-  //   dataForm[1] = e.value;
-  //   dataFormName[1] = e.label;
-  //   this.setState({create_mr_form : dataForm, create_mr_name_form : dataFormName });
-  //   return e
-  // }
 
   handleChangeProject(e){
     const value = e.target.value;
@@ -406,119 +184,212 @@ class MRDisCreation extends Component {
     this.setState({project_selected : value, project_name_selected : text});
   }
 
-  handleChangeCD(e){
-    const value = e.target.value;
-    const index = e.target.selectedIndex;
-    const text = e.target[index].text;
-    const data_CD = this.state.list_cd_id.find(e => e._id === value);
-    this.setState({cd_id_selected : value, data_cd_id_selected : data_CD}, () => {
-      this.getDataCDProject();
-    });
-  }
-
-  async loadOptionsTowerID(inputValue) {
+  async loadOptionsWPID(inputValue) {
     if(!inputValue || inputValue.length < 3 ) {
       return [];
     } else {
       let tower_id_list = [];
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
-      const getTowerID = await this.getDatafromAPIXL('/tower_site_sorted_non_page?where={"tower_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      const getTowerID = await getDatafromAPIEXEL('/custdel_op?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}&projection={"WP_ID":1,"WP_Name":1,"CD_Info_Project_Name":1,"CD_Info_Project":1,"Tower_Info_TowerID_NE":1,"Tower_Info_TowerName_NE":1}');
       if(getTowerID !== undefined && getTowerID.data !== undefined) {
-        getTowerID.data._items.map(tower =>
-          tower_id_list.push({'label' : tower.tower_id, 'value' : tower.tower_id}))
+        this.setState({wp_list : getTowerID.data._items});
+        getTowerID.data._items.map(wp =>
+          tower_id_list.push({'label' : wp.WP_ID, 'value' : wp._id, 'WP_ID' : wp.WP_ID, 'WP_Name' : wp.WP_Name, 'Project_Name' : wp.CD_Info_Project_Name, 'id_project_doc' : wp.CD_Info_Project, 'site_id' : wp.Tower_Info_TowerID_NE, 'site_name' : wp.Tower_Info_TowerName_NE}))
       }
       return tower_id_list;
     }
   }
 
-  async loadOptionsCDID(inputValue) {
-    if(!inputValue) {
+  async loadOptionsWPIDDestination(inputValue) {
+    if(!inputValue || inputValue.length < 3 ) {
       return [];
     } else {
-      let wp_id_list = [];
+      let tower_id_list = [];
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
-      const getWPID = await this.getDatafromAPIXL('/custdel_sorted_non_page?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}');
-      if(getWPID !== undefined && getWPID.data !== undefined) {
-        this.setState({list_cd_id : getWPID.data._items});
-        getWPID.data._items.map(wp =>
-          wp_id_list.push({'value' : wp.WP_ID , 'label' : wp.WP_ID +" ( "+wp.WP_Name+" )", 'project' : wp.CD_Info_Project_Name}))
+      const getTowerID = await getDatafromAPIEXEL('/custdel_op?where={"WP_ID":{"$regex":"'+inputValue+'", "$options":"i"}}&projection={"WP_ID":1,"WP_Name":1,"CD_Info_Project_Name":1,"CD_Info_Project":1,"Tower_Info_TowerID_NE":1,"Tower_Info_TowerName_NE":1}');
+      if(getTowerID !== undefined && getTowerID.data !== undefined) {
+        this.setState({wp_list : getTowerID.data._items});
+        getTowerID.data._items.map(wp =>
+          tower_id_list.push({'label' : wp.WP_ID, 'value' : wp._id, 'WP_ID' : wp.WP_ID, 'WP_Name' : wp.WP_Name, 'Project_Name' : wp.CD_Info_Project_Name, 'id_project_doc' : wp.CD_Info_Project, 'site_id' : wp.Tower_Info_TowerID_NE, 'site_name' : wp.Tower_Info_TowerName_NE}))
       }
-      this.setState({project_name : wp_id_list[0].project})
-      return wp_id_list;
+      return tower_id_list;
     }
   }
 
-  handleChangeTowerXL(e){
-    const cd_id_number = e.value;
-    this.setState({tower_selected_id : cd_id_number});
-    if(this.state.identifier_by === "cd_id"){
-      let findCDID = this.state.list_cd_id.find(e => e.WP_ID === cd_id_number.trim());
-      if(findCDID !== undefined){
-        this.setState({project_selected : findCDID.CD_Info_Project, project_name_selected : findCDID.CD_Info_Project_Name });
-      }
-    }
-    return e
-  }
-
-  showHide(e) {
-    if(e.target.value === "Relocation") {
-      this.setState({toggle_display : "relocation"});
-    } else if(e.target.value === "Return") {
-      this.setState({toggle_display : "return"});
+  async loadOptionsASG(inputValue) {
+    if (!inputValue) {
+      this.setState({ list_asg_selection: [] });
+      return [];
     } else {
-      this.setState({toggle_display : "new"});
+      let asg_list = [];
+      const getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q={"Assignment_No":{"$regex":"' + inputValue + '", "$options":"i"}}&v={"Assignment_No":1, "Site_ID" : 1}');
+      if (getASG !== undefined && getASG.data !== undefined) {
+        this.setState({ list_asg_selection: getASG.data.data }, () =>
+          getASG.data.data.map(mr =>
+            asg_list.push({ 'label': mr.Assignment_No !== undefined ? mr.Assignment_No : null, 'value': mr._id, 'site_id_asg' : mr.Site_ID })))
+      }
+      console.log("asg_list", asg_list);
+      return asg_list;
     }
   }
 
-  selectMRType(TypeDel){
-    let delType = null;
-    switch(TypeDel) {
-      case "New":
-        delType = 1;
-        break;
-      case "Upgrade":
-        delType = 2;
-        break;
-      case "Additional":
-        delType = 3;
-        break;
-      case "Outstanding":
-        delType = 4;
-        break;
-      default:
-        delType = 1;
-    }
-    return delType
+  handleChangeWPID(newValue){
+    this.setState(
+      (prevState) => ({
+        form_creation: {
+          ...prevState.form_creation,
+          ["id_wp_doc"]: newValue.value,
+          ["wp_id"]: newValue.WP_ID,
+          ["wp_name"]: newValue.WP_Name,
+          ["site_id"]: newValue.site_id,
+          ["site_name"]: newValue.site_name,
+          ["id_project_doc"]: newValue.id_project_doc,
+          ["project_name"]: newValue.Project_Name,
+        },
+      })
+    );
+    return newValue
   }
 
-  selectDeliveryType(TypeDel){
-    let delType = null;
-    switch(TypeDel) {
-      case "Warehouse to Site":
-        delType = 1;
-        break;
-      case "Site to Warehouse":
-        delType = 2;
-        break;
-      case "Site to Site":
-        delType = 3;
-        break;
-      case "Warehouse to Warehouse":
-        delType = 4;
-        break;
-      default:
-        delType = 1;
-    }
-    return delType
+  handleChangeWPIDDestination(newValue){
+    this.setState(
+      (prevState) => ({
+        form_creation: {
+          ...prevState.form_creation,
+          ["id_wp_doc_destination"]: newValue.value,
+          ["wp_id_destination"]: newValue.WP_ID,
+          ["wp_name_destination"]: newValue.WP_Name,
+          ["site_id_destination"]: newValue.site_id,
+          ["site_name_destination"]: newValue.site_name,
+          ["id_project_doc_destination"]: newValue.id_project_doc,
+          ["project_name_destination"]: newValue.Project_Name,
+        },
+      })
+    );
+    return newValue
   }
 
-  addDateFunction(afterDay){
-    var today = new Date();
-    today.setDate(today.getDate() + parseInt(afterDay));
-    let todayDate = today.getFullYear().toString()+"-"+(today.getMonth()+1).toString().padStart(2, '0')+"-"+today.getDate().toString().padStart(2, '0')
-    console.log("today", todayDate);
-    return todayDate;
+  fileHandlerUpload = (input) => {
+    const file = input.target.files[0];
+    const reader = new FileReader();
+    const rABS = !!reader.readAsBinaryString;
+    reader.onload = (e) => {
+      /* Parse data */
+      const bstr = e.target.result;
+      const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array', cellDates:true});
+      /* Get first worksheet */
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      /* Convert array of arrays */
+      const data = XLSX.utils.sheet_to_json(ws, {header:1, devfal : null});
+      /* Update state */
+      // this.ArrayEmptytoNull(data);
+      this.setState({ action_status: null, action_message: null }, () => {
+        this.ArrayEmptytoNull(data);
+      });
+    };
+    if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
   }
+
+  ArrayEmptytoNull(dataXLS){
+    let newDataXLS = [];
+    for(let i = 0; i < dataXLS.length; i++){
+      let col = [];
+      for(let j = 0; j < dataXLS[0].length; j++){
+        if(typeof dataXLS[i][j] === "object"){
+          let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
+          if(dataObject !== null){
+            dataObject = dataObject.replace(/"/g, "");
+          }
+          col.push(dataObject);
+        }else{
+          col.push(this.checkValue(dataXLS[i][j]));
+        }
+      }
+      newDataXLS.push(col);
+    }
+    this.setState({
+      rowsXLS : newDataXLS,
+    });
+  }
+
+  handleChangeText(e){
+    const value = e.target.value;
+    const name = e.target.name;
+    this.setState(
+      (prevState) => ({
+        form_creation: {
+          ...prevState.form_creation,
+          [name]: value,
+        },
+      })
+    );
+  }
+
+  handleChangeDropdown(e){
+    const value = e.target.value;
+    const name = e.target.name;
+    const index = e.target.selectedIndex;
+    const text = e.target[index].text;
+    this.setState(
+      (prevState) => ({
+        form_creation: {
+          ...prevState.form_creation,
+          [name]: value,
+          [name+'_name']: text,
+        },
+      })
+    );
+  }
+
+  async saveMRDis(){
+    const dataForm = this.state.form_creation;
+    const dataMR = [
+        ["id", "activity_id", "project", "category", "eta", "etd", "deliver_by", "dismantle_by", "wh_destination", "activity_id_destination", "project_destination", "assignment_id", "mra_type", "mr_related", "note"],
+        ["new", dataForm.wp_id, dataForm.project_name, dataForm.destination, dataForm.eta, dataForm.etd, dataForm.deliver_by, dataForm.dismantle_by, dataForm.warehouse, dataForm.warehouse === "TWH" ? null : dataForm.wp_id_destination, dataForm.warehouse === "TWH" ? null : dataForm.project_name_destination, dataForm.assignment_id === undefined ? null : dataForm.assignment_id, 1, null, dataForm.notes === undefined ? null : dataForm.notes],
+    ];
+    let fileDocument = new FormData();
+    await fileDocument.append('data', JSON.stringify(dataMR));
+    if(this.state.inputan_file !== null){
+      await fileDocument.append('fileDocument', this.state.inputan_file);
+    }
+    const resPost = await postDatatoAPINODE('/matreq-srn/createMatreqDismantle', fileDocument, this.state.tokenUser)
+    if(resPost !== undefined && resPost.data !== undefined){
+      this.setState({action_status : 'success'})
+    }else{
+      if (resPost.response !== undefined && resPost.response.data !== undefined && resPost.response.data.error !== undefined) {
+        if (resPost.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: resPost.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: resPost.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
+  handleChangeASG = async (newValue) => {
+    this.setState(
+      (prevState) => ({
+        form_creation: {
+          ...prevState.form_creation,
+          ["assignment_id"]: newValue.label,
+          ["site_id_asg"] : newValue.site_id_asg,
+        },
+      })
+    );
+  };
+
+  handleInputFile = (e) => {
+    let fileUpload = null;
+    if ( e !== undefined && e.target !== undefined && e.target.files !== undefined ) {
+      fileUpload = e.target.files[0];
+    }
+    this.setState({ inputan_file: fileUpload }, () =>
+      console.log(this.state.inputan_file)
+    );
+  };
 
   render() {
     if(this.state.redirectSign !== false){
@@ -535,185 +406,188 @@ class MRDisCreation extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-edit" style={{marginRight: "8px"}}></i>MR Creation </span>
+            <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-edit" style={{marginRight: "8px"}}></i>MRA  Creation </span>
           </CardHeader>
           <CardBody>
             <Form>
               <Row form>
                 <Col md={6}>
                   <FormGroup>
-                    <Label>MR Type</Label>
-                    <Input type="select" name="3" value={this.state.create_mr_form[3]} onChange={e => {this.handleChangeFormMRCreation(e); this.showHide(e)}} style={this.state.validation_form.mr_type === false ? {borderColor : 'red'} : {}}>
-                      <option value="" disabled selected hidden>Select MR Type</option>
-                      <option value="New">New</option>
-                      <option value="Upgrade">Upgrade</option>
-                      <option value="Additional">Additional</option>
-                      <option value="Outstanding">Outstanding</option>
+                    <Label>WP ID Source<span style={{color : 'rgba(216,67,21 ,1)'}}>*</span></Label>
+                    <AsyncSelect
+                      cacheOptions
+                      loadOptions={this.loadOptionsWPID}
+                      defaultOptions
+                      onChange={this.handleChangeWPID}
+                    />
+                  </FormGroup>
+                </Col>
+                <Col md={6}>
+                  <FormGroup>
+                    <Label>WP Name Source</Label>
+                    <Input type="type" name="site_name" readOnly value={this.state.form_creation.wp_name} onChange={this.handleChangeProject} />
+                  </FormGroup>
+                </Col>
+              </Row>
+              <Row form>
+                <Col md={4}>
+                  <FormGroup>
+                    <Label>Site ID Source</Label>
+                    <Input type="type" name="site_id" readOnly value={this.state.form_creation.site_id} onChange={this.handleChangeProject} />
+                  </FormGroup>
+                </Col>
+                <Col md={4}>
+                  <FormGroup>
+                    <Label>Site Name Source</Label>
+                    <Input type="type" name="site_name" readOnly value={this.state.form_creation.site_name} onChange={this.handleChangeProject} />
+                  </FormGroup>
+                </Col>
+                <Col md={4}>
+                  <FormGroup>
+                    <Label>Project Name Source</Label>
+                    <Input type="type" name="project_name" readOnly value={this.state.form_creation.project_name} onChange={this.handleChangeProject} />
+                  </FormGroup>
+                </Col>
+              </Row>
+              <Row form>
+                <Col md={6}>
+                  <FormGroup>
+                    <Label>Destination<span style={{color : 'rgba(216,67,21 ,1)'}}>*</span></Label>
+                    <Input type="select" name="destination" value={this.state.form_creation.destination} onChange={this.handleChangeDropdown}>
+                      <option value="" disabled selected hidden>Select Destination</option>
+                      <option value="TWH">Delivery to Warehouse</option>
+                      <option value="TST">Delivery to Site</option>
                     </Input>
                   </FormGroup>
                 </Col>
-                <Col md={6}>
-                  <FormGroup>
-                    <Label>MR Delivery Type</Label>
-                    <Input type="select" name="4" value={this.state.create_mr_form[4]} onChange={this.handleChangeFormMRCreation} style={this.state.validation_form.mr_delivery_type === false ? {borderColor : 'red'} : {}}>
-                      <option value="" disabled selected hidden>Select MR Delivery Type</option>
-                      <option value="Warehouse to Site" hidden={this.state.toggle_display !== "new"}>Warehouse to Site</option>
-                      <option value="Site to Warehouse" hidden={this.state.toggle_display !== "return"}>Site to Warehouse</option>
-                      <option value="Site to Site" hidden={this.state.toggle_display !== "relocation"}>Site to Site</option>
-                      <option value="Warehouse to Warehouse" hidden={this.state.toggle_display !== "relocation"}>Warehouse to Warehouse</option>
-                    </Input>
-                  </FormGroup>
-                </Col>
               </Row>
               <Row form>
                 <Col md={6}>
                   <FormGroup>
-                    <Label>
-                      <select type="select" onChange={this.handleChangeIdentifierBy} value={this.state.identifier_by}>
-                        <option value="cd_id">CD ID</option>
-                        <option value="tower_id">Tower ID</option>
-                      </select>
-                    </Label>
-                    {this.state.identifier_by === "tower_id" ? (
-                      <AsyncSelect
-                        cacheOptions
-                        loadOptions={this.loadOptionsTowerID}
-                        defaultOptions
-                        onChange={this.handleChangeTowerXL}
-                      />
-                    ) : (
-                      <AsyncSelect
-                        cacheOptions
-                        loadOptions={this.loadOptionsCDID}
-                        defaultOptions
-                        onChange={this.handleChangeTowerXL}
-                      />
-                    )}
-                  </FormGroup>
-                </Col>
-              </Row>
-              <Row form>
-              {this.state.identifier_by === "tower_id" ? (
-                <Col md={6}>
-                  <FormGroup>
-                    <Label>Project</Label>
-                      <Select
-                        cacheOptions
-                        isMulti
-                        options={this.state.list_project_selection}
-                        onChange={this.handleChangeProjectXL}
-                      />
-                  </FormGroup>
-                </Col>
-              ) : (
-                <Col md="6">
-                  <FormGroup>
-                    <Label>Project Name</Label>
-                    <Input value={this.state.project_name_selected} readOnly/>
-                  </FormGroup>
-                </Col>
-              )}
-              </Row>
-              <Row form>
-                <Col md={6}>
-                  <FormGroup>
-                    <Label>Delivery Company</Label>
-                    <Input type="select" name="7" value={this.state.create_mr_form[7]} onChange={this.handleChangeFormMRCreation} style={this.state.validation_form.deliver_by === false ? {borderColor : 'red'} : {}}>
-                      <option value="" disabled selected hidden>Select Delivery Company</option>
-                      <option value="DSP">DSP</option>
-                      {this.state.dsp_list.map(e =>
-                        <option value={e.Vendor_Code}>{e.Name}</option>
-                      )}
-                    </Input>
-                    {this.state.create_mr_form[7] === "DSP" && (
-                      <FormText color="muted" style={{fontSize : '12px', paddingLeft : '5px', marginTop : '5px'}}>
-                        LDM will choose the DSP company
-                      </FormText>
-                    ) }
-                  </FormGroup>
-                </Col>
-              </Row>
-              <Row form>
-                <Col md={6}>
-                  <FormGroup>
-                    <Label>Origin Warehouse</Label>
-                    <Input type="select" name="8" value={this.state.create_mr_form[8]} onChange={this.handleChangeFormMRCreation} hidden={this.state.toggle_display === "return"} style={this.state.validation_form.origin_warehouse === false ? {borderColor : 'red'} : {}}>
-                      <option value="" disabled selected hidden>Select Origin</option>
+                    <Label>Warehouse{this.state.form_creation.destination === "TWH" && (<span style={{color : 'rgba(216,67,21 ,1)'}}>*</span>)}</Label>
+                    <Input type="select" name="warehouse" value={this.state.form_creation.warehouse} onChange={this.handleChangeDropdown}>
+                      <option value="" disabled selected hidden>Select Warehouse</option>
                       {this.state.list_warehouse.map(e =>
                         <option value={e.wh_id}>{e.wh_id +" - "+e.wh_name}</option>
                       )}
                     </Input>
-                    <Input type="text" name="8" onChange={this.handleChangeFormMRCreation} hidden={this.state.toggle_display !== "return"} />
                   </FormGroup>
                 </Col>
-                <Col md={6} hidden={this.state.toggle_display === "new"}>
+              </Row>
+              <Row form>
+                <Col md={6}>
                   <FormGroup>
-                    <Label>Destination</Label>
-                    <Input type="select" name="9" value={this.state.create_mr_form[9]} onChange={this.handleChangeFormMRCreation}>
-                      <option value="" disabled selected hidden>Select Destination</option>
-                      <option value={"JKT"}>Jakarta</option>
-                      <option value={"MKS"}>Makassar</option>
-                      <option value={"PLB"}>Palembang</option>
-                      <option value={"PKB"}>Pekanbaru</option>
-                      <option value={"PDG"}>Padang</option>
-                      <option value={"MND"}>Manado</option>
+                    <Label>Dismantle by<span style={{color : 'rgba(216,67,21 ,1)'}}>*</span></Label>
+                    <Input type="select" name="dismantle_by" value={this.state.form_creation.dismantle_by} onChange={this.handleChangeDropdown} style={this.state.validation_form.dismantle_by === false ? {borderColor : 'red'} : {}}>
+                      <option value="" disabled selected hidden>Select Dismantle Company</option>
+                      {this.state.list_dsp.map(e =>
+                        <option value={e.Vendor_Code}>{e.Name}</option>
+                      )}
                     </Input>
+                  </FormGroup>
+                </Col>
+                <Col md={6}>
+                  <FormGroup>
+                    <Label>Deliver by<span style={{color : 'rgba(216,67,21 ,1)'}}>*</span></Label>
+                    <Input type="select" name="deliver_by" value={this.state.form_creation.deliver_by} onChange={this.handleChangeDropdown} style={this.state.validation_form.deliver_by === false ? {borderColor : 'red'} : {}}>
+                      <option value="" disabled selected hidden>Select Delivery Company</option>
+                      <option value="DSP">DSP</option>
+                      {this.state.list_dsp.map(e =>
+                        <option value={e.Vendor_Code}>{e.Name}</option>
+                      )}
+                    </Input>
+                  </FormGroup>
+                </Col>
+              </Row>
+              {this.state.form_creation.destination === "TST" && (
+                <Fragment>
+                  <Row form>
+                    <Col md={6}>
+                      <FormGroup>
+                        <Label>WP ID Destination<span style={{color : 'rgba(216,67,21 ,1)'}}>*</span></Label>
+                        <AsyncSelect
+                          cacheOptions
+                          loadOptions={this.loadOptionsWPIDDestination}
+                          defaultOptions
+                          onChange={this.handleChangeWPIDDestination}
+                        />
+                      </FormGroup>
+                    </Col>
+                    <Col md={6}>
+                      <FormGroup>
+                        <Label>WP Name Destination</Label>
+                        <Input type="type" name="site_name" readOnly value={this.state.form_creation.wp_name_destination} onChange={this.handleChangeProject} />
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  <Row form>
+                    <Col md={4}>
+                      <FormGroup>
+                        <Label>Site ID Destination</Label>
+                        <Input type="type" name="site_id" readOnly value={this.state.form_creation.site_id_destination} onChange={this.handleChangeProject} />
+                      </FormGroup>
+                    </Col>
+                    <Col md={4}>
+                      <FormGroup>
+                        <Label>Site Name Destination</Label>
+                        <Input type="type" name="site_name" readOnly value={this.state.form_creation.site_name_destination} onChange={this.handleChangeProject} />
+                      </FormGroup>
+                    </Col>
+                    <Col md={4}>
+                      <FormGroup>
+                        <Label>Project Name Destination</Label>
+                        <Input type="type" name="project_name" readOnly value={this.state.form_creation.project_name_destination} onChange={this.handleChangeProject} />
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                </Fragment>
+              )}
+              <Row form>
+                <Col md={3}>
+                  <FormGroup>
+                    <Label>ETD<span style={{color : 'rgba(216,67,21 ,1)'}}>*</span></Label>
+                    <Input type="date" name="etd" value={this.state.form_creation.etd} onChange={this.handleChangeText} />
+                  </FormGroup>
+                </Col>
+                <Col md={3}>
+                  <FormGroup>
+                    <Label>ETA<span style={{color : 'rgba(216,67,21 ,1)'}}>*</span></Label>
+                    <Input type="date" name="eta" value={this.state.form_creation.eta} onChange={this.handleChangeText} />
                   </FormGroup>
                 </Col>
               </Row>
               <Row form>
                 <Col md={3}>
                   <FormGroup>
-                    <Label>ETD</Label>
-                    <Input
-                      type="date"
-                      name="5" value={this.state.create_mr_form[5]} onChange={this.handleChangeFormMRCreation}
-                      style={this.state.validation_form.etd === false ? {borderColor : 'red'} : {}}
-                    />
+                    <Label>Notes<span style={{marginLeft : '5px', fontSize : '10px'}}>(Optional)</span></Label>
+                    <Input type="textarea" name="notes" value={this.state.form_creation.notes} onChange={this.handleChangeText} />
                   </FormGroup>
                 </Col>
                 <Col md={3}>
                   <FormGroup>
-                    <Label>ETA</Label>
-                    <Input
-                      type="date"
-                      name="6" value={this.state.create_mr_form[6]} onChange={this.handleChangeFormMRCreation}
-                      style={this.state.validation_form.eta === false ? {borderColor : 'red'} : {}}
-                    />
+                    <Label>Assignemnt ID<span style={{marginLeft : '5px', fontSize : '10px'}}>(Optional)</span></Label>
+                    <AsyncSelect loadOptions={this.loadOptionsASG} defaultOptions onChange={this.handleChangeASG} />
                   </FormGroup>
                 </Col>
                 <Col md={3}>
                   <FormGroup>
-                    <Label>Priority</Label>
-                    <Input type="select" name="10" value={this.state.create_mr_form[10]} onChange={this.handleChangeFormMRCreation}>
-                      <option value="" disabled selected hidden>Select Priority</option>
-                      <option value={"P1"}>P1</option>
-                      <option value={"P2"}>P2</option>
-                      <option value={"P3"}>P3</option>
-                    </Input>
-                    {/* <Input
-                      type="string"
-                      name="10" value={this.state.create_mr_form[10]} onChange={this.handleChangeFormMRCreation}
-                    /> */}
+                    <Label>Assignment Site ID</Label>
+                    <Input type="text" name="site_id_asg" value={this.state.form_creation.site_id_asg} readOnly />
                   </FormGroup>
                 </Col>
+              </Row>
+              <Row form>
                 <Col md={3}>
                   <FormGroup>
-                    <Label>Week target</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      max="54"
-                      name="11" value={this.state.create_mr_form[11]} onChange={this.handleChangeFormMRCreation}
-
-                    />
+                    <Label>BAPA File<span style={{marginLeft : '5px', fontSize : '10px'}}>(Optional)</span></Label>
+                    <input type="file" onChange={this.handleInputFile} style={{visiblity: "hidden" }} />
                   </FormGroup>
                 </Col>
               </Row>
             </Form>
           </CardBody>
           <CardFooter>
-            <Button color='success' style={{float : 'right'}} onClick={this.saveMRtoAPI} disabled={this.state.modal_loading === true}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create MR</Button>
+            <Button color='success' style={{float : 'right'}} size="sm" onClick={this.saveMRDis} disabled={this.state.modal_loading === true}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create MRA </Button>
           </CardFooter>
         </Card>
         </Col>

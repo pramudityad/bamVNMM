@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
 import {
   Card,
   CardHeader,
@@ -60,6 +60,7 @@ class DetailLCC extends Component {
       selected_name: "",
       selected_vendor: "",
       file_po_mapping:[],
+      dangerOffline : false,
     };
     // bind
 
@@ -232,7 +233,7 @@ class DetailLCC extends Component {
       this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
-        this.setState({ action_status: "success", action_message: "success" }, () => {});
+        this.setState({ action_status: "success", action_message: null }, () => {});
       } else {
         if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
           if (res.response.data.error.message !== undefined) {
@@ -301,7 +302,7 @@ class DetailLCC extends Component {
       "/poDsa/approvalPo",{approval : true, data:[objData]}, this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
-        this.setState({ action_status: "success", action_message: "success" });
+        this.setState({ action_status: "success", action_message: null });
         // this.toggleLoading();
       } else {
         if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
@@ -422,6 +423,52 @@ class DetailLCC extends Component {
     });
   }
 
+  toogleOffline=(e) => {
+    const modalDelete = this.state.dangerOffline;
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      const name = this.state.all_data.po.find(e => e._id === _id)
+      this.setState({
+        dangerOffline: !this.state.dangerOffline,
+        selected_id: _id,
+        selected_name: name.no_po_dsa,
+        selected_vendor: name.vendor_name
+      });
+    } else {
+      this.setState({
+        dangerOffline: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete: !prevState.modalDelete,
+    }));
+  }
+
+  OfflinePO = async () => {
+    let objData = {
+      _id: this.state.selected_id
+    }
+    this.toogleOffline();
+    const DelData = patchDatatoAPINODE(
+      "/poDsa/offlinePo/"+this.state.selected_id, {}, this.props.dataLogin.token
+    ).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success"});
+        // this.toggleLoading();
+      } else {
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
+      }
+    });
+  };
+
   render() {
     console.log(this.state.file_po_mapping);
     const { all_data } = this.state;
@@ -492,7 +539,7 @@ class DetailLCC extends Component {
                             type="text"
                             // placeholder="Site Name"
                             name={"budget"}
-                            value={all_data.budget}
+                            value={all_data.budget !== undefined && all_data.budget.toLocaleString()}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -505,7 +552,7 @@ class DetailLCC extends Component {
                             type="text"
                             // placeholder="Quotation Number"
                             name={"prebook"}
-                            value={this.state.amount_lcc.amount_prebook}
+                            value={this.state.amount_lcc.amount_prebook !== undefined && this.state.amount_lcc.amount_prebook.toLocaleString()}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -518,7 +565,7 @@ class DetailLCC extends Component {
                             type="text"
                             // placeholder="Signum PM"
                             name={"actual"}
-                            value={this.state.amount_lcc.amount_actualize}
+                            value={this.state.amount_lcc.amount_actualize !== undefined && this.state.amount_lcc.amount_actualize.toLocaleString()}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -579,33 +626,34 @@ class DetailLCC extends Component {
                       </tr>
                     )}
                     {all_data.po !== undefined && all_data.po.map(e =>
-                      <tr>
-                      <td>{e.no_po_dsa}</td>
-                      <td>{e.status}</td>
-                      <td>{e.cust_del != undefined ? e.cust_del.map(cd => cd.cd_id).join(", ") : null}</td>
-                      <td>{e.vendor_name}</td>
-                      <td>{e.vendor_code}</td>
-                      <td>{e.dsp_value}</td>
-                      <td>{this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa) !== undefined ? this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa).amount_prebook : null }</td>
-                      <td>{this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa) !== undefined ? this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa).amount_actualize : null }</td>
-                      <td>
-                        {e.status !== "Online" && (
-                        <Button
-                            size="sm"
-                            color="info"
-                            value={e._id}
-                            name={e.no_po_dsa}
-                            onClick={this.toogleConf}
-                            title="Delete"
-                          >
-                            <i
-                              className="fa fa-check"
-                              aria-hidden="true"
-                            ></i>
-                          </Button>
-                        )}
-                        </td>
-                      </tr>
+                      <Fragment>
+                      <tr style={{backgroundColor : 'rgba(187,222,251 ,1)'}}>
+                        <td>{e.no_po_dsa}</td>
+                        <td>{e.status}</td>
+                        <td></td>
+                        <td>{e.vendor_name}</td>
+                        <td>{e.vendor_code}</td>
+                        <td>{e.dsp_value.toLocaleString()}</td>
+                        <td>{this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa) !== undefined ? this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa).amount_prebook.toLocaleString() : null }</td>
+                        <td>{this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa) !== undefined ? this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa).amount_actualize.toLocaleString() : null }</td>
+                        <td>
+                          {e.status !== "Online" && (
+                            <Button size="sm" color="info" value={e._id} name={e.no_po_dsa} onClick={this.toogleConf} title="Online" >
+                              <i className="fa fa-check" aria-hidden="true" ></i>
+                            </Button>
+                          )}
+                          {e.status === "Online" && (
+                            <Button size="sm" color="danger" value={e._id} name={e.no_po_dsa} onClick={this.toogleOffline} title="Online" >
+                              <i className="fa fa-times" aria-hidden="true" ></i>
+                            </Button>
+                          )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>CD ID : </td>
+                          <td colSpan="9">{e.cust_del != undefined ? e.cust_del.map(cd => cd.cd_id).join(", ") : null}</td>
+                        </tr>
+                      </Fragment>
                     )}
                     </tbody>
                   </Table>
@@ -690,7 +738,7 @@ class DetailLCC extends Component {
                 </Row>
               </CardBody>
               <CardFooter>
-              {(all_data.status !== "Approved" && (this.state.userRole.findIndex(ur => ur === "Admin") !== -1 || this.state.userRole.findIndex(ur => ur === "BAM-Customer Project Manager") !== -1) )&& (
+              {(all_data.status !== "Approved" && (this.state.userRole.findIndex(ur => ur === "Admin") !== -1 || this.state.userRole.findIndex(ur => ur === "BAM-LDM") !== -1 || this.state.userRole.findIndex(ur => ur === "BAM-LDM Admin") !== -1) )&& (
                 <Button
                   type="submit"
                   color="success"
@@ -732,6 +780,22 @@ class DetailLCC extends Component {
             Yes
           </Button>
           <Button color="secondary" onClick={this.toogleConf}>
+            Cancel
+          </Button>
+        </ModalDelete>
+
+        {/* Modal confirmation Offline po */}
+        <ModalDelete
+          isOpen={this.state.dangerOffline}
+          toggle={this.toogleOffline}
+          className={this.props.className}
+          title={"Offline "+ this.state.selected_name+ " for " + this.state.selected_vendor}
+          body={"Are you sure ?"}
+        >
+          <Button color="success" onClick={this.OfflinePO}>
+            Yes
+          </Button>
+          <Button color="secondary" onClick={this.toogleOffline}>
             Cancel
           </Button>
         </ModalDelete>

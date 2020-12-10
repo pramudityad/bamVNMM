@@ -499,8 +499,8 @@ class CPODatabase extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["po_number","date","expired_month","currency","payment_terms","shipping_terms", "contract", "contact"]);
-    ws.addRow(["PO0001","2020-02-21","6","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com"]);
+    ws.addRow(["po_number","date","currency","payment_terms","shipping_terms", "contract", "contact"]);
+    ws.addRow(["PO0001","2020-02-21","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com"]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'CPO Level 1 Template.xlsx');
@@ -516,6 +516,34 @@ class CPODatabase extends React.Component {
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), 'CPO with Detail Template.xlsx');
+  }
+
+  async getPODataListAll() {
+    let dataPO = [];
+    let queryDate = ''
+    let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    const res = await this.getDatafromAPINODE('/cpodb/getCpoDb?noPg=1&srt=_id:-1&q={' + po_number+queryDate + '}');
+    if (res !== undefined && res.data !== undefined) {
+      dataPO = res.data.data
+    }
+    return dataPO
+  }
+
+  exportCPODBList = async () => {
+    this.toggleLoading();
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPOAll = await this.getPODataListAll();
+
+    ws.addRow(["PO Number", "Date", "Aging", "Expired Date", "Currency", "Payment Terms", "Shipping Terms", "Contract", "Contact"]);
+    for (let i = 0; i < dataPOAll.length; i++) {
+      ws.addRow([dataPOAll[i].po_number,convertDateFormat(dataPOAll[i].date), this.Aging(convertDateFormat(dataPOAll[i].date)), dataPOAll[i].expired_date !== null && dataPOAll[i].expired_date !== undefined ? convertDateFormat(dataPOAll[i].expired_date) : null, dataPOAll[i].currency, dataPOAll[i].payment_terms, dataPOAll[i].shipping_terms, dataPOAll[i].contract, dataPOAll[i].contact]);
+    }
+
+    const PPFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([PPFormat]), 'CPO List Report.xlsx');
+    this.toggleLoading();
   }
 
   Aging(date){
@@ -545,6 +573,7 @@ class CPODatabase extends React.Component {
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatCPO_level1}> CPO Level 1 Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatCPOWithDetail}> CPO With Detail Template</DropdownItem>
+                        <DropdownItem onClick={this.exportCPODBList}> CPO List Report</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>

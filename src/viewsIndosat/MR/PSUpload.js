@@ -286,6 +286,8 @@ class PSUpload extends Component {
     })
   }
 
+
+
   async getDataCDID(array_cd_id){
     if(array_cd_id.length !== 0){
       let array_in_cdid = '"'+array_cd_id.join('", "')+'"';
@@ -333,6 +335,42 @@ class PSUpload extends Component {
     }
     this.getDataWarehouse(listSku);
     this.getDataInbound(listSku);
+  }
+
+  prepareViewTRM(packagesTRM){
+    let dataPPPS = Object.assign({}, packagesTRM);
+    let dataPPNE = dataPPPS.filter(ne => ne.site_title === "NE");
+    let dataPPMW = []
+    for(let i = 0; i < dataPPNE.length; i++){
+      let dataNEIdx = Object.assign({}, dataPPNE[i]);
+      const dataFEIdx = dataPPPS.find(fe => fe.site_title === "FE" && fe.id_pp_doc === dataPPNE[i].id_pp_doc );
+      const dataFEIdxCopy = Object.assign({}, dataFEIdx);
+      const materialConcat = dataPPNE[i].materials.concat(dataFEIdxCopy.materials);
+      const materialConcatNE = materialConcat.filter(mc => mc.site_title === "NE");
+      let materialConcatUniq = this.uniqObjectArray(JSON.parse(JSON.stringify(materialConcat)), "id_mc_doc");
+      for(let j = 0; j < materialConcatUniq.length; j++){
+        let materialConcatNE = materialConcat.find(mcf => mcf.site_title === "NE" && mcf.id_mc_doc === materialConcatUniq[j].id_mc_doc);
+        let materialConcatFE = materialConcat.find(mcf => mcf.site_title === "FE" && mcf.id_mc_doc === materialConcatUniq[j].id_mc_doc);
+        if(materialConcatNE !== undefined){
+          materialConcatUniq[j]["qty"] = materialConcatNE.qty;
+          materialConcatUniq[j]["_id_ne"] = materialConcatNE._id;
+        }else{
+          materialConcatUniq[j]["qty"] = 0;
+        }
+        if(materialConcatFE !== undefined){
+          materialConcatUniq[j]["qty_fe"] = materialConcatFE.qty;
+          materialConcatUniq[j]["_id_fe"] = materialConcatFE._id;
+        }else{
+          materialConcatUniq[j]["qty_fe"] = 0;
+        }
+      }
+      dataNEIdx["_id_ne"] = dataNEIdx._id;
+      dataNEIdx["_id_fe"] = dataFEIdxCopy._id;
+      dataNEIdx["qty_fe"] = dataFEIdxCopy.qty;
+      dataNEIdx["materials"] = materialConcatUniq;
+      dataPPMW.push(dataNEIdx);
+    }
+    this.setState({ product_package_ps_mw : dataPPMW});
   }
 
   async getDataWarehouse(listSku) {
@@ -595,6 +633,11 @@ class PSUpload extends Component {
                   <tr>
                     <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>MR Site NE : {this.state.data_mr.site_info[0].site_id}</td>
                   </tr>
+                  {this.state.data_mr.sow_type === "TRM" && (
+                    <tr>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>MR Site FE : {this.state.data_mr.site_info[1].site_id}</td>
+                    </tr>
+                  )}
                   </Fragment>
                 )}
               </tbody>
@@ -617,14 +660,14 @@ class PSUpload extends Component {
                       ) : (
                         <Fragment>
                         <tr>
-                          <td style={{width : '200px'}}>TSSR Site ID NE</td>
+                          <td style={{width : '200px'}}>PS Site ID NE</td>
                           <td>:</td>
-                          <td>{this.state.data_tssr.siteList !== undefined ? this.state.data_tssr.siteList[0].site_info.site_id : ""}</td>
+                          <td>{this.state.data_tssr.site_info !== undefined ? this.state.data_tssr.site_info[0].site_id : ""}</td>
                         </tr>
                         <tr>
-                          <td style={{width : '200px'}}>TSSR Site Name NE</td>
+                          <td style={{width : '200px'}}>PS Site Name NE</td>
                           <td>:</td>
-                          <td>{this.state.data_tssr.siteList !== undefined ? this.state.data_tssr.siteList[0].site_info.site_name : ""}</td>
+                          <td>{this.state.data_tssr.site_info !== undefined ? this.state.data_tssr.site_info[0].site_name : ""}</td>
                         </tr>
                         </Fragment>
                       )}
@@ -637,14 +680,14 @@ class PSUpload extends Component {
                   <table className="table-header">
                     <tbody>
                       <tr>
-                        <td>Site ID FE</td>
-                        <td>: &nbsp;</td>
-                        <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_info.site_id}</td>
+                        <td style={{width : '200px'}}>PS Site ID FE</td>
+                        <td>:</td>
+                        <td>{this.state.data_tssr.site_info !== undefined && this.state.data_tssr.site_info[1] !== undefined  ? this.state.data_tssr.site_info[1].site_id : ""}</td>
                       </tr>
                       <tr>
-                        <td>Site Name FE</td>
+                        <td style={{width : '200px'}}>PS Site Name FE</td>
                         <td>:</td>
-                        <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_info.site_name}</td>
+                        <td>{this.state.data_tssr.site_info !== undefined && this.state.data_tssr.site_info[1] !== undefined ? this.state.data_tssr.site_info[1].site_name : ""}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -671,14 +714,20 @@ class PSUpload extends Component {
                       <th rowSpan="2" className="fixedhead" style={{verticalAlign : 'middle'}}>Program</th>
                       <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Unit</th>
                       <th colSpan="3" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
+                      {this.state.data_mr !== null && this.state.data_mr.sow_type === "TRM" && (
+                        <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Site Title</th>
+                      )}
                       <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Availability</th>
                     </tr>
                     {this.state.data_mr !== null ?
                       this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
                         <tr>
-                          <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th>
+                          <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Qty</th>
+                          {/* }<th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Site NE</th> */}
                           {this.state.tssr_site_FE !== null ? (
-                            <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th>
+                            <Fragment>
+                            {/* }<th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>SITE FE</th> */}
+                            </Fragment>
                           ):(<Fragment></Fragment>)}
                           <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>WH Stock</th>
                           <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>WH Plan</th>
@@ -699,6 +748,9 @@ class PSUpload extends Component {
                             <td>{pp.qty.toFixed(2)}</td>
                             <td></td>
                             <td></td>
+                            {this.state.data_mr.sow_type === "TRM" && (
+                              <td>{pp.site_title}</td>
+                            )}
                             <td></td>
                           </tr>
                           {pp.materials.map(material =>
@@ -711,6 +763,9 @@ class PSUpload extends Component {
                               <td align='center'>{(material.qty).toFixed(2)}</td>
                               <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                               <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
+                              {this.state.data_mr.sow_type === "TRM" && (
+                                <td align='center'></td>
+                              )}
                               <td align='center'>{material.qty < qty_wh ? "OK":"NOK"}</td>
                             </tr>
                           ) }
