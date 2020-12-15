@@ -173,6 +173,12 @@ export default {
       roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
     },
     {
+      name: 'DSA Dismantle List',
+      url: '/dsa-dismantle-list',
+      icon: 'icon-list',
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+    },
+    {
       title: true,
       name: 'MR Process',
       roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],

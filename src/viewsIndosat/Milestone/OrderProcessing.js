@@ -9,6 +9,7 @@ import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
 import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction';
 import {apiSendEmail} from '../../helper/asyncFunction';
+import { getDatafromAPIISAT } from "../../helper/asyncFunction";
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
@@ -46,6 +47,7 @@ class OrderProcessing extends Component {
       qty_ne: new Map(),
       qty_fe: new Map(),
       modal_loading : false,
+      product_package_ps_mw : [],
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -141,7 +143,7 @@ class OrderProcessing extends Component {
     filter_array.push('"current_milestones":"MS_ORDER_RECEIVED"');
     this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
     this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
-    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"creator.email":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
@@ -155,7 +157,8 @@ class OrderProcessing extends Component {
     })
   }
 
-  getAllMR() {
+  async getAllMR() {
+    let mrList = [];
     let filter_array = [];
     this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
     this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
@@ -166,17 +169,20 @@ class OrderProcessing extends Component {
     filter_array.push('"current_milestones":"MS_ORDER_RECEIVED"');
     this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
     this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
-    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"creator.email":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
-      if (res.data !== undefined) {
-        const items = res.data.data;
-        this.setState({ mr_all: items });
-      }
-    })
+    let res = await this.getDataFromAPINODE('/matreq?srt=_id:-1&noPg=1&q=' + whereAnd)
+    if (res.data !== undefined) {
+      const items = res.data.data;
+      mrList = res.data.data;
+      return mrList;
+      // this.setState({ mr_all: items });
+    }else{
+      return [];
+    }
   }
 
   numToSSColumn(num) {
@@ -190,13 +196,37 @@ class OrderProcessing extends Component {
     return s || undefined;
   }
 
+  async getDataCDID(data_mr){
+    let arrayCD = [];
+    arrayCD = data_mr.map( e => e.cust_del).reduce((l, n) => l.concat(n), []);
+    let array_cd_id = [...new Set(arrayCD.map(({ cd_id }) => cd_id))];
+    let dataCDID =[];
+    let getNumberPage = Math.ceil(array_cd_id.length / 20);
+    for(let i = 0 ; i < getNumberPage; i++){
+      let DataPaginationWPID = array_cd_id.slice(i * 20, (i+1)*20);
+      let array_in_cdid = '"'+DataPaginationWPID.join('", "')+'"';
+      let projection = '&projection={"WP_ID" : 1, "C1043_WBS_HW" : 1, "C1023_WBS_HWAC" : 1, "C1033_WBS_LCM" : 1, "C1003_WBS_PNRO" : 1, "C1053_WBS_SW" : 1, "C1063_C1053_WBS_PS" : 1, "C1066_C1053_WBS_ANC" : 1, "C1034_WBS_PowHW_Site_Basis" : 1, "C1035_WBS_PowLCM_Site_Basis" : 1, "C1036_WBS_Kathrein" : 1}'
+      const getWPID = await getDatafromAPIISAT('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}'+projection, this.state.tokenUser);
+      if(getWPID !== undefined && getWPID.data !== undefined) {
+        dataCDID = dataCDID.concat(getWPID.data._items);
+      }
+    }
+    return dataCDID;
+  }
+
   async downloadMRlist() {
+    this.toggleLoading();
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const allMR = this.state.mr_all;
+    const allMR = await this.getAllMR();
 
-    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Created By", "Updated On", "Created On"];
+    let dataCDID = [];
+    if(allMR.cust_del !== undefined){
+      dataCDID = await this.getDataCDID(allMR);
+    }
+
+    let headerRow = ["MR ID", "MR MITT ID","MR Type","MR Delivery Type", "Project Name", "CD ID", "Project PO", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "MR MITT Created On", "MR MITT Created By","Updated On", "Created On", "WBS HW", "WBS HWAC (License)", "WBS LCM", "WBS PNRO", "WBS SW", "WBS PS", "WBS ANC"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -204,11 +234,27 @@ class OrderProcessing extends Component {
     }
 
     for (let i = 0; i < allMR.length; i++) {
-      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0].site_id, allMR[i].site_info[0].site_name, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
-    }
+      let dataCDIDIdx = {};
+      if(allMR[i].cust_del[0] !== undefined){
+        dataCDIDIdx = dataCDID.find(dc => dc.WP_ID === allMR[i].cust_del[0].cd_id);
+        if(dataCDIDIdx === undefined){
+          dataCDIDIdx = {};
+        }
+      }
 
+      const creator_mr_mitt = allMR[i].mr_status.find(e => e.mr_status_name === "PLANTSPEC" && e.mr_status_value === "NOT ASSIGNED");
+      ws.addRow([allMR[i].mr_id, allMR[i].mr_mitt_no, allMR[i].mr_type, allMR[i].mr_delivery_type, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id, allMR[i].project_po, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, new Date(allMR[i].eta), creator_mr_mitt !== undefined ? new Date(creator_mr_mitt.mr_status_date) : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mr_status_updater : null, new Date(allMR[i].updated_on), new Date(allMR[i].created_on), dataCDIDIdx.C1043_WBS_HW, dataCDIDIdx.C1023_WBS_HWAC, dataCDIDIdx.C1033_WBS_LCM, dataCDIDIdx.C1003_WBS_PNRO, dataCDIDIdx.C1053_WBS_SW, dataCDIDIdx.C1063_C1053_WBS_PS, dataCDIDIdx.C1066_C1053_WBS_ANC]);
+      const getRowLast = ws.lastRow._number;
+      ws.getCell("M"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("Q"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("P"+getRowLast).numFmt = "YYYY-MM-DD";
+      if(creator_mr_mitt !== undefined && creator_mr_mitt !== null){
+        ws.getCell("N"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
+    }
+    this.toggleLoading();
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Order Processing.xlsx');
+    saveAs(new Blob([allocexport]), 'MR List Order Processing.xlsx');
   }
 
   async patchDataToAPI(url, data, _etag) {
@@ -326,26 +372,22 @@ class OrderProcessing extends Component {
     const dataMR = this.state.mr_list.find(e => e._id === _id);
 
     let successUpdate = [];
-
+    const dataMRSelected = this.state.data_material;
     let lomData = [];
     let updateLOM = {};
-    for (let i = 0; i < this.state.data_material.packages.length; i++) {
-      let materialData = [];
-      for (let j = 0; j < this.state.data_material.packages[i].materials.length; j++) {
-        if (this.state.qty_ne.has(this.state.data_material.packages[i].materials[j]._id) !== false || this.state.qty_fe.has(this.state.data_material.packages[i].materials[j]._id) !== false) {
-          let material = Object.assign({}, this.state.data_material.packages[i].materials[j]);
-          material["qty"] = this.state.data_material.packages[i].materials[j].site_id === this.state.site_NE.site_id ? this.state.qty_ne.get(this.state.data_material.packages[i].materials[j]._id) : this.state.qty_fe.get(this.state.data_material.packages[i].materials[j]._id);
-          if (material.qty !== undefined) {
-            if (material.qty !== 0 && material.qty !== "0") {
-              materialData.push(material);
-            }
-          }
+    for(let i = 0; i < dataMRSelected.packages.length; i++){
+      const dataPackage = Object.assign(dataMRSelected.packages[i]);
+      let matLomIdx = [];
+      for(let j = 0; j < dataPackage.materials.length; j++){
+        const dataMaterial = Object.assign(dataPackage.materials[j]);
+        if (this.state.qty_ne.has(dataPackage._id+" /// "+dataMaterial._id) !== false) {
+          dataMaterial["qty"] = this.state.qty_ne.get(dataPackage._id+" /// "+dataMaterial._id);
+          matLomIdx.push(dataMaterial);
         }
       }
-      let lom = Object.assign({}, this.state.data_material.packages[i]);
-      lom["materials"] = materialData;
-      if (materialData.length !== 0) {
-        lomData.push(lom);
+      dataPackage["materials"] = matLomIdx;
+      if(dataPackage.materials.length !== 0){
+        lomData.push(dataPackage);
       }
     }
 
@@ -404,6 +446,7 @@ class OrderProcessing extends Component {
       this.getDataFromAPINODE('/matreq/' + _id_mr).then(res => {
         if (res.data !== undefined) {
           this.setState({ data_material: res.data }, () => {
+            this.prepareView(res.data);
           });
           this.setState({ site_NE: this.state.data_material.site_info.find(e => e.site_title === "NE") });
           this.setState({ site_FE: this.state.data_material.site_info.find(e => e.site_title === "FE") });
@@ -413,6 +456,56 @@ class OrderProcessing extends Component {
     this.setState(prevState => ({
       modalNotComplete: !prevState.modalNotComplete
     }));
+  }
+
+  uniqObjectArray(array, field){
+    let arrUniq = [];
+    array.map(arr =>
+      !arrUniq.find(au => au[field] === arr[field]) && arrUniq.push(Object.assign(arr))
+    )
+    return arrUniq;
+  }
+
+  prepareView(dataMR){
+    let dataPS = Object.assign({}, dataMR);
+    let dataPPPS = dataPS.packages;
+    let dataPPNE = dataPPPS.filter(ne => ne.site_title === "NE");
+    if(dataPPNE.length === 0){
+      dataPPNE = dataPPPS;
+      this.setState({ product_package_ps_mw : dataPPPS});
+    }else{
+      let dataPPMW = []
+      for(let i = 0; i < dataPPNE.length; i++){
+        let dataNEIdx = Object.assign({}, dataPPNE[i]);
+        const dataFEIdx = dataPPPS.find(fe => fe.site_title === "FE" && fe.id_pp_doc === dataPPNE[i].id_pp_doc );
+        const dataFEIdxCopy = Object.assign({}, dataFEIdx);
+        const materialConcat = dataPPNE[i].materials.concat(dataFEIdxCopy.materials);
+        const materialConcatNE = materialConcat.filter(mc => mc.site_title === "NE");
+        let materialConcatUniq = this.uniqObjectArray(JSON.parse(JSON.stringify(materialConcat)), "id_mc_doc");
+        for(let j = 0; j < materialConcatUniq.length; j++){
+          let materialConcatNE = materialConcat.find(mcf => mcf.site_title === "NE" && mcf.id_mc_doc === materialConcatUniq[j].id_mc_doc);
+          let materialConcatFE = materialConcat.find(mcf => mcf.site_title === "FE" && mcf.id_mc_doc === materialConcatUniq[j].id_mc_doc);
+          if(materialConcatNE !== undefined){
+            materialConcatUniq[j]["qty"] = materialConcatNE.qty;
+            materialConcatUniq[j]["_id_ne"] = materialConcatNE._id;
+          }else{
+            materialConcatUniq[j]["qty"] = 0;
+          }
+          if(materialConcatFE !== undefined){
+            materialConcatUniq[j]["qty_fe"] = materialConcatFE.qty;
+            materialConcatUniq[j]["_id_fe"] = materialConcatFE._id;
+          }else{
+            materialConcatUniq[j]["qty_fe"] = 0;
+          }
+        }
+        dataNEIdx["_id_ne"] = dataNEIdx._id;
+        dataNEIdx["_id_fe"] = dataFEIdxCopy._id;
+        dataNEIdx["qty_fe"] = dataFEIdxCopy.qty;
+        dataNEIdx["materials"] = materialConcatUniq;
+        dataPPMW.push(dataNEIdx);
+      }
+      this.setState({ product_package_ps_mw : dataPPMW});
+    }
   }
 
   getQtySiteFE(pp_id) {
@@ -554,7 +647,7 @@ class OrderProcessing extends Component {
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{convertDateFormat(list.eta)}</td>
-                        <td></td>
+                        <td>{list.creator.map(e => e.email)}</td>
                         <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
@@ -562,7 +655,7 @@ class OrderProcessing extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries</small>
+                  <small>Showing {this.state.mr_list.length} entries from {this.state.totalData} data</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}
@@ -580,6 +673,7 @@ class OrderProcessing extends Component {
         <Modal isOpen={this.state.modalNotComplete} toggle={this.toggleNotComplete} size="lg">
           <ModalHeader>Lack of Materials</ModalHeader>
           <ModalBody>
+            <span>Only fill with Qty LOM</span>
             <Table hover bordered striped responsive size="sm">
               <thead style={{ backgroundColor: '#0B486B', color: 'white' }}>
                 <tr>
@@ -597,7 +691,7 @@ class OrderProcessing extends Component {
               </thead>
               <tbody>
                 {this.state.data_material !== null && (
-                  this.state.data_material.packages.map(pp =>
+                  this.state.product_package_ps_mw.map(pp =>
                     pp.site_id === this.state.site_NE.site_id && (
                       <Fragment>
                         <tr style={{ backgroundColor: '#E5FCC2' }} className="fixbody">
@@ -606,7 +700,7 @@ class OrderProcessing extends Component {
                           <td>{pp.uom}</td>
                           <td align='center'>{pp.qty}</td>
                           {this.state.site_FE !== undefined && (
-                            <td align='center'>{this.getQtySiteFE(pp.pp_id)}</td>
+                            <td align='center'>{pp.qty_fe}</td>
                           )}
                         </tr>
                         {pp.materials.map(mat =>
@@ -614,11 +708,10 @@ class OrderProcessing extends Component {
                             <td style={{ textAlign: 'right' }}>{mat.material_id}</td>
                             <td style={{ textAlign: 'left' }}>{mat.material_name}</td>
                             <td>{mat.uom}</td>
-                            <td align='center'><Input onChange={this.editQtyNE} type="number" name={mat._id} style={{ textAlign: 'center' }} min="0" /></td>
+                            <td align='center'><Input onChange={this.editQtyNE} type="number" name={(this.state.site_FE !== undefined ? pp._id_ne : pp._id)+" /// "+(this.state.site_FE !== undefined ? mat._id_ne : mat._id)} disabled={mat._id_ne === undefined && this.state.site_FE !== undefined} style={{ textAlign: 'center' }} min="0" /></td>
                             {this.state.site_FE !== undefined && (
-                              <td align='center'><Input onChange={this.editQtyFE} type="number" name={mat._id} style={{ textAlign: 'center' }} min="0" /></td>
+                              <td align='center'><Input onChange={this.editQtyNE} type="number" name={pp._id_fe+" /// "+mat._id_fe} disabled={mat._id_fe === undefined} style={{ textAlign: 'center' }} min="0" /></td>
                             )}
-
                           </tr>
                         )}
                       </Fragment>

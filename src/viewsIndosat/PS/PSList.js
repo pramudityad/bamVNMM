@@ -15,7 +15,7 @@ const password = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const arrayFilter = ["no_plantspec", "project_name", "current_status", "mr_id"];
+const arrayFilter = ["no_plantspec", "project_name", "site_info.site_id", "site_info.site_name", "current_status", "mr_id"];
 
 class PSList extends Component {
   constructor(props) {
@@ -86,7 +86,10 @@ class PSList extends Component {
     (this.state.filter_list["no_plantspec"] !== null && this.state.filter_list["no_plantspec"] !== undefined) && (filter_array.push('"no_plantspec":{"$regex" : "' + this.state.filter_list["no_plantspec"] + '", "$options" : "i"}'));
     (this.state.filter_list["project_name"] !== null && this.state.filter_list["project_name"] !== undefined) && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list["project_name"] + '", "$options" : "i"}'));
     (this.state.filter_list["current_status"] !== null && this.state.filter_list["current_status"] !== undefined) && (filter_array.push('"current_status":{"$regex" : "' + this.state.filter_list["current_status"] + '", "$options" : "i"}'));
+    (this.state.filter_list["site_info.site_id"] !== null && this.state.filter_list["site_info.site_id"] !== undefined) && (filter_array.push('"site_info.site_id":{"$regex" : "' + this.state.filter_list["site_info.site_id"] + '", "$options" : "i"}'));
+    (this.state.filter_list["site_info.site_name"] !== null && this.state.filter_list["site_info.site_name"] !== undefined) && (filter_array.push('"site_info.site_name":{"$regex" : "' + this.state.filter_list["site_info.site_name"] + '", "$options" : "i"}'));
     (this.state.filter_list["mr_id"] !== null && this.state.filter_list["mr_id"] !== undefined) && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list["mr_id"] + '", "$options" : "i"}'));
+    filter_array.push('"$and" : [{"plantspec_type_code" : {"$ne" : "A1" }}, {"plantspec_type_code" : {"$ne" : "A2" }}, {"plantspec_type_code" : {"$ne" : "B1" }}, {"plantspec_type_code" : {"$ne" : "C1" }}]')
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/plantspec?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
     // this.getDataFromAPIBAM('/tssr_sorted?'+'max_results='+this.state.perPage+'&page='+page).then(res => {
@@ -181,7 +184,10 @@ class PSList extends Component {
                   <i className="fa fa-align-justify" style={{marginRight: "8px"}}></i> Plant Spec Group List
                 </span>
                 {(this.state.userRole.includes('BAM-Engineering') === true || this.state.userRole.includes('Admin') === true ) && (
-                  <Link to={'/ps-creation'}><Button color="success" style={{float : 'right'}} size="sm">Create PS</Button></Link>
+                  <React.Fragment>
+                    <Link to={'/ps-creation-mw'}><Button color="success" style={{float : 'right', margin : '0px 10px'}} size="sm">Create PS Transmission</Button></Link>
+                    <Link to={'/ps-creation'}><Button color="success" style={{float : 'right'}} size="sm">Create PS</Button></Link>
+                  </React.Fragment>
                 )}
               </CardHeader>
               <CardBody>
@@ -190,6 +196,8 @@ class PSList extends Component {
                     <tr>
                       <th>No PS Group</th>
                       <th>Project</th>
+                      <th>Site ID</th>
+                      <th>Site Name</th>
                       <th>Status</th>
                       <th>MR Related</th>
                       <th rowSpan="2">Action</th>
@@ -203,12 +211,20 @@ class PSList extends Component {
                       <tr key={list._id}>
                         <td>{list.no_plantspec}</td>
                         <td>{list.project_name}</td>
+                        <td>{list.site_info.map(si => si.site_id).join(", ")}</td>
+                        <td>{list.site_info.map(si => si.site_name).join(", ")}</td>
                         <td>{list.submission_status}</td>
                         <td>{list.mr_id}</td>
                         <td>
+                        {list.plantspec_type === "MW" ? (
+                          <Link to={'/ps-detail-mw/'+list._id}>
+                            <Button color="info" size="sm" outline>Detail</Button>
+                          </Link>
+                        ) : (
                           <Link to={'/ps-detail/'+list._id}>
                             <Button color="info" size="sm" outline>Detail</Button>
                           </Link>
+                        )}
                         </td>
                       </tr>
                     )}

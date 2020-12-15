@@ -86,7 +86,7 @@ class DetailFMS extends Component {
     }
   }
 
-  viewCDIDTable(cd_id, source_ms_date){
+  viewCDIDTable(cd_id, sync_status, status_erisite, source_ms_date){
     const dataCDID = this.state.cd_id_data.find(cd => cd.WP_ID === cd_id);
     if(dataCDID !== undefined){
       let dataArrayTrue = this.state.ready_to_sync_true;
@@ -95,6 +95,8 @@ class DetailFMS extends Component {
           <td>{cd_id}</td>
           <td>{dataCDID.CD_Info_Project_Name}</td>
           <td>{dataCDID[source_ms_date]}</td>
+          <td>{sync_status}</td>
+          <td>{status_erisite}</td>
         </tr>
       )
     }else{
@@ -163,8 +165,8 @@ class DetailFMS extends Component {
                     <h5><b>General Information</b></h5>
                     <Form>
                       <FormGroup row>
-                        <Label sm={1}>Project</Label>
-                        <Col sm={6}>
+                        <Label sm={2}>Project</Label>
+                        <Col sm={4}>
                           <Input
                           readOnly
                             type="text"
@@ -176,8 +178,8 @@ class DetailFMS extends Component {
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={1}>POD ID</Label>
-                        <Col sm={6}>
+                        <Label sm={2}>POD ID</Label>
+                        <Col sm={4}>
                           <Input
                           readOnly
                             type="text"
@@ -187,7 +189,7 @@ class DetailFMS extends Component {
                             onChange={this.handleInput}
                           />
                         </Col>
-                        <Label sm={1}>Status</Label>
+                        <Label sm={2}>Status</Label>
                         <Col sm={4}>
                           <Input
                           readOnly
@@ -198,24 +200,63 @@ class DetailFMS extends Component {
                           />
                         </Col>
                       </FormGroup>
-
-
-                        {/*}{all_data.cust_del !== undefined && all_data.cust_del !== null && all_data.cust_del.map((a, i) => (
-                            <FormGroup row>
-                            <Label sm={2}>WP ID {i+1}</Label>
-                            <Col sm={6}>
-                            <Input
-                            readOnly
+                      <FormGroup row>
+                        <Label sm={2}>Sync Status</Label>
+                        <Col sm={4}>
+                          <Input
+                          readOnly
                             type="text"
-                            //placeholder="Site ID"
+                            //placeholder="POD ID"
+                            name={"status"}
+                            value={all_data.sync_status}
+                          />
+                        </Col>
+                        <Label sm={2}>Erisite Status</Label>
+                        <Col sm={4}>
+                          <Input
+                          readOnly
+                            type="text"
+                            //placeholder="POD ID"
+                            name={"status"}
+                            value={all_data.status_erisite}
+                          />
+                        </Col>
+                      </FormGroup>
+                      <FormGroup row>
+                        <Label sm={2}>Site ID</Label>
+                        <Col sm={4}>
+                          <Input
+                          readOnly
+                            type="text"
+                            //placeholder="POD ID"
                             name={"site_id"}
-                            value={a.cd_id}
+                            value={all_data.site_info !== undefined && all_data.site_info.map(si => si.site_id)}
                             onChange={this.handleInput}
-                            />
-                            </Col>
-                            </FormGroup>
-                        ))} */}
-
+                          />
+                        </Col>
+                        <Label sm={2}>Site Name</Label>
+                        <Col sm={4}>
+                          <Input
+                          readOnly
+                            type="text"
+                            //placeholder="POD ID"
+                            name={"site_name"}
+                            value={all_data.site_info !== undefined && all_data.site_info.map(si => si.site_name)}
+                          />
+                        </Col>
+                      </FormGroup>
+                      <FormGroup row>
+                        <Label sm={2}>Milestone</Label>
+                        <Col sm={4}>
+                          <Input
+                          readOnly
+                            type="text"
+                            name={"project"}
+                            value={all_data.ms_target}
+                            onChange={this.handleInput}
+                          />
+                        </Col>
+                      </FormGroup>
                     </Form>
                   </Col>
                   </Row>
@@ -227,11 +268,13 @@ class DetailFMS extends Component {
                           <th>WP ID</th>
                           <th>Project</th>
                           <th>{all_data.source_ms_date}</th>
+                          <th>Status</th>
+                          <th>Erisite Status</th>
                         </tr>
                       </thead>
                       <tbody>
                         {all_data.cust_del !== undefined && all_data.cust_del !== null && all_data.cust_del.map((a, i) =>
-                          this.viewCDIDTable(a.cd_id, all_data.source_ms_date)
+                          this.viewCDIDTable(a.cd_id, a.sync_status, a.status_erisite, all_data.source_ms_date)
                         )}
                       </tbody>
                     </Table>
@@ -239,7 +282,7 @@ class DetailFMS extends Component {
                   </Row>
               </CardBody>
               <CardFooter>
-              {all_data.status === "POD FILE SAVED" && (
+              {(all_data.status === "POD FILE SAVED" || all_data.status === "FILE SAVED") && (
                 <Fragment>
                 {this.state.cd_id_data.length !== 0 && (
                   <Button color={this.state.ready_to_sync_true.length !== all_data.cust_del.length ? "warning" : "success"} size="sm" onClick={this.ReadyToSync} disabled={this.state.ready_to_sync_true.length !== all_data.cust_del.length}>

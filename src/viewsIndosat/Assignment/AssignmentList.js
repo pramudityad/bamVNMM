@@ -267,9 +267,9 @@ class AssignmentList extends Component {
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                <span style={{ lineHeight: '2' }}>
+                {/* }<span style={{ lineHeight: '2' }}>
                   <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> Assignment List
-                </span>
+                </span> */}
                 {(this.state.userRole.includes('BAM-Implementation Manager') === true || this.state.userRole.includes('BAM-Implementation Coordinator') === true || this.state.userRole.includes('Admin') === true ) && (
                 <Fragment>
                   <Link to={'/assignment-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create Assignment</Button></Link>

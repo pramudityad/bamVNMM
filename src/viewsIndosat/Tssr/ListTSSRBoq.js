@@ -95,7 +95,7 @@ class ListTSSRBoq extends Component {
 
   handlePageChange(pageNumber) {
     this.setState({activePage: pageNumber}, () => {
-      this.getListBOQ();
+      this.getTechBoqList();
     });
   }
 

@@ -2266,7 +2266,7 @@ class DetailTssr extends Component {
                         <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Program</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>UOM</th>
                         <th colSpan="3" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
-                        <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Availability</th>
+                        <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Config ID / Availability</th>
                       </tr>
                       <tr>
                         <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Qty PS</th>
@@ -2287,7 +2287,7 @@ class DetailTssr extends Component {
                               <td align='center'>{pp.qty.toFixed(2)}</td>
                               <td align='center'></td>
                               <td align='center'></td>
-                              <td align='center'></td>
+                              <td align='center'>{pp.config_id}</td>
                             </tr>
                             {pp.materials.map((material, arr_mat) =>
                               <tr key={arr_mat} style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">

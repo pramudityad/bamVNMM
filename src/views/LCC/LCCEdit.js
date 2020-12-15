@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
 import {
   Card,
   CardHeader,
@@ -13,6 +13,7 @@ import {
   Label,
   Table, Modal, ModalFooter
 } from "reactstrap";
+import { Link } from 'react-router-dom';
 import { connect } from "react-redux";
 import Select from "react-select";
 import ModalDelete from "../components/ModalDelete";
@@ -498,6 +499,9 @@ class EditLCC extends Component {
                   <i className="fa fa-edit" style={{ marginRight: "8px" }}></i>
                   LCC Edit
                 </span>
+                <Link to={'/lcc-detail/' + this.props.match.params.id}>
+                  <Button style={{ width: "50px", float : 'right' }} outline color="secondary" size="sm">Back</Button>
+                </Link>
               </CardHeader>
               <CardBody>
                 <Row>
@@ -554,7 +558,7 @@ class EditLCC extends Component {
                             type="text"
                             // placeholder="Quotation Number"
                             name={"prebook"}
-                            value={this.state.amount_lcc.amount_prebook}
+                            value={this.state.amount_lcc.amount_prebook !== undefined && this.state.amount_lcc.amount_prebook.toLocaleString()}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -567,7 +571,7 @@ class EditLCC extends Component {
                             type="text"
                             // placeholder="Signum PM"
                             name={"actual"}
-                            value={this.state.amount_lcc.amount_actualize}
+                            value={this.state.amount_lcc.amount_actualize !== undefined && this.state.amount_lcc.amount_actualize.toLocaleString()}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -691,47 +695,43 @@ class EditLCC extends Component {
                       </tr>
                     )}
                     {all_data.po !== undefined && all_data.po.map(e =>
-                      <tr>
-                      <td>{e.no_po_dsa}</td>
-                      <td>{e.status}</td>
-                      <td>{e.cust_del != undefined ? e.cust_del.map(cd => cd.cd_id).join(", ") : null}</td>
-                      <td>{e.vendor_name}</td>
-                      <td>{e.vendor_code}</td>
-                      <td>{e.dsp_value}</td>
-                      <td>{this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa) !== undefined ? this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa).amount_prebook : null }</td>
-                      <td>{this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa) !== undefined ? this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa).amount_actualize : null }</td>
-                      <td>
-                      {e.status !== "Online" && (
-                        <Button
-                            size="sm"
-                            color="info"
-                            value={e._id}
-                            name={e.no_po_dsa}
-                            onClick={this.toogleConf}
-                            title="Approve"
-                          >
-                            <i
-                              className="fa fa-check"
-                              aria-hidden="true"
-                            ></i>
-                          </Button>
-                        )}
-                        </td>
-                        <td><Button
-                            size="sm"
-                            color="default"
-                            value={e._id}
-                            name={e.no_po_dsa}
-                            onClick={this.toogleEdit}
-                            title="Edit"
-                          >
-                            <i
-                              className="fa fa-edit"
-                              aria-hidden="true"
-                            ></i>
-                          </Button>
-                        </td>
-                      </tr>
+                      <Fragment>
+                      <tr style={{backgroundColor : 'rgba(187,222,251 ,1)'}}>
+                        <td>{e.no_po_dsa}</td>
+                        <td>{e.status}</td>
+                        <td></td>
+                        <td>{e.vendor_name}</td>
+                        <td>{e.vendor_code}</td>
+                        <td>{e.dsp_value.toLocaleString()}</td>
+                        <td>{this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa) !== undefined ? this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa).amount_prebook.toLocaleString() : null }</td>
+                        <td>{this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa) !== undefined ? this.state.amount_po.find(ap => ap.po_for_dsp == e.no_po_dsa).amount_actualize.toLocaleString() : null }</td>
+                        <td>
+                          {e.status !== "Online" && (
+                            <Button size="sm" color="info" value={e._id} name={e.no_po_dsa} onClick={this.toogleConf} title="Online" >
+                              <i className="fa fa-check" aria-hidden="true" ></i>
+                            </Button>
+                          )}
+                          </td>
+                          <td><Button
+                              size="sm"
+                              color="default"
+                              value={e._id}
+                              name={e.no_po_dsa}
+                              onClick={this.toogleEdit}
+                              title="Edit"
+                            >
+                              <i
+                                className="fa fa-edit"
+                                aria-hidden="true"
+                              ></i>
+                            </Button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>CD ID : </td>
+                          <td colSpan="10">{e.cust_del != undefined ? e.cust_del.map(cd => cd.cd_id).join(", ") : null}</td>
+                        </tr>
+                      </Fragment>
                     )}
                     </tbody>
                   </Table>

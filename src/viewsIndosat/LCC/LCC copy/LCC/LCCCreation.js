@@ -18,7 +18,7 @@ import Select from "react-select";
 import Loading from "../components/Loading";
 import {
   postDatatoAPINODE,
-  getDatafromAPIEXEL,
+  getDatafromAPIISAT,
 } from "../../helper/asyncFunction";
 
 const DefaultNotif = React.lazy(() =>
@@ -101,7 +101,7 @@ class CreateLCC extends Component {
   }
 
   getDataProject() {
-    getDatafromAPIEXEL("/project_sorted_non_page").then((resProject) => {
+    getDatafromAPIISAT("/project_sorted_non_page").then((resProject) => {
       if (resProject.data !== undefined) {
         this.setState({ list_project: resProject.data._items }, () => {
           this.filterDataProject("");

@@ -90,9 +90,9 @@ class AssignmentListASP extends Component {
     this.state.filter_list[3] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
     this.state.filter_list[5] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
     this.state.filter_list[7] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
-    filter_array.push('"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP"');
-    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
-      filter_array.push('"Vendor_Code_Number" : "'+this.state.vendor_code+'"');
+    filter_array.push('"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP", "$and" : [{"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT REQUEST FOR CANCELATION"}}, {"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT CANCELED"}}]');
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('"$or" : [{"Vendor_Code_Number" : "'+this.state.vendor_code+'"}, {"Vendor_Name" : "'+this.state.vendor_name+'"}]');
     }else{
           this.state.filter_list[4] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
     }

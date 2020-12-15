@@ -21,11 +21,11 @@ import {
 // sidebar nav config
 import navigationXL from '../../_navXL';
 import navigationIndosat from '../../_navIndosat';
-import navigationTelkom from '../../_navTelkom';
+import navigationTelkom from '../../_navTelkomsel';
 // routes config
 import routesXL from '../../routesXL';
 import routesIndosat from '../../routesIndosat';
-import routesTelkom from '../../routesTelkom';
+import routesTelkom from '../../routesTelkomsel';
 
 const DefaultAside = React.lazy(() => import('./DefaultAside'));
 const DefaultFooter = React.lazy(() => import('./DefaultFooter'));

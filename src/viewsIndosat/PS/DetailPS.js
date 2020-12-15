@@ -1198,7 +1198,7 @@ class DetailTssr extends Component {
     const ws2 = wb.addWorksheet();
 
     const dataTSSR = this.state.tssrData;
-    const dataItemTSSR = this.state.tssrData.packages;
+    const dataItemTSSR = this.state.tssrData.packages.filter(dp => dp.product_type.toLowerCase() !== "svc" && dp.product_type.toLowerCase() !== "hwac" && dp.product_type.toLowerCase() !== "sw");
     const stockWH = this.state.material_wh;
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
@@ -1267,7 +1267,7 @@ class DetailTssr extends Component {
     const ws2 = wb.addWorksheet();
 
     const dataTSSR = this.state.tssrData;
-    const dataItemTSSR = this.state.tssrData.packages;
+    const dataItemTSSR = this.state.tssrData.packages.filter(dp => dp.product_type.toLowerCase() !== "svc" && dp.product_type.toLowerCase() !== "hwac" && dp.product_type.toLowerCase() !== "sw");
     const stockWH = this.state.material_wh;
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
@@ -1476,7 +1476,7 @@ class DetailTssr extends Component {
     let numberPSItem = 0;
 
     for(let a = 0; a < dataItemTSSRConfig.length; a++){
-      let itemTSSRBundle = dataItemTSSR.filter(e => e.config_id === dataItemTSSRConfig[a] && e.product_type.toLowerCase() !== "svc");
+      let itemTSSRBundle = dataItemTSSR.filter(e => e.config_id === dataItemTSSRConfig[a] && e.product_type.toLowerCase() !== "svc" && e.product_type.toLowerCase() !== "hwac" && e.product_type.toLowerCase() !== "sw");
       ws.addRow([null, dataItemTSSRConfig[a], null, null, null, null, null, null, null]);
       ws.addRow([""]);
       numberPSItem = numberPSItem+1;
@@ -2238,7 +2238,7 @@ class DetailTssr extends Component {
                     </thead>
                     <tbody>
                       {this.state.tssrData !== null && Array.isArray(this.state.tssrData.packages) && (
-                        this.state.tssrData.packages.map((pp, idxPP) =>
+                        this.state.tssrData.packages.filter(dp => dp.product_type.toLowerCase() !== "svc" && dp.product_type.toLowerCase() !== "hwac" && dp.product_type.toLowerCase() !== "sw").map((pp, idxPP) =>
                           <Fragment>
                             <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                               <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site}</td>

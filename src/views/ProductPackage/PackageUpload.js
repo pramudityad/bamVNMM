@@ -835,13 +835,8 @@ class PackageUpload extends React.Component {
     let confArray = ["Cov_2020_Config-4_0610", "2020_Config-1D EXAMPLE", "Coverage", "Cov_2020_Config-4_06", "2515914", "RBS:COV_2020_CONFIG-4DC", "SVC", "EXAMPLE"];
     let typeArray = ["config_id", "config_name", "program", "config_customer_name", "sap_number", "sap_description", "config_type", "description"];
 
-    // ws.addRow(["config_id", "sap_number", "pp_id", "qty", "price", "currency", "config_description", "config_type", "qty_commercial"]);
     typeArray = typeArray.concat(dataPrint.map(pp => pp.pp_id + " /// " + pp.product_name));
     confArray = confArray.concat(dataPrint.map(pp => 0));
-
-    // for (let i = 0; i < dataPrint.length; i++) {
-    //   ws.addRow(["CONFIG_TEST", "SAP_NUMBER", dataPrint[i].pp_id, 2, 2400, "USD", "conf_desc_example", "conf_type_example", 235]);
-    // }
 
     ws.addRow(typeArray);
     ws.addRow(confArray);
@@ -869,6 +864,44 @@ class PackageUpload extends React.Component {
 
     const MaterialFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MaterialFormat]), 'Config Uploader Template Vertical.xlsx');
+  }
+
+  exportFormatPSDismantle = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPrint = this.state.packageSelected;
+
+    let headArray = ["bundle_id", "bundle_name", "qty", "category"];
+    let confArray = ["bundle_id", "bundle_name", "qty", "TWH"];
+    let conf2Array = ["bundle_id", "bundle_name", "qty", "TST"];
+
+    ws.addRow(headArray);
+    ws.addRow(confArray);
+    ws.addRow(conf2Array);
+
+    const ws2 = wb.addWorksheet();
+
+    ws2.addRow(["bundle_id", "bundle_name"]);
+    dataPrint.map(pp => ws2.addRow([pp.pp_id, pp.product_name]));
+
+    const MaterialFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MaterialFormat]), 'PS SRN Uploader Template.xlsx');
+  }
+
+  exportFormatPSWarehouse = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPrint = this.state.packageSelected;
+
+    let headArray = ["bundle_id", "bundle_name", "qty"];
+    ws.addRow(headArray)
+
+    dataPrint.map(pp => ws.addRow([pp.pp_id, pp.product_name]));
+
+    const MaterialFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MaterialFormat]), 'PS MR Warehouse Uploader Template.xlsx');
   }
 
   async exportFormatBundleMaterial() {
@@ -915,7 +948,8 @@ class PackageUpload extends React.Component {
                         <DropdownItem onClick={this.exportFormatMaterial} disabled={this.state.packageChecked.length === 0}>> Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatBundleMaterial}>> Bundle Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatConfigVertical} disabled={this.state.packageChecked.length === 0}>> Config Template</DropdownItem>
-                        <DropdownItem onClick={this.exportTSSRFormat} disabled={this.state.packageChecked.length === 0}>> PS Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatPSDismantle} disabled={this.state.packageChecked.length === 0}>> PS SRN Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatPSWarehouse} disabled={this.state.packageChecked.length === 0}>> PS Warehouse Template</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>

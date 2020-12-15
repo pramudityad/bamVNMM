@@ -220,7 +220,7 @@ class GI extends Component {
           this.state.filter_list[8] +
           '", "$options" : "i"}'
       );
-    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"creator.email":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
     this.state.filter_list[10] !== "" &&
       filter_array.push(
         '"updated_on":{"$regex" : "' +
@@ -307,7 +307,7 @@ class GI extends Component {
           this.state.filter_list[8] +
           '", "$options" : "i"}'
       );
-    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"creator.email":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
     this.state.filter_list[10] !== "" &&
       filter_array.push(
         '"updated_on":{"$regex" : "' +
@@ -782,7 +782,7 @@ class GI extends Component {
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{list.eta}</td>
-                        <td></td>
+                        <td>{list.creator.map(e => e.email)}</td>
                         <td>{list.updated_on}</td>
                         <td>{list.created_on}</td>
                       </tr>
@@ -790,7 +790,7 @@ class GI extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries</small>
+                  <small>Showing {this.state.mr_list.length} entries from {this.state.totalData} data</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}

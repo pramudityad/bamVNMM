@@ -18,7 +18,7 @@ import { Link } from "react-router-dom";
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import Loading from "../components/Loading";
-import { getDatafromAPINODE } from "../../helper/asyncFunction";
+import { getDatafromAPINODE, patchDatatoAPINODE, getDatafromAPIEXEL } from "../../helper/asyncFunction";
 
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
@@ -36,8 +36,14 @@ class DetailPRPO extends Component {
       tokenUser: this.props.dataLogin.token,
       all_data: [],
       data_form : {},
+      action_status : null,
+      action_message : null,
     };
     this.handleInputGR = this.handleInputGR.bind(this);
+    this.reqGRDP = this.reqGRDP.bind(this);
+    this.reqGRFinal = this.reqGRFinal.bind(this);
+    this.requestPRPO = this.requestPRPO.bind(this);
+    this.requestRevisionGR = this.requestRevisionGR.bind(this);
     // bind
   }
   // function
@@ -74,7 +80,25 @@ class DetailPRPO extends Component {
       (res) => {
         if (res.data !== undefined) {
           this.setState({ all_data: res.data.data });
-          console.log("getPRTDetail ", this.state.all_data);
+          this.getGRData(res.data.data);
+        }
+      }
+    );
+  }
+
+  getGRData(prt_data){
+    let filter_bast = [];
+    if(prt_data.bast_no_dp !== undefined && prt_data.bast_no_dp !== null && prt_data.bast_no_dp.length !== 0){
+      filter_bast.push(prt_data.bast_no_dp)
+    }
+    if(prt_data.bast_no_final !== undefined && prt_data.bast_no_final !== null && prt_data.bast_no_final.length !== 0){
+      filter_bast.push(prt_data.bast_no_final)
+    }
+    let strg_arr_bast = '"'+filter_bast.join('", "')+'"';
+    let where_bast = '?where={"bast_no" : {"$in" : ['+strg_arr_bast+']}}';
+    getDatafromAPIEXEL('/gr_prt_op/'+where_bast, this.props.dataLogin.token).then((res) => {
+        if (res !== undefined && res.data !== undefined) {
+          this.setState({ gr_data: res.data._items });
         }
       }
     );
@@ -99,6 +123,92 @@ class DetailPRPO extends Component {
 
     const MRFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MRFormat]), 'Assignment ' + data_prt.prt_id + ' Template.xlsx');
+  }
+
+  async requestPRPO(){
+      let res = await patchDatatoAPINODE('/prt/RequestPRPO/' + this.props.match.params.id, {}, this.state.tokenUser);
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
+      } else {
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
+      }
+  }
+
+  async reqGRDP(){
+    const GRData = {
+        "data": {
+            "bastNumber": this.state.data_form.bast_no_dp,
+            "grType": "DP"
+        }
+    }
+    let res = await patchDatatoAPINODE('/prt/RequestGR/' + this.props.match.params.id, GRData, this.state.tokenUser);
+    if (res.data !== undefined) {
+      this.setState({ action_status: "success" });
+    } else {
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
+  async reqGRFinal(){
+    const GRData = {
+        "data": {
+            "bastNumber": this.state.data_form.bast_no_final,
+            "grType": "FINAL"
+        }
+    }
+    let res = await patchDatatoAPINODE('/prt/RequestGR/' + this.props.match.params.id, GRData, this.state.tokenUser);
+    if (res.data !== undefined) {
+      this.setState({ action_status: "success" });
+    } else {
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
+  async requestRevisionGR(e){
+    const type = e.target.name;
+    const revGR = {
+        "data": {
+            "grType": type
+        }
+    }
+    let res = await patchDatatoAPINODE('/prt/RequestReviseGR/' + this.props.match.params.id, revGR, this.state.tokenUser);
+    if (res.data !== undefined) {
+      this.setState({ action_status: "success" });
+    } else {
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
   }
 
   render() {
@@ -177,8 +287,8 @@ class DetailPRPO extends Component {
                           readOnly
                             type="text"
                             //placeholder="PRT ID"
-                            name={"prt_id"}
-                            value={all_data.prt_id}
+                            name={"current_status"}
+                            value={all_data.current_status}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -423,6 +533,19 @@ class DetailPRPO extends Component {
                     <h5><b>PR Status</b></h5>
                     <Form>
                       <FormGroup row>
+                        <Label sm={2}>PR Status</Label>
+                        <Col sm={10}>
+                          <Input
+                          readOnly
+                            type="text"
+                            //placeholder="PR Number"
+                            name={"work_status"}
+                            value={all_data.work_status}
+                            onChange={this.handleInput}
+                          />
+                        </Col>
+                      </FormGroup>
+                      <FormGroup row>
                         <Label sm={2}>PR Number</Label>
                         <Col sm={10}>
                           <Input
@@ -516,118 +639,159 @@ class DetailPRPO extends Component {
                     </Form>
                   </Col>
                   </Row>
-                  {/* prpo info */}
                   <Row>
-                  <Col>
-                    <h5><b>GR Information</b></h5>
-                    <Form>
-                      <FormGroup row>
-                        <Label sm={2}>BAST No DP</Label>
-                        <Col sm={3}>
-                          <Input
-                            type="text"
-                            name={"bast_no_dp"}
-                            value={this.state.data_form.bast_no_dp}
-                            onChange={this.handleInputGR}
-                          />
-                        </Col>
-                        <Label sm={2}></Label>
-                        <Col sm={5}>
-                          <Button size="sm" color="primary">
-                            Req GR DP
-                          </Button>
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR DP by</Label>
-                        <Col sm={10}>
-                          <Input
-                          readOnly
-                            type="text"
-                            //placeholder="Req GR by DP"
-                            name={"req_gr_by_dp"}
-                            value={this.state.userEmail}
-                            onChange={this.handleInputGR}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR DP Date</Label>
-                        <Col sm={10}>
-                          <Input
+                    <Col md="12">
+                    {(all_data.work_status === null) && (
+                      <Button onClick={this.requestPRPO} color="primary" size="sm" style={{marginBottom : '10px'}}>
+                        Request PR PO
+                      </Button>
+                    )}
+                    </Col>
+                  </Row>
+                  {/* prpo info */}
+                  {all_data.term_of_payment !== "100" && (
+                    <Row>
+                      <Col>
+                      <h5><b>GR Information</b></h5>
+                      <Form>
+                        <FormGroup row>
+                          <Label sm={2}>BAST No DP</Label>
+                          <Col sm={3}>
+                          {all_data.bast_no_dp !== null && all_data.bast_no_dp !== undefined ? (
+                            <Input
+                              readOnly
+                              type="text"
+                              name={"bast_no_dp"}
+                              value={all_data.bast_no_dp}
+                              onChange={this.handleInputGR}
+                            />
+                          ) : (
+                            <Input
+                              type="text"
+                              name={"bast_no_dp"}
+                              value={this.state.data_form.bast_no_dp}
+                              onChange={this.handleInputGR}
+                            />
+                          )}
+                          </Col>
+                          <Label sm={2}></Label>
+                          <Col sm={5}>
+                          {(all_data.bast_no_dp === null || all_data.bast_no_dp === undefined)  && (
+                            <Button size="sm" color="primary" onClick={this.reqGRDP}>
+                              Req GR DP
+                            </Button>
+                          )}
+                          </Col>
+                        </FormGroup>
+                        <FormGroup row>
+                          <Label sm={2}>Req GR DP by</Label>
+                          <Col sm={4}>
+                            <Input
                             readOnly
-                            type="text"
-                            //placeholder="Req GR Date DP"
-                            name={"req_gr_date_dp"}
-                            value={this.state.data_form.date_now}
-                            onChange={this.handleInputGR}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}></Label>
-                        <Col sm={10}>
-                          <Button size="sm" color="primary">
-                            Req GR DP Revision
-                          </Button>
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}></Label>
-                        <Col sm={10}>
-                          <Button size="sm" color="primary">
-                            Send GR DP Revision (Done)
-                          </Button>
-                        </Col>
-                      </FormGroup>
-                      <br />
-                      <FormGroup row>
-                        <Label sm={2}>BAST No Final</Label>
-                        <Col sm={3}>
-                          <Input
-                            type="text"
-                            name={"bast_no_final"}
-                            value={this.state.data_form.bast_no_final}
-                            onChange={this.handleInputGR}
-                          />
-                        </Col>
-                        <Label sm={2}></Label>
-                        <Col sm={5}>
-                          <Button size="sm" color="primary">
-                            Req GR Final
-                          </Button>
-                        </Col>
-                      </FormGroup>
-                    </Form>
-                  </Col>
-                </Row>
+                              type="text"
+                              //placeholder="Req GR by DP"
+                              name={"req_gr_by_dp"}
+                              value={all_data.req_gr_by_dp}
+                              onChange={this.handleInputGR}
+                            />
+                          </Col>
+                          <Label sm={1}></Label>
+                          <Label sm={2}>Req GR DP Date</Label>
+                          <Col sm={3}>
+                            <Input
+                              readOnly
+                              type="text"
+                              //placeholder="Req GR Date DP"
+                              name={"req_gr_date_dp"}
+                              value={all_data.req_gr_date_dp}
+                              onChange={this.handleInputGR}
+                            />
+                          </Col>
+                        </FormGroup>
+                        {/*}<FormGroup row>
+                          <Label sm={2}>Req GR DP by</Label>
+                          <Col sm={4}>
+                            <Input
+                            readOnly
+                              type="text"
+                              //placeholder="Req GR by DP"
+                              name={"req_gr_by_dp"}
+                              value={all_data.req_gr_by_dp}
+                              onChange={this.handleInputGR}
+                            />
+                          </Col>
+                        </FormGroup>*/}
+                        <FormGroup row>
+                          <Label sm={2}></Label>
+                          <Col sm={10}>
+                            <Button size="sm" color="primary" name="DP" onClick={this.requestRevisionGR}>
+                              Req GR DP Revision
+                            </Button>
+                          </Col>
+                        </FormGroup>
+                        <br />
+                      </Form>
+                    </Col>
+                  </Row>
+                  )}
+
                 {/* gr information */}
                 <Row>
                   <Col>
                     {/* <h5>GR Information</h5> */}
                     <Form>
                       <FormGroup row>
+                        <Label sm={2}>BAST No Final</Label>
+                        <Col sm={3}>
+                        {all_data.bast_no_final !== null && all_data.bast_no_final !== undefined ? (
+                          <Input
+                            readOnly
+                            type="text"
+                            name={"bast_no_final"}
+                            value={all_data.bast_no_final}
+                            onChange={this.handleInputGR}
+                          />
+                        ) : (
+                          <Input
+                            type="text"
+                            name={"bast_no_final"}
+                            value={this.state.data_form.bast_no_final}
+                            onChange={this.handleInputGR}
+                          />
+                        )}
+
+                        </Col>
+                        <Label sm={2}></Label>
+                        <Col sm={5}>
+                        {(all_data.bast_no_final !== null || all_data.bast_no_final !== undefined) && (
+                          <Button size="sm" color="primary" onClick={this.reqGRFinal}>
+                            Req GR Final
+                          </Button>
+                        )}
+
+                        </Col>
+                      </FormGroup>
+                      <FormGroup row>
                         <Label sm={2}>Req GR Final by</Label>
-                        <Col sm={10}>
+                        <Col sm={4}>
                           <Input
                             readOnly
                             type="text"
                             //placeholder="Req GR by Final"
                             name={"req_gr_by_final"}
-                            value={this.state.userEmail}
+                            value={all_data.req_gr_by_final}
                             onChange={this.handleInputGR}
                           />
                         </Col>
-                      </FormGroup>
-                      <FormGroup row>
+                        <Label sm={1}></Label>
                         <Label sm={2}>Req GR Final Date</Label>
-                        <Col sm={10}>
+                        <Col sm={3}>
                           <Input
                           readOnly
                             type="date"
                             //placeholder=""
                             name={"req_gr_date_final"}
-                            value={this.state.data_form.date_now}
+                            value={all_data.req_gr_date_final}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -635,16 +799,8 @@ class DetailPRPO extends Component {
                       <FormGroup row>
                         <Label sm={2}></Label>
                         <Col sm={10}>
-                          <Button size="sm" color="primary">
+                          <Button size="sm" color="primary" name="FINAL" onClick={this.requestRevisionGR}>
                             Req GR Final Revision
-                          </Button>
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}></Label>
-                        <Col sm={10}>
-                          <Button size="sm" color="primary">
-                            Send GR Final Revision (Done)
                           </Button>
                         </Col>
                       </FormGroup>
@@ -652,7 +808,8 @@ class DetailPRPO extends Component {
                   </Col>
                 </Row>
               </CardBody>
-              <CardFooter></CardFooter>
+              <CardFooter>
+              </CardFooter>
             </Card>
           </Col>
         </Row>

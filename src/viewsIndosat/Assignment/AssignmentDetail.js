@@ -83,11 +83,16 @@ class AssignmentDetail extends Component {
       vendor_id: null,
       vendor_email: null,
       modal_warning_cancel_asg : false,
+      modal_warning_revise_asg : false,
       value_warning_cancel_asg : "Are you sure?",
       modal_loading : false,
       sid_file : [],
       abd_file : [],
+      pqr_file : [],
       dropdownOpen: new Array(2).fill(false),
+      reason_cancel : 'No Reason',
+      modal_warning_regr_asg : false,
+      bast_number_regr : null,
     };
     this.notifyASP = this.notifyASP.bind(this);
     this.saveBastNumber = this.saveBastNumber.bind(this);
@@ -96,6 +101,7 @@ class AssignmentDetail extends Component {
     this.revisionASG = this.revisionASG.bind(this);
     this.approveASGbyPM = this.approveASGbyPM.bind(this);
     this.CancelASG = this.CancelASG.bind(this);
+    this.ReGRASG = this.ReGRASG.bind(this);
     this.ApproveCancelASG = this.ApproveCancelASG.bind(this);
     this.RejectCancelASG = this.RejectCancelASG.bind(this);
     this.exportFormatBulkAssignment = this.exportFormatBulkAssignment.bind(
@@ -122,7 +128,12 @@ class AssignmentDetail extends Component {
     this.handleRescheduleNote = this.handleRescheduleNote.bind(this);
 
     this.toggleWarningCancelASG = this.toggleWarningCancelASG.bind(this);
+    this.toggleWarningREGRASG = this.toggleWarningREGRASG.bind(this);
+    this.toggleWarningReviseASG = this.toggleWarningReviseASG.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
+    this.RevisePRPO = this.RevisePRPO.bind(this);
+    this.handleChangeReasonCancel = this.handleChangeReasonCancel.bind(this);
+    this.ResyncNNandACT = this.ResyncNNandACT.bind(this);
     // this.handleChangeNotApprove = this.handleChangeNotApprove.bind(this);
   }
 
@@ -144,6 +155,21 @@ class AssignmentDetail extends Component {
   toggleWarningCancelASG(e) {
     this.setState(prevState => ({
       modal_warning_cancel_asg: !prevState.modal_warning_cancel_asg
+    }));
+  }
+
+  toggleWarningREGRASG(e) {
+    if(e !== undefined){
+      this.setState({bast_number_regr : e.currentTarget.value});
+    }
+    this.setState(prevState => ({
+      modal_warning_regr_asg: !prevState.modal_warning_regr_asg
+    }));
+  }
+
+  toggleWarningReviseASG(e) {
+    this.setState(prevState => ({
+      modal_warning_revise_asg: !prevState.modal_warning_revise_asg
     }));
   }
 
@@ -293,10 +319,11 @@ class AssignmentDetail extends Component {
     const maxPage = 1;
     let dataSID = [];
     let dataABD = [];
+    let dataPQR = [];
     for(let i = 0; i < arrayCDID.length; i++){
       let filter_array = [];
       filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
-      filter_array.push('"type" : {"$ne" : "ABD"}');
+      filter_array.push('"type" : "SID"');
       let whereAnd = "{" + filter_array.join(",") + "}";
       const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
       if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
@@ -313,7 +340,17 @@ class AssignmentDetail extends Component {
         dataABD.push(res.data.data[0])
       }
     }
-    this.setState({sid_file : dataSID, abd_file : dataABD});
+    for(let i = 0; i < arrayCDID.length; i++){
+      let filter_array = [];
+      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"type" : "PQR"');
+      let whereAnd = "{" + filter_array.join(",") + "}";
+      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
+      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
+        dataPQR.push(res.data.data[0])
+      }
+    }
+    this.setState({sid_file : dataSID, abd_file : dataABD, pqr_file : dataPQR});
   }
 
   handleBastAssign = (e) => {
@@ -865,6 +902,53 @@ class AssignmentDetail extends Component {
     }
   }
 
+  async RevisePRPO(e) {
+    this.toggleLoading();
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
+    const _id = e.target.id;
+    const dataAssignment = this.state.data_assignment;
+    let res = await this.patchDatatoAPINODE('/aspAssignment/revisePrPoAssignment/'+this.props.match.params.id, {});
+    if (res !== undefined && res.data !== undefined) {
+      this.setState({action_status : 'success'});
+    } else {
+      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+        if(res.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+  }
+
+  async ReGRASG(e) {
+    this.setState({modal_warning_regr_asg : false});
+    this.toggleLoading();
+    const newDate = new Date();
+    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
+    const _id = e.target.id;
+    const dataAssignment = this.state.data_assignment;
+    let res = await this.patchDatatoAPINODE('/aspAssignment/reviseGR/'+dataAssignment._id, { "bastNumber": [this.state.bast_number_regr]});
+    if (res !== undefined && res.data !== undefined) {
+      this.setState({action_status: 'success'});
+    } else {
+      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
+        if(res.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+  }
+
   async CancelASG(e) {
     this.setState({modal_warning_cancel_asg : false});
     this.toggleLoading();
@@ -872,7 +956,7 @@ class AssignmentDetail extends Component {
     const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
     const _id = e.target.id;
     const dataAssignment = this.state.data_assignment;
-    let res = await this.patchDatatoAPINODE('/aspAssignment/requestCancelation', { "assignmentId": [dataAssignment._id] });
+    let res = await this.patchDatatoAPINODE('/aspAssignment/requestCancelation', { "assignmentId": [dataAssignment._id], "reason" : this.state.reason_cancel });
     if (res !== undefined) {
       if (res.data !== undefined) {
         let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
@@ -1046,6 +1130,40 @@ class AssignmentDetail extends Component {
     }
   }
 
+  getPQRFile = async (e) => {
+    e.preventDefault()
+    e.persist();
+    const _id = e.currentTarget.value;
+    const dataSID = this.state.pqr_file.find(sf => sf._id === _id);
+    if(dataSID !== undefined)  {
+      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
+      if(resFile !== undefined){
+        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+      }
+    }
+  }
+
+  handleChangeReasonCancel(e){
+    this.setState({reason_cancel : e.target.value})
+  }
+
+  async ResyncNNandACT(e){
+    const dataPatch = await this.patchDatatoAPINODE('/aspAssignment/resyncNnActCodePdb/'+this.state.data_assignment._id, {})
+    if(dataPatch !== undefined && dataPatch.data !== undefined){
+      this.setState({action_status : 'success'});
+    }else{
+      if (dataPatch.response !== undefined && dataPatch.response.data !== undefined && dataPatch.response.data.error !== undefined) {
+        if (dataPatch.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: dataPatch.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: dataPatch.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -1084,7 +1202,20 @@ class AssignmentDetail extends Component {
                     ></i>
                     Assignment Format
                   </Button>
-                  {(this.state.sid_file.length !== 0 || this.state.abd_file.length !== 0) ? (
+                  {(this.state.userRole.findIndex(e => e === "Admin") !== -1 && (this.state.data_assignment.Locked_For_Revision === undefined || this.state.data_assignment.Locked_For_Revision === false)) && (
+                    <Button
+                      style={{ marginRight: "8px", float: "right" }}
+                      outline
+                      color="secondary"
+                      size="sm"
+                      onClick={this.ResyncNNandACT}
+                      size="sm"
+                    >
+                      <i class="fa fa-refresh" aria-hidden="true" style={{ marginRight: "8px" }}></i>
+                      Resync NN and ACT Code
+                    </Button>
+                  )}
+                  {(this.state.sid_file.length !== 0 || this.state.abd_file.length !== 0 || this.state.pqr_file.length !== 0) ? (
                     <Dropdown size="sm" isOpen={this.state.dropdownOpen[1]} toggle={() => {this.toggleDropdown(1);}} style={{float : 'right', marginRight : '10px'}}>
                       <DropdownToggle caret color="secondary">
                         <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download SID File
@@ -1097,6 +1228,10 @@ class AssignmentDetail extends Component {
                         <DropdownItem header>ABD File</DropdownItem>
                         {(this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && this.state.abd_file.map(sf =>
                           <DropdownItem value={sf._id} onClick={this.getABDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
+                        )}
+                        <DropdownItem header>PQR File</DropdownItem>
+                        {(this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && this.state.pqr_file.map(sf =>
+                          <DropdownItem value={sf._id} onClick={this.getPQRFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
                         )}
                       </DropdownMenu>
                     </Dropdown>
@@ -1199,6 +1334,22 @@ class AssignmentDetail extends Component {
                         ""
                       )}
                     </Row>
+                    <Row>
+                      <Col md="6">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Remark</Label>
+                          <Input type="textarea" readOnly value={this.state.data_assignment.Assignment_Remark} ></Input>
+                        </FormGroup>
+                      </Col>
+                      {(this.state.data_assignment.Cancelation_Reason !== undefined && this.state.data_assignment.Cancelation_Reason !== null && this.state.data_assignment.Cancelation_Reason.length !== 0) && (
+                        <Col md="6">
+                          <FormGroup style={{ paddingLeft: "16px" }}>
+                            <Label>Cancel Remark</Label>
+                            <Input type="textarea" readOnly value={this.state.data_assignment.Cancelation_Reason} ></Input>
+                          </FormGroup>
+                        </Col>
+                      )}
+                    </Row>
                     <h5 style={{ marginTop: "16px" }}>PROJECT</h5>
                     <Row>
                       <Col md="6">
@@ -1209,6 +1360,17 @@ class AssignmentDetail extends Component {
                             name="project_name"
                             readOnly
                             value={this.state.data_assignment.Project}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md="6">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Project PO</Label>
+                          <Input
+                            type="text"
+                            name="project_name"
+                            readOnly
+                            value={this.state.data_assignment.cust_del.map(cd => cd.project_po).join(", ")}
                           />
                         </FormGroup>
                       </Col>
@@ -1417,6 +1579,20 @@ class AssignmentDetail extends Component {
                             readOnly
                             value={this.state.data_assignment.SOW_Type}
                           />
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col md="6">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Assignment Accepted by</Label>
+                          <Input type="text" name="pr" readOnly value={this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED") !== undefined ? this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED").status_updater : null} />
+                        </FormGroup>
+                      </Col>
+                      <Col md="3">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Assignment Accepted On</Label>
+                          <Input type="text" name="pr_created_by" value={this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED") !== undefined ? this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED").status_date.slice(0, 10) : null} readOnly />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -1760,7 +1936,7 @@ class AssignmentDetail extends Component {
                                       position: "relative",
                                       left: "350px",
                                     }}
-                                    onClick={this.updateSSOWList}
+                                    onClick={this.toggleWarningReviseASG}
                                   >
                                     <i className="fa fa-save">&nbsp;</i>Update
                                   </Button>
@@ -1770,112 +1946,6 @@ class AssignmentDetail extends Component {
                           )}
                         </Fragment>
                       )}
-                    <h5 style={{ marginTop: "16px" }}>ASSIGN BAST</h5>
-                    <Row>
-                      <Col md="2">
-                        <FormGroup style={{ paddingLeft: "16px" }}>
-                          <Label>BAST NO</Label>
-                          <Input
-                            type="text"
-                            name="bast_no"
-                            onChange={this.handleBastAssign}
-                            value={
-                              !this.state.bast_assign_form.has("bast_no")
-                                ? null
-                                : this.state.bast_assign_form.get("bast_no")
-                            }
-                          />
-                        </FormGroup>
-                      </Col>
-                      <Col md="2">
-                        <FormGroup style={{ paddingLeft: "16px" }}>
-                          <Label>GR Type</Label>
-                          <Input
-                            type="select"
-                            name="gr_type"
-                            onChange={this.handleBastAssign}
-                            value={
-                              !this.state.bast_assign_form.has("gr_type")
-                                ? null
-                                : this.state.bast_assign_form.get("gr_type")
-                            }
-                          >
-                            <option value="" disabled selected hidden>
-                              Select GR Type
-                            </option>
-                            <option value={"DP"}>DP</option>
-                            <option value={"Final"}>Final</option>
-                          </Input>
-                        </FormGroup>
-                      </Col>
-                      <Col md="2">
-                        <FormGroup style={{ paddingLeft: "16px" }}>
-                          <Label>Payment Ratio</Label>
-                          <Input
-                            type="select"
-                            name="ratio"
-                            onChange={this.handleBastAssign}
-                            value={
-                              !this.state.bast_assign_form.has("ratio")
-                                ? null
-                                : this.state.bast_assign_form.get("ratio")
-                            }
-                          >
-                            <option value="" disabled selected hidden>
-                              Select Ratio
-                            </option>
-                            <option value={0.2}>20%</option>
-                            <option value={0.3}>30%</option>
-                            <option value={0.4}>40%</option>
-                            <option value={0.5}>50%</option>
-                            <option value={0.6}>60%</option>
-                            <option value={0.7}>70%</option>
-                            <option value={0.8}>80%</option>
-                            {(this.state.bast_assign_form.get("gr_type") === "Final") && (
-                              <option value={1.0}>100%</option>
-                            )}
-                          </Input>
-                        </FormGroup>
-                      </Col>
-                      <Col md="4">
-                        <FormGroup style={{ paddingLeft: "16px" }}>
-                          <Label>GR Status</Label>
-                          <Input
-                            type="select"
-                            name="item_status"
-                            onChange={this.handleBastAssign}
-                            value={
-                              !this.state.bast_assign_form.has("item_status")
-                                ? null
-                                : this.state.bast_assign_form.get("item_status")
-                            }
-                          >
-                            <option value="" disabled selected hidden></option>
-                            <option value="Submit">Submit</option>
-                            <option value="Submit and Urgent">
-                              Submit and Urgent
-                            </option>
-                          </Input>
-                        </FormGroup>
-                      </Col>
-                      <Col md="2">
-                        <Button
-                          color="success"
-                          style={{
-                            float: "right",
-                            marginRight: "20px",
-                            marginTop: "30px",
-                          }}
-                          onClick={this.saveBastNumber}
-                        >
-                          <i
-                            className="fa fa-plus-square"
-                            style={{ marginRight: "8px" }}
-                          ></i>
-                          Assign
-                        </Button>
-                      </Col>
-                    </Row>
                     <h5 style={{ marginTop: "16px" }}>GR</h5>
                     <Row>
                       <Col md="4">
@@ -1883,12 +1953,18 @@ class AssignmentDetail extends Component {
                           <thead>
                             <tr>
                               <th>ASP BAST No.</th>
+                              <th></th>
                             </tr>
                           </thead>
                           <tbody>
                             {this.state.data_assignment.BAST_No.map((bast) => (
                               <tr>
                                 <td>{bast}</td>
+                                <td>
+                                  <Button size="sm" color="success" style={{ float: "right" }} id={this.state.data_assignment._id} value={bast} onClick={this.toggleWarningREGRASG} >
+                                    Re-GR
+                                  </Button>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
@@ -1914,7 +1990,7 @@ class AssignmentDetail extends Component {
                       Approve
                     </Button>
                   )}
-                  {(this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT REQUEST FOR CANCELATION" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCEL APPROVED" && (this.state.data_assignment.SH_Assignment_No !== null || this.state.data_assignment.created_by === this.state.userId || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
+                  {(this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT REQUEST FOR CANCELATION" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCEL APPROVED" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCELED" && (this.state.data_assignment.SH_Assignment_No !== null || this.state.data_assignment.created_by === this.state.userId || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
                     <Button
                       color="danger"
                       size="sm"
@@ -2042,6 +2118,11 @@ class AssignmentDetail extends Component {
                       </Modal>
                     </Fragment>
                   )}
+                  {this.state.data_assignment.ASP_Assignment_Status !== undefined && this.state.data_assignment.ASP_Assignment_Status.find(aas => aas.status_value === "ACCEPTED" || aas.status_value === "CANCELED") !== undefined && this.state.data_assignment.ASP_Assignment_Status.find(aas => aas.status_value === "CANCELED") === undefined && (
+                    <Button size="sm" color="success" hidden style={{ float: "right" }} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.RevisePRPO} >
+                      Revise PR PO
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
             )}
@@ -2049,21 +2130,74 @@ class AssignmentDetail extends Component {
         </Row>
 
         {/* Modal confirmation Cancel */}
-        <ModalDelete
-          isOpen={this.state.modal_warning_cancel_asg}
-          toggle={this.toggleWarningCancelASG}
-          className={"modal-danger " + this.props.className}
-          title={"Cancel Assignment"}
-          body={"This Action will cancel this Assignment. Are you sure ?"}
-        >
-          <Button color="danger" onClick={this.CancelASG} value="save">
-            Yes
-          </Button>
-          <Button color="secondary" onClick={this.toggleWarningCancelASG}>
-            Cancel
-          </Button>
-        </ModalDelete>
+        <Modal isOpen={this.state.modal_warning_cancel_asg} toggle={this.toggleWarningCancelASG} className={'modal-sm modal-danger ' + this.props.className}>
+          <ModalHeader>
+            Cancel Confirmation
+          </ModalHeader>
+          <ModalBody>
+            <div style={{textAlign : 'center'}}>
+              This action will cancel this Assignment. Are you sure ?
+            </div>
+            <div style={{textAlign : 'center'}}>
+              Please select the reason
+            </div>
+            <div style={{textAlign : 'center'}}>
+              <Input type="select" onChange={this.handleChangeReasonCancel} value={this.state.reason_cancel}>
+                <option value="No Reason">No Reason</option>
+                <option value="Change Scope of Work">Change Scope of Work</option>
+                <option value="Change ASP">Change ASP</option>
+                <option value="Drop Site">Drop Site</option>
+                <option value="Change NN ESTA to NN">Change NN ESTA to NN</option>
+                <option value="Change NN between Project">Change NN between Project</option>
+                <option value="Double Assignment (1 ASP --> 2 Assignment)">Double Assignment (1 ASP --> 2 Assignment)</option>
+                <option value="Double Assignment (1 same SOW --> 2 ASP)">Double Assignment (1 same SOW --> 2 ASP)</option>
+                <option value="Change Handle by FSO">Change Handle by FSO</option>
+                <option value="ASP Discontinued">ASP Discontinued</option>
+                <option value="Purchase Order Expired">Purchase Order Expired</option>
+              </Input>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="secondary" onClick={this.toggleWarningCancelASG} size="sm">
+              Close
+            </Button>
+            <Button color="danger" onClick={this.CancelASG} value="save" size="sm">
+              Yes
+            </Button>
+          </ModalFooter>
+        </Modal>
         {/* Modal confirmation Cancel */}
+
+        {/* Modal confirmation Revise */}
+        <Modal isOpen={this.state.modal_warning_revise_asg} toggle={this.toggleWarningReviseASG} className={'modal-sm modal-warning ' + this.props.className}>
+          <ModalHeader>
+            Revise Confirmation
+          </ModalHeader>
+          {this.state.data_assignment !== null && (
+            <ModalBody>
+            {(this.state.data_assignment.Locked_For_Revision === undefined || this.state.data_assignment.Locked_For_Revision === false) ? (
+              <div style={{textAlign : 'center'}}>
+                This action will revise this Assignment. Are you sure ?
+              </div>
+            ) : (
+              <div style={{textAlign : 'center'}}>
+                Sorry can't update this Assignment
+              </div>
+            )}
+            </ModalBody>
+          )}
+          <ModalFooter>
+            <Button color="secondary" onClick={this.toggleWarningReviseASG} size="sm">
+              Close
+            </Button>
+            {this.state.data_assignment !== null && (this.state.data_assignment.Locked_For_Revision === undefined || this.state.data_assignment.Locked_For_Revision === false) && (
+              <Button color="warning" onClick={this.updateSSOWList} value="save" size="sm">
+                Revise
+              </Button>
+            )}
+          </ModalFooter>
+        </Modal>
+        {/* Modal confirmation Revise */}
 
         {/* Modal Loading */}
         <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className}>
@@ -2082,6 +2216,27 @@ class AssignmentDetail extends Component {
           </ModalFooter>
         </Modal>
         {/* end Modal Loading */}
+
+        {/* Modal confirmation REGR */}
+        <Modal isOpen={this.state.modal_warning_regr_asg} toggle={this.toggleWarningREGRASG} className={'modal-sm modal-danger ' + this.props.className}>
+          <ModalHeader>
+            RE-GR Confirmation
+          </ModalHeader>
+          <ModalBody>
+            <div style={{textAlign : 'center'}}>
+              This action will Re-GR this BAST Number {this.state.bast_number_regr}. Are you sure ?
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="secondary" onClick={this.toggleWarningREGRASG} size="sm">
+              Close
+            </Button>
+            <Button color="danger" onClick={this.ReGRASG} value="save" size="sm">
+              RE-GR
+            </Button>
+          </ModalFooter>
+        </Modal>
+        {/* Modal confirmation REGR */}
 
       </div>
     );

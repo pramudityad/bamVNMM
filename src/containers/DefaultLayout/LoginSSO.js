@@ -29,6 +29,15 @@ class SSOLogin extends Component {
       authenticatedLoginBAM : null,
       authenticatedLoginBAMStatus : null,
     };
+    this.signOut = this.signOut.bind(this);
+  }
+
+  signOut(e) {
+    e.preventDefault();
+    this.state.key.logout();
+    localStorage.clear();
+    this.props.history.push('/');
+    this.postDatatoAPILogout();
   }
 
   async postDatatoAPILogin(url, data){
@@ -146,7 +155,6 @@ class SSOLogin extends Component {
   }
 
   render() {
-    console.log("authenticatedLoginBAM", this.state.authenticatedLoginBAM,  this.state.authenticatedLoginBAMStatus)
     if(this.state.key !== null && this.state.key !== undefined && this.state.authenticatedLoginBAM === true){
       return(
         <App token={this.state.token} LoginData={this.state.dataLogin} keycloak={this.state.key} authenticatedBAM={this.state.authenticatedLoginBAM}/>
@@ -158,7 +166,11 @@ class SSOLogin extends Component {
         <React.Fragment>
         <div className="app flex-row align-items-center page--select-account">
           <Container className="background-container--login-page">
-            <Row className="justify-content-center" style={{display : 'flex', width : 'inherit'}}>
+            <Row style={{display : 'flex', 'justify-content' : 'space-between', width : 'inherit', paddingLeft : '25px'}}>
+              <Button size="sm" onClick={this.signOut} style={{float : 'left', marginRight : 'auto', height : '20px', padding : '0px 5px 0px 5px'}}>
+                <i class="fa fa-sign-out"></i>
+                Logout
+              </Button>
               <img src={ericssonLogoBlack} alt="Ericsson logo" style={{width : '170px', float : 'right', marginLeft : 'auto'}} />
             </Row>
             <Row className="justify-content-center">
