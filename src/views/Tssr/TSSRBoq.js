@@ -26,6 +26,93 @@ const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNot
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
+const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
+const usernameXL = "adminbamidsuper";
+const passwordXL = "F760qbAg2sml";
+
+class TableTSSRHorizontal extends React.Component{
+  constructor(props) {
+      super(props);
+  }
+
+  getTechnicalRow(site_data_config, config_group, config_group_type){
+    const dataConfigIdx = site_data_config.find(e => e.config_group === config_group && e.config_group_type === config_group_type);
+    if(dataConfigIdx !== undefined){
+      return ( <Fragment>
+                  <td>{dataConfigIdx.config_id}</td>
+                  <td>{dataConfigIdx.qty}</td>
+                  <td>{dataConfigIdx.qty_commercial}</td>
+                </Fragment>)
+    }else{
+      return ( <Fragment>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </Fragment>)
+    }
+  }
+
+  render(){
+    console.log("Props Child", this.props)
+    return(
+      <Table hover bordered striped responsive size="sm">
+        <thead>
+        <tr>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            Tower ID
+          </th>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            Program
+          </th>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            SOW
+          </th>
+          <th rowSpan="2" style={{verticalAlign : "middle"}}>
+            Priority
+          </th>
+          {this.props.configHeader.config_group_type_header.map(type =>
+            <Fragment>
+              <th>{type}</th>
+              <th>{type}</th>
+              <th>{type}</th>
+            </Fragment>
+          )}
+        </tr>
+        <tr>
+          {this.props.configHeader.config_group_header.map(conf =>
+            <Fragment>
+              <th>{conf}</th>
+              <th>Qty</th>
+              <th>Qty Comm</th>
+            </Fragment>
+          )}
+        </tr>
+        </thead>
+        <tbody>
+        {this.props.dataTechBoqSites.map(site =>
+          <tr>
+            <td>{site.site_id}</td>
+            <td>{site.program}</td>
+            <td>{site.sow}</td>
+            <td>{site.priority}</td>
+            {(this.props.isVersion === "rollback") ? (
+              this.props.configHeader.config_group_header.map((conf,i) =>
+                this.getTechnicalRow(site.siteItemConfigVersion, conf, this.props.configHeader.config_group_type_header[i])
+              )
+            ): (
+              this.props.configHeader.config_group_header.map((conf,i) =>
+                this.getTechnicalRow(site.siteItemConfig, conf, this.props.configHeader.config_group_type_header[i])
+              )
+            )}
+
+          </tr>
+        )}
+        </tbody>
+      </Table>
+    )
+  }
+}
+
 class TSSRBoq extends Component {
     constructor(props) {
       super(props);
@@ -36,9 +123,11 @@ class TSSRBoq extends Component {
         userName : this.props.dataLogin.userName,
         userEmail : this.props.dataLogin.email,
         tokenUser : this.props.dataLogin.token,
-        data_tech_boq : null,
-        data_tech_boq_sites : [],
-        data_tech_boq_sites_pagination : [],
+        data_tssr_boq : null,
+        data_tssr_boq_sites : [],
+        data_tssr_boq_sites_pagination : [],
+        data_tssr_boq_version : {},
+        data_tssr_boq_sites_version : [],
         tssr_config_comment : new Map(),
         tssr_config_qty : new Map(),
         tssr_comment : null,
@@ -54,9 +143,8 @@ class TSSRBoq extends Component {
         data_comm_boq_items_version : [],
         list_tech_boq : [],
         list_tech_boq_selection : [],
-        data_tech_boq_selected : null,
-        data_tech_boq_sites_selected : [],
-        list_version : [],
+        data_tssr_boq_selected : null,
+        data_tssr_boq_sites_selected : [],
 
         activePage : 1,
         perPage : 10,
@@ -75,7 +163,7 @@ class TSSRBoq extends Component {
         commercialData_now : [],
         project_select : null,
         project_name_select : null,
-        rowsComm : [],
+        rowsTSSR : [],
         qty_cust : new Map(),
         qty_ericsson : new Map(),
         early_start : false,
@@ -115,9 +203,14 @@ class TSSRBoq extends Component {
         modal_alert : false,
         drm_data : [],
         view_drm : 'tssr',
-
+        format_uploader : "Horizontal",
         view_tech_header_table : {"config_group_header" : [], "config_group_type_header" : []},
         view_tech_all_header_table : {"config_group_header" : [], "config_group_type_header" : []},
+        result_check_tssr : {},
+        array_site_ps_creation : [],
+        data_tower : [],
+        list_version : [],
+
       };
       this.saveDataTSSR = this.saveDataTSSR.bind(this);
       this.toggleAlert = this.toggleAlert.bind(this);
@@ -125,14 +218,24 @@ class TSSRBoq extends Component {
       this.exportFormatTSSRUpdate = this.exportFormatTSSRUpdate.bind(this);
       this.toggleLoading = this.toggleLoading.bind(this);
       this.toggleDropdown = this.toggleDropdown.bind(this);
-      this.toggleUpload = this.toggleUpload.bind(this);
+      this.toggleUploadPSCreationBulk = this.toggleUploadPSCreationBulk.bind(this);
       this.handleChangeCommentConfig = this.handleChangeCommentConfig.bind(this);
-      this.approvalTechnical = this.approvalTechnical.bind(this);
+      this.approvalTSSR = this.approvalTSSR.bind(this);
       this.handleChangeCommentTSSR = this.handleChangeCommentTSSR.bind(this);
       this.handleChangeQtyTSSRConfig = this.handleChangeQtyTSSRConfig.bind(this);
       this.handlePageChange = this.handlePageChange.bind(this);
       this.openDRMinPDB = this.openDRMinPDB.bind(this);
       this.handleChangeViewDRM = this.handleChangeViewDRM.bind(this);
+      this.updateTSSRBoq = this.updateTSSRBoq.bind(this);
+      this.exportForPSCreationMigration = this.exportForPSCreationMigration.bind(this);
+
+      this.onEntering = this.onEntering.bind(this);
+      this.onEntered = this.onEntered.bind(this);
+      this.onExiting = this.onExiting.bind(this);
+      this.onExited = this.onExited.bind(this);
+
+      this.psBulkCreation = this.psBulkCreation.bind(this);
+      this.handleChangeVersion = this.handleChangeVersion.bind(this);
     }
 
     checkValueReturn(value1, value2){
@@ -158,7 +261,7 @@ class TSSRBoq extends Component {
       }));
     }
 
-    toggleUpload() {
+    toggleUploadPSCreationBulk() {
       this.setState({ collapse: !this.state.collapse });
     }
 
@@ -246,6 +349,26 @@ class TSSRBoq extends Component {
       return data.findIndex(e => this.isSameValue(e,value));
     }
 
+    async getDatafromAPIXL(url){
+      try {
+        let respond = await axios.get(API_URL_XL +url, {
+          headers : {'Content-Type':'application/json'},
+          auth: {
+            username: usernameXL,
+            password: passwordXL
+          },
+        })
+        if(respond.status >= 200 && respond.status < 300){
+          console.log("respond Get Data", respond);
+        }
+        return respond;
+      }catch (err) {
+        let respond = err;
+        console.log("respond Get Data", err);
+        return respond;
+      }
+    }
+
     async getDataFromAPINODE(url) {
       try {
         let respond = await axios.get(API_URL_NODE+url, {
@@ -315,18 +438,138 @@ class TSSRBoq extends Component {
             console.log(err);
           }
           else{
-            console.log('rest.rows', JSON.stringify(rest.rows));
-            this.setState({
-              rowsComm: rest.rows}, ()=> {
-                this.makeFormatintoMap(rest.rows);
-            });
+            this.ArrayEmptytoNull(rest.rows);
           }
         });
       }
     }
 
+    ArrayEmptytoNull(dataXLS, DateNow){
+      let newDataXLS = [];
+      for(let i = 0; i < dataXLS.length; i++){
+        let col = [];
+        for(let j = 0; j < dataXLS[1].length; j++){
+          col.push(this.checkValue(dataXLS[i][j]));
+        }
+        newDataXLS.push(col);
+      }
+      this.setState({
+        rowsTSSR: newDataXLS
+      });
+      this.checkingFormatTSSR(newDataXLS);
+    }
+
+    fileHandlerPSCreation = (event) => {
+      let fileObj = event.target.files[0];
+      const date = new Date();
+      const DateNow = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
+      if(fileObj !== undefined){
+        ExcelRenderer(fileObj, (err, rest) => {
+          if(err){
+            console.log(err);
+          }
+          else{
+            this.ArrayEmptytoNullPSCreation(rest.rows);
+          }
+        });
+      }
+    }
+
+    ArrayEmptytoNullPSCreation(dataXLS, DateNow){
+      let newDataXLS = [];
+      for(let i = 0; i < dataXLS.length; i++){
+        let col = [];
+        for(let j = 0; j < dataXLS[0].length; j++){
+          col.push(this.checkValue(dataXLS[i][j]));
+        }
+        newDataXLS.push(col);
+      }
+      this.setState({
+        rowsTSSR: newDataXLS
+      }, () => {
+        this.checkFormatPSCreation(newDataXLS);
+      });
+    }
+
+    checkFormatPSCreation(dataXLS){
+      const siteXLSIndex = dataXLS[0].findIndex(e => e === "tower_id");
+      const siteSystemXLSIndex = dataXLS[0].findIndex(e => e === "system_tower_id");
+      let dataTower = [];
+      if(siteXLSIndex !== -1){
+        for(let i = 1; i < dataXLS.length; i++ ){
+          dataTower.push({"site_id" : dataXLS[i][siteXLSIndex], "system_site_id" : dataXLS[i][siteSystemXLSIndex]} );
+        }
+        if(dataTower.length > 500){
+          this.setState({action_status : 'failed', action_message : 'per bulk Creation PS cant more than 500 tower'});
+        }else{
+          this.setState({array_site_ps_creation : dataTower});
+        }
+      }else{
+        this.setState({action_status : 'failed', action_message : 'Please check your format'});
+      }
+      console.log("dataTower", dataTower);
+    }
+
+    async checkingFormatTSSR(rowsTech){
+      this.toggleLoading();
+      let dataCheck = {
+        "techBoqData" : rowsTech
+      }
+      let urlCheck = '/tssr/checkTssr2';
+      if(this.state.format_uploader === "Vertical"){
+        urlCheck = 'bamidapi/tssr/checkTssrVertical'
+      }
+      let postCheck = await this.postDatatoAPINODE(urlCheck, dataCheck);
+      if(postCheck.data !== undefined){
+        const dataCheck = postCheck.data;
+        let siteNew = [];
+        const listSites = dataCheck.tech_data.map(e => e.site_info);
+        for(let i = 0; i < listSites.length; i++){
+          if(listSites[i].new_site === true){
+            siteNew.push(listSites[i].site_id);
+          }
+        }
+        if(siteNew.length !== 0){
+          this.setState({action_status : 'failed', action_message : '[ '+siteNew.join(', ')+' ] => Not available, please create this sites in PDB'});
+          this.toggleLoading();
+        }else{
+          this.setState({result_check_tssr : dataCheck});
+          this.toggleLoading();
+        }
+      }else{
+        if(postCheck.response !== undefined){
+          if(postCheck.response.data !== undefined){
+            if(postCheck.response.data.error !== undefined){
+              if(postCheck.response.data.error.message !== undefined){
+                this.setState({ action_status: 'failed', action_message: postCheck.response.data.error.message }, () => {
+                  this.toggleLoading();
+                });
+              }else{
+                this.setState({ action_status: 'failed', action_message: postCheck.response.data.error }, () => {
+                  this.toggleLoading();
+                });
+              }
+            }else{
+              this.setState({ action_status: 'failed'}, () => {
+                this.toggleLoading();
+              });
+            }
+          }else{
+            this.setState({ action_status: 'failed' }, () => {
+              this.toggleLoading();
+            });
+          }
+        }else{
+          this.setState({ action_status: 'failed' }, () => {
+              this.toggleLoading();
+          });
+        }
+      }
+      this.setState({loading_checking : null});
+    }
+
     makeFormatintoMap(rowsXLS){
-      let dataTechSites = this.state.data_tech_boq_sites;
+      let dataTechSites = this.state.data_tssr_boq_sites;
       const dataHeader = rowsXLS[0];
       let notesTSSRConfig = new Map();
       let qtyTSSTConfig = new Map();
@@ -358,19 +601,39 @@ class TSSRBoq extends Component {
     }
 
     getTechBoqData(_id_tech){
-      this.getDataFromAPINODE('/techBoq/'+_id_tech).then(res => {
+      this.getDataFromAPINODE('/tssr/getTssrWithDelta/'+_id_tech).then(res => {
         if(res.data !== undefined){
           const dataTech = res.data;
-          this.setState({data_tech_boq : dataTech.data});
+          this.setState({data_tssr_boq : dataTech.data});
           if(res.data.data !== undefined){
-            this.setState({data_tech_boq_sites : dataTech.data.techBoqSite}, () => {
-              this.viewTechBoqData(dataTech.data.techBoqSite);
-              this.dataViewPagination(this.state.data_tech_boq_sites);
-              this.getDRMData(dataTech.data.techBoqSite, dataTech.data.project_name);
+            this.setState({data_tssr_boq_sites : dataTech.data.tssr_site, list_version : new Array(parseInt(dataTech.data.version)+1).fill(null)}, () => {
+              this.viewTechBoqData(dataTech.data.tssr_site);
+              this.getAllTowerRegion(dataTech.data.tssr_site.map(site => site.site_id))
+              this.dataViewPagination(this.state.data_tssr_boq_sites);
+              this.getDRMData(dataTech.data.tssr_site, dataTech.data.project_name);
             });
           }
         }
       })
+    }
+
+    async getAllTowerRegion(array_sites){
+      let dataSites = [];
+      let arrayDataSites = array_sites;
+      let getNumberPage = Math.ceil(arrayDataSites.length / 100);
+      for(let i = 0 ; i < getNumberPage; i++){
+        let DataPaginationSites = arrayDataSites.slice(i * 100, (i+1)*100);
+        let arrayIdSites = '"'+DataPaginationSites.join('", "')+'"';
+        arrayIdSites = arrayIdSites.replace("&", "%26");
+        let where_id_Sites = '&where={"tower_id" : {"$in" : ['+arrayIdSites+']}}';
+        let resSites = await this.getDatafromAPIXL('/tower_site_op?projection={"tower_id":1,"region":1}'+where_id_Sites);
+        if(resSites !== undefined){
+          if(resSites.data !== undefined){
+            dataSites = dataSites.concat(resSites.data._items);
+          }
+        }
+      }
+      this.setState({data_tower : dataSites});
     }
 
     getDRMData(sites_tech, project){
@@ -420,6 +683,32 @@ class TSSRBoq extends Component {
       }
     }
 
+    viewTechBoqDataVersion(data_sites){
+      if(data_sites.length !== 0){
+        const configId = data_sites[0].siteItemConfigVersion.map(e => e.config_id);
+        const typeHeader = data_sites[0].siteItemConfigVersion.map(e => "CONFIG");
+        let all_config = data_sites.map(value => value.siteItemConfigVersion.map(child => child)).reduce((l, n) => l.concat(n), []);
+        let config_group_avail_uniq = [...new Set(all_config.map(({ config_group }) => config_group))];
+        let config_group_non_default = [];
+        let config_group_type_avail = [];
+        let config_group_type_non_default = [];
+        for(let i = 0 ; i < config_group_avail_uniq.length; i++){
+          let findConfigGroupType = all_config.find(e => e.config_group === config_group_avail_uniq[i]).config_group_type;
+          config_group_type_avail.push(findConfigGroupType);
+          if(Config_group_DEFAULT.includes(config_group_avail_uniq[i])!== true){
+            config_group_non_default.push(config_group_avail_uniq[i]);
+            config_group_type_non_default.push(findConfigGroupType);
+          }
+        }
+        let config_group_all = Config_group_DEFAULT.concat(config_group_non_default);
+        let config_group_type_all = Config_group_type_DEFAULT.concat(config_group_type_non_default);
+
+        this.setState({view_tech_header_table : {"config_group_header" : config_group_avail_uniq, "config_group_type_header" : config_group_type_avail }, view_tech_all_header_table : {"config_group_header" : config_group_all, "config_group_type_header" : config_group_type_all } }, () => {
+          // this.dataViewPagination(data_sites);
+        });
+      }
+    }
+
     dataViewPagination(dataTechView){
       let perPage = this.state.perPage;
       let dataTechPage = [];
@@ -429,13 +718,20 @@ class TSSRBoq extends Component {
       }else{
         dataTechPage = dataTechView;
       }
-      this.setState({data_tech_boq_sites_pagination : dataTechPage})
+      this.setState({data_tssr_boq_sites_pagination : dataTechPage})
     }
 
     handlePageChange(pageNumber) {
-      this.setState({activePage: pageNumber}, () => {
-        this.dataViewPagination(this.state.data_tech_boq_sites);
-      });
+      if(this.state.version_selected !== null && this.state.data_tssr_boq.version !== this.state.version_selected){
+        this.setState({activePage: pageNumber}, () => {
+          this.dataViewPagination(this.state.data_tssr_boq_sites_version);
+        });
+      }else{
+        this.setState({activePage: pageNumber}, () => {
+          this.dataViewPagination(this.state.data_tssr_boq_sites);
+        });
+      }
+
     }
 
     handleChangeCommentConfig = (e) => {
@@ -460,42 +756,44 @@ class TSSRBoq extends Component {
       const wb = new Excel.Workbook();
       const ws = wb.addWorksheet();
 
-      const dataTech = this.state.data_tech_boq;
+      const dataTech = this.state.data_tssr_boq;
       let dataSites = [];
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-        dataSites = this.state.data_tech_boq_sites_version;
+        dataSites = this.state.data_tssr_boq_sites_version;
       }else{
-        dataSites = this.state.data_tech_boq_sites;
+        dataSites = this.state.data_tssr_boq_sites;
       }
       const dataHeader = this.state.view_tech_header_table;
 
-      let ppIdRow = ["Tower ID", "Program", "SOW", "BOQ Configuration", "SAP Number", "Qty Technical", "QTY TSSR", "Diff", "Note"];
+      let ppIdRow = ["TSSR No", "Tower ID", "Program", "SOW", "BOQ Configuration", "SAP Number", "QTY TSSR", "Qty Delta"];
 
       ws.addRow(ppIdRow);
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
-          let idx_config_comment = dataSites[i].siteItemConfig[j].tssr_notes === undefined ? "" : dataSites[i].siteItemConfig[j].tssr_notes.length !== 0 ? dataSites[i].siteItemConfig[j].tssr_notes[dataSites[i].siteItemConfig[j].tssr_notes.length-1].note : "";
-          let idx_config_qty = dataSites[i].siteItemConfig[j].tssr_notes === undefined ? 0 : dataSites[i].siteItemConfig[j].tssr_notes.length !== 0 ? dataSites[i].siteItemConfig[j].tssr_notes[dataSites[i].siteItemConfig[j].tssr_notes.length-1].suggested_qty : 0;
-          let diff = dataSites[i].siteItemConfig[j].qty - idx_config_qty
-          ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty, idx_config_qty, diff, idx_config_comment]);
+          let qty_delta = null;
+          let dataConfigDelta = dataSites[i].siteItemConfigDelta.find(e => e.config_id === dataSites[i].siteItemConfig[j].config_id && e.config_group === dataSites[i].siteItemConfig[j].config_group && e.config_group_type === dataSites[i].siteItemConfig[j].config_group_type);
+          if(dataConfigDelta !== undefined){
+            qty_delta = dataConfigDelta.qty;
+          }
+          ws.addRow([dataTech.no_tssr_boq,dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty, qty_delta]);
         }
       }
 
       const MRFormat = await wb.xlsx.writeBuffer();
-      saveAs(new Blob([MRFormat]), 'TSSR BOQ Vertical.xlsx');
+      saveAs(new Blob([MRFormat]), 'TSSR BOQ Vertical '+dataTech.no_tssr_boq+' Report.xlsx');
     }
 
     exportFormatTSSRUpdate = async () =>{
       const wb = new Excel.Workbook();
       const ws = wb.addWorksheet();
 
-      const dataTech = this.state.data_tech_boq;
+      const dataTech = this.state.data_tssr_boq;
       let dataSites = [];
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-        dataSites = this.state.data_tech_boq_sites_version;
+        dataSites = this.state.data_tssr_boq_sites_version;
       }else{
-        dataSites = this.state.data_tech_boq_sites;
+        dataSites = this.state.data_tssr_boq_sites;
       }
       const dataHeader = this.state.view_tech_header_table;
 
@@ -515,55 +813,21 @@ class TSSRBoq extends Component {
       saveAs(new Blob([MRFormat]), 'TSSR BOQ Update Format.xlsx');
     }
 
-    async approvalTechnical(e){
-      this.toggleLoading()
-      let currValue = e.currentTarget.value;
-      if(currValue !== undefined){
-        currValue = parseInt(currValue);
-      }
-      let tssrApproval = {
-        "operation":currValue
-      }
-      let configNotes = [];
-      let diffQty = [];
-      const data_tech = this.state.data_tech_boq_sites;
-      if(currValue === 5){
-        tssrApproval["tssrNote"] = true;
-        tssrApproval["techBoqNote"] = {};
-        tssrApproval["techBoqNote"]["note_value"] = this.state.tssr_comment !== null ? this.state.tssr_comment : this.state.data_tech_boq === null ? "-" : this.state.data_tech_boq.notes === undefined ? " " : this.state.data_tech_boq.notes.length !== 0 ? this.state.data_tech_boq.notes[this.state.data_tech_boq.notes.length-1].note_value : " ";
-        let config_comment = this.state.tssr_config_comment;
-        let config_qty = this.state.tssr_config_qty;
-        for(let i = 0; i < data_tech.length; i++){
-          const data_tech_site = data_tech[i];
-          for(let j = 0; j < data_tech_site.siteItemConfig.length ;j++ ){
-            let conf = data_tech_site.siteItemConfig[j];
-            let idx_config_comment = this.state.tssr_config_comment.has(conf._id) === true ? this.state.tssr_config_comment.get(conf._id) : conf.tssr_notes === undefined ? "" : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].note : "";
-            let idx_config_qty = config_qty.has(conf._id) === true ? config_qty.get(conf._id) : conf.tssr_notes === undefined ? data_tech_site.siteItemConfig[j].qty : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].suggested_qty : data_tech_site.siteItemConfig[j].qty;
-            let configNoteIdx = {
-              "_id": conf._id,
-              "tssr_note" : idx_config_comment,
-              "suggested_qty": idx_config_qty.length === 0 ? 0 : parseFloat(idx_config_qty)
-            }
-            if(data_tech_site.siteItemConfig[j].qty !== configNoteIdx.suggested_qty ){
-              diffQty.push("["+data_tech_site.siteItemConfig[j].site_id+"] => "+data_tech_site.siteItemConfig[j].config_id);
-            }
-            configNotes.push(configNoteIdx);
+    async approvalTSSR(e){
+      let patchData = await this.patchDatatoAPINODE('/tssr/approveTssr/'+this.props.match.params.id)
+      if(patchData.data !== undefined){
+        this.setState({action_status : 'success'});
+      }else{
+        if(patchData.response !== undefined){
+          if(patchData.response.data !== undefined){
+            this.setState({action_status : 'failed', action_message : JSON.stringify(patchData.response.data.error) })
+          }else{
+            this.setState({action_status : 'failed'});
           }
-        }
-        tssrApproval["tssrItemConfigNotes"] = configNotes;
-        if(diffQty.length !== 0){
-          tssrApproval["isGap"] = true;
+        }else{
+          this.setState({action_status : 'failed'});
         }
       }
-      this.toggleLoading();
-      // console.log("tssrApproval", JSON.stringify(tssrApproval));
-      this.setState({tssr_data_upload : tssrApproval}, () => {
-        if(diffQty.length !== 0){
-          this.toggleAlert();
-        }else{
-          this.saveDataTSSR();
-        }
-      });
     }
 
     async saveDataTSSR(){
@@ -571,7 +835,7 @@ class TSSRBoq extends Component {
       if(this.state.modal_alert === true){
         this.setState({modal_alert : false});
       }
-      let patchData = await this.patchDatatoAPINODE('/techBoq/approval/'+this.state.data_tech_boq._id, this.state.tssr_data_upload)
+      let patchData = await this.patchDatatoAPINODE('/techBoq/approval/'+this.state.data_tssr_boq._id, this.state.tssr_data_upload)
       if(patchData.data !== undefined){
         this.setState({action_status : 'success'});
       }else{
@@ -601,24 +865,133 @@ class TSSRBoq extends Component {
       this.toggleLoading();
     }
 
+    async updateTSSRBoq(e){
+      let revisionType = e.currentTarget.value;
+      let revision = true;
+      if(revisionType === "save"){
+        revision = false;
+      }
+      if(this.state.modal_update_info === true){
+        this.setState({modal_update_info : false});
+      }
+      this.toggleLoading();
+      const dataChecked = this.state.result_check_tssr;
+      const dataPatch = {
+        "revision" : revision,
+        "itemPackage": false,
+        "tssrBoqNote": "TSSR Updated",
+        "sites_data" : dataChecked.tech_data,
+        "configList" : dataChecked.configList
+      }
+      let patchTech = await this.patchDatatoAPINODE('/tssr/updateTssr/'+this.state.data_tssr_boq._id, dataPatch);
+      if(patchTech.data !== undefined){
+        this.setState({action_status : 'success'});
+      }else{
+        if(patchTech.response !== undefined){
+          if(patchTech.response.data !== undefined){
+            if(patchTech.response.data.error !== undefined){
+              if(patchTech.response.data.error.message !== undefined){
+                this.setState({ action_status: 'failed', action_message: patchTech.response.data.error.message }, () => {
+
+                });
+              }else{
+                this.setState({ action_status: 'failed', action_message: patchTech.response.data.error }, () => {
+
+                });
+              }
+            }else{
+              this.setState({ action_status: 'failed'}, () => {
+
+              });
+            }
+          }else{
+            this.setState({ action_status: 'failed' }, () => {
+
+            });
+          }
+        }else{
+          this.setState({ action_status: 'failed' }, () => {
+
+          });
+        }
+      }
+      this.toggleLoading();
+    }
+
     exportFormatTSSRHorizontalWithDRM = async () =>{
       const wb = new Excel.Workbook();
       const ws = wb.addWorksheet();
 
-      const dataTech = this.state.data_tech_boq;
+      const dataTech = this.state.data_tssr_boq;
       let dataSites = [];
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
-        dataSites = this.state.data_tech_boq_sites_version;
+        dataSites = this.state.data_tssr_boq_sites_version;
       }else{
-        dataSites = this.state.data_tech_boq_sites;
+        dataSites = this.state.data_tssr_boq_sites;
       }
 
       const header_config = this.state.view_tech_header_table;
 
       let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
-      let HeaderRow2 = ["Tower ID", "Program", "SOW"];
+      let HeaderRow2 = ["Tower ID", "Program", "SOW", "Priority"];
 
       let headerDRM = ["Actual RBS DATA", "Actual DU", "RU B0 (900)", "RU B1 (2100)", "RU B3 (1800) ", "RU B8 (900)", "RU B1B3", "RU Band Agnostic", "Remarks Need CR/Go as SoW Original", "Existing Antenna (type)", "ANTENNA_HEIGHT ", "Scenario RAN", "Dismantle Antenna", "Dismantle RU", "Dismantele Accessories", "Dismantle DU", "Dismantle RBS/Encl", "EXISTING DAN SCENARIO IMPLEMENTASI RBS ", "DRM FINAL (MODULE)", "DRM Final Radio", "DRM Final SOW Cabinet", "DRM FINAL (SOW G9/U9/L9)", "DRM FINAL (SOW G18/L18)", "DRM FINAL (SOW U21/L21)", "DRM FINAL (ANTENNA TYPE)", "PLAN ANTENNA AZIMUTH", "PLAN ANTENNA ET/MT", "Module", "Cabinet", "Radio", "Power RRU", "Antenna", "Dismantle", "System", "Optic RRU", "Area", "VERIFICATION (DATE)", "VERIFICATION (STATUS)", "VERIFICATION PIC", "ISSUED DETAIL", "CR Flag engineering"]
+
+      header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e, e]));
+      header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty", "delta"]));
+
+      HeaderRow1.push(null, null);
+      HeaderRow2.push(null, null);
+      headerDRM.map(e => HeaderRow1.push("DRM"));
+      HeaderRow2 = HeaderRow2.concat(headerDRM);
+
+      ws.addRow(HeaderRow1);
+      ws.addRow(HeaderRow2);
+      for(let i = 0; i < dataSites.length ; i++){
+        let qtyConfig = []
+        for(let j = 0; j < header_config.config_group_header.length; j++ ){
+          let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+          let dataConfigDelta = dataSites[i].siteItemConfigDelta.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+          if(dataConfigIdx !== undefined){
+            let idx_config_qty = dataConfigIdx.qty;
+            let idx_delta_qty = null;
+            if(dataConfigDelta !== undefined){
+              idx_delta_qty = dataConfigDelta.qty;
+            }
+            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, idx_config_qty, idx_delta_qty]);
+          }else{
+            qtyConfig = qtyConfig.concat([null, null]);
+          }
+        }
+        let drm = this.getDataDRM(dataSites[i].site_id, dataSites[i].program);
+        ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].priority]
+          .concat(qtyConfig)
+          .concat([null, null, drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering])
+        );
+      }
+
+      const TSSRDRM = await wb.xlsx.writeBuffer();
+      saveAs(new Blob([TSSRDRM]), 'TSSR '+dataTech.no_tech_boq+' Report with DRM.xlsx');
+    }
+
+    exportFormatTSSRHorizontal = async () =>{
+      const wb = new Excel.Workbook();
+      const ws = wb.addWorksheet();
+
+      const dataTech = this.state.data_tssr_boq;
+      let dataSites = [];
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        dataSites = this.state.data_tssr_boq_sites_version;
+      }else{
+        dataSites = this.state.data_tssr_boq_sites;
+      }
+
+      const header_config = this.state.view_tech_all_header_table;
+
+      let headerDRM = ["Actual RBS DATA", "Actual DU", "RU B0 (900)", "RU B1 (2100)", "RU B3 (1800) ", "RU B8 (900)", "RU B1B3", "RU Band Agnostic", "Remarks Need CR/Go as SoW Original", "Existing Antenna (type)", "ANTENNA_HEIGHT ", "Scenario RAN", "Dismantle Antenna", "Dismantle RU", "Dismantele Accessories", "Dismantle DU", "Dismantle RBS/Encl", "EXISTING DAN SCENARIO IMPLEMENTASI RBS ", "DRM FINAL (MODULE)", "DRM Final Radio", "DRM Final SOW Cabinet", "DRM FINAL (SOW G9/U9/L9)", "DRM FINAL (SOW G18/L18)", "DRM FINAL (SOW U21/L21)", "DRM FINAL (ANTENNA TYPE)", "PLAN ANTENNA AZIMUTH", "PLAN ANTENNA ET/MT", "Module", "Cabinet", "Radio", "Power RRU", "Antenna", "Dismantle", "System", "Optic RRU", "Area", "VERIFICATION (DATE)", "VERIFICATION (STATUS)", "VERIFICATION PIC", "ISSUED DETAIL", "CR Flag engineering"]
+
+      let HeaderRow1 = ["General Info", "General Info", "General Info", "General Info"];
+      let HeaderRow2 = ["tower_id","program", "sow", "priority"];
 
       header_config.config_group_type_header.map(e => HeaderRow1 = HeaderRow1.concat([e, e]));
       header_config.config_group_header.map(e => HeaderRow2 = HeaderRow2.concat([e, "qty"]));
@@ -631,31 +1004,47 @@ class TSSRBoq extends Component {
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         for(let j = 0; j < header_config.config_group_header.length; j++ ){
-          let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
-          if(dataConfigIdx !== undefined){
-            let idx_config_qty = dataConfigIdx.tssr_notes === undefined ? dataConfigIdx.qty : dataConfigIdx.tssr_notes.length !== 0 ? dataConfigIdx.tssr_notes[dataConfigIdx.tssr_notes.length-1].suggested_qty : dataConfigIdx.qty;
-            qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, idx_config_qty]);
+          if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+            let dataConfigIdx = dataSites[i].siteItemConfigVersion.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+            if(dataConfigIdx !== undefined){
+              let idx_config_qty = dataConfigIdx.qty;
+              qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, idx_config_qty]);
+            }else{
+              qtyConfig = qtyConfig.concat([null, null]);
+            }
           }else{
-            qtyConfig = qtyConfig.concat([null, null]);
+            let dataConfigIdx = dataSites[i].siteItemConfig.find(e => e.config_group === header_config.config_group_header[j] && e.config_group_type === header_config.config_group_type_header[j]);
+            if(dataConfigIdx !== undefined){
+              let idx_config_qty = dataConfigIdx.qty;
+              qtyConfig = qtyConfig.concat([dataConfigIdx.config_id, idx_config_qty]);
+            }else{
+              qtyConfig = qtyConfig.concat([null, null]);
+            }
           }
+
         }
         let drm = this.getDataDRM(dataSites[i].site_id, dataSites[i].program);
-        ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].priority, dataSites[i].sow]
+        ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].priority]
           .concat(qtyConfig)
           .concat([drm.actual_rbs_data, drm.actual_du, drm.ru_b0_900, drm.ru_b1_2100, drm.ru_b3_1800, drm.ru_b8_900, drm.ru_b1b3, drm.ru_band_agnostic, drm.remarks_need_cr_go_as_sow_original, drm.existing_antenna_type, drm.antenna_height, drm.scenario_ran, drm.dismantle_antenna, drm.dismantle_ru, drm.dismantle_accessories, drm.dismantle_du, drm.dismantle_rbs_encl, drm.existing_dan_scenario_implementasi_rbs, drm.drm_final_module, drm.drm_final_radio, drm.drm_final_sow_cabinet, drm.drm_final_sow_g9_u9_l9, drm.drm_final_sow_g18_l18, drm.drm_final_sow_u21_l21, drm.drm_final_antenna_type, drm.plan_antenna_azimuth, drm.plan_antenna_et_mt, drm.module, drm.cabinet, drm.radio, drm.power_rru, drm.antenna, drm.dismantle, drm.system, drm.optic_rru, drm.area, drm.verification_date, drm.verification_status, drm.verification_pic, drm.issued_detail, drm.cr_flag_engineering])
         );
       }
 
       const TSSRDRM = await wb.xlsx.writeBuffer();
-      saveAs(new Blob([TSSRDRM]), 'TSSR '+dataTech.no_tech_boq+' Report with DRM.xlsx');
+      if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+        saveAs(new Blob([TSSRDRM]), 'TSSR '+dataTech.no_tssr_boq+' Ver. '+this.state.version_selected+' Format.xlsx');
+      }else{
+        saveAs(new Blob([TSSRDRM]), 'TSSR '+dataTech.no_tssr_boq+' Format.xlsx');
+      }
+
     }
 
     exportDRMofTSSR= async () =>{
       const wb = new Excel.Workbook();
       const ws = wb.addWorksheet();
 
-      const dataTech = this.state.data_tech_boq;
-      let dataSites = this.state.data_tech_boq_sites;
+      const dataTech = this.state.data_tssr_boq;
+      let dataSites = this.state.data_tssr_boq_sites;
 
       let headerDRM = ["Tower ID", "Program Name", "Project", "Actual RBS DATA", "Actual DU", "RU B0 (900)", "RU B1 (2100)", "RU B3 (1800) ", "RU B8 (900)", "RU B1B3", "RU Band Agnostic", "Remarks Need CR/Go as SoW Original", "Existing Antenna (type)", "ANTENNA_HEIGHT ", "Scenario RAN", "Dismantle Antenna", "Dismantle RU", "Dismantele Accessories", "Dismantle DU", "Dismantle RBS/Encl", "EXISTING DAN SCENARIO IMPLEMENTASI RBS ", "DRM FINAL (MODULE)", "DRM Final Radio", "DRM Final SOW Cabinet", "DRM FINAL (SOW G9/U9/L9)", "DRM FINAL (SOW G18/L18)", "DRM FINAL (SOW U21/L21)", "DRM FINAL (ANTENNA TYPE)", "PLAN ANTENNA AZIMUTH", "PLAN ANTENNA ET/MT", "Module", "Cabinet", "Radio", "Power RRU", "Antenna", "Dismantle", "System", "Optic RRU", "Area", "VERIFICATION (DATE)", "VERIFICATION (STATUS)", "VERIFICATION PIC", "ISSUED DETAIL", "CR Flag engineering"]
 
@@ -670,7 +1059,25 @@ class TSSRBoq extends Component {
       }
 
       const DRMPrint = await wb.xlsx.writeBuffer();
-      saveAs(new Blob([DRMPrint]), 'DRM of TSSR'+dataTech.no_tech_boq+'.xlsx');
+      saveAs(new Blob([DRMPrint]), 'DRM of TSSR'+dataTech.no_tssr_boq+'.xlsx');
+    }
+
+    exportForPSCreationMigration= async () =>{
+      const wb = new Excel.Workbook();
+      const ws = wb.addWorksheet();
+
+      const dataTSSR = this.state.data_tssr_boq;
+      let dataSites = this.state.data_tssr_boq_sites.filter(e => e.migration !== true);
+
+      let headerDRM = ["tower_id", "program", "system_tower_id"]
+
+      ws.addRow(headerDRM);
+      for(let i = 0; i < dataSites.length ; i++){
+        ws.addRow([dataSites[i].site_id, dataSites[i].program, dataSites[i]._id]);
+      }
+
+      const DRMPrint = await wb.xlsx.writeBuffer();
+      saveAs(new Blob([DRMPrint]), 'PS Creation Bulk Migration '+dataTSSR.no_tssr_boq+'.xlsx');
     }
 
     getDataDRM(tower, program){
@@ -747,6 +1154,70 @@ class TSSRBoq extends Component {
       window.open("https://dev.xl.pdb.e-dpm.com/customerdeliverabledrmmenuxl/list/", "_blank")
     }
 
+    async psBulkCreation(){
+      this.toggleLoading();
+      const dataSitePSCreate = this.state.array_site_ps_creation;
+      let returnCreatePS = [];
+      let returnErrorCreate = [];
+      const wb = new Excel.Workbook();
+      const ws = wb.addWorksheet();
+
+      ws.addRow(["bam_id", "tssr_id", "tower_id", "plant_spec_number", "config_id", "bundle_id", "bundle_name", "bundle_qty", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "material_type", "material_origin"]);
+      for(let i = 0; i < dataSitePSCreate.length; i++ ){
+        let dataPreview = await this.postDatatoAPINODE('/plantspec/getTssrData2', {"data" : [{"techBoqId": this.state.data_tssr_boq._id, "siteId": dataSitePSCreate[i].system_site_id}]});
+        if(dataPreview.data !== undefined){
+          const respondSaveTSSR = await this.postDatatoAPINODE('/plantspec/createPlantspec2', {"migration" : true, "psData" : dataPreview.data.psData});
+          if(respondSaveTSSR.data !== undefined){
+            returnCreatePS.push(respondSaveTSSR.data.objMrPs.no_plantspec);
+            for(let j = 0; j < respondSaveTSSR.data.materialData.length; j++){
+              const material = respondSaveTSSR.data.materialData[j];
+              const findBundle = respondSaveTSSR.data.packageData.find(e => e._id === material.id_mr_pp_doc);
+              ws.addRow([material._id, findBundle !== undefined ? findBundle.no_tssr_boq_site : null, findBundle !== undefined ? findBundle.site_id : null, findBundle !== undefined ? findBundle.no_plantspec : null, findBundle !== undefined ? findBundle.config_id : null, findBundle !== undefined ? findBundle.pp_id : null, findBundle !== undefined ? findBundle.product_name : null, findBundle !== undefined ? findBundle.qty : null, findBundle !== undefined ? findBundle.program : null, material.material_id_plan, material.material_name_plan, material.material_id, material.material_name, material.uom, material.qty, findBundle !== undefined ? findBundle.product_type : null, material.material_origin ])
+            }
+          }else{
+            returnErrorCreate.push(dataSitePSCreate[i].site_id);
+          }
+        }
+      }
+      const allocexport = await wb.xlsx.writeBuffer();
+      saveAs(new Blob([allocexport]), 'Material TSSR uploader PS Creation Bulk.xlsx');
+      if(returnCreatePS.length === dataSitePSCreate.length){
+        this.setState({action_status : 'success', action_message : null});
+      }else{
+        this.setState({action_status : 'failed', action_message : 'Site failed create to PS => '+ '[ '+returnErrorCreate.join(' , ')+' ]'});
+      }
+      this.toggleLoading();
+    }
+
+    handleChangeVersion(e){
+      const value = e.target.value;
+      this.setState({version_selected : value, data_tssr_boq_sites : [], data_tssr_boq_sites_version : [], data_tssr_boq_sites_pagination : [], data_tssr_boq_version : {}}, () => {
+        if(value !== this.state.data_tssr_boq.version){
+          this.getVersionTechBoqData(this.props.match.params.id, value);
+        }else{
+          this.getTechBoqData(this.props.match.params.id);
+        }
+      });
+    }
+
+    getVersionTechBoqData(_id_tech, ver){
+      this.getDataFromAPINODE('/tssr/getTssrVersion/'+_id_tech+'/ver/'+ver).then(res => {
+        if(res.data !== undefined){
+          const dataTech = res.data;
+          if(res.data.data !== undefined){
+            this.setState({data_tssr_boq_version : dataTech.data, data_tssr_boq_sites_version : dataTech.data.tssr_site}, () => {
+              this.viewTechBoqDataVersion(dataTech.data.tssr_site);
+              if(dataTech.data.tssr_site.length !== 0){
+                this.getAllTowerRegion(dataTech.data.tssr_site.map(site => site.site_id));
+                this.getDRMData(dataTech.data.tssr_site, dataTech.data.project_name);
+              }
+              this.dataViewPagination(this.state.data_tssr_boq_sites_version);
+            });
+          }
+        }
+      })
+    }
+
     render() {
       let viewDataDRM = {};
       return (
@@ -757,8 +1228,13 @@ class TSSRBoq extends Component {
               <Card>
                 <CardHeader>
                   <span style={{lineHeight :'2', fontSize : '17px'}}> TSSR BOQ </span>
-                  {this.state.data_tech_boq !== null && (
+                  {this.state.data_tssr_boq !== null && (
                     <React.Fragment>
+                      {this.state.userRole.findIndex(e => e === "Admin") !== -1 && (
+                        <Button style={{float : 'right', marginLeft : '10px'}} color="info" onClick={this.toggleUploadPSCreationBulk} id="toggleCollapse1">
+                          PS Bulk
+                        </Button>
+                      )}
                       {this.state.view_drm === "tssr" && (
                         <Button onClick={this.handleChangeViewDRM} value="drm" style={{float : 'right'}} color="primary">
                           View DRM
@@ -775,41 +1251,95 @@ class TSSRBoq extends Component {
                         </DropdownToggle>
                         <DropdownMenu>
                           <DropdownItem header> TSSR File</DropdownItem>
-                          <DropdownItem onClick={this.exportFormatTSSRVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Vertical</DropdownItem>
+                          <DropdownItem onClick={this.exportFormatTSSRVertical}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Vertical Report</DropdownItem>
                           <DropdownItem onClick={this.exportFormatTSSRHorizontalWithDRM}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR with DRM Report</DropdownItem>
                           <DropdownItem onClick={this.exportDRMofTSSR}> <i className="fa fa-file-text-o" aria-hidden="true"></i>DRM of TSSR</DropdownItem>
-                          <DropdownItem onClick={this.exportFormatTSSRUpdate}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Update Format</DropdownItem>
+                          {/* }<DropdownItem onClick={this.exportFormatTSSRUpdate}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Update Vertical Format </DropdownItem> */}
+                          <DropdownItem onClick={this.exportFormatTSSRHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TSSR Update Horizontal Format </DropdownItem>
+
                         </DropdownMenu>
                       </Dropdown>
                     </React.Fragment>
                   )}
                 </CardHeader>
+                <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>
+                  <Card style={{ margin: '10px 10px 5px 10px' }}>
+                    <CardBody>
+                      <input type="file" onChange={this.fileHandlerPSCreation.bind(this)} style={{ "padding": "10px", "visiblity": "hidden" }} />
+                      <span style={{color :'rgba(216,67,21 ,1)', fontWeight : '600'}}>*Just for PS Migration, Just admin can access this</span>
+                      <Button style={{'float' : 'right'}} color="warning" onClick={this.psBulkCreation} value="save" disabled={this.state.action_status === 'failed' || this.state.array_site_ps_creation.length === 0}>
+                        Bulk PS Creation for Migration
+                      </Button>
+                    </CardBody>
+                    <CardFooter>
+                      <Button size="sm" color="info" onClick={this.exportForPSCreationMigration}>
+                        PS Creation Bulk Format
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </Collapse>
                 <CardBody className='card-UploadBoq'>
                   <input type="file" onChange={this.fileHandlerTSSR.bind(this)} style={{"padding":"10px","visiblity":"hidden"}} />
+                  <span style={{color :'rgba(216,67,21 ,1)', fontWeight : '600'}}>*Please Make sure the DRM column has been deleted from uploader</span>
+                  <Button style={{'float' : 'right'}} color="warning" onClick={this.updateTSSRBoq} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tssr.tech_data === undefined}>
+                    <i className="fa fa-paste">&nbsp;&nbsp;</i>
+                      {this.state.rowsTSSR.length === 0 ? 'Save' : this.state.result_check_tssr.tech_data !== undefined ? 'Save' : 'Loading..'}
+                  </Button>
+                  <Button style={{'float' : 'right',marginRight : '8px'}} color="success" onClick={this.updateTSSRBoq} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tssr.tech_data === undefined}>
+                    <i className="fa fa-copy">&nbsp;&nbsp;</i>
+                    {this.state.rowsTSSR.length === 0 ? 'Revision' : this.state.result_check_tssr.tech_data !== undefined ? 'Revision' : 'Loading..'}
+                  </Button>
                   <Row>
                     <Col sm="12" md="12">
                     <table style={{width : '100%', marginBottom : '0px'}}>
                       <tbody>
                         <tr style={{fontWeight : '425', fontSize : '23px'}}>
                           <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>
-                          {this.props.match.params.id === undefined ? "CREATE" : ""} TSSR BOQ
+                          TSSR BOQ {this.state.data_tssr_boq !== null ? this.state.data_tssr_boq.no_tssr_boq : ""}
                           </td>
                         </tr>
-                        {this.state.data_tech_boq !== null && (
+                        {this.state.data_tssr_boq !== null && (
                           <React.Fragment>
                             <tr style={{fontWeight : '390', fontSize : '12px', fontStyle:'oblique'}}>
-                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Technical BOQ Origin : {this.state.data_tech_boq.no_tech_boq}</td>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Technical BOQ Origin : {this.state.data_tssr_boq.no_tech_boq}</td>
                             </tr>
                             <tr style={{fontWeight : '390', fontSize : '10px', fontStyle:'oblique'}}>
-                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Project : {this.state.data_tech_boq.project_name}</td>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Project : {this.state.data_tssr_boq.project_name}</td>
                             </tr>
                             <tr style={{fontWeight : '390', fontSize : '10px', fontStyle:'oblique'}}>
-                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Status : {this.state.data_tech_boq.tssr_approval_status}</td>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Status : {this.state.data_tssr_boq.current_status}</td>
+                            </tr>
+                            <tr style={{fontWeight : '390', fontSize : '10px', fontStyle:'oblique'}}>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Current Version : {this.state.data_tssr_boq.version}
+                              </td>
+                            </tr>
+                            <tr style={{fontWeight : '390', fontSize : '10px', fontStyle:'oblique'}}>
+                              <td colSpan="2" style={{textAlign : 'center', marginBottom: '10px', fontWeight : '500'}}>Updated by : {this.state.data_tssr_boq.updater[0].email}
+                              </td>
                             </tr>
                           </React.Fragment>
                         )}
                       </tbody>
                     </table>
+                    {this.state.data_tssr_boq !== null && (
+                    <Row>
+                      <Col sm="12" md="12">
+                        <div style={{marginBottom : '5px'}}>
+                        <span style={{marginRight : '10px'}}>
+                          Version :
+                        </span>
+                        <Input type="select" value={this.state.version_selected === null? this.state.data_tssr_boq.version : this.state.version_selected} onChange={this.handleChangeVersion} style={{width : "100px", height : "30px", display : 'inline-grid'}}>
+                          {this.state.list_version.map((e,i) =>
+                            <option value={i}>{i}</option>
+                          )}
+                        </Input>
+                        <span style={{marginLeft : '10px'}}>
+                        {this.state.data_tssr_boq_version.updater !== undefined ? "Updated by "+this.state.data_tssr_boq_version.updater[0].email : null }
+                        </span>
+                        </div>
+                      </Col>
+                    </Row>
+                    )}
                     <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
                     </Col>
                   </Row>
@@ -819,50 +1349,56 @@ class TSSRBoq extends Component {
                           <thead class="table-tssr__header--fixed">
                           <tr>
                             <th>Tower ID</th>
+                            <th>Region</th>
                             <th>Program</th>
                             <th>SOW</th>
                             <th>Config</th>
                             <th>SAP Number</th>
-                            <th>Qty Technical</th>
                             <th>Qty TSSR</th>
-                            <th>Diff</th>
-                            <th>Note</th>
+                            {this.state.version_selected !== null && this.state.data_tssr_boq.version !== this.state.version_selected ? (
+                              <Fragment></Fragment>
+                            ) : (
+                              <th>Qty Delta</th>
+                            )}
+
                           </tr>
                         </thead>
                         <tbody>
-                        {this.state.data_tech_boq_sites_pagination.map(site =>
-                          site.siteItemConfig.map(conf =>
-                              <tr>
-                                <td>{site.site_id}</td>
-                                <td>{site.program}</td>
-                                <td>{site.sow}</td>
-                                <td>{conf.config_id}</td>
-                                <td>{conf.sap_number}</td>
-                                <td>{conf.qty}</td>
-                                <td style={{width : '125px'}}>
-                                  <Input
-                                    type="number"
-                                    name={conf._id}
-                                    className="BoQ-style-qty"
-                                    placeholder=""
-                                    onChange={this.handleChangeQtyTSSRConfig}
-                                    value={this.state.tssr_config_qty.has(conf._id) === true ? this.state.tssr_config_qty.get(conf._id) : conf.tssr_notes === undefined ? conf.qty : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].suggested_qty : conf.qty}
-                                  />
-                                </td>
-                                <td>{conf.qty - (this.state.tssr_config_qty.has(conf._id) === true ? this.state.tssr_config_qty.get(conf._id) : conf.tssr_notes === undefined ? conf.qty : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].suggested_qty : conf.qty) }</td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    name={conf._id}
-                                    className="BoQ-style-qty"
-                                    placeholder=""
-                                    onChange={this.handleChangeCommentConfig}
-                                    value={this.state.tssr_config_comment.has(conf._id) === true ? this.state.tssr_config_comment.get(conf._id) : conf.tssr_notes === undefined ? "" : conf.tssr_notes.length !== 0 ? conf.tssr_notes[conf.tssr_notes.length-1].note : ""}
-                                  />
-                                </td>
-                              </tr>
-                          )
-                        )}
+                        {this.state.version_selected !== null && this.state.data_tssr_boq.version !== this.state.version_selected ? (
+                          <Fragment>
+                            {this.state.data_tssr_boq_sites_version.length !== 0 && this.state.data_tssr_boq_sites_pagination !== undefined ? this.state.data_tssr_boq_sites_pagination.map(site =>
+                              site.siteItemConfigVersion.map(conf =>
+                                  <tr>
+                                    <td>{site.site_id}</td>
+                                    <td>{this.state.data_tower.find(twr => twr.tower_id === site.site_id) !== undefined ? this.state.data_tower.find(twr => twr.tower_id === site.site_id).region : null }</td>
+                                    <td>{site.program}</td>
+                                    <td>{site.sow}</td>
+                                    <td>{conf.config_id}</td>
+                                    <td>{conf.sap_number}</td>
+                                    <td>{conf.qty}</td>
+                                  </tr>
+                              )
+                            ) : <></>}
+                          </Fragment>
+                        ) : (
+                          <Fragment>
+                            {this.state.data_tssr_boq_sites_pagination.map(site =>
+                              site.siteItemConfig.map(conf =>
+                                  <tr>
+                                    <td>{site.site_id}</td>
+                                    <td>{this.state.data_tower.find(twr => twr.tower_id === site.site_id) !== undefined ? this.state.data_tower.find(twr => twr.tower_id === site.site_id).region : null }</td>
+                                    <td>{site.program}</td>
+                                    <td>{site.sow}</td>
+                                    <td>{conf.config_id}</td>
+                                    <td>{conf.sap_number}</td>
+                                    <td>{conf.qty}</td>
+                                    <td>{site.siteItemConfigDelta.find(e => e.config_group_type === conf.config_group_type && e.config_group === conf.config_group) !== undefined ? site.siteItemConfigDelta.find(e => e.config_group_type === conf.config_group_type && e.config_group === conf.config_group).qty : null}</td>
+                                  </tr>
+                              )
+                            )}
+                          </Fragment>
+                        ) }
+
                         </tbody>
                       </Table>
                     </div>
@@ -918,7 +1454,20 @@ class TSSRBoq extends Component {
                           </tr>
                         </thead>
                         <tbody>
-                        {this.state.data_tech_boq_sites_pagination.map(site =>
+                        {this.state.version_selected !== null && this.state.data_tssr_boq.version !== this.state.version_selected ? (
+                          <TableTSSRHorizontal
+                            dataTechBoqSites={this.state.data_tssr_boq_sites_pagination}
+                            configHeader={this.state.view_tech_all_header_table}
+                            isVersion={"rollback"}
+                          />
+                        ) : (
+                          <TableTSSRHorizontal
+                            dataTechBoqSites={this.state.data_tssr_boq_sites_pagination}
+                            configHeader={this.state.view_tech_all_header_table}
+                          />
+                        ) }
+
+                        {this.state.data_tssr_boq_sites_pagination.map(site =>
                           site.siteItemConfig.map(conf =>
                               <tr>
                                 <td>{site.site_id}</td>
@@ -936,7 +1485,7 @@ class TSSRBoq extends Component {
                       <Pagination
                           activePage={this.state.activePage}
                           itemsCountPerPage={this.state.perPage}
-                          totalItemsCount={this.state.data_tech_boq_sites.length}
+                          totalItemsCount={this.state.data_tssr_boq_sites.length}
                           pageRangeDisplayed={5}
                           onChange={this.handlePageChange}
                           itemClass="page-item"
@@ -944,24 +1493,17 @@ class TSSRBoq extends Component {
                       />
                     </div>
                   </nav>
-                  <div>
-                    <FormGroup>
-                      <Label htmlFor="tssr_comment" style={{ fontSize : '12px', marginBottom : '0px'}}>TSSR Note :</Label>
-                      <Input
-                        type="text"
-                        name={'tssr'}
-                        className="BoQ-style-qty"
-                        placeholder=""
-                        onChange={this.handleChangeCommentTSSR}
-                        value={this.state.tssr_comment !== null ? this.state.tssr_comment : this.state.data_tech_boq === null ? "" : this.state.data_tech_boq.notes === undefined ? "" : this.state.data_tech_boq.notes.length !== 0 ? this.state.data_tech_boq.notes[this.state.data_tech_boq.notes.length-1].note_value : "" }
-                      />
-                    </FormGroup>
-                  </div>
                 </CardBody>
                 <CardFooter>
-                  <div>
-                    <Button color="primary" size="sm" style={{marginLeft : '10px'}} value="5" onClick={this.approvalTechnical}>Save</Button>
-                  </div>
+                {this.state.data_tssr_boq !== null && (
+                  <Fragment>
+                    {this.state.data_tssr_boq.current_status !== "TSSR BOQ CONFIRMED" && (
+                      <Button size="sm" className="btn-success" style={{'float' : 'left'}} color="success" value={"1"} onClick={this.approvalTSSR} disabled={false}>
+                          Confirm
+                      </Button>
+                    )}
+                  </Fragment>
+                )}
                 </CardFooter>
               </Card>
             </Col>

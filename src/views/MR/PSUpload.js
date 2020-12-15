@@ -17,6 +17,10 @@ const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
+const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
+const usernameXL = "adminbamidsuper";
+const passwordXL = "F760qbAg2sml";
+
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="", disabled= false}) => (
@@ -56,14 +60,14 @@ class PSUpload extends Component {
         list_tssr_from_ps : [],
         list_cd_id_mr : [],
         modal_assign_ps : false,
+        wbs_cd_id_data : [],
     };
     this.handleChangeTSSR = this.handleChangeTSSR.bind(this);
     this.getQtyTssrPPNE = this.getQtyTssrPPNE.bind(this);
     this.getQtyTssrPPFE = this.getQtyTssrPPFE.bind(this);
-    // this.saveMRtoAPI = this.saveMRtoAPI.bind(this);
     this.editQtyNE = this.editQtyNE.bind(this);
     this.editQtyFE = this.editQtyFE.bind(this);
-    this.connectPlantSpectoTSSR = this.connectPlantSpectoTSSR.bind(this);
+    this.connectMRtoTSSR = this.connectMRtoTSSR.bind(this);
     this.getDataWarehouse = this.getDataWarehouse.bind(this);
     this.getDataInbound = this.getDataInbound.bind(this);
     this.handleChangeCDIDtoTSSR = this.handleChangeCDIDtoTSSR.bind(this);
@@ -232,6 +236,26 @@ class PSUpload extends Component {
     }
   }
 
+  async getDatafromAPIXL(url){
+    try {
+      let respond = await axios.get(API_URL_XL +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
+    }
+  }
+
   toggleAssign(e) {
     this.setState((prevState) => ({
       modal_assign_ps: !prevState.modal_assign_ps,
@@ -239,7 +263,7 @@ class PSUpload extends Component {
   }
 
   getListTssrAll(){
-    this.getDataFromAPINODE('/plantspec?q={"id_mr_doc" : null, "submission_status" : "SUBMITTED" }').then( res => {
+    this.getDataFromAPINODE('/plantspec?q={"id_mr_doc" : null, "submission_status" : "SUBMITTED", "site_info.site_id" : "'+this.state.data_mr.site_info[0].site_id+'" }').then( res => {
     // this.getDatafromAPIBAM('/tssr_sorted_nonpage?projection={"project_name" : 1, "no_tssr_boq" : 1, "_id" : 1, "version" : 1 }').then( res => {
       if(res.data !== undefined){
         const items = res.data.data;
@@ -273,15 +297,27 @@ class PSUpload extends Component {
     this.getDataFromAPINODE('/matreq/' + _id_MR).then(resMR => {
       if(resMR.data !== undefined){
         this.setState({ data_mr : resMR.data }, () => {
+          this.getListTssrAll();
           if(resMR.data.cust_del !== undefined){
-            console.log("resMR.data.cust_del", resMR.data.cust_del);
-            this.setState({list_cd_id_mr : resMR.data.cust_del })
+            this.setState({list_cd_id_mr : resMR.data.cust_del }, () => {
+              this.getDataCDID(resMR.data.cust_del.map(e => e.cd_id));
+            })
           }else{
             this.setState({list_cd_id_mr : [] })
           }
         });
       }
     })
+  }
+
+  async getDataCDID(array_cd_id){
+    if(array_cd_id.length !== 0){
+      let array_in_cdid = '"'+array_cd_id.join('", "')+'"';
+      const getWPID = await this.getDatafromAPIXL('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}');
+      if(getWPID !== undefined && getWPID.data !== undefined) {
+        this.setState({ wbs_cd_id_data : getWPID.data._items});
+      }
+    }
   }
 
   getDataTssr(_id_tssr){
@@ -444,352 +480,40 @@ class PSUpload extends Component {
     }
   }
 
-    // async saveMRtoAPI(){
-    //   const dataMRParent = this.state.data_mr;
-    //   const dataTSSRParent = this.state.data_tssr;
-    //   const dataTSSRBOMNE = this.state.tssr_site_NE;
-    //   const dataTSSRBOMFE = this.state.tssr_site_FE;
-    //   const newDate = new Date();
-    //   const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-    //   let site_info = [];
-    //   let mr_data = {
-    //     "site_info" : [],
-    //     "mr_milestones" : [],
-    //     "current_mr_status" : "PLANTSPEC ASSIGNED",
-    //     "current_milestones" : "",
-    //     "created_by" : this.state.userId,
-    //     "updated_by" : this.state.userId
-    //   };
-    //   //Add Site Info
-    //   if(dataMRParent.site_info.length !== 0){
-    //     let dataSiteNE = dataMRParent.site_info.find(e => e.site_id === dataTSSRBOMNE.site_id);
-    //     if(dataSiteNE !== undefined){
-    //       dataSiteNE["id_tssr_boq_site_doc"] = dataTSSRBOMNE._id;
-    //       dataSiteNE["no_tssr_boq_site"] = dataTSSRBOMNE.no_tssr_boq_site;
-    //       dataSiteNE["tssr_version"] = dataTSSRBOMNE.version === undefined ? "0" : dataTSSRBOMNE.version;
-    //       mr_data["site_info"].push(dataSiteNE);
-    //     }else{
-    //       const dataNewSiteNE = {
-    //           "id_site_doc" : dataTSSRBOMNE.id_site_doc,
-    //           "site_id" : dataTSSRBOMNE.site_id,
-    //           "site_name" : dataTSSRBOMNE.site_name,
-    //           "site_title": "NE",
-    //           "id_tssr_boq_site_doc" : dataTSSRBOMNE._id,
-    //           "no_tssr_boq_site" : dataTSSRBOMNE.no_tssr_boq_site,
-    //           "tssr_version" : dataTSSRBOMNE.version === undefined ? "0" : dataTSSRBOMNE.version,
-    //       };
-    //       mr_data["site_info"].push(dataNewSiteNE);
-    //     };
-    //     //IF There is Site FE
-    //     if(this.state.tssr_site_FE !== null){
-    //       let dataSiteFE = dataMRParent.site_info.find(e => e.site_id === dataTSSRBOMFE.site_id);
-    //       if(dataSiteFE !== undefined){
-    //         dataSiteFE["id_tssr_boq_site_doc"] = dataTSSRBOMFE._id;
-    //         dataSiteFE["no_tssr_boq_site"] = dataTSSRBOMFE.no_tssr_boq_site;
-    //         dataSiteFE["tssr_version"] = dataTSSRBOMFE.version === undefined ? "0" : dataTSSRBOMFE.version;
-    //         mr_data["site_info"].push(dataSiteFE);
-    //       }else{
-    //         const dataNewSiteFE = {
-    //             "id_site_doc": dataTSSRBOMFE.id_site_doc,
-    //             "site_id": dataTSSRBOMFE.site_id,
-    //             "site_name" : dataTSSRBOMFE.site_name,
-    //             "site_title": "FE",
-    //             "id_tssr_boq_site_doc" : dataTSSRBOMFE._id,
-    //             "no_tssr_boq_site" : dataTSSRBOMFE.no_tssr_boq_site,
-    //             "tssr_version" : dataTSSRBOMFE.version === undefined ? "0" : dataTSSRBOMFE.version,
-    //         }
-    //         mr_data["site_info"].push(dataNewSiteFE)
-    //       }
-    //     }
-    //   }
-    //   let currStatus = [
-    //     {
-    //         "mr_status_name": "PLANTSPEC",
-    //         "mr_status_value": "ASSIGNED",
-    //         "mr_status_date": dateNow,
-    //         "mr_status_updater": this.state.userEmail,
-    //         "mr_status_updater_id": this.state.userId
-    //     }
-    //   ];
-    //   mr_data["mr_status"] = dataMRParent.mr_status.concat(currStatus);
-    //   const respondSaveMR = await this.patchDatatoAPIBAM('/mr_op/'+dataMRParent._id, mr_data, dataMRParent._etag);
-    //   if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ){
-    //     this.saveMrPPtoAPI(dataMRParent._id, dataMRParent.mr_id, respondSaveMR.data._etag);
-    //   }else{
-    //     this.setState({action_status : 'failed'});
-    //   }
-    // }
-
-  // async saveMrPPtoAPI(_id_mr, mr_id, _etag_mr){
-  //   const dataPPTssr = this.state.list_pp_material_tssr;
-  //   const dataTSSRBOMNE = this.state.tssr_site_NE;
-  //   const dataTSSRBOMFE = this.state.tssr_site_FE;
-  //   let ppMRsave = [];
-  //   //PP for NE
-  //   for(let i = 0; i < dataPPTssr.length; i++){
-  //     let dataTSSRBomItemIndex = dataTSSRBOMNE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-  //     let ppSave = {
-  //       "id_mr_doc" : _id_mr,
-  //       "mr_id" : mr_id,
-  //       "id_pp_doc" : dataPPTssr[i]._id,
-  //       "pp_id" : dataPPTssr[i].pp_id,
-  //       "id_site_doc" : dataTSSRBOMNE.id_site_doc,
-  //       "site_id" : dataTSSRBOMNE.site_id,
-  //       "site_name" : dataTSSRBOMNE.site_name,
-  //       "product_name" : dataPPTssr[i].product_name,
-  //       "product_type" : dataPPTssr[i].product_type,
-  //       "physical_group" : dataPPTssr[i].physical_group,
-  //       "uom" : dataPPTssr[i].uom,
-  //       "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id)),
-  //       "qty_scan" : 0,
-  //       "id_po_doc" : null,
-  //       "po_number" : "demo PO 1",
-  //       "deleted" : 0,
-  //       "created_by" : this.state.userId,
-  //       "updated_by" : this.state.userId
-  //     }
-  //     ppMRsave.push(ppSave);
-  //   }
-  //   //PP for FE
-  //   if(this.state.tssr_site_FE !== null){
-  //     for(let i = 0; i < dataPPTssr.length; i++){
-  //       let dataTSSRBomItemIndex = dataTSSRBOMFE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-  //       let ppSave = {
-  //         "id_mr_doc" : _id_mr,
-  //         "mr_id" : mr_id,
-  //         "id_pp_doc" : dataPPTssr[i]._id,
-  //         "pp_id" : dataPPTssr[i].pp_id,
-  //         "id_site_doc" : dataTSSRBOMFE.id_site_doc,
-  //         "site_id" : dataTSSRBOMFE.site_id,
-  //         "site_name" : dataTSSRBOMFE.site_name,
-  //         "product_name" : dataPPTssr[i].product_name,
-  //         "product_type" : dataPPTssr[i].product_type,
-  //         "physical_group" : dataPPTssr[i].physical_group,
-  //         "uom" : dataPPTssr[i].uom,
-  //         "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id)),
-  //         "qty_scan" : 0,
-  //         "id_po_doc" : null,
-  //         "po_number" : "demo PO 1",
-  //         "deleted" : 0,
-  //         "created_by" : this.state.userId,
-  //         "updated_by" : this.state.userId
-  //       }
-  //       ppMRsave.push(ppSave);
-  //     }
-  //   }
-  //   const respondSaveMRPP = await this.postDatatoAPIBAM('/mr_pp_op', ppMRsave);
-  //   if(respondSaveMRPP.data !== undefined && respondSaveMRPP.status >= 200 && respondSaveMRPP.status <= 300 ){
-  //     if(ppMRsave.length === 1){
-  //       ppMRsave[0]["id_mr_pp_doc"] = respondSaveMRPP.data;
-  //       this.saveMrMattoAPI(_id_mr, mr_id, _etag_mr, ppMRsave);
-  //     }else{
-  //       for(let i = 0; i < ppMRsave.length; i++){
-  //         ppMRsave[i]["id_mr_pp_doc"] = respondSaveMRPP.data._items[i];
-  //       }
-  //       this.saveMrMattoAPI(_id_mr, mr_id, _etag_mr, ppMRsave);
-  //     }
-  //   }else{
-  //     this.setState({action_status : 'failed'});
-  //     this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
-  //   }
-  // }
-
-  // async saveMrMattoAPI(_id_mr, mr_id, _etag_mr, list_data_post_pp_mr){
-  //   const dataPPTssr = this.state.list_pp_material_tssr;
-  //   const dataTSSRBOMNE = this.state.tssr_site_NE;
-  //   const dataTSSRBOMFE = this.state.tssr_site_FE;
-  //   const list_id_pp_mr = list_data_post_pp_mr.map(e => e._id);
-  //   let matMRsave = [];
-  //   //Material for NE
-  //   let indexNE = 0;
-  //   for(let i = 0; i < dataPPTssr.length; i++){
-  //     let dataTSSRBomItemIndex = dataTSSRBOMNE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-  //     let getdataFromSavePPMR = list_data_post_pp_mr.find(e => e.id_pp_doc === dataPPTssr[i]._id && e.site_id === dataTSSRBOMNE.site_id);
-  //     for(let j = 0; j < dataPPTssr[i].list_of_material.length; j++){
-  //       const dataMatIndex = dataPPTssr[i].list_of_material[j];
-  //       let matSave = {
-  //         "id_mr_doc" : _id_mr,
-  //         "mr_id" : mr_id,
-  //         "id_mr_pp_doc" : getdataFromSavePPMR.id_mr_pp_doc._id,
-  //         "id_pp_doc" : dataPPTssr[i]._id,
-  //         "pp_id" : dataPPTssr[i].pp_id,
-  //         "id_site_doc" : dataTSSRBOMNE.id_site_doc,
-  //         "site_id" : dataTSSRBOMNE.site_id,
-  //         "site_name" : dataTSSRBOMNE.site_name,
-  //         "id_mc_doc" : dataMatIndex._id,
-  //         "material_id" : dataMatIndex.material_id,
-  //         "material_name" : dataMatIndex.material_name,
-  //         "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
-  //         "uom" : dataMatIndex.uom,
-  //         "qty" : (!this.state.qty_ne.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_ne.get(dataPPTssr[i].pp_id))*dataMatIndex.qty,
-  //         "qty_scan" : 0,
-  //         "id_po_doc" : null,
-  //         "po_number" : "demo PO 1",
-  //         "serial_numbers": [],
-  //         "deleted" : 0,
-  //         "created_by" : this.state.userId,
-  //         "updated_by" : this.state.userId
-  //       }
-  //       matMRsave.push(matSave);
-  //     }
-  //     indexNE = i;
-  //   }
-  //   //Material for FE
-  //   if(this.state.tssr_site_FE !== null){
-  //     for(let i = 0; i < dataPPTssr.length; i++){
-  //       let dataTSSRBomItemIndex = dataTSSRBOMFE.list_of_site_items.find(e => e.id_pp_doc === dataPPTssr[i]._id);
-  //       let getdataFromSavePPMR = list_data_post_pp_mr.find(e => e.id_pp_doc === dataPPTssr[i]._id && e.site_id === dataTSSRBOMFE.site_id);
-  //       for(let j = 0; j < dataPPTssr[i].list_of_material.length; j++){
-  //         const dataMatIndex = dataPPTssr[i].list_of_material[j];
-  //         let matSave = {
-  //           "id_mr_doc" : _id_mr,
-  //           "mr_id" : mr_id,
-  //           "id_mr_pp_doc" : getdataFromSavePPMR.id_mr_pp_doc._id,
-  //           "id_pp_doc" : dataPPTssr[i]._id,
-  //           "pp_id" : dataPPTssr[i].pp_id,
-  //           "id_site_doc" : dataTSSRBOMFE.id_site_doc,
-  //           "site_id" : dataTSSRBOMFE.site_id,
-  //           "site_name" : dataTSSRBOMFE.site_name,
-  //           "id_mc_doc" : dataMatIndex._id,
-  //           "material_id" : dataMatIndex.material_id,
-  //           "material_name" : dataMatIndex.material_name,
-  //           "material_type" : dataMatIndex.material_type === undefined ? "passive_material" : dataMatIndex.material_type,
-  //           "uom" : dataMatIndex.uom,
-  //           "qty" : (!this.state.qty_fe.has(dataPPTssr[i].pp_id) ? dataTSSRBomItemIndex.qty : this.state.qty_fe.get(dataPPTssr[i].pp_id))*dataMatIndex.qty,
-  //           "qty_scan" : 0,
-  //           "id_po_doc" : null,
-  //           "po_number" : "demo PO 1",
-  //           "serial_numbers": [],
-  //           "deleted" : 0,
-  //           "created_by" : this.state.userId,
-  //           "updated_by" : this.state.userId
-  //         }
-  //         matMRsave.push(matSave);
-  //       }
-  //     }
-  //   }
-  //   if(matMRsave.length !== 0){
-  //     const respondSaveMRMat = await this.postDatatoAPIBAM('/mr_md_op', matMRsave);
-  //     if(respondSaveMRMat.data !== undefined && respondSaveMRMat.status >= 200 && respondSaveMRMat.status <= 300 ){
-  //       this.setState({action_status : 'success'}, () => {
-  //         setTimeout(function(){ this.setState({ redirectSign : _id_mr}); }.bind(this), 3000);
-  //       });
-  //     }else{
-  //       this.setState({action_status : 'failed'});
-  //       // this.patchDatatoAPIBAM('/mr_op/'+_id_mr, {"deleted" : 1}, _etag_mr);
-  //     }
-  //   }else{
-  //     this.setState({action_status : 'success'}, () => {
-  //       setTimeout(function(){ this.setState({ redirectSign : _id_mr}); }.bind(this), 3000);
-  //     });
-  //   }
-  // }
-
-  // async connectPlantSpectoTSSR(){
-  //   const dataMRParent = this.state.data_mr;
-  //   const dataTSSRParent = this.state.data_tssr;
-  //   const dataTSSRBOMNE = this.state.tssr_site_NE;
-  //   const dataTSSRBOMFE = this.state.tssr_site_FE;
-  //   const dataTSSRItems = this.state.data_tssr_sites_item;
-  //   const dataPP = this.state.list_pp_material_tssr;
-  //   console.log("dataTSSRBOMNE", dataTSSRBOMNE);
-  //   console.log("dataTSSRParent", dataTSSRParent);
-  //   const dataTssrHeader = {
-  //     "id_tssr_doc": dataTSSRParent._id,
-  //     "tssr_id": dataTSSRParent.no_tssr_boq,
-  //     "tssr_version": dataTSSRParent.version,
-  //   }
-  //   const site_info_ne = {
-  //     "id_tssr_boq_site_doc": dataTSSRBOMNE.site_info.id_tssr_boq_doc,
-  //     "no_tssr_boq_site": dataTSSRBOMNE.site_info.no_tssr_boq_site,
-  //     "id_site_doc": null,
-  //     "site_id": dataTSSRBOMNE.site_info.site_id,
-  //     "site_name": dataTSSRBOMNE.site_info.site_name,
-  //     "tssr_version": dataTSSRBOMNE.site_info.version
-  //   }
-  //   let dataPPNE = [];
-  //   const dataTSSRItemsNE = dataTSSRBOMNE.site_items;
-  //   for(let i = 0; i < dataTSSRItemsNE.length; i++){
-  //     let itemIdx = Object.assign({}, dataTSSRItemsNE[i].product_packages);
-  //     if(itemIdx._etag !== undefined){
-  //       delete itemIdx._etag;
-  //     }
-  //     let dataMatPPIdx = [];
-  //     let dataPPIdx = dataTSSRItemsNE[i];
-  //     if(dataPPIdx !== undefined){
-  //       for(let j = 0; j < dataPPIdx.material_detail.length; j++){
-  //         let dataMatIdx = Object.assign({}, dataPPIdx.material_detail[j]);
-  //         dataMatIdx["__v"] = dataMatIdx.version;
-  //         // dataMatIdx["qty"] = itemIdx.qty * dataMatIdx.qty;
-  //         dataMatIdx["deleted"] = 0;
-  //         if(dataMatIdx._etag !== undefined){
-  //           delete dataMatIdx._etag;
-  //         }
-  //         dataMatPPIdx.push(dataMatIdx);
-  //       }
-  //     }
-  //     dataPPNE.push({"product_packages" : itemIdx, "material_detail" : dataMatPPIdx});
-  //   }
-  //   const dataNE = {
-  //     "site_info_ne" : site_info_ne,
-  //     "mr_ne_items" : dataPPNE,
-  //   }
-  //   const dataTSSRConnectMR = {
-  //     "tssr_info" : dataTssrHeader,
-  //     "mr_site_ne" : dataNE,
-  //   }
-  //   if(dataMRParent.sow_type === "TRM"){
-  //     const site_info_fe = {
-  //       "id_tssr_boq_site_doc": dataTSSRBOMFE.id_tssr_boq_doc,
-  //       "no_tssr_boq_site": dataTSSRBOMFE.no_tssr_boq_site,
-  //       "id_site_doc": null,
-  //       "site_id": dataTSSRBOMFE.site_id,
-  //       "site_name": dataTSSRBOMFE.site_name,
-  //       "tssr_version": dataTSSRBOMFE.version === undefined ? 0 : dataTSSRBOMFE.version
-  //     }
-  //     let dataPPFE = [];
-  //     const dataTSSRItemsFE = dataTSSRBOMFE.site_items;
-  //     for(let i = 0; i < dataTSSRItemsFE.length; i++){
-  //       let itemIdx = Object.assign({}, dataTSSRItemsFE[i].product_packages);
-  //       itemIdx["__v"] = itemIdx.version;
-  //       itemIdx["deleted"] = 0;
-  //       if(itemIdx._etag !== undefined){
-  //         delete itemIdx._etag;
-  //       }
-  //       let dataMatPPIdx = [];
-  //       let dataPPIdx = dataTSSRItemsFE[i];;
-  //       if(dataPPIdx !== undefined){
-  //         for(let j = 0; j < dataPPIdx.material_detail.length; j++){
-  //           let dataMatIdx = Object.assign({}, dataPPIdx.material_detail[i]);
-  //           dataMatIdx["__v"] = dataMatIdx.version;
-  //           dataMatIdx["deleted"] = 0;
-  //           if(dataMatIdx._etag !== undefined){
-  //             delete dataMatIdx._etag;
-  //           }
-  //           dataMatPPIdx.push(dataMatIdx);
-  //         }
-  //       }
-  //       dataPPNE.push({"product_packages" : itemIdx, "material_detail" : dataMatPPIdx});
-  //     }
-  //     const dataFE = {
-  //       "site_info_fe" : site_info_fe,
-  //       "mr_fe_items" : dataPPFE,
-  //     }
-  //     dataTSSRConnectMR["mr_site_fe"] = dataFE;
-  //   }
-  //   this.patchDatatoAPINODE('/matreq/updatePlantSpecByTssr/'+dataMRParent._id, dataTSSRConnectMR).then(res => {
-  //     if(res.data !== undefined){
-  //       this.setState({ action_status : "success" });
-  //     }else{
-  //       this.setState({ action_status : "failed" });
-  //     }
-  //   })
-  //   // console.log("dataTSSRConnectMR JSON", JSON.stringify(dataTSSRConnectMR));
-  //   // console.log("dataTSSRConnectMR", dataTSSRConnectMR);
-  // }
-
-  async connectPlantSpectoTSSR(){
+  async connectMRtoTSSR(){
     const dataMRParent = this.state.data_mr;
+    const dataPS = this.state.data_tssr;
+    const dataCDID = this.state.wbs_cd_id_data;
+    const selectedCD = this.state.cd_id_to_tssr;
+    let matOBDStat = [];
+    dataPS.packages.forEach((pp) => {
+      let wbsSite = null;
+      const dataCDSite = selectedCD.find(sc => sc.id_tssr_boq_site_doc === pp.id_tssr_boq_site_doc);
+      wbsSite = dataCDID.find(wbs => wbs.WP_ID === dataCDSite.cd_id);
+      if(wbsSite !== undefined){
+        wbsSite = wbsSite.C1003_WBS_HW;
+      }
+      pp.materials.forEach((mat) => {
+        const dataOBD = {
+           "MRF": dataMRParent.mr_id,
+           "Submit_by": dataMRParent.mr_status[0].mr_status_updater,
+           "Network_Order": null,
+           "Material": mat.material_id,
+           "Plant": dataMRParent.origin.value,
+           "Storage_Location": dataMRParent.origin.value,
+           "WBS_Element_from": wbsSite,
+           "WBS_Element_to": wbsSite,
+           "Qty": mat.qty,
+           "Delivery_Date": dataMRParent.etd.toString().slice(0,10),
+           "Shipping_point": null,
+           "Work_Status": null,
+           "OBD": null,
+           "Material_document": null,
+           "Error_Message": null,
+        };
+        matOBDStat.push(dataOBD);
+      });
+    });
     this.setState({modal_assign_ps : false})
     let dataTSSR = {};
     if(this.state.cd_id_to_tssr.length !== 0){
@@ -797,9 +521,11 @@ class PSUpload extends Component {
         "data" : this.state.cd_id_to_tssr
       }
     }
-    this.patchDatatoAPINODE('/matreq/assignPlantSpecByTssr/'+dataMRParent._id+'/ps/'+this.state.id_tssr_selected, dataTSSR).then(res => {
+    this.patchDatatoAPINODE('/matreq/assignPlantSpecByTssr2/'+dataMRParent._id+'/ps/'+this.state.id_tssr_selected, dataTSSR).then(res => {
       if(res.data !== undefined){
-        this.setState({ action_status : "success" });
+        this.patchDatatoAPINODE("/matreq/requestMatreq/" + dataMRParent._id).then(res => {
+          this.setState({ action_status : "success" });
+        })
       }else{
         if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
           if (res.response.data.error.message !== undefined) {
@@ -828,7 +554,7 @@ class PSUpload extends Component {
 
   componentDidMount(){
     this.getDataMR(this.props.match.params.id);
-    this.getListTssrAll();
+
   }
 
   handleChangeCDIDtoTSSR(e){
@@ -837,20 +563,27 @@ class PSUpload extends Component {
     let dataCDSelected = this.state.list_cd_id_mr.find(e => e.id_cd_doc === value)
     let cd_id_to_tssr = this.state.cd_id_to_tssr;
     let indexCurrent = cd_id_to_tssr.findIndex(e => e.id_tssr_boq_site_doc === name);
-    if( indexCurrent === -1){
-      cd_id_to_tssr.push({
-  			"id_tssr_boq_site_doc" : name,
-  			"id_cd_doc" : dataCDSelected.id_cd_doc,
-  			"cd_id" : dataCDSelected.cd_id
-  		})
+    if(dataCDSelected !== undefined){
+        if( indexCurrent === -1){
+	      cd_id_to_tssr.push({
+	  			"id_tssr_boq_site_doc" : name,
+	  			"id_cd_doc" : dataCDSelected.id_cd_doc,
+	  			"cd_id" : dataCDSelected.cd_id
+	  		})
+	    }else{
+	      cd_id_to_tssr[indexCurrent] = {
+	  			"id_tssr_boq_site_doc" : name,
+	  			"id_cd_doc" : dataCDSelected.id_cd_doc,
+	  			"cd_id" : dataCDSelected.cd_id
+	  		}
+	    }
     }else{
-      cd_id_to_tssr[indexCurrent] = {
-  			"id_tssr_boq_site_doc" : name,
-  			"id_cd_doc" : dataCDSelected.id_cd_doc,
-  			"cd_id" : dataCDSelected.cd_id
-  		}
+    	if( indexCurrent === -1){
+
+	    }else{
+	    	cd_id_to_tssr.splice(indexCurrent,1);
+	    }
     }
-    console.log("cd_id_to_tssr", cd_id_to_tssr);
     this.setState({cd_id_to_tssr : cd_id_to_tssr})
     this.setState((prevState) => ({
       cd_id_to_tssr_selected: prevState.cd_id_to_tssr_selected.set(name, value),
@@ -858,9 +591,6 @@ class PSUpload extends Component {
   }
 
   render() {
-    if(this.state.data_tssr !== null){
-      console.log("this.state.data_tssr stei list", this.state.data_tssr.siteList);
-    }
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/mr-detail/'+this.state.redirectSign} />);
     }
@@ -873,8 +603,7 @@ class PSUpload extends Component {
         <Card>
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}} >Assign PS</span>
-            connectPlantSpectoTSSR
-            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.toggleAssign}>Assign</Button>
+            <Button color='success' style={{float : 'right'}} disabled={this.state.list_tssr_from_ps.length === 0} onClick={this.toggleAssign}>Assign</Button>
           </CardHeader>
           <CardBody>
             <table>
@@ -1092,7 +821,7 @@ class PSUpload extends Component {
           </ModalBody>
           <ModalFooter>
             <Button color="secondary" onClick={this.toggleLoading}>Close</Button>
-            <Button color='success' style={{float : 'right'}} disable={this.state.list_pp_material_tssr.length === 0} onClick={this.connectPlantSpectoTSSR}>Assign</Button>
+            <Button color='success' style={{float : 'right'}} disabled={this.state.cd_id_to_tssr.length !== this.state.list_tssr_from_ps.length} onClick={this.connectMRtoTSSR}>Assign</Button>
           </ModalFooter>
         </Modal>
         {/* end Modal Assign */}

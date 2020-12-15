@@ -1,5 +1,9 @@
 import React, { Component } from 'react';
 import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import { Dropdown,
+DropdownToggle,
+DropdownMenu,
+DropdownItem } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
@@ -25,13 +29,16 @@ class MaterialDispatch extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      vendor_name : this.props.dataLogin.vendor_name,
+      vendor_code : this.props.dataLogin.vendor_code,
       mr_list: [],
       prevPage: 0,
       activePage: 1,
       totalData: 0,
       perPage: 10,
       filter_list: new Array(14).fill(""),
-      mr_all: []
+      mr_all: [],
+      dropdownOpen: new Array(10).fill(false),
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -39,6 +46,16 @@ class MaterialDispatch extends Component {
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
+    this.toggleDropdown = this.toggleDropdown.bind(this);
+  }
+
+  toggleDropdown(i) {
+    const newArray = this.state.dropdownOpen.map((element, index) => {
+      return (index === i ? !element : false);
+    });
+    this.setState({
+      dropdownOpen: newArray,
+    });
   }
 
   async getDataFromAPI(url) {
@@ -97,7 +114,11 @@ class MaterialDispatch extends Component {
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
-    filter_array.push('"$or" : [{"current_milestones": "MS_DISPATCH"}, {"current_milestones": "MS_LOADING_PROCESS", "current_mr_status": "LOADING PROCESS FINISH"}]');
+    filter_array.push('"$or" : [{"current_milestones": "MS_DISPATCH"}, {"current_milestones": "MS_MATERIAL_ON_SITE"}]');
+
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
+    }
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
@@ -108,7 +129,7 @@ class MaterialDispatch extends Component {
     })
   }
 
-  getAllMR() {
+  async getAllMR() {
     let filter_array = [];
     this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
     this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
@@ -123,15 +144,18 @@ class MaterialDispatch extends Component {
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
-    filter_array.push('"$or" : [{"current_milestones": "MS_DISPATCH"}, {"current_milestones": "MS_LOADING_PROCESS", "current_mr_status": "LOADING PROCESS FINISH"}]');
+    filter_array.push('"$or" : [{"current_milestones": "MS_DISPATCH"}, {"current_milestones": "MS_MATERIAL_ON_SITE"}]');
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
+    }
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
-      console.log("MR List All", res);
+    const res = await this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd)
       if (res.data !== undefined) {
         const items = res.data.data;
-        this.setState({ mr_all: items });
+        return items;
+      }else{
+        return [];
       }
-    })
   }
 
   numToSSColumn(num) {
@@ -149,9 +173,9 @@ class MaterialDispatch extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const allMR = this.state.mr_all;
+    const allMR = await this.getAllMR();
 
-    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Created By", "Updated On", "Created On"];
+    let headerRow = ["MR ID", "MR MITT ID","MR Type","MR Delivery Type", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "MR MITT Created On", "MR MITT Created By","Updated On", "Created On"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -159,16 +183,120 @@ class MaterialDispatch extends Component {
     }
 
     for (let i = 0; i < allMR.length; i++) {
-      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0].site_id, allMR[i].site_info[0].site_name, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
+      const creator_mr_mitt = allMR[i].mr_status.find(e => e.mr_status_name === "PLANTSPEC" && e.mr_status_value === "NOT ASSIGNED");
+      ws.addRow([allMR[i].mr_id, allMR[i].mr_mitt_no, allMR[i].mr_type, allMR[i].mr_delivery_type, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, new Date(allMR[i].eta), creator_mr_mitt !== undefined ? new Date(creator_mr_mitt.mr_status_date) : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mr_status_updater : null, new Date(allMR[i].updated_on), new Date(allMR[i].created_on)]);
+      const getRowLast = ws.lastRow._number;
+      ws.getCell("M"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("O"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("P"+getRowLast).numFmt = "YYYY-MM-DD";
+      if(creator_mr_mitt !== undefined && creator_mr_mitt !== null){
+        ws.getCell("L"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
+    }
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'MR List.xlsx');
+  }
+
+  async downloadMRTRACY(_id_MR){
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    let dataItemMR = [];
+    let dataMR = {};
+    const resMR = await this.getDataFromAPINODE("/matreq/" + _id_MR);
+    if (resMR.data !== undefined) {
+      dataMR = resMR.data;
+      dataItemMR = dataMR.packages;
+    }
+    let dataWH = {}
+    const getWH = await this.getDataWH(dataMR.origin.value);
+    if (getWH !== undefined) {
+      dataWH = getWH
+    }
+    let headerRow = ["REC_TYPE", "FILLER", "COMP_CD", "CUST_DELIV_NO", "CUST_ID", "CUST_CNTRY_CD", "ETA_SHP_DT", "SHP_DT", "SITE_LOC_ID", "SITE_CNTRY_CD", "SEND_SYSTEM", "SEND_UNIT", "SALES_GRP", "PRNO ", "SHP_NO", "END_CUST_NM", "END_CUST_ID", "CUST_NM", "SALES_ORD_NO", "PACK_ID", "PURCH_ORD_NO", "SER_NO", "CIN", "GI_Type", "Shp_Pnt", "Plant_ID"];
+    ws.addRow(headerRow);
+    let dateDispatch = null;
+    const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
+    if(dispatchData.mr_status_date !== undefined && dispatchData.mr_status_date !== null){
+      let dateDispatchNew = new Date(dispatchData.mr_status_date);
+      dateDispatch = dateDispatchNew.getFullYear().toString()+(dateDispatchNew.getMonth()+1).toString().padStart(2, '0')+dateDispatchNew.getDate().toString().padStart(2, '0');
+    }
+    const dataSite = dataMR.site_info[0].site_id;
+    let shipTrim = dataMR.no_shipment.split("-");
+    shipTrim.splice(0, 2);
+    const shipTracy = shipTrim.join('');
+    for (let i = 0; i < dataItemMR.length; i++) {
+      for (let j = 0; j < dataItemMR[i].materials.length; j++) {
+        let dataMatIdx = dataItemMR[i].materials[j];
+        if(dataMatIdx.serial_numbers !== undefined && dataMatIdx.serial_numbers.length !== 0){
+          let serial_number = dataMatIdx.serial_numbers.find(e => e.flag_name === "obd");
+          if(serial_number !== undefined){
+            for(let k = 0; k < serial_number.list_of_sn.length; k++){
+              ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", dataWH.factory_code, null, dataMatIdx.material_id, shipTracy, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, serial_number.list_of_sn[k], null, null, null, null]);
+            }
+          }
+        }else{
+          ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", dataWH.factory_code, null, dataMatIdx.material_id, shipTracy, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
+        }
+      }
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Material Dispatch.xlsx');
+    saveAs(
+      new Blob([allocexport]),
+      "TRACY Material MR " + dataMR.mr_id + ".xlsx"
+    );
+  }
+
+  async downloadMaterialSerialNumberReport(_id_MR) {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    let dataItemMR = [];
+    let dataMR = {};
+    let resMR = await this.getDataFromAPINODE("/matreq/" + _id_MR);
+    if (resMR.data !== undefined) {
+      dataMR = resMR.data;
+      dataItemMR = dataMR.packages;
+    }
+
+    let headerRow = ["MR_ID", "SKU", "SERIAL_NUMBER", "DESCRIPTION", "SCAN_BY", "LASTEST_UPDATE_DATE_SCAN", "ACCOUNT", "WAREHOUSE"];
+    ws.addRow(headerRow);
+    let dateDispatch = null;
+    const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
+    if(dispatchData !== undefined && dispatchData.mr_status_date !== undefined && dispatchData.mr_status_date !== null){
+      let dateDispatchNew = new Date(dispatchData.mr_status_date);
+      dateDispatch = dateDispatchNew.getFullYear().toString()+(dateDispatchNew.getMonth()+1).toString().padStart(2, '0')+dateDispatchNew.getDate().toString().padStart(2, '0');
+    }
+    const dataSite = dataMR.site_info[0].site_id
+    for (let i = 0; i < dataItemMR.length; i++) {
+      for (let j = 0; j < dataItemMR[i].materials.length; j++) {
+        let dataMatIdx = dataItemMR[i].materials[j];
+        if(dataMatIdx.serial_numbers !== undefined && dataMatIdx.serial_numbers.length !== 0){
+          let serial_number = dataMatIdx.serial_numbers.find(e => e.flag_name === "obd");
+          if(serial_number !== undefined){
+            for(let k = 0; k < serial_number.list_of_sn.length; k++){
+              ws.addRow([dataMR.mr_id, dataMatIdx.material_id, serial_number.list_of_sn[k], dataMatIdx.material_name, serial_number.updated_by, serial_number.updated_on, "XL", dataMR.origin.value]);
+            }
+          }
+        }else{
+          ws.addRow([dataMR.mr_id, dataMatIdx.material_id, null, dataMatIdx.material_name, null, null, "XL", dataMR.origin.value]);
+        }
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([allocexport]),
+      "SERIAL NUMBER Material MR " + dataMR.mr_id + " REPORT.xlsx"
+    );
   }
 
   componentDidMount() {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'Material Dispatch | BAM';
   }
 
@@ -193,7 +321,7 @@ class MaterialDispatch extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {
@@ -267,31 +395,36 @@ class MaterialDispatch extends Component {
                           {list.current_mr_status === "LOADING PROCESS FINISH" ? (
                             "Waiting Dispatch"
                           ) : (
-                              "Finish"
+                              <React.Fragment>Finish {(this.state.userRole.indexOf("BAM-ASP Management") === -1 && this.state.userRole.indexOf("BAM-ASP") === -1 && this.state.userRole.indexOf("BAM-Mover") === -1)&& (
+                                <Dropdown size="sm" isOpen={this.state.dropdownOpen[i]} toggle={() => {this.toggleDropdown(i);}}>
+                                  <DropdownToggle caret color="secondary">
+                                    <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>File
+                                  </DropdownToggle>
+                                  <DropdownMenu>
+                                    <DropdownItem header>MR File</DropdownItem>
+                                    <DropdownItem onClick={() => this.downloadMRTRACY(list._id)}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY</DropdownItem>
+                                    <DropdownItem onClick={() => this.downloadMaterialSerialNumberReport(list._id)}> <i className="fa fa-file-text-o" aria-hidden="true"></i>SN Report</DropdownItem>
+                                  </DropdownMenu>
+                                </Dropdown>
+                              )}</React.Fragment>
                             )}
                         </td>
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
                         <td>
-                          {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>
-                            j === list.cust_del.length - 1 ? custdel.cd_id : custdel.cd_id + ', '
-                          ))}
+                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_id + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_name + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{convertDateFormat(list.eta)}</td>
-                        <td></td>
+                        <td>{list.creator.map(c => c.email)}</td>
                         <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
@@ -299,7 +432,7 @@ class MaterialDispatch extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries</small>
+                  <small>Showing {this.state.perPage} entries from {this.state.totalData} data</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}

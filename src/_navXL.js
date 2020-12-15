@@ -12,13 +12,25 @@ export default {
           roles : ["BAM-Engineering", "BAM-Project Planner"],
         },
         {
+          name: 'Additional Material',
+          url: '/additional-material-package',
+          icon: 'icon-folder',
+          roles : ["BAM-Engineering", "BAM-Project Planner"],
+        },
+        {
           name: 'Config Manager',
           url: '/config-manager',
           icon: 'icon-doc',
           roles : ["BAM-Engineering", "BAM-Project Planner", "BAM-Solution"],
         },
         {
-          name: 'Material Library',
+          name: 'Additional Material',
+          url: '/additional-material',
+          icon: 'icon-folder',
+          roles : ["BAM-Engineering"],
+        },
+        {
+          name: 'Material Variant',
           url: '/mat-library',
           icon: 'icon-list',
           roles : ["BAM-Engineering", "BAM-Project Planner"],
@@ -56,7 +68,7 @@ export default {
         },
         {
           name: 'DRM',
-          url: '/drm-detail',
+          url: '/drm-list',
           icon: 'icon-docs',
           roles : ["BAM-Solution", "BAM-Engineering"],
         },
@@ -66,12 +78,18 @@ export default {
           icon: 'icon-docs',
           roles : ["BAM-Solution", "BAM-Engineering"],
         },
+        {
+          name: 'CR',
+          url: '/cr-detail',
+          icon: 'icon-docs',
+          roles : ["BAM-Solution", "BAM-Engineering"],
+        },
       ]
     },
     {
       name: 'Assignment',
       icon: 'icon-docs',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP", "BAM-Customer Project Manager"],
       children: [
         {
           name: 'Assignment List',
@@ -83,13 +101,19 @@ export default {
           name: 'Assignment NA List',
           url: '/assignment-list-approval',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Customer Project Manager"],
+        },
+        {
+          name: 'Assignment Approval Bulk',
+          url: '/assignment-bulk-approval',
+          icon: 'icon-list',
+          roles : ["BAM-Customer Project Manager"],
         },
         {
           name: 'Assignment List (ASP)',
           url: '/assignment-list-asp',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
         },
         {
           name: 'Assignment Bulk Notify',
@@ -102,7 +126,13 @@ export default {
           url: '/prt-list',
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
-        }
+        },
+        {
+          name: 'Assignment Report',
+          url: '/assignment-list-report',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
+        },
       ]
     },
     {
@@ -114,7 +144,7 @@ export default {
     {
       name: 'Material Request',
       icon: "fas fa-tools",
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
       children: [
         {
           name: 'MR Dashboard',
@@ -126,7 +156,7 @@ export default {
           name: 'MR List',
           url: '/mr-list',
           icon: 'icon-list',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
         {
           name: 'MR PS Not Assigned',
@@ -140,12 +170,104 @@ export default {
           icon: 'icon-plus',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
         },
+        {
+          name: 'MRA List',
+          url: '/mra-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
+        {
+          name: 'MRA Need Confirm',
+          url: '/mra-list-need-confirm',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
+        {
+          name: 'POD List',
+          url: '/pod-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
+        },
+      ]
+    },
+    {
+      name: 'MR Return/Dismantle',
+      icon: "fas fa-tools",
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+      children: [
+        {
+          name: 'PS SRN',
+          url: '/srn/ps-srn-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
+        {
+          name: 'MRA List',
+          url: '/srn/mr-srn-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
+        {
+          name: 'MRA Assign PS SRN',
+          url: '/srn/mr-srn-na-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
+        {
+          name: 'MRA Approval LDM',
+          url: '/srn/mr-srn-need-approval-ldm-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
+        {
+          name: 'MRA Warehouse Confirm',
+          url: '/srn/mr-srn-need-confirm-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
+      ]
+    },
+    {
+      name: 'MR Warehouse',
+      icon: "fas fa-tools",
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+      children: [
+        {
+          name: 'PS Warehouse List',
+          url: '/toWH/ps-wh-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
+        {
+          name: 'MR Warehouse',
+          url: '/toWH/mr-wh-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
+        {
+          name: 'MR WH Assign PS',
+          url: '/toWH/mr-wh-na-list',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
+        {
+          name: 'MR WH Dispatch',
+          url: '/toWH/mr-wh-dismantle',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
+        {
+          name: 'MR WH Confirm WH',
+          url: '/toWH/mr-wh-confirm-wh',
+          icon: 'icon-list',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+        },
       ]
     },
     {
       name: 'Warehouse',
       icon: 'fas fa-boxes',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASPWarehouse"],
       children: [
         {
           name: 'Dashboard EID',
@@ -157,18 +279,53 @@ export default {
           name: 'Dashboard ASP/DSP',
           url: '/wh-dashboard-ext',
           icon: 'icon-speedometer',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASPWarehouse"],
         },
         {
           name: 'Warehouse Management',
           url: '/wh-management',
           icon: 'fas fa-pallet',
         },
+        {
+          name: 'ASP User Management',
+          url: '/asp-user-management',
+          icon: 'icon-list',
+        },
       ]
+    },
+    {
+      name: 'SID List',
+      url: '/sid-list',
+      icon: 'icon-list',
+      roles : ["BAM-Engineering"],
+    },
+    {
+      name: 'POD List',
+      url: '/pod-list',
+      icon: 'icon-list',
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP"],
     },
     {
       name: 'DSA List',
       url: '/dsa-list',
+      icon: 'icon-list',
+      roles : ["BAM-LDM Admin", "BAM-LDM", "BAM-Mover"],
+    },
+    {
+      name: 'DSA Return List',
+      url: '/dsa-srn-list',
+      icon: 'icon-list',
+      roles : ["BAM-LDM Admin", "BAM-LDM", "BAM-Mover"],
+    },
+    {
+      name: 'LCC List',
+      url: '/lcc-list',
+      icon: 'icon-list',
+      roles : ["BAM-LDM Admin", "BAM-LDM"],
+    },
+    {
+      name: 'SHF List',
+      url: '/shf-list',
       icon: 'icon-list',
       roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
     },
@@ -191,7 +348,7 @@ export default {
     {
       name: 'MR Milestones',
       icon: 'icon-paper-plane',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASP Management", "BAM-ASP"],
       children: [
         {
           name: 'Order Received',
@@ -224,10 +381,16 @@ export default {
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
         {
+          name: 'Waiting Dispatch',
+          url: '/waiting-dispatch',
+          icon: 'fa fa-truck-moving',
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-ASP Management", "BAM-ASP"],
+        },
+        {
           name: 'Material Dispatch',
           url: '/material-dispatch',
           icon: 'fa fa-truck-moving',
-          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+          roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse", "BAM-ASP Management", "BAM-ASP"],
         },
         {
           name: 'Shipment',
@@ -241,6 +404,12 @@ export default {
     {
       name: 'LOM List',
       url: '/lom-list',
+      icon: 'fa fa-stop-circle',
+      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
+    },
+    {
+      name: 'Material LOM List',
+      url: '/matlom-list',
       icon: 'fa fa-stop-circle',
       roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
     },

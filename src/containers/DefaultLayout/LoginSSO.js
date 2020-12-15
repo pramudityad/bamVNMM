@@ -7,10 +7,11 @@ import ActionType from '../../redux/reducer/globalActionType';
 import App from '../../App';
 import './LoginSSO.css';
 import { Button, Card, CardBody, CardFooter, Col, Container, Form, Input, InputGroup, InputGroupAddon, InputGroupText, Row } from 'reactstrap';
-import psi from '../../assets/img/customer/psi.jpeg'
-import demokrat from '../../assets/img/customer/DEMOKRAT.png'
-import pks from '../../assets/img/customer/PKS.png'
-
+import telkom from '../../assets/img/customer/Telkomsel_Logo.png';
+import xl from '../../assets/img/customer/1200px-XL_logo_2016.svg.png';
+import indosat from '../../assets/img/customer/Indosat-Ooredoo-Vector-Logo.png';
+import ericssonLogo from '../../assets/img/brand/ERI_horizontal_RGB_WHITE.svg';
+import ericssonLogoBlack from '../../assets/img/brand/ERI_horizontal_RGB_BLACK.svg';
 
 const loading = () => <div className="animated fadeIn pt-3 text-center">Loading...</div>;
 
@@ -28,6 +29,15 @@ class SSOLogin extends Component {
       authenticatedLoginBAM : null,
       authenticatedLoginBAMStatus : null,
     };
+    this.signOut = this.signOut.bind(this);
+  }
+
+  signOut(e) {
+    e.preventDefault();
+    this.state.key.logout();
+    localStorage.clear();
+    this.props.history.push('/');
+    this.postDatatoAPILogout();
   }
 
   async postDatatoAPILogin(url, data){
@@ -64,16 +74,24 @@ class SSOLogin extends Component {
     if(getLogin.data !== undefined){
       localStorage.setItem('user_data_login', JSON.stringify(getLogin.data));
       this.setState({dataLogin : getLogin.data, token : getLogin.data.token});
+      let role_user = getLogin.data.listRole;
+      if(getLogin.data.validUser.vendor_code !== undefined && getLogin.data.validUser.vendor_code !== null && getLogin.data.validUser.vendor_code.length !== 0){
+        role_user.push("BAM-ASP");
+      }
       this.props.saveDataUser({
+        "data_user" : getLogin.data,
         "_id_user" : getLogin.data.validUser._id,
         "email_user" : getLogin.data.validUser.email,
-        "roles_user" : getLogin.data.listRole,
+        "roles_user" : role_user,
         "user_name" : getLogin.data.validUser.username,
         "account_id" : account_id,
         "token" : getLogin.data.token,
         "sso_id" : keycloak.sub,
-        "name" : getLogin.data.validUser.first_name+" "+getLogin.data.validUser.last_name
+        "name" : getLogin.data.validUser.first_name+" "+getLogin.data.validUser.last_name,
+        "vendor_code" : getLogin.data.validUser.vendor_code,
+        "vendor_name" : getLogin.data.validUser.vendor_name,
       });
+      console.log("getLogin.data",  getLogin.data.validUser.vendor_code);
       localStorage.setItem('keycloack_data_login', JSON.stringify(this.state.key));
       localStorage.setItem('authenticated_data_login', this.state.authenticated);
       localStorage.setItem('account_selected', account_id);
@@ -103,16 +121,24 @@ class SSOLogin extends Component {
 
   getDatafromLocalStorage(keycloak, authenticated){
     const dataLogin = JSON.parse(localStorage.getItem('user_data_login'));
+    let role_user = dataLogin.listRole;
+    if(dataLogin.validUser.vendor_code !== undefined && dataLogin.validUser.vendor_code !== null && dataLogin.validUser.vendor_code.length !== 0){
+      role_user.push("BAM-ASP");
+    }
     this.props.saveDataUser({
+      "data_user" : dataLogin,
       "_id_user" : dataLogin.validUser._id,
       "email_user" : dataLogin.validUser.email,
-      "roles_user" : dataLogin.listRole,
+      "roles_user" : role_user,
       "user_name" : dataLogin.validUser.username,
       "account_id" : localStorage.getItem('account_selected'),
       "token" : dataLogin.token,
       "sso_id" : keycloak.sub,
-      "name" : dataLogin.validUser.first_name+" "+dataLogin.validUser.last_name
+      "name" : dataLogin.validUser.first_name+" "+dataLogin.validUser.last_name,
+      "vendor_code" : dataLogin.validUser.vendor_code,
+      "vendor_name" : dataLogin.validUser.vendor_name,
     });
+          console.log("getLogin.data",  dataLogin.validUser.vendor_code);
     this.setState({dataLogin : dataLogin});
     this.setState({ key: keycloak, authenticated: authenticated }, () => {
       if(dataLogin === null){
@@ -129,7 +155,6 @@ class SSOLogin extends Component {
   }
 
   render() {
-    console.log("authenticatedLoginBAM", this.state.authenticatedLoginBAM,  this.state.authenticatedLoginBAMStatus)
     if(this.state.key !== null && this.state.key !== undefined && this.state.authenticatedLoginBAM === true){
       return(
         <App token={this.state.token} LoginData={this.state.dataLogin} keycloak={this.state.key} authenticatedBAM={this.state.authenticatedLoginBAM}/>
@@ -138,10 +163,18 @@ class SSOLogin extends Component {
 
     if(this.state.key !== null && this.state.key !== undefined && (this.state.authenticatedLoginBAM === null || this.state.authenticatedLoginBAM === false)){
       return (
-        <div className="app flex-row align-items-center">
-          <Container>
+        <React.Fragment>
+        <div className="app flex-row align-items-center page--select-account">
+          <Container className="background-container--login-page">
+            <Row style={{display : 'flex', 'justify-content' : 'space-between', width : 'inherit', paddingLeft : '25px'}}>
+              <Button size="sm" onClick={this.signOut} style={{float : 'left', marginRight : 'auto', height : '20px', padding : '0px 5px 0px 5px'}}>
+                <i class="fa fa-sign-out"></i>
+                Logout
+              </Button>
+              <img src={ericssonLogoBlack} alt="Ericsson logo" style={{width : '170px', float : 'right', marginLeft : 'auto'}} />
+            </Row>
             <Row className="justify-content-center">
-              <h4>Welcome to BAM</h4>
+              <span style={{fontWeight : '900', fontSize : '25px'}}>Welcome to BAM</span>
             </Row>
             <Row className="justify-content-center">
               <h3>Please Select Account :</h3>
@@ -151,17 +184,20 @@ class SSOLogin extends Component {
                 <div className="flex--card-account" >
                   <div className="card-account--telkom" onClick={()=>this.handleChangeAccount("1")}>
                     <div>
-                      <h2>TELKOM</h2>
+                      <img src={telkom} alt="telkom logo" style={{width : '80%', marginTop : '15%'}} />
+                      {/* }<h2>TELKOM</h2> */}
                     </div>
                   </div>
                   <div className="card-account--xl" onClick={()=>this.handleChangeAccount("2")}>
                     <div>
-                      <h2>XL AXIATA</h2>
+                      <img src={xl} alt="XL logo" style={{width : '55%', marginTop : '5px'}}/>
+                      {/*<h2>XL AXIATA</h2>*/}
                     </div>
                   </div>
                   <div className="card-account--indosat" onClick={()=>this.handleChangeAccount("3")}>
                     <div>
-                      <h2>INDOSAT</h2>
+                      <img src={indosat} alt="Indosat logo" style={{width : '80%'}}/>
+                      {/*<h2>INDOSAT</h2>*/}
                     </div>
                   </div>
                 </div>
@@ -176,6 +212,7 @@ class SSOLogin extends Component {
             )}
           </Container>
         </div>
+        </React.Fragment>
       )
     }
 

@@ -13,6 +13,7 @@ import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
 import { connect } from 'react-redux';
 import jsonData from './jsonData.js';
+import {numberWithCommas} from '../../helper/basicFunction';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue="" }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash"/>
@@ -1544,30 +1545,6 @@ class SubmissionCommBoq extends Component {
       return newValue;
     };
 
-    // saveNote = (e) => {
-    //   const commAPI = this.state.boq_comm_API;
-    //   const numbNote = e;
-    //   let updateNote = { };
-    //   updateNote["note_"+numbNote.toString()] = this.state.noteChange[parseInt(numbNote)];
-    //   if(this.checkValuetoString(this.state.noteChange[parseInt(numbNote)]).length == 0){
-    //     updateNote["note_"+numbNote.toString()] = this.checkValuetoString(commAPI["note_"+numbNote.toString()]);
-    //   }
-    //   updateNote["note_name_"+numbNote.toString()] = this.state.fieldNoteChange[parseInt(numbNote)];
-    //   if(this.checkValuetoString(this.state.fieldNoteChange[parseInt(numbNote)]).length == 0){
-    //     updateNote["note_name_"+numbNote.toString()] = this.checkValuetoString(commAPI["note_name_"+numbNote.toString()]);
-    //   }
-    //   this.patchDatatoAPI('/boq_comm_op/'+commAPI._id, updateNote, commAPI._etag).then(res => {
-    //     if(res !== undefined){
-    //       if(res.data !== undefined){
-    //         commAPI["note_"+numbNote.toString()] = this.state.noteChange[parseInt(numbNote)];
-    //         commAPI["_etag"] = res.data._etag;
-    //         this.setState({ boq_comm_API : commAPI, action_status : 'success', action_message : 'Your Commercial BOQ Note '+numbNote.toString()+' has been updated'});
-    //       }
-    //     }
-    //   })
-    //   console.log("numbNote", JSON.stringify(updateNote));
-    // }
-
     saveNote = () => {
       const commAPI = this.state.boq_comm_API;
       let updateNote = { };
@@ -1796,7 +1773,13 @@ class SubmissionCommBoq extends Component {
       const ws = wb.addWorksheet();
 
       const dataComm = this.state.data_comm_boq;
-      let dataSites = this.state.data_comm_boq_items;
+      let dataSites = [];
+      if(this.state.submission_number_selected !== "all"){
+        dataSites = this.state.data_comm_boq_items.filter(e => e.submission_id === this.state.submission_number_selected);
+      }else{
+        dataSites = this.state.data_comm_boq_items;
+      }
+
 
       const DatePrint = new Date();
       const DatePrintOnly = DatePrint.getFullYear()+'-'+(DatePrint.getMonth()+1).toString().padStart(2, '0')+'-'+DatePrint.getDay().toString().padStart(2, '0');
@@ -1876,13 +1859,22 @@ class SubmissionCommBoq extends Component {
 
       ws.addRow([""]);
 
-      let ppIdRow = ["Submission ID", "Tower ID", "Config ID", "Qty", "Unit Price after Incentive (USD)", "Unit Price after Incentive (IDR)", "Total Price after Incentive (USD)", "Total Price after Incentive (IDR)"];
+      let ppIdRow = ["Submission ID", "Tower ID", "Program", "SOW", "Category", "Config ID", "SAP", "SAP Description", "Qty", "Description", "Unit Price after Incentive (USD)", "Unit Price after Incentive (IDR)", "Total Price after Incentive (USD)", "Total Price after Incentive (IDR)"];
+      if(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === true){
+        ppIdRow = ["Submission ID", "Tower ID", "Program", "SOW", "Category", "Config ID", "SAP", "SAP Description", "Qty", "Description"];
+      }
 
       ws.addRow(ppIdRow);
       for(let i = 0; i < dataSites.length ; i++){
         let qtyConfig = []
         for(let j = 0; j < dataSites[i].items.length; j++ ){
-          ws.addRow([dataSites[i].submission_id, dataSites[i].site_id, dataSites[i].items[j].config_id, dataSites[i].items[j].qty, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive, dataSites[i].items[j].total_price_incentive_usd, dataSites[i].items[j].total_price_incentive]);
+          if(dataSites[i].submission_id === this.state.submission_number_selected){
+            if(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-CommBoq-ViewWithoutPrice") === false){
+              ws.addRow([dataSites[i].submission_id, dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].sap_description, dataSites[i].items[j].qty, dataSites[i].items[j].description, dataSites[i].items[j].net_price_incentive_usd, dataSites[i].items[j].net_price_incentive, dataSites[i].items[j].total_price_incentive_usd, dataSites[i].items[j].total_price_incentive]);
+            }else{
+              ws.addRow([dataSites[i].submission_id, dataSites[i].site_id, dataSites[i].program, dataSites[i].sow, dataSites[i].items[j].config_type, dataSites[i].items[j].config_id, dataSites[i].items[j].sap_number, dataSites[i].items[j].sap_description, dataSites[i].items[j].qty, dataSites[i].items[j].description]);
+            }
+          }
         }
       }
 
@@ -1905,6 +1897,9 @@ class SubmissionCommBoq extends Component {
         newValue.forEach( i => {
           selectPriority.push(i.value)
         })
+        if(selectPriority.length === 0){
+          this.setState({action_status : null, action_message : null})
+        }
         this.setState({priority_selected : selectPriority});
         this.priorityToXLSCreation(selectPriority)
       } else {
@@ -1918,7 +1913,10 @@ class SubmissionCommBoq extends Component {
       if(arrayPriority.length !== 0){
         let dataSites = dataSites = this.state.data_comm_boq_items;
         let dataSitesNonSubms = this.state.data_comm_boq_items.filter( e => e.submission_id === undefined || e.submission_id === null);
-        let dataPrioritySiteAll = this.state.data_tech_boq_sites.filter(e => arrayPriority.includes(e.priority)).map(e => e.site_id);
+        let dataPrioritySiteAll = this.state.data_tech_boq_sites.filter(e => arrayPriority.includes(e.priority));
+        dataPrioritySiteAll = dataPrioritySiteAll.map(e => e.site_id);
+        console.log("arraySites test", dataPrioritySiteAll, arrayPriority);
+        console.log("arraySites dataSitesNonSubms", dataSitesNonSubms, arrayPriority);
 
         let dataSiteNonSubmsPriority = dataSitesNonSubms.filter(e => dataPrioritySiteAll.includes(e.site_id));
 
@@ -1927,8 +1925,14 @@ class SubmissionCommBoq extends Component {
         arraySites.push(["tower_id"]);
 
         for(let i = 0; i < dataSiteNonSubmsPriority.length ; i++){
-          arraySites.push([dataSites[i].site_id]);
+          arraySites.push([dataSiteNonSubmsPriority[i].site_id]);
         }
+        if(dataSiteNonSubmsPriority.length === 0){
+          this.setState({action_status : 'failed', action_message : 'Sorry, All Site in this priority already became submission'})
+        }else{
+          this.setState({action_status : null, action_message : null})
+        }
+        console.log("arraySites", arraySites, arrayPriority)
         if(arraySites.length === 0){
           this.setState({rowsXLS : arraySites});
         }else{
@@ -1991,7 +1995,7 @@ class SubmissionCommBoq extends Component {
                                   isDisabled = {this.state.list_priority_avail.length==0}
                                 />
                               </div>
-                                <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.createNewSubmission} disabled={this.state.rowsXLS.length === 0}>
+                                <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.createNewSubmission} disabled={this.state.rowsXLS.length === 0 || this.state.action_status === 'failed'}>
                                   <i className="fa fa-paste">&nbsp;&nbsp;</i>
                                   New
                                 </Button>
@@ -2110,13 +2114,18 @@ class SubmissionCommBoq extends Component {
                           <th>Tower ID</th>
                           <th>Tower Name</th>
                           <th>Config ID</th>
+                          <th>SAP Number</th>
                           <th>SAP Desc</th>
                           <th>Qty</th>
+                          {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-SubmissionBoq-ViewWithoutPrice") === false) && (
+                            <React.Fragment>
                           <th>Unit Price after Incentive (USD)</th>
                           <th>Unit Price after Incentive (IDR)</th>
                           <th>Total Price after Incentive (USD)</th>
                           <th>Total Price after Incentive (IDR)</th>
                           <th>CPO BOQ Ref.</th>
+                          </React.Fragment>
+                        )}
                         </tr>
                       </thead>
                       {this.state.data_view_submission_items.map(site =>
@@ -2127,13 +2136,18 @@ class SubmissionCommBoq extends Component {
                               <td>{item.site_id}</td>
                               <td>{item.site_name}</td>
                               <td>{item.config_id}</td>
+                              <td>{item.sap_number}</td>
                               <td>{item.sap_description}</td>
                               <td>{item.qty}</td>
-                              <td>{item.net_price_incentive_usd}</td>
-                              <td>{item.net_price_incentive}</td>
-                              <td>{item.total_price_incentive_usd.toFixed(2)}</td>
-                              <td>{item.total_price_incentive.toFixed(2)}</td>
+                              {(this.state.userRole.length !== 0 && this.state.userRole.includes("BAM-SubmissionBoq-ViewWithoutPrice") === false) && (
+                                <React.Fragment>
+                              <td>{numberWithCommas(item.net_price_incentive_usd)}</td>
+                              <td>{numberWithCommas(item.net_price_incentive)}</td>
+                              <td>{numberWithCommas(item.total_price_incentive_usd)}</td>
+                              <td>{numberWithCommas(item.total_price_incentive)}</td>
                               <td>{item.cpo_boq}</td>
+                              </React.Fragment>
+                            )}
                             </tr>
                           )}
                         </tbody>

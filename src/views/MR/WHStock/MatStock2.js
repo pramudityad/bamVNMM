@@ -97,11 +97,12 @@ class MaterialStock2 extends React.Component {
       activeItemId: null,
       createModal: false,
       sortType: 0,
+      filter_search : {},
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterName = debounce(this.changeFilterName, 500);
+    this.changeFilterName = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
@@ -273,11 +274,14 @@ class MaterialStock2 extends React.Component {
   }
 
   handleChangeFilter = (e) => {
+    let search = this.state.filter_search;
+    let field = e.target.name;
     let value = e.target.value;
     if (value.length === 0) {
       value = null;
     }
-    this.setState({ filter_name: value }, () => {
+    search[field] = value;
+    this.setState({ filter_search: search }, () => {
       this.changeFilterName(value);
     });
   };
@@ -286,15 +290,20 @@ class MaterialStock2 extends React.Component {
     this.toggleLoading();
     // let get_wh_id = new URLSearchParams(window.location.search).get("wh_id");
     let filter_sku =
-      this.state.filter_name === null
-        ? '{"$exists" : 1}'
-        : '{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+      this.state.filter_search.sku !== null && this.state.filter_search.sku !== undefined
+        ? '{"$regex" : "' + this.state.filter_search.sku + '", "$options" : "i"}'
+        : '{"$exists" : 1}';
+    let filter_project =
+      this.state.filter_search.project !== null && this.state.filter_search.project !== undefined
+        ? '{"$regex" : "' + this.state.filter_search.project + '", "$options" : "i"}'
+        : '{"$exists" : 1}';
+    let filter_owner =
+      this.state.filter_search.owner !== null && this.state.filter_search.owner !== undefined
+        ? '{"$regex" : "' + this.state.filter_search.owner + '", "$options" : "i"}'
+        : '{"$exists" : 1}';
     let getbyWH =
       '{"wh_id":"' +
-      this.props.match.params.slug +
-      '","sku":' +
-      filter_sku +
-      "}";
+      this.props.match.params.slug +'","project_name":' +filter_project+',"owner_id":'+filter_owner+',"sku":'+filter_sku+'}';
     this.getDatafromAPINODE(
       "/whStock/getWhStock?q=" +
         getbyWH +
@@ -597,19 +606,35 @@ class MaterialStock2 extends React.Component {
     this.toggleLoading();
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
-    // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
-      stockData: BulkXLSX,
-    });
-    // console.log('res bulk ', res.error.message);
-    if (res.data !== undefined) {
-      this.setState({ action_status: "success" });
-      this.toggleLoading();
-    } else {
-      this.setState({ action_status: "failed" }, () => {
-        this.toggleLoading();
+    // let RowBulkPage = [];
+    let offset = 100;
+    let getNumberPage = Math.ceil(BulkXLSX.length / offset);
+    let RowXLS = [["owner_id", "po_number", "arrival_date", "project_name", "sku", "sku_description", "qty", "wh_id", "serial_number", "box_number", "condition", "notes", "batch", "location", "whs", "description", "project_id", "transaction_type"]];
+    for(let i = 0 ; i < getNumberPage; i++){
+      let DataPaginationXLS = BulkXLSX.slice(i * offset, (i+1)*offset);
+      let RowBulkPage = RowXLS.concat(DataPaginationXLS);
+      const res = await this.postDatatoAPINODE("/whStock/createWhStock", {
+        stockData: RowBulkPage,
       });
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
+        // this.toggleLoading();
+      } else {
+        console.log("index", i);
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
+
+      }
     }
+    this.toggleLoading();
+    // const BulkData = await this.getMatStockFormat(BulkXLSX);
   };
 
   saveTruncateBulk = async () => {
@@ -617,7 +642,6 @@ class MaterialStock2 extends React.Component {
     this.togglecreateModal();
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    console.log("xlsx data", JSON.stringify(BulkXLSX));
     const res = await this.postDatatoAPINODE("/whStock/createWhStockTruncate", {
       stockData: BulkXLSX,
     });
@@ -626,9 +650,16 @@ class MaterialStock2 extends React.Component {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      this.setState({ action_status: "failed" }, () => {
-        this.toggleLoading();
-      });
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
     }
   };
 
@@ -729,18 +760,19 @@ class MaterialStock2 extends React.Component {
   }
 
   async downloadAll() {
-    let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE(
-      "/whStock/getWhStock?noPg=1"
-    );
-    if (getAll_nonpage.data !== undefined) {
-      download_all = getAll_nonpage.data.data;
-    }
+    let download_all = this.state.all_data;
+    // let getAll_nonpage = await this.getDatafromAPINODE(
+    //   "/whStock/getWhStock?noPg=1"
+    // );
+    // if (getAll_nonpage.data !== undefined) {
+    //   download_all = getAll_nonpage.data.data;
+    // }
 
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
     let headerRow = [
+      "Project ID",
       "Owner ID",
       "WH ID",
       "PO Number",
@@ -754,6 +786,10 @@ class MaterialStock2 extends React.Component {
       "Box Number",
       "Condition",
       "Notes",
+      "Batch",
+      "Location",
+      "WHS",
+      "Description",
     ];
     ws.addRow(headerRow);
 
@@ -764,6 +800,7 @@ class MaterialStock2 extends React.Component {
     for (let i = 0; i < download_all.length; i++) {
       let list = download_all[i];
       ws.addRow([
+        list.project_id,
         list.owner_id,
         this.state.selected_wh,
         list.po_number,
@@ -777,11 +814,15 @@ class MaterialStock2 extends React.Component {
         list.box_number,
         list.condition,
         list.notes,
+        list.batch,
+        list.location,
+        list.whs,
+        list.description
       ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All Material Stock.xlsx");
+    saveAs(new Blob([allocexport]), "All Material Stock "+this.state.selected_wh+".xlsx");
   }
 
   DeleteData = async () => {
@@ -820,6 +861,11 @@ class MaterialStock2 extends React.Component {
       "box_number",
       "condition",
       "notes",
+      "batch",
+      "location",
+      "whs",
+      "description",
+      "project_id",
       "transaction_type",
     ]);
     ws.addRow([
@@ -835,6 +881,11 @@ class MaterialStock2 extends React.Component {
       "box_number",
       "condition",
       "notes",
+      "batch",
+      "location",
+      "whs",
+      "description",
+      "project_id",
       "Inbound",
     ]);
     ws.addRow([
@@ -850,6 +901,11 @@ class MaterialStock2 extends React.Component {
       "box_number",
       "condition",
       "notes",
+      "batch",
+      "location",
+      "whs",
+      "description",
+      "project_id",
       "Outbond",
     ]);
 
@@ -1048,7 +1104,7 @@ class MaterialStock2 extends React.Component {
               </Collapse>
               <CardBody>
                 <Row>
-                  <Col>                    
+                  <Col>
                     <div
                         style={{
                           float: "left",
@@ -1076,15 +1132,36 @@ class MaterialStock2 extends React.Component {
                         }}
                       >
                     <input
+                      style={{marginLeft : '10px', marginRight : '10px'}}
                       className="search-box-material"
                       type="text"
-                      name="filter"
+                      name="owner"
+                      placeholder="Search Owner ID"
+                      // onChange={(e) => this.SearchFilter(e)}
+                      onChange={this.handleChangeFilter}
+                      value={this.state.filter_search.owner}
+                    />
+                    <input
+                      style={{marginLeft : '10px',marginRight : '10px'}}
+                      className="search-box-material"
+                      type="text"
+                      name="project"
+                      placeholder="Search Project Name"
+                      // onChange={(e) => this.SearchFilter(e)}
+                      onChange={this.handleChangeFilter}
+                      value={this.state.filter_search.project}
+                    />
+                    <input
+                      style={{marginLeft : '10px',marginRight : '10px'}}
+                      className="search-box-material"
+                      type="text"
+                      name="sku"
                       placeholder="Search SKU"
                       // onChange={(e) => this.SearchFilter(e)}
                       onChange={this.handleChangeFilter}
-                      value={this.state.filter_name}
+                      value={this.state.filter_search.sku}
                     />
-                    </div>                    
+                    </div>
                   </Col>
                 </Row>
                 <Row>
@@ -1109,6 +1186,11 @@ class MaterialStock2 extends React.Component {
                             <th>Box Number</th>
                             <th>Condition</th>
                             <th>Notes</th>
+                            <th>Batch</th>
+                            <th>Location</th>
+                            <th>WHS</th>
+                            <th>Description</th>
+                            <th>Project ID</th>
                             <th>Transaction Type</th>
                             <th></th>
                           </tr>
@@ -1155,6 +1237,21 @@ class MaterialStock2 extends React.Component {
                                 </td>
                                 <td style={{ textAlign: "center" }}>
                                   {e.notes}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.batch}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.location}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.whs}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.description}
+                                </td>
+                                <td style={{ textAlign: "center" }}>
+                                  {e.project_id}
                                 </td>
                                 <td style={{ textAlign: "center" }}>
                                   {e.transaction_type}
@@ -1345,6 +1442,7 @@ class MaterialStock2 extends React.Component {
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
           title="Delete Stock"
+          body={"Are you sure ?"}
         >
           <Button color="danger" onClick={this.DeleteData}>
             Delete

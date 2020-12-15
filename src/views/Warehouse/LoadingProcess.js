@@ -7,15 +7,16 @@ import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
-import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction';
+import { getDatafromAPIISAT } from "../../helper/asyncFunction";
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
 
 const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
-const usernameXL = 'adminbamidsuper';
-const passwordXL = 'F760qbAg2sml';
+const usernameISAT = 'adminbamidsuper';
+const passwordISAT = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -48,6 +49,7 @@ class LoadingProcess extends Component {
       validation_form: {},
       modal_loading: false,
       asp_list: [],
+      no_filter_dsp : false,
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -61,6 +63,7 @@ class LoadingProcess extends Component {
     this.handleChangeShipmentDetail = this.handleChangeShipmentDetail.bind(this);
     this.handleCheckingForm = this.handleCheckingForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
+    this.handleChangeFilterDSP = this.handleChangeFilterDSP.bind(this);
   }
 
   async getDataFromAPI(url) {
@@ -126,8 +129,8 @@ class LoadingProcess extends Component {
       let respond = await axios.get(API_URL_XL + url, {
         headers: { 'Content-Type': 'application/json' },
         auth: {
-          username: usernameXL,
-          password: passwordXL
+          username: usernameISAT,
+          password: passwordISAT
         },
       })
       if (respond.status >= 200 && respond.status < 300) {
@@ -160,13 +163,15 @@ class LoadingProcess extends Component {
     filter_array.push('"current_milestones":"MS_JOINT_CHECK"');
     this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
     this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
-    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"creator.email":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
+    if(this.state.no_filter_dsp === true){
+      (filter_array.push('"$or" : [{"dsp_company_code" : {"$regex" : "' + this.state.shipment_detail.transporter + '", "$options" : "i"}}, {"dsp_company":{"$regex" : "' + this.state.shipment_detail.transporter_name + '", "$options" : "i"}}]'));
+    }
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
-      console.log("MR List Sorted", res);
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
@@ -175,7 +180,7 @@ class LoadingProcess extends Component {
     })
   }
 
-  getAllMR() {
+  async getAllMR() {
     let filter_array = [];
     this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
     this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
@@ -186,18 +191,21 @@ class LoadingProcess extends Component {
     filter_array.push('"current_milestones":"MS_JOINT_CHECK"');
     this.state.filter_list[7] !== "" && (filter_array.push('"dsp_company":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
     this.state.filter_list[8] !== "" && (filter_array.push('"eta":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
-    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"creator.email":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
-      console.log("MR List All", res);
-      if (res.data !== undefined) {
-        const items = res.data.data;
-        this.setState({ mr_all: items });
-      }
-    })
+    let mrList = [];
+    let res = await this.getDataFromAPINODE('/matreq?srt=_id:-1&noPg=1&q=' + whereAnd)
+    if (res.data !== undefined) {
+      const items = res.data.data;
+      mrList = res.data.data;
+      return mrList;
+      // this.setState({ mr_all: items });
+    }else{
+      return [];
+    }
   }
 
   numToSSColumn(num) {
@@ -211,13 +219,31 @@ class LoadingProcess extends Component {
     return s || undefined;
   }
 
+  async getDataCDID(data_mr){
+    let arrayCD = [];
+    arrayCD = data_mr.map( e => e.cust_del).reduce((l, n) => l.concat(n), []);
+    let array_cd_id = [...new Set(arrayCD.map(({ cd_id }) => cd_id))];
+    let dataCDID =[];
+    let getNumberPage = Math.ceil(array_cd_id.length / 20);
+    for(let i = 0 ; i < getNumberPage; i++){
+      let DataPaginationWPID = array_cd_id.slice(i * 20, (i+1)*20);
+      let array_in_cdid = '"'+DataPaginationWPID.join('", "')+'"';
+      let projection = '&projection={"WP_ID" : 1, "C1043_WBS_HW" : 1, "C1023_WBS_HWAC" : 1, "C1033_WBS_LCM" : 1, "C1003_WBS_PNRO" : 1, "C1053_WBS_SW" : 1, "C1063_C1053_WBS_PS" : 1, "C1066_C1053_WBS_ANC" : 1, "C1034_WBS_PowHW_Site_Basis" : 1, "C1035_WBS_PowLCM_Site_Basis" : 1, "C1036_WBS_Kathrein" : 1}'
+      const getWPID = await getDatafromAPIISAT('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}'+projection, this.state.tokenUser);
+      if(getWPID !== undefined && getWPID.data !== undefined) {
+        dataCDID = dataCDID.concat(getWPID.data._items);
+      }
+    }
+    return dataCDID;
+  }
+
   async downloadMRlist() {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const allMR = this.state.mr_all;
+    const allMR = await this.getAllMR();
 
-    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Created By", "Updated On", "Created On"];
+    let headerRow = ["MR ID", "MR MITT ID","MR Type","MR Delivery Type", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "MR MITT Created On", "MR MITT Created By","Updated On", "Created On"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -225,11 +251,18 @@ class LoadingProcess extends Component {
     }
 
     for (let i = 0; i < allMR.length; i++) {
-      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0].site_id, allMR[i].site_info[0].site_name, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
+      const creator_mr_mitt = allMR[i].mr_status.find(e => e.mr_status_name === "PLANTSPEC" && e.mr_status_value === "NOT ASSIGNED");
+      ws.addRow([allMR[i].mr_id, allMR[i].mr_mitt_no, allMR[i].mr_type, allMR[i].mr_delivery_type, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, new Date(allMR[i].eta), creator_mr_mitt !== undefined ? new Date(creator_mr_mitt.mr_status_date) : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mr_status_updater : null, new Date(allMR[i].updated_on), new Date(allMR[i].created_on)]);
+      const getRowLast = ws.lastRow._number;
+      ws.getCell("M"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("O"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("P"+getRowLast).numFmt = "YYYY-MM-DD";
+      if(creator_mr_mitt !== undefined && creator_mr_mitt !== null){
+        ws.getCell("L"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
     }
-
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Loading Process.xlsx');
+    saveAs(new Blob([allocexport]), 'MR List.xlsx');
   }
 
   async patchDataToAPI(url, data, _etag) {
@@ -327,7 +360,7 @@ class LoadingProcess extends Component {
         "dsp_name": inputanDetailShipment.driver_name,
         "dsp_phone": inputanDetailShipment.driver_phone_number,
         "dsp_truck": inputanDetailShipment.truck_number,
-        "dsp_truck_type": inputanDetailShipment.truck_type
+        "dsp_truck_type": inputanDetailShipment.truck_type === "Other" ? inputanDetailShipment.other_truck_type : inputanDetailShipment.truck_type
       }
     }
     let res = await this.patchDatatoAPINODE('/matreq/loadingProcess', dataShipment);
@@ -356,7 +389,7 @@ class LoadingProcess extends Component {
   componentDidMount() {
     this.getMRList();
     this.loadOptionsASP();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'Loading Process | BAM';
   }
 
@@ -390,7 +423,7 @@ class LoadingProcess extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   handleChangeShipmentDetail(e) {
@@ -399,6 +432,21 @@ class LoadingProcess extends Component {
     let dataShipment = this.state.shipment_detail;
     if (value !== (null && undefined)) {
       value = value.toString();
+    }
+    if(name.toString() === "transporter"){
+      const indexOpt = e.target.selectedIndex;
+      const textOpt = e.target[indexOpt].text;
+      dataShipment[name.toString()+"_name"] = textOpt;
+      if(value === "All"){
+        this.setState({no_filter_dsp : false}, () => {
+          this.getMRList();
+        })
+      }else{
+        this.setState({no_filter_dsp : true}, () => {
+          this.getMRList();
+        })
+      }
+
     }
     dataShipment[name.toString()] = value;
     this.setState({ shipment_detail: dataShipment });
@@ -438,6 +486,14 @@ class LoadingProcess extends Component {
       )
     }
     return searchBar;
+  }
+
+  handleChangeFilterDSP(){
+    this.setState(prevState => ({
+      no_filter_dsp: !prevState.no_filter_dsp
+    }), () => {
+      this.getMRList();
+    });
   }
 
   loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
@@ -480,7 +536,7 @@ class LoadingProcess extends Component {
             <Card>
               <CardHeader>
                 Shipment Detail
-                <Button onClick={this.handleCheckingForm} size="sm" style={{ float: 'right' }} color="success" disabled={this.state.mr_data_selected.length === 0}>
+                <Button onClick={this.handleCheckingForm} size="sm" style={{ float: 'right' }} color="success" disabled={this.state.mr_data_selected.length === 0 || this.state.shipment_detail.transporter === "All"}>
                   <i class="fa fa-plus" aria-hidden="true">&nbsp;</i> Ship
                 </Button>
               </CardHeader>
@@ -507,7 +563,8 @@ class LoadingProcess extends Component {
                       <Col md="8">
                         <div style={{ display: 'flex', "align-items": "baseline" }}>
                           <Input type="select" placeholder="" name="transporter" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.transporter === undefined ? "" : this.state.shipment_detail.transporter}>
-                            <option value="" disabled selected hidden>Select ASP</option>
+                            <option value="" disabled selected hidden>Select Transporter</option>
+                            <option value={"All"}>{"All Transporter (Just For Show)"}</option>
                             {this.state.asp_list.map((list, i) =>
                               <option value={list.Vendor_Code}>{list.Name}</option>
                             )}
@@ -530,7 +587,11 @@ class LoadingProcess extends Component {
                             <option value="CD2">CD2</option>
                             <option value="CD3">CD3</option>
                             <option value="CD4">CD4</option>
+                            <option value="Other">Other</option>
                           </Input>
+                          {this.state.shipment_detail.truck_type === "Other" && (
+                            <Input style={{marginLeft : "5px"}} type="text" name="10" placeholder="Other Type" name="other_truck_type" onChange={this.handleChangeShipmentDetail} value={this.state.shipment_detail.other_truck_type} />
+                          )}
                           {this.state.validation_form.truck_number === false && (
                             <i class="fa fa-exclamation-triangle" aria-hidden="true" style={{ color: "rgba(255,61,0 ,1)", paddingLeft: '10px' }}></i>
                           )}
@@ -614,7 +675,7 @@ class LoadingProcess extends Component {
                             <td style={{ textAlign: 'left' }}>{mr.mr_id}</td>
                             <td>{mr.project_name}</td>
                             <td>{mr.total_boxes}</td>
-                            <td>{mr.list_of_box_id !== undefined ? mr.list_of_box_id.map(e => e + ', ') : ''}</td>
+                            <td>{mr.list_of_box_id !== undefined ? mr.list_of_box_id.map(e => typeof e === "string" ? e+" , " : e.box_id + " , ") : ''}</td>
                           </tr>
                         )}
                       </tbody>
@@ -642,8 +703,8 @@ class LoadingProcess extends Component {
                       <th>MR ID</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
-                      <th>Site ID</th>
-                      <th>Site Name</th>
+                      <th>Tower ID</th>
+                      <th>Tower Name</th>
                       <th>Current Status</th>
                       <th>Current Milestone</th>
                       <th>DSP</th>
@@ -670,25 +731,19 @@ class LoadingProcess extends Component {
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
                         <td>
-                          {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>
-                            j === list.cust_del.length - 1 ? custdel.cd_id : custdel.cd_id + ', '
-                          ))}
+                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_id + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_name + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{convertDateFormat(list.eta)}</td>
-                        <td></td>
+                        <td>{list.creator.map(e => e.email)}</td>
                         <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
@@ -696,7 +751,7 @@ class LoadingProcess extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries</small>
+                  <small>Showing {this.state.mr_list.length} entries from {this.state.totalData} data</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}

@@ -63,6 +63,21 @@ export const convertDateFormatfull = (jsondate) => {
   }
 };
 
+export const getDateFormat = (jsondate) => {
+  let date = new Date(jsondate);
+  let year = date.getFullYear();
+  let month = date.getMonth() + 1;
+  let dt = date.getDate();
+
+  if (dt < 10) {
+    dt = "0" + dt;
+  }
+  if (month < 10) {
+    month = "0" + month;
+  }
+  return year,month,dt;
+};
+
 // for export all
 export const numToSSColumn = (num) => {
   var s = "",
@@ -75,3 +90,27 @@ export const numToSSColumn = (num) => {
   }
   return s || undefined;
 };
+
+export const convertDMSToDD  = (dms) => {
+  let parts = dms.split(/[^\d+(\,\d+)\d+(\.\d+)?\w]+/);
+  let degrees = parseFloat(parts[0]);
+  let minutes = parseFloat(parts[1]);
+  let seconds = parseFloat(parts[2].replace(',','.'));
+  let direction = parts[3];
+
+  // console.log('degrees: '+degrees)
+  // console.log('minutes: '+minutes)
+  // console.log('seconds: '+seconds)
+  // console.log('direction: '+direction)
+
+  let dd = degrees + minutes / 60 + seconds / (60 * 60);
+
+  if (direction == 'S' || direction == 'W') {
+    dd = dd * -1;
+  } // Don't do anything for N or E
+  return dd;
+}
+
+export function numberWithCommas(x) {
+    return x.toFixed(2).replace(".", ",").toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}

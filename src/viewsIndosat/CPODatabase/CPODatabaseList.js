@@ -14,17 +14,19 @@ import { connect } from 'react-redux';
 import { Redirect, Route, Switch, Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
+import {getDatafromAPINODEFile } from "../../helper/asyncFunction";
+
 import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
 );
 
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const DefaultNotif = React.lazy(() => import('../../viewsIndosat/DefaultView/DefaultNotif'));
 
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
-const usernameBAM = 'adminbamidsuper';
-const passwordBAM = 'F760qbAg2sml';
+const API_URL_ISAT = 'https://api-dev.isat.pdb.e-dpm.com/isatapi';
+const usernameISAT = 'adminbamidsuper';
+const passwordISAT = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -58,8 +60,12 @@ class CPODatabase extends React.Component {
       POForm: new Array(5).fill(null),
       collapse: false,
       selected_id: "",
+      inputan_file : null,
+      list_project:[],
+      modal_detail : false,
     }
     this.togglePOForm = this.togglePOForm.bind(this);
+    this.togglePODetail = this.togglePODetail.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
     this.changeFilterDebounce = debounce(this.changeFilterName, 500);
@@ -69,6 +75,8 @@ class CPODatabase extends React.Component {
     this.saveNewPO = this.saveNewPO.bind(this);
     this.toggleEdit = this.toggleEdit.bind(this);
     this.saveUpdate = this.saveUpdate.bind(this);
+    this.handleInputFile = this.handleInputFile.bind(this);
+    this.exportPRT = this.exportPRT.bind(this);
 
   }
 
@@ -142,6 +150,48 @@ class CPODatabase extends React.Component {
     }
   }
 
+  async getDatafromAPIISAT(url){
+    try {
+      let respond = await axios.get(API_URL_ISAT +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameISAT,
+          password: passwordISAT
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
+    }
+  }
+
+  async postDataFormData(url, form){
+    for (var value of form.values()) {
+       console.log("test api", value);
+    }
+    try {
+      let respond = await axios.post(API_URL_NODE +url, form, {
+        headers: {
+          'Content-Type':'multipart/form-data',
+          'Authorization': 'Bearer ' + this.state.tokenUser
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Post Form data", respond);
+      }
+      console.log("respond Post Form data", respond);
+      return respond;
+    }catch (err) {
+      let respond = undefined;
+      console.log("respond Post Form data", err);
+      return respond;
+    }
+  }
 
   changeFilterName(value) {
     this.getPODataList();
@@ -158,15 +208,16 @@ class CPODatabase extends React.Component {
   }
 
   getPODataList() {
-    // let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
-    // this.getDatatoAPIEXEL('/po_op?max_results=' + this.state.perPage + '&page=' + this.state.activePage + '&where={' + po_number + '}')
-    this.getDatafromAPINODE('/cpodb/getCpoDb')
+    this.getDatafromAPINODE('/cpodb/getCpoDb?srt=_id:-1&lmt='+this.state.perPage +
+    "&pg=" + this.state.activePage)
       .then(res => {
-        console.log('all cpoDB', res.data)
+        // console.log('all cpoDB', res.data)
         if (res.data !== undefined) {
-          this.setState({ po_op_data: res.data.data })
+          this.setState({ po_op_data: res.data.data, prevPage: this.state.activePage,
+            total_data_PO: res.data.totalResults})
         } else {
-          this.setState({ po_op_data: []});
+          this.setState({ po_op_data: [], total_data_PO: 0,
+            prevPage: this.state.activePage,});
         }
       })
   }
@@ -196,6 +247,15 @@ class CPODatabase extends React.Component {
       return "";
     } else {
       return props;
+    }
+  }
+
+  checkValueReturn(value1, value2) {
+    // if value undefined or null return Value2
+    if (typeof value1 !== 'undefined' && value1 !== null) {
+      return value1;
+    } else {
+      return value2;
     }
   }
 
@@ -243,7 +303,16 @@ class CPODatabase extends React.Component {
 
   componentDidMount() {
     this.getPODataList();
+    this.getDataProject();
     document.title = 'CPO Database | BAM';
+  }
+
+  getDataProject(){
+    this.getDatafromAPIISAT('/project_sorted_non_page').then( resProject => {
+      if(resProject.data !== undefined){
+        this.setState({ list_project : resProject.data._items });
+      }
+    })
   }
 
   handlePageChange(pageNumber) {
@@ -261,6 +330,37 @@ class CPODatabase extends React.Component {
   togglePOForm() {
     this.setState(prevState => ({
       modalPOForm: !prevState.modalPOForm
+    }));
+  }
+
+  togglePODetail(e) {
+    const modalDetail = this.state.modal_detail;
+    if(modalDetail === false){
+      const dataForm = this.state.POForm;
+      const value = e.currentTarget.value;
+      const aEdit = this.state.po_op_data.find((e) => e._id === value);
+      dataForm[0] = aEdit.po_number;
+      dataForm[1] = aEdit.date;
+      dataForm[2] = aEdit.revision_number;
+      dataForm[3] = aEdit.contract_number;
+      dataForm[4] = aEdit.pr_sc_number;
+      dataForm[5] = aEdit.delivery_term_location;
+      dataForm[6] = aEdit.expired_date;
+      dataForm[7] = aEdit.id_project_doc;
+      dataForm[8] = aEdit.idr_price;
+      dataForm[9] = aEdit.exchange_rate;
+      dataForm[10] = aEdit.usd_price;
+      dataForm[11] = aEdit.description;
+      dataForm[12] = aEdit.account_manager;
+      dataForm[13] = aEdit.remark;
+      dataForm[14] = aEdit.po_revision;
+      dataForm[15] = aEdit.project_name;
+      dataForm[16] = aEdit.project_child_name;
+      dataForm[17] = aEdit.consignee;
+      this.setState({ POForm: dataForm });
+    }
+    this.setState(prevState => ({
+      modal_detail: !prevState.modal_detail
     }));
   }
 
@@ -292,9 +392,17 @@ class CPODatabase extends React.Component {
   handleChangeForm(e) {
     const value = e.target.value;
     const index = e.target.name;
-    console.log("value ", value, index);
-    let dataForm = this.state.DataForm;
+    let dataForm = this.state.POForm;
     dataForm[parseInt(index)] = value;
+    if(parseInt(index) === 7){
+      const indexDrop = e.target.selectedIndex;
+      const text = e.target[indexDrop].text;
+      dataForm[7] = value;
+      dataForm[15] = text;
+    }
+    if(parseInt(index) === 8 || parseInt(index) === 9){
+      dataForm[10] = parseFloat(dataForm[8]) / parseFloat(dataForm[9]);
+    }
     this.setState({ DataForm: dataForm });
   }
 
@@ -392,6 +500,14 @@ class CPODatabase extends React.Component {
     }
   }
 
+  handleInputFile = e => {
+    let fileUpload = null;
+    if(e !== undefined && e.target !== undefined && e.target.files !== undefined){
+      fileUpload = e.target.files[0];
+    }
+    this.setState({inputan_file : fileUpload});
+  }
+
   async saveNewPO() {
     this.togglePOForm();
     this.toggleLoading();
@@ -399,16 +515,38 @@ class CPODatabase extends React.Component {
     let respondSaveNew = undefined;
     const dataPPNew = this.state.POForm;
     const ppcountID = Math.floor(Math.random() * 1000).toString().padStart(6, '0');
-    const po_num = dataPPNew[0];
-    let pp = {
-      "po_number": po_num.toString(),
-      "po_year": dataPPNew[1],
-      "currency": dataPPNew[2],
-      "value": dataPPNew[3],
-      "number_of_sites": dataPPNew[4]
+    let po = {
+      "byForm": true,
+      "dataForm": {
+        "po_number": dataPPNew[0],
+        "date": dataPPNew[1],
+        "revision_number": dataPPNew[2],
+        "contract_number": dataPPNew[3],
+        "pr_sc_number": dataPPNew[4],
+        "delivery_term_location": dataPPNew[5],
+        "expired_date": dataPPNew[6],
+        "id_project_doc" : dataPPNew[7],
+        "project_name" : dataPPNew[15],
+        "project_child_name" : dataPPNew[16],
+        "consignee" : dataPPNew[17],
+        "idr_price" : dataPPNew[8],
+        "exchange_rate" : dataPPNew[9],
+        "usd_price" : dataPPNew[10],
+        "description" : dataPPNew[11],
+        "account_manager" : dataPPNew[12],
+        "remark" : dataPPNew[13],
+        "po_delivery_date" : dataPPNew[1],
+        "po_revision" : dataPPNew[14]
+      },
+      "fileDocument": this.state.inputan_file
     }
-    poData.push(pp);
-    let postData = await this.postDatatoAPIEXEL('/po_op', pp)
+    const dataForm = new FormData();
+    await dataForm.append('byForm', true);
+    await dataForm.append('dataForm', JSON.stringify(po.dataForm));
+    await dataForm.append('fileDocument', this.state.inputan_file);
+
+    // poData.push(pp);
+    let postData = await this.postDataFormData('/cpodb/createCpoDbIsat', dataForm)
       .then(res => {
         if (res.data !== undefined) {
           this.toggleLoading();
@@ -419,6 +557,16 @@ class CPODatabase extends React.Component {
       });
   }
 
+  numToSSColumn(num) {
+    var s = '', t;
+
+    while (num > 0) {
+      t = (num - 1) % 26;
+      s = String.fromCharCode(65 + t) + s;
+      num = (num - t) / 26 | 0;
+    }
+    return s || undefined;
+  }
 
   exportFormatCPO_level1 = async () => {
     const wb = new Excel.Workbook();
@@ -431,6 +579,13 @@ class CPODatabase extends React.Component {
     saveAs(new Blob([PPFormat]), 'CPO Level 1 Template.xlsx');
   }
 
+  async exportPRT(_id) {
+    const data_po = this.state.po_op_data.find(po => po._id === _id);
+    const resFile = await getDatafromAPINODEFile('/cpodb/getCpoDbDocument/' + _id+'?fileId='+data_po.documents[0]._id, this.props.dataLogin.token, data_po.documents[0].mime_type);
+    if(resFile !== undefined){
+      saveAs(new Blob([resFile.data], {type:data_po.documents[0].mime_type}),  data_po.documents[0].file_name);
+    }
+  }
 
   render() {
     return (
@@ -442,33 +597,27 @@ class CPODatabase extends React.Component {
               <CardHeader>
                 <span style={{ marginTop: '8px', position: 'absolute' }}>CPO Database</span>
                 <div className="card-header-actions" style={{ display: 'inline-flex' }}>
-                  <div style={{ marginRight: "10px" }}>
+                  {/*}<div style={{ marginRight: "10px" }}>
                     <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => { this.toggle(0); }}>
-                      {/* <DropdownToggle caret color="light">
+                      <DropdownToggle caret color="light">
                         Download Template
-                        </DropdownToggle> */}
+                        </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatCPO_level1}> CPO Level 1 Template</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
-                  </div>
+                  </div>*/}
                   <div>
                     {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
                       <div>
-                        <Button block color="success" onClick={this.togglePOForm} >
+                        <Button block color="success" onClick={this.togglePOForm} id="toggleCollapse1">
                           <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> New
                           </Button>
                       </div>
                     ) : ("")}
                   </div>
                 </div>
-                {/* <div>
-                  <Button color="primary" style={{ float: 'right' }} onClick={this.togglePOForm}>
-                    <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form
-                  </Button>
-                </div> */}
-
               </CardHeader>
               <Collapse isOpen={this.state.collapse} onEntering={this.onEntering} onEntered={this.onEntered} onExiting={this.onExiting} onExited={this.onExited}>
                 <Card style={{ margin: '10px 10px 5px 10px' }}>
@@ -512,12 +661,12 @@ class CPODatabase extends React.Component {
                           <tr align="center">
                             <th style={{ minWidth: '150px' }}>PO Number</th>
                             <th>Date</th>
-                            <th>Currency</th>
-                            <th>Payment Terms</th>
-                            <th>Shipping Terms</th>
-                            <th>Contract</th>
-                            <th>Contact</th>
-                            <th></th>
+                            <th>Contract Number</th>
+                            <th>Delivery Terms Loc</th>
+                            <th>PR SC Number</th>
+                            <th>Rev. Number</th>
+                            <th>Creator</th>
+                            <th colSpan="2"></th>
                             {/* <th></th> */}
                           </tr>
                         </thead>
@@ -527,22 +676,20 @@ class CPODatabase extends React.Component {
                               <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={po._id}>
                                 <td style={{ textAlign: 'center' }}>{po.po_number}</td>
                                 <td style={{ textAlign: 'center' }}>{convertDateFormat(po.date)}</td>
-                                <td style={{ textAlign: 'center' }}>{po.currency}</td>
-                                <td style={{ textAlign: 'center' }}>{po.payment_terms}</td>
-                                <td style={{ textAlign: 'center' }}>{po.shipping_terms}</td>
-                                <td style={{ textAlign: 'center' }}>{po.contract}</td>
-                                <td style={{ textAlign: 'center' }}>{po.contact}</td>
-                                {/* <td style={{ textAlign: 'center' }}>
-                                  <Link to={'/detail-list-cpo-database/' + po._id}>
-                                    <Button color="primary" size="sm" style={{ marginRight: '10px' }}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
-                                  </Link>
-                                </td> */}
+                                <td style={{ textAlign: 'center' }}>{po.contract_number}</td>
+                                <td style={{ textAlign: 'center' }}>{po.delivery_term_location}</td>
+                                <td style={{ textAlign: 'center' }}>{po.pr_sc_number}</td>
+                                <td style={{ textAlign: 'center' }}>{po.revision_number}</td>
+                                <td style={{ textAlign: 'center' }}>{po.creator[0].email}</td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <Button color="primary" size="sm" onClick={() => this.exportPRT(po._id)} style={{ marginRight: '10px', fontSize : '9px' }}> <i className="fa fa-download" aria-hidden="true">&nbsp;</i> PO File</Button>
+                                </td>
                                 <td style={{ textAlign: 'center' }}>
                                 <Button
                                       size="sm"
                                       color="secondary"
                                       value={po._id}
-                                      onClick={this.toggleEdit}
+                                      onClick={this.togglePODetail}
                                       title="Edit"
                                     >
                                       <i className="fas fa-edit"></i>
@@ -575,30 +722,89 @@ class CPODatabase extends React.Component {
         </Row>
 
         {/* Modal New PO */}
-        <Modal isOpen={this.state.modalPOForm} toggle={this.togglePOForm} className="modal--form-po">
+        <Modal isOpen={this.state.modalPOForm} toggle={this.togglePOForm} className="modal--form-po modal--form modal-lg">
           <ModalHeader>Form CPO</ModalHeader>
           <ModalBody>
             <Row>
-              <Col sm="12">
+              <Col sm="6">
                 <FormGroup>
                   <Label htmlFor="po_number">PO Number</Label>
                   <Input type="text" name="0" placeholder="" value={this.state.POForm[0]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="po_year" >Year</Label>
-                  <Input type="text" name="1" placeholder="" value={this.state.POForm[1]} onChange={this.handleChangeForm} />
+                  <Label htmlFor="po_year" >PO Delivery Date</Label>
+                  <Input type="text" name="1" placeholder="YYYY-MM-DD" value={this.state.POForm[1]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="currency" >Currency</Label>
+                  <Label htmlFor="currency" >Revision Number</Label>
                   <Input type="text" name="2" placeholder="" value={this.state.POForm[2]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="value" >Price</Label>
-                  <Input type="number" min="0" name="3" placeholder="" value={this.state.POForm[3]} onChange={this.handleChangeForm} />
+                  <Label htmlFor="value" >Contact Number</Label>
+                  <Input type="text" name="3" value={this.state.POForm[3]} onChange={this.handleChangeForm} />
                 </FormGroup>
                 <FormGroup>
-                  <Label htmlFor="number_of_sites" >Number of Sites</Label>
-                  <Input type="number" min="0" name="4" placeholder="" value={this.state.POForm[4]} onChange={this.handleChangeForm} />
+                  <Label htmlFor="value" >PR SC Number</Label>
+                  <Input type="text" name="4" value={this.state.POForm[4]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >Delivery Term Loc</Label>
+                  <Input type="text" name="5" value={this.state.POForm[5]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="po_year" >Expired Date</Label>
+                  <Input type="text" name="6" placeholder="YYYY-MM-DD" value={this.state.POForm[6]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >Account Manager</Label>
+                  <Input type="text" name="12" value={this.state.POForm[12]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="number_of_sites" >File</Label>
+                  <input type="file" style={{"margin":"10px 10px 5px 20px","visiblity":"hidden"}} onChange={this.handleInputFile}/>
+                </FormGroup>
+              </Col>
+              <Col sm="6">
+                <FormGroup>
+                  <Label htmlFor="po_number">Project</Label>
+                  <Input type="select" name="7" onChange={this.handleChangeForm} value={this.state.POForm[7]}>
+                    <option value="">Select Project</option>
+                    {this.state.list_project.map(lp =>
+                      <option value={lp._id}>{lp.Project}</option>
+                    )}
+                  </Input>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >Project PO</Label>
+                  <Input type="text" name="16" value={this.state.POForm[16]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >Consignee</Label>
+                  <Input type="text" name="17" value={this.state.POForm[17]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="po_year" >IDR Price</Label>
+                  <Input type="number" name="8" placeholder="" value={this.state.POForm[8]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="currency" >Exchange Rate</Label>
+                  <Input type="number" name="9" placeholder="" value={this.state.POForm[9]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >USD Price</Label>
+                  <Input type="number" name="10" value={this.state.POForm[10]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >Description</Label>
+                  <Input type="text" name="11" value={this.state.POForm[11]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="po_year" >Remark</Label>
+                  <Input type="textarea" name="13" placeholder="" value={this.state.POForm[13]} onChange={this.handleChangeForm} />
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="number_of_sites" >PO Revision</Label>
+                  <Input type="text" name="14" value={this.state.POForm[14]} onChange={this.handleChangeForm} />
                 </FormGroup>
               </Col>
             </Row>
@@ -609,11 +815,101 @@ class CPODatabase extends React.Component {
         </Modal>
         {/*  Modal New PO*/}
 
+        {/* Modal Detail PO */}
+        <Modal isOpen={this.state.modal_detail} toggle={this.togglePODetail} className="modal--form-po modal--form modal-lg">
+          <ModalHeader>Detail PO</ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col sm="6">
+                <FormGroup>
+                  <Label htmlFor="po_number">PO Number</Label>
+                  <Input type="text" name="0" placeholder="" value={this.state.POForm[0]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="po_year" >PO Delivery Date</Label>
+                  <Input type="text" name="1" placeholder="YYYY-MM-DD" value={this.state.POForm[1]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="currency" >Revision Number</Label>
+                  <Input type="text" name="2" placeholder="" value={this.state.POForm[2]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >Contact Number</Label>
+                  <Input type="text" name="3" value={this.state.POForm[3]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >PR SC Number</Label>
+                  <Input type="text" name="4" value={this.state.POForm[4]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >Delivery Term Loc</Label>
+                  <Input type="text" name="5" value={this.state.POForm[5]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="po_year" >Expired Date</Label>
+                  <Input type="text" name="6" placeholder="YYYY-MM-DD" value={this.state.POForm[6]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >Account Manager</Label>
+                  <Input type="text" name="12" value={this.state.POForm[12]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+              </Col>
+              <Col sm="6">
+                <FormGroup>
+                  <Label htmlFor="po_number">Project</Label>
+                  <Input type="select" name="7" onChange={this.handleChangeForm} value={this.state.POForm[7]} readOnly>
+                    <option value="">Select Project</option>
+                    {this.state.list_project.map(lp =>
+                      <option value={lp._id}>{lp.Project}</option>
+                    )}
+                  </Input>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >Project PO</Label>
+                  <Input type="text" name="16" value={this.state.POForm[16]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >Consignee</Label>
+                  <Input type="text" name="17" value={this.state.POForm[17]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="po_year" >IDR Price</Label>
+                  <Input type="number" name="8" placeholder="" value={this.state.POForm[8]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="currency" >Exchange Rate</Label>
+                  <Input type="number" name="9" placeholder="" value={this.state.POForm[9]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >USD Price</Label>
+                  <Input type="number" name="10" value={this.state.POForm[10]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="value" >Description</Label>
+                  <Input type="text" name="11" value={this.state.POForm[11]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="po_year" >Remark</Label>
+                  <Input type="textarea" name="13" placeholder="" value={this.state.POForm[13]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="number_of_sites" >PO Revision</Label>
+                  <Input type="text" name="14" value={this.state.POForm[14]} onChange={this.handleChangeForm} readOnly/>
+                </FormGroup>
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            {/* }<Button color="success" onClick={this.saveNewPO}>Submit</Button> */}
+          </ModalFooter>
+        </Modal>
+        {/*  Modal Detail PO*/}
+
         {/* Modal Edit PP */}
         <Modal
           isOpen={this.state.modalEdit}
           toggle={this.toggleEdit}
-          className="modal--form"
+          className="modal--form modal-lg"
         >
           <ModalHeader>Form Update CPO Database</ModalHeader>
           <ModalBody>
@@ -668,7 +964,7 @@ class CPODatabase extends React.Component {
                     placeholder=""
                     value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
-                  />                    
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="contract">Contract</Label>
@@ -678,7 +974,7 @@ class CPODatabase extends React.Component {
                     placeholder=""
                     value={this.state.DataForm[5]}
                     onChange={this.handleChangeForm}
-                  />                    
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="contact">Contact</Label>
@@ -688,7 +984,7 @@ class CPODatabase extends React.Component {
                     placeholder=""
                     value={this.state.DataForm[6]}
                     onChange={this.handleChangeForm}
-                  />                    
+                  />
                 </FormGroup>
               </Col>
             </Row>

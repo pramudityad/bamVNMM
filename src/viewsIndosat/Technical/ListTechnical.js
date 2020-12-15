@@ -100,9 +100,9 @@ class ListTechnical extends Component {
     let filter_ver = this.state.filter_list[4] === null ? '"version":{"$exists" : 1}' : '"version":{"$regex" : "'+this.state.filter_list[4]+'", "$options" : "i"}';
     let filter_status = this.state.filter_list[5] === null ? '"approval_status":{"$exists" : 1}' : '"approval_status":{"$regex" : "'+this.state.filter_list[5]+'", "$options" : "i"}';
     let where = 'q={'+filter_no_tech+', '+filter_project+', '+filter_ver+', '+filter_status+'}';
-    this.getDataFromAPINODE('/techBoqList?srt=_id:-1&'+where).then(res => {
+    this.getDataFromAPINODE('/techBoqList?srt=_id:-1&'+where+'&lmt='+this.state.perPage+'&pg='+this.state.activePage).then(res => {
       if(res.data !== undefined){
-        this.setState({list_tech_boq : res.data.data});
+        this.setState({list_tech_boq : res.data.data, totalData : res.data.totalResults});
       }
     })
   }
@@ -219,21 +219,6 @@ class ListTechnical extends Component {
     const now_date = NowDate.getFullYear()+"/"+(NowDate.getMonth()+1)+"/"+NowDate.getDate();
     return DateNow;
   }
-  //
-  // toggleDelete(e){
-  //   let value = null;
-  //   this.setState(prevState => ({
-  //     modal_delete: !prevState.modal_delete
-  //   }));
-  //   if(e !== undefined){
-  //     if(e.currentTarget.value === undefined){
-  //       value = e.target.value;
-  //     }else{
-  //       value = e.currentTarget.value;
-  //     }
-  //   }
-  //   this.setState({modal_delete_noBOQ : value})
-  // }
 
   deleteTechBoq(e){
     const _id_tech = e.currentTarget.value;
@@ -249,12 +234,19 @@ class ListTechnical extends Component {
           <CardHeader>
             <React.Fragment>
               <span style={{marginTop:'8px'}}>Technical BOQ List</span>
-              {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
+              {(this.state.userRole.includes('BAM-Engineering') === true || this.state.userRole.includes('Admin') === true ) ? (
+                <React.Fragment>
                 <div className="card-header-actions" style={{marginRight:'5px'}}>
                     <Link to='/new-technical'>
-                    <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
+                    <Button className="btn-success" size="sm"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
                     </Link>
                 </div>
+                <div className="card-header-actions" style={{marginRight:'5px'}}>
+                    <Link to='/Microwave/new-technical'>
+                    <Button className="btn-success" size="sm"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New BOQ Transmission</Button>
+                    </Link>
+                </div>
+                </React.Fragment>
                 ) : ""}
             </React.Fragment>
           </CardHeader>
@@ -335,23 +327,23 @@ class ListTechnical extends Component {
                               <Link to={'/detail-technical/'+boq._id}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                               </Link>
-                              {/*<Link to={'/approval-technical/'+boq._id}>
-                                <Button color="warning" size="sm"> <i className="fa fa-check-circle" aria-hidden="true">&nbsp;</i> Approval</Button>
+                              <Link to={'/summary-boq/'+boq._id}>
+                                <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Summary</Button>
                               </Link>
-                              <Button  size="sm" color="danger" style={{color : "white"}} value={boq._id} onClick={e => this.deleteTechBoq(e, "value")}>
-                                  <i className="fa fa-trash" aria-hidden="true"></i>
-                              </Button> */}
                             </td>
                         </tr>
                     )}
                 </tbody>
             </Table>
+            <Col>
+              <span> View {this.state.list_tech_boq.length} data from total {this.state.totalData} data </span>
+            </Col>
             <nav>
                 <div>
                 <Pagination
                     activePage={this.state.activePage}
                     itemsCountPerPage={this.state.perPage}
-                    totalItemsCount={this.state.totalData.total}
+                    totalItemsCount={this.state.totalData}
                     pageRangeDisplayed={5}
                     onChange={this.handlePageChange}
                     itemClass="page-item"

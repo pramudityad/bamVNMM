@@ -13,19 +13,25 @@ import {
   Label,
 } from "reactstrap";
 import { connect } from "react-redux";
-import Select from "react-select";
-
 import Loading from "../components/Loading";
+import Select from "react-select";
+import './prpo.css';
 import {
   postDatatoAPINODE,
   getDatafromAPIEXEL,
 } from "../../helper/asyncFunction";
+const DefaultNotif = React.lazy(() =>
+  import("../../views/DefaultView/DefaultNotif")
+);
+
 
 class CreatePRPO extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      action_status : null,
+      action_message : null,
       Dataform: {
         prt_id: "",
         site_id: "",
@@ -86,6 +92,13 @@ class CreatePRPO extends Component {
     this.handleInputProject = this.handleInputProject.bind(this);
     this.postPRT = this.postPRT.bind(this);
     this.addSSOW = this.addSSOW.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
   }
 
   componentDidMount() {
@@ -166,8 +179,8 @@ class CreatePRPO extends Component {
   };
 
   async postPRT() {
+    this.toggleLoading();
     let prt_data = {
-      prt_id: this.state.Dataform.prt_id,
       site_id: this.state.Dataform.site_id,
       site_name: this.state.Dataform.site_name,
       quotation_number: this.state.Dataform.quotation_number,
@@ -181,36 +194,17 @@ class CreatePRPO extends Component {
       term_of_payment: this.state.Dataform.term_of_payment,
       network_number: this.state.Dataform.network_number,
       activity_code: this.state.Dataform.activity_code,
-      action_point: this.state.Dataform.action_point,
+      action_point: "New Assignment",
       currency: this.state.Dataform.currency,
       current_status: "PRT CREATED",
       approval_status: "NOT APPROVED",
       approval_date: "",
       total_price: this.state.Dataform.total_price,
-      pr_number: this.state.Dataform.pr_number,
-      pr_date: this.state.Dataform.pr_date,
-      pr_inserted_by: this.state.Dataform.pr_inserted_by,
-      po_number: this.state.Dataform.po_number,
-      po_date: this.state.Dataform.po_date,
-      po_inserted_by: this.state.Dataform.po_inserted_by,
-      po_item: this.state.Dataform.po_item,
-      bast_no_dp: this.state.Dataform.bast_no_dp,
-      req_gr_dp: this.state.Dataform.req_gr_dp,
-      req_gr_by_dp: this.state.Dataform.req_gr_by_dp,
-      req_gr_date_dp: this.state.Dataform.req_gr_date_dp,
-      req_revision_dp: this.state.Dataform.req_revision_dp,
-      revision_done_dp: this.state.Dataform.revision_done_dp,
-      bast_no_final: this.state.Dataform.bast_no_final,
-      req_gr_final: this.state.Dataform.req_gr_by_final,
-      req_gr_by_final: this.state.Dataform.req_gr_by_final,
-      req_gr_date_final: this.state.Dataform.req_gr_date_final,
-      req_revision_final: this.state.Dataform.req_revision_final,
-      revision_done_final: this.state.Dataform.revision_done_final,
       deleted: 0,
       SSOW_List: this.state.SSOW_List_out,
     };
     console.log("data prt", prt_data);
-    const post = postDatatoAPINODE(
+    const post = await postDatatoAPINODE(
       "/prt/createOnePrt",
       { prt_data },
       this.props.dataLogin.token
@@ -219,11 +213,18 @@ class CreatePRPO extends Component {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" }, () => {});
       } else {
-        this.setState({
-          action_status: "failed",
-        });
+        if(post.response !== undefined && post.response.data !== undefined && post.response.data.error !== undefined){
+          if(post.response.data.error.message !== undefined){
+            this.setState({ action_status: 'failed', action_message: post.response.data.error.message });
+          }else{
+            this.setState({ action_status: 'failed', action_message: post.response.data.error });
+          }
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
       }
     });
+    this.toggleLoading();
   }
 
   addSSOW() {
@@ -244,6 +245,11 @@ class CreatePRPO extends Component {
     const { Dataform, SSOW_List_out } = this.state;
     return (
       <div className="animated fadeIn">
+        <Row className="row-alert-fixed">
+          <Col xs="12" lg="12">
+            <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
+          </Col>
+        </Row>
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -261,18 +267,6 @@ class CreatePRPO extends Component {
                       <b>General Information</b>
                     </h5>
                     <Form>
-                      <FormGroup row>
-                        <Label sm={2}>PRT ID</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="PRT ID"
-                            name={"prt_id"}
-                            value={Dataform.prt_id}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
                       <FormGroup row>
                         <Label sm={2}>Site ID</Label>
                         <Col sm={10}>
@@ -406,7 +400,6 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Term of Payment</Label>
                         <Col sm={10}>
                           <Input
-                            type="select"
                             placeholder=""
                             name={"term_of_payment"}
                             value={Dataform.term_of_payment}
@@ -451,25 +444,6 @@ class CreatePRPO extends Component {
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Action Point</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="select"
-                            placeholder="Action Point"
-                            name={"action_point"}
-                            value={Dataform.action_point}
-                            onChange={this.handleInput}
-                          >
-                            <option value="" disabled selected hidden>
-                              Select Action Point
-                            </option>
-                            <option value="">New Assignment</option>
-                            <option value="">Revise Assignment</option>
-                            <option value="">Cancel Assignment</option>
-                          </Input>
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
                         <Label sm={2}>Currency</Label>
                         <Col sm={10}>
                           <Input
@@ -485,6 +459,8 @@ class CreatePRPO extends Component {
                             <option value="IDR">IDR</option>
                             <option value="USD">USD</option>
                             <option value="EUR">EUR</option>
+                            <option value="CNY">CNY</option>
+                            <option value="SEK">SEK</option>
                           </Input>
                         </Col>
                       </FormGroup>
@@ -556,266 +532,10 @@ class CreatePRPO extends Component {
                         <Label sm={2}>Total Price</Label>
                         <Col sm={6}>
                           <Input
-                            type="text"
+                            type="number"
                             placeholder="Total Price"
                             name={"total_price"}
                             value={Dataform.total_price}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                    </Form>
-                  </Col>
-                </Row>
-                {/* pr status */}
-                <Row>
-                  <Col>
-                    <h5>
-                      <b>PR Status</b>
-                    </h5>
-                    <Form>
-                      <FormGroup row>
-                        <Label sm={2}>PR Number</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="PR Number"
-                            name={"pr_number"}
-                            value={Dataform.pr_number}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>PR Date</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="date"
-                            placeholder="PR Date"
-                            name={"pr_date"}
-                            value={Dataform.pr_date}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>PR Inserted By</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="PR Inserted By"
-                            name={"pr_inserted_by"}
-                            value={Dataform.pr_inserted_by}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>PO Number</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="PO Number"
-                            name={"po_number"}
-                            value={Dataform.po_number}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>PO Date</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="date"
-                            placeholder="PO Date"
-                            name={"po_date"}
-                            value={Dataform.po_date}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>PO Inserted By</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="PO Inserted By"
-                            name={"po_inserted_by"}
-                            value={Dataform.po_inserted_by}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>PO Item</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="PO Item"
-                            name={"po_item"}
-                            value={Dataform.po_item}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                    </Form>
-                  </Col>
-                </Row>
-                {/* prpo info */}
-                <Row>
-                  <Col>
-                    <h5>
-                      <b>GR Information</b>
-                    </h5>
-                    <Form>
-                      <FormGroup row>
-                        <Label sm={2}>BAST No DP</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="BAST No DP"
-                            name={"bast_no_dp"}
-                            value={Dataform.bast_no_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR DP</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="checkbox"
-                            placeholder="Req GR DP"
-                            name={"req_gr_dp"}
-                            value={Dataform.req_gr_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR by DP</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="Req GR by DP"
-                            name={"req_gr_by_dp"}
-                            value={Dataform.req_gr_by_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR Date DP</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="date"
-                            placeholder="Req GR Date DP"
-                            name={"req_gr_date_dp"}
-                            value={Dataform.req_gr_date_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req Revision DP</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="checkbox"
-                            placeholder="Req Revision DP"
-                            name={"req_revision_dp"}
-                            value={Dataform.req_revision_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Revision Done DP</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="checkbox"
-                            placeholder="Revision Done DP"
-                            name={"revision_done_dp"}
-                            value={Dataform.revision_done_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>BAST No Final</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="BAST No Final"
-                            name={"bast_no_final"}
-                            value={Dataform.bast_no_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                    </Form>
-                  </Col>
-                </Row>
-                {/* gr information */}
-                <Row>
-                  <Col>
-                    {/* <h5>GR Information</h5> */}
-                    <Form>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR Final</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="checkbox"
-                            placeholder="Req GR Final"
-                            name={"req_gr_final"}
-                            value={Dataform.req_gr_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR by Final</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="text"
-                            placeholder="Req GR by Final"
-                            name={"req_gr_by_final"}
-                            value={Dataform.req_gr_by_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR Date Final</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="date"
-                            placeholder=""
-                            name={"req_gr_date_final"}
-                            value={Dataform.req_gr_date_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req Revision Final</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="checkbox"
-                            placeholder="Req Revision Final"
-                            name={"req_revision_final"}
-                            value={Dataform.req_revision_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Revision Done</Label>
-                        <Col sm={10}>
-                          <Input
-                            type="checkbox"
-                            placeholder="Area"
-                            name={"revision_done_final"}
-                            value={Dataform.revision_done_final}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -838,6 +558,12 @@ class CreatePRPO extends Component {
             </Card>
           </Col>
         </Row>
+        {/* Modal Loading */}
+        <Loading isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm modal--loading "}>
+        </Loading>
+        {/* end Modal Loading */}
       </div>
     );
   }

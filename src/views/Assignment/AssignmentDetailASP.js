@@ -6,6 +6,8 @@ import { connect } from 'react-redux';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import './assignment.css';
+import { getDatafromAPINODEFile } from "../../helper/asyncFunction";
+import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem} from "reactstrap";
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -14,6 +16,8 @@ const username_tsel = 'adminbamidsuper';
 const password_tsel = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
+const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
 
 class AssignmentDetailASP extends Component {
   constructor(props) {
@@ -32,7 +36,10 @@ class AssignmentDetailASP extends Component {
       modal_revision: false,
       revision_note: "",
       modal_reschedule: false,
-      reschedule_note: ""
+      reschedule_note: "",
+      sid_file : [],
+      abd_file : [],
+      dropdownOpen: new Array(2).fill(false),
     }
     this.notifyASP = this.notifyASP.bind(this);
     this.saveBastNumber = this.saveBastNumber.bind(this);
@@ -44,6 +51,15 @@ class AssignmentDetailASP extends Component {
     this.handleRevisionNote = this.handleRevisionNote.bind(this);
     this.toggleModalReschedule = this.toggleModalReschedule.bind(this);
     this.handleRescheduleNote = this.handleRescheduleNote.bind(this);
+  }
+
+  toggleDropdown(i) {
+    const newArray = this.state.dropdownOpen.map((element, index) => {
+      return (index === i ? !element : false);
+    });
+    this.setState({
+      dropdownOpen: newArray,
+    });
   }
 
   async getDataFromAPI(url) {
@@ -147,6 +163,18 @@ class AssignmentDetailASP extends Component {
     }
   }
 
+  async apiSendEmail(data){
+    try {
+      let respond = await axios.post(API_EMAIL, data, {
+        headers : {'Content-Type':'application/json'},
+      })
+      return respond;
+    }catch (err) {
+      let respond = undefined;
+      return respond;
+    }
+  }
+
   componentDidMount() {
     this.getDataAssignment(this.props.match.params.id);
     document.title = 'Assignment Detail | BAM';
@@ -155,9 +183,28 @@ class AssignmentDetailASP extends Component {
   getDataAssignment(_id_Assignment) {
     this.getDataFromAPINODE('/aspAssignment/aspassign/' + _id_Assignment).then(resAsg => {
       if (resAsg.data !== undefined) {
+        this.getSIDNumber(resAsg.data.data.cust_del.map(cd => cd.cd_id));
         this.setState({ data_assignment: resAsg.data.data });
       }
     })
+  }
+
+  async getSIDNumber(arrayCDID) {
+    const page = 1;
+    const maxPage = 1;
+    let dataSID = [];
+    let dataABD = [];
+    for(let i = 0; i < arrayCDID.length; i++){
+      let filter_array = [];
+      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"type" : {"$ne" : "ABD"}');
+      let whereAnd = "{" + filter_array.join(",") + "}";
+      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
+      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
+        dataSID.push(res.data.data[0])
+      }
+    }
+    this.setState({sid_file : dataSID});
   }
 
   handleBastAssign = (e) => {
@@ -236,16 +283,37 @@ class AssignmentDetailASP extends Component {
 
   async acceptASG(e) {
     let successUpdate = [];
-    const _id = e.target.id;
+    const _id = e.currentTarget.id;
+    const dataAssignment = this.state.data_assignment;
     let res = await this.patchDatatoAPINODE('/aspAssignment/acceptAspAssignment/' + _id);
-    if (res !== undefined) {
-      if (res.data !== undefined) {
-        this.setState({ action_status: "success" })
-      } else {
-        this.setState({ action_status: "failed" })
+    let creatorEmail = null;
+    let creator = dataAssignment.ASP_Assignment_Status.find(e => e.status_value === "CREATED" && e.status_name === "ASP_ASSIGNMENT");
+    if(creator !== undefined){
+      creatorEmail = creator.status_updater;
+    }
+    if (res !== undefined && res.data !== undefined) {
+      if(creatorEmail !== null){
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
+        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been approved by ASP, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is approved by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let dataEmail = {
+          "to": creatorEmail,
+          // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
+          "subject":"[APPROVED by ASP] Assignment "+dataAssignment.Assignment_No,
+          "body": bodyEmail
+        }
+        let sendEmail = await this.apiSendEmail(dataEmail);
       }
+      this.setState({ action_status: "success", action_message : null });
     } else {
-      this.setState({ action_status: "failed" })
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
     }
   }
 
@@ -257,9 +325,26 @@ class AssignmentDetailASP extends Component {
       const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
       const _etag = e.target.value;
       const _id = e.target.id;
+      const dataAssignment = this.state.data_assignment;
+      let creatorEmail = null;
+      let creator = dataAssignment.ASP_Assignment_Status.find(e => e.status_value === "CREATED" && e.status_name === "ASP_ASSIGNMENT");
+      if(creator !== undefined){
+        creatorEmail = creator.status_updater;
+      }
       let res = await this.patchDatatoAPINODE('/aspAssignment/reviseAspAssignment/' + _id, { "note": this.state.revision_note });
       if (res !== undefined) {
         if (res.data !== undefined) {
+          if(creatorEmail !== null){
+            let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
+            const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been requested for Revision by ASP, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for revision by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.revision_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+            let dataEmail = {
+              "to": creatorEmail,
+              // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
+              "subject":"[Request Revision by ASP] Assignment "+dataAssignment.Assignment_No,
+              "body": bodyEmail
+            }
+            let sendEmail = await this.apiSendEmail(dataEmail);
+          }
           this.setState({ action_status: "success" })
         } else {
           this.setState({ action_status: "failed" })
@@ -279,9 +364,26 @@ class AssignmentDetailASP extends Component {
       const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
       const _etag = e.target.value;
       const _id = e.target.id;
+      const dataAssignment = this.state.data_assignment;
+      let creatorEmail = null;
+      let creator = dataAssignment.ASP_Assignment_Status.find(e => e.status_value === "CREATED" && e.status_name === "ASP_ASSIGNMENT");
+      if(creator !== undefined){
+        creatorEmail = creator.status_updater;
+      }
       let res = await this.patchDatatoAPINODE('/aspAssignment/reScheduleAspAssignment/' + _id, { "note": this.state.reschedule_note });
       if (res !== undefined) {
         if (res.data !== undefined) {
+          if(creatorEmail !== null){
+            let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
+            const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been requested for Reschedule by ASP, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for reschedule by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.reschedule_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+            let dataEmail = {
+              "to": creatorEmail,
+              // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
+              "subject":"[Request Reschedule by ASP] Assignment "+dataAssignment.Assignment_No,
+              "body": bodyEmail
+            }
+            let sendEmail = await this.apiSendEmail(dataEmail);
+          }
           this.setState({ action_status: "success" })
         } else {
           this.setState({ action_status: "failed" })
@@ -371,6 +473,19 @@ class AssignmentDetailASP extends Component {
     this.setState({ reschedule_note: value })
   }
 
+  getSIDFile = async (e) => {
+    e.preventDefault()
+    e.persist();
+    const _id = e.currentTarget.value;
+    const dataSID = this.state.sid_file.find(sf => sf._id === _id);
+    if(dataSID !== undefined)  {
+      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
+      if(resFile !== undefined){
+        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+      }
+    }
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -385,6 +500,23 @@ class AssignmentDetailASP extends Component {
               <Card>
                 <CardHeader>
                   <span style={{ lineHeight: '2', fontSize: '17px' }}><i className="fa fa-info-circle" style={{ marginRight: "8px" }}></i>Assignment Detail ({this.state.data_assignment.Assignment_No})</span>
+                  {this.state.sid_file.length !== 0 ? (
+                    <Dropdown size="sm" isOpen={this.state.dropdownOpen[1]} toggle={() => {this.toggleDropdown(1);}} style={{float : 'right', marginRight : '10px'}}>
+                      <DropdownToggle caret color="secondary">
+                        <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download SID File
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem header>SID File</DropdownItem>
+                        {this.state.sid_file.map(sf =>
+                          <DropdownItem value={sf._id} onClick={this.getSIDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
+                        )}
+                      </DropdownMenu>
+                    </Dropdown>
+                  )  : (
+                    <Button size="sm" style={{float : 'right', marginRight : '10px'}}>
+                      no data SID
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardBody>
                   <Form>
@@ -499,6 +631,20 @@ class AssignmentDetailASP extends Component {
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>SSOW Type</Label>
                           <Input type="text" name="ssow_type" readOnly value={this.state.data_assignment.SOW_Type} />
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col md="6">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Assignment Accepted by</Label>
+                          <Input type="text" name="pr" readOnly value={this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED") !== undefined ? this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED").status_updater : null} />
+                        </FormGroup>
+                      </Col>
+                      <Col md="3">
+                        <FormGroup style={{ paddingLeft: "16px" }}>
+                          <Label>Assignment Accepted On</Label>
+                          <Input type="text" name="pr_created_by" value={this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED") !== undefined ? this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED").status_date.slice(0, 10) : null} readOnly />
                         </FormGroup>
                       </Col>
                     </Row>

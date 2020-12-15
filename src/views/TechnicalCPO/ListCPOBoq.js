@@ -31,19 +31,22 @@ class ListCPOBoq extends Component {
       list_cpo_boq : [],
       modal_delete : false,
         Tech_All : [],
-        prevPage : 0,
+        prevPage : 1,
         activePage : 1,
         totalData : 0,
         perPage : 10,
         filter_list : new Array(8).fill(null),
         filter_createdBy : [],
         activity_list : [],
+        filter_name : null,
+        list_cpo_boq_filter : [],
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.handleFilterListName = this.handleFilterListName.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.onChangeDebouncedName = debounce(this.onChangeDebouncedName, 1000);
+    this.changeFilterName = debounce(this.changeFilterName, 1000);
   }
 
   async getDataFromAPINODE(url) {
@@ -95,10 +98,17 @@ class ListCPOBoq extends Component {
   }
 
   getCpoBoqList(){
-    this.getDataFromAPINODE('/cpoBoqList?lmt=10&pg=104').then(res => {
+    let filter_no_po = this.state.filter_name === null ? '"cpo_number":{"$exists" : 1}' : '"cpo_number":{"$regex" : "'+this.state.filter_name+'", "$options" : "i"}';
+    this.getDataFromAPINODE('/cpoBoqList?srt=cpo_boq_id:-1&lmt='+this.state.perPage +
+    "&pg=" + this.state.activePage+'&q={'+filter_no_po+'}').then(res => {
       if(res.data !== undefined){
-        this.setState({list_cpo_boq : res.data.data});
+        this.setState({list_cpo_boq : res.data.data, list_cpo_boq_filter : res.data.data, prevPage: this.state.activePage,
+          totalData: res.data.totalResults});
+      } else{
+        this.setState({list_cpo_boq : [], list_cpo_boq_filter : [], prevPage: this.state.activePage,
+          totalData: 0});
       }
+      // console.log('totalData ', this.state.totalData)
     })
   }
 
@@ -214,25 +224,32 @@ class ListCPOBoq extends Component {
     const now_date = NowDate.getFullYear()+"/"+(NowDate.getMonth()+1)+"/"+NowDate.getDate();
     return DateNow;
   }
-  //
-  // toggleDelete(e){
-  //   let value = null;
-  //   this.setState(prevState => ({
-  //     modal_delete: !prevState.modal_delete
-  //   }));
-  //   if(e !== undefined){
-  //     if(e.currentTarget.value === undefined){
-  //       value = e.target.value;
-  //     }else{
-  //       value = e.currentTarget.value;
-  //     }
-  //   }
-  //   this.setState({modal_delete_noBOQ : value})
-  // }
 
   deleteTechBoq(e){
     const _id_tech = e.currentTarget.value;
     const delTech = this.deleteDataFromAPINODE('/techBoq/deleteOneTechBoq/'+_id_tech);
+  }
+
+  handleChangeFilter = (e) => {
+    let value = e.target.value;
+    if (value.length === 0) {
+      value = null;
+    }
+    this.setState({ filter_name: value }, () => {
+      this.onChangeDebounced(value);
+    });
+  }
+
+  changeFilterName(value) {
+    const dataCPOBOQ = this.state.list_cpo_boq;
+    if(value !== null){
+      const regexValue = '/'+value+'/g';
+      const globalRegex = RegExp(value, 'gi');
+      const dataFilter = dataCPOBOQ.filter(cpo => globalRegex.test(cpo.cpo_number));
+      this.setState({list_cpo_boq_filter : dataFilter})
+    }else{
+      this.setState({list_cpo_boq_filter : this.state.list_cpo_boq})
+    }
   }
 
   render() {
@@ -246,7 +263,7 @@ class ListCPOBoq extends Component {
               <span style={{marginTop:'8px'}}>CPO BOQ List</span>
               {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
                 <div className="card-header-actions" style={{marginRight:'5px'}}>
-                    <Link to='/cpo-boq-creation'>
+                    <Link to='/list-cpo-boq/creation'>
                     <Button className="btn-success"><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp; New</Button>
                     </Link>
                 </div>
@@ -254,6 +271,15 @@ class ListCPOBoq extends Component {
             </React.Fragment>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
+            <Row>
+              <Col>
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ float: 'right', margin: '5px', display: 'inline-flex' }}>
+                    <input className="search-box-material" type="text" name='filter' placeholder="Search CPO" onChange={this.handleChangeFilter} value={this.state.filter_name} />
+                  </div>
+                </div>
+              </Col>
+            </Row>
             <Table hover bordered striped responsive size="sm">
               <thead>
                   <tr>
@@ -264,21 +290,15 @@ class ListCPOBoq extends Component {
                   </tr>
               </thead>
               <tbody>
-                    {this.state.list_cpo_boq.map((boq,i) =>
+                    {this.state.list_cpo_boq_filter.sort((a, b) => b.created_on - a.created_on).map((boq,i) =>
                         <tr key={boq._id}>
                             <td style={{verticalAlign : 'middle'}}>{boq.cpo_number}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.cpo_boq_id}</td>
                             <td style={{verticalAlign : 'middle'}}>{boq.creator[0].email}</td>
                             <td style={{verticalAlign : 'middle', textAlign : "center"}}>
-                              <Link to={'/detail-cpo-boq/'+boq.cpo_number}>
+                              <Link to={'/list-cpo-boq/detail/'+boq.cpo_number}>
                                 <Button color="primary" size="sm" style={{marginRight : '10px'}}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
                               </Link>
-                              {/* <Link to={'/approval-technical/'+boq._id}>
-                                <Button color="warning" size="sm"> <i className="fa fa-check-circle" aria-hidden="true">&nbsp;</i> Approval</Button>
-                              </Link> */}
-                              {/*<Button  size="sm" color="danger" style={{color : "white"}} value={boq._id} onClick={e => this.deleteTechBoq(e, "value")}>
-                                  <i className="fa fa-trash" aria-hidden="true"></i>
-                              </Button> */}
                             </td>
                         </tr>
                     )}
@@ -286,10 +306,13 @@ class ListCPOBoq extends Component {
             </Table>
             <nav>
                 <div>
+                <div style={{ margin: "8px 0px" }}>
+                  <small>Showing {this.state.perPage} entries from {this.state.totalData} data</small>
+                </div>
                 <Pagination
                     activePage={this.state.activePage}
                     itemsCountPerPage={this.state.perPage}
-                    totalItemsCount={this.state.totalData.total}
+                    totalItemsCount={this.state.totalData}
                     pageRangeDisplayed={5}
                     onChange={this.handlePageChange}
                     itemClass="page-item"

@@ -18,7 +18,7 @@ import { Link } from "react-router-dom";
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import Loading from "../components/Loading";
-import { getDatafromAPINODE } from "../../helper/asyncFunction";
+import { getDatafromAPINODE, patchDatatoAPINODE, getDatafromAPIEXEL } from "../../helper/asyncFunction";
 
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
@@ -29,23 +29,76 @@ class DetailPRPO extends Component {
     super(props);
 
     this.state = {
+      userRole: this.props.dataLogin.role,
+      userId: this.props.dataLogin._id,
+      userName: this.props.dataLogin.userName,
+      userEmail: this.props.dataLogin.email,
+      tokenUser: this.props.dataLogin.token,
       all_data: [],
+      data_form : {},
+      action_status : null,
+      action_message : null,
     };
+    this.handleInputGR = this.handleInputGR.bind(this);
+    this.reqGRDP = this.reqGRDP.bind(this);
+    this.reqGRFinal = this.reqGRFinal.bind(this);
+    this.requestPRPO = this.requestPRPO.bind(this);
+    this.requestRevisionGR = this.requestRevisionGR.bind(this);
     // bind
   }
   // function
 
   componentDidMount() {
     this.getPRTDetail(this.props.match.params.id);
+    let dateToday = new Date();
+    dateToday = (dateToday.getFullYear().toString())+"-"+(dateToday.getMonth()+1).toString().padStart(2, '0')+"-"+(dateToday.getDate().toString().padStart(2, '0'));
+    this.setState({data_form : {'date_now' : dateToday}});
     document.title = "PRT Detail | BAM";
   }
+
+  handleInputGR(e){
+    let dataForm = this.state.data_form;
+    const field = e.target.name;
+    const value = e.target.value;
+    // dataForm[field] = value;
+    this.setState(
+      (prevState) => ({
+        data_form: {
+          ...prevState.data_form,
+          [field]: value,
+        },
+      }),
+      () => console.log(this.state.data_form)
+    );
+    // this.setState({data_form : dataForm});
+  }
+
+
 
   getPRTDetail(_id) {
     getDatafromAPINODE("/prt/getPrt/" + _id, this.props.dataLogin.token).then(
       (res) => {
         if (res.data !== undefined) {
           this.setState({ all_data: res.data.data });
-          console.log("getPRTDetail ", this.state.all_data);
+          this.getGRData(res.data.data);
+        }
+      }
+    );
+  }
+
+  getGRData(prt_data){
+    let filter_bast = [];
+    if(prt_data.bast_no_dp !== undefined && prt_data.bast_no_dp !== null && prt_data.bast_no_dp.length !== 0){
+      filter_bast.push(prt_data.bast_no_dp)
+    }
+    if(prt_data.bast_no_final !== undefined && prt_data.bast_no_final !== null && prt_data.bast_no_final.length !== 0){
+      filter_bast.push(prt_data.bast_no_final)
+    }
+    let strg_arr_bast = '"'+filter_bast.join('", "')+'"';
+    let where_bast = '?where={"bast_no" : {"$in" : ['+strg_arr_bast+']}}';
+    getDatafromAPIEXEL('/gr_prt_op/'+where_bast, this.props.dataLogin.token).then((res) => {
+        if (res !== undefined && res.data !== undefined) {
+          this.setState({ gr_data: res.data._items });
         }
       }
     );
@@ -55,21 +108,107 @@ class DetailPRPO extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const data_assingment = this.state.all_data;
+    const data_prt = this.state.all_data;
     let indexSSOW = 7;
 
-    let headerRow = ["prt_id", "site_id", "site_name", "quotation_number", "signum_pm", "approval_by", "id_project_doc", "project_name", "area", "purchase_group","asp_name","term_of_payment","network_number","activity_code","action_point","currency","current_status","approval_status","approval_date","total_price","pr_number","pr_date", "pr_inserted_by", "po_number","po_date","po_inserted_by","po_item","bast_no_dp","req_gr_dp","req_gr_by_dp","req_gr_date_dp","req_revision_dp","revision_done_dp", "bast_no_final", "req_gr_final", "req_gr_by_final", "req_gr_date_final","req_revision_final","revision_done_final", "SSOW_List"];
+    let headerRow = ["prt_id", "site_id", "site_name", "quotation_number", "signum_pm", "approval_by", "project_name", "area", "purchase_group","asp_name","term_of_payment","network_number","activity_code","action_point","currency","current_status","approval_status","approval_date","total_price","pr_number","pr_date", "pr_inserted_by", "po_number","po_date","po_inserted_by","po_item","bast_no_dp","req_gr_dp","req_gr_by_dp","req_gr_date_dp","req_revision_dp","revision_done_dp", "bast_no_final", "req_gr_final", "req_gr_by_final", "req_gr_date_final","req_revision_final","revision_done_final", "SSOW_List"];
 
-    // data_assingment.SSOW_List.map((e, idx) => headerRow.push("ssow_" + (e.sow_type.toLowerCase()) + "_id_" + (idx + 1).toString(), "ssow_" + (e.sow_type.toLowerCase()) + "_activity_number_" + (idx + 1).toString(), "ssow_" + (e.sow_type.toLowerCase()) + "_unit_" + (idx + 1).toString(), "ssow_" + (e.sow_type.toLowerCase()) + "_quantity_" + (idx + 1).toString()));
+    // data_prt.SSOW_List.map((e, idx) => headerRow.push("ssow_" + (e.sow_type.toLowerCase()) + "_id_" + (idx + 1).toString(), "ssow_" + (e.sow_type.toLowerCase()) + "_activity_number_" + (idx + 1).toString(), "ssow_" + (e.sow_type.toLowerCase()) + "_unit_" + (idx + 1).toString(), "ssow_" + (e.sow_type.toLowerCase()) + "_quantity_" + (idx + 1).toString()));
 
-    // let dataPRT = [data_assingment.Assignment_No, data_assingment.Project, data_assingment.SOW_Type, "cd_id", data_assingment.Vendor_Code_Number, data_assingment.Vendor_Name, this.convertTOP(data_assingment.Payment_Terms), data_assingment.Site_ID];
-    // data_assingment.SSOW_List.map(e => dataPRT.push(e.ssow_id, e.ssow_activity_number, e.ssow_unit, e.ssow_qty));
+    let dataPRT = [data_prt.prt_id, data_prt.site_id, data_prt.site_name, data_prt.quotation_number, data_prt.signum_pm, data_prt.approval_by, data_prt.project_name, data_prt.area, data_prt.purchase_group, data_prt.asp_name, data_prt.term_of_payment, data_prt.network_number, data_prt.activity_code, data_prt.action_point, data_prt.currency, data_prt.current_status, data_prt.approval_status, data_prt.approval_date, data_prt.total_price, data_prt.pr_number, data_prt.pr_date, data_prt.pr_inserted_by, data_prt.po_number, data_prt.po_date, data_prt.po_inserted_by, data_prt.po_item, data_prt.bast_no_dp, data_prt.req_gr_dp, data_prt.req_gr_by_dp, data_prt.req_gr_date_dp, data_prt.req_revision_dp, data_prt.revision_done_dp, data_prt.bast_no_final, data_prt.req_gr_final, data_prt.req_gr_by_final, data_prt.req_gr_date_final, data_prt.req_revision_final, data_prt.revision_done_final];
+    // data_prt.SSOW_List.map(e => dataPRT.push(e.ssow_id, e.ssow_activity_number, e.ssow_unit, e.ssow_qty));
 
     ws.addRow(headerRow);
-    // ws.addRow(dataPRT);
+    ws.addRow(dataPRT);
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'Assignment ' + data_assingment.prt_id + ' Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'Assignment ' + data_prt.prt_id + ' Template.xlsx');
+  }
+
+  async requestPRPO(){
+      let res = await patchDatatoAPINODE('/prt/RequestPRPO/' + this.props.match.params.id, {}, this.state.tokenUser);
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
+      } else {
+        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          } else {
+            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          }
+        } else {
+          this.setState({ action_status: 'failed' });
+        }
+      }
+  }
+
+  async reqGRDP(){
+    const GRData = {
+        "data": {
+            "bastNumber": this.state.data_form.bast_no_dp,
+            "grType": "DP"
+        }
+    }
+    let res = await patchDatatoAPINODE('/prt/RequestGR/' + this.props.match.params.id, GRData, this.state.tokenUser);
+    if (res.data !== undefined) {
+      this.setState({ action_status: "success" });
+    } else {
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
+  async reqGRFinal(){
+    const GRData = {
+        "data": {
+            "bastNumber": this.state.data_form.bast_no_final,
+            "grType": "FINAL"
+        }
+    }
+    let res = await patchDatatoAPINODE('/prt/RequestGR/' + this.props.match.params.id, GRData, this.state.tokenUser);
+    if (res.data !== undefined) {
+      this.setState({ action_status: "success" });
+    } else {
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+  }
+
+  async requestRevisionGR(e){
+    const type = e.target.name;
+    const revGR = {
+        "data": {
+            "grType": type
+        }
+    }
+    let res = await patchDatatoAPINODE('/prt/RequestReviseGR/' + this.props.match.params.id, revGR, this.state.tokenUser);
+    if (res.data !== undefined) {
+      this.setState({ action_status: "success" });
+    } else {
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
   }
 
   render() {
@@ -95,9 +234,9 @@ class DetailPRPO extends Component {
                   ></i>
                   PRT Detail ({all_data.prt_id})
                 </span>
-                <Link to={'/prt-edit/' + all_data._id}>
+                <Link to={'/prt-list/edit/' + all_data._id}>
                 <Button
-                  style={{ marginRight: "8px", float: "right" }}                  
+                  style={{ marginRight: "8px", float: "right" }}
                   color="warning"
                   size="sm"
                 >
@@ -108,7 +247,7 @@ class DetailPRPO extends Component {
                   Edit
                 </Button>
                 </Link>
-                
+
                 &nbsp;&nbsp;&nbsp;
                 <Button
                   style={{ marginRight: "8px", float: "right" }}
@@ -131,13 +270,25 @@ class DetailPRPO extends Component {
                     <Form>
                       <FormGroup row>
                         <Label sm={2}>PRT ID</Label>
-                        <Col sm={10}>
+                        <Col sm={4}>
                           <Input
                           readOnly
                             type="text"
-                            placeholder="PRT ID"
+                            //placeholder="PRT ID"
                             name={"prt_id"}
                             value={all_data.prt_id}
+                            onChange={this.handleInput}
+                          />
+                        </Col>
+                        <Label sm={1}></Label>
+                        <Label sm={1}>Status</Label>
+                        <Col sm={4}>
+                          <Input
+                          readOnly
+                            type="text"
+                            //placeholder="PRT ID"
+                            name={"current_status"}
+                            value={all_data.current_status}
                             onChange={this.handleInput}
                           />
                         </Col>
@@ -148,7 +299,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Site ID"
+                            //placeholder="Site ID"
                             name={"site_id"}
                             value={all_data.site_id}
                             onChange={this.handleInput}
@@ -161,7 +312,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Site Name"
+                            //placeholder="Site Name"
                             name={"site_name"}
                             value={all_data.site_name}
                             onChange={this.handleInput}
@@ -174,7 +325,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Quotation Number"
+                            //placeholder="Quotation Number"
                             name={"quotation_number"}
                             value={all_data.quotation_number}
                             onChange={this.handleInput}
@@ -187,7 +338,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Signum PM"
+                            //placeholder="Signum PM"
                             name={"signum_pm"}
                             value={all_data.signum_pm}
                             onChange={this.handleInput}
@@ -200,7 +351,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Select Approval by"
+                            //placeholder="Select Approval by"
                             name={"approval_by"}
                             value={all_data.approval_by}
                           />
@@ -212,7 +363,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            name="project_name"                            
+                            name="project_name"
                             value={all_data.project_name}
                           />
                         </Col>
@@ -223,7 +374,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Area"
+                            //placeholder="Area"
                             name={"area"}
                             value={all_data.area}
                             onChange={this.handleInput}
@@ -244,7 +395,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Purchase Group"
+                            //placeholder="Purchase Group"
                             name={"purchase_group"}
                             value={all_data.purchase_group}
                             onChange={this.handleInput}
@@ -257,7 +408,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="ASP Name"
+                            //placeholder="ASP Name"
                             name={"asp_name"}
                             value={all_data.asp_name}
                             onChange={this.handleInput}
@@ -270,7 +421,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder=""
+                            //placeholder=""
                             name={"term_of_payment"}
                             value={all_data.term_of_payment}
                             onChange={this.handleInput}
@@ -283,7 +434,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Network Number"
+                            //placeholder="Network Number"
                             name={"network_number"}
                             value={all_data.network_number}
                             onChange={this.handleInput}
@@ -296,7 +447,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Activity Code"
+                            //placeholder="Activity Code"
                             name={"activity_code"}
                             value={all_data.activity_code}
                             onChange={this.handleInput}
@@ -309,7 +460,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Action Point"
+                            //placeholder="Action Point"
                             name={"action_point"}
                             value={all_data.action_point}
                             onChange={this.handleInput}
@@ -322,7 +473,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="Currency"
+                            //placeholder="Currency"
                             name={"currency"}
                             value={all_data.currency}
                             onChange={this.handleInput}
@@ -369,7 +520,7 @@ class DetailPRPO extends Component {
                     <Input
                     readOnly
                       type="text"
-                      placeholder="Total Price"
+                      //placeholder="Total Price"
                       name={"total_price"}
                       value={all_data.total_price}
                       onChange={this.handleInput}
@@ -382,12 +533,25 @@ class DetailPRPO extends Component {
                     <h5><b>PR Status</b></h5>
                     <Form>
                       <FormGroup row>
+                        <Label sm={2}>PR Status</Label>
+                        <Col sm={10}>
+                          <Input
+                          readOnly
+                            type="text"
+                            //placeholder="PR Number"
+                            name={"work_status"}
+                            value={all_data.work_status}
+                            onChange={this.handleInput}
+                          />
+                        </Col>
+                      </FormGroup>
+                      <FormGroup row>
                         <Label sm={2}>PR Number</Label>
                         <Col sm={10}>
                           <Input
                           readOnly
                             type="text"
-                            placeholder="PR Number"
+                            //placeholder="PR Number"
                             name={"pr_number"}
                             value={all_data.pr_number}
                             onChange={this.handleInput}
@@ -400,7 +564,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="date"
-                            placeholder="PR Date"
+                            //placeholder="PR Date"
                             name={"pr_date"}
                             value={all_data.pr_date}
                             onChange={this.handleInput}
@@ -413,7 +577,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="PR Inserted By"
+                            //placeholder="PR Inserted By"
                             name={"pr_inserted_by"}
                             value={all_data.pr_inserted_by}
                             onChange={this.handleInput}
@@ -426,7 +590,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="PO Number"
+                            //placeholder="PO Number"
                             name={"po_number"}
                             value={all_data.po_number}
                             onChange={this.handleInput}
@@ -439,7 +603,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="date"
-                            placeholder="PO Date"
+                            //placeholder="PO Date"
                             name={"po_date"}
                             value={all_data.po_date}
                             onChange={this.handleInput}
@@ -452,7 +616,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="PO Inserted By"
+                            //placeholder="PO Inserted By"
                             name={"po_inserted_by"}
                             value={all_data.po_inserted_by}
                             onChange={this.handleInput}
@@ -465,7 +629,7 @@ class DetailPRPO extends Component {
                           <Input
                           readOnly
                             type="text"
-                            placeholder="PO Item"
+                            //placeholder="PO Item"
                             name={"po_item"}
                             value={all_data.po_item}
                             onChange={this.handleInput}
@@ -475,143 +639,157 @@ class DetailPRPO extends Component {
                     </Form>
                   </Col>
                   </Row>
-                  {/* prpo info */}
                   <Row>
-                  <Col>
-                    <h5><b>GR Information</b></h5>
-                    <Form>
-                      <FormGroup row>
-                        <Label sm={2}>BAST No DP</Label>
-                        <Col sm={10}>
-                          <Input
-                          readOnly
-                            type="text"
-                            placeholder="BAST No DP"
-                            name={"bast_no_dp"}
-                            value={all_data.bast_no_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR DP</Label>
-                        <Col sm={10}>
-                          <Input
-                          readOnly
-                            type="checkbox"
-                            placeholder="Req GR DP"
-                            name={"req_gr_dp"}
-                            value={all_data.req_gr_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR by DP</Label>
-                        <Col sm={10}>
-                          <Input
-                          readOnly
-                            type="text"
-                            placeholder="Req GR by DP"
-                            name={"req_gr_by_dp"}
-                            value={all_data.req_gr_by_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR Date DP</Label>
-                        <Col sm={10}>
-                          <Input
-                          readOnly
-                            type="date"
-                            placeholder="Req GR Date DP"
-                            name={"req_gr_date_dp"}
-                            value={all_data.req_gr_date_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req Revision DP</Label>
-                        <Col sm={10}>
-                          <Input
-                          readOnly
-                            type="checkbox"
-                            placeholder="Req Revision DP"
-                            name={"req_revision_dp"}
-                            value={all_data.req_revision_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Revision Done DP</Label>
-                        <Col sm={10}>
-                          <Input
-                          readOnly
-                            type="checkbox"
-                            placeholder="Revision Done DP"
-                            name={"revision_done_dp"}
-                            value={all_data.revision_done_dp}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>BAST No Final</Label>
-                        <Col sm={10}>
-                          <Input
-                          readOnly
-                            type="text"
-                            placeholder="BAST No Final"
-                            name={"bast_no_final"}
-                            value={all_data.bast_no_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                    </Form>
-                  </Col>
-                </Row>
+                    <Col md="12">
+                    {(all_data.work_status === null) && (
+                      <Button onClick={this.requestPRPO} color="primary" size="sm" style={{marginBottom : '10px'}}>
+                        Request PR PO
+                      </Button>
+                    )}
+                    </Col>
+                  </Row>
+                  {/* prpo info */}
+                  {all_data.term_of_payment !== "100" && (
+                    <Row>
+                      <Col>
+                      <h5><b>GR Information</b></h5>
+                      <Form>
+                        <FormGroup row>
+                          <Label sm={2}>BAST No DP</Label>
+                          <Col sm={3}>
+                          {all_data.bast_no_dp !== null && all_data.bast_no_dp !== undefined ? (
+                            <Input
+                              readOnly
+                              type="text"
+                              name={"bast_no_dp"}
+                              value={all_data.bast_no_dp}
+                              onChange={this.handleInputGR}
+                            />
+                          ) : (
+                            <Input
+                              type="text"
+                              name={"bast_no_dp"}
+                              value={this.state.data_form.bast_no_dp}
+                              onChange={this.handleInputGR}
+                            />
+                          )}
+                          </Col>
+                          <Label sm={2}></Label>
+                          <Col sm={5}>
+                          {(all_data.bast_no_dp === null || all_data.bast_no_dp === undefined)  && (
+                            <Button size="sm" color="primary" onClick={this.reqGRDP}>
+                              Req GR DP
+                            </Button>
+                          )}
+                          </Col>
+                        </FormGroup>
+                        <FormGroup row>
+                          <Label sm={2}>Req GR DP by</Label>
+                          <Col sm={4}>
+                            <Input
+                            readOnly
+                              type="text"
+                              //placeholder="Req GR by DP"
+                              name={"req_gr_by_dp"}
+                              value={all_data.req_gr_by_dp}
+                              onChange={this.handleInputGR}
+                            />
+                          </Col>
+                          <Label sm={1}></Label>
+                          <Label sm={2}>Req GR DP Date</Label>
+                          <Col sm={3}>
+                            <Input
+                              readOnly
+                              type="text"
+                              //placeholder="Req GR Date DP"
+                              name={"req_gr_date_dp"}
+                              value={all_data.req_gr_date_dp}
+                              onChange={this.handleInputGR}
+                            />
+                          </Col>
+                        </FormGroup>
+                        {/*}<FormGroup row>
+                          <Label sm={2}>Req GR DP by</Label>
+                          <Col sm={4}>
+                            <Input
+                            readOnly
+                              type="text"
+                              //placeholder="Req GR by DP"
+                              name={"req_gr_by_dp"}
+                              value={all_data.req_gr_by_dp}
+                              onChange={this.handleInputGR}
+                            />
+                          </Col>
+                        </FormGroup>*/}
+                        <FormGroup row>
+                          <Label sm={2}></Label>
+                          <Col sm={10}>
+                            <Button size="sm" color="primary" name="DP" onClick={this.requestRevisionGR}>
+                              Req GR DP Revision
+                            </Button>
+                          </Col>
+                        </FormGroup>
+                        <br />
+                      </Form>
+                    </Col>
+                  </Row>
+                  )}
+
                 {/* gr information */}
                 <Row>
                   <Col>
                     {/* <h5>GR Information</h5> */}
                     <Form>
                       <FormGroup row>
-                        <Label sm={2}>Req GR Final</Label>
-                        <Col sm={10}>
+                        <Label sm={2}>BAST No Final</Label>
+                        <Col sm={3}>
+                        {all_data.bast_no_final !== null && all_data.bast_no_final !== undefined ? (
                           <Input
-                          readOnly
-                            type="checkbox"
-                            placeholder="Req GR Final"
-                            name={"req_gr_final"}
-                            value={all_data.req_gr_final}
-                            onChange={this.handleInput}
+                            readOnly
+                            type="text"
+                            name={"bast_no_final"}
+                            value={all_data.bast_no_final}
+                            onChange={this.handleInputGR}
                           />
+                        ) : (
+                          <Input
+                            type="text"
+                            name={"bast_no_final"}
+                            value={this.state.data_form.bast_no_final}
+                            onChange={this.handleInputGR}
+                          />
+                        )}
+
+                        </Col>
+                        <Label sm={2}></Label>
+                        <Col sm={5}>
+                        {(all_data.bast_no_final !== null || all_data.bast_no_final !== undefined) && (
+                          <Button size="sm" color="primary" onClick={this.reqGRFinal}>
+                            Req GR Final
+                          </Button>
+                        )}
+
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Req GR by Final</Label>
-                        <Col sm={10}>
+                        <Label sm={2}>Req GR Final by</Label>
+                        <Col sm={4}>
                           <Input
-                          readOnly
+                            readOnly
                             type="text"
-                            placeholder="Req GR by Final"
+                            //placeholder="Req GR by Final"
                             name={"req_gr_by_final"}
                             value={all_data.req_gr_by_final}
-                            onChange={this.handleInput}
+                            onChange={this.handleInputGR}
                           />
                         </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Req GR Date Final</Label>
-                        <Col sm={10}>
+                        <Label sm={1}></Label>
+                        <Label sm={2}>Req GR Final Date</Label>
+                        <Col sm={3}>
                           <Input
                           readOnly
                             type="date"
-                            placeholder=""
+                            //placeholder=""
                             name={"req_gr_date_final"}
                             value={all_data.req_gr_date_final}
                             onChange={this.handleInput}
@@ -619,36 +797,19 @@ class DetailPRPO extends Component {
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label sm={2}>Req Revision Final</Label>
+                        <Label sm={2}></Label>
                         <Col sm={10}>
-                          <Input
-                          readOnly
-                            type="checkbox"
-                            placeholder="Req Revision Final"
-                            name={"req_revision_final"}
-                            value={all_data.req_revision_final}
-                            onChange={this.handleInput}
-                          />
-                        </Col>
-                      </FormGroup>
-                      <FormGroup row>
-                        <Label sm={2}>Revision Done</Label>
-                        <Col sm={10}>
-                          <Input
-                          readOnly
-                            type="checkbox"
-                            placeholder="Area"
-                            name={"revision_done_final"}
-                            value={all_data.revision_done_final}
-                            onChange={this.handleInput}
-                          />
+                          <Button size="sm" color="primary" name="FINAL" onClick={this.requestRevisionGR}>
+                            Req GR Final Revision
+                          </Button>
                         </Col>
                       </FormGroup>
                     </Form>
                   </Col>
                 </Row>
               </CardBody>
-              <CardFooter></CardFooter>
+              <CardFooter>
+              </CardFooter>
             </Card>
           </Col>
         </Row>

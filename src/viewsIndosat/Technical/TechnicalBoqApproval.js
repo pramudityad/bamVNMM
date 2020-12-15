@@ -12,7 +12,7 @@ import {connect} from 'react-redux';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+const DefaultNotif = React.lazy(() => import('../../viewsIndosat/DefaultView/DefaultNotif'));
 
 class TechnicalBoqApproval extends Component {
     constructor(props) {

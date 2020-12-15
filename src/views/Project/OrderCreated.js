@@ -13,6 +13,9 @@ import {
   Table,
   FormGroup,
   Label,
+  ModalFooter,
+  Modal,
+ ModalBody
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -64,6 +67,9 @@ class OrderCreated extends Component {
       id_mr_selected: null,
       selected_dsp: "",
       data_mr_selected: null,
+      modal_box_input: false,
+      rejectNote: "",
+      mot_type : null,
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -74,6 +80,27 @@ class OrderCreated extends Component {
     this.ApproveMR = this.ApproveMR.bind(this);
     this.rejectMR = this.rejectMR.bind(this);
     this.toggleModalapprove = this.toggleModalapprove.bind(this);
+    this.toggleBoxInput = this.toggleBoxInput.bind(this);
+    this.handleChangeNote = this.handleChangeNote.bind(this);
+    this.handleMotType = this.handleMotType.bind(this);
+  }
+
+  toggleBoxInput(e) {
+    if(e !== undefined){
+      const id_doc = e.currentTarget.id;
+      this.setState({ id_mr_selected: id_doc });
+    }
+    this.setState(prevState => ({
+      modal_box_input: !prevState.modal_box_input
+    }));
+  }
+
+  handleChangeNote = (e) => {
+    const name = e.target.name;
+    let value = e.target.value;
+    if (value !== null && value.length !== 0 && value !== 0) {
+      this.setState({ rejectNote: value });
+    }
   }
 
   async getDataFromAPI(url) {
@@ -300,7 +327,8 @@ class OrderCreated extends Component {
     });
   }
 
-  getAllMR() {
+  async getAllMR() {
+    let mrList = [];
     let filter_array = [];
     this.state.filter_list[0] !== "" &&
       filter_array.push(
@@ -369,13 +397,15 @@ class OrderCreated extends Component {
         '"origin.value" : "' + this.props.match.params.whid + '"'
       );
     let whereAnd = "{" + filter_array.join(",") + "}";
-    this.getDataFromAPINODE("/matreq?noPg=1&q=" + whereAnd).then((res) => {
-      console.log("MR List All", res);
-      if (res.data !== undefined) {
-        const items = res.data.data;
-        this.setState({ mr_all: items });
-      }
-    });
+    let res = await this.getDataFromAPINODE('/matreq?srt=_id:-1&noPg=1&q=' + whereAnd)
+    if (res.data !== undefined) {
+      const items = res.data.data;
+      mrList = res.data.data;
+      return mrList;
+      // this.setState({ mr_all: items });
+    }else{
+      return [];
+    }
   }
 
   numToSSColumn(num) {
@@ -394,47 +424,28 @@ class OrderCreated extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const allMR = this.state.mr_all;
+    const allMR = await this.getAllMR();
 
-    let headerRow = [
-      "MR ID",
-      "Project Name",
-      "CD ID",
-      "Site ID",
-      "Site Name",
-      "Current Status",
-      "Current Milestone",
-      "DSP",
-      "ETA",
-      "Created By",
-      "Updated On",
-      "Created On",
-    ];
+    let headerRow = ["MR ID", "MR MITT ID","MR Type","MR Delivery Type", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "MR MITT Created On", "MR MITT Created By","Updated On", "Created On"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
-      ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };
+      ws.getCell(this.numToSSColumn(i) + '1').font = { size: 11, bold: true };
     }
 
     for (let i = 0; i < allMR.length; i++) {
-      ws.addRow([
-        allMR[i].mr_id,
-        allMR[i].project_name,
-        allMR[i].cd_id,
-        allMR[i].site_info[0].site_id,
-        allMR[i].site_info[0].site_name,
-        allMR[i].current_mr_status,
-        allMR[i].current_milestones,
-        allMR[i].dsp_company,
-        allMR[i].eta,
-        "",
-        allMR[i].updated_on,
-        allMR[i].created_on,
-      ]);
+      const creator_mr_mitt = allMR[i].mr_status.find(e => e.mr_status_name === "PLANTSPEC" && e.mr_status_value === "NOT ASSIGNED");
+      ws.addRow([allMR[i].mr_id, allMR[i].mr_mitt_no, allMR[i].mr_type, allMR[i].mr_delivery_type, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, new Date(allMR[i].eta), creator_mr_mitt !== undefined ? new Date(creator_mr_mitt.mr_status_date) : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mr_status_updater : null, new Date(allMR[i].updated_on), new Date(allMR[i].created_on)]);
+      const getRowLast = ws.lastRow._number;
+      ws.getCell("M"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("O"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("P"+getRowLast).numFmt = "YYYY-MM-DD";
+      if(creator_mr_mitt !== undefined && creator_mr_mitt !== null){
+        ws.getCell("L"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
     }
-
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "Order Created.xlsx");
+    saveAs(new Blob([allocexport]), 'MR List Order Created.xlsx');
   }
 
   async patchDataToAPI(url, data, _etag) {
@@ -543,7 +554,8 @@ class OrderCreated extends Component {
 
   ApproveMR(e) {
     const _id = this.state.id_mr_selected;
-    const body = this.state.selected_dsp;
+    let body = this.state.selected_dsp;
+    body = {...body, "motType" : this.state.mot_type}
     // console.log('_id ',_id);
     // console.log('body ',body);
     this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id, body).then(
@@ -580,51 +592,22 @@ class OrderCreated extends Component {
 
   rejectMR(e) {
     const id_doc = e.currentTarget.id;
-    this.patchDatatoAPINODE("/matreq/rejectMatreq/" + id_doc).then((res) => {
+    let reason = this.state.rejectNote
+    this.patchDatatoAPINODE("/matreq/rejectMatreq/" + id_doc, {"rejectNote": reason}).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getMRList();
+        this.toggleBoxInput();
       } else {
         this.setState({ action_status: "failed" });
+        this.toggleBoxInput();
       }
     });
   }
 
-  // async rejectMR(e) {
-  //   const newDate = new Date();
-  //   const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
-  //   const _etag = e.target.value;
-  //   const _id = e.target.id;
-  //   const dataMR = this.state.mr_list.find(e => e._id === _id);
-  //   let currStatus = [
-  //     {
-  //         "mr_status_name": "MATERIAL_REQUEST",
-  //         "mr_status_value": "REJECTED",
-  //         "mr_status_date": dateNow,
-  //         "mr_status_updater": this.state.userEmail,
-  //         "mr_status_updater_id": this.state.userId
-  //     }
-  //   ];
-  //   let successUpdate = [];
-  //   let updateMR = {};
-  //   updateMR['current_milestones'] = null;
-  //   updateMR['current_mr_status'] = "MR CANCELED";
-  //   updateMR['mr_status'] = dataMR.mr_status.concat(currStatus);
-  //   let res = await this.patchDataToAPI('/mr_op/'+_id, updateMR, _etag);
-  //   if(res !== undefined) {
-  //     if(res.data !== undefined) {
-  //       successUpdate.push(res.data);
-  //     }
-  //   }
-  //   if(successUpdate.length !== 0){
-  //     this.setState({action_status : "success"});
-  //     setTimeout(function(){ window.location.reload(); }, 2000);
-  //   }
-  // }
-
   componentDidMount() {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = "Order Created | BAM";
   }
 
@@ -649,7 +632,7 @@ class OrderCreated extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {
@@ -679,6 +662,10 @@ class OrderCreated extends Component {
     }
     return searchBar;
   };
+
+  handleMotType(e){
+    this.setState({mot_type : e.target.value});
+  }
 
   loading = () => (
     <div className="animated fadeIn pt-1 text-center">Loading...</div>
@@ -801,7 +788,7 @@ class OrderCreated extends Component {
                             style={{ width: "90px" }}
                             id={list._id}
                             value={list._etag}
-                            onClick={this.rejectMR}
+                            onClick={this.toggleBoxInput}
                           >
                             <i
                               className="fa fa-times"
@@ -817,34 +804,19 @@ class OrderCreated extends Component {
                         </td>
                         <td>{list.project_name}</td>
                         <td>
-                          {list.cust_del !== undefined &&
-                            list.cust_del.map((custdel, j) =>
-                              j === list.cust_del.length - 1
-                                ? custdel.cd_id
-                                : custdel.cd_id + ", "
-                            )}
+                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined &&
-                            list.site_info.map((site_info, j) =>
-                              j === list.site_info.length - 1
-                                ? site_info.site_id
-                                : site_info.site_id + ", "
-                            )}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined &&
-                            list.site_info.map((site_info, j) =>
-                              j === list.site_info.length - 1
-                                ? site_info.site_id
-                                : site_info.site_name + ", "
-                            )}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{convertDateFormat(list.eta)}</td>
-                        <td></td>
+                        <td>{list.creator.map(c => c.email)}</td>
                         <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
@@ -852,12 +824,12 @@ class OrderCreated extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries</small>
+                  <small>Showing {this.state.mr_list.length} entries from {this.state.totalData} data</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}
                   itemsCountPerPage={this.state.perPage}
-                  totalItemsCount={this.state.totalData.total}
+                  totalItemsCount={this.state.totalData}
                   pageRangeDisplayed={5}
                   onChange={this.handlePageChange}
                   itemClass="page-item"
@@ -867,6 +839,30 @@ class OrderCreated extends Component {
             </Card>
           </Col>
         </Row>
+
+{/* Modal Loading */}
+<Modal isOpen={this.state.modal_box_input} toggle={this.toggleBoxInput} className={'modal-sm modal--box-input'}>
+          <ModalBody>
+            <Row>
+              <Col sm="12">
+                <FormGroup>
+                  <Label>Reject Note</Label>
+                  <Input
+                    type="text"
+                    name={this.state.id_mr_selected}
+                    placeholder="Write Reject Note"
+                    onChange={this.handleChangeNote}
+                    value={this.state.rejectNote}
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            <Button disabled={!this.state.rejectNote} outline color="danger" size="sm" style={{ width: "80px" }} id={this.state.id_mr_selected} onClick={this.rejectMR}>Reject MR</Button>
+          </ModalFooter>
+        </Modal>
+        {/* end Modal Loading */}
 
         {/* modal form approve */}
         <ModalForm
@@ -878,6 +874,7 @@ class OrderCreated extends Component {
             {this.state.data_mr_selected !== null &&
             this.state.data_mr_selected !== undefined &&
             this.state.data_mr_selected.dsp_company !== null ? (
+              <React.Fragment>
               <FormGroup>
                 <Label htmlFor="total_box">Delivery Company</Label>
                 <Input
@@ -888,7 +885,20 @@ class OrderCreated extends Component {
                   readOnly
                 />
               </FormGroup>
+              {this.state.data_mr_selected.deliver_by === "DSP" && (this.state.asp_data.find(ad => ad.Vendor_Code === this.state.data_mr_selected.dsp_company_code )) && (
+                <FormGroup>
+                  <Label htmlFor="total_box">MOT Type</Label>
+                  <Input type="select" name={"0 /// sub_category"} onChange={this.handleMotType} value={this.state.mot_type}>
+                    <option value="" disabled selected hidden></option>
+                    <option value="MOT-Land">MOT-Land</option>
+                    <option value="MOT-Air">MOT-Air</option>
+                    <option value="MOT-Sea">MOT-Sea</option>
+                  </Input>
+                </FormGroup>
+              )}
+              </React.Fragment>
             ) : (
+              <React.Fragment>
               <FormGroup>
                 <Label htmlFor="total_box">DSP Company</Label>
                 <Input
@@ -898,11 +908,22 @@ class OrderCreated extends Component {
                   onChange={this.handleLDMapprove}
                   name={this.state.id_mr_selected}
                 >
+                  <option value="" disabled selected hidden></option>
                   {this.state.asp_data.map((asp) => (
                     <option value={asp.Vendor_Code}>{asp.Name}</option>
                   ))}
                 </Input>
               </FormGroup>
+              <FormGroup>
+                <Label htmlFor="total_box">MOT Type</Label>
+                <Input type="select" name={"0 /// sub_category"} onChange={this.handleMotType} value={this.state.mot_type}>
+                  <option value="" disabled selected hidden></option>
+                  <option value="MOT-Land">MOT-Land</option>
+                  <option value="MOT-Air">MOT-Air</option>
+                  <option value="MOT-Sea">MOT-Sea</option>
+                </Input>
+              </FormGroup>
+              </React.Fragment>
             )}
           </Col>
           <div style={{ justifyContent: "center", alignSelf: "center" }}>

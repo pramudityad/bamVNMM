@@ -1,0 +1,5 @@
+.table-CR__header--middle th {
+  display: table-cell;
+  vertical-align: middle !important;
+  background-color: rgba(121,134,203 ,1);
+}

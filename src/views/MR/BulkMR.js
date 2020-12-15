@@ -91,11 +91,21 @@ class BulkMR extends Component {
         action_status : null,
         action_message : null,
         redirectSign : false,
-        data_checking_mr : null,
+        data_checking_mr : [],
         list_warehouse : [],
+        modal_loading : false,
     };
     this.exportFormatBulkMR = this.exportFormatBulkMR.bind(this);
     this.saveDataMRBulk = this.saveDataMRBulk.bind(this);
+    this.downloadResultofUploader = this.downloadResultofUploader.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+    this.saveDataMRBulkMigration = this.saveDataMRBulkMigration.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
+    }));
   }
 
   async getDataFromAPIEXEL(url) {
@@ -257,6 +267,25 @@ class BulkMR extends Component {
       }
     }
 
+    async patchDatatoAPINODE(url, data) {
+      try {
+        let respond = await axios.patch(API_URL_NODE + url, data, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + this.state.tokenUser
+          },
+        })
+        if (respond.status >= 200 && respond.status < 300) {
+          console.log("respond Patch data", respond);
+        }
+        return respond;
+      } catch (err) {
+        let respond = err;
+        console.log("respond Patch data", err.response);
+        return respond;
+      }
+    }
+
   checkValue(props){
     //Swap undefined to null
     if( typeof props === 'undefined' ) {
@@ -377,9 +406,53 @@ class BulkMR extends Component {
     this.setState({
       rowsXLS : newDataXLS,
     });
-    console.log("newDataXLS", JSON.stringify(newDataXLS));
     this.checkingDataMR(newDataXLS);
     // this.formatDataTSSR(newDataXLS);
+  }
+
+
+  fileHandlerMigration = (input) => {
+    const file = input.target.files[0];
+    const reader = new FileReader();
+    const rABS = !!reader.readAsBinaryString;
+    reader.onload = (e) => {
+      /* Parse data */
+      const bstr = e.target.result;
+      const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array', cellDates:true});
+      /* Get first worksheet */
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      /* Convert array of arrays */
+      const data = XLSX.utils.sheet_to_json(ws, {header:1, devfal : null});
+      /* Update state */
+      // this.ArrayEmptytoNull(data);
+      this.setState({ action_status: null, action_message: null }, () => {
+        this.ArrayEmptytoNullMigration(data);
+      });
+    };
+    if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
+  }
+
+  ArrayEmptytoNullMigration(dataXLS){
+    let newDataXLS = [];
+    for(let i = 0; i < dataXLS.length; i++){
+      let col = [];
+      for(let j = 0; j < dataXLS[0].length; j++){
+        if(typeof dataXLS[i][j] === "object"){
+          let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
+          if(dataObject !== null){
+            dataObject = dataObject.replace(/"/g, "");
+          }
+          col.push(dataObject);
+        }else{
+          col.push(this.checkValue(dataXLS[i][j]));
+        }
+      }
+      newDataXLS.push(col);
+    }
+    this.setState({
+      rowsXLS : newDataXLS,
+    });
   }
 
   async checkingDataMR(dataXLS){
@@ -391,11 +464,16 @@ class BulkMR extends Component {
       this.setState({data_checking_mr : dataChecking});
       for(let i =0; i < dataChecking.length; i++){
         if(dataChecking[i].operation === "INVALID"){
-          wp_invalid.push(dataChecking[i].cd_id)
+          if(dataChecking[i].cd_id === null){
+            wp_invalid.push(dataChecking[i].cd_id + " CD ID Row " +i)
+          }else{
+            wp_invalid.push(dataChecking[i].activity_status+ " Activity Row " +i)
+          }
+
         }
       }
       if(wp_invalid.length !== 0){
-        this.setState({ action_status : 'failed', action_message : '[ '+wp_invalid.join('", "')+' ] => unknown' });
+        this.setState({ action_status : 'failed', action_message : '[ '+wp_invalid.join('", "')+' ] => unknown, Please check the results of the upload below' });
       }
     } else{
       if(respondCheckingMR.response !== undefined && respondCheckingMR.response.data !== undefined && respondCheckingMR.response.data.error !== undefined){
@@ -528,13 +606,23 @@ class BulkMR extends Component {
   }
 
   async saveDataMRBulk(){
+    this.toggleLoading();
     const dataChecking = this.state.data_checking_mr;
     const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', {"data" : dataChecking});
     if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
       this.setState({ action_status : 'success' });
     } else{
-      this.setState({ action_status : 'failed' });
+      if (respondSaveMR.response !== undefined && respondSaveMR.response.data !== undefined && respondSaveMR.response.data.error !== undefined) {
+        if (respondSaveMR.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
     }
+    this.toggleLoading();
   }
 
   // getDataSites(){
@@ -571,6 +659,25 @@ class BulkMR extends Component {
     return dataPP;
   }
 
+  async saveDataMRBulkMigration(){
+    this.toggleLoading();
+    const respondPatchMR = await this.patchDatatoAPINODE('/matreq/updateStatusMigration', { "dataObjectMatreq": this.state.rowsXLS });
+    if(respondPatchMR.data !== undefined && respondPatchMR.status >= 200 && respondPatchMR.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      if (respondPatchMR.response !== undefined && respondPatchMR.response.data !== undefined && respondPatchMR.response.data.error !== undefined) {
+        if (respondPatchMR.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: respondPatchMR.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: respondPatchMR.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+  }
+
   exportFormatBulkMR = async () =>{
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -587,7 +694,9 @@ class BulkMR extends Component {
       "mr_comment_project",
       "sent_mr_request",
       "created_based",
-      "identifier"
+      "identifier",
+      "priority_mr",
+      "week_number"
     ]);
 
     ws.addRow(["new", "XL BAM DEMO 2020",	"1",	"1",	"JKT1",	"2020-04-19",	"2020-04-21",	"2000057356", null, null, "tower_id", "JAW-JT-BBS-0001"]);
@@ -597,11 +706,46 @@ class BulkMR extends Component {
     saveAs(new Blob([MRFormat]), 'MR Uploader Template.xlsx');
   }
 
+  async downloadResultofUploader(){
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const dataUploader = this.state.rowsXLS;
+    const resultUploader = this.state.data_checking_mr;
+
+    ws.addRow([
+      "Checking Status",
+      "id",
+      "project_name",
+      "mr_type",
+      "mr_delivery_type",
+      "origin_warehouse",
+      "etd",
+      "eta",
+      "deliver_by",
+      "mr_comment_project",
+      "sent_mr_request",
+      "created_based",
+      "identifier"
+    ]);
+
+    for(let i = 1; i < dataUploader.length; i++){
+      let row = [resultUploader[i-1].activity_status];
+      row = row.concat(dataUploader[i]);
+      ws.addRow(row)
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'Result of Checking mr template Uploader.xlsx');
+  }
+
   render() {
     if(this.state.redirectSign !== false){
       return (<Redirect to={'/mr-list'} />);
     }
-    console.log("Excel Render", this.state.rowsXLS);
+    if(this.state.data_checking_mr.length !== 0){
+      console.log("Excel Render", this.state.data_checking_mr);
+    }
+
     return (
       <div>
         <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
@@ -613,10 +757,32 @@ class BulkMR extends Component {
             <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkMR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MR Format</Button>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
-            <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
-            <Button color="success" onClick={this.saveDataMRBulk} style={{float : 'right'}} disabled={this.state.rowsXLS.length === 0 || this.state.waiting_status === true || this.state.action_status === "failed" }>
-              {this.state.rowsXLS.length === 0? "Save" : this.state.waiting_status === true ? "Loading..." : "Save"}
-            </Button>
+            <Row>
+              <Col>
+              <input type="file" onChange={this.fileHandlerMaterial.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
+              <Button color="success" onClick={this.saveDataMRBulk} style={{float : 'right'}} disabled={this.state.rowsXLS.length === 0 || this.state.waiting_status === true || this.state.action_status === "failed" }>
+                {this.state.rowsXLS.length === 0? "Save" : this.state.waiting_status === true ? "Loading..." : "Save"}
+              </Button>
+              </Col>
+            </Row>
+            {this.state.userRole.includes('Admin') && (
+            <Fragment>
+              <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
+              <Row>
+                <Col>
+                  <h5>Migration Status from SH :</h5>
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  <input type="file" onChange={this.fileHandlerMigration.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
+                  <Button color="success" onClick={this.saveDataMRBulkMigration} style={{float : 'right'}}>
+                    Save Migration Status
+                  </Button>
+                </Col>
+              </Row>
+            </Fragment>
+            )}
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>
@@ -628,14 +794,26 @@ class BulkMR extends Component {
               </tbody>
             </table>
             <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
+            {this.state.data_checking_mr.length !== 0 && (
+            <Row>
+              <Col xl="12">
+                <Button style={{marginRight : '8px', float : 'right', marginBottom : '10px'}} outline color="primary" onClick={this.downloadResultofUploader} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download results of checking of MR Uploader</Button>
+              </Col>
+            </Row>
+            )}
+
             {this.state.rowsXLS.length !== 0 ? (
               <Table hover bordered responsive size="sm">
                 <tbody>
                 {this.state.rowsXLS.length !== 0 ? (
-                  this.state.rowsXLS.map( row =>
+                  this.state.rowsXLS.map( (row, i) =>
                     <tr>
-                      {row.map( col =>
+                      {(i === 0 && this.state.data_checking_mr.length !== 0) && (<td>Checking Status</td>)}
+                      {(i > 0 && this.state.data_checking_mr.length !== 0) ? this.state.data_checking_mr[i-1].operation === "INVALID" ? <td style={{backgroundColor : "#D84315", color : "#FFF"}}>{this.state.data_checking_mr[i-1].activity_status}</td> : <td></td> : (<Fragment></Fragment>)  }
+                      {row.map(col =>
+                        <Fragment>
                         <td>{col}</td>
+                        </Fragment>
                       )}
                     </tr>
                   )
@@ -660,6 +838,18 @@ class BulkMR extends Component {
                       <tr>
                         <td>1</td>
                         <td>New</td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>Upgrade</td>
+                      </tr>
+                      <tr>
+                        <td>3</td>
+                        <td>Additional</td>
+                      </tr>
+                      <tr>
+                        <td>4</td>
+                        <td>Outstanding</td>
                       </tr>
                     </tbody>
                   </Table>
@@ -720,6 +910,10 @@ class BulkMR extends Component {
                       </tr>
                     </thead>
                     <tbody>
+                      <tr>
+                        <td>DSP</td>
+                        <td>(LDM will input DSP Company for delivery)</td>
+                      </tr>
                       {this.state.asp_list.map(e =>
                         <tr>
                           <td>{e.Vendor_Code}</td>

@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { Card, CardHeader, CardBody, Table, Row, Col, Button, Input, Collapse, Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap';
+import { Card, CardHeader, CardBody, CardFooter, Table, Row, Col, Button, Input, Collapse, Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap';
 import { Form, FormGroup, Label } from 'reactstrap';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import axios from 'axios';
@@ -8,6 +8,10 @@ import { saveAs } from 'file-saver';
 import {ExcelRenderer} from 'react-excel-renderer';
 import {connect} from 'react-redux';
 import Select from 'react-select';
+import ModalDelete from '../components/ModalDelete';
+import ericssonLogoBlack from '../../assets/img/brand/BLACK_ERI_horizontal_RGB.png';
+import {ericssonLogoBlackHorizontalBase64} from '../../assets/base64/ericssonLogoBlackHorizontalBase64.js';
+import {xlLogoBase64} from '../../assets/base64/xlLogoBase64.js';
 
 const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
 
@@ -73,6 +77,7 @@ class DetailTssr extends Component {
         userEmail : this.props.dataLogin.email,
         tokenUser : this.props.dataLogin.token,
         rowsXLS : [],
+        data_tower : {},
         data_tssr : null,
         tssr_site_FE : null,
         tssr_site_NE : null,
@@ -105,6 +110,14 @@ class DetailTssr extends Component {
         collapseUpload : false,
         dropdownOpen: new Array(1).fill(false),
         wbs_cd_id_data : [],
+        collapseUploadAdditonal : false,
+        qty_ps : [["bam_id","tssr_id","bundle_id","bundle_name","program","material_id_plan","material_name_plan","material_id_actual","material_name_actual","uom","qty"]],
+
+        modalAdditionalForm : false,
+        modal_loading : false,
+        additional_material : [],
+        modal_delete_warning : false,
+        product_package : [],
     };
     this.handleChangeProject = this.handleChangeProject.bind(this);
     this.handleChangeVersion = this.handleChangeVersion.bind(this);
@@ -115,13 +128,54 @@ class DetailTssr extends Component {
     this.handleChangeTechRef = this.handleChangeTechRef.bind(this);
     this.referenceWithTechBoq = this.referenceWithTechBoq.bind(this);
     this.submitTSSR = this.submitTSSR.bind(this);
+    this.deletePS = this.deletePS.bind(this);
     this.toggleUpload = this.toggleUpload.bind(this);
+    this.toggleUploadAdditional = this.toggleUploadAdditional.bind(this);
     this.saveUpdateMaterial = this.saveUpdateMaterial.bind(this);
+    this.saveUpdateMaterialAdditonal = this.saveUpdateMaterialAdditonal.bind(this);
+    this.saveUpdateMaterialWeb = this.saveUpdateMaterialWeb.bind(this);
     this.downloadMaterialTSSRUpload = this.downloadMaterialTSSRUpload.bind(this);
+    this.downloadMaterialTSSRUploadNOK = this.downloadMaterialTSSRUploadNOK.bind(this);
+    this.exportMaterialPSReport = this.exportMaterialPSReport.bind(this);
+    this.exportMaterialPSReportBundling = this.exportMaterialPSReportBundling.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+    this.toggleAdditionalForm = this.toggleAdditionalForm.bind(this);
+    this.AdditionalForm = this.AdditionalForm.bind(this);
+
+    this.addMaterialAdditional = this.addMaterialAdditional.bind(this);
+    this.deleteMaterialAdditional = this.deleteMaterialAdditional.bind(this);
+    this.downloadMaterialTSSRUploadAdditional = this.downloadMaterialTSSRUploadAdditional.bind(this);
+    this.onChangeMaterialAdditional = this.onChangeMaterialAdditional.bind(this);
+    this.saveAdditional = this.saveAdditional.bind(this);
+    this.deleteAdditionalMaterialAll = this.deleteAdditionalMaterialAll.bind(this);
+    this.toggleWarningDeleteAdditional = this.toggleWarningDeleteAdditional.bind(this);
+    this.downloadEPODFormat = this.downloadEPODFormat.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState(prevState => ({
+      modal_loading: !prevState.modal_loading
+    }));
+  }
+
+  toggleAdditionalForm() {
+    this.setState(prevState => ({
+      modalAdditionalForm: !prevState.modalAdditionalForm
+    }));
+  }
+
+  toggleWarningDeleteAdditional() {
+    this.setState(prevState => ({
+      modal_delete_warning: !prevState.modal_delete_warning
+    }));
   }
 
   toggleUpload() {
-    this.setState({ collapseUpload: !this.state.collapseUpload });
+    this.setState({ collapseUpload: !this.state.collapseUpload, collapseUploadAdditonal : false });
+  }
+
+  toggleUploadAdditional() {
+    this.setState({ collapseUploadAdditonal: !this.state.collapseUploadAdditonal, collapseUpload : false });
   }
 
   toggleDropdown(i) {
@@ -319,6 +373,26 @@ class DetailTssr extends Component {
     }
   }
 
+  async deleteDataFromAPINODE(url, data) {
+    try {
+      let respond = await axios.delete(API_URL_NODE + url, {
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': 'Bearer '+this.state.tokenUser
+        },
+          data : data
+      });
+      if (respond.status >= 200 && respond.status < 300) {
+        console.log("respond delete Data", respond);
+      }
+      return respond;
+    } catch (err) {
+      let respond = err;
+      console.log("respond delete Data err", err);
+      return respond;
+    }
+  }
+
   async getDatafromAPIXL(url){
     try {
       let respond = await axios.get(API_URL_XL +url, {
@@ -417,7 +491,7 @@ class DetailTssr extends Component {
     let newDataXLS = [];
     for(let i = 0; i < dataXLS.length; i++){
       let col = [];
-      for(let j = 0; j < dataXLS[1].length; j++){
+      for(let j = 0; j < dataXLS[0].length; j++){
         col.push(this.checkValue(dataXLS[i][j]));
       }
       newDataXLS.push(col);
@@ -425,166 +499,6 @@ class DetailTssr extends Component {
     this.setState({
       rowsXLS: newDataXLS
     });
-  }
-
-  formatDataTSSR = async(dataXLS) => {
-      let action_message = [];
-      let actionStatus = null;
-      let SitesOfTSSRNew = [];
-      this.setState({waiting_status : 'loading'});
-      const staticHeader = ["site_title", "site_id", "site_name"];
-      const staticHeaderXLS = dataXLS[1].filter((e,n) => n < 3);
-      if(staticHeaderXLS.equals(staticHeader) !== true){
-        actionStatus = "failed";
-        this.setState({action_status : "failed", action_message : "Please check your upload format or Package Number"});
-      }
-      if(actionStatus !== "failed"){
-        let dataPackage = [];
-        const index_item = 3;
-        let RespondGetPP = [];
-        const ppid_upload = [];
-        let pp_id_special = [];
-        for(let j = index_item ; j < dataXLS[1].length; j++){
-          let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
-          if(Array.isArray(idXLSIndex) == true){
-            idXLSIndex = idXLSIndex.join();
-            if(idXLSIndex.includes("\"")){
-              pp_id_special.push(idXLSIndex);
-            }else{
-              ppid_upload.push(idXLSIndex);
-            }
-          }
-        }
-        RespondGetPP = await this.getAllPP(ppid_upload, pp_id_special);
-        this.setState({waiting_status : null});
-        if(RespondGetPP.length !== 0){
-          dataPackage = RespondGetPP;
-        }
-        let id_PP = new Map();
-        let _id_PP = new Map();
-        let pp_key = new Map();
-        let pp_name = new Map();
-        let group_PP = new Map();
-        let pp_cust_num = new Map();
-        let physical_group = new Map();
-        let pp_type = new Map();
-        let pp_unit = new Map();
-        let data_duplicated = [];
-        let data_undefined = [];
-        let dataAllnull = [];
-        let siteIDNull = [];
-        for(let j = index_item ; j < dataXLS[1].length; j++){
-          let idXLSIndex = dataXLS[1][j].toString().split(" /// ",1);
-          if(Array.isArray(idXLSIndex) == true){
-            idXLSIndex = idXLSIndex.join();
-          }
-          let get_id_PP = dataPackage.find(PP => PP.pp_id === idXLSIndex);
-          let cekAllZero = dataXLS.map( e => this.checkValuetoZero(e[j]) ).filter( (e,n) => n>1);
-          if(cekAllZero.every( e => e == 0)){
-            dataAllnull.push(idXLSIndex);
-          }
-          if(get_id_PP === undefined){
-            data_undefined.push(idXLSIndex)
-          }else{
-            if(id_PP.get(idXLSIndex) === undefined){
-              id_PP.set(idXLSIndex, get_id_PP.pp_id);
-              pp_key.set(idXLSIndex, get_id_PP.pp_key);
-              _id_PP.set(idXLSIndex, get_id_PP._id);
-              group_PP.set(idXLSIndex, get_id_PP.pp_group)
-              pp_name.set(idXLSIndex, get_id_PP.product_name);
-              pp_cust_num.set(idXLSIndex, get_id_PP.pp_cust_number);
-              physical_group.set(idXLSIndex, get_id_PP.physical_group)
-              pp_type.set(idXLSIndex, get_id_PP.product_type);
-              pp_unit.set(idXLSIndex, get_id_PP.uom);
-            }else{
-              data_duplicated.push(idXLSIndex);
-            }
-          }
-        }
-        if(data_undefined.length !== 0){
-          actionStatus = "failed";
-          let twoSentence = action_message.length !== 0 ? "and <br />" : "";
-          action_message = "Please check your upload format or Package Number in "+data_undefined.join(", ")+twoSentence+action_message;
-        }
-        if(data_duplicated.length !== 0){
-          actionStatus = "failed";
-          let twoSentence = action_message.length !== 0 ? "and <br />" : "";
-          action_message = action_message+twoSentence+" There are Duplicated PP in "+data_duplicated.join(", ");
-        }
-        let siteSaveFormat = [];
-        let siteError = [];
-        for(let i = 2; i < dataXLS.length; i++){
-          if(this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]) !== null && this.state.action_status !== "failed" && actionStatus !== "failed"){
-            let packageDatas = []
-            for(let j = index_item ; j < dataXLS[1].length; j++){
-              let dataXLSIndex = dataXLS[1][j].split(" /// ",1).join();
-              if(dataAllnull.includes(dataXLSIndex) === false){
-                let package_data = {
-                  "id_pp_doc" : _id_PP.get(dataXLSIndex),
-                  "pp_id" : dataXLSIndex,
-                  "pp_group" : group_PP.get(dataXLSIndex),
-                  "pp_cust_number" : pp_cust_num.get(dataXLSIndex),
-                  "product_name" : pp_name.get(dataXLSIndex).toString(),
-                  "physical_group" : physical_group.get(dataXLSIndex),
-                  "product_type" : pp_type.get(dataXLSIndex),
-                  "uom" : pp_unit.get(dataXLSIndex),
-                  "qty" : this.checkValuetoZero(dataXLS[i][j]),
-                  "version" : "0",
-                  "deleted" : 0,
-                  "created_by" : this.state.userId,
-                  "updated_by" : this.state.userId
-                }
-                packageDatas.push(package_data);
-              }
-            }
-            let siteID = this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_id')]).toString();
-            let siteTssrBOM = {
-              "account_id" : "1",
-              "site_id" : siteID,
-              "site_name" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]),
-              "site_title" : this.checkValue(dataXLS[i][this.getIndex(dataXLS[1],'site_title')]),
-              "list_of_site_items" : packageDatas,
-              "version" : "0",
-              "created_by" : this.state.userId,
-              "updated_by" : this.state.userId,
-              "deleted" : 0
-            }
-            if(siteTssrBOM.site_name !== null){
-              siteTssrBOM["site_name"] = siteTssrBOM.site_name.toString();
-            }
-            if(siteTssrBOM.site_title !== null){
-              siteTssrBOM["site_title"] = siteTssrBOM.site_title.toString();
-            }
-            // "site_name" : this.checkValuetoString(dataXLS[i][this.getIndex(dataXLS[1],'site_name')]).toString(),
-            if(siteID.length === 0){
-              siteIDNull.push(null);
-            }
-            if(siteSaveFormat.find(e => e === siteTssrBOM.site_id) !== undefined){
-              siteError.push(siteTssrBOM.site_id);
-            }
-            siteSaveFormat.push(siteTssrBOM.site_id);
-            SitesOfTSSRNew.push(siteTssrBOM);
-          }
-        }
-        if(siteIDNull.length !== 0){
-          actionStatus = "failed";
-          let twoSentence = action_message.length !== 0 ? "and " : "";
-          action_message = action_message+twoSentence+"Site ID cant NULL";
-        }
-        if(siteError.length !== 0){
-          actionStatus = "failed";
-          let twoSentence = action_message.length !== 0 ? "and " : "";
-          action_message = action_message+twoSentence+"There are duplicate site";
-        }
-        if(actionStatus === 'failed'){
-          this.setState({action_status : "failed", action_message : action_message});
-        }
-        if(actionStatus !== 'failed'){
-          this.setState({action_message : null});
-        }
-      }
-      this.setState({dataTssrUpload : SitesOfTSSRNew});
-      return SitesOfTSSRNew;
   }
 
   async getAllPP(array_PP, array_PP_sepcial){
@@ -622,12 +536,23 @@ class DetailTssr extends Component {
       if(res.data !== undefined){
         this.setState({ tssrData : res.data.data }, () => {
           if(res.data.data.site_info !== undefined){
+            this.getDataTower(res.data.data.site_info[0].site_id)
             this.getDataCDID(res.data.data.site_info.filter(fe => fe.cd_id !== null && fe.cd_id !== undefined).map(e => e.cd_id));
           }
           this.getDataWarehouse();
           this.getDataInbound();
         })
         console.log('tssrData', this.state.tssrData);
+      }
+    })
+  }
+
+  getDataTower(tower_id){
+    this.getDatafromAPIXL('/tower_site_op?where={"tower_id" :"'+tower_id+'"}&projection={"tower_id":1,"region":1, "address":1, "city":1}').then( res => {
+      if(res.data !== undefined){
+        if(res.data._items[0] !== undefined){
+          this.setState({ data_tower : res.data._items[0] })
+        }
       }
     })
   }
@@ -751,6 +676,7 @@ class DetailTssr extends Component {
 
   componentDidMount(){
     this.getDataTssr(this.props.match.params.id);
+    this.getPackageDataAPI();
     // this.getVersionTssr(this.props.match.params.id);
   }
 
@@ -1047,6 +973,23 @@ class DetailTssr extends Component {
     })
   }
 
+  handleChangeQTY(e, i, u){
+    const value_qty = e.target.value;
+    const Data_tssr = this.state.tssrData;
+    const Data_package = Data_tssr.packages[u];
+    const Data_mat =  Data_tssr.packages[u].materials[i];
+
+    this.setState(
+      (prevState) => ({
+        qty_ps: [
+          ...prevState.qty_ps,
+          [Data_mat._id, Data_mat.no_tssr_boq_site, Data_package.pp_id, Data_package.product_name, Data_package.program, Data_mat.material_id_plan, Data_mat.material_name_plan, Data_mat.material_id_plan, Data_mat.material_name_plan, Data_mat.uom, value_qty]
+        ],
+      }),
+      () => console.log(this.state.qty_ps)
+    );
+  }
+
   getDataTssrVersion(_id_tssr, version){
     this.getDatafromAPIBAM('/tssr_version_op?where={"id_document" : "'+_id_tssr+'", "version" : "'+version+'"}').then( resTssr => {
       if(resTssr.data !== undefined){
@@ -1238,6 +1181,19 @@ class DetailTssr extends Component {
     })
   }
 
+  deletePS(){
+    this.toggleLoading();
+    this.deleteDataFromAPINODE('/plantspec/deletePlantspec', {"data" : [this.props.match.params.id]}).then(res => {
+      if(res.data !== undefined){
+        this.setState({ action_status : "success" });
+        this.toggleLoading();
+      }else{
+        this.setState({ action_status : "failed" });
+        this.toggleLoading();
+      }
+    })
+  }
+
   CompareArrayObject(arr, prop) {
     return arr.sort(function (a, b) {
         var nameA = a[prop].toLowerCase(),
@@ -1257,7 +1213,7 @@ class DetailTssr extends Component {
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
 
-    let headerRow = ["bam_id", "bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "stock_warehouse", "inbound_warehouse", "availability", "source_material"];
+    let headerRow = ["bam_id", "tssr_id", "bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "stock_warehouse", "inbound_warehouse", "availability", "source_material"];
     ws.addRow(headerRow);
     let list_material_id = [];
     for(let i = 0; i < dataItemTSSR.length; i++){
@@ -1268,7 +1224,7 @@ class DetailTssr extends Component {
         let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
         qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
-        ws.addRow([dataMatIdx._id, dataItemTSSR[i].pp_id, dataItemTSSR[i].product_name, dataItemTSSR[i].program, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.uom, dataMatIdx.qty, qty_wh, qty_inbound, (dataMatIdx.qty) < qty_wh ? "OK":"NOK"]);
+        ws.addRow([dataMatIdx._id, dataItemTSSR[i].no_tssr_boq_site, dataItemTSSR[i].pp_id, dataItemTSSR[i].product_name, dataItemTSSR[i].program, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.uom, dataMatIdx.qty, qty_wh, qty_inbound, (dataMatIdx.qty) < qty_wh ? "OK":"NOK"]);
       }
     }
 
@@ -1311,7 +1267,604 @@ class DetailTssr extends Component {
     saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' uploader.xlsx');
   }
 
+  // check_availability(availability){
+  //   if (availability === "OK" ){ continue; }
+  // }
+
+  async downloadMaterialTSSRUploadNOK() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataTSSR = this.state.tssrData;
+    const dataItemTSSR = this.state.tssrData.packages;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    let headerRow = ["bam_id", "tssr_id", "bundle_id", "bundle_name", "program", "material_id_plan", "material_name_plan", "material_id_actual", "material_name_actual", "uom", "qty", "stock_warehouse", "inbound_warehouse", "availability", "source_material"];
+    ws.addRow(headerRow);
+    let list_material_id = [];
+    for(let i = 0; i < dataItemTSSR.length; i++){
+      for(let j = 0; j < dataItemTSSR[i].materials.length; j++){
+        let dataMatIdx = dataItemTSSR[i].materials[j];
+        list_material_id.push(dataMatIdx.material_id);
+        let qty_wh = stockWH.find(e => e.sku === dataMatIdx.material_id);
+        let qty_inbound = inboundWH.find(e => e.sku === dataMatIdx.material_id);
+        qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
+        qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
+        if ((dataMatIdx.qty) < qty_wh) {continue}
+        ws.addRow([dataMatIdx._id, dataItemTSSR[i].no_tssr_boq_site, dataItemTSSR[i].pp_id, dataItemTSSR[i].product_name, dataItemTSSR[i].program, dataMatIdx.material_id_plan, dataMatIdx.material_name_plan, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.uom, dataMatIdx.qty, qty_wh, qty_inbound, (dataMatIdx.qty) < qty_wh ? "OK":"NOK"]);
+      }
+    }
+
+    let listMatId = [...new Set(list_material_id)];
+    let matIdData = {
+      "list_material_id" : listMatId
+    }
+
+    const getMaterialVariant = await this.postDatatoAPINODE('/variants/materialId', matIdData);
+    if(getMaterialVariant.data !== undefined && getMaterialVariant.status >= 200 && getMaterialVariant.status < 400 ) {
+      dataMaterialVariant = getMaterialVariant.data.data;
+    }
+
+    dataMaterialVariant = this.CompareArrayObject(dataMaterialVariant, "description");
+
+    let sku_list = [];
+    for(let j = 0; j < dataMaterialVariant.length; j++){
+      sku_list.push(dataMaterialVariant[j].material_id);
+    }
+    const list_qtySKU = [];
+    const getQtyfromWHbySKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', {"sku": sku_list }).then((res) => {
+      if(res.data !== undefined && res.status >= 200 && res.status < 400){
+        const dataSKU = res.data.data;
+        for (let i = 0; i < dataSKU.length; i++) {
+          if (dataSKU[i][0] === undefined){
+            list_qtySKU.push(0);
+          } else {
+            list_qtySKU.push(dataSKU[i][0].qty_sku);
+          }
+        }
+      }
+    });
+
+    ws2.addRow(["Origin","Material ID","Material Name","Description", "Category", "Qty Available"]);
+    for(let j = 0; j < dataMaterialVariant.length; j++){
+      ws2.addRow([dataMaterialVariant[j].origin,dataMaterialVariant[j].material_id,dataMaterialVariant[j].material_name,dataMaterialVariant[j].description, dataMaterialVariant[j].category, list_qtySKU[j]]);
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' uploader.xlsx');
+  }
+
+  async downloadMaterialTSSRUploadAdditional() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataTSSR = this.state.tssrData;
+    const dataItemTSSR = this.state.tssrData.packages;
+    const addPP = dataItemTSSR.filter(e => e.pp_id === "AdditionalMaterial");
+    let dataMaterialVariant = [];
+
+    let headerRow = ["material_id_actual", "material_name_actual", "material_type", "unit", "qty", "source_material"];
+    ws.addRow(headerRow);
+    let list_material_id = [];
+    for(let i = 0; i < addPP.length; i++){
+      for(let j = 0; j < addPP[i].materials.length; j++){
+        let dataMatIdx = addPP[i].materials[j];
+        ws.addRow([dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_type, dataMatIdx.uom, dataMatIdx.qty, dataMatIdx.source_material]);
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Additional Material TSSR '+dataTSSR.no_plantspec+' uploader.xlsx');
+  }
+
+  async exportMaterialPSReport() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataTSSR = this.state.tssrData;
+    const dataItemTSSR = this.state.tssrData.packages.filter(e => e.product_type.toLowerCase() === "svc");
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    const DatePrint = new Date();
+    const DatePrintOnly = DatePrint.getFullYear()+'-'+(DatePrint.getMonth()+1).toString().padStart(2, '0')+'-'+DatePrint.getDay().toString().padStart(2, '0');
+
+    const prepared = ws.mergeCells('A4:E4');
+    ws.getCell('A4').value = 'prepared';
+    ws.getCell('A4').alignment  = { vertical: 'top', horizontal: 'left' };
+    ws.getCell('A4').font  = { size: 8 };
+    ws.getCell('A4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const preparedEmail = ws.mergeCells('A5:E5');
+    ws.getCell('A5').value = this.state.userEmail;
+    ws.getCell('A5').alignment  = {horizontal: 'left' };
+    ws.getCell('A5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const DocumentNo = ws.mergeCells('F4:H4');
+    ws.getCell('F4').value = 'Document No.';
+    ws.getCell('F4').font  = { size: 8 };
+    ws.getCell('F4').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const DocumentNum = ws.mergeCells('F5:H5');
+    ws.getCell('F5').value = dataTSSR.no_plantspec;
+    ws.getCell('F5').alignment  = {horizontal: 'left' };
+    ws.getCell('F5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const Approved = ws.mergeCells('A6:C7');
+    ws.getCell('A6').value = 'Approved';
+    ws.getCell('A6').font  = { size: 8 };
+    ws.getCell('A6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('A6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}};
+
+    const Checked = ws.mergeCells('D6:E7');
+    ws.getCell('D6').value = 'Checked';
+    ws.getCell('D6').font  = { size: 8 };
+    ws.getCell('D6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('D6').border = {top: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const dateDoc = ws.mergeCells('F6:G6');
+    ws.getCell('F6').value = 'Date';
+    ws.getCell('F6').font  = { size: 8 };
+    ws.getCell('F6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const dateDocument = ws.mergeCells('F7:G7');
+    ws.getCell('F7').value = DatePrintOnly;
+    ws.getCell('F7').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    // const revDoc = ws.mergeCells('H6:I6');
+    ws.getCell('H6').value = 'Rev';
+    ws.getCell('H6').font  = { size: 8 };
+    ws.getCell('H6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('H6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    // const revDocNum = ws.mergeCells('H7:I7');
+    ws.getCell('H7').value = "-";
+    ws.getCell('H7').alignment  = {horizontal: 'left' };
+    ws.getCell('H7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    ws.mergeCells('I6:J6');
+    ws.getCell('I6').value = 'File';
+    ws.getCell('I6').font  = { size: 8 };
+    ws.getCell('I6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('I6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    ws.mergeCells('I7:J7');
+    ws.getCell('I7').value = null;
+    ws.getCell('I7').alignment  = {horizontal: 'left' };
+    ws.getCell('I7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    ws.mergeCells('I4:J4');
+    ws.getCell('I4').value = 'PO Number';
+    ws.getCell('I4').font  = { size: 8 };
+    ws.getCell('I4').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('I4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    ws.mergeCells('I5:J5');
+    ws.getCell('I5').value = null;
+    ws.getCell('I5').alignment  = {horizontal: 'left' };
+    ws.getCell('I5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    ws.addRow([""]);
+    ws.addRow(["Project", null, ": "+dataTSSR.project_name]);
+    ws.mergeCells('A9:B9');
+    ws.addRow([""]);
+    ws.addRow(["Tower ID", null, ": "+dataTSSR.site_info[0].site_id]);
+    ws.addRow(["Tower Name", null, ": "+dataTSSR.site_info[0].site_name]);
+    ws.mergeCells('A11:B11');
+    ws.addRow([""]);
+
+    let headerRow = ["NO.","DENOMINATION", null, null, "PRODUCT CODE", null, "QTY PLAN", "QTY ACTUAL", "UNIT", "REMARKS"];
+    ws.addRow(headerRow);
+    ws.mergeCells('B14:D14');
+    ws.mergeCells('E14:F14');
+    ws.getCell('A14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('B14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('F14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('G14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('H14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('I14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('J14').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('A14').font  = {bold : true };
+    ws.getCell('B14').font  = {bold : true };
+    ws.getCell('F14').font  = {bold : true };
+    ws.getCell('G14').font  = {bold : true };
+    ws.getCell('H14').font  = {bold : true };
+    ws.getCell('I14').font  = {bold : true };
+    ws.getCell('J14').font  = {bold : true };
+    ws.addRow([""]);
+    let dataItemTSSRConfig = [...new Set(dataItemTSSR.map(({ config_id }) => config_id))];
+
+    let numberPSItem = 0;
+
+    for(let a = 0; a < dataItemTSSRConfig.length; a++){
+      let itemTSSRBundle = dataItemTSSR.filter(e => e.config_id === dataItemTSSRConfig[a] && e.product_type.toLowerCase() !== "svc");
+      ws.addRow([null, dataItemTSSRConfig[a], null, null, null, null, null, null, null]);
+      ws.addRow([""]);
+      numberPSItem = numberPSItem+1;
+      ws.addRow([numberPSItem, dataItemTSSRConfig[a], null, null, null, null, null, null, null, dataItemTSSRConfig[a]]);
+      ws.addRow([""]);
+      for(let i = 0; i < itemTSSRBundle.length; i++){
+        numberPSItem = numberPSItem+1;
+        ws.addRow([numberPSItem, itemTSSRBundle[i].product_name, null, null, itemTSSRBundle[i].pp_id, null, itemTSSRBundle[i].qty, null, itemTSSRBundle[i].uom, null]);
+        for(let j = 0; j < itemTSSRBundle[i].materials.length; j++){
+          let dataMatIdx = itemTSSRBundle[i].materials[j];
+          ws.addRow([null, dataMatIdx.material_name, null, null, dataMatIdx.material_id, null, dataMatIdx.qty, dataMatIdx.qty, dataMatIdx.uom, null]);
+        }
+        ws.addRow([""]);
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'Material TSSR '+dataTSSR.no_plantspec+' Report.xlsx');
+  }
+
+  async getDataConfig(arrayConfigId) {
+    let dataConfig = [];
+    let array_config_id = '"'+arrayConfigId.join('", "')+'"';
+    const res = await this.getDataFromAPINODE('/packageconfig?q={"config_id":{"$in" : ['+array_config_id+']}}&v={"config_id":1, "config_name":1}');
+    if(res.data !== undefined){
+      dataConfig = res.data.data;
+    }
+    return dataConfig
+  }
+
+  async exportMaterialPSReportBundling() {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataTSSR = this.state.tssrData;
+    const dataItemTSSR = this.state.tssrData.packages.filter(e => e.product_type.toLowerCase() === "hw");
+    const dataCDID = this.state.wbs_cd_id_data;
+    const stockWH = this.state.material_wh;
+    const inboundWH = this.state.material_inbound;
+    let dataMaterialVariant = [];
+
+    const DatePrint = new Date();
+    const DatePrintOnly = DatePrint.getFullYear()+'-'+(DatePrint.getMonth()+1).toString().padStart(2, '0')+'-'+DatePrint.getDay().toString().padStart(2, '0');
+
+    const myBase64Image = ericssonLogoBlackHorizontalBase64;
+    const imageId2 = wb.addImage({
+      base64: myBase64Image,
+      extension: 'png',
+    });
+
+    ws.addImage(imageId2, {
+      tl: { col: 0, row: 0 },
+      br: { col: 2.5, row: 1.5 }
+    });
+
+    const myBase64ImageXL = xlLogoBase64;
+    const imageId3 = wb.addImage({
+      base64: myBase64ImageXL,
+      extension: 'png',
+    });
+
+    ws.addImage(imageId3, {
+      tl: { col: 7, row: 0 },
+      br: { col: 8, row: 2 }
+    });
+
+    const prepared = ws.mergeCells('A4:E4');
+    ws.getCell('A4').value = 'prepared';
+    ws.getCell('A4').alignment  = { vertical: 'top', horizontal: 'left' };
+    ws.getCell('A4').font  = { size: 8 };
+    ws.getCell('A4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const preparedEmail = ws.mergeCells('A5:E5');
+    ws.getCell('A5').value = this.state.userEmail;
+    ws.getCell('A5').alignment  = {horizontal: 'left' };
+    ws.getCell('A5').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const DocumentNo = ws.mergeCells('F4:I4');
+    ws.getCell('F4').value = 'Document No.';
+    ws.getCell('F4').font  = { size: 8 };
+    ws.getCell('F4').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F4').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const DocumentNum = ws.mergeCells('F5:I5');
+    ws.getCell('F5').value = dataTSSR.no_plantspec;
+    ws.getCell('F5').alignment  = {horizontal: 'left' };
+    ws.getCell('F5').border = {left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const Approved = ws.mergeCells('A6:C7');
+    ws.getCell('A6').value = 'Approved';
+    ws.getCell('A6').font  = { size: 8 };
+    ws.getCell('A6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('A6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}};
+
+    const Checked = ws.mergeCells('D6:E7');
+    ws.getCell('D6').value = 'Checked';
+    ws.getCell('D6').font  = { size: 8 };
+    ws.getCell('D6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('D6').border = {top: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const dateDoc = ws.mergeCells('F6:G6');
+    ws.getCell('F6').value = 'Date';
+    ws.getCell('F6').font  = { size: 8 };
+    ws.getCell('F6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F6').border = {top: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    const dateDocument = ws.mergeCells('F7:G7');
+    ws.getCell('F7').value = DatePrintOnly;
+    ws.getCell('F7').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('F7').border = { left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const revDoc = ws.mergeCells('H6:I6');
+    ws.getCell('H6').value = 'File';
+    ws.getCell('H6').font  = { size: 8 };
+    ws.getCell('H6').alignment  = {vertical: 'top', horizontal: 'left' };
+    ws.getCell('H6').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    const revDocNum = ws.mergeCells('H7:I7');
+    ws.getCell('H7').value = null;
+    ws.getCell('H7').alignment  = {horizontal: 'left' };
+    ws.getCell('H7').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+    ws.addRow([null]);
+
+    let dataItemTSSRConfig = [...new Set(dataItemTSSR.map(({ config_id }) => config_id))];
+    let dataCDSOWCODEUNIQ = [...new Set(dataCDID.map(({ SoW_Code }) => SoW_Code))];
+
+    const dataConfig = await this.getDataConfig(dataItemTSSRConfig);
+
+    ws.addRow(["RBS"]);
+    let getlastRow = ws.lastRow._number;
+    ws.getCell('A'+getlastRow).font  = {bold : true };
+
+    ws.addRow(["Project", null, ": "+dataTSSR.project_name.replace("///", ", ")]);
+    getlastRow = ws.lastRow._number;
+    ws.mergeCells('A'+getlastRow+':B'+getlastRow);
+    ws.getCell('A'+getlastRow).font  = {bold : true };
+    ws.getCell('C'+getlastRow).font  = {bold : true };
+    ws.addRow(["Prodef No.", null, ": "+dataCDSOWCODEUNIQ.join(", ")]);
+    getlastRow = ws.lastRow._number;
+    ws.mergeCells('A'+getlastRow+':B'+getlastRow);
+    ws.getCell('A'+getlastRow).font  = {bold : true };
+    ws.getCell('C'+getlastRow).font  = {bold : true };
+
+    ws.addRow([""]);
+    ws.addRow(["Tower", null, ": "+dataTSSR.site_info[0].site_id+" "+dataTSSR.site_info[0].site_name]);
+    getlastRow = ws.lastRow._number;
+    ws.getCell('A'+getlastRow).font  = {bold : true };
+    ws.getCell('C'+getlastRow).font  = {bold : true };
+
+    ws.mergeCells('A'+getlastRow+':B'+getlastRow);
+    ws.addRow(["Address", null, ": "+(this.state.data_tower.address !== undefined && this.state.data_tower.address !== null && this.state.data_tower.address.length !== 0  ? this.state.data_tower.address+", " : '')+(this.state.data_tower.city !== undefined && this.state.data_tower.city !== null && this.state.data_tower.city.length !== 0  ? this.state.data_tower.city : '')]);
+    getlastRow = ws.lastRow._number;
+    ws.mergeCells('A'+getlastRow+':B'+getlastRow);
+    ws.getCell('A'+getlastRow).font  = {bold : true };
+    ws.getCell('C'+getlastRow).font  = {bold : true };
+
+    ws.addRow([""]);
+    ws.addRow(["Site Information", null, ": "]);
+    getlastRow = ws.lastRow._number;
+    ws.getCell('A'+getlastRow).font  = {bold : true };
+    ws.getCell('C'+getlastRow).font  = {bold : true };
+
+    ws.mergeCells('A'+getlastRow+':B'+getlastRow);
+    ws.addRow(["Configuration", null, ": "+ dataItemTSSRConfig.join(", ")]);
+    getlastRow = ws.lastRow._number;
+    ws.mergeCells('A'+getlastRow+':B'+getlastRow);
+    ws.getCell('A'+getlastRow).font  = {bold : true };
+    ws.getCell('C'+getlastRow).font  = {bold : true };
+
+    ws.addRow([""]);
+
+    let headerRow = ["No","FUNCTIONAL DESCRIPTION", null, null, "SAP NUMBER", "Qty Plan", "Qty Built", "SLOC", "REMARKS"];
+    ws.addRow(headerRow);
+    getlastRow = ws.lastRow._number;
+    ws.mergeCells('B'+getlastRow+':D'+getlastRow);
+    ws.getCell('A'+getlastRow).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('B'+getlastRow).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('E'+getlastRow).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('F'+getlastRow).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('G'+getlastRow).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('H'+getlastRow).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('I'+getlastRow).border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('A'+getlastRow).font  = {bold : true };
+    ws.getCell('B'+getlastRow).font  = {bold : true };
+    ws.getCell('E'+getlastRow).font  = {bold : true };
+    ws.getCell('F'+getlastRow).font  = {bold : true };
+    ws.getCell('G'+getlastRow).font  = {bold : true };
+    ws.getCell('H'+getlastRow).font  = {bold : true };
+    ws.getCell('I'+getlastRow).font  = {bold : true };
+    ws.addRow([""]);
+    getlastRow = ws.lastRow._number;
+    ws.getCell('A'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('B'+getlastRow).border = {left: {style:'thin'}};
+    ws.getCell('E'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('F'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('G'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('H'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('I'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+
+    let numberPSItem = 0;
+    for(let a = 0; a < dataItemTSSRConfig.length; a++){
+      let itemTSSRBundle = dataItemTSSR.filter(e => e.config_id === dataItemTSSRConfig[a] && e.product_type.toLowerCase() === "hw");
+      let dataConfigIdx = dataConfig.find(e => e.config_id === dataItemTSSRConfig[a]);
+      if(dataConfigIdx !== undefined){
+        ws.addRow([(a+1), dataConfigIdx.config_name,  null, null, dataItemTSSRConfig[a], null, null, null, null]);
+      }else{
+        ws.addRow([(a+1), null,  null, null, dataItemTSSRConfig[a], null, null, null, null]);
+      }
+      getlastRow = ws.lastRow._number;
+      ws.getCell('A'+getlastRow).font  = {bold : true };
+      ws.getCell('B'+getlastRow).font  = {bold : true };
+      ws.getCell('E'+getlastRow).font  = {bold : true };
+      ws.getCell('A'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+      ws.getCell('B'+getlastRow).border = {left: {style:'thin'}};
+      ws.getCell('E'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+      ws.getCell('F'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+      ws.getCell('G'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+      ws.getCell('H'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+      ws.getCell('I'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+      for(let i = 0; i < itemTSSRBundle.length; i++){
+        ws.addRow([(a+1)+"."+(i+1), itemTSSRBundle[i].product_name, null, null, itemTSSRBundle[i].pp_id, itemTSSRBundle[i].qty, null, null, null]);
+        getlastRow = ws.lastRow._number;
+        ws.getCell('A'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+        ws.getCell('B'+getlastRow).border = {left: {style:'thin'}};
+        ws.getCell('E'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+        ws.getCell('F'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+        ws.getCell('G'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+        ws.getCell('H'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+        ws.getCell('I'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+
+        // for(let j = 0; j < itemTSSRBundle[i].materials.length; j++){
+        //   let dataMatIdx = itemTSSRBundle[i].materials[j];
+        //   // ws.addRow([null, dataMatIdx.material_name, null, null, null, dataMatIdx.qty, null, null, null]);
+        // }
+        // ws.addRow([""]);
+      }
+      ws.addRow([""]);
+      getlastRow = ws.lastRow._number;
+      ws.getCell('A'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+      ws.getCell('B'+getlastRow).border = {left: {style:'thin'}};
+      ws.getCell('E'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+      ws.getCell('F'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+      ws.getCell('G'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+      ws.getCell('H'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+      ws.getCell('I'+getlastRow).border = {left: {style:'thin'}, right: {style:'thin'} };
+    }
+    ws.addRow([""]);
+    getlastRow = ws.lastRow._number;
+    ws.getCell('A'+getlastRow).border = {bottom: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('B'+getlastRow).border = {bottom: {style:'thin'}, left: {style:'thin'} };
+    ws.getCell('C'+getlastRow).border = {bottom: {style:'thin'}};
+    ws.getCell('D'+getlastRow).border = {bottom: {style:'thin'}};
+    ws.getCell('E'+getlastRow).border = {bottom: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('F'+getlastRow).border = {bottom: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('G'+getlastRow).border = {bottom: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('H'+getlastRow).border = {bottom: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+    ws.getCell('I'+getlastRow).border = {bottom: {style:'thin'}, left: {style:'thin'}, right: {style:'thin'} };
+
+    ws.addRow([""]);
+    ws.addRow([""]);
+    getlastRow = ws.lastRow._number;
+    ws.getCell('A'+(getlastRow+1)).value = "Date";
+    ws.getCell('G'+(getlastRow+1)).value = "Date";
+
+    getlastRow = ws.lastRow._number;
+    ws.getCell('A'+(getlastRow+1)).value = "PT. Ericsson Indonesia";
+    ws.getCell('G'+(getlastRow+1)).value = "PT. Huawei Service";
+    getlastRow = ws.lastRow._number;
+    ws.getCell('A'+getlastRow).font  = {bold : true };
+    ws.getCell('G'+getlastRow).font  = {bold : true };
+
+    ws.addRow([""]);
+    ws.addRow([""]);
+    ws.addRow([""]);
+    ws.addRow([""]);
+    ws.addRow([""]);
+
+    getlastRow = ws.lastRow._number;
+    ws.getCell('A'+(getlastRow+1)).value = "Name";
+
+    ws.getCell('A'+(getlastRow+1)).border = {top: {style:'thin'}};
+    ws.getCell('B'+(getlastRow+1)).border = {top: {style:'thin'}};
+    // ws.getCell('C'+(getlastRow+1)).border = {top: {style:'thin'}};
+
+    ws.getCell('G'+(getlastRow+1)).value = "Name";
+
+    ws.getCell('G'+(getlastRow+1)).border = {top: {style:'thin'}};
+    ws.getCell('H'+(getlastRow+1)).border = {top: {style:'thin'}};
+    ws.getCell('I'+(getlastRow+1)).border = {top: {style:'thin'}};
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'PS '+dataTSSR.no_plantspec+' Report Bundling ATP.xlsx');
+  }
+
+  async downloadEPODFormat(){
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+    const ws2 = wb.addWorksheet();
+
+    const dataTSSR = this.state.tssrData;
+    const dataItemTSSR = this.state.tssrData.packages;
+    const dataCDWBS = this.state.wbs_cd_id_data;
+    let dataMaterialVariant = [];
+
+    let checkMaterialOrigin = this.state.tssrData.packages[0] !== undefined ? this.state.tssrData.packages[0].materials[0] !== undefined ? this.state.tssrData.packages[0].materials[0].material_origin !== undefined ? this.state.tssrData.packages[0].materials[0].material_origin : undefined : undefined : undefined;
+
+    // let ppData = [];
+    // if(checkMaterialOrigin === undefined){
+    //   ppData = await this.ppData(dataItemTSSR.map(e => e.pp_id))
+    // }
+
+    let headerRow = ["BOM_ID", "Site_ID", "Material_ID", "Material_Name", "Material_Quantity", "BOM_Status", "WBS_ID", "CPO_ID", "BOM_Creation_Date", "SalesOrder_ID", "InternalPO_ID", "BOM_Approval_Date", "Configuration_ID", "Bundle_ID", "Program_Name", "Material_Category"];
+    ws.addRow(headerRow);
+    let list_material_id = [];
+    for(let i = 0; i < dataItemTSSR.length; i++){
+      let dataCD = null;
+      let dataCDWBSbyCDID = dataCDWBS.find(e => e.WP_ID === dataTSSR.site_info[0].cd_id);
+      if(dataCDWBSbyCDID !== undefined){
+        dataCD = dataCDWBSbyCDID;
+      }
+      let dataCDMaterial = null;
+      let findCDMaterial = dataTSSR.site_info.find(e => e.no_tssr_boq_site === dataItemTSSR[i].no_tssr_boq_site);
+      if(findCDMaterial !== undefined){
+        dataCDMaterial = findCDMaterial.cd_id;
+      }
+      for(let j = 0; j < dataItemTSSR[i].materials.length; j++){
+        let dataMatIdx = dataItemTSSR[i].materials[j];
+        ws.addRow([dataTSSR.no_plantspec, dataCDMaterial, dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.qty, "Approved", dataCD.C1003_WBS_HW, dataItemTSSR[i].cpo_number, null, null, null, null, dataItemTSSR[i].config_id, dataItemTSSR[i].pp_id, dataItemTSSR[i].program, dataMatIdx.material_origin]);
+      }
+    }
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'EPOD Format '+dataTSSR.no_plantspec+'.xlsx');
+  }
+
+  async getAllPP(array_PP){
+    let dataPP = [];
+    let arrayDataPP = array_PP;
+    let getNumberPage = Math.ceil(arrayDataPP.length / 25);
+    for(let i = 0 ; i < getNumberPage; i++){
+      let DataPaginationPP = arrayDataPP.slice(i * 25, (i+1)*25);
+      let arrayIdPP = '"'+DataPaginationPP.join('", "')+'"';
+      arrayIdPP = arrayIdPP.replace("&", "%26");
+      let where_id_PP = '?where={"pp_id" : {"$in" : ['+arrayIdPP+']}}';
+      let resPP = await this.getDatafromAPI('/pp_sorted_non_page'+where_id_PP);
+      if(resPP !== undefined){
+        if(resPP.data !== undefined){
+          dataPP = dataPP.concat(resPP.data._items);
+        }
+      }
+    }
+    return dataPP;
+  }
+
+  async saveUpdateMaterialWeb(){
+    this.toggleLoading();
+    const dataWeb = this.state.qty_ps;
+    const dataTSSR = this.state.tssrData;
+    let patchDataMat = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataTSSR._id, {"identifier" : "PS" ,"data" : dataWeb});
+    if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
+      this.setState({ action_status : 'success'});
+    } else{
+      if(patchDataMat.response !== undefined && patchDataMat.response.data !== undefined && patchDataMat.response.data.error !== undefined){
+        if(patchDataMat.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+  }
+
   async saveUpdateMaterial(){
+    this.toggleLoading();
     const dataXLS = this.state.rowsXLS;
     const dataTSSR = this.state.tssrData;
     let patchDataMat = await this.patchDatatoAPINODE('/matreq/updatePlantSpecWithVariant/'+dataTSSR._id, {"identifier" : "PS" ,"data" : dataXLS});
@@ -1328,6 +1881,54 @@ class DetailTssr extends Component {
         this.setState({ action_status: 'failed' });
       }
     }
+    this.toggleLoading();
+  }
+
+  async saveUpdateMaterialAdditonal(){
+    this.toggleLoading();
+    const dataXLS = this.state.rowsXLS;
+    const dataTSSR = this.state.tssrData;
+    let patchDataMat = await this.patchDatatoAPINODE('/matreq/inputAdditionalMaterial/'+dataTSSR._id, {"identifier" : "PS" ,"additionalMaterial" : dataXLS, "takeOutAdditional" : false });
+    if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
+      this.setState({ action_status : 'success'});
+    } else{
+      if(patchDataMat.response !== undefined && patchDataMat.response.data !== undefined && patchDataMat.response.data.error !== undefined){
+        if(patchDataMat.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+  }
+
+  async deleteAdditionalMaterialAll(){
+    this.toggleLoading();
+    const dataXLS = this.state.rowsXLS;
+    const dataTSSR = this.state.tssrData;
+    let patchDataMat = await this.patchDatatoAPINODE('/matreq/inputAdditionalMaterial/'+dataTSSR._id, {"identifier" : "PS" ,"additionalMaterial" : dataXLS, "takeOutAdditional" : true });
+    if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
+      this.setState({ action_status : 'success'});
+    } else{
+      if(patchDataMat.response !== undefined && patchDataMat.response.data !== undefined && patchDataMat.response.data.error !== undefined){
+        if(patchDataMat.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error });
+        }
+      }else{
+        if(patchDataMat.response.data.data !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.data });
+        }else{
+          this.setState({ action_status: 'failed' });
+        }
+      }
+    }
+    this.setState({modal_delete_warning : false});
+    this.toggleLoading();
   }
 
   tableWBSPlantSpect(site_info){
@@ -1376,6 +1977,104 @@ class DetailTssr extends Component {
     }
   }
 
+  addMaterialAdditional(){
+    let addMaterial = this.state.additional_material;
+    addMaterial.push({});
+    this.setState({additional_material : addMaterial });
+  }
+
+  deleteMaterialAdditional(index){
+    let addMaterial = this.state.additional_material;
+    addMaterial.splice(index,1);
+    this.setState({additional_material : addMaterial });
+  }
+
+  onChangeMaterialAdditional(e){
+    let addMaterial = this.state.additional_material;
+    let idxField = e.target.name.split(" /// ");
+    let value = e.target.value;
+    let idx = idxField[1];
+    let field = idxField[0];
+    if(field === "material_id_actual"){
+      addMaterial[parseInt(idx)][field] = value;
+      let material = this.state.product_package[0].materials.find(mm => mm.material_id === value);
+      if(material !== undefined){
+        addMaterial[parseInt(idx)]["material_name_actual"] = material.material_name;
+        addMaterial[parseInt(idx)]["material_type"] = material.material_type;
+        addMaterial[parseInt(idx)]["unit"] = material.uom;
+        addMaterial[parseInt(idx)]["qty"] = material.qty;
+      }else{
+        addMaterial[parseInt(idx)]["material_name_actual"] = null;
+        addMaterial[parseInt(idx)]["material_type"] = null;
+        addMaterial[parseInt(idx)]["unit"] = null;
+        addMaterial[parseInt(idx)]["qty"] = null;
+      }
+    }else{
+      addMaterial[parseInt(idx)][field] = value;
+    }
+    this.setState({additional_material : addMaterial})
+  }
+
+  async saveAdditional(){
+    this.toggleLoading();
+    this.setState({modalAdditionalForm : false});
+    const addMaterial = this.state.additional_material;
+    const dataTSSR = this.state.tssrData;
+    const dataUpload = [["material_id_actual", "material_name_actual", "material_type", "unit", "qty", "source_material"]];
+    for(let i = 0; i < addMaterial.length; i++){
+      dataUpload.push([addMaterial[i].material_id_actual, addMaterial[i].material_name_actual, addMaterial[i].material_type, addMaterial[i].unit, parseFloat(addMaterial[i].qty), addMaterial[i].source_material]);
+    }
+    let patchDataMat = await this.patchDatatoAPINODE('/matreq/inputAdditionalMaterial/'+dataTSSR._id, {"identifier" : "PS" ,"additionalMaterial" : dataUpload , "takeOutAdditional" : false});
+    if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
+      this.setState({ action_status : 'success'});
+    } else{
+      if(patchDataMat.response !== undefined && patchDataMat.response.data !== undefined && patchDataMat.response.data.error !== undefined){
+        if(patchDataMat.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: patchDataMat.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+  }
+
+  AdditionalForm(){
+    // this.toggleLoading();
+    let additionaMaterial = [];
+    const addPP = this.state.tssrData.packages.filter(e => e.pp_id === "AdditionalMaterial");
+    const addMaterial = addPP.map(value => value.materials.map(child => child)).reduce((l, n) => l.concat(n), []);
+    for(let i = 0; i < addMaterial.length; i++){
+      let addIdx = {
+        "material_id_actual" : addMaterial[i].material_id,
+        "material_name_actual" : addMaterial[i].material_name,
+        "material_type" : addMaterial[i].material_type,
+        "unit" : addMaterial[i].uom,
+        "qty" : addMaterial[i].qty,
+        "source_material" : addMaterial[i].source_material
+      };
+      additionaMaterial.push(addIdx);
+    }
+    this.setState({additional_material : additionaMaterial, modalAdditionalForm : true}, () => {
+      // this.toggleLoading();
+    });
+
+  }
+
+
+  getPackageDataAPI() {
+    this.getDataFromAPINODE('/productpackage?q={"pp_id": "AdditionalMaterial"}')
+      .then(res => {
+        if (res.data !== undefined) {
+          this.setState({ product_package: res.data.data});
+        } else {
+          this.setState({ product_package: []});
+        }
+      })
+  }
+
   render() {
     let qty_wh = undefined, qty_inbound = undefined;
     return (
@@ -1386,13 +2085,16 @@ class DetailTssr extends Component {
           <Card>
             <CardHeader>
               <span style={{lineHeight :'2', fontSize : '15px'}} >Detail Plant Spec Group</span>
-              {this.state.tssrData !== null && this.state.tssrData.submission_status !== "SUBMITTED" ? (
+              {this.state.tssrData !== null && (this.state.tssrData.submission_status === "NOT SUBMITTED" ||  this.state.tssrData.submission_status === "PLANTSPEC UPDATED" )? (
                 <Button style={{marginRight : '8px', float : 'right'}} color="success" onClick={this.submitTSSR} size="sm">Submit</Button>
               ) : (
                 <Fragment></Fragment>
               )}
               {this.state.tssrData !== null && this.state.tssrData.locked === false ? (
+                <Fragment>
                 <Button style={{marginRight : '8px', float : 'right'}} color="primary" onClick={this.toggleUpload} size="sm">Edit</Button>
+                <Button style={{marginRight : '8px', float : 'right'}} color="primary" onClick={this.toggleUploadAdditional} size="sm">Edit Additional</Button>
+                </Fragment>
               ) : (<Fragment></Fragment>)}
               <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'right', marginRight : '10px'}}>
                 <DropdownToggle caret color="secondary">
@@ -1400,7 +2102,12 @@ class DetailTssr extends Component {
                 </DropdownToggle>
                 <DropdownMenu>
                   <DropdownItem header>TSSR File</DropdownItem>
+                  <DropdownItem onClick={this.exportMaterialPSReportBundling}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PS Report Bundling ATP</DropdownItem>
+                  <DropdownItem onClick={this.exportMaterialPSReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Report</DropdownItem>
+                  <DropdownItem onClick={this.downloadEPODFormat}> <i className="fa fa-file-text-o" aria-hidden="true"></i>EPOD Format</DropdownItem>
                   <DropdownItem onClick={this.downloadMaterialTSSRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
+                  <DropdownItem onClick={this.downloadMaterialTSSRUploadNOK}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format NOK</DropdownItem>
+                  <DropdownItem onClick={this.downloadMaterialTSSRUploadAdditional}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Additional Material Format</DropdownItem>
                 </DropdownMenu>
               </Dropdown>
               {/* }<Button style={{marginRight : '8px', float : 'right', display: 'none'}} outline color="info" onClick={this.exportFormatTSSR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download PS Format</Button> */}
@@ -1411,14 +2118,17 @@ class DetailTssr extends Component {
                   <div>
                     <Row>
                       <Col md="12">
-                      {this.state.data_comm_boq !== null && this.props.match.params.id !== undefined && (
+                      {this.props.match.params.id !== undefined && (
                         <React.Fragment>
                         <div style={{display : 'flex', "align-items": "baseline"}}>
                           <input type="file" onChange={this.fileHandlerTSSR.bind(this)} style={{"padding":"10px"}}/>
-                          <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
+                          {this.state.rowsXLS.length === 0 ? <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.saveUpdateMaterialWeb} >
+                            <i className="fa fa-paste">&nbsp;&nbsp;</i>
+                            Save Web
+                          </Button>: <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.saveUpdateMaterial} disabled={this.state.rowsXLS.length === 0}>
                             <i className="fa fa-paste">&nbsp;&nbsp;</i>
                             Save
-                          </Button>
+                          </Button>}
                         </div>
                         </React.Fragment>
                       )}
@@ -1428,10 +2138,40 @@ class DetailTssr extends Component {
                 </CardBody>
               </Card>
             </Collapse>
+            <Collapse isOpen={this.state.collapseUploadAdditonal}>
+              <Card style={{ margin: '10px 10px 5px 10px' }}>
+                <CardBody>
+                  <div>
+                    <Row>
+                      <Col md="12">
+                      {this.props.match.params.id !== undefined && (
+                        <React.Fragment>
+                        <div style={{display : 'flex', "align-items": "baseline"}}>
+                          <input type="file" onChange={this.fileHandlerTSSR.bind(this)} style={{"padding":"10px"}}/>
+                          <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.saveUpdateMaterialAdditonal} disabled={this.state.rowsXLS.length === 0}>
+                            <i className="fa fa-save">&nbsp;&nbsp;</i>
+                            Save Additional
+                          </Button>
+                        </div>
+                        </React.Fragment>
+                      )}
+                      </Col>
+                    </Row>
+                  </div>
+                </CardBody>
+                <CardFooter>
+                  <Button style={{'float' : 'left',marginLeft : 'auto', order : "2"}} color="danger" size="sm" onClick={this.toggleWarningDeleteAdditional}>
+                    <i className="fa fa-trash">&nbsp;&nbsp;</i>
+                    Delete Additional Bundle
+                  </Button>
+                  <Button style={{'float' : 'right',marginLeft : 'auto', order : "2"}} color="primary" onClick={this.AdditionalForm}>
+                    <i className="fa fa-paste">&nbsp;&nbsp;</i>
+                    Form
+                  </Button>
+                </CardFooter>
+              </Card>
+            </Collapse>
             <CardBody>
-            <input type="file" onChange={this.fileHandlerTSSR.bind(this)} style={{"padding":"10px","visiblity":"hidden","display":"none"}}/>
-            <Button color="warning" onClick={this.prepareEdit} style={{float : 'right', display : 'none'}} >Edit</Button>
-            <Button color="success" onClick={this.prepareRevision} style={{float : 'right', marginRight : '8px', display : 'none'}} >Revision</Button>
             {this.state.data_tssr !== null ?
               this.state.data_tssr.project_name === "" || this.state.data_tssr.project_name === null ? (
                 <table style={{marginBottom : '20px'}}>
@@ -1472,10 +2212,13 @@ class DetailTssr extends Component {
                       <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Project Name : {this.state.tssrData.project_name}</td>
                     </tr>
                     <tr>
-                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Site ID : {this.state.tssrData.site_info[0].site_id}</td>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Tower ID : {this.state.tssrData.site_info[0].site_id}</td>
                     </tr>
                     <tr>
                       <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>MR Related : {this.state.tssrData.mr_id}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Region : {this.state.data_tower.region}</td>
                     </tr>
                     </Fragment>
                   )}
@@ -1483,91 +2226,6 @@ class DetailTssr extends Component {
               </table>
               <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : 'rgba(59,134,134,1)', marginTop: '5px'}}></hr>
               <Fragment>
-                <Row>
-                {this.state.tssr_site_NE !== null && (
-                <Col style={{marginBottom : '10px'}}>
-                  <table>
-                    <tbody>
-                      <tr>
-                        <td>Technical Ref</td>
-                        <td>:</td>
-                        {this.state.list_technical_ref !== null ? (
-                          <Fragment>
-                            <td style={{paddingLeft:'10px', width : '200px'}}>
-                              <Select
-                                cacheOptions
-                                options={this.state.list_technical_ref_selection}
-                                onChange={this.handleChangeTechRef}
-                              />
-                            </td>
-                            <td style={{paddingLeft:'10px', width : '100px'}}>
-                              <Button size="sm" color="primary" style={{float: "right"}} sm disabled={this.state.technical_ref_selected === null} onClick={this.referenceWithTechBoq}>Submit</Button>
-                            </td>
-                          </Fragment>
-                        ) : (
-                          <td style={{paddingLeft:'10px', width : '200px'}}>
-                            {this.state.technical_ref_selected}
-                          </td>
-                        )}
-
-                      </tr>
-                    </tbody>
-                  </table>
-                </Col>
-                )}
-                </Row>
-                <Row>
-                {this.state.tssr_site_NE !== null && (
-                  <Fragment>
-                    <Col md="4">
-                    <table className="table-header">
-                      <tbody>
-                          <tr>
-                            <td>Site ID NE</td>
-                            <td>: &nbsp;</td>
-                            <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_id}</td>
-                          </tr>
-                          <tr>
-                            <td>Site Name NE</td>
-                            <td>:</td>
-                            <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_NE.site_id}</td>
-                          </tr>
-                          <tr>
-                            <td>Version</td>
-                            <td>:</td>
-                            <td style={{paddingLeft:'10px'}}>
-                              <Input style={{marginTop : '10px'}} type="select" onChange={this.handleChangeVersion} value={this.state.version_selected === null ? this.state.version_current : this.state.version_selected}>
-                                <option value={this.state.data_tssr.version}>{this.state.data_tssr.version}</option>
-                                {this.state.list_version.map( ver =>
-                                  <option value={ver.version}>{ver.version}</option>
-                                )}
-                              </Input>
-                            </td>
-                          </tr>
-                      </tbody>
-                    </table>
-                    </Col>
-                    {this.state.tssr_site_FE !== null ? (
-                      <Col md="4">
-                      <table className="table-header">
-                        <tbody>
-                          <tr>
-                            <td>Site ID FE</td>
-                            <td>: &nbsp;</td>
-                            <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_id}</td>
-                          </tr>
-                          <tr>
-                            <td>Site Name FE</td>
-                            <td>:</td>
-                            <td style={{paddingLeft:'10px'}}>{this.state.tssr_site_FE.site_id}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      </Col>
-                    ) : (<Fragment></Fragment>)}
-                  </Fragment>
-                )}
-                </Row>
                 <hr className="upload-line-ordering"></hr>
                 <Table responsive striped bordered size="sm">
                   <thead>
@@ -1608,7 +2266,7 @@ class DetailTssr extends Component {
                         <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>Program</th>
                         <th rowSpan="2" className="fixedhead" style={{width : '75px', verticalAlign : 'middle'}}>UOM</th>
                         <th colSpan="3" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Total Qty per PP</th>
-                        <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Availability</th>
+                        <th rowSpan="2" className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Config ID / Availability</th>
                       </tr>
                       <tr>
                         <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>Qty PS</th>
@@ -1618,9 +2276,9 @@ class DetailTssr extends Component {
                     </thead>
                     <tbody>
                       {this.state.tssrData !== null && Array.isArray(this.state.tssrData.packages) && (
-                        this.state.tssrData.packages.map(pp =>
+                        this.state.tssrData.packages.filter(e => e.product_type.toLowerCase() !== "svc").map((pp,arr_pp) =>
                           <Fragment>
-                            <tr style={{backgroundColor : '#E5FCC2'}} className="fixbody">
+                            <tr key={arr_pp} style={{backgroundColor : '#E5FCC2'}} className="fixbody">
                               <td style={{textAlign : 'left'}}>{pp.no_tssr_boq_site +" ("+pp.program+")"}</td>
                               <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
                               <td>{pp.product_name}</td>
@@ -1629,16 +2287,20 @@ class DetailTssr extends Component {
                               <td align='center'>{pp.qty.toFixed(2)}</td>
                               <td align='center'></td>
                               <td align='center'></td>
-                              <td align='center'></td>
+                              <td align='center'>{pp.config_id}</td>
                             </tr>
-                            {pp.materials.map(material =>
-                              <tr style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
+                            {pp.materials.map((material, arr_mat) =>
+                              <tr key={arr_mat} style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
                                 <td>{material.source_material}</td>
                                 <td style={{textAlign : 'right'}}>{material.material_id}</td>
                                 <td style={{textAlign : 'left'}}>{material.material_name}</td>
                                 <td style={{textAlign : 'left'}}></td>
                                 <td>{material.uom}</td>
-                                <td align='center'>{(material.qty).toFixed(2)}</td>
+                                <td key={arr_mat} align='center'>
+                                  {this.state.collapseUpload === true ? (
+                                    <Input type="number" min="0" defaultValue={(material.qty).toFixed(2)} onChange={e => {this.handleChangeQTY(e, arr_mat, arr_pp)} } />
+                                  ) : material.qty }
+                                </td>
                                 <td align='center'>{qty_wh = this.state.material_wh.find(e => e.sku === material.material_id) !== undefined ? this.state.material_wh.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                                 <td align='center'>{qty_inbound = this.state.material_inbound.find(e => e.sku === material.material_id) !== undefined ? this.state.material_inbound.find(e => e.sku === material.material_id).qty_sku.toFixed(2) : 0}</td>
                                 <td align='center'>{material.qty < qty_wh ? "OK":"NOK"}</td>
@@ -1652,6 +2314,14 @@ class DetailTssr extends Component {
                 </div>
               </Fragment>
             </CardBody>
+            <CardFooter>
+              {(this.state.tssrData !== null && this.state.tssrData.mr_id === null) && (
+                <Button style={{'float' : 'left',marginLeft : 'auto', order : "2"}} color="danger" size="sm" onClick={this.deletePS}>
+                  <i className="fa fa-trash">&nbsp;&nbsp;</i>
+                  Delete Plant Spec
+                </Button>
+              )}
+            </CardFooter>
           </Card>
           </Col>
         </Row>
@@ -1669,10 +2339,109 @@ class DetailTssr extends Component {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="secondary" onClick={this.toggleLoading}>Close</Button>
           </ModalFooter>
         </Modal>
         {/* end Modal Loading */}
+
+        {/* Modal Additional Material */}
+        <Modal isOpen={this.state.modalAdditionalForm} toggle={this.toggleAdditionalForm} className={'modal-xl '+ this.props.className}>
+          <ModalHeader>
+            <div>
+              <span>Form Additional Material</span>
+            </div>
+          </ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col>
+                <Table hover bordered striped responsive size="sm">
+                  <thead>
+                    <tr>
+                      <th>
+                        Material ID
+                      </th>
+                      <th>
+                        Material Name
+                      </th>
+                      <th>
+                        Type
+                      </th>
+                      <th>
+                        UoM
+                      </th>
+                      <th>
+                        Qty
+                      </th>
+                      <th>
+                        Source Material
+                      </th>
+                      <th>
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {this.state.additional_material.map((add,i) =>
+                    <tr>
+                      <td>
+                        <select name="cars" id="cars" name={"material_id_actual" + " /// "+i } value={add.material_id_actual} onChange={this.onChangeMaterialAdditional} >
+                          <option value={null} selected disabled></option>
+                          {this.state.product_package.map(pp =>
+                            pp.materials.map(mm =>
+                              <option value={mm.material_id}>{mm.material_id}</option>
+                            )
+                          )}
+                        </select>
+                      </td>
+                      <td>
+                        <input type="text" name={"material_name_actual" + " /// "+i } value={add.material_name_actual} onChange={this.onChangeMaterialAdditional} />
+                      </td>
+                      <td>
+                        <input type="text" name={"material_type" + " /// "+i } value={add.material_type} onChange={this.onChangeMaterialAdditional} style={{width : '150px'}}/>
+                      </td>
+                      <td>
+                        <input type="text" name={"unit" + " /// "+i } value={add.unit} onChange={this.onChangeMaterialAdditional} style={{width : '100px'}}/>
+                      </td>
+                      <td>
+                        <input type="number" name={"qty" + " /// "+i } value={add.qty} onChange={this.onChangeMaterialAdditional} style={{width : '75px'}}/>
+                      </td>
+                      <td>
+                        <input type="string" name={"source_material" + " /// "+i } value={add.source_material} onChange={this.onChangeMaterialAdditional} />
+                      </td>
+                      <td>
+                        <Button color="danger" size="sm" onClick={e => this.deleteMaterialAdditional(i)}><span className="fa fa-times"></span></Button>
+                      </td>
+                    </tr>
+                  )}
+                  </tbody>
+                  <Button style={{ float : "left", margin : "15px"}} color="info" size="sm" onClick={this.addMaterialAdditional}>Add Material</Button>
+                </Table>
+              </Col>
+            </Row>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="warning" size="sm" onClick={this.toggleAdditionalForm}>Cancel</Button>
+            <Button color="success" size="sm" onClick={this.saveAdditional}>Submit</Button>
+          </ModalFooter>
+        </Modal>
+        {/*  Modal Additional Material*/}
+
+        {/* Modal confirmation Delete */}
+        <ModalDelete
+          isOpen={this.state.modal_delete_warning}
+          toggle={this.toggleWarningDeleteAdditional}
+          className={"modal-danger " + this.props.className}
+          title={"Delete All Additional Material"}
+          body={"This action will delete all additional material and its bundle in this PS. Are you sure ?"}
+        >
+          <Button color="danger" onClick={this.deleteAdditionalMaterialAll} value="save">
+            Yes
+          </Button>
+          <Button color="secondary" onClick={this.toggleWarningDeleteAdditional}>
+            Cancel
+          </Button>
+        </ModalDelete>
+        {/* Modal confirmation Delete */}
+
       </div>
 
     );

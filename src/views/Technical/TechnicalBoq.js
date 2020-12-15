@@ -12,6 +12,9 @@ import { Redirect, Link } from 'react-router-dom';
 import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
 import jsonData from './TechnicalNewFormat.js';
 
+import ModalDelete from '../components/ModalDelete'
+import {convertDateFormatfull} from '../../helper/basicFunction'
+
 const API_EMAIL = 'https://prod-37.westeurope.logic.azure.com:443/workflows/7700be82ef7b4bdab6eb986e970e2fc8/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wndx4N_qNLEZ9fpCR73BBR-5T1QHjx7xxshdyrvJ20c';
 const API_URL = 'https://api-dev.smart.pdb.e-dpm.com/smartapi';
 const usernamePhilApi = 'pdbdash';
@@ -188,6 +191,10 @@ class TechnicalBoq extends Component {
       modal_update_info : false,
       loading_checking : null,
       format_uploader : null,
+      save_confirmation: false,
+      revise_confirmation: false,
+      selected_id: "",
+      selected_version: null,
     };
     this.toggleUpdateInfo = this.toggleUpdateInfo.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -218,8 +225,12 @@ class TechnicalBoq extends Component {
     this.exportFormatTechnicalHorizontal = this.exportFormatTechnicalHorizontal.bind(this);
     this.exportFormatTechnicalVertical = this.exportFormatTechnicalVertical.bind(this);
     this.approvalTechnical = this.approvalTechnical.bind(this);
+    this.submitTSSR = this.submitTSSR.bind(this);
     this.handleChangeOptionView = this.handleChangeOptionView.bind(this);
     this.handleChangeFormatUploader = this.handleChangeFormatUploader.bind(this);
+    this.toggleSave = this.toggleSave.bind(this);
+    this.toggleRevised = this.toggleRevised.bind(this);
+
     }
 
     numberToAlphabet(number){
@@ -231,6 +242,45 @@ class TechnicalBoq extends Component {
         return (num + 9).toString(36).toUpperCase();
       }
     }
+
+  toggleSave(e) {
+    const modalDelete = this.state.save_confirmation;
+    if (modalDelete === false) {
+      const _id = e.currentTarget.value;
+      // const name = e.currentTarget.name;
+      this.setState({
+        save_confirmation: !this.state.save_confirmation,
+        selected_id: this.state.data_tech_boq.no_tech_boq,
+
+      });
+    } else {
+      this.setState({
+        save_confirmation: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete: !prevState.modalDelete,
+    }));
+  }
+
+  toggleRevised(e) {
+    const modalDelete = this.state.revise_confirmation;
+    if (modalDelete === false) {
+      // const name = e.currentTarget.name;
+      this.setState({
+        revise_confirmation: !this.state.revise_confirmation,
+        selected_id: this.state.data_tech_boq.no_tech_boq,
+        selected_version: parseInt(this.state.data_tech_boq.version)+1
+      });
+    } else {
+      this.setState({
+        revise_confirmation: false,
+      });
+    }
+    this.setState((prevState) => ({
+      modalDelete: !prevState.modalDelete,
+    }));
+  }
 
   toggleUpload(e) {
     if(e !== undefined){
@@ -551,9 +601,40 @@ class TechnicalBoq extends Component {
     if(patchTech.data !== undefined){
       this.setState({action_status : 'success'});
     }else{
-      this.setState({action_status : 'failed'});
+      if(patchTech.response !== undefined){
+        if(patchTech.response.data !== undefined){
+          if(patchTech.response.data.error !== undefined){
+            if(patchTech.response.data.error.message !== undefined){
+              this.setState({ action_status: 'failed', action_message: patchTech.response.data.error.message }, () => {
+
+              });
+            }else{
+              this.setState({ action_status: 'failed', action_message: patchTech.response.data.error }, () => {
+
+              });
+            }
+          }else{
+            this.setState({ action_status: 'failed'}, () => {
+
+            });
+          }
+        }else{
+          this.setState({ action_status: 'failed' }, () => {
+
+          });
+        }
+      }else{
+        this.setState({ action_status: 'failed' }, () => {
+
+        });
+      }
     }
     this.toggleLoading();
+    if(revisionType==='save'){
+      this.toggleSave();
+    }else{
+      this.toggleRevised();
+    }
   }
 
   handleChangeVersion(e){
@@ -632,7 +713,7 @@ class TechnicalBoq extends Component {
     }else{
       if(patchData.response !== undefined){
         if(patchData.response.data !== undefined){
-          this.setState({action_status : 'failed', action_message : patchData.response.data.error })
+          this.setState({action_status : 'failed', action_message : JSON.stringify(patchData.response.data.error) })
         }else{
           this.setState({action_status : 'failed'});
         }
@@ -640,6 +721,29 @@ class TechnicalBoq extends Component {
         this.setState({action_status : 'failed'});
       }
     }
+  }
+
+  async submitTSSR(e){
+    this.toggleLoading();
+    let currValue = e.currentTarget.value;
+    if(currValue !== undefined){
+      currValue = parseInt(currValue);
+    }
+    let patchData = await this.postDatatoAPINODE('/tssr/createTssr/'+this.state.data_tech_boq._id)
+    if(patchData.data !== undefined){
+      this.setState({action_status : 'success'});
+    }else{
+      if(patchData.response !== undefined){
+        if(patchData.response.data !== undefined){
+          this.setState({action_status : 'failed', action_message : JSON.stringify(patchData.response.data.error) })
+        }else{
+          this.setState({action_status : 'failed'});
+        }
+      }else{
+        this.setState({action_status : 'failed'});
+      }
+    }
+    this.toggleLoading();
   }
 
     getBOQTechAPI(_id_Tech){
@@ -785,6 +889,7 @@ class TechnicalBoq extends Component {
       // });
       this.getTechBoqData(this.props.match.params.id);
     }
+    console.log(this.state.version_selected)
   }
 
 
@@ -911,7 +1016,30 @@ class TechnicalBoq extends Component {
         setTimeout(function(){ this.setState({ redirectSign : postTech.data.techBoq._id}); }.bind(this), 3000);
       });
     }else{
-      this.setState({action_status : 'failed'});
+      if (postTech.response !== undefined) {
+        if (postTech.response.data !== undefined) {
+          if (postTech.response.data.error !== undefined) {
+            if (postTech.response.data.error.message !== undefined) {
+              this.setState({ action_status: 'failed', action_message: JSON.stringify(postTech.response.data.error.message) }, () => {
+
+              });
+            } else {
+              this.setState({ action_status: 'failed', action_message: JSON.stringify(postTech.response.data.error) }, () => {
+
+              });
+            }
+          } else {
+            this.setState({ action_status: 'failed' }, () => {
+            });
+          }
+        } else {
+          this.setState({ action_status: 'failed' }, () => {
+          });
+        }
+      } else {
+        this.setState({ action_status: 'failed' }, () => {
+        });
+      }
     }
     this.toggleLoading();
   }
@@ -1791,7 +1919,7 @@ class TechnicalBoq extends Component {
     ws.getCell('A9').border = {bottom: {style:'double'} };
 
     ws.addRow(["Project",": "+dataTech.project_name,"","","","", "", "",""]);
-    ws.addRow(["Created On",": "+dataTech.created_on,"","","","", "Updated On", dataTech.updated_on,""]);
+    ws.addRow(["Created On",": "+convertDateFormatfull(dataTech.created_on),"","","","", "Updated On", convertDateFormatfull(dataTech.updated_on),""]);
     ws.mergeCells('B10:C10');
     ws.mergeCells('B11:C11');
     ws.mergeCells('B12:C12');
@@ -1822,7 +1950,7 @@ class TechnicalBoq extends Component {
     ws.addRow([""]);
 
     const rowHeader1 = ["",""].concat(dataHeader.config_group_type_header.map(e => e));
-    const rowHeader2 = ["Tower ID","Tower Name"].concat(dataHeader.config_group_header.map(e => e));
+    const rowHeader2 = ["Tower ID","Tower Name","Program"].concat(dataHeader.config_group_header.map(e => e));
     let getlastrowHeaderSum = ws.lastRow._number;
     ws.addRow(rowHeader1);
     let getlastrowHeader1 = ws.lastRow._number;
@@ -1844,7 +1972,7 @@ class TechnicalBoq extends Component {
     }
 
     for(let i = 0; i < dataSites.length ; i++){
-      ws.addRow([ dataSites[i].site_id, dataSites[i].site_name].concat(dataSites[i].siteItemConfig.map(e => e.qty)));
+      ws.addRow([ dataSites[i].site_id, dataSites[i].site_name, dataSites[i].program].concat(dataSites[i].siteItemConfig.map(e => e.qty)));
     }
 
     const techFormat = await wb.xlsx.writeBuffer()
@@ -2318,18 +2446,18 @@ class TechnicalBoq extends Component {
     }
     const dataHeader = this.state.view_tech_header_table;
 
-    let ppIdRow = ["tower_id", "tower_name", "Type", "Configuration BOQ", "SAP NUmber", "Qty"];
+    let ppIdRow = ["Tower ID", "Tower Name", "Program", "SOW", "Type", "Configuration BOQ", "SAP NUmber", "Qty"];
 
     ws.addRow(ppIdRow);
     for(let i = 0; i < dataSites.length ; i++){
       let qtyConfig = []
       if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
         for(let j = 0; j < dataSites[i].siteItemConfigVersion.length; j++ ){
-          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfigVersion[j].config_type, dataSites[i].siteItemConfigVersion[j].config_id, dataSites[i].siteItemConfigVersion[j].sap_number, dataSites[i].siteItemConfigVersion[j].qty]);
+          ws.addRow([dataSites[i].site_id, dataSites[i].site_name,dataSites[i].program,dataSites[i].sow, dataSites[i].siteItemConfigVersion[j].config_type, dataSites[i].siteItemConfigVersion[j].config_id, dataSites[i].siteItemConfigVersion[j].sap_number, dataSites[i].siteItemConfigVersion[j].qty]);
         }
       }else{
         for(let j = 0; j < dataSites[i].siteItemConfig.length; j++ ){
-          ws.addRow([dataSites[i].site_id, dataSites[i].site_name, dataSites[i].siteItemConfig[j].config_type, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty]);
+          ws.addRow([dataSites[i].site_id, dataSites[i].site_name,dataSites[i].program,dataSites[i].sow, dataSites[i].siteItemConfig[j].config_type, dataSites[i].siteItemConfig[j].config_id, dataSites[i].siteItemConfig[j].sap_number, dataSites[i].siteItemConfig[j].qty]);
         }
       }
     }
@@ -2341,7 +2469,7 @@ class TechnicalBoq extends Component {
     render() {
       console.log("length", Config_group_DEFAULT.length, Config_group_type_DEFAULT.length);
       if(this.state.redirectSign !== false){
-        return (<Redirect to={'/detail-technical/'+this.state.redirectSign} />);
+        return (<Redirect to={'/list-technical/detail/'+this.state.redirectSign} />);
       }
 
       function AlertProcess(props){
@@ -2488,7 +2616,7 @@ class TechnicalBoq extends Component {
                                       {this.state.rowsTech.length === 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
                                     </Button>
                                   </React.Fragment>
-                                  <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.toggleUpdateInfo} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
+                                  <Button style={{'float' : 'right',marginRight : '8px'}} color="success" onClick={this.toggleUpdateInfo} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
                                     <i className="fa fa-copy">&nbsp;&nbsp;</i>
                                     {this.state.rowsTech.length === 0 ? 'Revision' : this.state.result_check_tech !== null ? 'Revision' : 'Loading..'}
                                   </Button>
@@ -2498,12 +2626,12 @@ class TechnicalBoq extends Component {
                               <Col>
                                 <div>
                                   <React.Fragment>
-                                    <Button style={{'float' : 'right'}} color="warning" onClick={this.updateTechBoq} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
+                                    <Button style={{'float' : 'right'}} color="warning" onClick={this.toggleSave} value="save" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
                                     <i className="fa fa-paste">&nbsp;&nbsp;</i>
                                       {this.state.rowsTech.length === 0 ? 'Save' : this.state.result_check_tech !== null ? 'Save' : 'Loading..'}
                                     </Button>
                                   </React.Fragment>
-                                  <Button style={{'float' : 'right',marginRight : '8px'}} color="secondary" onClick={this.updateTechBoq} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
+                                  <Button style={{'float' : 'right',marginRight : '8px'}} color="success" onClick={this.toggleRevised} value="revision" disabled={this.state.action_status === 'failed' || this.state.result_check_tech === null}>
                                     <i className="fa fa-copy">&nbsp;&nbsp;</i>
                                     {this.state.rowsTech.length === 0 ? 'Revision' : this.state.result_check_tech !== null ? 'Revision' : 'Loading..'}
                                   </Button>
@@ -2598,7 +2726,7 @@ class TechnicalBoq extends Component {
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Created On &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.created_on}</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{convertDateFormatfull(this.state.data_tech_boq.created_on)}</td>
                           </tr>
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                               <td>&nbsp; </td>
@@ -2622,7 +2750,7 @@ class TechnicalBoq extends Component {
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
                             <td style={{textAlign : 'left'}}>Updated On </td>
                             <td style={{textAlign : 'left'}}>:</td>
-                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.updated_on}</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{convertDateFormatfull(this.state.data_tech_boq.updated_on)}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -2644,17 +2772,6 @@ class TechnicalBoq extends Component {
                       </tbody>
                     </Table>
                     ) : (<React.Fragment>
-                      {/*<div style={{display : 'inline-flex', marginBottom : '5px'}}>
-                        <span style={{padding: '4px'}}>Show per Page : </span>
-                        <Input className="select-per-page" name="PO" type="select" onChange={this.handleChangeShow} value={this.state.perPage} >
-                          <option value="5">5</option>
-                          <option value="10">10</option>
-                          <option value="25">25</option>
-                          <option value="50">50</option>
-                          <option value={this.state.data_item.length}>All</option>
-                        </Input>
-                      </div> */}
-
                       {(this.state.version_selected !== null && this.state.data_tech_boq.version !== this.state.version_selected) ? (
                         <TableTechnicalConfig
                           dataTechBoqSites={this.state.data_tech_boq_sites_version}
@@ -2667,54 +2784,6 @@ class TechnicalBoq extends Component {
                           configHeader={this.state.option_tssr_header_view === 'only_filled' ?  this.state.view_tech_header_table : this.state.view_tech_all_header_table}
                         />
                       )}
-
-                      {/*<Table hover bordered striped responsive size="sm">
-                        <thead>
-                        <tr>
-                          <th rowSpan="2" style={{verticalAlign : "middle"}}>
-                            Tower ID
-                          </th>
-                          <th rowSpan="2" style={{verticalAlign : "middle"}}>
-                            Tower Name
-                          </th>
-                          {this.state.view_tech_header_table.config_group_type_header.map(type =>
-                            <th>{type}</th>
-                          )}
-                        </tr>
-                        <tr>
-                          {this.state.view_tech_header_table.config_group_header.map(conf =>
-                            <th>{conf}</th>
-                          )}
-                        </tr>
-                        </thead>
-                        {(this.state.version_selected !== null && this.state.data_tech_boq.version !== this.state.version_selected) ? (
-                          <tbody>
-                          {this.state.data_tech_boq_sites_version.map(site =>
-                            <tr>
-                              <td>{site.site_id}</td>
-                              <td>{site.site_name}</td>
-                              {site.siteItemConfigVersion.map(conf =>
-                                <td>{conf.qty}</td>
-                              )}
-                            </tr>
-                          )}
-                          </tbody>
-                        ) : (
-                          <tbody>
-                          {this.state.data_tech_boq_sites.map(site =>
-                            <tr>
-                              <td>{site.site_id}</td>
-                              <td>{site.site_name}</td>
-                              {site.siteItemConfig.map(conf =>
-                                <td>{conf.qty}</td>
-                              )}
-                            </tr>
-                          )}
-                          </tbody>
-                        )}
-                      </Table>
-                      {/*
-                      */}
                       <nav>
                         <div>
                           <Pagination
@@ -2754,11 +2823,19 @@ class TechnicalBoq extends Component {
                       )}
                       {this.state.data_tech_boq !== null && (
                       <Row>
-                        <Col>
-                          <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.approvalTechnical} disabled={this.state.data_tech_boq.tssr_approval_status !== "NOT SUBMITTED"}>
-                              {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" ? "Submit to TSSR" : "TSSR Submitted"}
-                          </Button>
-                        </Col>
+                        {(this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP") ? (
+                          <Col>
+                            <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.submitTSSR} disabled={false}>
+                                {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP" ? "Submit to TSSR" : "TSSR Submitted"}
+                            </Button>
+                          </Col>
+                        ) : (
+                          <Col>
+                            <Button size="sm" className="btn-success" style={{'float' : 'left', marginLeft : '10px'}} color="success" value="4" onClick={this.submitTSSR} disabled={true}>
+                                {this.state.data_tech_boq.tssr_approval_status === "NOT SUBMITTED" || this.state.data_tech_boq.tssr_approval_status === "TSSR CONFIRMED WITH GAP" ? "Submit to TSSR" : "TSSR Submitted"}
+                            </Button>
+                          </Col>
+                        )}
                        </Row>
                       )}
                     </div>
@@ -2788,6 +2865,38 @@ class TechnicalBoq extends Component {
             </ModalFooter>
           </Modal>
           {/* end Modal Loading */}
+
+        {/* Modal confirmation save */}
+        <ModalDelete
+          isOpen={this.state.save_confirmation}
+          toggle={this.toggleSave}
+          className={"modal-warning " + this.props.className}
+          title={"Save and Replace "}
+          body={"This action will save and replace "+ this.state.selected_id+ ". Are you sure ?"}
+        >
+          <Button color="warning" onClick={this.updateTechBoq} value="save">
+            Yes
+          </Button>
+          <Button color="secondary" onClick={this.toggleSave}>
+            Cancel
+          </Button>
+        </ModalDelete>
+
+        {/* Modal confirmation revised */}
+        <ModalDelete
+          isOpen={this.state.revise_confirmation}
+          toggle={this.toggleRevised}
+          className={"modal-success " + this.props.className}
+          title={"Make Revise "}
+          body={"This action will add revision version "+ "'"+this.state.selected_version+"'" +" on "+ this.state.selected_id+" . Are you sure ?"}
+        >
+          <Button color="success" onClick={this.updateTechBoq} value="revision">
+            Yes
+          </Button>
+          <Button color="secondary" onClick={this.toggleRevised}>
+            Cancel
+          </Button>
+        </ModalDelete>
 
           {/* Modal Delete */}
           <Modal isOpen={this.state.modal_update_info} toggle={this.toggleUpdateInfo} className={'modal-sm ' + this.props.className}>

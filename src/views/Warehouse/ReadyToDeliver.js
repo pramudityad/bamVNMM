@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
+import { Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Pagination from 'react-js-pagination';
@@ -7,12 +8,17 @@ import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
-import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction';
+import {apiSendEmail} from '../../helper/asyncFunction';
 
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
+
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -43,6 +49,34 @@ class ReadyToDeliver extends Component {
     this.getMRList = this.getMRList.bind(this);
     this.getAllMR = this.getAllMR.bind(this);
     this.proceedMilestone = this.proceedMilestone.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState(prevState => ({
+      modal_loading: !prevState.modal_loading
+    }));
+  }
+
+  async getDataFromAPIEXEL(url){
+    console.log("url", url);
+    try {
+      let respond = await axios.get(API_URL_XL +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
+      return respond;
+    }
   }
 
   async getDataFromAPI(url) {
@@ -120,7 +154,7 @@ class ReadyToDeliver extends Component {
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
-    filter_array.push('"$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}]');
+    filter_array.push('"$or" : [{"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}]');
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
@@ -131,7 +165,7 @@ class ReadyToDeliver extends Component {
     })
   }
 
-  getAllMR() {
+  async getAllMR() {
     let filter_array = [];
     this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
     this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
@@ -146,15 +180,18 @@ class ReadyToDeliver extends Component {
     this.state.filter_list[10] !== "" && (filter_array.push('"updated_on":{"$regex" : "' + this.state.filter_list[10] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
-    filter_array.push('"$or" : [{"current_mr_status": "LACK OF MATERIAL"}, {"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}]');
+    filter_array.push('"$or" : [{"current_mr_status": "LOM CONFIRMED (WAIT FOR COMPLETION)"}]');
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
-      console.log("MR List All", res);
-      if (res.data !== undefined) {
-        const items = res.data.data;
-        this.setState({ mr_all: items });
-      }
-    })
+    let mrList = [];
+    let res = await this.getDataFromAPINODE('/matreq?srt=_id:-1&noPg=1&q=' + whereAnd)
+    if (res.data !== undefined) {
+      const items = res.data.data;
+      mrList = res.data.data;
+      return mrList;
+      // this.setState({ mr_all: items });
+    }else{
+      return [];
+    }
   }
 
   numToSSColumn(num) {
@@ -172,9 +209,9 @@ class ReadyToDeliver extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const allMR = this.state.mr_all;
+    const allMR = await this.getAllMR();
 
-    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Created By", "Updated On", "Created On"];
+    let headerRow = ["MR ID", "MR MITT ID","MR Type","MR Delivery Type", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "MR MITT Created On", "MR MITT Created By","Updated On", "Created On"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -182,11 +219,18 @@ class ReadyToDeliver extends Component {
     }
 
     for (let i = 0; i < allMR.length; i++) {
-      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0].site_id, allMR[i].site_info[0].site_name, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
+      const creator_mr_mitt = allMR[i].mr_status.find(e => e.mr_status_name === "PLANTSPEC" && e.mr_status_value === "NOT ASSIGNED");
+      ws.addRow([allMR[i].mr_id, allMR[i].mr_mitt_no, allMR[i].mr_type, allMR[i].mr_delivery_type, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, new Date(allMR[i].eta), creator_mr_mitt !== undefined ? new Date(creator_mr_mitt.mr_status_date) : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mr_status_updater : null, new Date(allMR[i].updated_on), new Date(allMR[i].created_on)]);
+      const getRowLast = ws.lastRow._number;
+      ws.getCell("M"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("O"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("P"+getRowLast).numFmt = "YYYY-MM-DD";
+      if(creator_mr_mitt !== undefined && creator_mr_mitt !== null){
+        ws.getCell("L"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
     }
-
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Ready To Deliver.xlsx');
+    saveAs(new Blob([allocexport]), 'MR List.xlsx');
   }
 
   async patchDataToAPI(url, data, _etag) {
@@ -218,9 +262,27 @@ class ReadyToDeliver extends Component {
     const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
     const _etag = e.target.value;
     const _id = e.target.id;
+    let dataMR = this.state.mr_list.find(e => e._id === _id);
+    let dataProject = undefined;
+    if(dataMR !== undefined){
+      // dataProject = await this.getDataProject(dataMR.project_name);
+    }
     let res = await this.patchDatatoAPINODE('/matreq/confirmRTD/' + _id);
     if (res !== undefined) {
       if (res.data !== undefined) {
+        if(dataProject !== undefined){
+          // let linkImp = "https://dev.bam-id.e-dpm.com/mr-detail/"+id_doc;
+          let linkImp = "#";
+          const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following MR have reached the Joint Check stage<br/><br/><i>Site</i>: <b>"+dataMR.site_info.map(site_info => site_info.site_id).join(' , ')+"</b> <br/><i>Project</i>: <b>"+dataMR.project_name+"</b><br/><i>MR</i>: <b>"+dataMR.mr_id+"</b><br/><br/>RTD Milestone is done by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the MR detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+          let dataEmail = {
+            // "to": cpm_email+'; aminuddin.fauzan@ericsson.com',
+            "to": dataProject.Email_CPM_Name+' ;',
+            "subject":"[MR Joint Checked] MR "+dataProject.mr_id,
+            "body": bodyEmail
+          }
+          // console.log(dataEmail)
+          const sendEmail = await apiSendEmail(dataEmail);
+        }
         this.setState({ action_status: "success" });
         this.getMRList();
         // setTimeout(function(){this.setState({action_status : null, action_message : null}) }, 2000);
@@ -242,7 +304,7 @@ class ReadyToDeliver extends Component {
 
   componentDidMount() {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'Ready To Deliver | BAM';
   }
 
@@ -267,7 +329,7 @@ class ReadyToDeliver extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {
@@ -367,25 +429,19 @@ class ReadyToDeliver extends Component {
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
                         <td>
-                          {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>
-                            j === list.cust_del.length - 1 ? custdel.cd_id : custdel.cd_id + ', '
-                          ))}
+                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_id + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_name + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{convertDateFormat(list.eta)}</td>
-                        <td></td>
+                        <td>{list.creator.map(c => c.email)}</td>
                         <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
@@ -393,7 +449,7 @@ class ReadyToDeliver extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries</small>
+                  <small>Showing {this.state.mr_list.length} entries from {this.state.totalData} data</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}
@@ -408,6 +464,23 @@ class ReadyToDeliver extends Component {
             </Card>
           </Col>
         </Row>
+        {/* Modal Loading */}
+        <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className}>
+          <ModalBody>
+            <div style={{textAlign : 'center'}}>
+              <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+            </div>
+            <div style={{textAlign : 'center'}}>
+              Loading ...
+            </div>
+            <div style={{textAlign : 'center'}}>
+              System is processing ...
+            </div>
+          </ModalBody>
+          <ModalFooter>
+          </ModalFooter>
+        </Modal>
+        {/* end Modal Loading */}
       </div>
     );
   }

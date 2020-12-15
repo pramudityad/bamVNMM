@@ -7,11 +7,16 @@ import debounce from 'lodash.debounce';
 import Excel from 'exceljs';
 import { saveAs } from 'file-saver';
 import { connect } from 'react-redux';
-import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction';
+import {apiSendEmail} from '../../helper/asyncFunction';
 
 const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
 const username = 'bamidadmin@e-dpm.com';
 const password = 'F760qbAg2sml';
+
+const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
+const usernameXL = 'adminbamidsuper';
+const passwordXL = 'F760qbAg2sml';
 
 const API_URL_Node = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
@@ -40,6 +45,7 @@ class OrderProcessing extends Component {
       site_FE: "",
       qty_ne: new Map(),
       qty_fe: new Map(),
+      modal_loading : false,
     }
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -53,6 +59,13 @@ class OrderProcessing extends Component {
     this.getQtySiteFE = this.getQtySiteFE.bind(this);
     this.editQtyNE = this.editQtyNE.bind(this);
     this.editQtyFE = this.editQtyFE.bind(this);
+    this.toggleLoading = this.toggleLoading.bind(this);
+  }
+
+  toggleLoading() {
+    this.setState(prevState => ({
+      modal_loading: !prevState.modal_loading
+    }));
   }
 
   async getDataFromAPI(url) {
@@ -71,6 +84,27 @@ class OrderProcessing extends Component {
     } catch (err) {
       let respond = err;
       console.log("respond data", err);
+      return respond;
+    }
+  }
+
+  async getDataFromAPIEXEL(url){
+    console.log("url", url);
+    try {
+      let respond = await axios.get(API_URL_XL +url, {
+        headers : {'Content-Type':'application/json'},
+        auth: {
+          username: usernameXL,
+          password: passwordXL
+        },
+      })
+      if(respond.status >= 200 && respond.status < 300){
+        console.log("respond Get Data", respond);
+      }
+      return respond;
+    }catch (err) {
+      let respond = err;
+      console.log("respond Get Data", err);
       return respond;
     }
   }
@@ -121,7 +155,7 @@ class OrderProcessing extends Component {
     })
   }
 
-  getAllMR() {
+  async getAllMR() {
     let filter_array = [];
     this.state.filter_list[0] !== "" && (filter_array.push('"mr_id":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
     this.state.filter_list[1] !== "" && (filter_array.push('"project_name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
@@ -137,13 +171,16 @@ class OrderProcessing extends Component {
     this.state.filter_list[11] !== "" && (filter_array.push('"created_on":{"$regex" : "' + this.state.filter_list[11] + '", "$options" : "i"}'));
     this.props.match.params.whid !== undefined && (filter_array.push('"origin.value" : "' + this.props.match.params.whid + '"'));
     let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/matreq?noPg=1&q=' + whereAnd).then(res => {
-      console.log("MR List All", res);
-      if (res.data !== undefined) {
-        const items = res.data.data;
-        this.setState({ mr_all: items });
-      }
-    })
+    let mrList = [];
+    let res = await this.getDataFromAPINODE('/matreq?srt=_id:-1&noPg=1&q=' + whereAnd)
+    if (res.data !== undefined) {
+      const items = res.data.data;
+      mrList = res.data.data;
+      return mrList;
+      // this.setState({ mr_all: items });
+    }else{
+      return [];
+    }
   }
 
   numToSSColumn(num) {
@@ -161,9 +198,9 @@ class OrderProcessing extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const allMR = this.state.mr_all;
+    const allMR = await this.getAllMR();
 
-    let headerRow = ["MR ID", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "Created By", "Updated On", "Created On"];
+    let headerRow = ["MR ID", "MR MITT ID","MR Type","MR Delivery Type", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "MR MITT Created On", "MR MITT Created By","Updated On", "Created On"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -171,11 +208,18 @@ class OrderProcessing extends Component {
     }
 
     for (let i = 0; i < allMR.length; i++) {
-      ws.addRow([allMR[i].mr_id, allMR[i].project_name, allMR[i].cd_id, allMR[i].site_info[0].site_id, allMR[i].site_info[0].site_name, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta, "", allMR[i].updated_on, allMR[i].created_on])
+      const creator_mr_mitt = allMR[i].mr_status.find(e => e.mr_status_name === "PLANTSPEC" && e.mr_status_value === "NOT ASSIGNED");
+      ws.addRow([allMR[i].mr_id, allMR[i].mr_mitt_no, allMR[i].mr_type, allMR[i].mr_delivery_type, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, new Date(allMR[i].eta), creator_mr_mitt !== undefined ? new Date(creator_mr_mitt.mr_status_date) : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mr_status_updater : null, new Date(allMR[i].updated_on), new Date(allMR[i].created_on)]);
+      const getRowLast = ws.lastRow._number;
+      ws.getCell("M"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("O"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("P"+getRowLast).numFmt = "YYYY-MM-DD";
+      if(creator_mr_mitt !== undefined && creator_mr_mitt !== null){
+        ws.getCell("L"+getRowLast).numFmt = "YYYY-MM-DD";
+      }
     }
-
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Order Processing.xlsx');
+    saveAs(new Blob([allocexport]), 'MR List.xlsx');
   }
 
   async patchDataToAPI(url, data, _etag) {
@@ -221,14 +265,46 @@ class OrderProcessing extends Component {
     }
   }
 
+  async getDataProject(project_name){
+    const resProject = await this.getDataFromAPIEXEL('/project_sorted_non_page?where={"Project" : "'+project_name+'"}')
+    if(resProject.data !== undefined){
+      if(resProject.data._items.length === 0){
+        return undefined;
+      }else{
+        return resProject.data._items[0]
+      }
+    }
+  }
+
   async proceedMilestone(e) {
+    this.toggleLoading();
     const newDate = new Date();
     const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
     const _etag = e.target.value;
     const id_doc = e.currentTarget.id;
+    let dataMR = this.state.mr_list.find(e => e._id === id_doc);
+    let dataProject = undefined;
+    if(dataMR !== undefined){
+      dataProject = await this.getDataProject(dataMR.project_name);
+    }
     let res = await this.patchDatatoAPINODE('/matreq/finishOrderProcessing/' + id_doc, { "ps_completion_status": "COMPLETE" });
     if (res !== undefined) {
       if (res.data !== undefined) {
+
+        if(dataProject !== undefined){
+          // let linkImp = "https://dev.bam-id.e-dpm.com/mr-detail/"+id_doc;
+          let linkImp = "#";
+          const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following MR have reached the Joint Check stage<br/><br/><i>Site</i>: <b>"+dataMR.site_info.map(site_info => site_info.site_id).join(' , ')+"</b> <br/><i>Project</i>: <b>"+dataMR.project_name+"</b><br/><i>MR</i>: <b>"+dataMR.mr_id+"</b><br/><br/>order processing is completed by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the MR detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+          let dataEmail = {
+            // "to": cpm_email+'; aminuddin.fauzan@ericsson.com',
+            "to": dataProject.Email_CPM_Name+' ;',
+            "subject":"[MR Joint Checked] MR "+dataProject.mr_id,
+            "body": bodyEmail
+          }
+          // console.log(dataEmail)
+          const sendEmail = await apiSendEmail(dataEmail);
+        }
+
         this.setState({ action_status: "success" }, () => {
           setTimeout(function () { this.getMRList(); }.bind(this), 2000);
         });
@@ -246,9 +322,11 @@ class OrderProcessing extends Component {
     } else {
       this.setState({ action_status: 'failed' });
     }
+    this.toggleLoading();
   }
 
   async submitLOM(e) {
+    this.toggleLoading();
     this.setState(prevState => ({
       modalNotComplete: !prevState.modalNotComplete
     }));
@@ -266,34 +344,8 @@ class OrderProcessing extends Component {
       let materialData = [];
       for (let j = 0; j < this.state.data_material.packages[i].materials.length; j++) {
         if (this.state.qty_ne.has(this.state.data_material.packages[i].materials[j]._id) !== false || this.state.qty_fe.has(this.state.data_material.packages[i].materials[j]._id) !== false) {
-          let material = {
-            "id_mr_doc": this.state.data_material.packages[i].materials[j].id_mr_doc,
-            "id_mr_pp_doc": this.state.data_material.packages[i].materials[j].id_mr_pp_doc,
-            "id_pp_doc": this.state.data_material.packages[i].materials[j].id_pp_doc,
-            "id_site_doc": this.state.data_material.packages[i].materials[j].id_site_doc,
-            "id_mc_doc": this.state.data_material.packages[i].materials[j].id_mc_doc,
-            "id_po_doc": this.state.data_material.packages[i].materials[j].id_po_doc,
-            "add_photo": this.state.data_material.packages[i].materials[j].add_photo,
-            "deleted": this.state.data_material.packages[i].materials[j].deleted,
-            "mr_id": this.state.data_material.packages[i].materials[j].mr_id,
-            "pp_id": this.state.data_material.packages[i].materials[j].pp_id,
-            "site_id": this.state.data_material.packages[i].materials[j].site_id,
-            "site_name": this.state.data_material.packages[i].materials[j].site_name,
-            "material_id": this.state.data_material.packages[i].materials[j].material_id,
-            "material_name": this.state.data_material.packages[i].materials[j].material_name,
-            "material_type": this.state.data_material.packages[i].materials[j].material_type,
-            "uom": this.state.data_material.packages[i].materials[j].uom,
-            "qty": this.state.data_material.packages[i].materials[j].site_id === this.state.site_NE.site_id ? this.state.qty_ne.get(this.state.data_material.packages[i].materials[j]._id) : this.state.qty_fe.get(this.state.data_material.packages[i].materials[j]._id),
-            "qty_scan": this.state.data_material.packages[i].materials[j].qty_scan,
-            "po_number": this.state.data_material.packages[i].materials[j].po_number,
-            "serial_numbers": [],
-            "created_by": this.state.data_material.packages[i].materials[j].created_by,
-            "updated_by": this.state.data_material.packages[i].materials[j].updated_by,
-            "priority": this.state.data_material.packages[i].materials[j].priority,
-            "updated_on": this.state.data_material.packages[i].materials[j].updated_on,
-            "created_on": this.state.data_material.packages[i].materials[j].created_on
-          }
-          console.log("material", material.material_id, material.qty);
+          let material = Object.assign({}, this.state.data_material.packages[i].materials[j]);
+          material["qty"] = this.state.data_material.packages[i].materials[j].site_id === this.state.site_NE.site_id ? this.state.qty_ne.get(this.state.data_material.packages[i].materials[j]._id) : this.state.qty_fe.get(this.state.data_material.packages[i].materials[j]._id);
           if (material.qty !== undefined) {
             if (material.qty !== 0 && material.qty !== "0") {
               materialData.push(material);
@@ -301,30 +353,8 @@ class OrderProcessing extends Component {
           }
         }
       }
-      let lom = {
-        "id_mr_doc": this.state.data_material.packages[i].id_mr_doc,
-        "mr_id": this.state.data_material.packages[i].mr_id,
-        "id_pp_doc": this.state.data_material.packages[i].id_pp_doc,
-        "pp_id": this.state.data_material.packages[i].pp_id,
-        "id_site_doc": this.state.data_material.packages[i].id_site_doc,
-        "site_id": this.state.data_material.packages[i].site_id,
-        "site_name": this.state.data_material.packages[i].site_name,
-        "product_name": this.state.data_material.packages[i].product_name,
-        "product_type": this.state.data_material.packages[i].product_type,
-        "physical_group": this.state.data_material.packages[i].physical_group,
-        "uom": this.state.data_material.packages[i].uom,
-        "qty": 1,
-        "qty_scan": this.state.data_material.packages[i].qty_scan,
-        "id_po_doc": this.state.data_material.packages[i].id_po_doc,
-        "po_number": this.state.data_material.packages[i].po_number,
-        "deleted": this.state.data_material.packages[i].deleted,
-        "created_by": this.state.data_material.packages[i].created_by,
-        "updated_by": this.state.data_material.packages[i].updated_by,
-        "add_photo": this.state.data_material.packages[i].add_photo,
-        "updated_on": this.state.data_material.packages[i].updated_on,
-        "created_on": this.state.data_material.packages[i].created_on,
-        "materials": materialData
-      }
+      let lom = Object.assign({}, this.state.data_material.packages[i]);
+      lom["materials"] = materialData;
       if (materialData.length !== 0) {
         lomData.push(lom);
       }
@@ -338,15 +368,24 @@ class OrderProcessing extends Component {
     }
     if (successUpdate.length !== 0) {
       this.setState({ action_status: "success" });
-      setTimeout(function () { window.location.reload(); }, 2000);
+      // setTimeout(function () { window.location.reload(); }, 2000);
     } else {
-      this.setState({ action_status: 'failed' });
+      if(resLOM.response !== undefined && resLOM.response.data !== undefined && resLOM.response.data.error !== undefined){
+        if(resLOM.response.data.error.message !== undefined){
+          this.setState({ action_status: 'failed', action_message: resLOM.response.data.error.message });
+        }else{
+          this.setState({ action_status: 'failed', action_message: resLOM.response.data.error });
+        }
+      }else{
+        this.setState({ action_status: 'failed' });
+      }
     }
+    this.toggleLoading();
   }
 
   componentDidMount() {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
     document.title = 'Order Processing | BAM';
   }
 
@@ -376,7 +415,6 @@ class OrderProcessing extends Component {
       this.getDataFromAPINODE('/matreq/' + _id_mr).then(res => {
         if (res.data !== undefined) {
           this.setState({ data_material: res.data }, () => {
-            console.log("Data Material", this.state.data_material);
           });
           this.setState({ site_NE: this.state.data_material.site_info.find(e => e.site_title === "NE") });
           this.setState({ site_FE: this.state.data_material.site_info.find(e => e.site_title === "FE") });
@@ -402,7 +440,6 @@ class OrderProcessing extends Component {
     const name = e.target.name;
     const value = e.target.value;
     this.setState(prevState => ({ qty_ne: prevState.qty_ne.set(name, value) }));
-    console.log("qty_ne", this.state.qty_ne);
   }
 
   editQtyFE = (e) => {
@@ -413,7 +450,7 @@ class OrderProcessing extends Component {
 
   onChangeDebounced(e) {
     this.getMRList();
-    this.getAllMR();
+    // this.getAllMR();
   }
 
   loopSearchBar = () => {
@@ -516,25 +553,19 @@ class OrderProcessing extends Component {
                         <td><Link to={'/mr-detail/' + list._id}>{list.mr_id}</Link></td>
                         <td>{list.project_name}</td>
                         <td>
-                          {list.cust_del !== undefined && (list.cust_del.map((custdel, j) =>
-                            j === list.cust_del.length - 1 ? custdel.cd_id : custdel.cd_id + ', '
-                          ))}
+                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_id + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map((site_info, j) =>
-                            j === list.site_info.length - 1 ? site_info.site_id : site_info.site_name + ', '
-                          ))}
+                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{convertDateFormat(list.eta)}</td>
-                        <td></td>
+                        <td>{list.creator.map(c => c.email)}</td>
                         <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
@@ -542,7 +573,7 @@ class OrderProcessing extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries</small>
+                  <small>Showing {this.state.mr_list.length} entries from {this.state.totalData} data</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}
@@ -612,6 +643,23 @@ class OrderProcessing extends Component {
             <Button color="primary" style={{ float: "right" }} id={this.state.data_material !== null ? this.state.data_material._id : ""} value={this.state.data_material !== null ? this.state.data_material._etag : ""} onClick={this.submitLOM}><i className="fa fa-edit" style={{ marginRight: "8px" }}></i> Submit LOM</Button>
           </ModalFooter>
         </Modal>
+        {/* Modal Loading */}
+        <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className}>
+          <ModalBody>
+            <div style={{textAlign : 'center'}}>
+              <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+            </div>
+            <div style={{textAlign : 'center'}}>
+              Loading ...
+            </div>
+            <div style={{textAlign : 'center'}}>
+              System is processing ...
+            </div>
+          </ModalBody>
+          <ModalFooter>
+          </ModalFooter>
+        </Modal>
+        {/* end Modal Loading */}
       </div>
     );
   }

@@ -14,7 +14,7 @@ import { connect } from 'react-redux';
 import { Redirect, Route, Switch, Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
-import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
+import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction';
 
 const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, value }) => (
   <input type={type} name={name} checked={checked} onChange={onChange} value={value} className="checkmark-dash" />
@@ -39,7 +39,7 @@ class CPODatabase extends React.Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      filter_name: null,
+      filter_name: "",
       perPage: 10,
       prevPage: 1,
       activePage: 1,
@@ -62,7 +62,7 @@ class CPODatabase extends React.Component {
     this.togglePOForm = this.togglePOForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.changeFilterDebounce = debounce(this.changeFilterName, 500);
+    this.changeFilterName = debounce(this.changeFilterName, 1000);
     this.toggle = this.toggle.bind(this);
     this.toggleAddNew = this.toggleAddNew.bind(this);
     this.handleChangeForm = this.handleChangeForm.bind(this);
@@ -150,23 +150,30 @@ class CPODatabase extends React.Component {
   handleChangeFilter = (e) => {
     let value = e.target.value;
     if (value.length === 0) {
-      value = null;
+      value = "";
     }
     this.setState({ filter_name: value }, () => {
-      this.changeFilterDebounce(value);
+      this.changeFilterName(value);
     });
   }
 
   getPODataList() {
-    // let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    let queryDate = ''
+    // if(this.props.location.search.length !== 0){
+    //   queryDate = ", "+this.props.location.search.replace("?q=", "").replace("{", "").replace("}", "")
+    // }
+    let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
     // this.getDatatoAPIEXEL('/po_op?max_results=' + this.state.perPage + '&page=' + this.state.activePage + '&where={' + po_number + '}')
-    this.getDatafromAPINODE('/cpodb/getCpoDb')
+    this.getDatafromAPINODE('/cpodb/getCpoDb?srt=_id:-1&lmt='+this.state.perPage +
+    "&pg=" + this.state.activePage+ '&q={' + po_number+queryDate + '}')
       .then(res => {
-        console.log('all cpoDB', res.data)
+        // console.log('all cpoDB', res.data)
         if (res.data !== undefined) {
-          this.setState({ po_op_data: res.data.data })
+          this.setState({ po_op_data: res.data.data, prevPage: this.state.activePage,
+            total_data_PO: res.data.totalResults})
         } else {
-          this.setState({ po_op_data: []});
+          this.setState({ po_op_data: [], total_data_PO: 0,
+            prevPage: this.state.activePage,});
         }
       })
   }
@@ -247,6 +254,7 @@ class CPODatabase extends React.Component {
 
   ArrayEmptytoNull(dataXLS){
     let newDataXLS = [];
+    const idxEM = dataXLS.length > 0 ? dataXLS[0].findIndex(e => e === "expired_month") : 0;
     for(let i = 0; i < dataXLS.length; i++){
       let col = [];
       for(let j = 0; j < dataXLS[0].length; j++){
@@ -258,6 +266,12 @@ class CPODatabase extends React.Component {
           col.push(dataObject);
         }else{
           col.push(this.checkValue(dataXLS[i][j]));
+        }
+      }
+      if(i > 0 && idxEM !== -1){
+        const dataED = dataXLS[i][idxEM];
+        if(/^\d+$/.test(dataED)){
+          col[idxEM] = parseFloat(dataED);
         }
       }
       newDataXLS.push(col);
@@ -331,6 +345,7 @@ class CPODatabase extends React.Component {
     let pp = {
       po_number: dataPPEdit[0],
       date: dataPPEdit[1],
+      expired_date : dataPPEdit[7],
       currency: dataPPEdit[2],
       payment_terms: dataPPEdit[3],
       shipping_terms: dataPPEdit[4],
@@ -401,6 +416,30 @@ class CPODatabase extends React.Component {
     const cpobulkXLS = this.state.rowsXLS;
     const cpoData = await this.getCPOFormat(cpobulkXLS);
     const res = await this.postDatatoAPINODE('/cpodb/createCpoDb', { 'poData': cpobulkXLS });
+    // const res = await this.postDatatoAPINODE('/cpodb/createCpoDbWithDetail', { 'poData': cpobulkXLS });
+    if (res.data !== undefined) {
+      this.setState({ action_status: 'success', action_message : null });
+      this.toggleLoading();
+    } else {
+      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+        } else {
+          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+      this.toggleLoading();
+    }
+  }
+
+  saveCPOBulkWithDetail = async () => {
+    this.toggleLoading();
+    const cpobulkXLS = this.state.rowsXLS;
+    const cpoData = await this.getCPOFormat(cpobulkXLS);
+    // const res = await this.postDatatoAPINODE('/cpodb/createCpoDb', { 'poData': cpobulkXLS });
+    const res = await this.postDatatoAPINODE('/cpodb/createCpoDbWithDetail', { 'poData': cpobulkXLS });
     if (res.data !== undefined) {
       this.setState({ action_status: 'success', action_message : null });
       this.toggleLoading();
@@ -467,6 +506,53 @@ class CPODatabase extends React.Component {
     saveAs(new Blob([PPFormat]), 'CPO Level 1 Template.xlsx');
   }
 
+  exportFormatCPOWithDetail = async () => {
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    ws.addRow(["po_number","date","expired_month", "currency","payment_terms","shipping_terms", "contract", "contact", "config_id", "description", "mm_id", "need_by_date", "qty", "unit", "price"]);
+    ws.addRow(["PO0001","2020-02-21","6","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com","INSTALL:CONFIG SERVICE 11_1105A","3416315 |  INSTALL:CONFIG SERVICE 11_1105A  | YYYY:2019 | MM:12","desc","2020-08-21",1,"Performance Unit",1000000]);
+    ws.addRow(["PO0001","2020-02-21","6","idr",7030, "DDP", "103-EID RAN 2020", "lale@gmail.com","Cov_2020_Config-4a","330111 | Cov_2020_Config-4a | YYYY : 2020 | MM : 04","desc","2020-12-12",200,"Performance Unit",15000000]);
+
+    const PPFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([PPFormat]), 'CPO with Detail Template.xlsx');
+  }
+
+  async getPODataListAll() {
+    let dataPO = [];
+    let queryDate = ''
+    let po_number = this.state.filter_name === null ? '"po_number":{"$exists" : 1}' : '"po_number":{"$regex" : "' + this.state.filter_name + '", "$options" : "i"}';
+    const res = await this.getDatafromAPINODE('/cpodb/getCpoDb?noPg=1&srt=_id:-1&q={' + po_number+queryDate + '}');
+    if (res !== undefined && res.data !== undefined) {
+      dataPO = res.data.data
+    }
+    return dataPO
+  }
+
+  exportCPODBList = async () => {
+    this.toggleLoading();
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataPOAll = await this.getPODataListAll();
+
+    ws.addRow(["PO Number", "Date", "Aging", "Expired Date", "Currency", "Payment Terms", "Shipping Terms", "Contract", "Contact"]);
+    for (let i = 0; i < dataPOAll.length; i++) {
+      ws.addRow([dataPOAll[i].po_number,convertDateFormat(dataPOAll[i].date), this.Aging(convertDateFormat(dataPOAll[i].date)), dataPOAll[i].expired_date !== null && dataPOAll[i].expired_date !== undefined ? convertDateFormat(dataPOAll[i].expired_date) : null, dataPOAll[i].currency, dataPOAll[i].payment_terms, dataPOAll[i].shipping_terms, dataPOAll[i].contract, dataPOAll[i].contact]);
+    }
+
+    const PPFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([PPFormat]), 'CPO List Report.xlsx');
+    this.toggleLoading();
+  }
+
+  Aging(date){
+    let today = new Date();
+    today.setDate(today.getDate()-120);
+    let dateExpired = today.getFullYear().toString()+"-"+(today.getMonth()+1).toString().padStart(2, '0')+"-"+today.getDate().toString().padStart(2, '0');
+    let aging = (new Date() - new Date(date)) / (1000 * 60 * 60 * 24);
+    return aging.toFixed(0);
+  }
 
   render() {
     return (
@@ -486,6 +572,8 @@ class CPODatabase extends React.Component {
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatCPO_level1}> CPO Level 1 Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatCPOWithDetail}> CPO With Detail Template</DropdownItem>
+                        <DropdownItem onClick={this.exportCPODBList}> CPO List Report</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -524,7 +612,8 @@ class CPODatabase extends React.Component {
                     </div>
                   </CardBody>
                   <CardFooter>
-                    <Button color="success" disabled={this.state.rowsXLS.length === 0} onClick={this.saveCPOBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
+                    <Button color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveCPOBulk}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE </Button>
+                    <Button style={{marginLeft : '20px'}} color="success" size="sm" disabled={this.state.rowsXLS.length === 0} onClick={this.saveCPOBulkWithDetail}> <i className="fa fa-save" aria-hidden="true"> </i> &nbsp;SAVE With Detail</Button>
                     {/* <Button color="primary" style={{ float: 'right' }} onClick={this.togglePOForm}> <i className="fa fa-file-text-o" aria-hidden="true"> </i> &nbsp;Form</Button> */}
                   </CardFooter>
                 </Card>
@@ -548,6 +637,8 @@ class CPODatabase extends React.Component {
                           <tr align="center">
                             <th style={{ minWidth: '150px' }}>PO Number</th>
                             <th>Date</th>
+                            <th>Aging</th>
+                            <th>Expired Date</th>
                             <th>Currency</th>
                             <th>Payment Terms</th>
                             <th>Shipping Terms</th>
@@ -563,6 +654,12 @@ class CPODatabase extends React.Component {
                               <tr style={{ backgroundColor: '#d3d9e7' }} className='fixbody' key={po._id}>
                                 <td style={{ textAlign: 'center' }}>{po.po_number}</td>
                                 <td style={{ textAlign: 'center' }}>{convertDateFormat(po.date)}</td>
+                                {this.Aging(convertDateFormat(po.date)) >= 120 ? (
+                                  <td style={{ textAlign: 'center', backgroundColor: 'rgba(255,112,67 ,1)' }}>{this.Aging(convertDateFormat(po.date))}</td>
+                                ) : (
+                                  <td style={{ textAlign: 'center' }}>{this.Aging(convertDateFormat(po.date))}</td>
+                                )}
+                                <td style={{ textAlign: 'center' }}>{po.expired_date !== null && po.expired_date !== undefined ? convertDateFormat(po.expired_date) : null}</td>
                                 <td style={{ textAlign: 'center' }}>{po.currency}</td>
                                 <td style={{ textAlign: 'center' }}>{po.payment_terms}</td>
                                 <td style={{ textAlign: 'center' }}>{po.shipping_terms}</td>
@@ -594,6 +691,9 @@ class CPODatabase extends React.Component {
                 </Row>
                 <Row>
                   <Col>
+                    <div style={{ margin: "8px 0px" }}>
+                      <small>Showing {this.state.perPage} entries from {this.state.total_data_PO} data</small>
+                    </div>
                     <Pagination
                       activePage={this.state.activePage}
                       itemsCountPerPage={this.state.perPage}
@@ -677,6 +777,16 @@ class CPODatabase extends React.Component {
                   />
                 </FormGroup>
                 <FormGroup>
+                  <Label htmlFor="data">Expired Date</Label>
+                  <Input
+                    type="text"
+                    name="7"
+                    placeholder=""
+                    value={this.state.DataForm[7]}
+                    onChange={this.handleChangeForm}
+                  />
+                </FormGroup>
+                <FormGroup>
                   <Label htmlFor="currency">Currency</Label>
                   <Input
                     type="text"
@@ -704,7 +814,7 @@ class CPODatabase extends React.Component {
                     placeholder=""
                     value={this.state.DataForm[4]}
                     onChange={this.handleChangeForm}
-                  />                    
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="contract">Contract</Label>
@@ -714,7 +824,7 @@ class CPODatabase extends React.Component {
                     placeholder=""
                     value={this.state.DataForm[5]}
                     onChange={this.handleChangeForm}
-                  />                    
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="contact">Contact</Label>
@@ -724,7 +834,7 @@ class CPODatabase extends React.Component {
                     placeholder=""
                     value={this.state.DataForm[6]}
                     onChange={this.handleChangeForm}
-                  />                    
+                  />
                 </FormGroup>
               </Col>
             </Row>
