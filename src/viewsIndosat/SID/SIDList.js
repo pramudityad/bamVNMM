@@ -79,11 +79,7 @@ class SIDList extends Component {
             '", "$options" : "i"}'
         );
     }
-    if(this.state.type_uploader_selected !== "SID"){
-      filter_array.push('"type" : "'+this.state.type_uploader_selected+'"');
-    }else{
-      filter_array.push('"type" : {"$ne" : "ABD"}');
-    }
+    filter_array.push('"type" : "'+this.state.type_uploader_selected+'"');
     let whereAnd = "{" + filter_array.join(",") + "}";
     getDatafromAPINODE(
       "/sidFile?srt=_id:-1&q=" +
@@ -168,11 +164,7 @@ class SIDList extends Component {
   async downloadAllSIDFile() {
     let allSIDList = [];
     let filter_array = [];
-    if(this.state.type_uploader_selected !== "SID"){
-      filter_array.push('"type" : "'+this.state.type_uploader_selected+'"');
-    }else{
-      filter_array.push('"type" : {"$ne" : "ABD"}');
-    }
+    filter_array.push('"type" : "'+this.state.type_uploader_selected+'"');
     let whereAnd = "{" + filter_array.join(",") + "}";
     let getSID = await getDatafromAPINODE(
       "/sidFile?srt=_id:-1&noPg=1&q="+whereAnd, this.props.dataLogin.token
@@ -261,6 +253,9 @@ class SIDList extends Component {
                     <option value="ABD">
                       ABD
                     </option>
+                    <option value="PQR">
+                      PQR
+                    </option>
                   </Input>
                 </Col>
                 </Row>
@@ -298,8 +293,8 @@ class SIDList extends Component {
                         </td>
                         <td>{list.no_sid}</td>
                         <td>{list.cust_del.map((e) => e.cd_id)}</td>
-                        <td>{list.site_info !== undefined && list.site_info!== null && list.site_info.map((e) => e.site_id)}</td>
-                        <td>{list.site_info !== undefined && list.site_info!== null && list.site_info.map((e) => e.site_name)}</td>
+                        <td>{list.site_info !== undefined && list.site_info!== null && list.site_info.map((e) => e.site_id).join(", ")}</td>
+                        <td>{list.site_info !== undefined && list.site_info!== null && list.site_info.map((e) => e.site_name).join(", ")}</td>
                         <td>{list.cust_del.map((e) => e.project_code)}</td>
                         <td>{list.cust_del.map((e) => e.project_po)}</td>
                         <td>{list.created_by}</td>

@@ -507,13 +507,15 @@ class AssignmentListReport extends Component {
         allAssignmentList[i].PO_Date,
         allAssignmentList[i].BAST_No[0], allAssignmentList[i].BAST_No[1],
       ];
-      if(dataGR[0] !== undefined){
-        rowAdded.push(dataGR[0].Requestor, dataGR[0].created_on, dataGR[0].GR_Document_No, dataGR[0].GR_Document_Date);
+      let GRDPIdx = dataGR.find(dg => dg.GR_Type === "DP");
+      if(GRDPIdx !== undefined){
+        rowAdded.push(GRDPIdx.Requestor, GRDPIdx.created_on, GRDPIdx.GR_Document_No, GRDPIdx.GR_Document_Date);
       }else{
         rowAdded.push(null,null,null,null)
       }
-      if(dataGR[1] !== undefined){
-        rowAdded.push(dataGR[1].Requestor, dataGR[1].created_on, dataGR[1].GR_Document_No, dataGR[1].GR_Document_Date);
+      let GRFINALIdx = dataGR.find(dg => dg.GR_Type === "Final");
+      if(GRFINALIdx !== undefined){
+        rowAdded.push(GRFINALIdx.Requestor, GRFINALIdx.created_on, GRFINALIdx.GR_Document_No, GRFINALIdx.GR_Document_Date);
       }else{
         rowAdded.push(null,null,null,null)
       }
@@ -539,20 +541,20 @@ class AssignmentListReport extends Component {
         ws.getCell("V"+getRowLast).value = new Date(allAssignmentList[i].PO_Date);
         ws.getCell("V"+getRowLast).numFmt = "YYYY-MM-DD";
       }
-      if(dataGR[0] !== undefined && dataGR[0].created_on !== null && dataGR[1].created_on !== undefined){
-        ws.getCell("Z"+getRowLast).numFmt = new Date(dataGR[0].created_on);
+      if(GRDPIdx !== undefined && GRDPIdx.created_on !== null && GRDPIdx.created_on !== undefined){
+        ws.getCell("Z"+getRowLast).numFmt = new Date(GRDPIdx.created_on);
         ws.getCell("Z"+getRowLast).numFmt = "YYYY-MM-DD";
       }
-      if(dataGR[0] !== undefined && dataGR[0].GR_Document_Date !== null && dataGR[1].GR_Document_Date !== undefined){
-        ws.getCell("AB"+getRowLast).numFmt = new Date(dataGR[0].GR_Document_Date);
+      if(GRDPIdx !== undefined && GRDPIdx.GR_Document_Date !== null && GRDPIdx.GR_Document_Date !== undefined){
+        ws.getCell("AB"+getRowLast).numFmt = new Date(GRDPIdx.GR_Document_Date);
         ws.getCell("AB"+getRowLast).numFmt = "YYYY-MM-DD";
       }
-      if(dataGR[1] !== undefined && dataGR[1].created_on !== null && dataGR[1].created_on !== undefined){
-        ws.getCell("AD"+getRowLast).numFmt = new Date(dataGR[1].created_on);
+      if(GRFINALIdx !== undefined && GRFINALIdx.created_on !== null && GRFINALIdx.created_on !== undefined){
+        ws.getCell("AD"+getRowLast).numFmt = new Date(GRFINALIdx.created_on);
         ws.getCell("AD"+getRowLast).numFmt = "YYYY-MM-DD";
       }
-      if(dataGR[1] !== undefined && dataGR[1].GR_Document_Date !== null && dataGR[1].GR_Document_Date !== undefined){
-        ws.getCell("AF"+getRowLast).numFmt = new Date(dataGR[1].GR_Document_Date);
+      if(GRFINALIdx !== undefined && GRFINALIdx.GR_Document_Date !== null && GRFINALIdx.GR_Document_Date !== undefined){
+        ws.getCell("AF"+getRowLast).numFmt = new Date(GRFINALIdx.GR_Document_Date);
         ws.getCell("AF"+getRowLast).numFmt = "YYYY-MM-DD";
       }
     }

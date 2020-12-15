@@ -136,7 +136,7 @@ class MRWHDismantle extends Component {
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'MR Warehouse Dismantle.xlsx');
+    saveAs(new Blob([allocexport]), 'MR Warehouse Dispatch.xlsx');
   }
 
   async proceedMilestone(e) {
@@ -185,7 +185,7 @@ class MRWHDismantle extends Component {
   componentDidMount() {
     this.getMRList();
     // this.getAllMR();
-    document.title = 'MR Warehouse Dismantle | BAM';
+    document.title = 'MR Warehouse Dispatch | BAM';
   }
 
   handlePageChange(pageNumber) {
@@ -250,7 +250,7 @@ class MRWHDismantle extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: '2' }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MR Warehouse Dismantle
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MR Warehouse Dispatch
                 </span>
                 <Button style={downloadMR} outline color="success" onClick={this.downloadMRlist} size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download MR List</Button>
               </CardHeader>

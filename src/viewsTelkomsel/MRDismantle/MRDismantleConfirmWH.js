@@ -25,7 +25,7 @@ const password = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const array_field = ["mra_id", "mrd_category", "project_name", "site_info.site_id", "site_info.site_name", "site_info.site_region", "destination.value", "site_info.site_name", "site_info.site_region", "creator.email", "created_on"]
+const array_field = ["mra_id", "mra_type", "mrd_category", "project_name", "site_info.site_id", "site_info.site_name", "site_info.site_region", "destination.value", "site_info.site_name", "site_info.site_region", "creator.email", "created_on"]
 
 class MRDismantleConfirmWH extends Component {
   constructor(props) {
@@ -193,7 +193,7 @@ class MRDismantleConfirmWH extends Component {
     this.props.SidebarMinimizer(true);
     this.getPSDisList();
     // this.getAllPSDis();
-    document.title = 'MRA List | BAM';
+    document.title = 'MRA  List | BAM';
   }
 
   componentWillUnmount() {
@@ -238,7 +238,7 @@ class MRDismantleConfirmWH extends Component {
     }
     this.toggleLoading();
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'MRA List.xlsx');
+    saveAs(new Blob([allocexport]), 'MRA  List.xlsx');
   }
 
   onChangeDebounced(e) {
@@ -316,7 +316,7 @@ class MRDismantleConfirmWH extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: '2' }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MRA List
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MRA  List
                 </span>
               </CardHeader>
               <CardBody>
@@ -324,7 +324,7 @@ class MRDismantleConfirmWH extends Component {
                   <thead>
                     <tr>
                       <th rowSpan="2">Action</th>
-                      <th>MR Dis ID</th>
+                      <th>MRA  ID</th>
                       <th>MRA Type</th>
                       <th>Category</th>
                       <th>Project Name</th>
@@ -350,7 +350,7 @@ class MRDismantleConfirmWH extends Component {
                     {this.state.mr_dis_list.map((list, i) =>
                       <tr key={list._id}>
                         <td><Button outline color="primary" size="sm" className="btn-pill" style={{ width: "130px" }} id={list._id} value={list._etag} onClick={this.toggleBoxInput}><i className="fa fa-angle-double-right" style={{ marginRight: "8px" }}></i>WH Confirm</Button></td>
-                        <td><Link to={'/dismantle/mr-dis-detail/'+list._id}>{list.mra_id}</Link></td>
+                        <td><Link to={'/srn/mr-srn-detail/'+list._id}>{list.mra_id}</Link></td>
                         <td>{list.mra_type}</td>
                         <td>{list.mrd_category}</td>
                         <td>{list.project_name}</td>

@@ -156,7 +156,9 @@ const DSADList = React.lazy(() => import('./viewsIndosat/DSADismantle/DSADList')
 const DSADDetail = React.lazy(() => import('./viewsIndosat/DSADismantle/DSADDetail'));
 const DSADEdit = React.lazy(() => import('./viewsIndosat/DSADismantle/DSADEdit2'));
 
-const MRDismantleBulk = React.lazy(() => import('./views/MRDismantle/MRDismantleBulk'));
+const MRDismantleBulk = React.lazy(() => import('./viewsIndosat/MRDismantle/MRDismantleBulk'));
+
+const DSADMigration = React.lazy(() => import('./viewsIndosat/DSADismantle/DSADMigration'));
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -278,21 +280,21 @@ const routes = [
   { path: '/pod-list', exact: true, name: 'POD List', component: FMSList },
   { path: '/pod-list/detail/:id', exact: true, name: 'POD Detail', component: FMSDetail },
 
-  { path: '/dismantle/ps-dis-list', exact: true, name: 'PS Dismantle List', component: PSDisList },
-  { path: '/dismantle/ps-dis-creation', exact: true, name: 'MR Dismantle Creation', component: PSDisCreation },
-  { path: '/dismantle/ps-dis-detail/:id', exact: true, name: 'MR Dismantle Detail', component: PSDisDetail },
+  { path: '/srn/ps-srn-list', exact: true, name: 'PS SRN List', component: PSDisList },
+  { path: '/srn/ps-srn-creation', exact: true, name: 'MR SRN Creation', component: PSDisCreation },
+  { path: '/srn/ps-srn-detail/:id', exact: true, name: 'MR SRN Detail', component: PSDisDetail },
 
-  { path: '/dismantle/mr-dis-list', exact: true, name: 'MR Dismantle List', component: MRDisList },
-  { path: '/dismantle/mr-dis-creation', exact: true, name: 'MR Dismantle Creation', component: MRDisCreation },
-  { path: '/dismantle/mr-dis-detail/:id', exact: true, name: 'MR Dismantle Detail', component: MRDisDetail },
+  { path: '/srn/mr-srn-list', exact: true, name: 'MR SRN List', component: MRDisList },
+  { path: '/srn/mr-srn-creation', exact: true, name: 'MR SRN Creation', component: MRDisCreation },
+  { path: '/srn/mr-srn-detail/:id', exact: true, name: 'MR SRN Detail', component: MRDisDetail },
 
-  { path: '/dismantle/mr-dis-na-list', exact: true, name: 'MR Not Assigne PS Dismantle List', component: MRDisNAList },
+  { path: '/srn/mr-srn-na-list', exact: true, name: 'MR Not Assigne PS SRN List', component: MRDisNAList },
 
-  { path: '/dismantle/mr-dis-na-list/:id', exact: true, name: 'PS Assign to MR Dismantle List', component: PSAssigntoMR },
+  { path: '/srn/mr-srn-na-list/:id', exact: true, name: 'PS Assign to MR SRN List', component: PSAssigntoMR },
 
-  { path: '/dismantle/mr-dis-need-approval-ldm-list', exact: true, name: 'MR Dismantle Need Approval LDM List', component: LDMApprovalDismantle },
+  { path: '/srn/mr-srn-need-approval-ldm-list', exact: true, name: 'MR SRN Need Approval LDM List', component: LDMApprovalDismantle },
 
-  { path: '/dismantle/mr-dis-need-confirm-list', exact: true, name: 'MR Dismantle Need Confirm WH List', component: MRDismantleConfirmWH },
+  { path: '/srn/mr-srn-need-confirm-list', exact: true, name: 'MR SRN Need Confirm WH List', component: MRDismantleConfirmWH },
 
   { path: '/Microwave/list-technical', exact: true, name: 'List Technical BOQ', component: ListTechnicalMW },
   { path: '/Microwave/detail-technical/:id', exact: true, name: 'Detail Technical BOQ', component: DetailTechnicalMW },
@@ -306,17 +308,19 @@ const routes = [
   { path: '/toWH/mr-wh-list', exact: true, name: 'MR WH List', component: MRWHList },
   { path: '/toWH/mr-wh-na-list', exact: true, name: 'MR WH NA List', component: MRWHNAList },
   { path: '/toWH/mr-wh-na-detail/:id', exact: true, name: 'MR WH NA Detail', component: AssingPStoMRWH },
-  { path: '/toWH/mr-wh-dismantle', exact: true, name: 'MR WH Dismantle', component: MRWHDismantle },
+  { path: '/toWH/mr-wh-dispatch', exact: true, name: 'MR WH Dispatch', component: MRWHDismantle },
   { path: '/toWH/mr-wh-confirm-wh', exact: true, name: 'MR WH Confirm Warehouse', component: MRWHConfirm },
 
   { path: '/dsa-migration', exact: true, name: 'DSA Migration', component: DSAMigration },
 
-  { path: '/dsa-dismantle-creation', exact: true, name: 'DSA Dismantle Creation', component: DSADCreation },
-  { path: '/dsa-dismantle-list', exact: true, name: 'DSA Dismantle List', component: DSADList },
-  { path: '/dsa-dismantle-detail/:id', exact: true, name: 'DSA Dismantle Detail', component: DSADDetail },
-  { path: '/dsa-dismantle-edit/:id', exact: true, name: 'DSA Dismantle Edit', component: DSADEdit },
+  { path: '/dsa-srn-creation', exact: true, name: 'DSA SRN Creation', component: DSADCreation },
+  { path: '/dsa-srn-list', exact: true, name: 'DSA SRN List', component: DSADList },
+  { path: '/dsa-srn-detail/:id', exact: true, name: 'DSA SRN Detail', component: DSADDetail },
+  { path: '/dsa-srn-edit/:id', exact: true, name: 'DSA SRN Edit', component: DSADEdit },
 
-  { path: '/dismantle/mr-dis-creation-bulk', exact: true, name: 'MR Dismantle Creation', component: MRDismantleBulk },
+  { path: '/srn/mr-srn-creation-bulk', exact: true, name: 'MR SRN Creation', component: MRDismantleBulk },
+
+  { path: '/dsa-srn-migration', exact: true, name: 'DSA SRN Migration', component: DSADMigration },
 
 ];
 

@@ -10,7 +10,7 @@ import {connect} from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
-import {apiSendEmail, postDatatoAPINODE, getDatafromAPIISAT, getDatafromAPINODE} from '../../helper/asyncFunction';
+import {apiSendEmail, postDatatoAPINODE, getDatafromAPIISAT, getDatafromAPINODE, patchDatatoAPINODE} from '../../helper/asyncFunction';
 
 const DefaultNotif = React.lazy(() => import('../../viewsTelkomsel/DefaultView/DefaultNotif'));
 
@@ -85,11 +85,16 @@ class MRDismantleBulk extends Component {
         modal_loading : false,
         project_in_bulk : [],
         list_warehouse : [],
+        action_finish : false,
+        process_bulk_message : [],
     };
     this.saveDataMRABulk = this.saveDataMRABulk.bind(this);
     this.exportFormatBulkMR = this.exportFormatBulkMR.bind(this);
+    this.exportFormatBulkMRMigration = this.exportFormatBulkMRMigration.bind(this);
     this.handleChangeUploadType = this.handleChangeUploadType.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
+    this.saveDataPSAssignMRBulk = this.saveDataPSAssignMRBulk.bind(this);
+    this.saveDataMRAStatusMigrationBulk = this.saveDataMRAStatusMigrationBulk.bind(this);
   }
 
 	toggleLoading(){
@@ -105,6 +110,16 @@ class MRDismantleBulk extends Component {
     }else{
       return props;
     }
+  }
+
+  isSameValue(element,value){
+    //function for FindIndex
+    return element === value;
+  }
+
+  getIndex(data, value){
+    //get index of value in Array
+    return data.findIndex(e => this.isSameValue(e,value));
   }
 
   checkValuetoZero(props){
@@ -204,7 +219,7 @@ class MRDismantleBulk extends Component {
   }
 
   getASPList() {
-    getDatafromAPIEXEL('/vendor_data_non_page?where={"Type":"ASP"}').then(res => {
+    getDatafromAPIISAT('/vendor_data_non_page?where={"Type":"ASP"}').then(res => {
       if(res.data !== undefined) {
         const items = res.data._items;
         this.setState({asp_list : items});
@@ -222,7 +237,7 @@ class MRDismantleBulk extends Component {
 
   async getProjectinBulk(array_project){
     let arrayProject = '"'+array_project.join('", "')+'"';
-    const dataProject = await getDatafromAPIEXEL('/project_sorted_non_page?where={"Project" : {"$in" : ['+arrayProject+']}}');
+    const dataProject = await getDatafromAPIISAT('/project_sorted_non_page?where={"Project" : {"$in" : ['+arrayProject+']}}');
     if(dataProject.data !== undefined){
       return dataProject.data._items;
     }else{
@@ -258,6 +273,29 @@ class MRDismantleBulk extends Component {
     return numberTSSR;
   }
 
+  async saveDataMRAStatusMigrationBulk(){
+    this.toggleLoading();
+    // const dataChecking = this.state.assignment_ssow_upload;
+    const dataUploadMigration = {
+      "data" : this.state.rowsXLS
+    }
+    const respondSaveDSA = await patchDatatoAPINODE('/matreq-srn/updateStatusMRDMigration', dataUploadMigration, this.state.tokenUser);
+    if(respondSaveDSA.data !== undefined && respondSaveDSA.status >= 200 && respondSaveDSA.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      if (respondSaveDSA.response !== undefined && respondSaveDSA.response.data !== undefined && respondSaveDSA.response.data.error !== undefined) {
+        if (respondSaveDSA.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveDSA.response.data.error.message) });
+        } else {
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveDSA.response.data.error) });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+  }
+
   async saveDataMRABulk(){
   	this.toggleLoading();
     // const dataChecking = this.state.assignment_ssow_upload;
@@ -281,6 +319,75 @@ class MRDismantleBulk extends Component {
     this.toggleLoading();
   }
 
+  async saveDataPSAssignMRBulk(){
+    this.toggleLoading();
+    const dataXLS = this.state.rowsXLS
+    // const dataChecking = this.state.assignment_ssow_upload;
+    let dataError = [];
+    let actionMessage = [];
+    for(let i = 1; i < dataXLS.length; i++){
+      let dataPSIDBAM = dataXLS[i][this.getIndex(dataXLS[0],'id_bam_psa')];
+      let dataMRIDBAM = dataXLS[i][this.getIndex(dataXLS[0],'id_bam_mra')];
+      let dataPSID = dataXLS[i][this.getIndex(dataXLS[0],'psa_id')];
+      let dataMRID = dataXLS[i][this.getIndex(dataXLS[0],'mra_id')];
+      let actionMessageIdx = {
+        mra_id : dataMRID,
+        psa_id : dataPSID
+      }
+      if((dataPSIDBAM === null || dataPSIDBAM === undefined) && (dataMRIDBAM === null || dataMRIDBAM === undefined) && (dataPSID === null || dataPSID === undefined) && (dataMRID === null || dataMRID === undefined)){
+        actionMessageIdx["message"] = null;
+      }else{
+        if(dataPSIDBAM === null || dataPSIDBAM === undefined || dataMRIDBAM === null || dataMRIDBAM === undefined){
+          actionMessageIdx["message"] = "id bam of both cannot be empty";
+        }else{
+          const assingPS = await patchDatatoAPINODE('/matreq-srn/assignPsToMrd/'+dataMRIDBAM+'/psd/'+dataPSIDBAM, {}, this.state.tokenUser);
+          if(assingPS !== undefined && assingPS.data !== undefined){
+            actionMessageIdx["message"] = "Success";
+          }else{
+            if (assingPS.response !== undefined && assingPS.response.data !== undefined && assingPS.response.data.error !== undefined) {
+              if (assingPS.response.data.error.message !== undefined) {
+                dataError.push("("+dataMRID+" <=> "+dataPSID+")-> "+JSON.stringify(assingPS.response.data.error.message));
+                actionMessageIdx["message"] = JSON.stringify(assingPS.response.data.error.message);
+              } else {
+                dataError.push("("+dataMRID+" <=> "+dataPSID+")-> "+JSON.stringify(assingPS.response.data.error));
+                actionMessageIdx["message"] = JSON.stringify(assingPS.response.data.error);
+              }
+            } else {
+              dataError.push("("+dataMRID+" <=> "+dataPSID+")-> There is error, please try again");
+              actionMessageIdx["message"] = "There is error, please try again";
+            }
+          }
+        }
+      }
+      actionMessage.push(actionMessageIdx);
+    }
+    if(dataError.length === 0){
+      this.setState({action_status : "success"});
+    }else{
+      this.setState({action_status : "failed", action_message : "[ "+dataError.map(eam => eam).join("; ")+" ] => There is some error, MRA NOT ERROR ALREADY SAVED"});
+    }
+    this.setState({process_bulk_message : actionMessage, action_finish : true})
+    this.toggleLoading();
+  }
+
+  exportFormatBulkPSAssignMRWithMessage = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataXLS = this.state.rowsXLS;
+    const actionMessage = this.state.process_bulk_message;
+    console.log("actionMessage with", actionMessage);
+
+    let headerRow = ["Action Message", "id_bam_psa", "psa_id", "id_bam_mra", "mra_id"];
+    ws.addRow(headerRow);
+    for(let j = 1; j < dataXLS.length; j++){
+      ws.addRow([actionMessage[j-1].message].concat(dataXLS[j]));
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'PS SRN Assign MRA Migration Uploader Template with Action Message.xlsx');
+  }
+
   exportFormatBulkMR = async () =>{
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -292,6 +399,30 @@ class MRDismantleBulk extends Component {
 
     const MRFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([MRFormat]), 'MRA Uploader Template.xlsx');
+  }
+
+  exportFormatBulkPSAssignMR = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let headerRow = ["id_bam_psa", "psa_id", "id_bam_mra", "mra_id"];
+    ws.addRow(headerRow);
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'PS SRN Assign MRA Migration Uploader Template.xlsx');
+  }
+
+  exportFormatBulkMRMigration = async () =>{
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    let headerRow = ["id", "mra_sh_id", "mra_sh_created_on", "mra_sh_created_by", "activity_id", "project", "category", "eta", "etd", "deliver_by", "dismantle_by", "wh_destination", "activity_id_destination", "project_destination", "assignment_id", "mra_type", "mr_related", "note"];
+    ws.addRow(headerRow);
+    let exRow1 = ["new", null, "2020-10-02", "test@email.com", null, null, "TWH", "2020-10-02", "2020-10-06", "DSP", null, "JKT1", null, null, null, 1, null, null];
+    ws.addRow(exRow1);
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'MRA Migration Uploader Template.xlsx');
   }
 
   handleChangeUploadType(e){
@@ -312,6 +443,12 @@ class MRDismantleBulk extends Component {
           <CardHeader>
             <span style={{lineHeight :'2', fontSize : '17px'}} >MRA Bulk </span>
             <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkMR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MRA Format Bulk</Button>
+            {(this.state.userRole.findIndex(e => e === "Admin") !== -1) && (
+              <Fragment>
+                <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkMRMigration} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download MRA Migration Format</Button>
+                <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkPSAssignMR} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download PS SRN Assign MRA Migration Format</Button>
+              </Fragment>
+            )}
           </CardHeader>
           <CardBody className='card-UploadBoq'>
             <Row>
@@ -322,6 +459,38 @@ class MRDismantleBulk extends Component {
                 </Button>
               </Col>
             </Row>
+            {(this.state.userRole.findIndex(e => e === "Admin") !== -1) && (
+              <Fragment>
+                <hr style={{borderStyle : 'solid', borderWidth: '0px 0px 1px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
+                <Row>
+                  <Col>
+                    <h6>MRA Migration SH Assign PS to MRA :</h6>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <input type="file" onChange={this.fileHandlerMRBulk.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
+                    <Button color="success" onClick={this.saveDataPSAssignMRBulk} style={{float : 'right'}} disabled={this.state.action_status === "failed" || this.state.rowsXLS.length === 0}>
+                      {this.state.waiting_status === true ? "loading.." : "Save"}
+                    </Button>
+                  </Col>
+                </Row>
+                <hr style={{borderStyle : 'solid', borderWidth: '0px 0px 1px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
+                <Row>
+                  <Col>
+                    <h6>MRA Migration Status from SH :</h6>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <input type="file" onChange={this.fileHandlerMRBulk.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
+                    <Button color="success" onClick={this.saveDataMRAStatusMigrationBulk} style={{float : 'right'}} disabled={this.state.action_status === "failed" || this.state.rowsXLS.length === 0}>
+                      {this.state.waiting_status === true ? "loading.." : "Save"}
+                    </Button>
+                  </Col>
+                </Row>
+              </Fragment>
+            )}
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>
@@ -333,6 +502,11 @@ class MRDismantleBulk extends Component {
               </tbody>
             </table>
             <hr style={{borderStyle : 'double', borderWidth: '0px 0px 3px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
+            {this.state.action_finish == true && (
+              <Button color="info" outline size="sm" onClick={this.exportFormatBulkPSAssignMRWithMessage} style={{float : 'right', marginBottom : '10px'}}>
+                Print Action Message
+              </Button>
+            )}
             <Table hover bordered responsive size="sm">
               <tbody>
               {this.state.rowsXLS.length !== 0 ? (

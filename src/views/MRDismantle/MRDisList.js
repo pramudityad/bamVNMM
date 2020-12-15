@@ -171,6 +171,7 @@ class MRDisList extends Component {
     if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
       filter_array.push('""asp_company_dismantle"," : "'+this.state.vendor_name+'"');
     }
+    filter_array.push('"$or" : [{"current_mra_status":"PLANTSPEC SRN ASSIGNED"}, {"current_mra_status":"MR REQUESTED"}]');
     let whereAnd = '{' + filter_array.join(',') + '}';
     let items = [];
     const res = await this.getDataFromAPINODE('/matreq-srn?noPg=1&srt=_id:-1&q=' + whereAnd+'&v={"mra_id":1}')
@@ -264,7 +265,7 @@ class MRDisList extends Component {
 
     const allMR = await this.getAllMRAListFS();
 
-    let headerRow = ["MRD_ID_BAM", "LDM_Approve_By", "LDM_Approve_Date", "Deliver_By", "Start_Delivery_By", "Start_Delivery_Date", "Start_Delivery_Phone", "End_Delivery_By", "End_Delivery_Date", "End_Delivery_Phone", "Material_On_Warehouse_By", "Material_On_Warehouse_Date"];
+    let headerRow = ["MRD_ID_BAM", "LDM_Approve_By", "LDM_Approve_Date", "Deliver_By", "Vendor_Code", "MOT", "Material_Packed_By", "Material_Packed_Date", "Start_Delivery_By", "Start_Delivery_Date", "Start_Delivery_Phone", "End_Delivery_By", "End_Delivery_Date", "End_Delivery_Phone", "Material_On_Warehouse_By", "Material_On_Warehouse_Date"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {

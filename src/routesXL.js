@@ -205,6 +205,10 @@ const DSADEdit = React.lazy(() => import('./views/DSADismantle/DSADEdit2'));
 
 const MRDismantleBulk = React.lazy(() => import('./views/MRDismantle/MRDismantleBulk'));
 
+const LCCPOList = React.lazy(() => import('./views/LCC/LCCPOList'));
+
+const DSADMigration = React.lazy(() => import('./views/DSADismantle/DSADMigration'));
+
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -429,6 +433,10 @@ const routes = [
   { path: '/dsa-srn-edit/:id', exact: true, name: 'DSA Return Edit', component: DSADEdit },
 
   { path: '/srn/mr-srn-creation-bulk', exact: true, name: 'MR Return Creation', component: MRDismantleBulk },
+
+  { path: '/lcc-po-list', exact: true, name: 'LCC PO List', component: LCCPOList },
+
+  { path: '/dsa-srn-migration', exact: true, name: 'DSA SRN Migration', component: DSADMigration },
 
 ];
 

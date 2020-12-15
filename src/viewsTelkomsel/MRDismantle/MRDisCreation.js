@@ -65,6 +65,8 @@ class MRDisCreation extends Component {
     this.saveMRDis = this.saveMRDis.bind(this);
     this.loadOptionsASG = this.loadOptionsASG.bind(this);
     this.handleChangeASG = this.handleChangeASG.bind(this);
+    this.loadOptionsMR = this.loadOptionsMR.bind(this);
+    this.handleChangeMR = this.handleChangeMR.bind(this);
   }
 
   toggleLoading() {
@@ -232,6 +234,22 @@ class MRDisCreation extends Component {
     }
   }
 
+  async loadOptionsMR(inputValue) {
+    if (!inputValue) {
+      this.setState({ list_asg_selection: [] });
+      return [{ 'label': null, 'value': null }];
+    } else {
+      let asg_list = [{ 'label': null, 'value': null }];
+      const getASG = await this.getDataFromAPINODE('/matreq?srt=_id:-1&q={"mr_id":{"$regex":"' + inputValue + '", "$options":"i"}}&v={"mr_id":1, "Site_ID" : 1}');
+      if (getASG !== undefined && getASG.data !== undefined) {
+        this.setState({ list_asg_selection: getASG.data.data }, () =>
+          getASG.data.data.map(mr =>
+            asg_list.push({ 'label': mr.mr_id !== undefined ? mr.mr_id : null, 'value': mr._id , 'mr_id': mr.mr_id })))
+      }
+      return asg_list;
+    }
+  }
+
   handleChangeWPID(newValue){
     this.setState(
       (prevState) => ({
@@ -345,7 +363,7 @@ class MRDisCreation extends Component {
     const dataForm = this.state.form_creation;
     const dataMR = [
         ["id", "activity_id", "project", "category", "eta", "etd", "deliver_by", "dismantle_by", "wh_destination", "activity_id_destination", "project_destination", "assignment_id", "mra_type", "mr_related", "note"],
-        ["new", dataForm.wp_id, dataForm.project_name, dataForm.destination, dataForm.eta, dataForm.etd, dataForm.deliver_by, dataForm.dismantle_by, dataForm.warehouse, dataForm.warehouse === "TWH" ? null : dataForm.wp_id_destination, dataForm.warehouse === "TWH" ? null : dataForm.project_name_destination, dataForm.assignment_id === undefined ? null : dataForm.assignment_id, 1, null, dataForm.notes === undefined ? null : dataForm.notes],
+        ["new", dataForm.wp_id, dataForm.project_name, dataForm.destination, dataForm.eta, dataForm.etd, dataForm.deliver_by, dataForm.dismantle_by, dataForm.warehouse, dataForm.warehouse === "TWH" ? null : dataForm.wp_id_destination, dataForm.warehouse === "TWH" ? null : dataForm.project_name_destination, dataForm.assignment_id === undefined ? null : dataForm.assignment_id, dataForm.mra_type, dataForm.mr_id !== undefined ? dataForm.mr_id : null, dataForm.notes === undefined ? null : dataForm.notes],
     ];
     let fileDocument = new FormData();
     await fileDocument.append('data', JSON.stringify(dataMR));
@@ -375,6 +393,17 @@ class MRDisCreation extends Component {
           ...prevState.form_creation,
           ["assignment_id"]: newValue.label,
           ["site_id_asg"] : newValue.site_id_asg,
+        },
+      })
+    );
+  };
+
+  handleChangeMR = async (newValue) => {
+    this.setState(
+      (prevState) => ({
+        form_creation: {
+          ...prevState.form_creation,
+          ["mr_id"]: newValue.mr_id
         },
       })
     );
@@ -410,6 +439,20 @@ class MRDisCreation extends Component {
           </CardHeader>
           <CardBody>
             <Form>
+              <Row form>
+                <Col md={6}>
+                  <FormGroup>
+                    <Label>MRA Type</Label>
+                    <Input type="select" name="mra_type" value={this.state.form_creation.mra_type} onChange={this.handleChangeDropdown}>
+                      <option value="" disabled selected hidden>Select MRA Type</option>
+                      <option value="1">Dismantle</option>
+                      <option value="2">Return Excess</option>
+                      <option value="3">Return Faulty</option>
+                      <option value="4">Relocation</option>
+                    </Input>
+                  </FormGroup>
+                </Col>
+              </Row>
               <Row form>
                 <Col md={6}>
                   <FormGroup>
@@ -575,6 +618,12 @@ class MRDisCreation extends Component {
                     <Input type="text" name="site_id_asg" value={this.state.form_creation.site_id_asg} readOnly />
                   </FormGroup>
                 </Col>
+                <Col md={3}>
+                  <FormGroup>
+                    <Label>MR ID<span style={{marginLeft : '5px', fontSize : '10px'}}>(Optional)</span></Label>
+                    <AsyncSelect loadOptions={this.loadOptionsMR} defaultOptions onChange={this.handleChangeMR} />
+                  </FormGroup>
+                </Col>
               </Row>
               <Row form>
                 <Col md={3}>
@@ -587,7 +636,7 @@ class MRDisCreation extends Component {
             </Form>
           </CardBody>
           <CardFooter>
-            <Button color='success' style={{float : 'right'}} size="sm" onClick={this.saveMRDis} disabled={this.state.modal_loading === true}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create MR Dismantle</Button>
+            <Button color='success' style={{float : 'right'}} size="sm" onClick={this.saveMRDis} disabled={this.state.modal_loading === true}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create MRA</Button>
           </CardFooter>
         </Card>
         </Col>

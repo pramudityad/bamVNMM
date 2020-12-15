@@ -315,7 +315,7 @@ export default {
       name: 'DSA Return List',
       url: '/dsa-srn-list',
       icon: 'icon-list',
-      roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator"],
+      roles : ["BAM-LDM Admin", "BAM-LDM", "BAM-Mover"],
     },
     {
       name: 'LCC List',

@@ -769,7 +769,7 @@ class MRDisDetail extends Component {
 
   componentDidMount() {
     this.getDataMR(this.props.match.params.id);
-    document.title = "MRA Detail | BAM";
+    document.title = "MRA  Detail | BAM";
   }
 
   // async plantSpecUnassigned(){
@@ -1582,6 +1582,19 @@ class MRDisDetail extends Component {
     }
   }
 
+  getBAPAFile = async (e) => {
+    e.preventDefault()
+    e.persist();
+    const _id = e.currentTarget.value;
+    const dataBAPA = this.state.data_mr.bapa_document;
+    if(dataBAPA !== undefined && dataBAPA !== null)  {
+      const resFile = await getDatafromAPINODEFile('/matreq-srn/getBapaDocument/' + _id, this.props.dataLogin.token, dataBAPA.mime_type);
+      if(resFile !== undefined){
+        saveAs(new Blob([resFile.data], {type:dataBAPA.mime_type}), dataBAPA.file_name);
+      }
+    }
+  }
+
   handleMotType(e){
     this.setState({mot_type : e.target.value});
   }
@@ -1650,19 +1663,6 @@ async requestMRDismantle(){
     }
   }
 
-  getBAPAFile = async (e) => {
-    e.preventDefault()
-    e.persist();
-    const _id = e.currentTarget.value;
-    const dataBAPA = this.state.data_mr.bapa_document;
-    if(dataBAPA !== undefined && dataBAPA !== null)  {
-      const resFile = await getDatafromAPINODEFile('/matreq-srn/getBapaDocument/' + _id, this.props.dataLogin.token, dataBAPA.mime_type);
-      if(resFile !== undefined){
-        saveAs(new Blob([resFile.data], {type:dataBAPA.mime_type}), dataBAPA.file_name);
-      }
-    }
-  }
-
   render() {
     const background = {
       backgroundColor: "#e3e3e3",
@@ -1690,10 +1690,10 @@ async requestMRDismantle(){
                     className="fa fa-info-circle"
                     style={{ marginRight: "8px" }}
                   ></i>
-                  MRA Detail
+                  MRA  Detail
                 </span>
                 {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && (
-                  <Fragment>{/* }<Button style={{float : 'right', marginRight: "8px"}} size="sm" color="warning" onClick={this.changeEditable}>Edit MRA Detail</Button> */}</Fragment>
+                  <Fragment>{/* }<Button style={{float : 'right', marginRight: "8px"}} size="sm" color="warning" onClick={this.changeEditable}>Edit MRA  Detail</Button> */}</Fragment>
                 )}
                 {(this.state.data_mr !== null && (this.state.sid_file.length !== 0 || this.state.abd_file.length !== 0 || (this.state.data_mr.bapa_document !== undefined && this.state.data_mr.bapa_document !== null))) ? (
                   <Dropdown size="sm" isOpen={this.state.dropdownOpen[1]} toggle={() => {this.toggleDropdown(1);}} style={{float : 'right', marginRight : '10px'}}>
@@ -1786,7 +1786,7 @@ async requestMRDismantle(){
                       <td
                         colSpan="4"
                         style={{ textAlign: "center", color: "rgba(59,134,134,1)", fontSize: "21px" }} >
-                        MRA Detail
+                        MRA  Detail
                       </td>
                     </tr>
                     {this.state.data_mr !== null && (
@@ -1800,7 +1800,7 @@ async requestMRDismantle(){
                               color: "rgba(59,134,134,1)",
                             }}
                           >
-                            MRA ID : {this.state.data_mr.mra_id}
+                            MRA  ID : {this.state.data_mr.mra_id}
                           </td>
                         </tr>
                         <tr>
@@ -1936,6 +1936,12 @@ async requestMRDismantle(){
                           <div>
                             <div className="mr-detail__body--header-detail">
                               <span>Assignment ID</span>
+                            </div>
+                            <div>{this.state.data_mr.assignment_id}</div>
+                          </div>
+                          <div>
+                            <div className="mr-detail__body--header-detail">
+                              <span>MR Related</span>
                             </div>
                             <div>{this.state.data_mr.assignment_id}</div>
                           </div>
@@ -2092,7 +2098,7 @@ async requestMRDismantle(){
                       </Col>
                     </Row>
                     <hr className="upload-line-ordering"></hr>
-                    <div>PlantSpec Group No : {this.state.data_mr !== null ? (<Link to={'/dismantle/ps-dis-detail/'+this.state.data_mr.id_plantspec_doc}>{this.state.data_mr.srn_plantspec.length !== 0 ? this.state.data_mr.srn_plantspec[0].no_plantspec_srn : null}</Link>) : ""}</div>
+                    <div>PlantSpec Group No : {this.state.data_mr !== null ? (<Link to={'/srn/ps-srn-detail/'+this.state.data_mr.id_plantspec_doc}>{this.state.data_mr.srn_plantspec.length !== 0 ? this.state.data_mr.srn_plantspec[0].no_plantspec_srn : null}</Link>) : ""}</div>
                     <div className="divtable2">
                       <Table hover bordered striped responsive size="sm">
                         <thead style={{backgroundColor : '#0B486B', color : 'white'}}>

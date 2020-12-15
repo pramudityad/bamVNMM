@@ -284,7 +284,7 @@ class TSSRboq extends Component {
         if(res.data.data !== undefined){
           this.setState({data_tssr_boq_sites : dataTech.data.tssr_site, list_version : new Array(parseInt(dataTech.data.version)+1).fill("0")}, () => {
             this.viewTechBoqDataISAT(dataTech.data.tssr_site);
-            this.getDataSystemKey(dataTech.data.tssr_site);
+            // this.getDataSystemKey(dataTech.data.tssr_site);
           });
         }
       }
@@ -298,12 +298,14 @@ class TSSRboq extends Component {
       let techItemUniqID = [...new Set(dataTechItemNSVC.map(({ pp_id }) => pp_id))];
       let techItemUniqType = [];
       let techItemUniqName = [];
+      let techItemUniq_ID = [];
       for(let i = 0; i < techItemUniqID.length; i++){
         let itemTechFind = dataTechItemNSVC.find(e => e.pp_id === techItemUniqID[i]);
         techItemUniqType.push(itemTechFind.product_type);
         techItemUniqName.push(itemTechFind.product_name);
+        techItemUniq_ID.push(itemTechFind.id_pp_doc)
       }
-      const Header = {"type" : techItemUniqType, "name" : techItemUniqName, "pp_id" : techItemUniqID};
+      const Header = {"type" : techItemUniqType, "name" : techItemUniqName, "pp_id" : techItemUniqID, "id_pp_doc" : techItemUniq_ID};
       this.setState({view_tech_header_table : Header}, () => {
         this.dataViewPagination(data_sites);
       });
@@ -312,26 +314,26 @@ class TSSRboq extends Component {
     }
   }
 
-  async getDataSystemKey(array_dataSite){
-    let arraySite = array_dataSite.filter(ads => ads.project_po !== undefined && ads.project_po !== null && ads.project_po.length !== 0);
-    let array_or = [];
-    let dataSite =[];
-    let getNumberPage = Math.ceil(arraySite.length / 10);
-    for(let i = 0 ; i < getNumberPage; i++){
-      let DataPaginationSite = arraySite.slice(i * 10, (i+1)*10);
-      DataPaginationSite.map(ais => array_or.push('{"Project_PO" : "'+ais.project_po+'", "CD_Info_Project_Name" : "'+ais.project_name+'","Site_Info_SiteID_NE_Actual" : "'+ais.site_id+'"}'))
-      let arrayIdSite = array_or.join(', ');
-      let where_id_Site = '?where={"$or": ['+arrayIdSite+']}&projection={"Project_PO":1,"CD_Info_Project_Name":1,"Site_Info_SiteID_NE_Actual":1,"CD_Info_System_Key":1}';
-      let resSite = await getDatafromAPIISAT('/custdel_op'+where_id_Site);
-      if(resSite !== undefined){
-        if(resSite.data !== undefined){
-          dataSite = dataSite.concat(resSite.data._items);
-        }
-      }
-    }
-    this.setState({ data_from_cd:dataSite});
-    // const getData = await this.getDatafromAPIISAT()
-  }
+  // async getDataSystemKey(array_dataSite){
+  //   let arraySite = array_dataSite.filter(ads => ads.project_po !== undefined && ads.project_po !== null && ads.project_po.length !== 0);
+  //   let array_or = [];
+  //   let dataSite =[];
+  //   let getNumberPage = Math.ceil(arraySite.length / 10);
+  //   for(let i = 0 ; i < getNumberPage; i++){
+  //     let DataPaginationSite = arraySite.slice(i * 10, (i+1)*10);
+  //     DataPaginationSite.map(ais => array_or.push('{"Project_PO" : "'+ais.project_po+'", "CD_Info_Project_Name" : "'+ais.project_name+'","Site_Info_SiteID_NE_Actual" : "'+ais.site_id+'"}'))
+  //     let arrayIdSite = array_or.join(', ');
+  //     let where_id_Site = '?where={"$or": ['+arrayIdSite+']}&projection={"Project_PO":1,"CD_Info_Project_Name":1,"Site_Info_SiteID_NE_Actual":1,"CD_Info_System_Key":1}';
+  //     let resSite = await getDatafromAPIISAT('/custdel_op'+where_id_Site);
+  //     if(resSite !== undefined){
+  //       if(resSite.data !== undefined){
+  //         dataSite = dataSite.concat(resSite.data._items);
+  //       }
+  //     }
+  //   }
+  //   this.setState({ data_from_cd:dataSite});
+  //   // const getData = await this.getDatafromAPIISAT()
+  // }
 
   dataViewPagination(dataTechView){
     let perPage = this.state.perPage;
@@ -408,12 +410,14 @@ class TSSRboq extends Component {
       let techItemUniqID = [...new Set(dataTechItemNSVC.map(({ pp_id }) => pp_id))];
       let techItemUniqType = [];
       let techItemUniqName = [];
+      let techItemUniq_ID = [];
       for(let i = 0; i < techItemUniqID.length; i++){
         let itemTechFind = dataTechItemNSVC.find(e => e.pp_id === techItemUniqID[i]);
         techItemUniqType.push(itemTechFind.product_type);
         techItemUniqName.push(itemTechFind.product_name);
+        techItemUniq_ID.push(itemTechFind.id_pp_doc);
       }
-      const Header = {"type" : techItemUniqType, "name" : techItemUniqName, "pp_id" : techItemUniqID};
+      const Header = {"type" : techItemUniqType, "name" : techItemUniqName, "pp_id" : techItemUniqID, 'id_pp_doc' : techItemUniq_ID};
       this.setState({view_tech_header_table : Header}, () => {
         this.dataViewPagination(data_sites);
       });
@@ -1060,6 +1064,129 @@ class TSSRboq extends Component {
     saveAs(new Blob([MRFormat]), 'BOQ Implementation '+dataTech.no_tssr_boq+' Format.xlsx');
   }
 
+  async getPPandMaterialTSSR(array_id_pp_doc){
+    let arrayIDPPDOC = array_id_pp_doc;
+    let array_or = [];
+    let dataPP =[];
+    let getNumberPage = Math.ceil(arrayIDPPDOC.length / 25);
+    for(let i = 0 ; i < getNumberPage; i++){
+      let DataPaginationPP = arrayIDPPDOC.slice(i * 25, (i+1)*25);
+      let arrayIdppdoc = DataPaginationPP.join('", "');
+      let projection = '&v={"pp_id":1,"product_name":1,"product_type":1,"physical_group":1,"materials":1}'
+      let where_id_pp_doc = '?q={"_id" : {"$in": ["'+arrayIdppdoc+'"]}}';
+      let resPP = await getDatafromAPINODE('/productpackage'+where_id_pp_doc, this.state.tokenUser);
+      if(resPP !== undefined){
+        if(resPP.data !== undefined){
+          dataPP = dataPP.concat(resPP.data.data);
+        }
+      }
+    }
+    return dataPP
+    // const getData = await this.getDatafromAPIISAT()
+  }
+
+  exportImplementationWithMaterial = async () =>{
+    this.toggleLoading();
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataTech = this.state.data_tssr_boq;
+    let dataSites = [];
+    if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+      dataSites = this.state.data_tssr_boq_sites_version;
+    }else{
+      dataSites = this.state.data_tssr_boq_sites;
+    }
+
+    // const header_config = this.state.view_tech_all_header_table;
+    const header_pp = this.state.view_tech_header_table;
+    if(this.state.boq_type === "MW"){
+      let HeaderRow1 = ["project_name", "tssr_id", "region","region_fe", "site_id", "site_name","site_id_fe", "site_name_fe", "wp_id", "pp_id", "product_name", "product_type", "physical_group", "product_qty", "program", "material_id", "material_name", "uom", "material_qty", "material_type"];
+      ws.addRow(HeaderRow1);
+    }else{
+      let HeaderRow1 = ["project_name", "tssr_id", "region", "site_id", "site_name", "wp_id", "pp_id", "product_name", "product_type", "physical_group", "product_qty", "program", "material_id", "material_name", "uom", "material_qty", "material_type"];
+      ws.addRow(HeaderRow1);
+    }
+
+    const dataPPMM = await this.getPPandMaterialTSSR(header_pp.id_pp_doc);
+
+    if(this.state.boq_type === "MW"){
+      for(let i = 0; i < dataSites.length ; i++){
+        let qtyItem = []
+        if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+          for(let j = 0; j < dataSites[i].siteItemVersion.length; j++ ){
+            let dataSPPIdx = dataSites[i].siteItemVersion[j];
+            let dataPPDb = dataPPMM.find(dp => dp._id === dataSPPIdx.id_pp_doc);
+            if(dataPPDb !== undefined){
+              for(let k = 0; k < dataPPDb.materials.length; k++){
+                let dataMatSIdx = dataPPDb.materials[k];
+                const rowData = [dataSPPIdx.project_name, dataSPPIdx.no_tssr_boq, dataSites[i].region, dataSites[i].region_fe, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].site_id_fe, dataSites[i].site_name_fe, dataSites[i].wp_id, dataSPPIdx.pp_id, dataSPPIdx.product_name, dataSPPIdx.product_type, dataSPPIdx.physical_group, dataSPPIdx.qty,dataSites[i].program, dataMatSIdx.material_id, dataMatSIdx.material_name, dataMatSIdx.uom, dataSPPIdx.qty*dataMatSIdx.qty, dataMatSIdx.material_type];
+                ws.addRow(rowData);
+              }
+            }else{
+              const rowData = [dataSPPIdx.project_name, dataSPPIdx.no_tssr_boq, dataSites[i].region, dataSites[i].region_fe, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].site_id_fe, dataSites[i].site_name_fe, dataSites[i].wp_id, dataSPPIdx.pp_id, dataSPPIdx.product_name, dataSPPIdx.product_type, dataSPPIdx.physical_group, dataSPPIdx.qty,dataSites[i].program];
+              ws.addRow(rowData);
+            }
+          }
+        }else{
+          for(let j = 0; j < dataSites[i].siteItem.length; j++ ){
+            let dataSPPIdx = dataSites[i].siteItem[j];
+            let dataPPDb = dataPPMM.find(dp => dp._id === dataSPPIdx.id_pp_doc);
+            if(dataPPDb !== undefined){
+              for(let k = 0; k < dataPPDb.materials.length; k++){
+                let dataMatSIdx = dataPPDb.materials[k];
+                const rowData = [dataSPPIdx.project_name, dataSPPIdx.no_tssr_boq, dataSites[i].region, dataSites[i].region_fe, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].site_id_fe, dataSites[i].site_name_fe, dataSites[i].wp_id, dataSPPIdx.pp_id, dataSPPIdx.product_name, dataSPPIdx.product_type, dataSPPIdx.physical_group, dataSPPIdx.qty,dataSites[i].program, dataMatSIdx.material_id, dataMatSIdx.material_name, dataMatSIdx.uom, dataSPPIdx.qty*dataMatSIdx.qty, dataMatSIdx.material_type];
+                ws.addRow(rowData);
+              }
+            }else{
+              const rowData = [dataSPPIdx.project_name, dataSPPIdx.no_tssr_boq, dataSites[i].region, dataSites[i].region_fe, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].site_id_fe, dataSites[i].site_name_fe, dataSites[i].wp_id, dataSPPIdx.pp_id, dataSPPIdx.product_name, dataSPPIdx.product_type, dataSPPIdx.physical_group, dataSPPIdx.qty,dataSites[i].program];
+              ws.addRow(rowData);
+            }
+          }
+        }
+      }
+    }else{
+      for(let i = 0; i < dataSites.length ; i++){
+        let qtyItem = []
+        if(this.state.version_selected !== null && dataTech.version !== this.state.version_selected){
+          for(let j = 0; j < dataSites[i].siteItemVersion.length; j++ ){
+            let dataSPPIdx = dataSites[i].siteItemVersion[j];
+            let dataPPDb = dataPPMM.find(dp => dp._id === dataSPPIdx.id_pp_doc);
+            if(dataPPDb !== undefined){
+              for(let k = 0; k < dataPPDb.materials.length; k++){
+                let dataMatSIdx = dataPPDb.materials[k];
+                const rowData = [dataSPPIdx.project_name, dataSPPIdx.no_tssr_boq, dataSites[i].region, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].wp_id, dataSPPIdx.pp_id, dataSPPIdx.product_name, dataSPPIdx.product_type, dataSPPIdx.physical_group, dataSPPIdx.qty,dataSites[i].program, dataMatSIdx.material_id, dataMatSIdx.material_name, dataMatSIdx.uom, dataSPPIdx.qty*dataMatSIdx.qty, dataMatSIdx.material_type];
+                ws.addRow(rowData);
+              }
+            }else{
+              const rowData = [dataSPPIdx.project_name, dataSPPIdx.no_tssr_boq, dataSites[i].region, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].wp_id, dataSPPIdx.pp_id, dataSPPIdx.product_name, dataSPPIdx.product_type, dataSPPIdx.physical_group, dataSPPIdx.qty,dataSites[i].program];
+              ws.addRow(rowData);
+            }
+          }
+        }else{
+          for(let j = 0; j < dataSites[i].siteItem.length; j++ ){
+            let dataSPPIdx = dataSites[i].siteItem[j];
+            let dataPPDb = dataPPMM.find(dp => dp._id === dataSPPIdx.id_pp_doc);
+            if(dataPPDb !== undefined){
+              for(let k = 0; k < dataPPDb.materials.length; k++){
+                let dataMatSIdx = dataPPDb.materials[k];
+                const rowData = [dataSPPIdx.project_name, dataSPPIdx.no_tssr_boq, dataSites[i].region, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].wp_id, dataSPPIdx.pp_id, dataSPPIdx.product_name, dataSPPIdx.product_type, dataSPPIdx.physical_group, dataSPPIdx.qty,dataSites[i].program, dataMatSIdx.material_id, dataMatSIdx.material_name, dataMatSIdx.uom, dataSPPIdx.qty*dataMatSIdx.qty, dataMatSIdx.material_type];
+                ws.addRow(rowData);
+              }
+            }else{
+              const rowData = [dataSPPIdx.project_name, dataSPPIdx.no_tssr_boq, dataSites[i].region, dataSites[i].site_id, dataSites[i].site_name, dataSites[i].wp_id, dataSPPIdx.pp_id, dataSPPIdx.product_name, dataSPPIdx.product_type, dataSPPIdx.physical_group, dataSPPIdx.qty,dataSites[i].program];
+              ws.addRow(rowData);
+            }
+          }
+        }
+      }
+    }
+
+    const MRFormat = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([MRFormat]), 'BOQ Implementation '+dataTech.no_tech_boq+' With Material.xlsx');
+    this.toggleLoading();
+  }
+
   exportFormatTechnicalVerticalUploader = async () =>{
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
@@ -1216,6 +1343,7 @@ class TSSRboq extends Component {
                                 {/* }<DropdownItem onClick={this.exportTechnical}> <i className="fa fa-file-text-o" aria-hidden="true"></i> TSSR Report</DropdownItem> */}
                                 <DropdownItem onClick={this.exportTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> BOQ Implementation Horizontal</DropdownItem>
                                 <DropdownItem onClick={this.exportFormatTechnicalHorizontal}> <i className="fa fa-file-text-o" aria-hidden="true"></i> BOQ Implementation Format</DropdownItem>
+                                <DropdownItem onClick={this.exportImplementationWithMaterial}> <i className="fa fa-file-text-o" aria-hidden="true"></i> BOQ Implementation With Material</DropdownItem>
                               </DropdownMenu>
                             )}
                           </Dropdown>

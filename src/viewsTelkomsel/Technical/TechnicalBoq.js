@@ -1803,10 +1803,9 @@ class TechnicalBoq extends Component {
                             <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.created_on}</td>
                           </tr>
                           <tr style={{fontWeight : '425', fontSize : '15px'}}>
-                              <td>&nbsp; </td>
-                              <td></td>
-                              <td></td>
-                              <td style={{paddingLeft:'5px'}}></td>
+                            <td style={{textAlign : 'left'}}>Created By &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                            <td style={{textAlign : 'left'}}>:</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.tech_boq_status !== undefined && this.state.data_tech_boq.tech_boq_status.find(tbs => tbs.status_value === "CREATED") !== undefined ? this.state.data_tech_boq.tech_boq_status.find(tbs => tbs.status_value === "CREATED").status_updater : null}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -1825,6 +1824,11 @@ class TechnicalBoq extends Component {
                             <td style={{textAlign : 'left'}}>Updated On </td>
                             <td style={{textAlign : 'left'}}>:</td>
                             <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.updated_on}</td>
+                          </tr>
+                          <tr style={{fontWeight : '425', fontSize : '15px'}}>
+                            <td style={{textAlign : 'left'}}>Created By &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                            <td style={{textAlign : 'left'}}>:</td>
+                            <td style={{textAlign : 'left'}} colspan={2}>{this.state.data_tech_boq.tech_boq_status !== undefined ? this.state.data_tech_boq.tech_boq_status.find(tbs => tbs.status_value === "UPDATED") !== undefined ? this.state.data_tech_boq.tech_boq_status.find(tbs => tbs.status_value === "UPDATED").status_updater : this.state.data_tech_boq.tech_boq_status.find(tbs => tbs.status_value === "CREATED") !== undefined ? this.state.data_tech_boq.tech_boq_status.find(tbs => tbs.status_value === "CREATED").status_updater : null : null}</td>
                           </tr>
                         </tbody>
                       </table>

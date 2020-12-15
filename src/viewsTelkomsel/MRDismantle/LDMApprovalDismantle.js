@@ -25,7 +25,7 @@ const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
 
-const array_field = ["mra_id", "mrd_category", "project_name", "site_info.site_id", "site_info.site_name", "site_info.site_region", "destination.value", "site_info.site_name", "site_info.site_region", "current_mra_status", "creator.email", "created_on"];
+const array_field = ["mra_id", "mra_type", "mrd_category", "project_name", "site_info.site_id", "site_info.site_name", "site_info.site_region", "destination.value", "site_info.site_name", "site_info.site_region", "current_mra_status", "creator.email", "created_on"];
 
 class OrderCreated extends Component {
   constructor(props) {
@@ -395,7 +395,7 @@ class OrderCreated extends Component {
   componentDidMount() {
     this.getMRDisList();
     // this.getAllMR();
-    document.title = "MRA Approval | BAM";
+    document.title = "MRA  Approval | BAM";
   }
 
   handlePageChange(pageNumber) {
@@ -467,14 +467,14 @@ class OrderCreated extends Component {
               <CardHeader>
                 <span style={{ lineHeight: "2" }}>
                   <i className="fa fa-align-justify" style={{ marginRight: "8px" }} ></i>
-                  LDM Approval MR Dismantle
+                  LDM Approval MRA
                 </span>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <tr>
                     <th rowSpan="2">Action</th>
-                    <th>MR Dis ID</th>
+                    <th>MRA  ID</th>
                     <th>MRA Type</th>
                     <th>Category</th>
                     <th>Project Name</th>
@@ -510,7 +510,7 @@ class OrderCreated extends Component {
                             Reject
                           </Button>
                         </td>
-                        <td><Link to={'/dismantle/mr-dis-detail/'+list._id}>{list.mra_id}</Link></td>
+                        <td><Link to={'/srn/mr-srn-detail/'+list._id}>{list.mra_id}</Link></td>
                         <td>{list.mra_type}</td>
                         <td>{list.mrd_category}</td>
                         <td>{list.project_name}</td>

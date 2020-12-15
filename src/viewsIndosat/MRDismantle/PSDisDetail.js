@@ -79,12 +79,12 @@ class PSDisDetail extends Component {
     ws.addRow(["bundle_id","bundle_name","qty","category"]);
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'PSA Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'PS SRN Template.xlsx');
   }
 
   componentDidMount(){
     this.getDataPSDis(this.props.match.params.id);
-    document.title = "PSA Creation | BAM"
+    document.title = "PS SRN Creation | BAM"
   }
 
   async getDataPSDis(_id){
@@ -105,15 +105,15 @@ class PSDisDetail extends Component {
     if(!inputValue || inputValue.length < 3 ) {
       return [];
     } else {
-      let site_id_list = [];
+      let tower_id_list = [];
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
-      const getTowerID = await getDatafromAPIISAT('/site_op?where={"site_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
+      const getTowerID = await getDatafromAPIISAT('/tower_site_op?where={"tower_id":{"$regex":"'+inputValue+'", "$options":"i"}}');
       if(getTowerID !== undefined && getTowerID.data !== undefined) {
         this.setState({site_list : getTowerID.data._items});
         getTowerID.data._items.map(tower =>
-          site_id_list.push({'label' : tower.site_id, 'value' : tower._id, 'site_id' : tower.site_id, 'site_name' : tower.site_name}))
+          tower_id_list.push({'label' : tower.tower_id, 'value' : tower._id, 'tower_id' : tower.tower_id, 'tower_name' : tower.tower_name}))
       }
-      return site_id_list;
+      return tower_id_list;
     }
   }
 
@@ -123,8 +123,8 @@ class PSDisDetail extends Component {
         form_creation: {
           ...prevState.form_creation,
           ["id_site_doc"]: newValue.value,
-          ["site_id"]: newValue.site_id,
-          ["site_name"]: newValue.site_name,
+          ["site_id"]: newValue.tower_id,
+          ["site_name"]: newValue.tower_name,
         },
       })
     );
@@ -255,7 +255,7 @@ class PSDisDetail extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}}>PSA </span>
+            <span style={{lineHeight :'2', fontSize : '17px'}}>PS SRN </span>
             {this.state.ps_dis_data.submission_status !== "SUBMITTED" && (
               <Fragment>
                 <Button size="sm" onClick={this.submitPSDis} color='primary' style={{float : 'right', margin : '0 10px 0 10px'}}>
@@ -284,13 +284,10 @@ class PSDisDetail extends Component {
                         <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Project Name : {this.state.ps_dis_data.project_name}</td>
                       </tr>
                       <tr>
-                        <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Tower ID : {this.state.ps_dis_data.site_info !== undefined ? this.state.ps_dis_data.site_info.map(psd => psd.site_id+" ("+psd.site_name+")") : null}</td>
+                        <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Site ID : {this.state.ps_dis_data.site_info !== undefined ? this.state.ps_dis_data.site_info.map(psd => psd.site_id+" ("+psd.site_name+")") : null}</td>
                       </tr>
                       <tr>
-                        <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>MRA Related : {this.state.ps_dis_data.mra_id}</td>
-                      </tr>
-                      <tr>
-                        <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Region : {this.state.ps_dis_data.site_info !== undefined ? this.state.ps_dis_data.site_info.map(psd => psd.region) : null}</td>
+                        <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>MRA  Related : {this.state.ps_dis_data.mra_id}</td>
                       </tr>
                       <tr>
                         <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Category Dis : {this.state.ps_dis_data.plantspec_srn_category}</td>

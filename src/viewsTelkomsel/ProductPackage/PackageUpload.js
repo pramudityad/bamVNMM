@@ -913,7 +913,7 @@ class PackageUpload extends React.Component {
     dataPrint.map(pp => ws2.addRow([pp.pp_id, pp.product_name]));
 
     const MaterialFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MaterialFormat]), 'PS Dismantle Uploader Template.xlsx');
+    saveAs(new Blob([MaterialFormat]), 'PS SRN Uploader Template.xlsx');
   }
 
   exportFormatPSWH = async () => {
@@ -976,13 +976,13 @@ class PackageUpload extends React.Component {
                         <DropdownItem onClick={this.exportFormatBundleMaterial}>> PP Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatTechnical} disabled={this.state.packageChecked.length === 0}>> Tehnical Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatTechnicalTRM} disabled={this.state.packageChecked.length === 0}>> Tehnical TRM Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatPSDismantle} disabled={this.state.packageChecked.length === 0}>> PS Dismantle Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatPSDismantle} disabled={this.state.packageChecked.length === 0}>> PS SRN Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatPSWH} disabled={this.state.packageChecked.length === 0}>> PS Warehouse Template</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
-                  {this.state.userRole.includes('Flow-PublicInternal') !== true ? (
+                  {(this.state.userRole.includes('Flow-PublicInternal') !== true && this.state.userRole.findIndex(e => e === "BAM-PPManagerOnlyView") === -1 ) ? (
                     <div>
                       <Button block color="success" onClick={this.toggleAddNew} id="toggleCollapse1">
                         <i className="fa fa-plus-square" aria-hidden="true"> &nbsp; </i> New
@@ -1064,9 +1064,11 @@ class PackageUpload extends React.Component {
                                 <td style={{ textAlign: 'center' }}>{pp.physical_group}</td>
                                 <td style={{ textAlign: 'center' }}>{pp.product_type}</td>
                                 <td>
+                                {this.state.userRole.findIndex(e => e === "BAM-PPManagerOnlyView") === -1 && (
                                   <Button size='sm' color="secondary" value={pp.pp_id} onClick={this.togglePPedit} title='Edit'>
                                     <i className="fas fa-edit" aria-hidden="true"></i>
                                   </Button>
+                                )}
                                 </td>
                               </tr>
                               {pp.materials.map(mat =>

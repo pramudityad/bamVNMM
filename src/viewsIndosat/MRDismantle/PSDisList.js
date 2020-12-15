@@ -20,7 +20,7 @@ const password = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const array_field = ["no_plantspec_srn", "plantspec_srn_category", "project_name", "site_info.site_id", "site_info.site_name", "current_status", "created_on"]
+const array_field = ["no_plantspec_srn", "plantspec_srn_category", "project_name", "site_info.site_id", "site_info.site_name", "current_status", "mra_id",  "created_on"]
 
 class PSDisList extends Component {
   constructor(props) {
@@ -48,6 +48,7 @@ class PSDisList extends Component {
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.downloadPSDisList = this.downloadPSDisList.bind(this);
+    this.downloadPSDisListFM = this.downloadPSDisListFM.bind(this);
     this.getPSDisList = this.getPSDisList.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.toggleDropdown = this.toggleDropdown.bind(this);
@@ -152,6 +153,30 @@ class PSDisList extends Component {
     }
   }
 
+  async getAllPSDisFM() {
+    let PSDisList = [];
+    let filter_array = [];
+    for(let i = 0; i < array_field.length; i++){
+      if(this.state.filter_list[array_field[i]] !== undefined && this.state.filter_list[array_field[i]] !== null){
+        filter_array.push('"'+array_field[i]+'":{"$regex" : "' + this.state.filter_list[array_field[i]] + '", "$options" : "i"}');
+      }
+    }
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
+    }
+    filter_array.push('"mra_id" : null')
+    filter_array.push('"current_status" : "PS SRN  SUBMITTED"')
+    let whereAnd = '{' + filter_array.join(',') + '}';
+    let res = await this.getDataFromAPINODE('/plantspec-srn?srt=_id:-1&noPg=1&q=' + whereAnd)
+    if (res.data !== undefined) {
+      const items = res.data.data;
+      PSDisList = res.data.data;
+      return PSDisList;
+    }else{
+      return [];
+    }
+  }
+
   numToSSColumn(num) {
     var s = '', t;
 
@@ -167,7 +192,7 @@ class PSDisList extends Component {
     this.props.SidebarMinimizer(true);
     this.getPSDisList();
     // this.getAllPSDis();
-    document.title = 'PSA List | BAM';
+    document.title = 'PS SRN List | BAM';
   }
 
   componentWillUnmount() {
@@ -198,17 +223,35 @@ class PSDisList extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const allSHF = await this.getAllPSDis();
+    const allPSA = await this.getAllPSDis();
 
-    let headerRow = ["PSA ID", "Category", "Project name", "Origin Site ID", "Origin Site Name", "Region", "Status", "Created On"];
+    let headerRow = ["PS SRN ID", "Category", "Project name", "Origin Site ID", "Origin Site Name", "Status", "Created On"];
     ws.addRow(headerRow);
 
-    for (let i = 0; i < allSHF.length; i++) {
-      ws.addRow([allSHF[i].no_plantspec_srn, allSHF[i].plantspec_srn_category, allSHF[i].project_name, allSHF[i].site_info.map(si => si.site_id).join(", "), allSHF[i].site_info.map(si => si.site_name).join(", "), allSHF[i].site_info.map(si => si.region).join(", "), allSHF[i].current_status, new Date(allSHF[i].created_on)])
+    for (let i = 0; i < allPSA.length; i++) {
+      ws.addRow([allPSA[i].no_plantspec_srn, allPSA[i].plantspec_srn_category, allPSA[i].project_name, allPSA[i].site_info.map(si => si.site_id).join(", "), allPSA[i].site_info.map(si => si.site_name).join(", "), allPSA[i].current_status, new Date(allPSA[i].created_on)])
     }
     this.toggleLoading();
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'PSA List.xlsx');
+    saveAs(new Blob([allocexport]), 'PS SRN List.xlsx');
+  }
+
+  async downloadPSDisListFM() {
+    this.toggleLoading();
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const allPSA = await this.getAllPSDisFM();
+
+    let headerRow = ["ID BAM PSA", "PS SRN ID", "Category", "Project name", "Origin Site ID", "Origin Site Name", "Status", "Created On"];
+    ws.addRow(headerRow);
+
+    for (let i = 0; i < allPSA.length; i++) {
+      ws.addRow([allPSA[i]._id, allPSA[i].no_plantspec_srn, allPSA[i].plantspec_srn_category, allPSA[i].project_name, allPSA[i].site_info.map(si => si.site_id).join(", "), allPSA[i].site_info.map(si => si.site_name).join(", "), allPSA[i].current_status, new Date(allPSA[i].created_on)])
+    }
+    this.toggleLoading();
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([allocexport]), 'PS SRN For Migration List.xlsx');
   }
 
   onChangeDebounced(e) {
@@ -250,7 +293,7 @@ class PSDisList extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: '2' }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> PSA List
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> PS SRN List
                 </span>
                 {((this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-Mover") === -1)) && (
                   <React.Fragment>
@@ -260,23 +303,25 @@ class PSDisList extends Component {
                     </DropdownToggle>
                     <DropdownMenu>
                       <DropdownItem header>MR File</DropdownItem>
-                      <DropdownItem onClick={this.downloadPSDisList}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download PSA List</DropdownItem>
+                      <DropdownItem onClick={this.downloadPSDisList}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download PS SRN List</DropdownItem>
+                      <DropdownItem onClick={this.downloadPSDisListFM}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download PS SRN List For Migration</DropdownItem>
                     </DropdownMenu>
                   </Dropdown>
                 </React.Fragment>
                 )}
-                <Link to={'/dismantle/ps-dis-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create PSA </Button></Link>
+                <Link to={'/srn/ps-srn-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create PS SRN </Button></Link>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th>PSA ID</th>
+                      <th>PS SRN ID</th>
                       <th>Category</th>
                       <th>Project Name</th>
                       <th>Site ID</th>
                       <th>Site Name</th>
                       <th>Status</th>
+                      <th>MRA Related</th>
                       <th>Created On</th>
                     </tr>
                     <tr>
@@ -291,12 +336,13 @@ class PSDisList extends Component {
                     )}
                     {this.state.ps_dis_list.map((list, i) =>
                       <tr key={list._id}>
-                        <td><Link to={'/dismantle/ps-dis-detail/'+list._id}>{list.no_plantspec_srn}</Link></td>
+                        <td><Link to={'/srn/ps-srn-detail/'+list._id}>{list.no_plantspec_srn}</Link></td>
                         <td>{list.plantspec_srn_category}</td>
                         <td>{list.project_name}</td>
                         <td>{list.site_info.map(si => si.site_id).join(", ")}</td>
                         <td>{list.site_info.map(si => si.site_name).join(", ")}</td>
                         <td>{list.current_status}</td>
+                        <td>{list.mra_id}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
                     )}

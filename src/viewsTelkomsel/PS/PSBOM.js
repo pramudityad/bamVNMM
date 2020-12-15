@@ -435,6 +435,12 @@ class PSBOM extends Component {
           site_tssr_list.push({'value' : site._id, 'label' : "PS "+site.no_tssr_boq+"-"+site.site_id +" ("+site.program+") ("+site.wp_id+")", 'id_tssr_boq_doc' : site.id_tssr_boq_doc })
         );
       }
+      const getWPTSSR = await this.getDataFromAPINODE('/plantspec/getTechnicalByProjectId2/'+this.state.project_selected+'?wpId='+inputValue);
+      if(getWPTSSR !== undefined && getWPTSSR.data !== undefined) {
+        getWPTSSR.data.data.map(site =>
+          site_tssr_list.push({'value' : site._id, 'label' : "PS "+site.no_tssr_boq+"-"+site.site_id +" ("+site.program+") ("+site.wp_id+")", 'id_tssr_boq_doc' : site.id_tssr_boq_doc })
+        );
+      }
       console.log("site_tssr_list", site_tssr_list);
       return site_tssr_list;
     }

@@ -25,7 +25,7 @@ const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
 
-const array_field = ["mra_id", "mra_type", "mrd_category", "project_name", "site_info.site_id", "site_info.site_name", "site_info.site_region", "destination.value", "site_info.site_name", "site_info.site_region", "current_mra_status", "creator.email", "created_on"];
+const array_field = ["mra_id", "mra_type", "mrd_category", "project_name", "site_info.site_id", "site_info.site_name", "destination.value", "site_info.site_name", "current_mra_status", "creator.email", "created_on"];
 
 class OrderCreated extends Component {
   constructor(props) {
@@ -395,7 +395,7 @@ class OrderCreated extends Component {
   componentDidMount() {
     this.getMRDisList();
     // this.getAllMR();
-    document.title = "MRA Approval | BAM";
+    document.title = "MRA  Approval | BAM";
   }
 
   handlePageChange(pageNumber) {
@@ -467,23 +467,21 @@ class OrderCreated extends Component {
               <CardHeader>
                 <span style={{ lineHeight: "2" }}>
                   <i className="fa fa-align-justify" style={{ marginRight: "8px" }} ></i>
-                  LDM Approval MR Dismantle
+                  LDM Approval MRA
                 </span>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <tr>
                     <th rowSpan="2">Action</th>
-                    <th>MRA ID</th>
+                    <th>MRA  ID</th>
                     <th>MRA Type</th>
                     <th>Category</th>
                     <th>Project Name</th>
-                    <th>Tower ID Origin</th>
-                    <th>Tower Name Origin</th>
-                    <th>Region Origin</th>
+                    <th>Site ID Origin</th>
+                    <th>Site Name Origin</th>
                     <th>Destination ID</th>
                     <th>Destination Name</th>
-                    <th>Destination Region</th>
                     <th>Current Status</th>
                     <th>Created By</th>
                     <th>Created On</th>
@@ -510,16 +508,14 @@ class OrderCreated extends Component {
                             Reject
                           </Button>
                         </td>
-                        <td><Link to={'/dismantle/mr-dis-detail/'+list._id}>{list.mra_id}</Link></td>
+                        <td><Link to={'/srn/mr-srn-detail/'+list._id}>{list.mra_id}</Link></td>
                         <td>{list.mra_type}</td>
                         <td>{list.mrd_category}</td>
                         <td>{list.project_name}</td>
                         <td>{list.site_info.find(si => si.srn_title === "Origin") !== undefined ? list.site_info.find(si => si.srn_title === "Origin").site_id : null }</td>
                         <td>{list.site_info.find(si => si.srn_title === "Origin") !== undefined ? list.site_info.find(si => si.srn_title === "Origin").site_name : null}</td>
-                        <td>{list.site_info.find(si => si.srn_title === "Origin") !== undefined ? list.site_info.find(si => si.srn_title === "Origin").site_region : null}</td>
-                        <td>{list.mrd_category === "Dismantle To Warehouse" ? list.destination.value : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_id : null }</td>
-                        <td>{list.mrd_category === "Dismantle To Warehouse" ? null : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_name : null}</td>
-                        <td>{list.mrd_category === "Dismantle To Warehouse" ? null : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_region : null}</td>
+                        <td>{list.mrd_category === "To Warehouse" ? list.destination.value : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_id : null }</td>
+                        <td>{list.mrd_category === "To Warehouse" ? null : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_name : null}</td>
                         <td>{list.current_mra_status}</td>
                         <td>{list.creator.map(e => e.email)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>

@@ -1085,7 +1085,7 @@ class DSADEdit extends Component {
                       <Row>
                         <Col md="3">
                           <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>MR Dismantle ID</Label>
+                            <Label>MRA ID</Label>
                             <Input type="text" readOnly value={this.state.data_dsa.mra_id}></Input>
                           </FormGroup>
                         </Col>

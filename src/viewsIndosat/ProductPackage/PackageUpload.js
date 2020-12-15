@@ -947,7 +947,7 @@ class PackageUpload extends React.Component {
     dataPrint.map(pp => ws2.addRow([pp.pp_id, pp.product_name]));
 
     const MaterialFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MaterialFormat]), 'PS Dismantle Uploader Template.xlsx');
+    saveAs(new Blob([MaterialFormat]), 'PS SRN Uploader Template.xlsx');
   }
 
   exportFormatPSWarehouse = async () => {
@@ -986,7 +986,7 @@ class PackageUpload extends React.Component {
                         <DropdownItem onClick={this.exportFormatBundleMaterial}>> Bundle Material Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatTechnical} disabled={this.state.packageChecked.length === 0}>> Tehnical Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatTechnicalMW} disabled={this.state.packageChecked.length === 0}>> Tehnical Transmission Template</DropdownItem>
-                        <DropdownItem onClick={this.exportFormatPSDismantle} disabled={this.state.packageChecked.length === 0}>> PS Dismantle Template</DropdownItem>
+                        <DropdownItem onClick={this.exportFormatPSDismantle} disabled={this.state.packageChecked.length === 0}>> PS SRN Template</DropdownItem>
                         <DropdownItem onClick={this.exportFormatPSWarehouse} disabled={this.state.packageChecked.length === 0}>> PS Warehouse Template</DropdownItem>
                         <DropdownItem onClick={this.downloadAll}>> Download All PP</DropdownItem>
                       </DropdownMenu>

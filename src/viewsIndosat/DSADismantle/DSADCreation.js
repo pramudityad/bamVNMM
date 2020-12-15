@@ -176,7 +176,7 @@ class DSADCreation extends Component {
     }
     this.setState({dsa_creation_status : newValue.dsa_number })
     const getNN = await this.getDataFromAPIXL('/custdel_sorted_non_page?where={"WP_ID":"' + dataMR.cust_del[0].cd_id + '"}');
-    if(getNN !== undefined && getNN.data !== undefined && getNN.data._items !== 0){
+    if(getNN !== undefined && getNN.data !== undefined && getNN.data._items.length !== 0){
       this.setState({ network_number: getNN.data._items[0].CD_Info_Network_Number });
     }
     let dataForm = this.state.create_dsa_form;

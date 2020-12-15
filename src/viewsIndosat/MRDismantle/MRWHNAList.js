@@ -182,7 +182,7 @@ class MRWHNAList extends Component {
 
     const allSHF = await this.getAllPSDis();
 
-    let headerRow = ["SHF No.", "Related To", "Related No.", "Tower ID", "Tower Name", "Latitude", "Longitude", "Region", "Distance", "Amount Paid", "Receiver Name", "Receiver Email", "Note", "Receiver Phone", "Created By", "Created On"];
+    let headerRow = ["SHF No.", "Related To", "Related No.", "Tower ID", "Tower Name", "Latitude", "Longitude", "Distance", "Amount Paid", "Receiver Name", "Receiver Email", "Note", "Receiver Phone", "Created By", "Created On"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -190,7 +190,7 @@ class MRWHNAList extends Component {
     }
 
     for (let i = 0; i < allSHF.length; i++) {
-      ws.addRow([allSHF[i].shf_no, allSHF[i].related_to, allSHF[i].related_to === "MR" ? allSHF[i].mr_id : allSHF[i].assignment_no, allSHF[i].site_id, allSHF[i].site_name, allSHF[i].site_location.latitude, allSHF[i].site_location.longitude, allSHF[i].site_region, allSHF[i].distance, allSHF[i].amount_paid, allSHF[i].receiver_name, allSHF[i].receiver_email, allSHF[i].receiver_note, allSHF[i].receiver_phone_number, allSHF[i].created_by, allSHF[i].created_on])
+      ws.addRow([allSHF[i].shf_no, allSHF[i].related_to, allSHF[i].related_to === "MR" ? allSHF[i].mr_id : allSHF[i].assignment_no, allSHF[i].site_id, allSHF[i].site_name, allSHF[i].site_location.latitude, allSHF[i].site_location.longitude, allSHF[i].distance, allSHF[i].amount_paid, allSHF[i].receiver_name, allSHF[i].receiver_email, allSHF[i].receiver_note, allSHF[i].receiver_phone_number, allSHF[i].created_by, allSHF[i].created_on])
     }
     this.toggleLoading();
     const allocexport = await wb.xlsx.writeBuffer();

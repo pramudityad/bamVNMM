@@ -165,7 +165,7 @@ class PSDisList extends Component {
       filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
     }
     filter_array.push('"mra_id" : null')
-    filter_array.push('"current_status" : "PS SRN  SUBMITTED"')
+    filter_array.push('"current_status" : "PS SRN SUBMITTED"')
     let whereAnd = '{' + filter_array.join(',') + '}';
     let res = await this.getDataFromAPINODE('/plantspec-srn?srt=_id:-1&noPg=1&q=' + whereAnd)
     if (res.data !== undefined) {

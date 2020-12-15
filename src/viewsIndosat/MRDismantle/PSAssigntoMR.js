@@ -451,37 +451,6 @@ class PSAssigntoMR extends Component {
   async connectMRtoPSDismantle(){
     const dataMRParent = this.state.data_mr;
     const dataPS = this.state.ps_dis_data;
-    // const dataCDID = this.state.wbs_cd_id_data;
-    // const selectedCD = this.state.cd_id_to_tssr;
-    // let matOBDStat = [];
-    // dataPS.packages.forEach((pp) => {
-    //   let wbsSite = null;
-    //   const dataCDSite = selectedCD.find(sc => sc.id_tssr_boq_site_doc === pp.id_tssr_boq_site_doc);
-    //   wbsSite = dataCDID.find(wbs => wbs.WP_ID === dataCDSite.cd_id);
-    //   if(wbsSite !== undefined){
-    //     wbsSite = wbsSite.C1003_WBS_HW;
-    //   }
-    //   pp.materials.forEach((mat) => {
-    //     const dataOBD = {
-    //        "MRF": dataMRParent.mr_id,
-    //        "Submit_by": dataMRParent.mr_status[0].mr_status_updater,
-    //        "Network_Order": null,
-    //        "Material": mat.material_id,
-    //        "Plant": dataMRParent.origin.value,
-    //        "Storage_Location": dataMRParent.origin.value,
-    //        "WBS_Element_from": wbsSite,
-    //        "WBS_Element_to": wbsSite,
-    //        "Qty": mat.qty,
-    //        "Delivery_Date": dataMRParent.etd.toString().slice(0,10),
-    //        "Shipping_point": null,
-    //        "Work_Status": null,
-    //        "OBD": null,
-    //        "Material_document": null,
-    //        "Error_Message": null,
-    //     };
-    //     matOBDStat.push(dataOBD);
-    //   });
-    // });
     this.patchDatatoAPINODE('/matreq-srn/assignPsToMrd/'+dataMRParent._id+'/psd/'+this.state.id_tssr_selected, {}).then(res => {
       if(res.data !== undefined){
         this.setState({ action_status : "success" }, () => {
@@ -519,7 +488,7 @@ class PSAssigntoMR extends Component {
 
   render() {
     if(this.state.redirectSign !== false){
-      return (<Redirect to={'/dismantle/mr-dis-detail/'+this.state.redirectSign} />);
+      return (<Redirect to={'/srn/mr-srn-detail/'+this.state.redirectSign} />);
     }
     let qty_wh = undefined, qty_inbound = undefined;
     return (
@@ -556,7 +525,7 @@ class PSAssigntoMR extends Component {
                 {this.state.data_mr !== null && (
                   <Fragment>
                   <tr>
-                    <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>MRA ID : {this.state.data_mr.mra_id}</td>
+                    <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>MRA  ID : {this.state.data_mr.mra_id}</td>
                   </tr>
                   <tr>
                     <td colSpan="4" style={{fontSize : '15px', textAlign : 'center', color : 'rgba(59,134,134,1)'}}>Project Name : {this.state.data_mr.project_name}</td>

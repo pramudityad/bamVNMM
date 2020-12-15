@@ -20,7 +20,7 @@ const password = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const array_field = ["mra_id", "mra_type", "mrd_category", "project_name", "cust_del.cd_id", "site_info.site_id", "site_info.site_name", "site_info.site_region", "destination.value", "site_info.site_name", "site_info.site_region", "current_mra_status", "dsp_company", "creator.email", "created_on"]
+const array_field = ["mra_id", "mra_type", "mrd_category", "project_name", "cust_del.cd_id", "site_info.site_id", "site_info.site_name", "site_info.site_region", "destination.value", "site_info.site_name", "site_info.site_region", "current_mra_status", "asp_company_dismantle", "dsp_company", "creator.email", "created_on"]
 
 class MRDisList extends Component {
   constructor(props) {
@@ -47,7 +47,7 @@ class MRDisList extends Component {
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
-    this.downloadPSDisList = this.downloadPSDisList.bind(this);
+    this.downloadMRList = this.downloadMRList.bind(this);
     this.getMRAList = this.getMRAList.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.toggleDropdown = this.toggleDropdown.bind(this);
@@ -121,6 +121,9 @@ class MRDisList extends Component {
     if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
       filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
     }
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('""asp_company_dismantle"," : "'+this.state.vendor_name+'"');
+    }
     let whereAnd = '{' + filter_array.join(',') + '}';
     this.getDataFromAPINODE('/matreq-srn?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
       if (res.data !== undefined) {
@@ -140,6 +143,9 @@ class MRDisList extends Component {
     }
     if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
       filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
+    }
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('""asp_company_dismantle"," : "'+this.state.vendor_name+'"');
     }
     let whereAnd = '{' + filter_array.join(',') + '}';
     let items = [];
@@ -162,6 +168,10 @@ class MRDisList extends Component {
     if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
       filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
     }
+    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
+      filter_array.push('""asp_company_dismantle"," : "'+this.state.vendor_name+'"');
+    }
+    filter_array.push('"$or" : [{"current_mra_status":"PLANTSPEC SRN ASSIGNED"}, {"current_mra_status":"MR REQUESTED"}]');
     let whereAnd = '{' + filter_array.join(',') + '}';
     let items = [];
     const res = await this.getDataFromAPINODE('/matreq-srn?noPg=1&srt=_id:-1&q=' + whereAnd+'&v={"mra_id":1}')
@@ -214,14 +224,14 @@ class MRDisList extends Component {
     })
   }
 
-  async downloadPSDisList() {
+  async downloadMRList() {
     this.toggleLoading();
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
     const allMR = await this.getAllMRAList();
 
-    let headerRow = ["MRA ID", "MRA Type","MRA Category", "Project Name", "CD ID", "Origin ID", "Origin Name",  "Destination ID", "Destination Name", "Current Status", "Current Milestone", "Delivery By", "ETA", "MRA Created On", "MRA Created By","Updated On", "Created On"];
+    let headerRow = ["MRA ID", "MRA SH ID", "MRA Type","MRA Category", "Project Name", "CD ID", "Origin ID", "Origin Name",  "Destination ID", "Destination Name", "Current Status", "Current Milestone", "Dismantle By", "Delivery By", "ETA", "MRA SH Created On", "MRA SH Created By","Updated On", "Created On"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -230,10 +240,10 @@ class MRDisList extends Component {
 
     for (let i = 0; i < allMR.length; i++) {
       const creator_mr_mitt = allMR[i].mra_status.find(e => e.mra_status_name === "PLANTSPEC SRN" && e.mra_status_value === "NOT ASSIGNED");
-      const dataPrimary = [allMR[i].mra_id, allMR[i].mra_type, allMR[i].mrd_category, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id]
+      const dataPrimary = [allMR[i].mra_id, allMR[i].mra_sh_id, allMR[i].mra_type, allMR[i].mrd_category, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id]
       const dataOrigin = [allMR[i].site_info.find(si => si.srn_title === "Origin") !== undefined ? allMR[i].site_info.find(si => si.srn_title === "Origin").site_id : null, allMR[i].site_info.find(si => si.srn_title === "Origin") !== undefined ? allMR[i].site_info.find(si => si.srn_title === "Origin").site_name : null];
       const dataDestination = [allMR[i].mrd_category === "To Warehouse" ? allMR[i].destination.value : allMR[i].site_info.find(si => si.srn_title === "Destination") !== undefined ? allMR[i].site_info.find(si => si.srn_title === "Destination").site_id : null, allMR[i].mrd_category === "To Warehouse" ? null : allMR[i].site_info.find(si => si.srn_title === "Destination") !== undefined ? allMR[i].site_info.find(si => si.srn_title === "Destination").site_name : null];
-      const dataCommon = [allMR[i].current_mra_status, allMR[i].current_milestones, allMR[i].dsp_company, allMR[i].eta !== undefined ? new Date(allMR[i].eta) : null, creator_mr_mitt !== undefined ? new Date(creator_mr_mitt.mra_status_date) : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mra_status_updater : null, new Date(allMR[i].updated_on), new Date(allMR[i].created_on)];
+      const dataCommon = [allMR[i].current_mra_status, allMR[i].current_milestones, allMR[i].asp_company_dismantle, allMR[i].dsp_company, allMR[i].eta !== undefined ? new Date(allMR[i].eta) : null, creator_mr_mitt !== undefined ? new Date(creator_mr_mitt.mra_status_date) : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mra_status_updater : null, new Date(allMR[i].updated_on), new Date(allMR[i].created_on)];
       ws.addRow(dataPrimary.concat(dataOrigin).concat(dataDestination).concat(dataCommon));
       const getRowLast = ws.lastRow._number;
       ws.getCell("M"+getRowLast).numFmt = "YYYY-MM-DD";
@@ -255,7 +265,7 @@ class MRDisList extends Component {
 
     const allMR = await this.getAllMRAListFS();
 
-    let headerRow = ["MRD_ID_BAM", "LDM_Approve_By", "LDM_Approve_Date", "Deliver_By", "Start_Delivery_By", "Start_Delivery_Date", "Start_Delivery_Phone", "End_Delivery_By", "End_Delivery_Date", "End_Delivery_Phone", "Material_On_Warehouse_By", "Material_On_Warehouse_Date"];
+    let headerRow = ["MRD_ID_BAM", "LDM_Approve_By", "LDM_Approve_Date", "Deliver_By", "Vendor_Code", "MOT", "Material_Packed_By", "Material_Packed_Date", "Start_Delivery_By", "Start_Delivery_Date", "Start_Delivery_Phone", "End_Delivery_By", "End_Delivery_Date", "End_Delivery_Phone", "Material_On_Warehouse_By", "Material_On_Warehouse_Date"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -319,14 +329,14 @@ class MRDisList extends Component {
                     </DropdownToggle>
                     <DropdownMenu>
                       <DropdownItem header>MRA File</DropdownItem>
-                      <DropdownItem onClick={this.downloadPSDisList}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MRA List</DropdownItem>
+                      <DropdownItem onClick={this.downloadMRList}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MRA List</DropdownItem>
                       <DropdownItem onClick={this.downloadMRAStatusMigration}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MRA Status Migration Template</DropdownItem>
                     </DropdownMenu>
                   </Dropdown>
                 </React.Fragment>
                 )}
-                <Link to={'/dismantle/mr-dis-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MRA </Button></Link>
-                <Link to={'/dismantle/mr-dis-creation-bulk'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MRA Bulk </Button></Link>
+                <Link to={'/srn/mr-srn-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MRA </Button></Link>
+                <Link to={'/srn/mr-srn-creation-bulk'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MRA Bulk </Button></Link>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -337,13 +347,14 @@ class MRDisList extends Component {
                       <th>Category</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
-                      <th>Site ID Origin</th>
-                      <th>Site Name Origin</th>
+                      <th>Tower ID Origin</th>
+                      <th>Tower Name Origin</th>
                       <th>Region Origin</th>
                       <th>Destination ID</th>
                       <th>Destination Name</th>
                       <th>Destination Region</th>
                       <th>Current Status</th>
+                      <th>Dismantle By</th>
                       <th>Delivery By</th>
                       <th>Created By</th>
                       <th>Created On</th>
@@ -360,7 +371,7 @@ class MRDisList extends Component {
                     )}
                     {this.state.mr_dis_list.map((list, i) =>
                       <tr key={list._id}>
-                        <td><Link to={'/dismantle/mr-dis-detail/'+list._id}>{list.mra_id}</Link></td>
+                        <td><Link to={'/srn/mr-srn-detail/'+list._id}>{list.mra_id}</Link></td>
                         <td>{list.mra_type}</td>
                         <td>{list.mrd_category}</td>
                         <td>{list.project_name}</td>
@@ -372,6 +383,7 @@ class MRDisList extends Component {
                         <td>{list.mrd_category === "To Warehouse" ? null : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_name : null}</td>
                         <td>{list.mrd_category === "To Warehouse" ? null : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_region : null}</td>
                         <td>{list.current_mra_status}</td>
+                        <td>{list.asp_company_dismantle}</td>
                         <td>{list.dsp_company}</td>
                         <td>{list.creator.map(e => e.email)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>

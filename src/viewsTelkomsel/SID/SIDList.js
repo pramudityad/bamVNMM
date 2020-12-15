@@ -20,7 +20,7 @@ import { connect } from "react-redux";
 import { getDatafromAPINODE, getDatafromAPINODEFile } from "../../helper/asyncFunction";
 import Loading from '../components/Loading'
 
-const arrayFilter = ["no_sid", "cust_del.cd_id", "site_info.site_id", "site_info.site_name", "cust_del.project_code", "cust_del.project_po", "created_by", "created_on"];
+const arrayFilter = ["no_sid", "cust_del.cd_id", "site_info.site_id", "site_info.site_name", "created_by", "created_on"];
 
 class SIDList extends Component {
   constructor(props) {
@@ -79,11 +79,7 @@ class SIDList extends Component {
             '", "$options" : "i"}'
         );
     }
-    if(this.state.type_uploader_selected !== "SID"){
-      filter_array.push('"type" : "'+this.state.type_uploader_selected+'"');
-    }else{
-      filter_array.push('"type" : {"$ne" : "ABD"}');
-    }
+    filter_array.push('"type" : "'+this.state.type_uploader_selected+'"');
     let whereAnd = "{" + filter_array.join(",") + "}";
     getDatafromAPINODE(
       "/sidFile?srt=_id:-1&q=" +
@@ -168,11 +164,12 @@ class SIDList extends Component {
   async downloadAllSIDFile() {
     let allSIDList = [];
     let filter_array = [];
-    if(this.state.type_uploader_selected !== "SID"){
-      filter_array.push('"type" : "'+this.state.type_uploader_selected+'"');
-    }else{
-      filter_array.push('"type" : {"$ne" : "ABD"}');
-    }
+    // if(this.state.type_uploader_selected !== "SID"){
+    //   filter_array.push('"type" : "'+this.state.type_uploader_selected+'"');
+    // }else{
+    //   filter_array.push('"type" : {"$ne" : "ABD"}');
+    // }
+    filter_array.push('"type" : "'+this.state.type_uploader_selected+'"');
     let whereAnd = "{" + filter_array.join(",") + "}";
     let getSID = await getDatafromAPINODE(
       "/sidFile?srt=_id:-1&noPg=1&q="+whereAnd, this.props.dataLogin.token
@@ -184,11 +181,11 @@ class SIDList extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let headerRow = ["no_sid", "cd_id", "tower_id", "tower_name", "project", "created_by", "created_on", "file_name"];
+    let headerRow = ["no_sid", "cd_id", "site_id", "site_name", "project", "created_by", "created_on", "file_name"];
     ws.addRow(headerRow);
 
     for (let i = 0; i < allSIDList.length; i++) {
-      let rowAdded = [allSIDList[i].no_sid, allSIDList[i].cust_del.map((e) => e.cd_id).toString(), allSIDList[i].site_info !== undefined && allSIDList[i].site_info!== null && allSIDList[i].site_info.map((e) => e.site_id).toString(), allSIDList[i].site_info !== undefined && allSIDList[i].site_info!== null && allSIDList[i].site_info.map((e) => e.site_name).toString(), allSIDList[i].cust_del.map((e) => e.project_name).toString(), allSIDList.created_by,
+      let rowAdded = [allSIDList[i].no_sid, allSIDList[i].cust_del.map((e) => e.cd_id).toString(), allSIDList[i].site_info !== undefined && allSIDList[i].site_info!== null && allSIDList[i].site_info.map((e) => e.site_id).join(", "), allSIDList[i].site_info !== undefined && allSIDList[i].site_info!== null && allSIDList[i].site_info.map((e) => e.site_name).join(", "), allSIDList[i].cust_del.map((e) => e.project_name).toString(), allSIDList.created_by,
       allSIDList[i].created_on.slice(0,10), allSIDList[i].file_document.file_name];
       ws.addRow(rowAdded);
     }
@@ -261,6 +258,9 @@ class SIDList extends Component {
                     <option value="ABD">
                       ABD
                     </option>
+                    <option value="PQR">
+                      PQR
+                    </option>
                   </Input>
                 </Col>
                 </Row>
@@ -274,8 +274,6 @@ class SIDList extends Component {
                       <th>CD ID</th>
                       <th>Site ID</th>
                       <th>Site Name</th>
-                      <th>Program BOQ</th>
-                      <th>Project PO</th>
                       <th>Created By</th>
                       <th>Created On</th>
                     </tr>
@@ -298,10 +296,8 @@ class SIDList extends Component {
                         </td>
                         <td>{list.no_sid}</td>
                         <td>{list.cust_del.map((e) => e.cd_id)}</td>
-                        <td>{list.site_info !== undefined && list.site_info!== null && list.site_info.map((e) => e.site_id)}</td>
-                        <td>{list.site_info !== undefined && list.site_info!== null && list.site_info.map((e) => e.site_name)}</td>
-                        <td>{list.cust_del.map((e) => e.project_code)}</td>
-                        <td>{list.cust_del.map((e) => e.project_po)}</td>
+                        <td>{list.site_info !== undefined && list.site_info!== null && list.site_info.map((e) => e.site_id).join(", ")}</td>
+                        <td>{list.site_info !== undefined && list.site_info!== null && list.site_info.map((e) => e.site_name).join(", ")}</td>
                         <td>{list.created_by}</td>
                         <td>{list.created_on.slice(0,10)}</td>
                       </tr>

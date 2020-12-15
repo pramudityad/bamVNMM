@@ -606,7 +606,7 @@ class DSADDetail extends Component {
                   <CardHeader>
                     <span style={{ lineHeight: '2', fontSize: '15px' }}><i className="fa fa-info-circle" style={{ marginLeft: "8px" }}></i>DSA Detail ({this.state.data_dsa.dsa_number})</span>
                     {(this.state.userRole.findIndex(e => e === "Admin") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && (
-                      <Link to={'/dsa-dismantle-edit/' + this.props.match.params.id}>
+                      <Link to={'/dsa-srn-edit/' + this.props.match.params.id}>
                         <Button style={{ marginLeft: "100px" }} color="warning" size="sm" >
                           <i className="fas fa-edit" style={{ marginRight: "8px" }} ></i>
                           Edit
@@ -642,7 +642,7 @@ class DSADDetail extends Component {
                           <Row>
                             <Col md="3">
                               <FormGroup style={{ paddingLeft: "16px" }}>
-                                <Label>MR Dismantle ID</Label>
+                                <Label>MRA ID</Label>
                                 <Input type="text" readOnly value={this.state.data_dsa.mra_id}></Input>
                               </FormGroup>
                             </Col>

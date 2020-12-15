@@ -171,10 +171,10 @@ class DSAList extends Component {
                 <span style={{ lineHeight: '2' }}>
                   <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> DSA List
                 </span>
-                <Link to={'/dsa-dismantle-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create DSA</Button></Link>
+                <Link to={'/dsa-srn-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create DSA</Button></Link>
                 <Button style={downloadDSA} outline color="success" size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download DSA List</Button>
                 {(this.state.userRole.findIndex(e => e === "Admin") !== -1) && (
-                  <Link to={'/dsa-migration'}><Button color="success" style={{ float: 'right', marginRight: "8px"  }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>DSA Migration</Button></Link>
+                  <Link to={'/dsa-srn-migration'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>DSA Migration</Button></Link>
                 )}
               </CardHeader>
               <CardBody>
@@ -200,7 +200,7 @@ class DSAList extends Component {
                     {this.state.dsa_list.map((list, i) =>
                       <tr key={list._id}>
                         <td>
-                          <Link to={'/dsa-dismantle-detail/' + list._id}>
+                          <Link to={'/dsa-srn-detail/' + list._id}>
                             <Button style={{ width: "90px" }} outline color="info" size="sm">Detail</Button>
                           </Link>
                         </td>

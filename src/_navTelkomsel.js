@@ -3,11 +3,17 @@ export default {
     {
       name: 'Product',
       icon: 'icon-folder-alt',
-      roles : ["BAM-Engineering", "BAM-Account Team", "BAM-Solution"],
+      roles : ["BAM-Engineering", "BAM-Account Team", "BAM-Solution", "BAM-PPManagerOnlyView"],
       children: [
         {
           name: 'Product Package',
           url: '/product-package',
+          icon: 'icon-folder',
+          roles : ["BAM-Engineering", "BAM-Account Team", "BAM-Solution", "BAM-PPManagerOnlyView"],
+        },
+        {
+          name: 'Additional Material',
+          url: '/additional-package',
           icon: 'icon-folder',
           roles : ["BAM-Engineering", "BAM-Account Team", "BAM-Solution"],
         },
@@ -143,37 +149,37 @@ export default {
       ]
     },
     {
-      name: 'MRA',
+      name: 'MR Return/Dismantle',
       icon: "fas fa-tools",
       roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
       children: [
         {
-          name: 'PSA',
-          url: '/dismantle/ps-dis-list',
+          name: 'PS SRN',
+          url: '/srn/ps-srn-list',
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
         {
           name: 'MRA List',
-          url: '/dismantle/mr-dis-list',
+          url: '/srn/mr-srn-list',
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
         {
-          name: 'MRA Assign PSD',
-          url: '/dismantle/mr-dis-na-list',
+          name: 'MRA Assign PS SRN',
+          url: '/srn/mr-srn-na-list',
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
         {
           name: 'MRA Approval LDM',
-          url: '/dismantle/mr-dis-need-approval-ldm-list',
+          url: '/srn/mr-srn-need-approval-ldm-list',
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
         {
           name: 'MRA Warehouse Confirm',
-          url: '/dismantle/mr-dis-need-confirm-list',
+          url: '/srn/mr-srn-need-confirm-list',
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
@@ -204,7 +210,7 @@ export default {
         },
         {
           name: 'MR WH Dispatch',
-          url: '/toWH/mr-wh-dismantle',
+          url: '/toWH/mr-wh-dispatch',
           icon: 'icon-list',
           roles : ["BAM-Implementation Manager", "BAM-Implementation Coordinator", "BAM-Warehouse"],
         },
@@ -256,6 +262,12 @@ export default {
     {
       name: 'DSA List',
       url: '/dsa-list',
+      icon: 'icon-list',
+      roles : ["BAM-LDM Admin", "BAM-LDM", "BAM-Mover"],
+    },
+    {
+      name: 'DSA Return List',
+      url: '/dsa-srn-list',
       icon: 'icon-list',
       roles : ["BAM-LDM Admin", "BAM-LDM", "BAM-Mover"],
     },

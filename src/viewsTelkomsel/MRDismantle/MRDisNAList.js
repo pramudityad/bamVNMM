@@ -281,7 +281,7 @@ class MRDisNAList extends Component {
                   </Dropdown>
                 </React.Fragment>
                 )}
-                <Link to={'/dismantle/mr-dis-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MRA </Button></Link>
+                <Link to={'/srn/mr-srn-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MRA </Button></Link>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
@@ -313,8 +313,8 @@ class MRDisNAList extends Component {
                     )}
                     {this.state.mr_dis_list.map((list, i) =>
                       <tr key={list._id}>
-                        <td><Link to={'/dismantle/mr-dis-na-list/'+list._id}><Button size="sm" outline color="info">Assign</Button></Link></td>
-                        <td><Link to={'/dismantle/mr-dis-detail/'+list._id}>{list.mra_id}</Link></td>
+                        <td><Link to={'/srn/mr-srn-na-list/'+list._id}><Button size="sm" outline color="info">Assign</Button></Link></td>
+                        <td><Link to={'/srn/mr-srn-detail/'+list._id}>{list.mra_id}</Link></td>
                         <td>{list.mra_type}</td>
                         <td>{list.mrd_category}</td>
                         <td>{list.project_name}</td>

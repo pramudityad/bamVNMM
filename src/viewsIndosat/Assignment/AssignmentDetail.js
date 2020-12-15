@@ -88,6 +88,7 @@ class AssignmentDetail extends Component {
       modal_loading : false,
       sid_file : [],
       abd_file : [],
+      pqr_file : [],
       dropdownOpen: new Array(2).fill(false),
       reason_cancel : 'No Reason',
       modal_warning_regr_asg : false,
@@ -318,10 +319,11 @@ class AssignmentDetail extends Component {
     const maxPage = 1;
     let dataSID = [];
     let dataABD = [];
+    let dataPQR = [];
     for(let i = 0; i < arrayCDID.length; i++){
       let filter_array = [];
       filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
-      filter_array.push('"type" : {"$ne" : "ABD"}');
+      filter_array.push('"type" : "SID"');
       let whereAnd = "{" + filter_array.join(",") + "}";
       const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
       if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
@@ -338,7 +340,17 @@ class AssignmentDetail extends Component {
         dataABD.push(res.data.data[0])
       }
     }
-    this.setState({sid_file : dataSID, abd_file : dataABD});
+    for(let i = 0; i < arrayCDID.length; i++){
+      let filter_array = [];
+      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"type" : "PQR"');
+      let whereAnd = "{" + filter_array.join(",") + "}";
+      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
+      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
+        dataPQR.push(res.data.data[0])
+      }
+    }
+    this.setState({sid_file : dataSID, abd_file : dataABD, pqr_file : dataPQR});
   }
 
   handleBastAssign = (e) => {
@@ -1118,6 +1130,19 @@ class AssignmentDetail extends Component {
     }
   }
 
+  getPQRFile = async (e) => {
+    e.preventDefault()
+    e.persist();
+    const _id = e.currentTarget.value;
+    const dataSID = this.state.pqr_file.find(sf => sf._id === _id);
+    if(dataSID !== undefined)  {
+      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
+      if(resFile !== undefined){
+        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+      }
+    }
+  }
+
   handleChangeReasonCancel(e){
     this.setState({reason_cancel : e.target.value})
   }
@@ -1190,7 +1215,7 @@ class AssignmentDetail extends Component {
                       Resync NN and ACT Code
                     </Button>
                   )}
-                  {(this.state.sid_file.length !== 0 || this.state.abd_file.length !== 0) ? (
+                  {(this.state.sid_file.length !== 0 || this.state.abd_file.length !== 0 || this.state.pqr_file.length !== 0) ? (
                     <Dropdown size="sm" isOpen={this.state.dropdownOpen[1]} toggle={() => {this.toggleDropdown(1);}} style={{float : 'right', marginRight : '10px'}}>
                       <DropdownToggle caret color="secondary">
                         <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download SID File
@@ -1203,6 +1228,10 @@ class AssignmentDetail extends Component {
                         <DropdownItem header>ABD File</DropdownItem>
                         {(this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && this.state.abd_file.map(sf =>
                           <DropdownItem value={sf._id} onClick={this.getABDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
+                        )}
+                        <DropdownItem header>PQR File</DropdownItem>
+                        {(this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && this.state.pqr_file.map(sf =>
+                          <DropdownItem value={sf._id} onClick={this.getPQRFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
                         )}
                       </DropdownMenu>
                     </Dropdown>

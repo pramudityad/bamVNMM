@@ -14,11 +14,11 @@ import {apiSendEmail, patchDatatoAPINODE, getDatafromAPIEXEL} from '../../helper
 
 const DefaultNotif = React.lazy(() => import('../../viewsTelkomsel/DefaultView/DefaultNotif'));
 
-const API_URL_TSEL = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
+const API_URL_TSEL = 'https://api.tsel.pdb.e-dpm.com/tselpdbapi';
 const usernameISAT = 'adminbamidsuper';
 const passwordISAT = 'F760qbAg2sml';
 
-const API_URL_BAM = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
+const API_URL_BAM = 'https://api.bam-id.e-dpm.com/bamidapi';
 const usernameBAM = 'bamidadmin@e-dpm.com';
 const passwordBAM = 'F760qbAg2sml';
 
@@ -28,7 +28,7 @@ const Checkbox = ({ type = 'checkbox', name, checked = false, onChange, inValue=
   <input type={type} name={name} checked={checked} onChange={onChange} value={inValue} className="checkmark-dash" disabled={disabled}/>
 );
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+const API_URL_NODE = 'https://api2.bam-id.e-dpm.com/bamidapi';
 
 const dataPercentage =[20, 30, 40, 50, 60, 70, 80, 90, 100];
 
@@ -61,7 +61,7 @@ Array.prototype.equals = function (array) {
 // Hide method from for-in loops
 Object.defineProperty(Array.prototype, "equals", {enumerable: false});
 
-class DSAMigration extends Component {
+class DSADMigration extends Component {
   constructor(props) {
     super(props);
 
@@ -285,7 +285,8 @@ class DSAMigration extends Component {
   	this.toggleLoading();
     // const dataChecking = this.state.assignment_ssow_upload;
     const dataUploadMigration = {
-      "data" : this.state.rowsXLS
+      "data" : this.state.rowsXLS,
+      "mrCategory" : "Return"
     }
     const respondSaveDSA = await patchDatatoAPINODE('/matreq/uploadMigrationDsa', dataUploadMigration, this.state.tokenUser);
     if(respondSaveDSA.data !== undefined && respondSaveDSA.status >= 200 && respondSaveDSA.status <= 300 ) {
@@ -331,7 +332,7 @@ class DSAMigration extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}} >DSA Migration Bulk </span>
+            <span style={{lineHeight :'2', fontSize : '17px'}} >DSA SRN Migration Bulk </span>
             <Button style={{marginRight : '8px', float : 'right'}} outline color="info" onClick={this.exportFormatBulkDSAMigration} size="sm"><i className="fa fa-download" style={{marginRight: "8px"}}></i>Download DSA Format Migration</Button>
           </CardHeader>
           <CardBody className='card-UploadBoq'>
@@ -346,7 +347,7 @@ class DSAMigration extends Component {
             <table style={{width : '100%', marginBottom : '0px', fontSize : '20px', fontWeight : '500'}}>
               <tbody>
                 <tr>
-                  <td colSpan="4" style={{textAlign : 'center'}}>DSA MIGRATION UPLOADER PREVIEW</td>
+                  <td colSpan="4" style={{textAlign : 'center'}}>DSA SRN MIGRATION UPLOADER PREVIEW</td>
                 </tr>
                 <tr>
                   <td colSpan="4" style={{textAlign : 'center', fontSize : '15px', color : 'red'}}>{this.state.uploadan_type === "without Predefined SSOW" ? "It will need approval from authoried": "SSOW List get from default mapping of SSOW to CD ID" }</td>
@@ -422,4 +423,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(DSAMigration);
+export default connect(mapStateToProps)(DSADMigration);

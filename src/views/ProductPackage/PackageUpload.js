@@ -886,7 +886,7 @@ class PackageUpload extends React.Component {
     dataPrint.map(pp => ws2.addRow([pp.pp_id, pp.product_name]));
 
     const MaterialFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MaterialFormat]), 'PSA Uploader Template.xlsx');
+    saveAs(new Blob([MaterialFormat]), 'PS SRN Uploader Template.xlsx');
   }
 
   exportFormatPSWarehouse = async () => {

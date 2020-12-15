@@ -134,17 +134,17 @@ class PSDisCreation extends Component {
     ws.addRow(["bundle_id","bundle_name","qty","TWH"]);
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'PS Dismantle Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'PS SRN Template.xlsx');
   }
 
   componentDidMount(){
     this.getProjectAll();
-    document.title = "PS Dismantle Creation | BAM"
+    document.title = "PS SRN Creation | BAM"
   }
 
   getProjectAll(){
     getDatafromAPITSEL('/project_sorted_non_page').then( resp => {
-      if(resp !== undefined && resp.data !== undefined){
+      if(resp !== undefined){
         this.setState({project_all : resp.data._items});
       }
     })
@@ -284,7 +284,7 @@ class PSDisCreation extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-edit" style={{marginRight: "8px"}}></i>PS Dismantle Creation </span>
+            <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-edit" style={{marginRight: "8px"}}></i>PS SRN Creation </span>
             <Button onClick={this.exportFormatPSDismantle} color="info" style={{ float: 'right', marginRight: "8px" }} size="sm">Download PS Dis Template</Button>
           </CardHeader>
           <CardBody>
@@ -351,7 +351,7 @@ class PSDisCreation extends Component {
             </Form>
           </CardBody>
           <CardFooter>
-            <Button color='success' style={{float : 'right'}} size="sm" onClick={this.savePSDis} disabled={this.state.modal_loading === true}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create PS Dismantle</Button>
+            <Button color='success' style={{float : 'right'}} size="sm" onClick={this.savePSDis} disabled={this.state.modal_loading === true}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create PS SRN</Button>
           </CardFooter>
         </Card>
         </Col>

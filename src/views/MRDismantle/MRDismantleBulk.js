@@ -94,6 +94,7 @@ class MRDismantleBulk extends Component {
     this.handleChangeUploadType = this.handleChangeUploadType.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.saveDataPSAssignMRBulk = this.saveDataPSAssignMRBulk.bind(this);
+    this.saveDataMRAStatusMigrationBulk = this.saveDataMRAStatusMigrationBulk.bind(this);
   }
 
 	toggleLoading(){
@@ -272,6 +273,29 @@ class MRDismantleBulk extends Component {
     return numberTSSR;
   }
 
+  async saveDataMRAStatusMigrationBulk(){
+    this.toggleLoading();
+    // const dataChecking = this.state.assignment_ssow_upload;
+    const dataUploadMigration = {
+      "data" : this.state.rowsXLS
+    }
+    const respondSaveDSA = await patchDatatoAPINODE('/matreq-srn/updateStatusMRDMigration', dataUploadMigration, this.state.tokenUser);
+    if(respondSaveDSA.data !== undefined && respondSaveDSA.status >= 200 && respondSaveDSA.status <= 300 ) {
+      this.setState({ action_status : 'success' });
+    } else{
+      if (respondSaveDSA.response !== undefined && respondSaveDSA.response.data !== undefined && respondSaveDSA.response.data.error !== undefined) {
+        if (respondSaveDSA.response.data.error.message !== undefined) {
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveDSA.response.data.error.message) });
+        } else {
+          this.setState({ action_status: 'failed', action_message: JSON.stringify(respondSaveDSA.response.data.error) });
+        }
+      } else {
+        this.setState({ action_status: 'failed' });
+      }
+    }
+    this.toggleLoading();
+  }
+
   async saveDataMRABulk(){
   	this.toggleLoading();
     // const dataChecking = this.state.assignment_ssow_upload;
@@ -440,8 +464,27 @@ class MRDismantleBulk extends Component {
                 <hr style={{borderStyle : 'solid', borderWidth: '0px 0px 1px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
                 <Row>
                   <Col>
+                    <h6>MRA Migration SH Assign PS to MRA :</h6>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
                     <input type="file" onChange={this.fileHandlerMRBulk.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
                     <Button color="success" onClick={this.saveDataPSAssignMRBulk} style={{float : 'right'}} disabled={this.state.action_status === "failed" || this.state.rowsXLS.length === 0}>
+                      {this.state.waiting_status === true ? "loading.." : "Save"}
+                    </Button>
+                  </Col>
+                </Row>
+                <hr style={{borderStyle : 'solid', borderWidth: '0px 0px 1px 0px', borderColor : ' rgba(174,213,129 ,1)', marginTop: '5px'}}></hr>
+                <Row>
+                  <Col>
+                    <h6>MRA Migration Status from SH :</h6>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <input type="file" onChange={this.fileHandlerMRBulk.bind(this)} style={{"padding":"10px","visiblity":"hidden"}}/>
+                    <Button color="success" onClick={this.saveDataMRAStatusMigrationBulk} style={{float : 'right'}} disabled={this.state.action_status === "failed" || this.state.rowsXLS.length === 0}>
                       {this.state.waiting_status === true ? "loading.." : "Save"}
                     </Button>
                   </Col>

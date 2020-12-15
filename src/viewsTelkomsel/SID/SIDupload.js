@@ -128,7 +128,7 @@ class SIDupload extends Component {
       const getWPID = await getDatafromAPITSEL(
         '/custdel_op?where={"WP_ID":{"$regex":"' +
           inputValue +
-          '", "$options":"i"}}&projection={"WP_ID":1,"WP_Name":1,"CD_Info_Project":1,"CD_Info_Project_Name":1,"Project_PO":1,"CD_Info_System_Key":1,"Site_Info_SiteID_NE":1,"Site_Info_SiteID_NE_Actual":1,"Site_Info_SiteName_NE_Actual":1}'
+          '", "$options":"i"}}&projection={"WP_ID":1,"WP_Name":1,"CD_Info_Project":1,"CD_Info_Project_Name":1,"Project_PO":1,"CD_Info_System_Key":1,"Site_Info_SiteID_NE":1,"Site_Info_SiteID_Value_NE":1,"Site_Info_SiteName_NE":1,"Site_Info_SiteID_FE":1,"Site_Info_SiteID_Value_FE":1,"Site_Info_SiteName_FE":1}'
       );
       if (getWPID !== undefined && getWPID.data !== undefined) {
         this.setState({ list_cd_id: getWPID.data._items });
@@ -200,9 +200,6 @@ class SIDupload extends Component {
             <thead class="table-commercial__header--fixed">
               <tr>
                 <th>Project Name</th>
-                <th>Program BOQ</th>
-                <th>Project PO</th>
-                <th>System Key</th>
                 <th>Site ID</th>
                 <th>Site Name</th>
               </tr>
@@ -210,11 +207,8 @@ class SIDupload extends Component {
             <tbody>
                   <tr>
                     <td>{cdInfo.CD_Info_Project_Name}</td>
-                    <td>{cdInfo.Program_BoQ}</td>
-                    <td>{cdInfo.Project_PO}</td>
-                    <td>{cdInfo.CD_Info_System_Key}</td>
-                    <td>{cdInfo.Site_Info_SiteID_NE_Actual}</td>
-                    <td>{cdInfo.Site_Info_SiteName_NE_Actual}</td>
+                    <td>{cdInfo.Site_Info_SiteID_Value_NE}</td>
+                    <td>{cdInfo.Site_Info_SiteName_NE}</td>
                   </tr>
             </tbody>
           </Table>
@@ -243,16 +237,27 @@ class SIDupload extends Component {
       project_po : cdInfo.Project_PO,
       system_key : cdInfo.CD_Info_System_Key
     }
-    const dataSite = {
+    let dataSite = [];
+    const dataSiteNE =  {
       id_site_doc : cdInfo.Site_Info_SiteID_NE,
-      site_id : cdInfo.Site_Info_SiteID_NE_Actual,
-      site_ne_id : cdInfo.Site_Info_SiteID_NE_Actual,
-      site_name : cdInfo.Site_Info_SiteName_NE_Actual
+      site_id : cdInfo.Site_Info_SiteID_Value_NE,
+      site_ne_id : cdInfo.Site_Info_SiteID_Value_NE,
+      site_name : cdInfo.Site_Info_SiteName_NE
+    }
+    dataSite.push(dataSiteNE);
+    if(cdInfo.Site_Info_SiteID_Value_FE !== undefined && cdInfo.Site_Info_SiteID_Value_FE !== null){
+      const dataSiteFE =  {
+        id_site_doc : cdInfo.Site_Info_SiteID_FE,
+        site_id : cdInfo.Site_Info_SiteID_Value_FE,
+        site_ne_id : cdInfo.Site_Info_SiteID_Value_FE,
+        site_name : cdInfo.Site_Info_SiteName_FE
+      }
+      dataSite.push(dataSiteFE);
     }
     let fileDocument = new FormData();
     await fileDocument.append("fileDocument", this.state.inputan_file);
     await fileDocument.append( "cdIdList", JSON.stringify([Object.assign({}, this.state.cd_selected, dataCDID)]) );
-    await fileDocument.append("site_info", JSON.stringify([dataSite]));
+    await fileDocument.append("site_info", JSON.stringify(dataSite));
     await fileDocument.append("type", JSON.stringify(this.state.type_uploader_selected));
     const respostSID = await postDatatoAPINODEdata( "/sidFile/createSidFile", fileDocument, this.state.tokenUser );
     if ( respostSID.data !== undefined && respostSID.status >= 200 && respostSID.status <= 300 ) {
@@ -307,6 +312,9 @@ class SIDupload extends Component {
                             </option>
                             <option value="ABD">
                               ABD
+                            </option>
+                            <option value="PQR">
+                              PQR
                             </option>
                           </Input>
                       </FormGroup>

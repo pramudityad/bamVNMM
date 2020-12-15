@@ -1387,13 +1387,13 @@ class PSDetailMW extends Component {
     const addPP = dataItemTSSR.filter(e => e.pp_id === "AdditionalMaterial");
     let dataMaterialVariant = [];
 
-    let headerRow = ["material_id_actual", "material_name_actual", "material_type", "unit", "qty", "source_material"];
+    let headerRow = ["material_id_actual", "material_name_actual", "material_type", "unit", "qty", "qty_fe", "source_material"];
     ws.addRow(headerRow);
     let list_material_id = [];
     for(let i = 0; i < addPP.length; i++){
       for(let j = 0; j < addPP[i].materials.length; j++){
         let dataMatIdx = addPP[i].materials[j];
-        ws.addRow([dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_type, dataMatIdx.uom, dataMatIdx.qty, dataMatIdx.source_material]);
+        ws.addRow([dataMatIdx.material_id, dataMatIdx.material_name, dataMatIdx.material_type, dataMatIdx.uom, dataMatIdx.qty, dataMatIdx.qty_fe, dataMatIdx.source_material]);
       }
     }
 
@@ -2039,11 +2039,12 @@ class PSDetailMW extends Component {
         addMaterial[parseInt(idx)]["material_type"] = material.material_type;
         addMaterial[parseInt(idx)]["unit"] = material.uom;
         addMaterial[parseInt(idx)]["qty"] = material.qty;
+        addMaterial[parseInt(idx)]["qty_fe"] = material.qty;
       }else{
         addMaterial[parseInt(idx)]["material_name_actual"] = null;
         addMaterial[parseInt(idx)]["material_type"] = null;
         addMaterial[parseInt(idx)]["unit"] = null;
-        addMaterial[parseInt(idx)]["qty"] = null;
+        addMaterial[parseInt(idx)]["qty_fe"] = null;
       }
     }else{
       addMaterial[parseInt(idx)][field] = value;
@@ -2056,9 +2057,9 @@ class PSDetailMW extends Component {
     this.setState({modalAdditionalForm : false});
     const addMaterial = this.state.additional_material;
     const dataTSSR = this.state.tssrData;
-    const dataUpload = [["material_id_actual", "material_name_actual", "material_type", "unit", "qty", "source_material"]];
+    const dataUpload = [["material_id_actual", "material_name_actual", "material_type", "unit", "qty",  "qty_fe", "source_material"]];
     for(let i = 0; i < addMaterial.length; i++){
-      dataUpload.push([addMaterial[i].material_id_actual, addMaterial[i].material_name_actual, addMaterial[i].material_type, addMaterial[i].unit, parseFloat(addMaterial[i].qty), addMaterial[i].source_material]);
+      dataUpload.push([addMaterial[i].material_id_actual, addMaterial[i].material_name_actual, addMaterial[i].material_type, addMaterial[i].unit, parseFloat(addMaterial[i].qty), parseFloat(addMaterial[i].qty_fe), addMaterial[i].source_material]);
     }
     let patchDataMat = await this.patchDatatoAPINODE('/matreq/inputAdditionalMaterial/'+dataTSSR._id, {"identifier" : "PS" ,"additionalMaterial" : dataUpload , "takeOutAdditional" : false});
     if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
@@ -2080,15 +2081,24 @@ class PSDetailMW extends Component {
   AdditionalForm(){
     // this.toggleLoading();
     let additionaMaterial = [];
-    const addPP = this.state.tssrData.packages.filter(e => e.pp_id === "AdditionalMaterial");
+    const addPP = this.state.tssrData.packages.filter(e => e.pp_id === "AdditionalMaterial" && e.site_title === "NE");
     const addMaterial = addPP.map(value => value.materials.map(child => child)).reduce((l, n) => l.concat(n), []);
+    const addPPFE = this.state.tssrData.packages.filter(e => e.pp_id === "AdditionalMaterial" && e.site_title === "FE");
+    const addMaterialFE = addPPFE.map(value => value.materials.map(child => child)).reduce((l, n) => l.concat(n), []);
     for(let i = 0; i < addMaterial.length; i++){
+      let qty_fe = 0;
+      let qty_ne = 0;
+      let matFE = addMaterialFE.find(af => af.material_id === addMaterial[i].material_id);
+      if(matFE !== undefined){
+        qty_fe = matFE.qty;
+      }
       let addIdx = {
         "material_id_actual" : addMaterial[i].material_id,
         "material_name_actual" : addMaterial[i].material_name,
         "material_type" : addMaterial[i].material_type,
         "unit" : addMaterial[i].uom,
         "qty" : addMaterial[i].qty,
+        "qty_fe" : qty_fe,
         "source_material" : addMaterial[i].source_material
       };
       additionaMaterial.push(addIdx);
@@ -2393,6 +2403,9 @@ class PSDetailMW extends Component {
                         Qty
                       </th>
                       <th>
+                        Qty FE
+                      </th>
+                      <th>
                         Source Material
                       </th>
                       <th>
@@ -2424,6 +2437,9 @@ class PSDetailMW extends Component {
                       </td>
                       <td>
                         <input type="number" name={"qty" + " /// "+i } value={add.qty} onChange={this.onChangeMaterialAdditional} style={{width : '75px'}}/>
+                      </td>
+                      <td>
+                        <input type="number" name={"qty_fe" + " /// "+i } value={add.qty_fe} onChange={this.onChangeMaterialAdditional} style={{width : '75px'}}/>
                       </td>
                       <td>
                         <input type="string" name={"source_material" + " /// "+i } value={add.source_material} onChange={this.onChangeMaterialAdditional} />

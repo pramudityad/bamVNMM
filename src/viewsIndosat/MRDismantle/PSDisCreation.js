@@ -134,12 +134,12 @@ class PSDisCreation extends Component {
     ws.addRow(["bundle_id","bundle_name","qty","TWH"]);
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'PSA Template.xlsx');
+    saveAs(new Blob([MRFormat]), 'PS SRN Template.xlsx');
   }
 
   componentDidMount(){
     this.getProjectAll();
-    document.title = "PSA Creation | BAM"
+    document.title = "PS SRN Creation | BAM"
   }
 
   getProjectAll(){
@@ -284,8 +284,8 @@ class PSDisCreation extends Component {
         <Col xl="12">
         <Card>
           <CardHeader>
-            <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-edit" style={{marginRight: "8px"}}></i>PSA Creation </span>
-            <Button onClick={this.exportFormatPSDismantle} color="info" style={{ float: 'right', marginRight: "8px" }} size="sm">Download PSA Template</Button>
+            <span style={{lineHeight :'2', fontSize : '17px'}}><i className="fa fa-edit" style={{marginRight: "8px"}}></i>PS SRN Creation </span>
+            <Button onClick={this.exportFormatPSDismantle} color="info" style={{ float: 'right', marginRight: "8px" }} size="sm">Download PS Dis Template</Button>
           </CardHeader>
           <CardBody>
             <Form>
@@ -351,7 +351,7 @@ class PSDisCreation extends Component {
             </Form>
           </CardBody>
           <CardFooter>
-            <Button color='success' style={{float : 'right'}} size="sm" onClick={this.savePSDis} disabled={this.state.modal_loading === true}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create PSA</Button>
+            <Button color='success' style={{float : 'right'}} size="sm" onClick={this.savePSDis} disabled={this.state.modal_loading === true}><i className="fa fa-plus-square" style={{marginRight: "8px"}}></i> Create PS SRN</Button>
           </CardFooter>
         </Card>
         </Col>

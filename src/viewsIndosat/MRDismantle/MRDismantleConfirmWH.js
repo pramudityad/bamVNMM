@@ -25,7 +25,7 @@ const password = 'F760qbAg2sml';
 
 const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const array_field = ["mra_id", "mra_type", "mrd_category", "project_name", "site_info.site_id", "site_info.site_name", "site_info.site_region", "destination.value", "site_info.site_name", "site_info.site_region", "creator.email", "created_on"]
+const array_field = ["mra_id", "mra_type", "mrd_category", "project_name", "site_info.site_id", "site_info.site_name", "destination.value", "site_info.site_name", "creator.email", "created_on"]
 
 class MRDismantleConfirmWH extends Component {
   constructor(props) {
@@ -139,7 +139,7 @@ class MRDismantleConfirmWH extends Component {
         filter_array.push('"'+array_field[i]+'":{"$regex" : "' + this.state.filter_list[array_field[i]] + '", "$options" : "i"}');
       }
     }
-    filter_array.push('"mrd_category":"Dismantle To Warehouse"');
+    filter_array.push('"mrd_category":"To Warehouse"');
     filter_array.push('"current_mra_status":"MR FINISH DELIVERY"');
     if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
       filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
@@ -193,7 +193,7 @@ class MRDismantleConfirmWH extends Component {
     this.props.SidebarMinimizer(true);
     this.getPSDisList();
     // this.getAllPSDis();
-    document.title = 'MRA List | BAM';
+    document.title = 'MRA  List | BAM';
   }
 
   componentWillUnmount() {
@@ -226,7 +226,7 @@ class MRDismantleConfirmWH extends Component {
 
     const allSHF = await this.getAllPSDis();
 
-    let headerRow = ["SHF No.", "Related To", "Related No.", "Tower ID", "Tower Name", "Latitude", "Longitude", "Region", "Distance", "Amount Paid", "Receiver Name", "Receiver Email", "Note", "Receiver Phone", "Created By", "Created On"];
+    let headerRow = ["SHF No.", "Related To", "Related No.", "Site ID", "Site Name", "Latitude", "Longitude", "Distance", "Amount Paid", "Receiver Name", "Receiver Email", "Note", "Receiver Phone", "Created By", "Created On"];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
@@ -234,11 +234,11 @@ class MRDismantleConfirmWH extends Component {
     }
 
     for (let i = 0; i < allSHF.length; i++) {
-      ws.addRow([allSHF[i].shf_no, allSHF[i].related_to, allSHF[i].related_to === "MR" ? allSHF[i].mr_id : allSHF[i].assignment_no, allSHF[i].site_id, allSHF[i].site_name, allSHF[i].site_location.latitude, allSHF[i].site_location.longitude, allSHF[i].site_region, allSHF[i].distance, allSHF[i].amount_paid, allSHF[i].receiver_name, allSHF[i].receiver_email, allSHF[i].receiver_note, allSHF[i].receiver_phone_number, allSHF[i].created_by, allSHF[i].created_on])
+      ws.addRow([allSHF[i].shf_no, allSHF[i].related_to, allSHF[i].related_to === "MR" ? allSHF[i].mr_id : allSHF[i].assignment_no, allSHF[i].site_id, allSHF[i].site_name, allSHF[i].site_location.latitude, allSHF[i].site_location.longitude, allSHF[i].distance, allSHF[i].amount_paid, allSHF[i].receiver_name, allSHF[i].receiver_email, allSHF[i].receiver_note, allSHF[i].receiver_phone_number, allSHF[i].created_by, allSHF[i].created_on])
     }
     this.toggleLoading();
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'MRA List.xlsx');
+    saveAs(new Blob([allocexport]), 'MRA  List.xlsx');
   }
 
   onChangeDebounced(e) {
@@ -316,7 +316,7 @@ class MRDismantleConfirmWH extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: '2' }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MRA List
+                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> MRA  List
                 </span>
               </CardHeader>
               <CardBody>
@@ -324,16 +324,14 @@ class MRDismantleConfirmWH extends Component {
                   <thead>
                     <tr>
                       <th rowSpan="2">Action</th>
-                      <th>MRA ID</th>
+                      <th>MRA  ID</th>
                       <th>MRA Type</th>
                       <th>Category</th>
                       <th>Project Name</th>
-                      <th>Tower ID Origin</th>
-                      <th>Tower Name Origin</th>
-                      <th>Region Origin</th>
+                      <th>Site ID Origin</th>
+                      <th>Site Name Origin</th>
                       <th>Destination ID</th>
                       <th>Destination Name</th>
-                      <th>Destination Region</th>
                       <th>Created By</th>
                       <th>Created On</th>
                     </tr>
@@ -350,16 +348,14 @@ class MRDismantleConfirmWH extends Component {
                     {this.state.mr_dis_list.map((list, i) =>
                       <tr key={list._id}>
                         <td><Button outline color="primary" size="sm" className="btn-pill" style={{ width: "130px" }} id={list._id} value={list._etag} onClick={this.toggleBoxInput}><i className="fa fa-angle-double-right" style={{ marginRight: "8px" }}></i>WH Confirm</Button></td>
-                        <td><Link to={'/dismantle/mr-dis-detail/'+list._id}>{list.mra_id}</Link></td>
+                        <td><Link to={'/srn/mr-srn-detail/'+list._id}>{list.mra_id}</Link></td>
                         <td>{list.mra_type}</td>
                         <td>{list.mrd_category}</td>
                         <td>{list.project_name}</td>
                         <td>{list.site_info.find(si => si.srn_title === "Origin") !== undefined ? list.site_info.find(si => si.srn_title === "Origin").site_id : null }</td>
                         <td>{list.site_info.find(si => si.srn_title === "Origin") !== undefined ? list.site_info.find(si => si.srn_title === "Origin").site_name : null}</td>
-                        <td>{list.site_info.find(si => si.srn_title === "Origin") !== undefined ? list.site_info.find(si => si.srn_title === "Origin").site_region : null}</td>
-                        <td>{list.mrd_category === "Dismantle To Warehouse" ? list.destination.value : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_id : null }</td>
-                        <td>{list.mrd_category === "Dismantle To Warehouse" ? null : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_name : null}</td>
-                        <td>{list.mrd_category === "Dismantle To Warehouse" ? null : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_region : null}</td>
+                        <td>{list.mrd_category === "To Warehouse" ? list.destination.value : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_id : null }</td>
+                        <td>{list.mrd_category === "To Warehouse" ? null : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_name : null}</td>
                         <td>{list.creator.map(e => e.email)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>

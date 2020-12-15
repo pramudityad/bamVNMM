@@ -1374,7 +1374,7 @@ class PSDetailMW extends Component {
     const addPP = dataItemTSSR.filter(e => e.pp_id === "AdditionalMaterial");
     let dataMaterialVariant = [];
 
-    let headerRow = ["material_id_actual", "material_name_actual", "material_type", "unit", "qty", "source_material"];
+    let headerRow = ["material_id_actual", "material_name_actual", "material_type", "unit", "qty", "qty", "source_material"];
     ws.addRow(headerRow);
     let list_material_id = [];
     for(let i = 0; i < addPP.length; i++){
@@ -2043,9 +2043,9 @@ class PSDetailMW extends Component {
     this.setState({modalAdditionalForm : false});
     const addMaterial = this.state.additional_material;
     const dataTSSR = this.state.tssrData;
-    const dataUpload = [["material_id_actual", "material_name_actual", "material_type", "unit", "qty", "source_material"]];
+    const dataUpload = [["material_id_actual", "material_name_actual", "material_type", "unit", "qty", "qty_fe", "source_material"]];
     for(let i = 0; i < addMaterial.length; i++){
-      dataUpload.push([addMaterial[i].material_id_actual, addMaterial[i].material_name_actual, addMaterial[i].material_type, addMaterial[i].unit, parseFloat(addMaterial[i].qty), addMaterial[i].source_material]);
+      dataUpload.push([addMaterial[i].material_id_actual, addMaterial[i].material_name_actual, addMaterial[i].material_type, addMaterial[i].unit, parseFloat(addMaterial[i].qty), parseFloat(addMaterial[i].qty_fe), addMaterial[i].source_material]);
     }
     let patchDataMat = await this.patchDatatoAPINODE('/matreq/inputAdditionalMaterial/'+dataTSSR._id, {"identifier" : "PS" ,"additionalMaterial" : dataUpload , "takeOutAdditional" : false});
     if(patchDataMat.data !== undefined && patchDataMat.status >= 200 && patchDataMat.status <= 300 ) {
@@ -2377,6 +2377,9 @@ class PSDetailMW extends Component {
                         Qty
                       </th>
                       <th>
+                        Qty FE
+                      </th>
+                      <th>
                         Source Material
                       </th>
                       <th>
@@ -2408,6 +2411,9 @@ class PSDetailMW extends Component {
                       </td>
                       <td>
                         <input type="number" name={"qty" + " /// "+i } value={add.qty} onChange={this.onChangeMaterialAdditional} style={{width : '75px'}}/>
+                      </td>
+                      <td>
+                        <input type="number" name={"qty_fe" + " /// "+i } value={add.qty_fe} onChange={this.onChangeMaterialAdditional} style={{width : '75px'}}/>
                       </td>
                       <td>
                         <input type="string" name={"source_material" + " /// "+i } value={add.source_material} onChange={this.onChangeMaterialAdditional} />
