@@ -258,12 +258,12 @@ class SSOLogin extends Component {
                       onClick={() => this.handleChangeAccount("1")}
                     >
                       <div>
-                        <img
+                        {/* <img
                           src={telenor}
                           alt="telenor logo"
                           style={{ width: "80%", marginTop: "15%" }}
-                        />
-                        {/* }<h2>TELKOM</h2> */}
+                        /> */}
+                        <h2>VN MM</h2>
                       </div>
                     </div>
                   </div>
