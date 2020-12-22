@@ -28,7 +28,6 @@ import queryString from "query-string";
 import ModalCreateNew from "../../components/ModalCreateNew";
 import ModalDelete from "../../components/ModalDelete";
 
-
 const Checkbox = ({
   type = "checkbox",
   name,
@@ -52,7 +51,7 @@ const API_URL_TSEL = "https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi";
 const usernameBAM = "adminbamidsuper";
 const passwordBAM = "F760qbAg2sml";
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 class GIInternal extends React.Component {
   constructor(props) {
@@ -195,7 +194,7 @@ class GIInternal extends React.Component {
 
   async getDatafromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -214,12 +213,16 @@ class GIInternal extends React.Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.post(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         // console.log("respond Post Data", respond);
       }
@@ -233,12 +236,16 @@ class GIInternal extends React.Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond patch Data", respond);
       }
@@ -252,12 +259,15 @@ class GIInternal extends React.Component {
 
   async deleteDataFromAPINODE(url) {
     try {
-      let respond = await axios.delete(API_URL_NODE + url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.delete(
+        process.env.REACT_APP_API_URL_NODE + url,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond delete Data", respond);
       }
@@ -550,14 +560,24 @@ class GIInternal extends React.Component {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
         if (res.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error.message.message,
+          });
         } else {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error,
+          });
         }
       } else {
-        this.setState({ action_status: 'failed' });
+        this.setState({ action_status: "failed" });
       }
       this.toggleLoading();
     }
@@ -577,14 +597,24 @@ class GIInternal extends React.Component {
       this.setState({ action_status: "success", rowsXLS: [] });
       this.toggleLoading();
     } else {
-      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
         if (res.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message.message });
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error.message.message,
+          });
         } else {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error,
+          });
         }
       } else {
-        this.setState({ action_status: 'failed' });
+        this.setState({ action_status: "failed" });
       }
       this.toggleLoading();
     }
@@ -744,7 +774,10 @@ class GIInternal extends React.Component {
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "All Material GI "+this.state.selected_wh+".xlsx");
+    saveAs(
+      new Blob([allocexport]),
+      "All Material GI " + this.state.selected_wh + ".xlsx"
+    );
   }
 
   DeleteData = async () => {
@@ -973,38 +1006,52 @@ class GIInternal extends React.Component {
                     <div>
                       <table>
                         <tbody>
-                        <tr>
-                            <td><b>Warehouse Name</b></td>
+                          <tr>
+                            <td>
+                              <b>Warehouse Name</b>
+                            </td>
                             <td>:</td>
                             <td>{this.state.wh_data.wh_name}</td>
                           </tr>
                           <tr>
-                            <td><b>Warehouse ID</b></td>
+                            <td>
+                              <b>Warehouse ID</b>
+                            </td>
                             <td>:</td>
                             <td>{this.state.wh_data.wh_id}</td>
                           </tr>
                           <tr>
-                            <td><b>Warehouse Manager</b></td>
+                            <td>
+                              <b>Warehouse Manager</b>
+                            </td>
                             <td>:</td>
                             <td>{this.state.wh_data.wh_manager}</td>
                           </tr>
                           <tr>
-                            <td><b>Warehouse Address</b></td>
+                            <td>
+                              <b>Warehouse Address</b>
+                            </td>
                             <td>:</td>
                             <td>{this.state.wh_data.address}</td>
                           </tr>
                           <tr>
-                            <td><b>Latitude</b></td>
+                            <td>
+                              <b>Latitude</b>
+                            </td>
                             <td>:</td>
                             <td>{this.state.wh_data.latitude}</td>
                           </tr>
                           <tr>
-                            <td><b>Longitude</b></td>
+                            <td>
+                              <b>Longitude</b>
+                            </td>
                             <td>:</td>
                             <td>{this.state.wh_data.longitude}</td>
                           </tr>
                           <tr>
-                            <td><b>Warehouse Owner</b></td>
+                            <td>
+                              <b>Warehouse Owner</b>
+                            </td>
                             <td>:</td>
                             <td>{this.state.wh_data.owner}</td>
                           </tr>

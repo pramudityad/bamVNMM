@@ -26,7 +26,7 @@ const API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
 const username = "bamidadmin@e-dpm.com";
 const password = "F760qbAg2sml";
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 class GI extends Component {
   constructor(props) {
@@ -62,7 +62,7 @@ class GI extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -128,12 +128,16 @@ class GI extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Patch data", respond);
       }
@@ -237,7 +241,9 @@ class GI extends Component {
       filter_array.push(
         '"dsp_handover.location_id" : "' + this.props.match.params.whid + '"'
       );
-    filter_array.push('"$or" : [{"asp_material_gi" : {"$ne" : null}}, {"asp_material_confirmation" : {"$ne" : null} }]');
+    filter_array.push(
+      '"$or" : [{"asp_material_gi" : {"$ne" : null}}, {"asp_material_confirmation" : {"$ne" : null} }]'
+    );
     let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE(
       "/matreq?srt=_id:-1&q=" + whereAnd + "&lmt=" + maxPage + "&pg=" + page
@@ -324,16 +330,20 @@ class GI extends Component {
       filter_array.push(
         '"dsp_handover.location_id" : "' + this.props.match.params.whid + '"'
       );
-    filter_array.push('"$or" : [{"asp_material_gi" : {"$ne" : null}}, {"asp_material_confirmation" : {"$ne" : null} }]');
+    filter_array.push(
+      '"$or" : [{"asp_material_gi" : {"$ne" : null}}, {"asp_material_confirmation" : {"$ne" : null} }]'
+    );
     let whereAnd = "{" + filter_array.join(",") + "}";
     let mrList = [];
-    let res = await this.getDataFromAPINODE('/matreq?srt=_id:-1&noPg=1&q=' + whereAnd)
+    let res = await this.getDataFromAPINODE(
+      "/matreq?srt=_id:-1&noPg=1&q=" + whereAnd
+    );
     if (res.data !== undefined) {
       const items = res.data.data;
       mrList = res.data.data;
       return mrList;
       // this.setState({ mr_all: items });
-    }else{
+    } else {
       return [];
     }
   }
@@ -360,26 +370,74 @@ class GI extends Component {
 
     const allMR = await this.getAllMR();
 
-    let headerRow = ["MR ID", "MR MITT ID","MR Type","MR Delivery Type", "Project Name", "CD ID", "Site ID", "Site Name", "Current Status", "Current Milestone", "DSP", "ETA", "MR MITT Created On", "MR MITT Created By","Updated On", "Created On"];
+    let headerRow = [
+      "MR ID",
+      "MR MITT ID",
+      "MR Type",
+      "MR Delivery Type",
+      "Project Name",
+      "CD ID",
+      "Site ID",
+      "Site Name",
+      "Current Status",
+      "Current Milestone",
+      "DSP",
+      "ETA",
+      "MR MITT Created On",
+      "MR MITT Created By",
+      "Updated On",
+      "Created On",
+    ];
     ws.addRow(headerRow);
 
     for (let i = 1; i < headerRow.length + 1; i++) {
-      ws.getCell(this.numToSSColumn(i) + '1').font = { size: 11, bold: true };
+      ws.getCell(this.numToSSColumn(i) + "1").font = { size: 11, bold: true };
     }
 
     for (let i = 0; i < allMR.length; i++) {
-      const creator_mr_mitt = allMR[i].mr_status.find(e => e.mr_status_name === "PLANTSPEC" && e.mr_status_value === "NOT ASSIGNED");
-      ws.addRow([allMR[i].mr_id, allMR[i].mr_mitt_no, allMR[i].mr_type, allMR[i].mr_delivery_type, allMR[i].project_name, allMR[i].cust_del !== undefined ? allMR[i].cust_del.map(cd => cd.cd_id).join(', ') : allMR[i].cd_id, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_id : null, allMR[i].site_info[0] !== undefined ? allMR[i].site_info[0].site_name : null, allMR[i].current_mr_status, allMR[i].current_milestones, allMR[i].dsp_company, new Date(allMR[i].eta), creator_mr_mitt !== undefined ? new Date(creator_mr_mitt.mr_status_date) : null, creator_mr_mitt !== undefined ? creator_mr_mitt.mr_status_updater : null, new Date(allMR[i].updated_on), new Date(allMR[i].created_on)]);
+      const creator_mr_mitt = allMR[i].mr_status.find(
+        (e) =>
+          e.mr_status_name === "PLANTSPEC" &&
+          e.mr_status_value === "NOT ASSIGNED"
+      );
+      ws.addRow([
+        allMR[i].mr_id,
+        allMR[i].mr_mitt_no,
+        allMR[i].mr_type,
+        allMR[i].mr_delivery_type,
+        allMR[i].project_name,
+        allMR[i].cust_del !== undefined
+          ? allMR[i].cust_del.map((cd) => cd.cd_id).join(", ")
+          : allMR[i].cd_id,
+        allMR[i].site_info[0] !== undefined
+          ? allMR[i].site_info[0].site_id
+          : null,
+        allMR[i].site_info[0] !== undefined
+          ? allMR[i].site_info[0].site_name
+          : null,
+        allMR[i].current_mr_status,
+        allMR[i].current_milestones,
+        allMR[i].dsp_company,
+        new Date(allMR[i].eta),
+        creator_mr_mitt !== undefined
+          ? new Date(creator_mr_mitt.mr_status_date)
+          : null,
+        creator_mr_mitt !== undefined
+          ? creator_mr_mitt.mr_status_updater
+          : null,
+        new Date(allMR[i].updated_on),
+        new Date(allMR[i].created_on),
+      ]);
       const getRowLast = ws.lastRow._number;
-      ws.getCell("M"+getRowLast).numFmt = "YYYY-MM-DD";
-      ws.getCell("O"+getRowLast).numFmt = "YYYY-MM-DD";
-      ws.getCell("P"+getRowLast).numFmt = "YYYY-MM-DD";
-      if(creator_mr_mitt !== undefined && creator_mr_mitt !== null){
-        ws.getCell("L"+getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("M" + getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("O" + getRowLast).numFmt = "YYYY-MM-DD";
+      ws.getCell("P" + getRowLast).numFmt = "YYYY-MM-DD";
+      if (creator_mr_mitt !== undefined && creator_mr_mitt !== null) {
+        ws.getCell("L" + getRowLast).numFmt = "YYYY-MM-DD";
       }
     }
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'MR List.xlsx');
+    saveAs(new Blob([allocexport]), "MR List.xlsx");
   }
 
   async patchDataToAPI(url, data, _etag) {
@@ -754,19 +812,28 @@ class GI extends Component {
                         </td>
                         <td>{list.project_name}</td>
                         <td>
-                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
+                          {list.cust_del !== undefined &&
+                            list.cust_del
+                              .map((custdel) => custdel.cd_id)
+                              .join(" , ")}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
+                          {list.site_info !== undefined &&
+                            list.site_info
+                              .map((site_info) => site_info.site_id)
+                              .join(" , ")}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
+                          {list.site_info !== undefined &&
+                            list.site_info
+                              .map((site_info) => site_info.site_name)
+                              .join(" , ")}
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{list.eta}</td>
-                        <td>{list.creator.map(c => c.email)}</td>
+                        <td>{list.creator.map((c) => c.email)}</td>
                         <td>{list.updated_on}</td>
                         <td>{list.created_on}</td>
                       </tr>
@@ -774,7 +841,10 @@ class GI extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_list.length} entries from {this.state.totalData} data</small>
+                  <small>
+                    Showing {this.state.mr_list.length} entries from{" "}
+                    {this.state.totalData} data
+                  </small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}

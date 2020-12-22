@@ -15,7 +15,7 @@ import {
   Label,
   ModalFooter,
   Modal,
- ModalBody
+  ModalBody,
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -27,7 +27,10 @@ import { connect } from "react-redux";
 // import './project_css.css'
 
 import ModalForm from "../components/ModalForm";
-import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
+import {
+  convertDateFormatfull,
+  convertDateFormat,
+} from "../../helper/basicFunction";
 
 const API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
 const username = "bamidadmin@e-dpm.com";
@@ -37,7 +40,7 @@ const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
 const usernameXL = "adminbamidsuper";
 const passwordXL = "F760qbAg2sml";
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
@@ -68,7 +71,7 @@ class MRAList extends Component {
       selected_dsp: "",
       data_mr_selected: null,
       modal_confirm_input: false,
-      rejectNote: ""
+      rejectNote: "",
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -84,12 +87,12 @@ class MRAList extends Component {
   }
 
   toggleMRAConfirmInput(e) {
-    if(e !== undefined){
+    if (e !== undefined) {
       const id_doc = e.currentTarget.id;
       this.setState({ id_mra_selected: id_doc });
     }
-    this.setState(prevState => ({
-      modal_confirm_input: !prevState.modal_confirm_input
+    this.setState((prevState) => ({
+      modal_confirm_input: !prevState.modal_confirm_input,
     }));
   }
 
@@ -99,7 +102,7 @@ class MRAList extends Component {
     if (value !== null && value.length !== 0 && value !== 0) {
       this.setState({ rejectNote: value });
     }
-  }
+  };
 
   async getDataFromAPI(url) {
     try {
@@ -123,7 +126,7 @@ class MRAList extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -142,12 +145,16 @@ class MRAList extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Post Data", respond);
       }
@@ -597,8 +604,10 @@ class MRAList extends Component {
 
   confirmMRA(e) {
     const id_doc = e.currentTarget.id;
-    let reason = this.state.rejectNote
-    this.patchDatatoAPINODE("/matreq-ra/confirmMRA/" + id_doc, {"data": {"note": reason}}).then((res) => {
+    let reason = this.state.rejectNote;
+    this.patchDatatoAPINODE("/matreq-ra/confirmMRA/" + id_doc, {
+      data: { note: reason },
+    }).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getMRAList();
@@ -673,7 +682,6 @@ class MRAList extends Component {
   );
 
   render() {
-
     const downloadMR = {
       float: "right",
     };
@@ -689,7 +697,10 @@ class MRAList extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: "2" }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }} ></i>
+                  <i
+                    className="fa fa-align-justify"
+                    style={{ marginRight: "8px" }}
+                  ></i>
                   MRA List
                 </span>
               </CardHeader>
@@ -722,31 +733,47 @@ class MRAList extends Component {
                     {this.state.mr_list.map((list, i) => (
                       <tr key={list._id}>
                         <td>
-                        {list.current_mra_status === "MRA FINISH DELIVERY" && (
-                          <Button outline color="success" size="sm" className="btn-pill" style={{ width: "90px" }} id={list._id} value={list._etag} onClick={this.toggleMRAConfirmInput} >
-                            >> Confirm
-                          </Button>
-                        )}
+                          {list.current_mra_status ===
+                            "MRA FINISH DELIVERY" && (
+                            <Button
+                              outline
+                              color="success"
+                              size="sm"
+                              className="btn-pill"
+                              style={{ width: "90px" }}
+                              id={list._id}
+                              value={list._etag}
+                              onClick={this.toggleMRAConfirmInput}
+                            >
+                              >> Confirm
+                            </Button>
+                          )}
                           {/* <Button outline color="success" size="sm" className="btn-pill" style={{ width: "90px", marginBottom: "4px" }} id={list._id} value={list._etag} onClick={this.ApproveMR}><i className="fa fa-check" style={{ marginRight: "8px" }}></i>Approve</Button> */}
-
                         </td>
                         <td>
                           <Link to={"/mra-list/detail/" + list._id}>
                             {list.mra_id}
                           </Link>
                         </td>
-                        <td>
-                            {list.mr_id}
-                        </td>
+                        <td>{list.mr_id}</td>
                         <td>{list.project_name}</td>
                         <td>
-                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
+                          {list.cust_del !== undefined &&
+                            list.cust_del
+                              .map((custdel) => custdel.cd_id)
+                              .join(" , ")}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
+                          {list.site_info !== undefined &&
+                            list.site_info
+                              .map((site_info) => site_info.site_id)
+                              .join(" , ")}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
+                          {list.site_info !== undefined &&
+                            list.site_info
+                              .map((site_info) => site_info.site_name)
+                              .join(" , ")}
                         </td>
                         <td>{list.current_mra_status}</td>
                         <td>{list.dsp_company}</td>
@@ -757,7 +784,10 @@ class MRAList extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_list.length} entries from {this.state.totalData} data</small>
+                  <small>
+                    Showing {this.state.mr_list.length} entries from{" "}
+                    {this.state.totalData} data
+                  </small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}
@@ -774,7 +804,11 @@ class MRAList extends Component {
         </Row>
 
         {/* Modal Loading */}
-        <Modal isOpen={this.state.modal_confirm_input} toggle={this.toggleMRAConfirmInput} className={'modal-sm modal--box-input'}>
+        <Modal
+          isOpen={this.state.modal_confirm_input}
+          toggle={this.toggleMRAConfirmInput}
+          className={"modal-sm modal--box-input"}
+        >
           <ModalBody>
             <Row>
               <Col sm="12">
@@ -792,7 +826,17 @@ class MRAList extends Component {
             </Row>
           </ModalBody>
           <ModalFooter>
-            <Button disabled={!this.state.rejectNote} outline color="success" size="sm" style={{ width: "80px" }} id={this.state.id_mra_selected} onClick={this.confirmMRA}>Confirm MRA</Button>
+            <Button
+              disabled={!this.state.rejectNote}
+              outline
+              color="success"
+              size="sm"
+              style={{ width: "80px" }}
+              id={this.state.id_mra_selected}
+              onClick={this.confirmMRA}
+            >
+              Confirm MRA
+            </Button>
           </ModalFooter>
         </Modal>
         {/* end Modal Loading */}

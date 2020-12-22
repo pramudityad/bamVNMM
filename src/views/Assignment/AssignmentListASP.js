@@ -1,18 +1,30 @@
-import React, { Component } from 'react';
-import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
-import Pagination from 'react-js-pagination';
-import debounce from 'lodash.debounce';
-import Excel from 'exceljs';
-import { saveAs } from 'file-saver';
-import { connect } from 'react-redux';
+import React, { Component } from "react";
+import {
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Col,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  Input,
+  Row,
+  Table,
+} from "reactstrap";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import Pagination from "react-js-pagination";
+import debounce from "lodash.debounce";
+import Excel from "exceljs";
+import { saveAs } from "file-saver";
+import { connect } from "react-redux";
 
-const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
-const username_tsel = 'adminbamidsuper';
-const password_tsel = 'F760qbAg2sml';
+const API_URL_tsel = "https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi";
+const username_tsel = "adminbamidsuper";
+const password_tsel = "F760qbAg2sml";
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+//const process.env.REACT_APP_API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
 class AssignmentListASP extends Component {
   constructor(props) {
@@ -24,15 +36,15 @@ class AssignmentListASP extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      vendor_name : this.props.dataLogin.vendor_name,
-      vendor_code : this.props.dataLogin.vendor_code,
+      vendor_name: this.props.dataLogin.vendor_name,
+      vendor_code: this.props.dataLogin.vendor_code,
       assignment_list: [],
       prevPage: 0,
       activePage: 1,
       totalData: 0,
       perPage: 10,
       filter_list: new Array(8).fill(""),
-    }
+    };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.getAssignmentList = this.getAssignmentList.bind(this);
     this.downloadASGList = this.downloadASGList.bind(this);
@@ -43,10 +55,10 @@ class AssignmentListASP extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + this.state.tokenUser
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + this.state.tokenUser,
         },
       });
       if (respond.status >= 200 && respond.status < 300) {
@@ -63,11 +75,11 @@ class AssignmentListASP extends Component {
   async getDataFromAPI(url) {
     try {
       let respond = await axios.get(API_URL_tsel + url, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         auth: {
           username: username_tsel,
-          password: password_tsel
-        }
+          password: password_tsel,
+        },
       });
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond data", respond);
@@ -84,31 +96,86 @@ class AssignmentListASP extends Component {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     let filter_array = [];
-    this.state.filter_list[0] !== "" && (filter_array.push('"Assignment_No":{"$regex" : "' + this.state.filter_list[0] + '", "$options" : "i"}'));
-    this.state.filter_list[1] !== "" && (filter_array.push('"Account_Name":{"$regex" : "' + this.state.filter_list[1] + '", "$options" : "i"}'));
-    this.state.filter_list[2] !== "" && (filter_array.push('"Project":{"$regex" : "' + this.state.filter_list[2] + '", "$options" : "i"}'));
-    this.state.filter_list[3] !== "" && (filter_array.push('"cust_del.cd_id":{"$regex" : "' + this.state.filter_list[3] + '", "$options" : "i"}'));
-    this.state.filter_list[5] !== "" && (filter_array.push('"Payment_Terms":{"$regex" : "' + this.state.filter_list[5] + '", "$options" : "i"}'));
-    this.state.filter_list[7] !== "" && (filter_array.push('"Work_Status":{"$regex" : "' + this.state.filter_list[7] + '", "$options" : "i"}'));
-    filter_array.push('"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP", "$and" : [{"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT REQUEST FOR CANCELATION"}}, {"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT CANCELED"}}]');
-    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
-      filter_array.push('"$or" : [{"Vendor_Code_Number" : "'+this.state.vendor_code+'"}, {"Vendor_Name" : "'+this.state.vendor_name+'"}]');
-    }else{
-          this.state.filter_list[4] !== "" && (filter_array.push('"Vendor_Name":{"$regex" : "' + this.state.filter_list[4] + '", "$options" : "i"}'));
+    this.state.filter_list[0] !== "" &&
+      filter_array.push(
+        '"Assignment_No":{"$regex" : "' +
+          this.state.filter_list[0] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[1] !== "" &&
+      filter_array.push(
+        '"Account_Name":{"$regex" : "' +
+          this.state.filter_list[1] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[2] !== "" &&
+      filter_array.push(
+        '"Project":{"$regex" : "' +
+          this.state.filter_list[2] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[3] !== "" &&
+      filter_array.push(
+        '"cust_del.cd_id":{"$regex" : "' +
+          this.state.filter_list[3] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[5] !== "" &&
+      filter_array.push(
+        '"Payment_Terms":{"$regex" : "' +
+          this.state.filter_list[5] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[7] !== "" &&
+      filter_array.push(
+        '"Work_Status":{"$regex" : "' +
+          this.state.filter_list[7] +
+          '", "$options" : "i"}'
+      );
+    filter_array.push(
+      '"ASP_Assignment_Status.status_value": "NOTIFIED TO ASP", "$and" : [{"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT REQUEST FOR CANCELATION"}}, {"ASP_Assignment_Status.status_value": {"$ne" : "ASP ASSIGNMENT CANCELED"}}]'
+    );
+    if (
+      (this.state.userRole.findIndex((e) => e === "BAM-ASP") !== -1 ||
+        this.state.userRole.findIndex((e) => e === "BAM-ASP Management") !==
+          -1) &&
+      this.state.userRole.findIndex((e) => e === "Admin") === -1
+    ) {
+      filter_array.push(
+        '"$or" : [{"Vendor_Code_Number" : "' +
+          this.state.vendor_code +
+          '"}, {"Vendor_Name" : "' +
+          this.state.vendor_name +
+          '"}]'
+      );
+    } else {
+      this.state.filter_list[4] !== "" &&
+        filter_array.push(
+          '"Vendor_Name":{"$regex" : "' +
+            this.state.filter_list[4] +
+            '", "$options" : "i"}'
+        );
     }
-    let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
+    let whereAnd = "{" + filter_array.join(",") + "}";
+    this.getDataFromAPINODE(
+      "/aspAssignment/aspassign?srt=_id:-1&q=" +
+        whereAnd +
+        "&lmt=" +
+        maxPage +
+        "&pg=" +
+        page
+    ).then((res) => {
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
         this.setState({ assignment_list: items, totalData: totalData });
       }
-    })
+    });
   }
 
   componentDidMount() {
     this.getAssignmentList();
-    document.title = 'Assignment List | BAM';
+    document.title = "Assignment List | BAM";
   }
 
   handlePageChange(pageNumber) {
@@ -127,7 +194,7 @@ class AssignmentListASP extends Component {
     dataFilter[parseInt(index)] = value;
     this.setState({ filter_list: dataFilter, activePage: 1 }, () => {
       this.onChangeDebounced(e);
-    })
+    });
   }
 
   onChangeDebounced(e) {
@@ -136,11 +203,21 @@ class AssignmentListASP extends Component {
 
   async downloadASGList() {
     let listASGAll = [];
-    let vendorSeacrh = '';
-    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
-      vendorSeacrh = ', "Vendor_Code_Number" : "'+this.state.vendor_code+'"';
+    let vendorSeacrh = "";
+    if (
+      (this.state.userRole.findIndex((e) => e === "BAM-ASP") !== -1 ||
+        this.state.userRole.findIndex((e) => e === "BAM-ASP Management") !==
+          -1) &&
+      this.state.userRole.findIndex((e) => e === "Admin") === -1
+    ) {
+      vendorSeacrh =
+        ', "Vendor_Code_Number" : "' + this.state.vendor_code + '"';
     }
-    let getASG = await this.getDataFromAPINODE('/aspAssignment/aspassign?srt=_id:-1&noPg=1&q={"Current_Status" : "ASP ASSIGNMENT NOTIFIED TO ASP"'+vendorSeacrh+'}');
+    let getASG = await this.getDataFromAPINODE(
+      '/aspAssignment/aspassign?srt=_id:-1&noPg=1&q={"Current_Status" : "ASP ASSIGNMENT NOTIFIED TO ASP"' +
+        vendorSeacrh +
+        "}"
+    );
     if (getASG.data !== undefined) {
       listASGAll = getASG.data.data;
     }
@@ -148,16 +225,33 @@ class AssignmentListASP extends Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    let headerRow = ["Assignment ID", "Account Name", " Project Name", " SOW Type", " NW  NW Activity Terms of Payment", " Item Status Work Status"];
+    let headerRow = [
+      "Assignment ID",
+      "Account Name",
+      " Project Name",
+      " SOW Type",
+      " NW  NW Activity Terms of Payment",
+      " Item Status Work Status",
+    ];
     ws.addRow(headerRow);
 
     for (let i = 0; i < listASGAll.length; i++) {
       let list = listASGAll[i];
-      ws.addRow([list.Assignment_No, list.Account_Name, list.Project, list.SOW_Type, list.NW, list.NW_Activity, list.Payment_Terms, list.Item_Status, list.Work_Status])
+      ws.addRow([
+        list.Assignment_No,
+        list.Account_Name,
+        list.Project,
+        list.SOW_Type,
+        list.NW,
+        list.NW_Activity,
+        list.Payment_Terms,
+        list.Item_Status,
+        list.Work_Status,
+      ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), 'Assignment List.xlsx');
+    saveAs(new Blob([allocexport]), "Assignment List.xlsx");
   }
 
   loopSearchBar = () => {
@@ -165,27 +259,38 @@ class AssignmentListASP extends Component {
     for (let i = 0; i < 8; i++) {
       searchBar.push(
         <td>
-          <div className="controls" style={{ width: '150px' }}>
+          <div className="controls" style={{ width: "150px" }}>
             <InputGroup className="input-prepend">
               <InputGroupAddon addonType="prepend">
-                <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                <InputGroupText>
+                  <i className="fa fa-search"></i>
+                </InputGroupText>
               </InputGroupAddon>
-              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[i]} name={i} size="sm" />
+              <Input
+                type="text"
+                placeholder="Search"
+                onChange={this.handleFilterList}
+                value={this.state.filter_list[i]}
+                name={i}
+                size="sm"
+              />
             </InputGroup>
           </div>
         </td>
-      )
+      );
     }
     return searchBar;
-  }
+  };
 
-  loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
+  loading = () => (
+    <div className="animated fadeIn pt-1 text-center">Loading...</div>
+  );
 
   render() {
     const downloadAssignment = {
-      float: 'right',
-      marginRight: '10px'
-    }
+      float: "right",
+      marginRight: "10px",
+    };
 
     return (
       <div className="animated fadeIn">
@@ -193,15 +298,21 @@ class AssignmentListASP extends Component {
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                <span style={{ lineHeight: '2' }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> Assignment List
+                <span style={{ lineHeight: "2" }}>
+                  <i
+                    className="fa fa-align-justify"
+                    style={{ marginRight: "8px" }}
+                  ></i>{" "}
+                  Assignment List
                 </span>
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
+                      <th rowSpan="2" style={{ verticalAlign: "middle" }}>
+                        Action
+                      </th>
                       <th>Assignment ID</th>
                       <th>Account Name</th>
                       <th>Project Name</th>
@@ -211,9 +322,7 @@ class AssignmentListASP extends Component {
                       <th>Assignment Status</th>
                       <th>Work Status</th>
                     </tr>
-                    <tr>
-                      {this.loopSearchBar()}
-                    </tr>
+                    <tr>{this.loopSearchBar()}</tr>
                   </thead>
                   <tbody>
                     {this.state.assignment_list.length === 0 && (
@@ -221,25 +330,35 @@ class AssignmentListASP extends Component {
                         <td colSpan="10">No Data Available</td>
                       </tr>
                     )}
-                    {this.state.assignment_list.map((list, i) =>
+                    {this.state.assignment_list.map((list, i) => (
                       <tr key={list._id}>
                         <td>
-                          <Link to={'/assignment-detail-asp/' + list._id}>
-                            <Button style={{ width: "90px" }} outline color="info" size="sm">Detail</Button>
+                          <Link to={"/assignment-detail-asp/" + list._id}>
+                            <Button
+                              style={{ width: "90px" }}
+                              outline
+                              color="info"
+                              size="sm"
+                            >
+                              Detail
+                            </Button>
                           </Link>
                         </td>
                         <td>{list.Assignment_No}</td>
                         <td>{list.Account_Name}</td>
                         <td>{list.Project}</td>
                         <td>
-                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
+                          {list.cust_del !== undefined &&
+                            list.cust_del
+                              .map((custdel) => custdel.cd_id)
+                              .join(" , ")}
                         </td>
                         <td>{list.Vendor_Name}</td>
                         <td>{list.Payment_Terms}</td>
                         <td>{list.Current_Status}</td>
                         <td>{list.Work_Status}</td>
                       </tr>
-                    )}
+                    ))}
                   </tbody>
                 </Table>
                 <Pagination
@@ -256,15 +375,15 @@ class AssignmentListASP extends Component {
           </Col>
         </Row>
       </div>
-    )
+    );
   }
 }
 
 const mapStateToProps = (state) => {
   return {
     dataLogin: state.loginData,
-    SidebarMinimize: state.minimizeSidebar
-  }
-}
+    SidebarMinimize: state.minimizeSidebar,
+  };
+};
 
 export default connect(mapStateToProps)(AssignmentListASP);

@@ -12,11 +12,11 @@ import {
   Dropdown,
   DropdownToggle,
   DropdownMenu,
-  DropdownItem
+  DropdownItem,
 } from "reactstrap";
-import { Modal, ModalBody, ModalHeader, ModalFooter} from 'reactstrap';
+import { Modal, ModalBody, ModalHeader, ModalFooter } from "reactstrap";
 import { Form, FormGroup, Label } from "reactstrap";
-import ModalDelete from '../components/ModalDelete';
+import ModalDelete from "../components/ModalDelete";
 import axios from "axios";
 import { connect } from "react-redux";
 import Excel from "exceljs";
@@ -26,7 +26,7 @@ import AsyncSelect from "react-select/async";
 import debounce from "lodash.debounce";
 import { getDatafromAPINODEFile } from "../../helper/asyncFunction";
 
-import {apiSendEmail} from '../../helper/asyncFunction'
+import { apiSendEmail } from "../../helper/asyncFunction";
 
 const Checkbox = ({
   type = "checkbox",
@@ -55,7 +55,7 @@ const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
 const usernameXL = "adminbamidsuper";
 const passwordXL = "F760qbAg2sml";
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 class AssignmentDetail extends Component {
   constructor(props) {
@@ -82,16 +82,16 @@ class AssignmentDetail extends Component {
       reschedule_note: "",
       vendor_id: null,
       vendor_email: null,
-      modal_warning_cancel_asg : false,
-      modal_warning_revise_asg : false,
-      value_warning_cancel_asg : "Are you sure?",
-      modal_loading : false,
-      sid_file : [],
-      abd_file : [],
+      modal_warning_cancel_asg: false,
+      modal_warning_revise_asg: false,
+      value_warning_cancel_asg: "Are you sure?",
+      modal_loading: false,
+      sid_file: [],
+      abd_file: [],
       dropdownOpen: new Array(2).fill(false),
-      reason_cancel : 'No Reason',
-      modal_warning_regr_asg : false,
-      bast_number_regr : null,
+      reason_cancel: "No Reason",
+      modal_warning_regr_asg: false,
+      bast_number_regr: null,
     };
     this.notifyASP = this.notifyASP.bind(this);
     this.saveBastNumber = this.saveBastNumber.bind(this);
@@ -138,7 +138,7 @@ class AssignmentDetail extends Component {
 
   toggleDropdown(i) {
     const newArray = this.state.dropdownOpen.map((element, index) => {
-      return (index === i ? !element : false);
+      return index === i ? !element : false;
     });
     this.setState({
       dropdownOpen: newArray,
@@ -146,20 +146,20 @@ class AssignmentDetail extends Component {
   }
 
   toggleLoading() {
-    this.setState(prevState => ({
-      modal_loading: !prevState.modal_loading
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
     }));
   }
 
   toggleWarningCancelASG(e) {
-    this.setState(prevState => ({
-      modal_warning_cancel_asg: !prevState.modal_warning_cancel_asg
+    this.setState((prevState) => ({
+      modal_warning_cancel_asg: !prevState.modal_warning_cancel_asg,
     }));
   }
 
   toggleWarningReviseASG(e) {
-    this.setState(prevState => ({
-      modal_warning_revise_asg: !prevState.modal_warning_revise_asg
+    this.setState((prevState) => ({
+      modal_warning_revise_asg: !prevState.modal_warning_revise_asg,
     }));
   }
 
@@ -205,7 +205,7 @@ class AssignmentDetail extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -224,12 +224,16 @@ class AssignmentDetail extends Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.post(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Post data", respond);
       }
@@ -270,12 +274,16 @@ class AssignmentDetail extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Patch data", respond);
       }
@@ -297,7 +305,7 @@ class AssignmentDetail extends Component {
     this.getDataFromAPINODE("/aspAssignment/aspassign/" + _id_Assignment).then(
       (resAsg) => {
         if (resAsg.data !== undefined) {
-          this.getSIDNumber(resAsg.data.data.cust_del.map(cd => cd.cd_id));
+          this.getSIDNumber(resAsg.data.data.cust_del.map((cd) => cd.cd_id));
           this.setState({ data_assignment: resAsg.data.data });
         }
       }
@@ -309,37 +317,52 @@ class AssignmentDetail extends Component {
     const maxPage = 1;
     let dataSID = [];
     let dataABD = [];
-    for(let i = 0; i < arrayCDID.length; i++){
+    for (let i = 0; i < arrayCDID.length; i++) {
       let filter_array = [];
-      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"cust_del.cd_id":"' + arrayCDID[i] + '"');
       filter_array.push('"type" : {"$ne" : "ABD"}');
       let whereAnd = "{" + filter_array.join(",") + "}";
-      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
-      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
-        dataSID.push(res.data.data[0])
+      const res = await this.getDataFromAPINODE(
+        "/sidFile?srt=_id:-1&q=" + whereAnd + "&lmt=" + maxPage + "&pg=" + page
+      );
+      if (
+        res.data !== undefined &&
+        res.data.data !== undefined &&
+        res.data.data.length !== 0
+      ) {
+        dataSID.push(res.data.data[0]);
       }
     }
-    for(let i = 0; i < arrayCDID.length; i++){
+    for (let i = 0; i < arrayCDID.length; i++) {
       let filter_array = [];
-      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"cust_del.cd_id":"' + arrayCDID[i] + '"');
       filter_array.push('"type" : "ABD"');
       let whereAnd = "{" + filter_array.join(",") + "}";
-      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
-      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
-        dataABD.push(res.data.data[0])
+      const res = await this.getDataFromAPINODE(
+        "/sidFile?srt=_id:-1&q=" + whereAnd + "&lmt=" + maxPage + "&pg=" + page
+      );
+      if (
+        res.data !== undefined &&
+        res.data.data !== undefined &&
+        res.data.data.length !== 0
+      ) {
+        dataABD.push(res.data.data[0]);
       }
     }
-    this.setState({sid_file : dataSID, abd_file : dataABD});
+    this.setState({ sid_file: dataSID, abd_file: dataABD });
   }
 
   handleBastAssign = (e) => {
     const name = e.target.name;
     let value = e.target.value;
-    this.setState((prevState) => ({
-      bast_assign_form: prevState.bast_assign_form.set(name, value),
-    }), () => {
-      console.log("bast_assign_form", this.state.bast_assign_form);
-    });
+    this.setState(
+      (prevState) => ({
+        bast_assign_form: prevState.bast_assign_form.set(name, value),
+      }),
+      () => {
+        console.log("bast_assign_form", this.state.bast_assign_form);
+      }
+    );
   };
 
   loading = () => (
@@ -368,16 +391,33 @@ class AssignmentDetail extends Component {
     );
     if (res !== undefined) {
       if (res.data !== undefined) {
-        let linkImp = "https://bam-id.e-dpm.com/assignment-detail-asp/"+_id;
-        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment need to be approved by "+dataAssignment.Vendor_Name+", <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is notified by "+this.state.userEmail+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail-asp/" + _id;
+        const bodyEmail =
+          "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment need to be approved by " +
+          dataAssignment.Vendor_Name +
+          ", <br/><br/><i>Site</i>: <b>" +
+          dataAssignment.Site_ID +
+          "</b> <br/><i>Project</i>: <b>" +
+          dataAssignment.Project +
+          "</b><br/><i>Assignment</i>: <b>" +
+          dataAssignment.Assignment_No +
+          "</b><br/><br/>is notified by " +
+          this.state.userEmail +
+          ".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='" +
+          linkImp +
+          "'>" +
+          linkImp +
+          "</a>";
         // let name_vendor = this.state.data_assignment.Vendor_Name;
         this.getASPListEmail(dataAssignment.Vendor_Code);
         let dataEmail = {
-          "to": this.state.vendor_email,
+          to: this.state.vendor_email,
           // "to" : "damar.pramuditya@ericsson.com",
-          "subject":"[Assignment Need Approval from ASP] Assignment "+dataAssignment.Assignment_No,
-          "body": bodyEmail
-        }
+          subject:
+            "[Assignment Need Approval from ASP] Assignment " +
+            dataAssignment.Assignment_No,
+          body: bodyEmail,
+        };
         const sendEmail = await apiSendEmail(dataEmail);
         this.setState({ action_status: "success" });
       } else {
@@ -491,16 +531,16 @@ class AssignmentDetail extends Component {
       Project: dataAssignment.Project,
       SOW_Type: dataAssignment.SOW_Type,
       BAST_No: formBast.get("bast_no"),
-      GR_Type : formBast.get("gr_type"),
+      GR_Type: formBast.get("gr_type"),
       Payment_Terms: dataAssignment.Payment_Terms,
       //Persen
-      Payment_Terms_Ratio: (formBast.get("ratio")*100).toString()+"%",
+      Payment_Terms_Ratio: (formBast.get("ratio") * 100).toString() + "%",
       //Float
       GR_Percentage: formBast.get("ratio"),
       PO_Number: dataAssignment.PO_Number,
       PO_Item: dataAssignment.PO_Item,
       Item_Status: formBast.get("item_status"),
-      Requestor:this.state.userName,
+      Requestor: this.state.userName,
     };
     let assignBast = {
       account_id: null,
@@ -660,7 +700,7 @@ class AssignmentDetail extends Component {
       asp_selected["Vendor_Email"] = asp_name.Email;
       asp_selected["Vendor_Name"] = asp_name.Name;
     }
-    this.setState({ data_assignment: asp_selected, vendor_id : asp_name._id});
+    this.setState({ data_assignment: asp_selected, vendor_id: asp_name._id });
   }
 
   handleChangeTOP(e) {
@@ -704,7 +744,7 @@ class AssignmentDetail extends Component {
   }
 
   getASPListEmail(_id) {
-    this.getDataFromAPIEXEL("/vendor_data_non_page/"+ _id).then((res) => {
+    this.getDataFromAPIEXEL("/vendor_data_non_page/" + _id).then((res) => {
       // this.getDataFromAPIEXEL("/vendor_data_non_page/5e9ddd1203748a2f02b1fa63").then((res) => {
       if (res.data !== undefined) {
         const items = res.data.Email;
@@ -740,7 +780,7 @@ class AssignmentDetail extends Component {
   };
 
   async updateSSOWList() {
-    this.setState({modal_warning_revise_asg : false});
+    this.setState({ modal_warning_revise_asg: false });
     this.toggleLoading();
     const data_assingment = this.state.data_assignment;
 
@@ -800,13 +840,16 @@ class AssignmentDetail extends Component {
       respondCheckingASG.status <= 300
     ) {
       let dataChecking = respondCheckingASG.data.data;
-      if (dataChecking[0].operation === "INVALID" || dataChecking[0].update_status === false) {
-        if(dataChecking[0].update_status === false){
+      if (
+        dataChecking[0].operation === "INVALID" ||
+        dataChecking[0].update_status === false
+      ) {
+        if (dataChecking[0].update_status === false) {
           this.setState({
             action_status: "failed",
             action_message: dataChecking[0].update_status_note,
           });
-        }else{
+        } else {
           this.setState({
             action_status: "failed",
             action_message: dataChecking[0].activity_status,
@@ -824,26 +867,46 @@ class AssignmentDetail extends Component {
         ) {
           this.setState({ action_status: "success" });
         } else {
-          if (respondSaveASG.response !== undefined && respondSaveASG.response.data !== undefined && respondSaveASG.response.data.error !== undefined) {
+          if (
+            respondSaveASG.response !== undefined &&
+            respondSaveASG.response.data !== undefined &&
+            respondSaveASG.response.data.error !== undefined
+          ) {
             if (respondSaveASG.response.data.error.message !== undefined) {
-              this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error.message });
+              this.setState({
+                action_status: "failed",
+                action_message: respondSaveASG.response.data.error.message,
+              });
             } else {
-              this.setState({ action_status: 'failed', action_message: respondSaveASG.response.data.error });
+              this.setState({
+                action_status: "failed",
+                action_message: respondSaveASG.response.data.error,
+              });
             }
           } else {
-            this.setState({ action_status: 'failed' });
+            this.setState({ action_status: "failed" });
           }
         }
       }
     } else {
-      if (respondCheckingASG.response !== undefined && respondCheckingASG.response.data !== undefined && respondCheckingASG.response.data.error !== undefined) {
+      if (
+        respondCheckingASG.response !== undefined &&
+        respondCheckingASG.response.data !== undefined &&
+        respondCheckingASG.response.data.error !== undefined
+      ) {
         if (respondCheckingASG.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: respondCheckingASG.response.data.error.message });
+          this.setState({
+            action_status: "failed",
+            action_message: respondCheckingASG.response.data.error.message,
+          });
         } else {
-          this.setState({ action_status: 'failed', action_message: respondCheckingASG.response.data.error });
+          this.setState({
+            action_status: "failed",
+            action_message: respondCheckingASG.response.data.error,
+          });
         }
       } else {
-        this.setState({ action_status: 'failed' });
+        this.setState({ action_status: "failed" });
       }
     }
     this.toggleLoading();
@@ -880,23 +943,38 @@ class AssignmentDetail extends Component {
     const _etag = e.target.value;
     const _id = e.target.id;
     let creatorEmail = null;
-    let creator = dataAssignment.ASP_Assignment_Status.find(e => e.status_value === "CREATED" && e.status_name === "ASP_ASSIGNMENT");
-    if(creator !== undefined){
+    let creator = dataAssignment.ASP_Assignment_Status.find(
+      (e) => e.status_value === "CREATED" && e.status_name === "ASP_ASSIGNMENT"
+    );
+    if (creator !== undefined) {
       creatorEmail = creator.status_updater;
     }
     let res = await this.patchDatatoAPINODE("/aspAssignment/pmApproval/" + _id);
     if (res !== undefined) {
       if (res.data !== undefined) {
-        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
-        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment approved by PM "+this.state.userEmail+", <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/" + _id;
+        const bodyEmail =
+          "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment approved by PM " +
+          this.state.userEmail +
+          ", <br/><br/><i>Site</i>: <b>" +
+          dataAssignment.Site_ID +
+          "</b> <br/><i>Project</i>: <b>" +
+          dataAssignment.Project +
+          "</b><br/><i>Assignment</i>: <b>" +
+          dataAssignment.Assignment_No +
+          ".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='" +
+          linkImp +
+          "'>" +
+          linkImp +
+          "</a>";
         let dataEmail = {
-          "to": creatorEmail,
+          to: creatorEmail,
           // "to": "damar.pramuditya@ericsson.com",
-          "subject":"[APPROVED ASG] Assignment "+dataAssignment.Assignment_No,
-          "body": bodyEmail
-        }
+          subject: "[APPROVED ASG] Assignment " + dataAssignment.Assignment_No,
+          body: bodyEmail,
+        };
         // let sendEmail = await apiSendEmail(dataEmail);
-        console.log(dataEmail)
+        console.log(dataEmail);
         this.setState({ action_status: "success" });
       } else {
         this.setState({ action_status: "failed" });
@@ -907,45 +985,98 @@ class AssignmentDetail extends Component {
   }
 
   async CancelASG(e) {
-    this.setState({modal_warning_cancel_asg : false});
+    this.setState({ modal_warning_cancel_asg: false });
     this.toggleLoading();
     const newDate = new Date();
-    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
+    const dateNow =
+      newDate.getFullYear() +
+      "-" +
+      (newDate.getMonth() + 1) +
+      "-" +
+      newDate.getDate() +
+      " " +
+      newDate.getHours() +
+      ":" +
+      newDate.getMinutes() +
+      ":" +
+      newDate.getSeconds();
     const _id = e.target.id;
     const dataAssignment = this.state.data_assignment;
-    let res = await this.patchDatatoAPINODE('/aspAssignment/requestCancelation', { "assignmentId": [dataAssignment._id], "reason" : this.state.reason_cancel });
+    let res = await this.patchDatatoAPINODE(
+      "/aspAssignment/requestCancelation",
+      { assignmentId: [dataAssignment._id], reason: this.state.reason_cancel }
+    );
     if (res !== undefined) {
       if (res.data !== undefined) {
-        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
-        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been requested for Cancel by "+this.state.userEmail+", <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for reschedule by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.reschedule_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/" + _id;
+        const bodyEmail =
+          "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been requested for Cancel by " +
+          this.state.userEmail +
+          ", <br/><br/><i>Site</i>: <b>" +
+          dataAssignment.Site_ID +
+          "</b> <br/><i>Project</i>: <b>" +
+          dataAssignment.Project +
+          "</b><br/><i>Assignment</i>: <b>" +
+          dataAssignment.Assignment_No +
+          "</b><br/><br/>is requested for reschedule by " +
+          this.state.userEmail +
+          ".</span><br/><i>Note from ASP</i>: <b>" +
+          this.state.reschedule_note +
+          "</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='" +
+          linkImp +
+          "'>" +
+          linkImp +
+          "</a>";
         let dataEmail = {
           // "to": creatorEmail,
           // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
-          "subject":"[Cancellation Approval] Assignment "+dataAssignment.Assignment_No,
-          "body": bodyEmail
-        }
+          subject:
+            "[Cancellation Approval] Assignment " +
+            dataAssignment.Assignment_No,
+          body: bodyEmail,
+        };
         // let sendEmail = await this.apiSendEmail(dataEmail);
-        this.setState({ action_status: "success" })
+        this.setState({ action_status: "success" });
       } else {
-        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-          if(res.response.data.error.message !== undefined){
-            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-          }else{
-            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        if (
+          res.response !== undefined &&
+          res.response.data !== undefined &&
+          res.response.data.error !== undefined
+        ) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error.message,
+            });
+          } else {
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error,
+            });
           }
-        }else{
-          this.setState({ action_status: 'failed' });
+        } else {
+          this.setState({ action_status: "failed" });
         }
       }
     } else {
-      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-        if(res.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-        }else{
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error.message,
+          });
+        } else {
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error,
+          });
         }
-      }else{
-        this.setState({ action_status: 'failed' });
+      } else {
+        this.setState({ action_status: "failed" });
       }
     }
     this.toggleLoading();
@@ -954,42 +1085,94 @@ class AssignmentDetail extends Component {
   async ApproveCancelASG(e) {
     this.toggleLoading();
     const newDate = new Date();
-    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
+    const dateNow =
+      newDate.getFullYear() +
+      "-" +
+      (newDate.getMonth() + 1) +
+      "-" +
+      newDate.getDate() +
+      " " +
+      newDate.getHours() +
+      ":" +
+      newDate.getMinutes() +
+      ":" +
+      newDate.getSeconds();
     const _id = e.target.id;
     const dataAssignment = this.state.data_assignment;
-    let res = await this.patchDatatoAPINODE('/aspAssignment/approveCancelation', { "assignmentId": [_id] });
+    let res = await this.patchDatatoAPINODE(
+      "/aspAssignment/approveCancelation",
+      { assignmentId: [_id] }
+    );
     if (res !== undefined) {
       if (res.data !== undefined) {
-        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
-        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been Approve for Cancel by "+this.state.userEmail+", <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for reschedule by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.reschedule_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/" + _id;
+        const bodyEmail =
+          "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been Approve for Cancel by " +
+          this.state.userEmail +
+          ", <br/><br/><i>Site</i>: <b>" +
+          dataAssignment.Site_ID +
+          "</b> <br/><i>Project</i>: <b>" +
+          dataAssignment.Project +
+          "</b><br/><i>Assignment</i>: <b>" +
+          dataAssignment.Assignment_No +
+          "</b><br/><br/>is requested for reschedule by " +
+          this.state.userEmail +
+          ".</span><br/><i>Note from ASP</i>: <b>" +
+          this.state.reschedule_note +
+          "</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='" +
+          linkImp +
+          "'>" +
+          linkImp +
+          "</a>";
         let dataEmail = {
           // "to": creatorEmail,
           // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
-          "subject":"[Approve Cancellation] Assignment "+dataAssignment.Assignment_No,
-          "body": bodyEmail
-        }
+          subject:
+            "[Approve Cancellation] Assignment " + dataAssignment.Assignment_No,
+          body: bodyEmail,
+        };
         // let sendEmail = await this.apiSendEmail(dataEmail);
-        this.setState({ action_status: "success" })
+        this.setState({ action_status: "success" });
       } else {
-        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-          if(res.response.data.error.message !== undefined){
-            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-          }else{
-            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        if (
+          res.response !== undefined &&
+          res.response.data !== undefined &&
+          res.response.data.error !== undefined
+        ) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error.message,
+            });
+          } else {
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error,
+            });
           }
-        }else{
-          this.setState({ action_status: 'failed' });
+        } else {
+          this.setState({ action_status: "failed" });
         }
       }
     } else {
-      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-        if(res.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-        }else{
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error.message,
+          });
+        } else {
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error,
+          });
         }
-      }else{
-        this.setState({ action_status: 'failed' });
+      } else {
+        this.setState({ action_status: "failed" });
       }
     }
     this.toggleLoading();
@@ -998,42 +1181,94 @@ class AssignmentDetail extends Component {
   async RejectCancelASG(e) {
     this.toggleLoading();
     const newDate = new Date();
-    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
+    const dateNow =
+      newDate.getFullYear() +
+      "-" +
+      (newDate.getMonth() + 1) +
+      "-" +
+      newDate.getDate() +
+      " " +
+      newDate.getHours() +
+      ":" +
+      newDate.getMinutes() +
+      ":" +
+      newDate.getSeconds();
     const _id = e.target.id;
     const dataAssignment = this.state.data_assignment;
-    let res = await this.patchDatatoAPINODE('/aspAssignment/rejectCancelation', { "assignmentId": [_id] });
+    let res = await this.patchDatatoAPINODE(
+      "/aspAssignment/rejectCancelation",
+      { assignmentId: [_id] }
+    );
     if (res !== undefined) {
       if (res.data !== undefined) {
-        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
-        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been Reject for Cancel by "+this.state.userEmail+", <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+"</b><br/><br/>is requested for reschedule by "+this.state.userEmail+".</span><br/><i>Note from ASP</i>: <b>"+this.state.reschedule_note+"</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/" + _id;
+        const bodyEmail =
+          "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assignment has been Reject for Cancel by " +
+          this.state.userEmail +
+          ", <br/><br/><i>Site</i>: <b>" +
+          dataAssignment.Site_ID +
+          "</b> <br/><i>Project</i>: <b>" +
+          dataAssignment.Project +
+          "</b><br/><i>Assignment</i>: <b>" +
+          dataAssignment.Assignment_No +
+          "</b><br/><br/>is requested for reschedule by " +
+          this.state.userEmail +
+          ".</span><br/><i>Note from ASP</i>: <b>" +
+          this.state.reschedule_note +
+          "</b><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='" +
+          linkImp +
+          "'>" +
+          linkImp +
+          "</a>";
         let dataEmail = {
           // "to": creatorEmail,
           // "to" : "a.rakha.ahmad.taufiq@ericsson.com",
-          "subject":"[Reject Cancellation] Assignment "+dataAssignment.Assignment_No,
-          "body": bodyEmail
-        }
+          subject:
+            "[Reject Cancellation] Assignment " + dataAssignment.Assignment_No,
+          body: bodyEmail,
+        };
         // let sendEmail = await this.apiSendEmail(dataEmail);
-        this.setState({ action_status: "success" })
+        this.setState({ action_status: "success" });
       } else {
-        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-          if(res.response.data.error.message !== undefined){
-            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-          }else{
-            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+        if (
+          res.response !== undefined &&
+          res.response.data !== undefined &&
+          res.response.data.error !== undefined
+        ) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error.message,
+            });
+          } else {
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error,
+            });
           }
-        }else{
-          this.setState({ action_status: 'failed' });
+        } else {
+          this.setState({ action_status: "failed" });
         }
       }
     } else {
-      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-        if(res.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-        }else{
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error.message,
+          });
+        } else {
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error,
+          });
         }
-      }else{
-        this.setState({ action_status: 'failed' });
+      } else {
+        this.setState({ action_status: "failed" });
       }
     }
     this.toggleLoading();
@@ -1061,19 +1296,32 @@ class AssignmentDetail extends Component {
     this.setState({ reschedule_note: value });
   }
 
-  async ResyncNNandACT(e){
-    const dataPatch = await this.patchDatatoAPINODE('/aspAssignment/resyncNnActCodePdb/'+this.state.data_assignment._id, {})
-    if(dataPatch !== undefined && dataPatch.data !== undefined){
-      this.setState({action_status : 'success'});
-    }else{
-      if (dataPatch.response !== undefined && dataPatch.response.data !== undefined && dataPatch.response.data.error !== undefined) {
+  async ResyncNNandACT(e) {
+    const dataPatch = await this.patchDatatoAPINODE(
+      "/aspAssignment/resyncNnActCodePdb/" + this.state.data_assignment._id,
+      {}
+    );
+    if (dataPatch !== undefined && dataPatch.data !== undefined) {
+      this.setState({ action_status: "success" });
+    } else {
+      if (
+        dataPatch.response !== undefined &&
+        dataPatch.response.data !== undefined &&
+        dataPatch.response.data.error !== undefined
+      ) {
         if (dataPatch.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: dataPatch.response.data.error.message });
+          this.setState({
+            action_status: "failed",
+            action_message: dataPatch.response.data.error.message,
+          });
         } else {
-          this.setState({ action_status: 'failed', action_message: dataPatch.response.data.error });
+          this.setState({
+            action_status: "failed",
+            action_message: dataPatch.response.data.error,
+          });
         }
       } else {
-        this.setState({ action_status: 'failed' });
+        this.setState({ action_status: "failed" });
       }
     }
   }
@@ -1081,84 +1329,146 @@ class AssignmentDetail extends Component {
   async RevisePRPO(e) {
     this.toggleLoading();
     const newDate = new Date();
-    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
+    const dateNow =
+      newDate.getFullYear() +
+      "-" +
+      (newDate.getMonth() + 1) +
+      "-" +
+      newDate.getDate() +
+      " " +
+      newDate.getHours() +
+      ":" +
+      newDate.getMinutes() +
+      ":" +
+      newDate.getSeconds();
     const _id = e.target.id;
     const dataAssignment = this.state.data_assignment;
-    let res = await this.patchDatatoAPINODE('/aspAssignment/revisePrPoAssignment/'+this.props.match.params.id, {});
+    let res = await this.patchDatatoAPINODE(
+      "/aspAssignment/revisePrPoAssignment/" + this.props.match.params.id,
+      {}
+    );
     if (res !== undefined && res.data !== undefined) {
-      this.setState({action_status : 'success'});
+      this.setState({ action_status: "success" });
     } else {
-      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-        if(res.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-        }else{
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error.message,
+          });
+        } else {
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error,
+          });
         }
-      }else{
-        this.setState({ action_status: 'failed' });
+      } else {
+        this.setState({ action_status: "failed" });
       }
     }
     this.toggleLoading();
   }
 
   getSIDFile = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     e.persist();
     const _id = e.currentTarget.value;
-    const dataSID = this.state.sid_file.find(sf => sf._id === _id);
-    if(dataSID !== undefined)  {
-      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
-      if(resFile !== undefined){
-        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+    const dataSID = this.state.sid_file.find((sf) => sf._id === _id);
+    if (dataSID !== undefined) {
+      const resFile = await getDatafromAPINODEFile(
+        "/sidFile/getDocument/" + _id,
+        this.props.dataLogin.token,
+        dataSID.file_document.mime_type
+      );
+      if (resFile !== undefined) {
+        saveAs(
+          new Blob([resFile.data], { type: dataSID.file_document.mime_type }),
+          dataSID.file_document.file_name
+        );
       }
     }
-  }
+  };
 
   getABDFile = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     e.persist();
     const _id = e.currentTarget.value;
-    const dataSID = this.state.abd_file.find(sf => sf._id === _id);
-    if(dataSID !== undefined)  {
-      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
-      if(resFile !== undefined){
-        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+    const dataSID = this.state.abd_file.find((sf) => sf._id === _id);
+    if (dataSID !== undefined) {
+      const resFile = await getDatafromAPINODEFile(
+        "/sidFile/getDocument/" + _id,
+        this.props.dataLogin.token,
+        dataSID.file_document.mime_type
+      );
+      if (resFile !== undefined) {
+        saveAs(
+          new Blob([resFile.data], { type: dataSID.file_document.mime_type }),
+          dataSID.file_document.file_name
+        );
       }
     }
-  }
+  };
 
-  handleChangeReasonCancel(e){
-    this.setState({reason_cancel : e.target.value})
+  handleChangeReasonCancel(e) {
+    this.setState({ reason_cancel: e.target.value });
   }
 
   toggleWarningREGRASG(e) {
-    if(e !== undefined){
-      this.setState({bast_number_regr : e.currentTarget.value});
+    if (e !== undefined) {
+      this.setState({ bast_number_regr: e.currentTarget.value });
     }
-    this.setState(prevState => ({
-      modal_warning_regr_asg: !prevState.modal_warning_regr_asg
+    this.setState((prevState) => ({
+      modal_warning_regr_asg: !prevState.modal_warning_regr_asg,
     }));
   }
 
   async ReGRASG(e) {
-    this.setState({modal_warning_regr_asg : false});
+    this.setState({ modal_warning_regr_asg: false });
     this.toggleLoading();
     const newDate = new Date();
-    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
+    const dateNow =
+      newDate.getFullYear() +
+      "-" +
+      (newDate.getMonth() + 1) +
+      "-" +
+      newDate.getDate() +
+      " " +
+      newDate.getHours() +
+      ":" +
+      newDate.getMinutes() +
+      ":" +
+      newDate.getSeconds();
     const _id = e.target.id;
     const dataAssignment = this.state.data_assignment;
-    let res = await this.patchDatatoAPINODE('/aspAssignment/reviseGR/'+dataAssignment._id, { "bastNumber": [this.state.bast_number_regr]});
+    let res = await this.patchDatatoAPINODE(
+      "/aspAssignment/reviseGR/" + dataAssignment._id,
+      { bastNumber: [this.state.bast_number_regr] }
+    );
     if (res !== undefined && res.data !== undefined) {
-      this.setState({action_status: 'success'});
+      this.setState({ action_status: "success" });
     } else {
-      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-        if(res.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-        }else{
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error.message,
+          });
+        } else {
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error,
+          });
         }
-      }else{
-        this.setState({ action_status: 'failed' });
+      } else {
+        this.setState({ action_status: "failed" });
       }
     }
     this.toggleLoading();
@@ -1202,37 +1512,81 @@ class AssignmentDetail extends Component {
                     ></i>
                     Assignment Format
                   </Button>
-                  {(this.state.userRole.findIndex(e => e === "Admin") !== -1 && (this.state.data_assignment.Locked_For_Revision === undefined || this.state.data_assignment.Locked_For_Revision === false)) && (
-                    <Button
-                      style={{ marginRight: "8px", float: "right" }}
-                      outline
-                      color="secondary"
+                  {this.state.userRole.findIndex((e) => e === "Admin") !== -1 &&
+                    (this.state.data_assignment.Locked_For_Revision ===
+                      undefined ||
+                      this.state.data_assignment.Locked_For_Revision ===
+                        false) && (
+                      <Button
+                        style={{ marginRight: "8px", float: "right" }}
+                        outline
+                        color="secondary"
+                        size="sm"
+                        onClick={this.ResyncNNandACT}
+                        size="sm"
+                      >
+                        <i
+                          class="fa fa-refresh"
+                          aria-hidden="true"
+                          style={{ marginRight: "8px" }}
+                        ></i>
+                        Resync NN and ACT Code
+                      </Button>
+                    )}
+                  {this.state.sid_file.length !== 0 ||
+                  this.state.abd_file.length !== 0 ? (
+                    <Dropdown
                       size="sm"
-                      onClick={this.ResyncNNandACT}
-                      size="sm"
+                      isOpen={this.state.dropdownOpen[1]}
+                      toggle={() => {
+                        this.toggleDropdown(1);
+                      }}
+                      style={{ float: "right", marginRight: "10px" }}
                     >
-                      <i class="fa fa-refresh" aria-hidden="true" style={{ marginRight: "8px" }}></i>
-                      Resync NN and ACT Code
-                    </Button>
-                  )}
-                  {(this.state.sid_file.length !== 0 || this.state.abd_file.length !== 0) ? (
-                    <Dropdown size="sm" isOpen={this.state.dropdownOpen[1]} toggle={() => {this.toggleDropdown(1);}} style={{float : 'right', marginRight : '10px'}}>
                       <DropdownToggle caret color="secondary">
-                        <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download SID File
+                        <i className="fa fa-download" aria-hidden="true">
+                          {" "}
+                          &nbsp;{" "}
+                        </i>
+                        Download SID File
                       </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>SID File</DropdownItem>
-                        {this.state.sid_file.map(sf =>
-                          <DropdownItem value={sf._id} onClick={this.getSIDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
-                        )}
+                        {this.state.sid_file.map((sf) => (
+                          <DropdownItem
+                            value={sf._id}
+                            onClick={this.getSIDFile}
+                          >
+                            <span>{sf.file_document.file_name}</span> (
+                            {sf.cust_del[0].cd_id})
+                          </DropdownItem>
+                        ))}
                         <DropdownItem header>ABD File</DropdownItem>
-                        {(this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && this.state.abd_file.map(sf =>
-                          <DropdownItem value={sf._id} onClick={this.getABDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
-                        )}
+                        {this.state.userRole.findIndex(
+                          (e) => e === "BAM-ASP Management"
+                        ) === -1 &&
+                          this.state.userRole.findIndex(
+                            (e) => e === "BAM-ASP"
+                          ) === -1 &&
+                          this.state.userRole.findIndex(
+                            (e) => e === "BAM-ASPWarehouse"
+                          ) === -1 &&
+                          this.state.abd_file.map((sf) => (
+                            <DropdownItem
+                              value={sf._id}
+                              onClick={this.getABDFile}
+                            >
+                              <span>{sf.file_document.file_name}</span> (
+                              {sf.cust_del[0].cd_id})
+                            </DropdownItem>
+                          ))}
                       </DropdownMenu>
                     </Dropdown>
                   ) : (
-                    <Button size="sm" style={{float : 'right', marginRight : '10px'}}>
+                    <Button
+                      size="sm"
+                      style={{ float: "right", marginRight: "10px" }}
+                    >
                       no data SID or ABD
                     </Button>
                   )}
@@ -1316,16 +1670,16 @@ class AssignmentDetail extends Component {
                       </Col>
                       {this.state.data_assignment.Current_Status ===
                       "ASP ASSIGNMENT NEED REVISION" ? (
-                          <Col md="6">
-                            <FormGroup style={{ paddingLeft: "16px" }}>
-                              <Label>Notes</Label>
-                              <Input
-                                type="text"
-                                readOnly
-                                value={this.state.data_assignment.notes}
-                              ></Input>
-                            </FormGroup>
-                          </Col>
+                        <Col md="6">
+                          <FormGroup style={{ paddingLeft: "16px" }}>
+                            <Label>Notes</Label>
+                            <Input
+                              type="text"
+                              readOnly
+                              value={this.state.data_assignment.notes}
+                            ></Input>
+                          </FormGroup>
+                        </Col>
                       ) : (
                         ""
                       )}
@@ -1337,14 +1691,25 @@ class AssignmentDetail extends Component {
                           <Input type="textarea" readOnly value={this.state.data_assignment.Assignment_Remark} ></Input>
                         </FormGroup>
                       </Col> */}
-                      {(this.state.data_assignment.Cancelation_Reason !== undefined && this.state.data_assignment.Cancelation_Reason !== null && this.state.data_assignment.Cancelation_Reason.length !== 0) && (
-                        <Col md="6">
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>Cancel Remark</Label>
-                            <Input type="textarea" readOnly value={this.state.data_assignment.Cancelation_Reason} ></Input>
-                          </FormGroup>
-                        </Col>
-                      )}
+                      {this.state.data_assignment.Cancelation_Reason !==
+                        undefined &&
+                        this.state.data_assignment.Cancelation_Reason !==
+                          null &&
+                        this.state.data_assignment.Cancelation_Reason.length !==
+                          0 && (
+                          <Col md="6">
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>Cancel Remark</Label>
+                              <Input
+                                type="textarea"
+                                readOnly
+                                value={
+                                  this.state.data_assignment.Cancelation_Reason
+                                }
+                              ></Input>
+                            </FormGroup>
+                          </Col>
+                        )}
                     </Row>
                     <h5 style={{ marginTop: "16px" }}>PROJECT</h5>
                     <Row>
@@ -1571,13 +1936,39 @@ class AssignmentDetail extends Component {
                       <Col md="6">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Assignment Accepted by</Label>
-                          <Input type="text" name="pr" readOnly value={this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED") !== undefined ? this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED").status_updater : null} />
+                          <Input
+                            type="text"
+                            name="pr"
+                            readOnly
+                            value={
+                              this.state.data_assignment.ASP_Assignment_Status.find(
+                                (st) => st.status_value === "ACCEPTED"
+                              ) !== undefined
+                                ? this.state.data_assignment.ASP_Assignment_Status.find(
+                                    (st) => st.status_value === "ACCEPTED"
+                                  ).status_updater
+                                : null
+                            }
+                          />
                         </FormGroup>
                       </Col>
                       <Col md="3">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Assignment Accepted On</Label>
-                          <Input type="text" name="pr_created_by" value={this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED") !== undefined ? this.state.data_assignment.ASP_Assignment_Status.find(st => st.status_value === "ACCEPTED").status_date.slice(0, 10) : null} readOnly />
+                          <Input
+                            type="text"
+                            name="pr_created_by"
+                            value={
+                              this.state.data_assignment.ASP_Assignment_Status.find(
+                                (st) => st.status_value === "ACCEPTED"
+                              ) !== undefined
+                                ? this.state.data_assignment.ASP_Assignment_Status.find(
+                                    (st) => st.status_value === "ACCEPTED"
+                                  ).status_date.slice(0, 10)
+                                : null
+                            }
+                            readOnly
+                          />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -1596,13 +1987,35 @@ class AssignmentDetail extends Component {
                       <Col md="4">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Created By</Label>
-                          <Input type="text" name="pr_created_by" value={this.state.data_assignment.PR_For_ASP_Creator} readOnly />
+                          <Input
+                            type="text"
+                            name="pr_created_by"
+                            value={
+                              this.state.data_assignment.PR_For_ASP_Creator
+                            }
+                            readOnly
+                          />
                         </FormGroup>
                       </Col>
                       <Col md="4">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Created On</Label>
-                          <Input type="date" name="pr_created_on" value={this.state.data_assignment.PR_For_ASP_Date !== null && this.state.data_assignment.PR_For_ASP_Date !== undefined ? this.state.data_assignment.PR_For_ASP_Date.slice(0,10) : null} readOnly />
+                          <Input
+                            type="date"
+                            name="pr_created_on"
+                            value={
+                              this.state.data_assignment.PR_For_ASP_Date !==
+                                null &&
+                              this.state.data_assignment.PR_For_ASP_Date !==
+                                undefined
+                                ? this.state.data_assignment.PR_For_ASP_Date.slice(
+                                    0,
+                                    10
+                                  )
+                                : null
+                            }
+                            readOnly
+                          />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -1621,13 +2034,31 @@ class AssignmentDetail extends Component {
                       <Col md="4">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Created By</Label>
-                          <Input type="text" name="po_created_by" value={this.state.data_assignment.PO_Creator} readOnly />
+                          <Input
+                            type="text"
+                            name="po_created_by"
+                            value={this.state.data_assignment.PO_Creator}
+                            readOnly
+                          />
                         </FormGroup>
                       </Col>
                       <Col md="4">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Created On</Label>
-                          <Input type="date" name="po_created_on" value={this.state.data_assignment.PO_Date !== null && this.state.data_assignment.PO_Date !== undefined ? this.state.data_assignment.PO_Date.slice(0,10) : null} readOnly />
+                          <Input
+                            type="date"
+                            name="po_created_on"
+                            value={
+                              this.state.data_assignment.PO_Date !== null &&
+                              this.state.data_assignment.PO_Date !== undefined
+                                ? this.state.data_assignment.PO_Date.slice(
+                                    0,
+                                    10
+                                  )
+                                : null
+                            }
+                            readOnly
+                          />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -1944,7 +2375,14 @@ class AssignmentDetail extends Component {
                               <tr>
                                 <td>{bast}</td>
                                 <td>
-                                  <Button size="sm" color="success" style={{ float: "right" }} id={this.state.data_assignment._id} value={bast} onClick={this.toggleWarningREGRASG} >
+                                  <Button
+                                    size="sm"
+                                    color="success"
+                                    style={{ float: "right" }}
+                                    id={this.state.data_assignment._id}
+                                    value={bast}
+                                    onClick={this.toggleWarningREGRASG}
+                                  >
                                     Re-GR
                                   </Button>
                                 </td>
@@ -1961,8 +2399,13 @@ class AssignmentDetail extends Component {
                     "REQUEST PM APPROVAL" ||
                     this.state.data_assignment.Current_Status ===
                       "ASP ASSIGNMENT NEED REVISION" ||
-                    this.state.data_assignment.Current_Status ===
-                      "ASP ASSIGNMENT RE-SCHEDULE" && (this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
+                    (this.state.data_assignment.Current_Status ===
+                      "ASP ASSIGNMENT RE-SCHEDULE" &&
+                      (this.state.userRole.findIndex(
+                        (e) => e === "BAM-Customer Project Manager"
+                      ) !== -1 ||
+                        this.state.userRole.findIndex((e) => e === "Admin") !==
+                          -1))) && (
                     <Button
                       color="success"
                       style={{ float: "right" }}
@@ -1973,39 +2416,61 @@ class AssignmentDetail extends Component {
                       Approve
                     </Button>
                   )}
-                  {(this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT REQUEST FOR CANCELATION" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCEL APPROVED" && this.state.data_assignment.Current_Status !== "ASP ASSIGNMENT CANCELED" && (this.state.data_assignment.SH_Assignment_No !== null || this.state.data_assignment.created_by === this.state.userId || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
-                    <Button
-                      color="danger"
-                      size="sm"
-                      style={{ float: "left" }}
-                      id={this.state.data_assignment._id}
-                      onClick={this.toggleWarningCancelASG}
-                    >
-                      Cancel ASG
-                    </Button>
-                  )}
-                  {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1))&& (
-                    <Button
-                      color="danger"
-                      size="sm"
-                      style={{ float: "left" }}
-                      id={this.state.data_assignment._id}
-                      onClick={this.ApproveCancelASG}
-                    >
-                      Approve Cancellation ASG
-                    </Button>
-                  )}
-                  {(this.state.data_assignment.Current_Status === "ASP ASSIGNMENT REQUEST FOR CANCELATION" && (this.state.userRole.findIndex(e => e === "BAM-Customer Project Manager") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1)) && (
-                    <Button
-                      color="warning"
-                      size="sm"
-                      style={{ float: "left", marginLeft : "10px" }}
-                      id={this.state.data_assignment._id}
-                      onClick={this.RejectCancelASG}
-                    >
-                      Reject Cancellation ASG
-                    </Button>
-                  )}
+                  {this.state.data_assignment.Current_Status !==
+                    "ASP ASSIGNMENT REQUEST FOR CANCELATION" &&
+                    this.state.data_assignment.Current_Status !==
+                      "ASP ASSIGNMENT CANCEL APPROVED" &&
+                    this.state.data_assignment.Current_Status !==
+                      "ASP ASSIGNMENT CANCELED" &&
+                    (this.state.data_assignment.SH_Assignment_No !== null ||
+                      this.state.data_assignment.created_by ===
+                        this.state.userId ||
+                      this.state.userRole.findIndex((e) => e === "Admin") !==
+                        -1) && (
+                      <Button
+                        color="danger"
+                        size="sm"
+                        style={{ float: "left" }}
+                        id={this.state.data_assignment._id}
+                        onClick={this.toggleWarningCancelASG}
+                      >
+                        Cancel ASG
+                      </Button>
+                    )}
+                  {this.state.data_assignment.Current_Status ===
+                    "ASP ASSIGNMENT REQUEST FOR CANCELATION" &&
+                    (this.state.userRole.findIndex(
+                      (e) => e === "BAM-Customer Project Manager"
+                    ) !== -1 ||
+                      this.state.userRole.findIndex((e) => e === "Admin") !==
+                        -1) && (
+                      <Button
+                        color="danger"
+                        size="sm"
+                        style={{ float: "left" }}
+                        id={this.state.data_assignment._id}
+                        onClick={this.ApproveCancelASG}
+                      >
+                        Approve Cancellation ASG
+                      </Button>
+                    )}
+                  {this.state.data_assignment.Current_Status ===
+                    "ASP ASSIGNMENT REQUEST FOR CANCELATION" &&
+                    (this.state.userRole.findIndex(
+                      (e) => e === "BAM-Customer Project Manager"
+                    ) !== -1 ||
+                      this.state.userRole.findIndex((e) => e === "Admin") !==
+                        -1) && (
+                      <Button
+                        color="warning"
+                        size="sm"
+                        style={{ float: "left", marginLeft: "10px" }}
+                        id={this.state.data_assignment._id}
+                        onClick={this.RejectCancelASG}
+                      >
+                        Reject Cancellation ASG
+                      </Button>
+                    )}
                   {this.state.data_assignment.Current_Status ===
                     "PM APPROVE" && (
                     <Button
@@ -2101,11 +2566,28 @@ class AssignmentDetail extends Component {
                       </Modal>
                     </Fragment>
                   )}
-                  {this.state.data_assignment.ASP_Assignment_Status !== undefined && this.state.data_assignment.ASP_Assignment_Status.find(aas => aas.status_value === "ACCEPTED" || aas.status_value === "CANCELED") !== undefined && this.state.data_assignment.ASP_Assignment_Status.find(aas => aas.status_value === "CANCELED") === undefined && (
-                    <Button size="sm" hidden color="success" style={{ float: "right" }} id={this.state.data_assignment._id} value={this.state.data_assignment._etag} onClick={this.RevisePRPO} >
-                      Revise PR PO
-                    </Button>
-                  )}
+                  {this.state.data_assignment.ASP_Assignment_Status !==
+                    undefined &&
+                    this.state.data_assignment.ASP_Assignment_Status.find(
+                      (aas) =>
+                        aas.status_value === "ACCEPTED" ||
+                        aas.status_value === "CANCELED"
+                    ) !== undefined &&
+                    this.state.data_assignment.ASP_Assignment_Status.find(
+                      (aas) => aas.status_value === "CANCELED"
+                    ) === undefined && (
+                      <Button
+                        size="sm"
+                        hidden
+                        color="success"
+                        style={{ float: "right" }}
+                        id={this.state.data_assignment._id}
+                        value={this.state.data_assignment._etag}
+                        onClick={this.RevisePRPO}
+                      >
+                        Revise PR PO
+                      </Button>
+                    )}
                 </CardFooter>
               </Card>
             )}
@@ -2113,38 +2595,65 @@ class AssignmentDetail extends Component {
         </Row>
 
         {/* Modal confirmation Cancel */}
-        <Modal isOpen={this.state.modal_warning_cancel_asg} toggle={this.toggleWarningCancelASG} className={'modal-sm modal-danger ' + this.props.className}>
-          <ModalHeader>
-            Cancel Confirmation
-          </ModalHeader>
+        <Modal
+          isOpen={this.state.modal_warning_cancel_asg}
+          toggle={this.toggleWarningCancelASG}
+          className={"modal-sm modal-danger " + this.props.className}
+        >
+          <ModalHeader>Cancel Confirmation</ModalHeader>
           <ModalBody>
-            <div style={{textAlign : 'center'}}>
+            <div style={{ textAlign: "center" }}>
               This action will cancel this Assignment. Are you sure ?
             </div>
-            <div style={{textAlign : 'center'}}>
-              Please select the reason
-            </div>
-            <div style={{textAlign : 'center'}}>
-              <Input type="select" onChange={this.handleChangeReasonCancel} value={this.state.reason_cancel}>
+            <div style={{ textAlign: "center" }}>Please select the reason</div>
+            <div style={{ textAlign: "center" }}>
+              <Input
+                type="select"
+                onChange={this.handleChangeReasonCancel}
+                value={this.state.reason_cancel}
+              >
                 <option value="No Reason">No Reason</option>
-                <option value="Change Scope of Work">Change Scope of Work</option>
+                <option value="Change Scope of Work">
+                  Change Scope of Work
+                </option>
                 <option value="Change ASP">Change ASP</option>
                 <option value="Drop Site">Drop Site</option>
-                <option value="Change NN ESTA to NN">Change NN ESTA to NN</option>
-                <option value="Change NN between Project">Change NN between Project</option>
-                <option value="Double Assignment (1 ASP --> 2 Assignment)">Double Assignment (1 ASP --> 2 Assignment)</option>
-                <option value="Double Assignment (1 same SOW --> 2 ASP)">Double Assignment (1 same SOW --> 2 ASP)</option>
-                <option value="Change Handle by FSO">Change Handle by FSO</option>
+                <option value="Change NN ESTA to NN">
+                  Change NN ESTA to NN
+                </option>
+                <option value="Change NN between Project">
+                  Change NN between Project
+                </option>
+                <option value="Double Assignment (1 ASP --> 2 Assignment)">
+                  Double Assignment (1 ASP --> 2 Assignment)
+                </option>
+                <option value="Double Assignment (1 same SOW --> 2 ASP)">
+                  Double Assignment (1 same SOW --> 2 ASP)
+                </option>
+                <option value="Change Handle by FSO">
+                  Change Handle by FSO
+                </option>
                 <option value="ASP Discontinued">ASP Discontinued</option>
-                <option value="Purchase Order Expired">Purchase Order Expired</option>
+                <option value="Purchase Order Expired">
+                  Purchase Order Expired
+                </option>
               </Input>
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="secondary" onClick={this.toggleWarningCancelASG} size="sm">
+            <Button
+              color="secondary"
+              onClick={this.toggleWarningCancelASG}
+              size="sm"
+            >
               Close
             </Button>
-            <Button color="danger" onClick={this.CancelASG} value="save" size="sm">
+            <Button
+              color="danger"
+              onClick={this.CancelASG}
+              value="save"
+              size="sm"
+            >
               Yes
             </Button>
           </ModalFooter>
@@ -2152,68 +2661,98 @@ class AssignmentDetail extends Component {
         {/* Modal confirmation Cancel */}
 
         {/* Modal confirmation Revise */}
-        <Modal isOpen={this.state.modal_warning_revise_asg} toggle={this.toggleWarningReviseASG} className={'modal-sm modal-warning ' + this.props.className}>
-          <ModalHeader>
-            Revise Confirmation
-          </ModalHeader>
+        <Modal
+          isOpen={this.state.modal_warning_revise_asg}
+          toggle={this.toggleWarningReviseASG}
+          className={"modal-sm modal-warning " + this.props.className}
+        >
+          <ModalHeader>Revise Confirmation</ModalHeader>
           {this.state.data_assignment !== null && (
             <ModalBody>
-            {(this.state.data_assignment.Locked_For_Revision === undefined || this.state.data_assignment.Locked_For_Revision === false) ? (
-              <div style={{textAlign : 'center'}}>
-                This action will revise this Assignment. Are you sure ?
-              </div>
-            ) : (
-              <div style={{textAlign : 'center'}}>
-                Sorry can't update this Assignment
-              </div>
-            )}
+              {this.state.data_assignment.Locked_For_Revision === undefined ||
+              this.state.data_assignment.Locked_For_Revision === false ? (
+                <div style={{ textAlign: "center" }}>
+                  This action will revise this Assignment. Are you sure ?
+                </div>
+              ) : (
+                <div style={{ textAlign: "center" }}>
+                  Sorry can't update this Assignment
+                </div>
+              )}
             </ModalBody>
           )}
           <ModalFooter>
-            <Button color="secondary" onClick={this.toggleWarningReviseASG} size="sm">
+            <Button
+              color="secondary"
+              onClick={this.toggleWarningReviseASG}
+              size="sm"
+            >
               Close
             </Button>
-            {this.state.data_assignment !== null && (this.state.data_assignment.Locked_For_Revision === undefined || this.state.data_assignment.Locked_For_Revision === false) && (
-              <Button color="warning" onClick={this.updateSSOWList} value="save" size="sm">
-                Revise
-              </Button>
-            )}
+            {this.state.data_assignment !== null &&
+              (this.state.data_assignment.Locked_For_Revision === undefined ||
+                this.state.data_assignment.Locked_For_Revision === false) && (
+                <Button
+                  color="warning"
+                  onClick={this.updateSSOWList}
+                  value="save"
+                  size="sm"
+                >
+                  Revise
+                </Button>
+              )}
           </ModalFooter>
         </Modal>
         {/* Modal confirmation Revise */}
 
         {/* Modal Loading */}
-        <Modal isOpen={this.state.modal_loading} toggle={this.toggleLoading} className={'modal-sm ' + this.props.className}>
+        <Modal
+          isOpen={this.state.modal_loading}
+          toggle={this.toggleLoading}
+          className={"modal-sm " + this.props.className}
+        >
           <ModalBody>
-            <div style={{textAlign : 'center'}}>
-              <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+            <div style={{ textAlign: "center" }}>
+              <div class="lds-ring">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
             </div>
-            <div style={{textAlign : 'center'}}>
-              Loading ...
-            </div>
-            <div style={{textAlign : 'center'}}>
-              System is processing ...
-            </div>
+            <div style={{ textAlign: "center" }}>Loading ...</div>
+            <div style={{ textAlign: "center" }}>System is processing ...</div>
           </ModalBody>
-          <ModalFooter>
-          </ModalFooter>
+          <ModalFooter></ModalFooter>
         </Modal>
         {/* end Modal Loading */}
         {/* Modal confirmation REGR */}
-        <Modal isOpen={this.state.modal_warning_regr_asg} toggle={this.toggleWarningREGRASG} className={'modal-sm modal-danger ' + this.props.className}>
-          <ModalHeader>
-            RE-GR Confirmation
-          </ModalHeader>
+        <Modal
+          isOpen={this.state.modal_warning_regr_asg}
+          toggle={this.toggleWarningREGRASG}
+          className={"modal-sm modal-danger " + this.props.className}
+        >
+          <ModalHeader>RE-GR Confirmation</ModalHeader>
           <ModalBody>
-            <div style={{textAlign : 'center'}}>
-              This action will Re-GR this BAST Number {this.state.bast_number_regr}. Are you sure ?
+            <div style={{ textAlign: "center" }}>
+              This action will Re-GR this BAST Number{" "}
+              {this.state.bast_number_regr}. Are you sure ?
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="secondary" onClick={this.toggleWarningREGRASG} size="sm">
+            <Button
+              color="secondary"
+              onClick={this.toggleWarningREGRASG}
+              size="sm"
+            >
               Close
             </Button>
-            <Button color="danger" onClick={this.ReGRASG} value="save" size="sm">
+            <Button
+              color="danger"
+              onClick={this.ReGRASG}
+              value="save"
+              size="sm"
+            >
               RE-GR
             </Button>
           </ModalFooter>

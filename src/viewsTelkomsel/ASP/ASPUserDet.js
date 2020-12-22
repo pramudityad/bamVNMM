@@ -19,13 +19,19 @@ import { saveAs } from "file-saver";
 import Excel from "exceljs";
 import { connect } from "react-redux";
 import * as XLSX from "xlsx";
-import { Redirect, Route, Switch, Link } from 'react-router-dom';
-import Select from 'react-select';
+import { Redirect, Route, Switch, Link } from "react-router-dom";
+import Select from "react-select";
 
 import ModalDelete from "../components/ModalDelete";
-import Loading from '../components/Loading'
-import {getDatafromAPIISAT ,getDatafromAPINODE, postDatatoAPINODE, patchDatatoAPINODE, deletemanyDataFromAPINODE} from '../../helper/asyncFunction'
-import {convertDMSToDD} from '../../helper/basicFunction'
+import Loading from "../components/Loading";
+import {
+  getDatafromAPIISAT,
+  getDatafromAPINODE,
+  postDatatoAPINODE,
+  patchDatatoAPINODE,
+  deletemanyDataFromAPINODE,
+} from "../../helper/asyncFunction";
+import { convertDMSToDD } from "../../helper/basicFunction";
 // import "../MatStyle.css";
 
 const Checkbox = ({
@@ -47,7 +53,7 @@ const Checkbox = ({
 
 const DefaultNotif = React.lazy(() => import("../DefaultView/DefaultNotif"));
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 const API_URL_TSEL = "https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi";
 const usernameISAT = "adminbamidsuper";
@@ -94,7 +100,7 @@ class ASPUserDet extends React.Component {
       sortType: 0,
       sortField: "",
       vendor_data: {},
-      id_email_selected: []
+      id_email_selected: [],
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -112,7 +118,6 @@ class ASPUserDet extends React.Component {
     this.requestSort = this.requestSort.bind(this);
     this.handleChangeLimit = this.handleChangeLimit.bind(this);
     this.handleSelectUser = this.handleSelectUser.bind(this);
-
   }
 
   toggle(i) {
@@ -192,13 +197,17 @@ class ASPUserDet extends React.Component {
   }
 
   getASPUser() {
-    getDatafromAPINODE("/vendorManagement/getAllUser", this.props.dataLogin.token).then((res) => {
+    getDatafromAPINODE(
+      "/vendorManagement/getAllUser",
+      this.props.dataLogin.token
+    ).then((res) => {
       if (res.data !== undefined) {
         const data_user = res.data.data;
         let list_asp_select = [];
-        data_user.map(i => list_asp_select.push({'label' : i.email, 'value' : i._id}))
-        this.setState({ list_asp_user: list_asp_select,
-          });
+        data_user.map((i) =>
+          list_asp_select.push({ label: i.email, value: i._id })
+        );
+        this.setState({ list_asp_user: list_asp_select });
       } else {
         this.setState({ list_asp_user: [] });
       }
@@ -238,7 +247,8 @@ class ASPUserDet extends React.Component {
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
-        this.state.activePage, this.props.dataLogin.token
+        this.state.activePage,
+      this.props.dataLogin.token
     ).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
@@ -260,13 +270,18 @@ class ASPUserDet extends React.Component {
   }
 
   getASPList(_id) {
-    getDatafromAPINODE("/vendorManagement/viewVendor/"+ _id, this.props.dataLogin.token).then((res) => {
+    getDatafromAPINODE(
+      "/vendorManagement/viewVendor/" + _id,
+      this.props.dataLogin.token
+    ).then((res) => {
       if (res.data !== undefined) {
-        this.setState({ Accounts_data: res.data.data.Accounts, vendor_data: res.data.data
-          });
-          console.log('vendor data ',this.state.vendor_data)
+        this.setState({
+          Accounts_data: res.data.data.Accounts,
+          vendor_data: res.data.data,
+        });
+        console.log("vendor data ", this.state.vendor_data);
       } else {
-        this.setState({ Accounts_data: null, vendor_data:{} });
+        this.setState({ Accounts_data: null, vendor_data: {} });
       }
     });
   }
@@ -339,14 +354,14 @@ class ASPUserDet extends React.Component {
     let newDataXLS = [];
     for (let i = 0; i < dataXLS.length; i++) {
       let col = [];
-      console.log('col ', col)
+      console.log("col ", col);
       for (let j = 0; j < dataXLS[0].length; j++) {
         if (typeof dataXLS[i][j] === "object") {
           let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
           if (dataObject !== null) {
             dataObject = dataObject.replace(/"/g, "");
           }
-          console.log('dataObject ', dataObject)
+          console.log("dataObject ", dataObject);
           col.push(dataObject);
         } else {
           col.push(this.checkValue(dataXLS[i][j]));
@@ -368,8 +383,6 @@ class ASPUserDet extends React.Component {
     // console.log(this.state.tokenUser)
     document.title = "Vendor Management | BAM";
   }
-
-
 
   handleChangeLimit(e) {
     let limitpg = e.currentTarget.value;
@@ -427,29 +440,40 @@ class ASPUserDet extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     console.log("xlsx data", JSON.stringify(BulkXLSX));
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await postDatatoAPINODE("/whManagement/createWarehouse", {
-      managementData: BulkXLSX,
-    }, this.props.dataLogin.token);
+    const res = await postDatatoAPINODE(
+      "/whManagement/createWarehouse",
+      {
+        managementData: BulkXLSX,
+      },
+      this.props.dataLogin.token
+    );
     console.log("res bulk ", res.response);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
         if (res.response.data.error.message !== undefined) {
-
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error.message,
+          });
         } else {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error,
+          });
         }
       } else {
-        this.setState({ action_status: 'failed' });
+        this.setState({ action_status: "failed" });
       }
       this.toggleLoading();
     }
   };
-
-
 
   async saveUpdate() {
     let respondSaveEdit = undefined;
@@ -469,7 +493,8 @@ class ASPUserDet extends React.Component {
     this.toggleEdit();
     let patchData = await patchDatatoAPINODE(
       "/whManagement/UpdateOneWarehouse/" + objData,
-      { data: pp }, this.props.dataLogin.token
+      { data: pp },
+      this.props.dataLogin.token
     );
     console.log("patch data ", pp);
     if (patchData === undefined) {
@@ -485,14 +510,24 @@ class ASPUserDet extends React.Component {
       });
     } else {
       this.toggleLoading();
-      if (patchData.response !== undefined && patchData.response.data !== undefined && patchData.response.data.error !== undefined) {
+      if (
+        patchData.response !== undefined &&
+        patchData.response.data !== undefined &&
+        patchData.response.data.error !== undefined
+      ) {
         if (patchData.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: patchData.response.data.error.message });
+          this.setState({
+            action_status: "failed",
+            action_message: patchData.response.data.error.message,
+          });
         } else {
-          this.setState({ action_status: 'failed', action_message: patchData.response.data.error });
+          this.setState({
+            action_status: "failed",
+            action_message: patchData.response.data.error,
+          });
         }
       } else {
-        this.setState({ action_status: 'failed' });
+        this.setState({ action_status: "failed" });
       }
     }
   }
@@ -502,17 +537,18 @@ class ASPUserDet extends React.Component {
     this.toggleLoading();
     let poData = [];
     const dataPPEdit = this.state.DataForm;
-      poData.push({
-        id: this.state.id_email_selected.map(e=> e),
-        vendor_code: this.props.match.params.id,
-      });
+    poData.push({
+      id: this.state.id_email_selected.map((e) => e),
+      vendor_code: this.props.match.params.id,
+    });
     // poData.push(pp);
     console.log("post data ", poData);
     let postData = await patchDatatoAPINODE(
       "/vendorManagement/assignVendor",
       {
         data: poData,
-      }, this.props.dataLogin.token
+      },
+      this.props.dataLogin.token
     ).then((res) => {
       console.log("res save ", res);
       if (res.data !== undefined) {
@@ -520,14 +556,24 @@ class ASPUserDet extends React.Component {
           this.toggleLoading();
         });
       } else {
-        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (
+          res.response !== undefined &&
+          res.response.data !== undefined &&
+          res.response.data.error !== undefined
+        ) {
           if (res.response.data.error.message !== undefined) {
-            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error.message,
+            });
           } else {
-            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error,
+            });
           }
         } else {
-          this.setState({ action_status: 'failed' });
+          this.setState({ action_status: "failed" });
         }
         this.toggleLoading();
       }
@@ -549,7 +595,8 @@ class ASPUserDet extends React.Component {
   async downloadAll() {
     let download_all = [];
     let getAll_nonpage = await getDatafromAPINODE(
-      "/whManagement/warehouse?noPg=1", this.props.dataLogin.token
+      "/whManagement/warehouse?noPg=1",
+      this.props.dataLogin.token
     );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
@@ -597,10 +644,12 @@ class ASPUserDet extends React.Component {
     this.toggleLoading();
     this.toggleDelete();
     let pp = {
-      id: _id
-    }
+      id: _id,
+    };
     const DelData = deletemanyDataFromAPINODE(
-      "/vendorManagement/deleteVendor", this.state.tokenUser, {data: [pp] }
+      "/vendorManagement/deleteVendor",
+      this.state.tokenUser,
+      { data: [pp] }
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
@@ -623,7 +672,8 @@ class ASPUserDet extends React.Component {
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
-        this.state.activePage, this.props.dataLogin.token
+        this.state.activePage,
+      this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
@@ -666,21 +716,21 @@ class ASPUserDet extends React.Component {
   handleSelectUser = (newValue) => {
     if (newValue !== null) {
       const selectPriority = [];
-      newValue.forEach( i => {
-        selectPriority.push(i.value)
-      })
-      console.log('selectPriority ',selectPriority)
-      this.setState({id_email_selected : selectPriority});
+      newValue.forEach((i) => {
+        selectPriority.push(i.value);
+      });
+      console.log("selectPriority ", selectPriority);
+      this.setState({ id_email_selected: selectPriority });
       // this.priorityToXLSCreation(selectPriority)
     } else {
-      this.setState({id_email_selected : []});
+      this.setState({ id_email_selected: [] });
       // this.priorityToXLSCreation([])
     }
     return newValue;
-  }
+  };
 
   render() {
-    const {all_data} = this.state;
+    const { all_data } = this.state;
     return (
       <div className="animated fadeIn">
         <DefaultNotif
@@ -693,20 +743,20 @@ class ASPUserDet extends React.Component {
               <CardHeader>
                 <span style={{ marginTop: "8px", position: "absolute" }}>
                   {" "}
-                  Vendor Management{" "}{this.state.vendor_data.Vendor_Name}
+                  Vendor Management {this.state.vendor_data.Vendor_Name}
                 </span>
                 <div
                   className="card-header-actions"
                   style={{ display: "inline-flex" }}
                 >
                   <div>
-                        <Button color="success" onClick={this.toggleMatStockForm}>
-                        <i className="fa fa-plus-square" aria-hidden="true">
-                              {" "}
-                              &nbsp;{" "}
-                            </i>{" "}
-                            New User
-                        </Button>
+                    <Button color="success" onClick={this.toggleMatStockForm}>
+                      <i className="fa fa-plus-square" aria-hidden="true">
+                        {" "}
+                        &nbsp;{" "}
+                      </i>{" "}
+                      New User
+                    </Button>
                   </div>
                   &nbsp;&nbsp;&nbsp;
                 </div>
@@ -722,7 +772,7 @@ class ASPUserDet extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                    {/* <div
+                      {/* <div
                         style={{
                           float: "left",
                           margin: "5px",
@@ -762,20 +812,20 @@ class ASPUserDet extends React.Component {
                 </Row>
                 <Row>
                   <Col>
-                    <div >
+                    <div>
                       <Table striped size="sm">
                         <thead
-                          // style={{ backgroundColor: "#73818f" }}
-                          // className="fixed-whman"
+                        // style={{ backgroundColor: "#73818f" }}
+                        // className="fixed-whman"
                         >
                           <tr>
-                          {/* <th><Button color="ghost-dark"
+                            {/* <th><Button color="ghost-dark"
                                 onClick={() => this.requestSort('wh_name')}
                               >
                                 <b>User Name</b>
                               </Button></th> */}
-                              <th>User Name</th>
-                              {/* <th><Button color="ghost-dark"
+                            <th>User Name</th>
+                            {/* <th><Button color="ghost-dark"
                                 onClick={() => this.requestSort('wh_id')}
                               >
                                 <b>Vendor Code</b>
@@ -787,7 +837,7 @@ class ASPUserDet extends React.Component {
                           </tr>
                         </thead>
                         <tbody>
-                          {this.state.Accounts_data !== null ?
+                          {this.state.Accounts_data !== null ? (
                             this.state.Accounts_data.map((e) => (
                               <React.Fragment key={e._id + "frag"}>
                                 <tr
@@ -795,18 +845,10 @@ class ASPUserDet extends React.Component {
                                   // className="fixbody"
                                   key={e._id}
                                 >
-                                  <td>
-                                    {e.username}
-                                  </td>
-                                  <td>
-                                    {e.first_name}
-                                  </td>
-                                  <td >
-                                    {e.last_name}
-                                  </td>
-                                  <td >
-                                    {e.email}
-                                  </td>
+                                  <td>{e.username}</td>
+                                  <td>{e.first_name}</td>
+                                  <td>{e.last_name}</td>
+                                  <td>{e.email}</td>
                                   <td>
                                     <Button
                                       size="sm"
@@ -824,10 +866,12 @@ class ASPUserDet extends React.Component {
                                   </td>
                                 </tr>
                               </React.Fragment>
-                            )) : (
+                            ))
+                          ) : (
                             <tr>
-                            <td colSpan="15">No User Available</td>
-                          </tr>)}
+                              <td colSpan="15">No User Available</td>
+                            </tr>
+                          )}
                         </tbody>
                       </Table>
                     </div>
@@ -856,8 +900,12 @@ class ASPUserDet extends React.Component {
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
-          title={"Delete User "+ this.state.selected_wh_id}
-          body={"From vendor "+ this.state.vendor_data.Vendor_Name+". Are you sure ?"}
+          title={"Delete User " + this.state.selected_wh_id}
+          body={
+            "From vendor " +
+            this.state.vendor_data.Vendor_Name +
+            ". Are you sure ?"
+          }
         >
           <Button color="danger" onClick={this.DeleteData}>
             Delete
@@ -890,9 +938,9 @@ class ASPUserDet extends React.Component {
                     classNamePrefix="select"
                     onChange={this.handleSelectUser}
                     // isDisabled = {this.state.list_asp_user.length==0}
-                                />
+                  />
                 </FormGroup>
-                </Col>
+              </Col>
             </Row>
           </ModalBody>
           <ModalFooter>
@@ -964,10 +1012,11 @@ class ASPUserDet extends React.Component {
         </Modal>
 
         {/* Modal Loading */}
-        <Loading isOpen={this.state.modal_loading}
+        <Loading
+          isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
-          className={"modal-sm modal--loading "}>
-        </Loading>
+          className={"modal-sm modal--loading "}
+        ></Loading>
         {/* end Modal Loading */}
       </div>
     );

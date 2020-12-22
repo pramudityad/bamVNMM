@@ -15,10 +15,10 @@ import {
   Dropdown,
   DropdownToggle,
   DropdownMenu,
-  DropdownItem
+  DropdownItem,
 } from "reactstrap";
 import { Form, FormGroup, Label } from "reactstrap";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 import { Modal, ModalBody, ModalHeader, ModalFooter } from "reactstrap";
 import axios from "axios";
 import { connect } from "react-redux";
@@ -37,7 +37,7 @@ import "./MatStyle.css";
 import ModalForm from "../components/ModalForm";
 import { getDatafromAPINODEFile } from "../../helper/asyncFunction";
 
-import {convertDateFormatfull} from '../../helper/basicFunction'
+import { convertDateFormatfull } from "../../helper/basicFunction";
 
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
@@ -74,9 +74,20 @@ const Checkbox = ({
   />
 );
 
-const API_URL_NODE = "https://api2.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2.bam-id.e-dpm.com/bamidapi";
 
-const status_can_edit_material = [ "PLANTSPEC ASSIGNED", "PLANTSPEC UPDATED", "MR REQUESTED", "MR CANCELED", "MR APPROVED", "MR REJECTED", "MR UPDATED", "ORDER PROCESSING START", "MR NEED REVISION", "PS NEED REVISION"];
+const status_can_edit_material = [
+  "PLANTSPEC ASSIGNED",
+  "PLANTSPEC UPDATED",
+  "MR REQUESTED",
+  "MR CANCELED",
+  "MR APPROVED",
+  "MR REJECTED",
+  "MR UPDATED",
+  "ORDER PROCESSING START",
+  "MR NEED REVISION",
+  "PS NEED REVISION",
+];
 
 class MRDisDetail extends Component {
   constructor(props) {
@@ -91,7 +102,7 @@ class MRDisDetail extends Component {
       list_mr_item: [],
       rowsXLS: [],
       data_mr: null,
-      data_wh : {},
+      data_wh: {},
       mr_site_NE: null,
       mr_site_FE: null,
       update_mr_form: {},
@@ -111,16 +122,16 @@ class MRDisDetail extends Component {
       asp_data: [],
       modal_revision: false,
       revision_note: "",
-      wbs_cd_id_data : [],
-      location_mr : {},
+      wbs_cd_id_data: [],
+      location_mr: {},
       dropdownOpen: new Array(2).fill(false),
-      modal_loading : false,
-      dsp_list : [],
+      modal_loading: false,
+      dsp_list: [],
       sid_file: [],
-      abd_file : [],
-      mot_type:null,
-      edit_qty_mat_dis : false,
-      qty_material_new : new Map(),
+      abd_file: [],
+      mot_type: null,
+      edit_qty_mat_dis: false,
+      qty_material_new: new Map(),
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
@@ -146,7 +157,9 @@ class MRDisDetail extends Component {
     this.toggleLoading = this.toggleLoading.bind(this);
     this.exportMRFormat = this.exportMRFormat.bind(this);
     this.updateMR = this.updateMR.bind(this);
-    this.downloadMaterialSerialNumberReport = this.downloadMaterialSerialNumberReport.bind(this);
+    this.downloadMaterialSerialNumberReport = this.downloadMaterialSerialNumberReport.bind(
+      this
+    );
     this.handleMotType = this.handleMotType.bind(this);
     this.handleChangeEditQty = this.handleChangeEditQty.bind(this);
     this.handleChangeQtyMaterial = this.handleChangeQtyMaterial.bind(this);
@@ -154,9 +167,9 @@ class MRDisDetail extends Component {
     this.requestMRDismantle = this.requestMRDismantle.bind(this);
   }
 
-  toggleLoading(){
-    this.setState(prevState => ({
-      modal_loading: !prevState.modal_loading
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
     }));
   }
 
@@ -170,13 +183,13 @@ class MRDisDetail extends Component {
 
   toggleModalRevision(e) {
     this.setState((prevState) => ({
-      modal_revision: !prevState.modal_revision
+      modal_revision: !prevState.modal_revision,
     }));
   }
 
   toggleDropdown(i) {
     const newArray = this.state.dropdownOpen.map((element, index) => {
-      return (index === i ? !element : false);
+      return index === i ? !element : false;
     });
     this.setState({
       dropdownOpen: newArray,
@@ -185,7 +198,7 @@ class MRDisDetail extends Component {
 
   handleRevisionNote(e) {
     let value = e.target.value;
-    this.setState({ revision_note: value })
+    this.setState({ revision_note: value });
   }
 
   async getDatafromAPIISAT(url) {
@@ -211,14 +224,16 @@ class MRDisDetail extends Component {
   getASPList() {
     // switch (this.props.dataLogin.account_id) {
     //   case "xl":
-    this.getDatafromAPIISAT('/vendor_data_non_page?where={"Type":"DSP"}').then((res) => {
-      // console.log("asp data ", res.data);
-      if (res.data !== undefined) {
-        this.setState({ asp_data: res.data._items });
-      } else {
-        this.setState({ asp_data: [] });
+    this.getDatafromAPIISAT('/vendor_data_non_page?where={"Type":"DSP"}').then(
+      (res) => {
+        // console.log("asp data ", res.data);
+        if (res.data !== undefined) {
+          this.setState({ asp_data: res.data._items });
+        } else {
+          this.setState({ asp_data: [] });
+        }
       }
-    });
+    );
     //     break;
     //   default:
     //     break;
@@ -330,7 +345,7 @@ class MRDisDetail extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -349,12 +364,16 @@ class MRDisDetail extends Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.post(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond post data", respond);
       }
@@ -368,12 +387,16 @@ class MRDisDetail extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Post Data", respond);
       }
@@ -390,20 +413,20 @@ class MRDisDetail extends Component {
     }
   }
 
-  async getDatafromAPIXL(url){
+  async getDatafromAPIXL(url) {
     try {
-      let respond = await axios.get(API_URL_XL +url, {
-        headers : {'Content-Type':'application/json'},
+      let respond = await axios.get(API_URL_XL + url, {
+        headers: { "Content-Type": "application/json" },
         auth: {
           username: usernameXL,
-          password: passwordXL
+          password: passwordXL,
         },
-      })
-      if(respond.status >= 200 && respond.status < 300){
+      });
+      if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Get Data", respond);
       }
       return respond;
-    }catch (err) {
+    } catch (err) {
       let respond = err;
       console.log("respond Get Data", err);
       return respond;
@@ -412,13 +435,16 @@ class MRDisDetail extends Component {
 
   async deleteDataFromAPINODE(url, data) {
     try {
-      let respond = await axios.delete(API_URL_NODE + url, {
-        headers: {
-          'Content-Type':'application/json',
-          'Authorization': 'Bearer '+this.state.tokenUser
-        },
-          data : data
-      });
+      let respond = await axios.delete(
+        process.env.REACT_APP_API_URL_NODE + url,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+          data: data,
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond delete Data", respond);
       }
@@ -472,29 +498,29 @@ class MRDisDetail extends Component {
     this.getDataFromAPINODE("/matreq-srn/" + _id_MR).then((resMR) => {
       if (resMR.data !== undefined) {
         this.getMRLocation(_id_MR);
-        if(resMR.data.dsp_company === null){
+        if (resMR.data.dsp_company === null) {
           this.getASPList();
         }
         this.setState({ data_mr: resMR.data }, () => {
-          if(resMR.data.origin !== undefined && resMR.data.mrd_category_code === "TWH"){
+          if (
+            resMR.data.origin !== undefined &&
+            resMR.data.mrd_category_code === "TWH"
+          ) {
             this.getWHOrigin(resMR.data.destination.value);
           }
-          if(this.state.data_mr.cust_del !== undefined){
-            this.getDataCDID(this.state.data_mr.cust_del.map(e => e.cd_id));
-            this.getSIDNumber(this.state.data_mr.cust_del.map(e => e.cd_id));
+          if (this.state.data_mr.cust_del !== undefined) {
+            this.getDataCDID(this.state.data_mr.cust_del.map((e) => e.cd_id));
+            this.getSIDNumber(this.state.data_mr.cust_del.map((e) => e.cd_id));
           }
-          this.setState(
-            { mr_pp: resMR.data.packages },
-            () => {
-              if (
-                status_can_edit_material.includes(resMR.data.current_mr_status)
-              ) {
-                this.getDataWarehouse(resMR.data.packages);
-                this.getDataInbound(resMR.data.packages);
-              }
-              // this.prepareView();
+          this.setState({ mr_pp: resMR.data.packages }, () => {
+            if (
+              status_can_edit_material.includes(resMR.data.current_mr_status)
+            ) {
+              this.getDataWarehouse(resMR.data.packages);
+              this.getDataInbound(resMR.data.packages);
             }
-          );
+            // this.prepareView();
+          });
         });
       }
     });
@@ -505,53 +531,73 @@ class MRDisDetail extends Component {
     const maxPage = 1;
     let dataSID = [];
     let dataABD = [];
-    for(let i = 0; i < arrayCDID.length; i++){
+    for (let i = 0; i < arrayCDID.length; i++) {
       let filter_array = [];
-      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"cust_del.cd_id":"' + arrayCDID[i] + '"');
       filter_array.push('"type" : {"$ne" : "ABD"}');
       let whereAnd = "{" + filter_array.join(",") + "}";
-      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
-      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
-        dataSID.push(res.data.data[0])
+      const res = await this.getDataFromAPINODE(
+        "/sidFile?srt=_id:-1&q=" + whereAnd + "&lmt=" + maxPage + "&pg=" + page
+      );
+      if (
+        res.data !== undefined &&
+        res.data.data !== undefined &&
+        res.data.data.length !== 0
+      ) {
+        dataSID.push(res.data.data[0]);
       }
     }
-    for(let i = 0; i < arrayCDID.length; i++){
+    for (let i = 0; i < arrayCDID.length; i++) {
       let filter_array = [];
-      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"cust_del.cd_id":"' + arrayCDID[i] + '"');
       filter_array.push('"type" : "ABD"');
       let whereAnd = "{" + filter_array.join(",") + "}";
-      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
-      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
-        dataABD.push(res.data.data[0])
+      const res = await this.getDataFromAPINODE(
+        "/sidFile?srt=_id:-1&q=" + whereAnd + "&lmt=" + maxPage + "&pg=" + page
+      );
+      if (
+        res.data !== undefined &&
+        res.data.data !== undefined &&
+        res.data.data.length !== 0
+      ) {
+        dataABD.push(res.data.data[0]);
       }
     }
-    this.setState({sid_file : dataSID, abd_file : dataABD});
+    this.setState({ sid_file: dataSID, abd_file: dataABD });
   }
 
-  getWHOrigin(wh_id){
-    this.getDataFromAPINODE('/whManagement/warehouse?q={"wh_id" : "'+wh_id+'"}').then((resWH) => {
-      if(resWH.data !== undefined){
-        if(resWH.data.data[0] !== undefined){
-          this.setState({data_wh : resWH.data.data[0]});
+  getWHOrigin(wh_id) {
+    this.getDataFromAPINODE(
+      '/whManagement/warehouse?q={"wh_id" : "' + wh_id + '"}'
+    ).then((resWH) => {
+      if (resWH.data !== undefined) {
+        if (resWH.data.data[0] !== undefined) {
+          this.setState({ data_wh: resWH.data.data[0] });
         }
-      }
-    })
-  }
-
-  getMRLocation(_id_MR){
-    this.getDataFromAPINODE('/getMRLocationById/' + _id_MR).then((resLocMR) => {
-      if (resLocMR.data !== undefined) {
-        this.setState({location_mr : resLocMR.data});
       }
     });
   }
 
-  async getDataCDID(array_cd_id){
-    let array_in_cdid = '"'+array_cd_id.join('", "')+'"';
-    let projection = '&projection={"WP_ID" : 1, "C1003_WBS_HW" : 1, "C1008_WBS_HWAC" : 1, "C1013_WBS_LCM" : 1, "C1018_WBS_PNRO" : 1, "C1024_WBS_PNDO" : 1, "C1032_WBS_HW_Bulk" : 1, "C1033_WBS_LCM_Bulk" : 1, "C1034_WBS_PowHW_Site_Basis" : 1, "C1035_WBS_PowLCM_Site_Basis" : 1, "C1036_WBS_Kathrein" : 1}'
-    const getWPID = await this.getDatafromAPIXL('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}'+projection);
-    if(getWPID !== undefined && getWPID.data !== undefined) {
-      this.setState({ wbs_cd_id_data : getWPID.data._items});
+  getMRLocation(_id_MR) {
+    this.getDataFromAPINODE("/getMRLocationById/" + _id_MR).then((resLocMR) => {
+      if (resLocMR.data !== undefined) {
+        this.setState({ location_mr: resLocMR.data });
+      }
+    });
+  }
+
+  async getDataCDID(array_cd_id) {
+    let array_in_cdid = '"' + array_cd_id.join('", "') + '"';
+    let projection =
+      '&projection={"WP_ID" : 1, "C1003_WBS_HW" : 1, "C1008_WBS_HWAC" : 1, "C1013_WBS_LCM" : 1, "C1018_WBS_PNRO" : 1, "C1024_WBS_PNDO" : 1, "C1032_WBS_HW_Bulk" : 1, "C1033_WBS_LCM_Bulk" : 1, "C1034_WBS_PowHW_Site_Basis" : 1, "C1035_WBS_PowLCM_Site_Basis" : 1, "C1036_WBS_Kathrein" : 1}';
+    const getWPID = await this.getDatafromAPIXL(
+      '/custdel_sorted?where={"WP_ID":{"$in" : [' +
+        array_in_cdid +
+        "]}}" +
+        projection
+    );
+    if (getWPID !== undefined && getWPID.data !== undefined) {
+      this.setState({ wbs_cd_id_data: getWPID.data._items });
     }
   }
 
@@ -701,12 +747,12 @@ class MRDisDetail extends Component {
   }
 
   changeEditable(e) {
-    if(this.state.edit_detail === false){
+    if (this.state.edit_detail === false) {
       this.getDSPList();
       let dataForm = this.state.update_mr_form;
       dataForm["vendor_code"] = this.state.data_mr.dsp_company_code;
-      dataForm["vendor_name"] =this.state.data_mr.dsp_company;
-      this.setState({update_mr_form : dataForm});
+      dataForm["vendor_name"] = this.state.data_mr.dsp_company;
+      this.setState({ update_mr_form: dataForm });
     }
     this.setState((prevState) => ({
       edit_detail: !prevState.edit_detail,
@@ -715,13 +761,15 @@ class MRDisDetail extends Component {
 
   getDSPList() {
     this.toggleLoading();
-    this.getDatafromAPIXL('/vendor_data_non_page?where={"Type":"ASP"}').then(res => {
-      if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({dsp_list : items});
+    this.getDatafromAPIXL('/vendor_data_non_page?where={"Type":"ASP"}').then(
+      (res) => {
+        if (res.data !== undefined) {
+          const items = res.data._items;
+          this.setState({ dsp_list: items });
+        }
+        this.toggleLoading();
       }
-      this.toggleLoading();
-    })
+    );
   }
 
   changeTabsSubmenu(e) {
@@ -736,10 +784,10 @@ class MRDisDetail extends Component {
     let dataForm = this.state.update_mr_form;
     dataForm[field] = value;
     const indexOpt = e.target.selectedIndex;
-    if (field === 'vendor_code') {
-      let vendoridx = this.state.dsp_list.find(v => v.Vendor_Code === value);
-      if(vendoridx !== undefined){
-        dataForm["vendor_name"] = vendoridx.Name
+    if (field === "vendor_code") {
+      let vendoridx = this.state.dsp_list.find((v) => v.Vendor_Code === value);
+      if (vendoridx !== undefined) {
+        dataForm["vendor_name"] = vendoridx.Name;
       }
     }
     this.setState({ update_mr_form: dataForm });
@@ -758,7 +806,7 @@ class MRDisDetail extends Component {
         <h4 className="vertical-timeline-element-subtitle">
           initiated by <b>{ms_updater}</b>
         </h4>
-        {(ms_notes !== undefined && ms_notes !== null) && (
+        {ms_notes !== undefined && ms_notes !== null && (
           <h6 className="vertical-timeline-element-subtitle">
             Notes : {ms_notes}
           </h6>
@@ -780,14 +828,16 @@ class MRDisDetail extends Component {
   //   }
   // }
 
-  submitTSSR(_id_ps){
-    this.patchDatatoAPINODE('/plantspec/submitPlantspec/'+_id_ps).then(res => {
-      if(res.data !== undefined){
-        // this.setState({ action_status : "success" });
-      }else{
-        // this.setState({ action_status : "failed" });
+  submitTSSR(_id_ps) {
+    this.patchDatatoAPINODE("/plantspec/submitPlantspec/" + _id_ps).then(
+      (res) => {
+        if (res.data !== undefined) {
+          // this.setState({ action_status : "success" });
+        } else {
+          // this.setState({ action_status : "failed" });
+        }
       }
-    })
+    );
   }
 
   requestForApproval() {
@@ -811,32 +861,48 @@ class MRDisDetail extends Component {
     const _id = this.props.match.params.id;
     let body = this.state.selected_dsp;
     let dataMot = this.state.mot_type;
-    if(this.state.data_mr.dsp_company !== null && this.state.data_mr.dsp_company !== undefined){
-      body = {"dsp_company_code" : this.state.data_mr.dsp_company_code, "dsp_company": this.state.data_mr.dsp_company}
+    if (
+      this.state.data_mr.dsp_company !== null &&
+      this.state.data_mr.dsp_company !== undefined
+    ) {
+      body = {
+        dsp_company_code: this.state.data_mr.dsp_company_code,
+        dsp_company: this.state.data_mr.dsp_company,
+      };
     }
-    body = {...body, ...{"approve": true}, ...{"motType" : dataMot}}
+    body = { ...body, ...{ approve: true }, ...{ motType: dataMot } };
     // console.log('_id ',_id);
-    this.patchDatatoAPINODE("/matreq-srn/approveMrd/" + _id,  {data : body} ).then(
-      (res) => {
-        if (res.data !== undefined) {
-          this.setState({ action_status: "success" });
-          this.toggleModalapprove();
-          this.toggleLoading();
-        } else {
-          if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
-            if (res.response.data.error.message !== undefined) {
-              this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-            } else {
-              this.setState({ action_status: 'failed', action_message: res.response.data.error });
-            }
+    this.patchDatatoAPINODE("/matreq-srn/approveMrd/" + _id, {
+      data: body,
+    }).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
+        this.toggleModalapprove();
+        this.toggleLoading();
+      } else {
+        if (
+          res.response !== undefined &&
+          res.response.data !== undefined &&
+          res.response.data.error !== undefined
+        ) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error.message,
+            });
           } else {
-            this.setState({ action_status: 'failed' });
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error,
+            });
           }
-          this.toggleModalapprove();
-          this.toggleLoading();
+        } else {
+          this.setState({ action_status: "failed" });
         }
+        this.toggleModalapprove();
+        this.toggleLoading();
       }
-    );
+    });
   }
 
   async updateDataMR() {
@@ -961,8 +1027,8 @@ class MRDisDetail extends Component {
 
     let listMatId = [...new Set(list_material_id)];
     let matIdData = {
-      "list_material_id" : listMatId
-    }
+      list_material_id: listMatId,
+    };
 
     const getMaterialVariant = await this.postDatatoAPINODE(
       "/variants/materialId",
@@ -987,8 +1053,11 @@ class MRDisDetail extends Component {
       sku_list.push(dataMaterialVariant[j].material_id);
     }
     const list_qtySKU = [];
-    const getQtyfromWHbySKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', {"sku": sku_list }).then((res) => {
-      if(res.data !== undefined && res.status >= 200 && res.status < 400){
+    const getQtyfromWHbySKU = await this.postDatatoAPINODE(
+      "/whStock/getWhStockbySku",
+      { sku: sku_list }
+    ).then((res) => {
+      if (res.data !== undefined && res.status >= 200 && res.status < 400) {
         const dataSKU = res.data.data;
         // console.log('dataSKU ', dataSKU);
         for (let i = 0; i < dataSKU.length; i++) {
@@ -1067,7 +1136,9 @@ class MRDisDetail extends Component {
         );
         qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
-        if ((dataMatIdx.qty) < qty_wh) {continue}
+        if (dataMatIdx.qty < qty_wh) {
+          continue;
+        }
         ws.addRow([
           dataMatIdx._id,
           dataItemMR[i].no_tssr_boq_site,
@@ -1090,8 +1161,8 @@ class MRDisDetail extends Component {
 
     let listMatId = [...new Set(list_material_id)];
     let matIdData = {
-      "list_material_id" : listMatId
-    }
+      list_material_id: listMatId,
+    };
 
     const getMaterialVariant = await this.postDatatoAPINODE(
       "/variants/materialId",
@@ -1116,8 +1187,11 @@ class MRDisDetail extends Component {
       sku_list.push(dataMaterialVariant[j].material_id);
     }
     const list_qtySKU = [];
-    const getQtyfromWHbySKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', {"sku": sku_list }).then((res) => {
-      if(res.data !== undefined && res.status >= 200 && res.status < 400){
+    const getQtyfromWHbySKU = await this.postDatatoAPINODE(
+      "/whStock/getWhStockbySku",
+      { sku: sku_list }
+    ).then((res) => {
+      if (res.data !== undefined && res.status >= 200 && res.status < 400) {
         const dataSKU = res.data.data;
         // console.log('dataSKU ', dataSKU);
         for (let i = 0; i < dataSKU.length; i++) {
@@ -1183,32 +1257,93 @@ class MRDisDetail extends Component {
       "Material Source",
       "CPO Number",
       "PS No.",
-      "Program"
+      "Program",
     ];
     ws.addRow(headerRow);
-    ws.getCell('A5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('B5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('C5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('D5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('E5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('F5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('G5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('H5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('I5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('J5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('A5').font  = {bold : true };
-    ws.getCell('B5').font  = {bold : true };
-    ws.getCell('C5').font  = {bold : true };
-    ws.getCell('D5').font  = {bold : true };
-    ws.getCell('E5').font  = {bold : true };
-    ws.getCell('F5').font  = {bold : true };
-    ws.getCell('G5').font  = {bold : true };
-    ws.getCell('H5').font  = {bold : true };
-    ws.getCell('I5').font  = {bold : true };
-    ws.getCell('J5').font  = {bold : true };
+    ws.getCell("A5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("B5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("C5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("D5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("E5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("F5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("G5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("H5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("I5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("J5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("A5").font = { bold: true };
+    ws.getCell("B5").font = { bold: true };
+    ws.getCell("C5").font = { bold: true };
+    ws.getCell("D5").font = { bold: true };
+    ws.getCell("E5").font = { bold: true };
+    ws.getCell("F5").font = { bold: true };
+    ws.getCell("G5").font = { bold: true };
+    ws.getCell("H5").font = { bold: true };
+    ws.getCell("I5").font = { bold: true };
+    ws.getCell("J5").font = { bold: true };
     ws.addRow([]);
     for (let i = 0; i < dataItemMR.length; i++) {
-      ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name, null, null, dataItemMR[i].uom, null, null, null, dataItemMR[i].no_tssr_boq_site, dataItemMR[i].program]);
+      ws.addRow([
+        dataItemMR[i].pp_id,
+        dataItemMR[i].product_name,
+        null,
+        null,
+        dataItemMR[i].uom,
+        null,
+        null,
+        null,
+        dataItemMR[i].no_tssr_boq_site,
+        dataItemMR[i].program,
+      ]);
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
         ws.addRow([
@@ -1242,30 +1377,124 @@ class MRDisDetail extends Component {
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
 
-    let headerRow = ["REC_TYPE", "FILLER", "COMP_CD", "CUST_DELIV_NO", "CUST_ID", "CUST_CNTRY_CD", "ETA_SHP_DT", "SHP_DT", "SITE_LOC_ID", "SITE_CNTRY_CD", "SEND_SYSTEM", "SEND_UNIT", "SALES_GRP", "PRNO ", "SHP_NO", "END_CUST_NM", "END_CUST_ID", "CUST_NM", "SALES_ORD_NO", "PACK_ID", "PURCH_ORD_NO", "SER_NO", "CIN", "GI_Type", "Shp_Pnt", "Plant_ID"];
+    let headerRow = [
+      "REC_TYPE",
+      "FILLER",
+      "COMP_CD",
+      "CUST_DELIV_NO",
+      "CUST_ID",
+      "CUST_CNTRY_CD",
+      "ETA_SHP_DT",
+      "SHP_DT",
+      "SITE_LOC_ID",
+      "SITE_CNTRY_CD",
+      "SEND_SYSTEM",
+      "SEND_UNIT",
+      "SALES_GRP",
+      "PRNO ",
+      "SHP_NO",
+      "END_CUST_NM",
+      "END_CUST_ID",
+      "CUST_NM",
+      "SALES_ORD_NO",
+      "PACK_ID",
+      "PURCH_ORD_NO",
+      "SER_NO",
+      "CIN",
+      "GI_Type",
+      "Shp_Pnt",
+      "Plant_ID",
+    ];
     ws.addRow(headerRow);
     let dateDispatch = null;
-    const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
-    if(dispatchData.mr_status_date !== undefined && dispatchData.mr_status_date !== null){
+    const dispatchData = dataMR.mr_status.find(
+      (e) => e.mr_status_value === "DISPATCH"
+    );
+    if (
+      dispatchData.mr_status_date !== undefined &&
+      dispatchData.mr_status_date !== null
+    ) {
       let dateDispatchNew = new Date(dispatchData.mr_status_date);
-      dateDispatch = dateDispatchNew.getFullYear().toString()+(dateDispatchNew.getMonth()+1).toString().padStart(2, '0')+dateDispatchNew.getDate().toString().padStart(2, '0');
+      dateDispatch =
+        dateDispatchNew.getFullYear().toString() +
+        (dateDispatchNew.getMonth() + 1).toString().padStart(2, "0") +
+        dateDispatchNew.getDate().toString().padStart(2, "0");
     }
     const dataSite = dataMR.site_info[0].site_id;
     let shipTrim = dataMR.no_shipment.split("-");
     shipTrim.splice(0, 2);
-    const shipTracy = shipTrim.join('');
+    const shipTracy = shipTrim.join("");
     for (let i = 0; i < dataItemMR.length; i++) {
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
-        if(dataMatIdx.serial_numbers !== undefined && dataMatIdx.serial_numbers.length !== 0){
-          let serial_number = dataMatIdx.serial_numbers.find(e => e.flag_name === "obd");
-          if(serial_number !== undefined){
-            for(let k = 0; k < serial_number.list_of_sn.length; k++){
-              ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, shipTracy, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, serial_number.list_of_sn[k], null, null, null, null]);
+        if (
+          dataMatIdx.serial_numbers !== undefined &&
+          dataMatIdx.serial_numbers.length !== 0
+        ) {
+          let serial_number = dataMatIdx.serial_numbers.find(
+            (e) => e.flag_name === "obd"
+          );
+          if (serial_number !== undefined) {
+            for (let k = 0; k < serial_number.list_of_sn.length; k++) {
+              ws.addRow([
+                "K",
+                null,
+                2089,
+                dataMR.mr_id,
+                "XL",
+                "ID",
+                null,
+                dateDispatch,
+                dataMR.site_info[0].site_id,
+                "ID",
+                "DPM",
+                1105,
+                null,
+                dataMatIdx.material_id,
+                shipTracy,
+                "XL Axiata",
+                "XL",
+                "XL Axiata",
+                null,
+                null,
+                dataMatIdx.cpo_number,
+                serial_number.list_of_sn[k],
+                null,
+                null,
+                null,
+                null,
+              ]);
             }
           }
-        }else{
-          ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, shipTracy, "XL Axiata", "XL", "XL Axiata", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
+        } else {
+          ws.addRow([
+            "K",
+            null,
+            2089,
+            dataMR.mr_id,
+            "XL",
+            "ID",
+            null,
+            dateDispatch,
+            dataMR.site_info[0].site_id,
+            "ID",
+            "DPM",
+            1105,
+            null,
+            dataMatIdx.material_id,
+            shipTracy,
+            "XL Axiata",
+            "XL",
+            "XL Axiata",
+            null,
+            null,
+            dataMatIdx.cpo_number,
+            null,
+            null,
+            null,
+            null,
+            null,
+          ]);
         }
       }
     }
@@ -1288,27 +1517,68 @@ class MRDisDetail extends Component {
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
 
-    let headerRow = ["MR_ID", "SKU", "SERIAL_NUMBER", "DESCRIPTION", "SCAN_BY", "LASTEST_UPDATE_DATE_SCAN", "ACCOUNT", "WAREHOUSE"];
+    let headerRow = [
+      "MR_ID",
+      "SKU",
+      "SERIAL_NUMBER",
+      "DESCRIPTION",
+      "SCAN_BY",
+      "LASTEST_UPDATE_DATE_SCAN",
+      "ACCOUNT",
+      "WAREHOUSE",
+    ];
     ws.addRow(headerRow);
     let dateDispatch = null;
-    const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
-    if(dispatchData !== undefined && dispatchData.mr_status_date !== undefined && dispatchData.mr_status_date !== null){
+    const dispatchData = dataMR.mr_status.find(
+      (e) => e.mr_status_value === "DISPATCH"
+    );
+    if (
+      dispatchData !== undefined &&
+      dispatchData.mr_status_date !== undefined &&
+      dispatchData.mr_status_date !== null
+    ) {
       let dateDispatchNew = new Date(dispatchData.mr_status_date);
-      dateDispatch = dateDispatchNew.getFullYear().toString()+(dateDispatchNew.getMonth()+1).toString().padStart(2, '0')+dateDispatchNew.getDate().toString().padStart(2, '0');
+      dateDispatch =
+        dateDispatchNew.getFullYear().toString() +
+        (dateDispatchNew.getMonth() + 1).toString().padStart(2, "0") +
+        dateDispatchNew.getDate().toString().padStart(2, "0");
     }
-    const dataSite = dataMR.site_info[0].site_id
+    const dataSite = dataMR.site_info[0].site_id;
     for (let i = 0; i < dataItemMR.length; i++) {
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
-        if(dataMatIdx.serial_numbers !== undefined && dataMatIdx.serial_numbers.length !== 0){
-          let serial_number = dataMatIdx.serial_numbers.find(e => e.flag_name === "obd");
-          if(serial_number !== undefined){
-            for(let k = 0; k < serial_number.list_of_sn.length; k++){
-              ws.addRow([dataMR.mr_id, dataMatIdx.material_id, serial_number.list_of_sn[k], dataMatIdx.material_name, serial_number.updated_by, serial_number.updated_on, "XL", dataMR.origin.value]);
+        if (
+          dataMatIdx.serial_numbers !== undefined &&
+          dataMatIdx.serial_numbers.length !== 0
+        ) {
+          let serial_number = dataMatIdx.serial_numbers.find(
+            (e) => e.flag_name === "obd"
+          );
+          if (serial_number !== undefined) {
+            for (let k = 0; k < serial_number.list_of_sn.length; k++) {
+              ws.addRow([
+                dataMR.mr_id,
+                dataMatIdx.material_id,
+                serial_number.list_of_sn[k],
+                dataMatIdx.material_name,
+                serial_number.updated_by,
+                serial_number.updated_on,
+                "XL",
+                dataMR.origin.value,
+              ]);
             }
           }
-        }else{
-          ws.addRow([dataMR.mr_id, dataMatIdx.material_id, null, dataMatIdx.material_name, null, null, "XL", dataMR.origin.value]);
+        } else {
+          ws.addRow([
+            dataMR.mr_id,
+            dataMatIdx.material_id,
+            null,
+            dataMatIdx.material_name,
+            null,
+            null,
+            "XL",
+            dataMR.origin.value,
+          ]);
         }
       }
     }
@@ -1328,7 +1598,7 @@ class MRDisDetail extends Component {
       "/matreq/updatePlantSpecWithVariant/" + dataMR._id,
       { identifier: "MR", data: dataXLS }
     );
-    if(dataMR.id_plantspec_doc !== undefined){
+    if (dataMR.id_plantspec_doc !== undefined) {
       let submitPS = this.submitTSSR(dataMR.id_plantspec_doc);
     }
     if (
@@ -1365,14 +1635,15 @@ class MRDisDetail extends Component {
     this.toggleLoading();
     const dataMR = this.state.data_mr;
     let patchDataMR = await this.patchDatatoAPINODE(
-      "/matreq/needReviseMRFromWH/" + dataMR._id, {"note_value" : this.state.revision_note}
+      "/matreq/needReviseMRFromWH/" + dataMR._id,
+      { note_value: this.state.revision_note }
     );
     if (
       patchDataMR.data !== undefined &&
       patchDataMR.status >= 200 &&
       patchDataMR.status <= 300
     ) {
-      this.setState({ action_status: "success", modal_revision : false });
+      this.setState({ action_status: "success", modal_revision: false });
     } else {
       if (
         patchDataMR.response !== undefined &&
@@ -1388,7 +1659,7 @@ class MRDisDetail extends Component {
           this.setState({
             action_status: "failed",
             action_message: patchDataMR.response.data.error,
-            modal_revision : false
+            modal_revision: false,
           });
         }
       } else {
@@ -1398,38 +1669,42 @@ class MRDisDetail extends Component {
     this.toggleLoading();
   }
 
-  async takeoutPS(){
+  async takeoutPS() {
     this.toggleLoading();
     const dataMR = this.state.data_mr;
-    this.patchDatatoAPINODE('/matreq/takeOutPlantSpec/'+dataMR._id).then(res => {
-      if(res.data !== undefined){
-        this.setState({ action_status : "success" });
-        this.toggleLoading();
-      }else{
-        this.setState({ action_status : "failed" });
-        this.toggleLoading();
+    this.patchDatatoAPINODE("/matreq/takeOutPlantSpec/" + dataMR._id).then(
+      (res) => {
+        if (res.data !== undefined) {
+          this.setState({ action_status: "success" });
+          this.toggleLoading();
+        } else {
+          this.setState({ action_status: "failed" });
+          this.toggleLoading();
+        }
       }
-    })
+    );
   }
 
-  async cancelMR(){
+  async cancelMR() {
     this.toggleLoading();
     const dataMR = this.state.data_mr;
-    this.patchDatatoAPINODE('/matreq/cancelMatreq/'+dataMR._id, {"cancelNote" : "Cancel MR"}).then(res => {
-      if(res.data !== undefined){
-        this.setState({ action_status : "success" });
+    this.patchDatatoAPINODE("/matreq/cancelMatreq/" + dataMR._id, {
+      cancelNote: "Cancel MR",
+    }).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
         this.toggleLoading();
-      }else{
-        this.setState({ action_status : "failed" });
+      } else {
+        this.setState({ action_status: "failed" });
         this.toggleLoading();
       }
-    })
+    });
   }
 
-  tableViewWBSCDID(cd_id){
+  tableViewWBSCDID(cd_id) {
     const dataCDWBS = this.state.wbs_cd_id_data;
-    let dataCDWBSbyCDID = dataCDWBS.find(e => e.WP_ID === cd_id);
-    if(dataCDWBSbyCDID !== undefined){
+    let dataCDWBSbyCDID = dataCDWBS.find((e) => e.WP_ID === cd_id);
+    if (dataCDWBSbyCDID !== undefined) {
       return (
         <Fragment>
           <td>{dataCDWBSbyCDID.C1003_WBS_HW}</td>
@@ -1443,9 +1718,9 @@ class MRDisDetail extends Component {
           <td>{dataCDWBSbyCDID.C1035_WBS_PowLCM_Site_Basis}</td>
           <td>{dataCDWBSbyCDID.C1036_WBS_Kathrein}</td>
         </Fragment>
-      )
-    }else{
-      return(
+      );
+    } else {
+      return (
         <Fragment>
           <td></td>
           <td></td>
@@ -1458,7 +1733,7 @@ class MRDisDetail extends Component {
           <td></td>
           <td></td>
         </Fragment>
-      )
+      );
     }
   }
 
@@ -1480,7 +1755,7 @@ class MRDisDetail extends Component {
       "mr_comment_project",
       "sent_mr_request",
       "created_based",
-      "identifier"
+      "identifier",
     ]);
 
     ws.addRow([
@@ -1489,176 +1764,303 @@ class MRDisDetail extends Component {
       1,
       1,
       dataMR.origin.value,
-      dataMR.etd.slice(0,10),
-      dataMR.eta.slice(0,10),
+      dataMR.etd.slice(0, 10),
+      dataMR.eta.slice(0, 10),
       dataMR.dsp_company_code,
       null,
       null,
       "cd_id",
-      dataMR.cust_del[0].cd_id
+      dataMR.cust_del[0].cd_id,
     ]);
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'MR Uploader Template '+dataMR.mr_id+'.xlsx');
+    saveAs(
+      new Blob([MRFormat]),
+      "MR Uploader Template " + dataMR.mr_id + ".xlsx"
+    );
   }
 
-  async updateMR(){
+  async updateMR() {
     this.toggleLoading();
     let success = true;
-    this.setState({action_status : null, action_message : null});
+    this.setState({ action_status: null, action_message: null });
     const dataMR = this.state.data_mr;
     const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    const dateNow =
+      newDate.getFullYear() +
+      "-" +
+      (newDate.getMonth() + 1) +
+      "-" +
+      newDate.getDate() +
+      " " +
+      newDate.getHours() +
+      ":" +
+      newDate.getMinutes() +
+      ":" +
+      newDate.getSeconds();
     let list_site = [];
     let dataXLS = [
-      ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "mr_comment_project", "sent_mr_request", "created_based", "identifier"],
-      [ dataMR.mr_id,
+      [
+        "id",
+        "project_name",
+        "mr_type",
+        "mr_delivery_type",
+        "origin_warehouse",
+        "etd",
+        "eta",
+        "deliver_by",
+        "mr_comment_project",
+        "sent_mr_request",
+        "created_based",
+        "identifier",
+      ],
+      [
+        dataMR.mr_id,
         dataMR.project_name,
         1,
         1,
         dataMR.origin.value,
-        dataMR.etd.slice(0,10),
-        dataMR.eta.slice(0,10),
+        dataMR.etd.slice(0, 10),
+        dataMR.eta.slice(0, 10),
         this.state.update_mr_form.vendor_code,
         null,
         null,
         "cd_id",
-        dataMR.cust_del[0].cd_id
-      ]
-    ]
-    const respondCheckingMR = await this.postDatatoAPINODE('/matreq/matreqByActivity', {"data" : dataXLS});
-    if(respondCheckingMR.data !== undefined && respondCheckingMR.status >= 200 && respondCheckingMR.status <= 300 ) {
-      const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', {"data" : respondCheckingMR.data.data });
-      if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
-        this.setState({ action_status : 'success', action_message: null });
-      } else{
-        if(respondSaveMR.response !== undefined && respondSaveMR.response.data !== undefined && respondSaveMR.response.data.error !== undefined){
-          if(respondSaveMR.response.data.error.message !== undefined){
-            this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error.message });
-          }else{
-            this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error });
+        dataMR.cust_del[0].cd_id,
+      ],
+    ];
+    const respondCheckingMR = await this.postDatatoAPINODE(
+      "/matreq/matreqByActivity",
+      { data: dataXLS }
+    );
+    if (
+      respondCheckingMR.data !== undefined &&
+      respondCheckingMR.status >= 200 &&
+      respondCheckingMR.status <= 300
+    ) {
+      const respondSaveMR = await this.postDatatoAPINODE(
+        "/matreq/saveMatreqByActivity",
+        { data: respondCheckingMR.data.data }
+      );
+      if (
+        respondSaveMR.data !== undefined &&
+        respondSaveMR.status >= 200 &&
+        respondSaveMR.status <= 300
+      ) {
+        this.setState({ action_status: "success", action_message: null });
+      } else {
+        if (
+          respondSaveMR.response !== undefined &&
+          respondSaveMR.response.data !== undefined &&
+          respondSaveMR.response.data.error !== undefined
+        ) {
+          if (respondSaveMR.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: respondSaveMR.response.data.error.message,
+            });
+          } else {
+            this.setState({
+              action_status: "failed",
+              action_message: respondSaveMR.response.data.error,
+            });
           }
-        }else{
-          this.setState({ action_status: 'failed' });
+        } else {
+          this.setState({ action_status: "failed" });
         }
       }
-    }else{
-      if(respondCheckingMR.response !== undefined && respondCheckingMR.response.data !== undefined && respondCheckingMR.response.data.error !== undefined){
-        if(respondCheckingMR.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error.message });
-        }else{
-          this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error });
+    } else {
+      if (
+        respondCheckingMR.response !== undefined &&
+        respondCheckingMR.response.data !== undefined &&
+        respondCheckingMR.response.data.error !== undefined
+      ) {
+        if (respondCheckingMR.response.data.error.message !== undefined) {
+          this.setState({
+            action_status: "failed",
+            action_message: respondCheckingMR.response.data.error.message,
+          });
+        } else {
+          this.setState({
+            action_status: "failed",
+            action_message: respondCheckingMR.response.data.error,
+          });
         }
-      }else{
-        this.setState({ action_status: 'failed' });
+      } else {
+        this.setState({ action_status: "failed" });
       }
     }
     this.toggleLoading();
   }
 
   getSIDFile = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     e.persist();
     const _id = e.currentTarget.value;
-    const dataSID = this.state.sid_file.find(sf => sf._id === _id);
-    if(dataSID !== undefined)  {
-      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
-      if(resFile !== undefined){
-        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+    const dataSID = this.state.sid_file.find((sf) => sf._id === _id);
+    if (dataSID !== undefined) {
+      const resFile = await getDatafromAPINODEFile(
+        "/sidFile/getDocument/" + _id,
+        this.props.dataLogin.token,
+        dataSID.file_document.mime_type
+      );
+      if (resFile !== undefined) {
+        saveAs(
+          new Blob([resFile.data], { type: dataSID.file_document.mime_type }),
+          dataSID.file_document.file_name
+        );
       }
     }
-  }
+  };
 
   getABDFile = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     e.persist();
     const _id = e.currentTarget.value;
-    const dataSID = this.state.abd_file.find(sf => sf._id === _id);
-    if(dataSID !== undefined)  {
-      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
-      if(resFile !== undefined){
-        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+    const dataSID = this.state.abd_file.find((sf) => sf._id === _id);
+    if (dataSID !== undefined) {
+      const resFile = await getDatafromAPINODEFile(
+        "/sidFile/getDocument/" + _id,
+        this.props.dataLogin.token,
+        dataSID.file_document.mime_type
+      );
+      if (resFile !== undefined) {
+        saveAs(
+          new Blob([resFile.data], { type: dataSID.file_document.mime_type }),
+          dataSID.file_document.file_name
+        );
       }
     }
-  }
+  };
 
   getBAPAFile = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     e.persist();
     const _id = e.currentTarget.value;
     const dataBAPA = this.state.data_mr.bapa_document;
-    if(dataBAPA !== undefined && dataBAPA !== null)  {
-      const resFile = await getDatafromAPINODEFile('/matreq-srn/getBapaDocument/' + _id, this.props.dataLogin.token, dataBAPA.mime_type);
-      if(resFile !== undefined){
-        saveAs(new Blob([resFile.data], {type:dataBAPA.mime_type}), dataBAPA.file_name);
+    if (dataBAPA !== undefined && dataBAPA !== null) {
+      const resFile = await getDatafromAPINODEFile(
+        "/matreq-srn/getBapaDocument/" + _id,
+        this.props.dataLogin.token,
+        dataBAPA.mime_type
+      );
+      if (resFile !== undefined) {
+        saveAs(
+          new Blob([resFile.data], { type: dataBAPA.mime_type }),
+          dataBAPA.file_name
+        );
       }
     }
+  };
+
+  handleMotType(e) {
+    this.setState({ mot_type: e.target.value });
   }
 
-  handleMotType(e){
-    this.setState({mot_type : e.target.value});
-  }
-
-  handleChangeEditQty(){
-    this.setState(prevState => ({
-      edit_qty_mat_dis: !prevState.edit_qty_mat_dis
+  handleChangeEditQty() {
+    this.setState((prevState) => ({
+      edit_qty_mat_dis: !prevState.edit_qty_mat_dis,
     }));
   }
 
-  handleChangeQtyMaterial(e){
+  handleChangeQtyMaterial(e) {
     const name = e.target.name;
     const value = e.target.value;
-    this.setState(prevState => ({ qty_material_new: prevState.qty_material_new.set(name, value) }));
+    this.setState((prevState) => ({
+      qty_material_new: prevState.qty_material_new.set(name, value),
+    }));
   }
 
-  async updateMaterialQty(){
+  async updateMaterialQty() {
     let dataQtyList = [];
-    let headerRow = ["bam_id", "bundle_id", "bundle_name", "material_id", "material_name", "uom", "qty"];
-    dataQtyList.push(headerRow)
+    let headerRow = [
+      "bam_id",
+      "bundle_id",
+      "bundle_name",
+      "material_id",
+      "material_name",
+      "uom",
+      "qty",
+    ];
+    dataQtyList.push(headerRow);
     const dataMR = this.state.data_mr;
     const dataPackage = dataMR.srn_packages;
     const dataQtyNew = this.state.qty_material_new;
-    for(let i = 0; i < dataPackage.length; i++){
-      for(let j = 0; j < dataPackage[i].srn_materials.length; j++){
+    for (let i = 0; i < dataPackage.length; i++) {
+      for (let j = 0; j < dataPackage[i].srn_materials.length; j++) {
         const dataMat = dataPackage[i].srn_materials[j];
-        if(dataQtyNew.has(dataMat._id)){
-          dataQtyList.push([dataMat._id, dataPackage[i].pp_id, dataPackage[i].product_name, dataMat.material_id, dataMat.material_name, dataMat.uom, dataQtyNew.get(dataMat._id) ])
+        if (dataQtyNew.has(dataMat._id)) {
+          dataQtyList.push([
+            dataMat._id,
+            dataPackage[i].pp_id,
+            dataPackage[i].product_name,
+            dataMat.material_id,
+            dataMat.material_name,
+            dataMat.uom,
+            dataQtyNew.get(dataMat._id),
+          ]);
         }
       }
     }
     const dataUpload = {
-      data : dataQtyList,
-      identifier : "MRD"
-    }
-    const resPatch = await this.patchDatatoAPINODE('/matreq-srn/updateMaterialPlantSpec/'+dataMR._id, dataUpload)
-    if(resPatch !== undefined && resPatch.data !== undefined){
-      this.setState({action_status : 'success'})
-    }else{
-      if (resPatch.response !== undefined && resPatch.response.data !== undefined && resPatch.response.data.error !== undefined) {
+      data: dataQtyList,
+      identifier: "MRD",
+    };
+    const resPatch = await this.patchDatatoAPINODE(
+      "/matreq-srn/updateMaterialPlantSpec/" + dataMR._id,
+      dataUpload
+    );
+    if (resPatch !== undefined && resPatch.data !== undefined) {
+      this.setState({ action_status: "success" });
+    } else {
+      if (
+        resPatch.response !== undefined &&
+        resPatch.response.data !== undefined &&
+        resPatch.response.data.error !== undefined
+      ) {
         if (resPatch.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: resPatch.response.data.error.message });
+          this.setState({
+            action_status: "failed",
+            action_message: resPatch.response.data.error.message,
+          });
         } else {
-          this.setState({ action_status: 'failed', action_message: resPatch.response.data.error });
+          this.setState({
+            action_status: "failed",
+            action_message: resPatch.response.data.error,
+          });
         }
       } else {
-        this.setState({ action_status: 'failed' });
+        this.setState({ action_status: "failed" });
       }
     }
   }
 
-async requestMRDismantle(){
-    const resPatch = await this.patchDatatoAPINODE('/matreq-srn/requestMatreqDismantle/'+this.props.match.params.id, {})
-    if(resPatch !== undefined && resPatch.data !== undefined){
-      this.setState({action_status : 'success'})
-    }else{
-      if (resPatch.response !== undefined && resPatch.response.data !== undefined && resPatch.response.data.error !== undefined) {
+  async requestMRDismantle() {
+    const resPatch = await this.patchDatatoAPINODE(
+      "/matreq-srn/requestMatreqDismantle/" + this.props.match.params.id,
+      {}
+    );
+    if (resPatch !== undefined && resPatch.data !== undefined) {
+      this.setState({ action_status: "success" });
+    } else {
+      if (
+        resPatch.response !== undefined &&
+        resPatch.response.data !== undefined &&
+        resPatch.response.data.error !== undefined
+      ) {
         if (resPatch.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: resPatch.response.data.error.message });
+          this.setState({
+            action_status: "failed",
+            action_message: resPatch.response.data.error.message,
+          });
         } else {
-          this.setState({ action_status: 'failed', action_message: resPatch.response.data.error });
+          this.setState({
+            action_status: "failed",
+            action_message: resPatch.response.data.error,
+          });
         }
       } else {
-        this.setState({ action_status: 'failed' });
+        this.setState({ action_status: "failed" });
       }
     }
   }
@@ -1668,13 +2070,14 @@ async requestMRDismantle(){
       backgroundColor: "#e3e3e3",
     };
 
-    function MapsTrekking(props){
-      return (<GMap/>)
+    function MapsTrekking(props) {
+      return <GMap />;
     }
 
     // const MapLoader = withScriptjs(MapsTrekking);
 
-    let qty_wh = undefined,qty_inbound = undefined;
+    let qty_wh = undefined,
+      qty_inbound = undefined;
     return (
       <div>
         <DefaultNotif
@@ -1690,33 +2093,94 @@ async requestMRDismantle(){
                     className="fa fa-info-circle"
                     style={{ marginRight: "8px" }}
                   ></i>
-                  MRA  Detail
+                  MRA Detail
                 </span>
-                {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && (
-                  <Fragment>{/* }<Button style={{float : 'right', marginRight: "8px"}} size="sm" color="warning" onClick={this.changeEditable}>Edit MRA  Detail</Button> */}</Fragment>
-                )}
-                {(this.state.data_mr !== null && (this.state.sid_file.length !== 0 || this.state.abd_file.length !== 0 || (this.state.data_mr.bapa_document !== undefined && this.state.data_mr.bapa_document !== null))) ? (
-                  <Dropdown size="sm" isOpen={this.state.dropdownOpen[1]} toggle={() => {this.toggleDropdown(1);}} style={{float : 'right', marginRight : '10px'}}>
+                {this.state.data_mr !== null &&
+                  this.state.data_mr.current_mr_status !== "MR CANCELED" &&
+                  this.state.userRole.findIndex(
+                    (e) => e === "BAM-Project Planner"
+                  ) === -1 &&
+                  this.state.userRole.findIndex(
+                    (e) => e === "BAM-Warehouse"
+                  ) === -1 &&
+                  this.state.userRole.findIndex(
+                    (e) => e === "BAM-ASP Management"
+                  ) === -1 &&
+                  this.state.userRole.findIndex((e) => e === "BAM-ASP") ===
+                    -1 &&
+                  this.state.userRole.findIndex(
+                    (e) => e === "BAM-ASPWarehouse"
+                  ) === -1 && (
+                    <Fragment>
+                      {/* }<Button style={{float : 'right', marginRight: "8px"}} size="sm" color="warning" onClick={this.changeEditable}>Edit MRA  Detail</Button> */}
+                    </Fragment>
+                  )}
+                {this.state.data_mr !== null &&
+                (this.state.sid_file.length !== 0 ||
+                  this.state.abd_file.length !== 0 ||
+                  (this.state.data_mr.bapa_document !== undefined &&
+                    this.state.data_mr.bapa_document !== null)) ? (
+                  <Dropdown
+                    size="sm"
+                    isOpen={this.state.dropdownOpen[1]}
+                    toggle={() => {
+                      this.toggleDropdown(1);
+                    }}
+                    style={{ float: "right", marginRight: "10px" }}
+                  >
                     <DropdownToggle caret color="secondary">
-                      <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
+                      <i className="fa fa-download" aria-hidden="true">
+                        {" "}
+                        &nbsp;{" "}
+                      </i>
+                      Download File
                     </DropdownToggle>
                     <DropdownMenu>
                       <DropdownItem header>BAPA File</DropdownItem>
-                      {(this.state.data_mr.bapa_document !== undefined && this.state.data_mr.bapa_document !== null) && (
-                        <DropdownItem value={this.state.data_mr._id} onClick={this.getBAPAFile}><span>{this.state.data_mr.bapa_document.file_name}</span></DropdownItem>
-                      )}
+                      {this.state.data_mr.bapa_document !== undefined &&
+                        this.state.data_mr.bapa_document !== null && (
+                          <DropdownItem
+                            value={this.state.data_mr._id}
+                            onClick={this.getBAPAFile}
+                          >
+                            <span>
+                              {this.state.data_mr.bapa_document.file_name}
+                            </span>
+                          </DropdownItem>
+                        )}
                       <DropdownItem header>SID File</DropdownItem>
-                      {this.state.sid_file.map(sf =>
-                        <DropdownItem value={sf._id} onClick={this.getSIDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
-                      )}
+                      {this.state.sid_file.map((sf) => (
+                        <DropdownItem value={sf._id} onClick={this.getSIDFile}>
+                          <span>{sf.file_document.file_name}</span> (
+                          {sf.cust_del[0].cd_id})
+                        </DropdownItem>
+                      ))}
                       <DropdownItem header>ABD File</DropdownItem>
-                      {(this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && this.state.abd_file.map(sf =>
-                        <DropdownItem value={sf._id} onClick={this.getABDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
-                      )}
+                      {this.state.userRole.findIndex(
+                        (e) => e === "BAM-ASP Management"
+                      ) === -1 &&
+                        this.state.userRole.findIndex(
+                          (e) => e === "BAM-ASP"
+                        ) === -1 &&
+                        this.state.userRole.findIndex(
+                          (e) => e === "BAM-ASPWarehouse"
+                        ) === -1 &&
+                        this.state.abd_file.map((sf) => (
+                          <DropdownItem
+                            value={sf._id}
+                            onClick={this.getABDFile}
+                          >
+                            <span>{sf.file_document.file_name}</span> (
+                            {sf.cust_del[0].cd_id})
+                          </DropdownItem>
+                        ))}
                     </DropdownMenu>
                   </Dropdown>
                 ) : (
-                  <Button size="sm" style={{float : 'right', marginRight : '10px'}}>
+                  <Button
+                    size="sm"
+                    style={{ float: "right", marginRight: "10px" }}
+                  >
                     no data SID or ABD
                   </Button>
                 )}
@@ -1780,13 +2244,25 @@ async requestMRDismantle(){
                     </NavItem>
                   </Nav>
                 </div>
-                <table style={{ width: "100%", marginBottom: "0px", fontSize: "20px", fontWeight: "500" }} >
+                <table
+                  style={{
+                    width: "100%",
+                    marginBottom: "0px",
+                    fontSize: "20px",
+                    fontWeight: "500",
+                  }}
+                >
                   <tbody>
                     <tr>
                       <td
                         colSpan="4"
-                        style={{ textAlign: "center", color: "rgba(59,134,134,1)", fontSize: "21px" }} >
-                        MRA  Detail
+                        style={{
+                          textAlign: "center",
+                          color: "rgba(59,134,134,1)",
+                          fontSize: "21px",
+                        }}
+                      >
+                        MRA Detail
                       </td>
                     </tr>
                     {this.state.data_mr !== null && (
@@ -1800,7 +2276,7 @@ async requestMRDismantle(){
                               color: "rgba(59,134,134,1)",
                             }}
                           >
-                            MRA  ID : {this.state.data_mr.mra_id}
+                            MRA ID : {this.state.data_mr.mra_id}
                           </td>
                         </tr>
                         <tr>
@@ -1827,20 +2303,22 @@ async requestMRDismantle(){
                             MRA Type : {this.state.data_mr.mra_type}
                           </td>
                         </tr>
-                        {(this.state.data_mr.mra_sh_id != undefined && this.state.data_mr.mra_sh_id !== null) && (
-                          <tr>
-                            <td
-                              colSpan="4"
-                              style={{
-                                fontSize: "13px",
-                                textAlign: "center",
-                                color: "rgba(59,134,134,1)",
-                              }}
-                            >
-                              MRA SH Migration ID : {this.state.data_mr.mra_sh_id}
-                            </td>
-                          </tr>
-                        )}
+                        {this.state.data_mr.mra_sh_id != undefined &&
+                          this.state.data_mr.mra_sh_id !== null && (
+                            <tr>
+                              <td
+                                colSpan="4"
+                                style={{
+                                  fontSize: "13px",
+                                  textAlign: "center",
+                                  color: "rgba(59,134,134,1)",
+                                }}
+                              >
+                                MRA SH Migration ID :{" "}
+                                {this.state.data_mr.mra_sh_id}
+                              </td>
+                            </tr>
+                          )}
                       </Fragment>
                     )}
                   </tbody>
@@ -1865,7 +2343,11 @@ async requestMRDismantle(){
                             <div>
                               <ul className="mr-detail__ul--cd-id">
                                 {this.state.data_mr.cust_del !== undefined ? (
-                                  <li>{this.state.data_mr.cust_del.map(cd => cd.cd_id).join(', ')}</li>
+                                  <li>
+                                    {this.state.data_mr.cust_del
+                                      .map((cd) => cd.cd_id)
+                                      .join(", ")}
+                                  </li>
                                 ) : (
                                   <li>{this.state.data_mr.cd_id}</li>
                                 )}
@@ -1909,19 +2391,30 @@ async requestMRDismantle(){
                             <div className="mr-detail__body--header-detail">
                               <span>Dismantle Company</span>
                             </div>
-                            <div>{this.state.data_mr.asp_company_dismantle}</div>
+                            <div>
+                              {this.state.data_mr.asp_company_dismantle}
+                            </div>
                           </div>
                           <div>
                             <div className="mr-detail__body--header-detail">
                               <span>Delivery Company</span>
                             </div>
                             {this.state.edit_detail === true ? (
-                              <Input type="select" name="vendor_code" value={this.state.update_mr_form.vendor_code} onChange={this.handleChangeFormMRUpdate}>
-                                <option value="" disabled selected hidden>Select Delivery Company</option>
+                              <Input
+                                type="select"
+                                name="vendor_code"
+                                value={this.state.update_mr_form.vendor_code}
+                                onChange={this.handleChangeFormMRUpdate}
+                              >
+                                <option value="" disabled selected hidden>
+                                  Select Delivery Company
+                                </option>
                                 <option value="DSP">DSP</option>
-                                {this.state.dsp_list.map(e =>
-                                  <option value={e.Vendor_Code}>{e.Name}</option>
-                                )}
+                                {this.state.dsp_list.map((e) => (
+                                  <option value={e.Vendor_Code}>
+                                    {e.Name}
+                                  </option>
+                                ))}
                               </Input>
                             ) : (
                               <div>{this.state.data_mr.dsp_company}</div>
@@ -1957,7 +2450,14 @@ async requestMRDismantle(){
                                   <span>Origin Site ID</span>
                                 </div>
                                 <div>
-                                  {this.state.data_mr.origin !== null && this.state.data_mr.site_info.find(si => si.srn_title === "Origin") !== undefined ? this.state.data_mr.site_info.find(si => si.srn_title === "Origin").site_id : null}
+                                  {this.state.data_mr.origin !== null &&
+                                  this.state.data_mr.site_info.find(
+                                    (si) => si.srn_title === "Origin"
+                                  ) !== undefined
+                                    ? this.state.data_mr.site_info.find(
+                                        (si) => si.srn_title === "Origin"
+                                      ).site_id
+                                    : null}
                                 </div>
                               </div>
                               <div className="mr-detail__flex-body--25">
@@ -1965,7 +2465,14 @@ async requestMRDismantle(){
                                   <span>Origin Site Name</span>
                                 </div>
                                 <div>
-                                  {this.state.data_mr.origin !== null && this.state.data_mr.site_info.find(si => si.srn_title === "Origin") !== undefined ? this.state.data_mr.site_info.find(si => si.srn_title === "Origin").site_name : null}
+                                  {this.state.data_mr.origin !== null &&
+                                  this.state.data_mr.site_info.find(
+                                    (si) => si.srn_title === "Origin"
+                                  ) !== undefined
+                                    ? this.state.data_mr.site_info.find(
+                                        (si) => si.srn_title === "Origin"
+                                      ).site_name
+                                    : null}
                                 </div>
                               </div>
                               <div className="mr-detail__flex-body--25">
@@ -1973,9 +2480,29 @@ async requestMRDismantle(){
                                   <span>Origin Site Coordinat</span>
                                 </div>
                                 <div>
-                                  <span style={{fontWeight : '700'}}>Lat : </span>{this.state.data_mr.origin !== null && this.state.data_mr.site_info.find(si => si.srn_title === "Origin") !== undefined ? this.state.data_mr.site_info.find(si => si.srn_title === "Origin").site_latitude : null}
+                                  <span style={{ fontWeight: "700" }}>
+                                    Lat :{" "}
+                                  </span>
+                                  {this.state.data_mr.origin !== null &&
+                                  this.state.data_mr.site_info.find(
+                                    (si) => si.srn_title === "Origin"
+                                  ) !== undefined
+                                    ? this.state.data_mr.site_info.find(
+                                        (si) => si.srn_title === "Origin"
+                                      ).site_latitude
+                                    : null}
                                   <br />
-                                  <span style={{fontWeight : '700'}}>Long : </span>{this.state.data_mr.origin !== null && this.state.data_mr.site_info.find(si => si.srn_title === "Origin") !== undefined ? this.state.data_mr.site_info.find(si => si.srn_title === "Origin").site_longitude : null}
+                                  <span style={{ fontWeight: "700" }}>
+                                    Long :{" "}
+                                  </span>
+                                  {this.state.data_mr.origin !== null &&
+                                  this.state.data_mr.site_info.find(
+                                    (si) => si.srn_title === "Origin"
+                                  ) !== undefined
+                                    ? this.state.data_mr.site_info.find(
+                                        (si) => si.srn_title === "Origin"
+                                      ).site_longitude
+                                    : null}
                                 </div>
                               </div>
                             </Fragment>
@@ -1989,20 +2516,27 @@ async requestMRDismantle(){
                                   <span>Destination ID</span>
                                 </div>
                                 <div>
-                                  {this.state.data_mr.origin !== null && this.state.data_mr.destination.value}
+                                  {this.state.data_mr.origin !== null &&
+                                    this.state.data_mr.destination.value}
                                 </div>
                               </div>
                               <div className="mr-detail__flex-body--25">
                                 <div className="mr-detail__body--header-detail">
                                   <span>Destination Name</span>
                                 </div>
-                                {this.state.data_mr.mrd_category_code === "TWH" ? (
-                                  <div>
-                                    {this.state.data_wh.wh_name}
-                                  </div>
+                                {this.state.data_mr.mrd_category_code ===
+                                "TWH" ? (
+                                  <div>{this.state.data_wh.wh_name}</div>
                                 ) : (
                                   <div>
-                                    {this.state.data_mr.origin !== null && this.state.data_mr.site_info.find(si => si.srn_title === "Destination") !== undefined ? this.state.data_mr.site_info.find(si => si.srn_title === "Destination").site_name : null}
+                                    {this.state.data_mr.origin !== null &&
+                                    this.state.data_mr.site_info.find(
+                                      (si) => si.srn_title === "Destination"
+                                    ) !== undefined
+                                      ? this.state.data_mr.site_info.find(
+                                          (si) => si.srn_title === "Destination"
+                                        ).site_name
+                                      : null}
                                   </div>
                                 )}
                               </div>
@@ -2010,17 +2544,44 @@ async requestMRDismantle(){
                                 <div className="mr-detail__body--header-detail">
                                   <span>Destination Coordinat</span>
                                 </div>
-                                {this.state.data_mr.mrd_category_code === "TWH" ? (
+                                {this.state.data_mr.mrd_category_code ===
+                                "TWH" ? (
                                   <div>
-                                    <span style={{fontWeight : '700'}}>Lat : </span>{this.state.data_wh.latitude}
+                                    <span style={{ fontWeight: "700" }}>
+                                      Lat :{" "}
+                                    </span>
+                                    {this.state.data_wh.latitude}
                                     <br />
-                                    <span style={{fontWeight : '700'}}>Long : </span>{this.state.data_wh.longitude}
+                                    <span style={{ fontWeight: "700" }}>
+                                      Long :{" "}
+                                    </span>
+                                    {this.state.data_wh.longitude}
                                   </div>
                                 ) : (
                                   <div>
-                                    <span style={{fontWeight : '700'}}>Lat : </span>{this.state.data_mr.origin !== null && this.state.data_mr.site_info.find(si => si.srn_title === "Destination") !== undefined ? this.state.data_mr.site_info.find(si => si.srn_title === "Destination").site_latitude : null}
+                                    <span style={{ fontWeight: "700" }}>
+                                      Lat :{" "}
+                                    </span>
+                                    {this.state.data_mr.origin !== null &&
+                                    this.state.data_mr.site_info.find(
+                                      (si) => si.srn_title === "Destination"
+                                    ) !== undefined
+                                      ? this.state.data_mr.site_info.find(
+                                          (si) => si.srn_title === "Destination"
+                                        ).site_latitude
+                                      : null}
                                     <br />
-                                    <span style={{fontWeight : '700'}}>Long : </span>{this.state.data_mr.origin !== null && this.state.data_mr.site_info.find(si => si.srn_title === "Destination") !== undefined ? this.state.data_mr.site_info.find(si => si.srn_title === "Destination").site_longitude : null}
+                                    <span style={{ fontWeight: "700" }}>
+                                      Long :{" "}
+                                    </span>
+                                    {this.state.data_mr.origin !== null &&
+                                    this.state.data_mr.site_info.find(
+                                      (si) => si.srn_title === "Destination"
+                                    ) !== undefined
+                                      ? this.state.data_mr.site_info.find(
+                                          (si) => si.srn_title === "Destination"
+                                        ).site_longitude
+                                      : null}
                                   </div>
                                 )}
                               </div>
@@ -2031,47 +2592,54 @@ async requestMRDismantle(){
                         <hr className="mr-detail__line" />
 
                         <div className="mr-detail__body--flex-long">
-                            <Fragment>
-                              {this.state.data_mr.cust_del !== undefined ? (
-                                this.state.data_mr.cust_del.map((e) => (
-                                  <div className="mr-detail__flex-body--25">
-                                    <div className="mr-detail__body--header-detail">
-                                      <span>WBS of CD ID {e.cd_id}</span>
-                                    </div>
-                                    <div>
-                                      <Table responsive striped bordered size="sm">
-                                        <thead>
-                                          <tr style={{fontSize : '10.5px'}}>
-                                            <th>WBS HW</th>
-                                            <th>WBS HWAC (License)</th>
-                                            <th>WBS LCM</th>
-                                            <th>WBS PNRO</th>
-                                            <th>WBS PNDO</th>
-                                            <th>WBS HW Bulk</th>
-                                            <th>WBS LCM Bulk</th>
-                                            <th>WBS PowHW Site Basis</th>
-                                            <th>WBS PowLCM Site Basis</th>
-                                            <th>WBS Kathrein</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          <tr style={{fontSize : '10.5px'}}>
-                                            {this.tableViewWBSCDID(e.cd_id)}
-                                          </tr>
-                                        </tbody>
-                                      </Table>
-                                    </div>
-                                  </div>
-                                ))
-                              ) : (
+                          <Fragment>
+                            {this.state.data_mr.cust_del !== undefined ? (
+                              this.state.data_mr.cust_del.map((e) => (
                                 <div className="mr-detail__flex-body--25">
                                   <div className="mr-detail__body--header-detail">
-                                    <span>WBS of CD ID {this.state.data_mr.cd_id}</span>
+                                    <span>WBS of CD ID {e.cd_id}</span>
                                   </div>
-                                  <div>{this.state.mr_site_NE.site_id}</div>
+                                  <div>
+                                    <Table
+                                      responsive
+                                      striped
+                                      bordered
+                                      size="sm"
+                                    >
+                                      <thead>
+                                        <tr style={{ fontSize: "10.5px" }}>
+                                          <th>WBS HW</th>
+                                          <th>WBS HWAC (License)</th>
+                                          <th>WBS LCM</th>
+                                          <th>WBS PNRO</th>
+                                          <th>WBS PNDO</th>
+                                          <th>WBS HW Bulk</th>
+                                          <th>WBS LCM Bulk</th>
+                                          <th>WBS PowHW Site Basis</th>
+                                          <th>WBS PowLCM Site Basis</th>
+                                          <th>WBS Kathrein</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr style={{ fontSize: "10.5px" }}>
+                                          {this.tableViewWBSCDID(e.cd_id)}
+                                        </tr>
+                                      </tbody>
+                                    </Table>
+                                  </div>
                                 </div>
-                              )}
-                            </Fragment>
+                              ))
+                            ) : (
+                              <div className="mr-detail__flex-body--25">
+                                <div className="mr-detail__body--header-detail">
+                                  <span>
+                                    WBS of CD ID {this.state.data_mr.cd_id}
+                                  </span>
+                                </div>
+                                <div>{this.state.mr_site_NE.site_id}</div>
+                              </div>
+                            )}
+                          </Fragment>
                         </div>
 
                         <hr className="mr-detail__line" />
@@ -2086,11 +2654,21 @@ async requestMRDismantle(){
                     <Row>
                       <Col md="6">
                         <div>
-                          <Button color="info" style={{margin : '0px 10px'}} size="sm" onClick={this.handleChangeEditQty}>
+                          <Button
+                            color="info"
+                            style={{ margin: "0px 10px" }}
+                            size="sm"
+                            onClick={this.handleChangeEditQty}
+                          >
                             Edit Material Qty
                           </Button>
                           {this.state.edit_qty_mat_dis === true && (
-                            <Button color="success" style={{float : 'right', margin : '0px 10px'}} size="sm" onClick={this.updateMaterialQty}>
+                            <Button
+                              color="success"
+                              style={{ float: "right", margin: "0px 10px" }}
+                              size="sm"
+                              onClick={this.updateMaterialQty}
+                            >
                               Update Material Qty
                             </Button>
                           )}
@@ -2098,48 +2676,179 @@ async requestMRDismantle(){
                       </Col>
                     </Row>
                     <hr className="upload-line-ordering"></hr>
-                    <div>PlantSpec Group No : {this.state.data_mr !== null ? (<Link to={'/srn/ps-srn-detail/'+this.state.data_mr.id_plantspec_doc}>{this.state.data_mr.srn_plantspec.length !== 0 ? this.state.data_mr.srn_plantspec[0].no_plantspec_srn : null}</Link>) : ""}</div>
+                    <div>
+                      PlantSpec Group No :{" "}
+                      {this.state.data_mr !== null ? (
+                        <Link
+                          to={
+                            "/srn/ps-srn-detail/" +
+                            this.state.data_mr.id_plantspec_doc
+                          }
+                        >
+                          {this.state.data_mr.srn_plantspec.length !== 0
+                            ? this.state.data_mr.srn_plantspec[0]
+                                .no_plantspec_srn
+                            : null}
+                        </Link>
+                      ) : (
+                        ""
+                      )}
+                    </div>
                     <div className="divtable2">
                       <Table hover bordered striped responsive size="sm">
-                        <thead style={{backgroundColor : '#0B486B', color : 'white'}}>
+                        <thead
+                          style={{ backgroundColor: "#0B486B", color: "white" }}
+                        >
                           <tr>
-                            <th className="fixedhead" style={{width : '200px', verticalAlign : 'middle'}}>PP / Material Code</th>
-                            <th className="fixedhead" style={{verticalAlign : 'middle'}}>PP / Material Name</th>
-                            <th className="fixedhead" style={{width : '100px', verticalAlign : 'middle'}}>UoM</th>
-                            <th className="fixedhead" style={{width : '150px', verticalAlign : 'middle'}}>Qty</th>
-                            <th className="fixedhead" style={{width : '150px', verticalAlign : 'middle'}}>Qty Actual</th>
+                            <th
+                              className="fixedhead"
+                              style={{
+                                width: "200px",
+                                verticalAlign: "middle",
+                              }}
+                            >
+                              PP / Material Code
+                            </th>
+                            <th
+                              className="fixedhead"
+                              style={{ verticalAlign: "middle" }}
+                            >
+                              PP / Material Name
+                            </th>
+                            <th
+                              className="fixedhead"
+                              style={{
+                                width: "100px",
+                                verticalAlign: "middle",
+                              }}
+                            >
+                              UoM
+                            </th>
+                            <th
+                              className="fixedhead"
+                              style={{
+                                width: "150px",
+                                verticalAlign: "middle",
+                              }}
+                            >
+                              Qty
+                            </th>
+                            <th
+                              className="fixedhead"
+                              style={{
+                                width: "150px",
+                                verticalAlign: "middle",
+                              }}
+                            >
+                              Qty Actual
+                            </th>
                           </tr>
                         </thead>
                         {this.state.data_mr !== null && (
                           <tbody>
-                            {this.state.data_mr.srn_packages !== undefined && this.state.data_mr.srn_packages.filter(e => e.product_type.toLowerCase() !== "svc").map((pp,arr_pp) =>
-                              <Fragment>
-                                <tr key={arr_pp} style={{backgroundColor : '#E5FCC2'}} className="fixbody">
-                                  <td style={{textAlign : 'left'}}>{pp.pp_id}</td>
-                                  <td>{pp.product_name}</td>
-                                  <td>{pp.uom}</td>
-                                  <td align='center'>{pp.qty.toFixed(2)}</td>
-                                  <td align='center'>{pp.qty.toFixed(2)}</td>
-                                </tr>
-                                {pp.srn_materials.map((material, arr_mat) =>
-                                  <tr key={arr_pp+"/"+arr_mat} style={{backgroundColor : 'rgba(248,246,223, 0.5)'}} className="fixbody">
-                                    <td style={{textAlign : 'right'}}>{material.material_id}</td>
-                                    <td style={{textAlign : 'left'}}>{material.material_name}</td>
-                                    <td>{material.uom}</td>
-                                    {this.state.edit_qty_mat_dis === true ? (
-                                      <td key={arr_mat} align='center'>
-                                        <Input type="number" name={material._id} value={this.state.qty_material_new.has(material._id) ? this.state.qty_material_new.get(material._id) : material.qty} onChange={this.handleChangeQtyMaterial}/>
+                            {this.state.data_mr.srn_packages !== undefined &&
+                              this.state.data_mr.srn_packages
+                                .filter(
+                                  (e) => e.product_type.toLowerCase() !== "svc"
+                                )
+                                .map((pp, arr_pp) => (
+                                  <Fragment>
+                                    <tr
+                                      key={arr_pp}
+                                      style={{ backgroundColor: "#E5FCC2" }}
+                                      className="fixbody"
+                                    >
+                                      <td style={{ textAlign: "left" }}>
+                                        {pp.pp_id}
                                       </td>
-                                    ) : (
-                                      <td key={arr_mat} align='center'>{ material.qty }</td>
+                                      <td>{pp.product_name}</td>
+                                      <td>{pp.uom}</td>
+                                      <td align="center">
+                                        {pp.qty.toFixed(2)}
+                                      </td>
+                                      <td align="center">
+                                        {pp.qty.toFixed(2)}
+                                      </td>
+                                    </tr>
+                                    {pp.srn_materials.map(
+                                      (material, arr_mat) => (
+                                        <tr
+                                          key={arr_pp + "/" + arr_mat}
+                                          style={{
+                                            backgroundColor:
+                                              "rgba(248,246,223, 0.5)",
+                                          }}
+                                          className="fixbody"
+                                        >
+                                          <td style={{ textAlign: "right" }}>
+                                            {material.material_id}
+                                          </td>
+                                          <td style={{ textAlign: "left" }}>
+                                            {material.material_name}
+                                          </td>
+                                          <td>{material.uom}</td>
+                                          {this.state.edit_qty_mat_dis ===
+                                          true ? (
+                                            <td key={arr_mat} align="center">
+                                              <Input
+                                                type="number"
+                                                name={material._id}
+                                                value={
+                                                  this.state.qty_material_new.has(
+                                                    material._id
+                                                  )
+                                                    ? this.state.qty_material_new.get(
+                                                        material._id
+                                                      )
+                                                    : material.qty
+                                                }
+                                                onChange={
+                                                  this.handleChangeQtyMaterial
+                                                }
+                                              />
+                                            </td>
+                                          ) : (
+                                            <td key={arr_mat} align="center">
+                                              {material.qty}
+                                            </td>
+                                          )}
+                                          <td align="center">
+                                            {this.state.data_mr
+                                              .lom_srn_packages !== undefined &&
+                                            this.state.data_mr.lom_srn_packages.find(
+                                              (lsp) => lsp.pp_id === pp.pp_id
+                                            ) !== undefined
+                                              ? this.state.data_mr.lom_srn_packages
+                                                  .find(
+                                                    (lsp) =>
+                                                      lsp.pp_id === pp.pp_id
+                                                  )
+                                                  .lom_srn_materials.find(
+                                                    (lsm) =>
+                                                      lsm.material_id ===
+                                                      material.material_id
+                                                  ) !== undefined
+                                                ? material.qty -
+                                                  this.state.data_mr.lom_srn_packages
+                                                    .find(
+                                                      (lsp) =>
+                                                        lsp.pp_id === pp.pp_id
+                                                    )
+                                                    .lom_srn_materials.find(
+                                                      (lsm) =>
+                                                        lsm.material_id ===
+                                                        material.material_id
+                                                    ).qty
+                                                : material.qty
+                                              : material.qty}
+                                          </td>
+                                        </tr>
+                                      )
                                     )}
-                                    <td align='center'>{this.state.data_mr.lom_srn_packages !== undefined && this.state.data_mr.lom_srn_packages.find(lsp => lsp.pp_id === pp.pp_id) !== undefined ? this.state.data_mr.lom_srn_packages.find(lsp => lsp.pp_id === pp.pp_id).lom_srn_materials.find(lsm => lsm.material_id === material.material_id) !== undefined ? material.qty - this.state.data_mr.lom_srn_packages.find(lsp => lsp.pp_id === pp.pp_id).lom_srn_materials.find(lsm => lsm.material_id === material.material_id).qty : material.qty : material.qty }</td>
-                                  </tr>
-                                )}
-                              </Fragment>
-                            )}
+                                  </Fragment>
+                                ))}
                           </tbody>
-                        ) }
+                        )}
                       </Table>
                     </div>
                   </Fragment>
@@ -2190,8 +2899,21 @@ async requestMRDismantle(){
                             <CardBody style={background}>
                               <VerticalTimeline>
                                 {this.state.data_mr !== null &&
-                                  this.state.data_mr.mra_status.filter((e) => e.mra_status_name !== "IMPLEMENTATION")
-                                  .map((ms, i) => {return this.milestoneStat(ms.mra_status_name, ms.mra_status_value, ms.mra_status_date, ms.mra_status_updater, ms.mra_status_note, i);})}
+                                  this.state.data_mr.mra_status
+                                    .filter(
+                                      (e) =>
+                                        e.mra_status_name !== "IMPLEMENTATION"
+                                    )
+                                    .map((ms, i) => {
+                                      return this.milestoneStat(
+                                        ms.mra_status_name,
+                                        ms.mra_status_value,
+                                        ms.mra_status_date,
+                                        ms.mra_status_updater,
+                                        ms.mra_status_note,
+                                        i
+                                      );
+                                    })}
                               </VerticalTimeline>
                             </CardBody>
                           </Card>
@@ -2202,52 +2924,118 @@ async requestMRDismantle(){
                 )}
                 {this.state.tabs_submenu[3] === true && (
                   <Fragment>
-                    {this.state.data_mr !== null ? (this.state.location_mr.updated_location !== undefined) ? (
-                      <Fragment>
-                      {console.log("dataWH", this.state.data_wh)}
-                      <GMap
-                        wh_lat={this.state.data_wh.latitude}
-                        wh_lng={this.state.data_wh.longitude}
-                        dsp_lat={this.state.location_mr.updated_location.latitude}
-                        dsp_lng={this.state.location_mr.updated_location.longitude}
-                        site_lat={this.state.data_mr.site_info[0].site_latitude}
-                        site_lng={this.state.data_mr.site_info[0].site_longitude}
-                      />
-                      </Fragment>
-                    ): (
-                      <GMap
-                        wh_lat={this.state.data_wh.latitude === null ? undefined : this.state.data_wh.latitude}
-                        wh_lng={this.state.data_wh.longitude === null ? undefined : this.state.data_wh.longitude}
-                        dsp_lat={this.state.data_wh.latitude === null ? undefined : this.state.data_wh.latitude}
-                        dsp_lng={this.state.data_wh.longitude === null ? undefined : this.state.data_wh.longitude}
-                        site_lat={this.state.data_mr.site_info[0].site_latitude}
-                        site_lng={this.state.data_mr.site_info[0].site_longitude}
-                      />
-                    ) : <div></div>}
+                    {this.state.data_mr !== null ? (
+                      this.state.location_mr.updated_location !== undefined ? (
+                        <Fragment>
+                          {console.log("dataWH", this.state.data_wh)}
+                          <GMap
+                            wh_lat={this.state.data_wh.latitude}
+                            wh_lng={this.state.data_wh.longitude}
+                            dsp_lat={
+                              this.state.location_mr.updated_location.latitude
+                            }
+                            dsp_lng={
+                              this.state.location_mr.updated_location.longitude
+                            }
+                            site_lat={
+                              this.state.data_mr.site_info[0].site_latitude
+                            }
+                            site_lng={
+                              this.state.data_mr.site_info[0].site_longitude
+                            }
+                          />
+                        </Fragment>
+                      ) : (
+                        <GMap
+                          wh_lat={
+                            this.state.data_wh.latitude === null
+                              ? undefined
+                              : this.state.data_wh.latitude
+                          }
+                          wh_lng={
+                            this.state.data_wh.longitude === null
+                              ? undefined
+                              : this.state.data_wh.longitude
+                          }
+                          dsp_lat={
+                            this.state.data_wh.latitude === null
+                              ? undefined
+                              : this.state.data_wh.latitude
+                          }
+                          dsp_lng={
+                            this.state.data_wh.longitude === null
+                              ? undefined
+                              : this.state.data_wh.longitude
+                          }
+                          site_lat={
+                            this.state.data_mr.site_info[0].site_latitude
+                          }
+                          site_lng={
+                            this.state.data_mr.site_info[0].site_longitude
+                          }
+                        />
+                      )
+                    ) : (
+                      <div></div>
+                    )}
                   </Fragment>
                 )}
               </CardBody>
               <CardFooter>
-              {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && (
-                <React.Fragment>
-                  {this.state.data_mr !== null && (
-                    <div>
-                      {(this.state.userRole.findIndex(e => e === "BAM-LDM") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1) && this.state.data_mr.current_mra_status === "MR REQUESTED" ? (
-                        <Button color="success" style={{ float: "right" }} size="sm" onClick={this.toggleModalapprove} >
-                          Approve
-                        </Button>
-                      ) : (
-                        <div></div>
+                {this.state.data_mr !== null &&
+                  this.state.data_mr.current_mr_status !== "MR CANCELED" &&
+                  this.state.userRole.findIndex(
+                    (e) => e === "BAM-Project Planner"
+                  ) === -1 &&
+                  this.state.userRole.findIndex(
+                    (e) => e === "BAM-Warehouse"
+                  ) === -1 &&
+                  this.state.userRole.findIndex(
+                    (e) => e === "BAM-ASP Management"
+                  ) === -1 &&
+                  this.state.userRole.findIndex((e) => e === "BAM-ASP") ===
+                    -1 &&
+                  this.state.userRole.findIndex(
+                    (e) => e === "BAM-ASPWarehouse"
+                  ) === -1 && (
+                    <React.Fragment>
+                      {this.state.data_mr !== null && (
+                        <div>
+                          {(this.state.userRole.findIndex(
+                            (e) => e === "BAM-LDM"
+                          ) !== -1 ||
+                            this.state.userRole.findIndex(
+                              (e) => e === "Admin"
+                            ) !== -1) &&
+                          this.state.data_mr.current_mra_status ===
+                            "MR REQUESTED" ? (
+                            <Button
+                              color="success"
+                              style={{ float: "right" }}
+                              size="sm"
+                              onClick={this.toggleModalapprove}
+                            >
+                              Approve
+                            </Button>
+                          ) : (
+                            <div></div>
+                          )}
+                        </div>
                       )}
-                    </div>
+                    </React.Fragment>
                   )}
-                </React.Fragment>
-              )}
-              {(this.state.data_mr !== null && this.state.data_mr.current_mra_status === "PLANTSPEC SRN UPDATED") && (
-                <Button color="info" style={{ float: "right" }} size="sm" onClick={this.requestMRDismantle} >
-                  Request MRD
-                </Button>
-              )}
+                {this.state.data_mr !== null &&
+                  this.state.data_mr.current_mra_status ===
+                    "PLANTSPEC SRN UPDATED" && (
+                    <Button
+                      color="info"
+                      style={{ float: "right" }}
+                      size="sm"
+                      onClick={this.requestMRDismantle}
+                    >
+                      Request MRD
+                    </Button>
+                  )}
               </CardFooter>
             </Card>
           </Col>
@@ -2279,14 +3067,33 @@ async requestMRDismantle(){
         </Modal>
         {/* end Modal Loading */}
 
-        <Modal isOpen={this.state.modal_revision} toggle={this.toggleModalRevision} className={"modal-sm"}>
+        <Modal
+          isOpen={this.state.modal_revision}
+          toggle={this.toggleModalRevision}
+          className={"modal-sm"}
+        >
           <ModalHeader>Note for Revision</ModalHeader>
           <ModalBody>
-            <Input type="textarea" rows="9" placeholder="Note..." onChange={this.handleRevisionNote} value={this.state.revision_note} />
+            <Input
+              type="textarea"
+              rows="9"
+              placeholder="Note..."
+              onChange={this.handleRevisionNote}
+              value={this.state.revision_note}
+            />
           </ModalBody>
           <ModalFooter>
-            <Button color="warning" style={{ float: "right", marginRight: "8px" }} onClick={this.needReviseMR}><i className="fa fa-edit" style={{ marginRight: "8px" }}></i> Need Revision</Button>
-            <Button color="secondary" onClick={this.toggleModalRevision}>Cancel</Button>
+            <Button
+              color="warning"
+              style={{ float: "right", marginRight: "8px" }}
+              onClick={this.needReviseMR}
+            >
+              <i className="fa fa-edit" style={{ marginRight: "8px" }}></i> Need
+              Revision
+            </Button>
+            <Button color="secondary" onClick={this.toggleModalRevision}>
+              Cancel
+            </Button>
           </ModalFooter>
         </Modal>
 
@@ -2294,47 +3101,54 @@ async requestMRDismantle(){
         <ModalForm
           isOpen={this.state.modal_approve_ldm}
           toggle={this.toggleModalapprove}
-          className={'modal-sm modal--box-input'}
+          className={"modal-sm modal--box-input"}
         >
           <Col>
-          {this.state.data_mr !== null && this.state.data_mr !== undefined && this.state.data_mr.dsp_company !== null ? (
-            <FormGroup>
-              <Label htmlFor="total_box">Delivery Company</Label>
-              <Input
-                type="text"
-                className=""
-                placeholder=""
-                value={this.state.data_mr.dsp_company}
-                readOnly
-              />
-            </FormGroup>
-          ) : (
-            <Fragment>
-            <FormGroup>
-              <Label htmlFor="total_box">DSP Company</Label>
-              <Input
-                type="select"
-                className=""
-                placeholder=""
-                onChange={this.handleLDMapprove}
-              >
-                <option value="" disabled selected hidden></option>
-                {this.state.asp_data.map((asp) => (
-                  <option value={asp.Vendor_Code}>{asp.Name}</option>
-                ))}
-              </Input>
-            </FormGroup>
-            <FormGroup>
-              <Label htmlFor="total_box">MOT Type</Label>
-              <Input type="select" name={"0 /// sub_category"} onChange={this.handleMotType} value={this.state.mot_type}>
-                <option value="" disabled selected hidden></option>
-                <option value="MOT-Land">MOT-Land</option>
-                <option value="MOT-Air">MOT-Air</option>
-                <option value="MOT-Sea">MOT-Sea</option>
-              </Input>
-            </FormGroup>
-            </Fragment>
-          )}
+            {this.state.data_mr !== null &&
+            this.state.data_mr !== undefined &&
+            this.state.data_mr.dsp_company !== null ? (
+              <FormGroup>
+                <Label htmlFor="total_box">Delivery Company</Label>
+                <Input
+                  type="text"
+                  className=""
+                  placeholder=""
+                  value={this.state.data_mr.dsp_company}
+                  readOnly
+                />
+              </FormGroup>
+            ) : (
+              <Fragment>
+                <FormGroup>
+                  <Label htmlFor="total_box">DSP Company</Label>
+                  <Input
+                    type="select"
+                    className=""
+                    placeholder=""
+                    onChange={this.handleLDMapprove}
+                  >
+                    <option value="" disabled selected hidden></option>
+                    {this.state.asp_data.map((asp) => (
+                      <option value={asp.Vendor_Code}>{asp.Name}</option>
+                    ))}
+                  </Input>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="total_box">MOT Type</Label>
+                  <Input
+                    type="select"
+                    name={"0 /// sub_category"}
+                    onChange={this.handleMotType}
+                    value={this.state.mot_type}
+                  >
+                    <option value="" disabled selected hidden></option>
+                    <option value="MOT-Land">MOT-Land</option>
+                    <option value="MOT-Air">MOT-Air</option>
+                    <option value="MOT-Sea">MOT-Sea</option>
+                  </Input>
+                </FormGroup>
+              </Fragment>
+            )}
           </Col>
           <div style={{ justifyContent: "center", alignSelf: "center" }}>
             <Button

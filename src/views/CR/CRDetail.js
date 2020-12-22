@@ -11,7 +11,17 @@ import {
   DropdownToggle,
   Collapse,
 } from "reactstrap";
-import { Col, FormGroup, Label, Row, Table, Input, InputGroup, InputGroupAddon, InputGroupText } from "reactstrap";
+import {
+  Col,
+  FormGroup,
+  Label,
+  Row,
+  Table,
+  Input,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+} from "reactstrap";
 import { ExcelRenderer } from "react-excel-renderer";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 import axios from "axios";
@@ -23,7 +33,7 @@ import Excel from "exceljs";
 import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
-import {convertDateFormat, getDateFormat} from '../../helper/basicFunction'
+import { convertDateFormat, getDateFormat } from "../../helper/basicFunction";
 import "./CRcss.css";
 
 const Checkbox = ({
@@ -33,21 +43,21 @@ const Checkbox = ({
   onChange,
   value,
 }) => (
-    <input
-      type={type}
-      name={name}
-      checked={checked}
-      onChange={onChange}
-      value={value}
-      className="checkmark-dash"
-    />
-  );
+  <input
+    type={type}
+    name={name}
+    checked={checked}
+    onChange={onChange}
+    value={value}
+    className="checkmark-dash"
+  />
+);
 
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 class CRDetail extends React.Component {
   constructor(props) {
@@ -81,8 +91,8 @@ class CRDetail extends React.Component {
       activeItemName: "",
       activeItemId: null,
       createModal: false,
-      filter_list : {},
-      cr_temp_aging : 0,
+      filter_list: {},
+      cr_temp_aging: 0,
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -161,10 +171,9 @@ class CRDetail extends React.Component {
     });
   }
 
-
   async getDatafromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -183,12 +192,16 @@ class CRDetail extends React.Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.post(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         // console.log("respond Post Data", respond);
       }
@@ -202,12 +215,16 @@ class CRDetail extends React.Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond patch Data", respond);
       }
@@ -221,12 +238,15 @@ class CRDetail extends React.Component {
 
   async deleteDataFromAPINODE(url) {
     try {
-      let respond = await axios.delete(API_URL_NODE + url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.delete(
+        process.env.REACT_APP_API_URL_NODE + url,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond delete Data", respond);
       }
@@ -257,9 +277,13 @@ class CRDetail extends React.Component {
     this.setState({ search: keyword });
   };
 
-
   getWHStockList() {
-    this.getDatafromAPINODE("/variants/variants?lmt=" + this.state.perPage + '&pg=' + this.state.activePage).then((res) => {
+    this.getDatafromAPINODE(
+      "/variants/variants?lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
+    ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -267,7 +291,11 @@ class CRDetail extends React.Component {
           total_dataParent: res.data.totalResults,
         });
       } else {
-        this.setState({ all_data: [], total_dataParent: 0, prevPage: this.state.activePage });
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
       }
     });
   }
@@ -365,19 +393,115 @@ class CRDetail extends React.Component {
   }
 
   getDRMDataList() {
-    let cr_system_number = this.state.filter_list.cr_system_number === null || this.state.filter_list.cr_system_number ===  undefined ? '"cr_system_number" : {"$exists" : 1}' : '"cr_system_number" : {"$regex" : "'+this.state.filter_list.cr_system_number+'", "$options" : "i"}';
-    let sub_region_before = this.state.filter_list.sub_region_before === null || this.state.filter_list.sub_region_before ===  undefined ? '"sub_region_before" : {"$exists" : 1}' : '"sub_region_before" : {"$regex" : "'+this.state.filter_list.sub_region_before+'", "$options" : "i"}';
-    let tower_id_before = this.state.filter_list.tower_id_before === null || this.state.filter_list.tower_id_before ===  undefined ? '"tower_id_before" : {"$exists" : 1}' : '"tower_id_before" : {"$regex" : "'+this.state.filter_list.tower_id_before+'", "$options" : "i"}';
-    let site_id_before = this.state.filter_list.site_id_before === null || this.state.filter_list.site_id_before ===  undefined ? '"site_id_before" : {"$exists" : 1}' : '"site_id_before" : {"$regex" : "'+this.state.filter_list.site_id_before+'", "$options" : "i"}';
-    let site_name_before = this.state.filter_list.site_name_before === null || this.state.filter_list.site_name_before ===  undefined ? '"site_name_before" : {"$exists" : 1}' : '"site_name_before" : {"$regex" : "'+this.state.filter_list.site_name_before+'", "$options" : "i"}';
-    let sub_region_after = this.state.filter_list.sub_region_after === null || this.state.filter_list.sub_region_after ===  undefined ? '"sub_region_after" : {"$exists" : 1}' : '"sub_region_after" : {"$regex" : "'+this.state.filter_list.sub_region_after+'", "$options" : "i"}';
-    let tower_id_after = this.state.filter_list.tower_id_after === null || this.state.filter_list.tower_id_after ===  undefined ? '"tower_id_after" : {"$exists" : 1}' : '"tower_id_after" : {"$regex" : "'+this.state.filter_list.tower_id_after+'", "$options" : "i"}';
-    let site_id_after = this.state.filter_list.site_id_after === null || this.state.filter_list.site_id_after ===  undefined ? '"site_id_after" : {"$exists" : 1}' : '"site_id_after" : {"$regex" : "'+this.state.filter_list.site_id_after+'", "$options" : "i"}';
-    let site_name_after = this.state.filter_list.site_name_after === null || this.state.filter_list.site_name_after ===  undefined ? '"site_name_after" : {"$exists" : 1}' : '"site_name_after" : {"$regex" : "'+this.state.filter_list.site_name_after+'", "$options" : "i"}';
-    let remark = this.state.filter_list.remark === null || this.state.filter_list.remark ===  undefined ? '"remark" : {"$exists" : 1}' : '"remark" : {"$regex" : "'+this.state.filter_list.remark+'", "$options" : "i"}';
-    let status = this.state.filter_list.status === null || this.state.filter_list.status ===  undefined ? '"status" : {"$exists" : 1}' : '"status" : {"$regex" : "'+this.state.filter_list.status+'", "$options" : "i"}';
-    let whereAnd = 'q={'+cr_system_number+','+sub_region_before+','+tower_id_before+','+site_id_before+','+site_name_before+','+sub_region_after+','+tower_id_after+','+site_id_after+','+site_name_after+','+remark+','+status+'}';
-    this.getDatafromAPINODE("/changeRequest/getCr?srt=_id:-1&lmt=" + this.state.perPage + '&pg=' + this.state.activePage+'&'+whereAnd).then((res) => {
+    let cr_system_number =
+      this.state.filter_list.cr_system_number === null ||
+      this.state.filter_list.cr_system_number === undefined
+        ? '"cr_system_number" : {"$exists" : 1}'
+        : '"cr_system_number" : {"$regex" : "' +
+          this.state.filter_list.cr_system_number +
+          '", "$options" : "i"}';
+    let sub_region_before =
+      this.state.filter_list.sub_region_before === null ||
+      this.state.filter_list.sub_region_before === undefined
+        ? '"sub_region_before" : {"$exists" : 1}'
+        : '"sub_region_before" : {"$regex" : "' +
+          this.state.filter_list.sub_region_before +
+          '", "$options" : "i"}';
+    let tower_id_before =
+      this.state.filter_list.tower_id_before === null ||
+      this.state.filter_list.tower_id_before === undefined
+        ? '"tower_id_before" : {"$exists" : 1}'
+        : '"tower_id_before" : {"$regex" : "' +
+          this.state.filter_list.tower_id_before +
+          '", "$options" : "i"}';
+    let site_id_before =
+      this.state.filter_list.site_id_before === null ||
+      this.state.filter_list.site_id_before === undefined
+        ? '"site_id_before" : {"$exists" : 1}'
+        : '"site_id_before" : {"$regex" : "' +
+          this.state.filter_list.site_id_before +
+          '", "$options" : "i"}';
+    let site_name_before =
+      this.state.filter_list.site_name_before === null ||
+      this.state.filter_list.site_name_before === undefined
+        ? '"site_name_before" : {"$exists" : 1}'
+        : '"site_name_before" : {"$regex" : "' +
+          this.state.filter_list.site_name_before +
+          '", "$options" : "i"}';
+    let sub_region_after =
+      this.state.filter_list.sub_region_after === null ||
+      this.state.filter_list.sub_region_after === undefined
+        ? '"sub_region_after" : {"$exists" : 1}'
+        : '"sub_region_after" : {"$regex" : "' +
+          this.state.filter_list.sub_region_after +
+          '", "$options" : "i"}';
+    let tower_id_after =
+      this.state.filter_list.tower_id_after === null ||
+      this.state.filter_list.tower_id_after === undefined
+        ? '"tower_id_after" : {"$exists" : 1}'
+        : '"tower_id_after" : {"$regex" : "' +
+          this.state.filter_list.tower_id_after +
+          '", "$options" : "i"}';
+    let site_id_after =
+      this.state.filter_list.site_id_after === null ||
+      this.state.filter_list.site_id_after === undefined
+        ? '"site_id_after" : {"$exists" : 1}'
+        : '"site_id_after" : {"$regex" : "' +
+          this.state.filter_list.site_id_after +
+          '", "$options" : "i"}';
+    let site_name_after =
+      this.state.filter_list.site_name_after === null ||
+      this.state.filter_list.site_name_after === undefined
+        ? '"site_name_after" : {"$exists" : 1}'
+        : '"site_name_after" : {"$regex" : "' +
+          this.state.filter_list.site_name_after +
+          '", "$options" : "i"}';
+    let remark =
+      this.state.filter_list.remark === null ||
+      this.state.filter_list.remark === undefined
+        ? '"remark" : {"$exists" : 1}'
+        : '"remark" : {"$regex" : "' +
+          this.state.filter_list.remark +
+          '", "$options" : "i"}';
+    let status =
+      this.state.filter_list.status === null ||
+      this.state.filter_list.status === undefined
+        ? '"status" : {"$exists" : 1}'
+        : '"status" : {"$regex" : "' +
+          this.state.filter_list.status +
+          '", "$options" : "i"}';
+    let whereAnd =
+      "q={" +
+      cr_system_number +
+      "," +
+      sub_region_before +
+      "," +
+      tower_id_before +
+      "," +
+      site_id_before +
+      "," +
+      site_name_before +
+      "," +
+      sub_region_after +
+      "," +
+      tower_id_after +
+      "," +
+      site_id_after +
+      "," +
+      site_name_after +
+      "," +
+      remark +
+      "," +
+      status +
+      "}";
+    this.getDatafromAPINODE(
+      "/changeRequest/getCr?srt=_id:-1&lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage +
+        "&" +
+        whereAnd
+    ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -385,7 +509,11 @@ class CRDetail extends React.Component {
           total_dataParent: res.data.totalResults,
         });
       } else {
-        this.setState({ all_data: [], total_dataParent: 0, prevPage: this.state.activePage });
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
       }
     });
   }
@@ -498,21 +626,31 @@ class CRDetail extends React.Component {
     const dataXLS = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     const res = await this.postDatatoAPINODE("/changeRequest/createCr", {
-      'crData': dataXLS,
+      crData: dataXLS,
     });
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-        if(res.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error.message) });
-        }else{
-          this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error) });
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({
+            action_status: "failed",
+            action_message: JSON.stringify(res.response.data.error.message),
+          });
+        } else {
+          this.setState({
+            action_status: "failed",
+            action_message: JSON.stringify(res.response.data.error),
+          });
         }
-      }else{
-        this.setState({ action_status: 'failed' });
+      } else {
+        this.setState({ action_status: "failed" });
       }
       this.toggleLoading();
     }
@@ -524,10 +662,13 @@ class CRDetail extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     // console.log('xlsx data', JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE("/variants/createVariantsTruncate", {
-      'materialData': BulkXLSX,
-    });
-    console.log('res bulk ', res);
+    const res = await this.postDatatoAPINODE(
+      "/variants/createVariantsTruncate",
+      {
+        materialData: BulkXLSX,
+      }
+    );
+    console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -546,24 +687,25 @@ class CRDetail extends React.Component {
     this.setState({ MatStockForm: dataForm });
   }
 
-  countagingCR(e){
+  countagingCR(e) {
     const today = new Date();
     const json_date = new Date(e);
-    console.log('json_date ',json_date);
-    const diff = parseInt((today - json_date)/(1000 * 60 * 60 * 24), 10);
+    console.log("json_date ", json_date);
+    const diff = parseInt((today - json_date) / (1000 * 60 * 60 * 24), 10);
     // this.setState({ cr_temp_aging: diff });
     return diff;
-
   }
 
-  countagingApproved(e, b){
+  countagingApproved(e, b) {
     const approval_date = new Date(e);
     const submission_date = new Date(b);
-    const diff = parseInt((approval_date - submission_date)/(1000 * 60 * 60 * 24), 10);
+    const diff = parseInt(
+      (approval_date - submission_date) / (1000 * 60 * 60 * 24),
+      10
+    );
     // console.log('diff ',diff);
     // this.setState({ cr_temp_aging: diff });
     return diff;
-
   }
 
   async saveUpdate() {
@@ -633,14 +775,24 @@ class CRDetail extends React.Component {
       if (res.data !== undefined) {
         this.toggleLoading();
       } else {
-        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-          if(res.response.data.error.message !== undefined){
-            this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error.message) });
-          }else{
-            this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error) });
+        if (
+          res.response !== undefined &&
+          res.response.data !== undefined &&
+          res.response.data.error !== undefined
+        ) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: JSON.stringify(res.response.data.error.message),
+            });
+          } else {
+            this.setState({
+              action_status: "failed",
+              action_message: JSON.stringify(res.response.data.error),
+            });
           }
-        }else{
-          this.setState({ action_status: 'failed' });
+        } else {
+          this.setState({ action_status: "failed" });
         }
         this.toggleLoading();
       }
@@ -662,7 +814,9 @@ class CRDetail extends React.Component {
   async downloadAll() {
     this.toggleLoading();
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE('/changeRequest/getCr?noPg=1');
+    let getAll_nonpage = await this.getDatafromAPINODE(
+      "/changeRequest/getCr?noPg=1"
+    );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -670,11 +824,75 @@ class CRDetail extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["cr_system_number","sub_region_before","project_group","tower_id_before","site_id_before","site_name_before","project_definition_before","municipality_before","sow_before","site_base_type","wbs", "sub_region_after","tower_id_after","site_id_after", "site_name_after", "project_definition_after", "municipality_after", "sow_after", "cr_number","category","reason", "date_submission", "ageing", "duration", "date_approval", "remark","status","pic", "cr_announce_status","final_status","po_completeness"]);
+    ws.addRow([
+      "cr_system_number",
+      "sub_region_before",
+      "project_group",
+      "tower_id_before",
+      "site_id_before",
+      "site_name_before",
+      "project_definition_before",
+      "municipality_before",
+      "sow_before",
+      "site_base_type",
+      "wbs",
+      "sub_region_after",
+      "tower_id_after",
+      "site_id_after",
+      "site_name_after",
+      "project_definition_after",
+      "municipality_after",
+      "sow_after",
+      "cr_number",
+      "category",
+      "reason",
+      "date_submission",
+      "ageing",
+      "duration",
+      "date_approval",
+      "remark",
+      "status",
+      "pic",
+      "cr_announce_status",
+      "final_status",
+      "po_completeness",
+    ]);
 
     for (let i = 0; i < download_all.length; i++) {
       let cr = download_all[i];
-      ws.addRow([cr.cr_system_number, cr.sub_region_before, cr.project_group, cr.tower_id_before, cr.site_id_before, cr.site_name_before, cr.project_definition_before, cr.municipality_before, cr.sow_before, cr.site_base_type, cr.wbs, cr.sub_region_after, cr.tower_id_after, cr.site_id_after, cr.site_name_after, cr.project_definition_after, cr.municipality_after, cr.sow_after, cr.cr_number, cr.category, cr.reason, cr.date_submission, cr.ageing, cr.duration, cr.date_approval, cr.remark, cr.status, cr.pic, cr.cr_announce_status, cr.final_status, cr.po_completeness]);
+      ws.addRow([
+        cr.cr_system_number,
+        cr.sub_region_before,
+        cr.project_group,
+        cr.tower_id_before,
+        cr.site_id_before,
+        cr.site_name_before,
+        cr.project_definition_before,
+        cr.municipality_before,
+        cr.sow_before,
+        cr.site_base_type,
+        cr.wbs,
+        cr.sub_region_after,
+        cr.tower_id_after,
+        cr.site_id_after,
+        cr.site_name_after,
+        cr.project_definition_after,
+        cr.municipality_after,
+        cr.sow_after,
+        cr.cr_number,
+        cr.category,
+        cr.reason,
+        cr.date_submission,
+        cr.ageing,
+        cr.duration,
+        cr.date_approval,
+        cr.remark,
+        cr.status,
+        cr.pic,
+        cr.cr_announce_status,
+        cr.final_status,
+        cr.po_completeness,
+      ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -684,20 +902,111 @@ class CRDetail extends React.Component {
 
   async downloadAllFilter() {
     this.toggleLoading();
-    let cr_system_number = this.state.filter_list.cr_system_number === null || this.state.filter_list.cr_system_number ===  undefined ? '"cr_system_number" : {"$exists" : 1}' : '"cr_system_number" : {"$regex" : "'+this.state.filter_list.cr_system_number+'", "$options" : "i"}';
-    let sub_region_before = this.state.filter_list.sub_region_before === null || this.state.filter_list.sub_region_before ===  undefined ? '"sub_region_before" : {"$exists" : 1}' : '"sub_region_before" : {"$regex" : "'+this.state.filter_list.sub_region_before+'", "$options" : "i"}';
-    let tower_id_before = this.state.filter_list.tower_id_before === null || this.state.filter_list.tower_id_before ===  undefined ? '"tower_id_before" : {"$exists" : 1}' : '"tower_id_before" : {"$regex" : "'+this.state.filter_list.tower_id_before+'", "$options" : "i"}';
-    let site_id_before = this.state.filter_list.site_id_before === null || this.state.filter_list.site_id_before ===  undefined ? '"site_id_before" : {"$exists" : 1}' : '"site_id_before" : {"$regex" : "'+this.state.filter_list.site_id_before+'", "$options" : "i"}';
-    let site_name_before = this.state.filter_list.site_name_before === null || this.state.filter_list.site_name_before ===  undefined ? '"site_name_before" : {"$exists" : 1}' : '"site_name_before" : {"$regex" : "'+this.state.filter_list.site_name_before+'", "$options" : "i"}';
-    let sub_region_after = this.state.filter_list.sub_region_after === null || this.state.filter_list.sub_region_after ===  undefined ? '"sub_region_after" : {"$exists" : 1}' : '"sub_region_after" : {"$regex" : "'+this.state.filter_list.sub_region_after+'", "$options" : "i"}';
-    let tower_id_after = this.state.filter_list.tower_id_after === null || this.state.filter_list.tower_id_after ===  undefined ? '"tower_id_after" : {"$exists" : 1}' : '"tower_id_after" : {"$regex" : "'+this.state.filter_list.tower_id_after+'", "$options" : "i"}';
-    let site_id_after = this.state.filter_list.site_id_after === null || this.state.filter_list.site_id_after ===  undefined ? '"site_id_after" : {"$exists" : 1}' : '"site_id_after" : {"$regex" : "'+this.state.filter_list.site_id_after+'", "$options" : "i"}';
-    let site_name_after = this.state.filter_list.site_name_after === null || this.state.filter_list.site_name_after ===  undefined ? '"site_name_after" : {"$exists" : 1}' : '"site_name_after" : {"$regex" : "'+this.state.filter_list.site_name_after+'", "$options" : "i"}';
-    let remark = this.state.filter_list.remark === null || this.state.filter_list.remark ===  undefined ? '"remark" : {"$exists" : 1}' : '"remark" : {"$regex" : "'+this.state.filter_list.remark+'", "$options" : "i"}';
-    let status = this.state.filter_list.status === null || this.state.filter_list.status ===  undefined ? '"status" : {"$exists" : 1}' : '"status" : {"$regex" : "'+this.state.filter_list.status+'", "$options" : "i"}';
-    let whereAnd = 'q={'+cr_system_number+','+sub_region_before+','+tower_id_before+','+site_id_before+','+site_name_before+','+sub_region_after+','+tower_id_after+','+site_id_after+','+site_name_after+','+remark+','+status+'}';
+    let cr_system_number =
+      this.state.filter_list.cr_system_number === null ||
+      this.state.filter_list.cr_system_number === undefined
+        ? '"cr_system_number" : {"$exists" : 1}'
+        : '"cr_system_number" : {"$regex" : "' +
+          this.state.filter_list.cr_system_number +
+          '", "$options" : "i"}';
+    let sub_region_before =
+      this.state.filter_list.sub_region_before === null ||
+      this.state.filter_list.sub_region_before === undefined
+        ? '"sub_region_before" : {"$exists" : 1}'
+        : '"sub_region_before" : {"$regex" : "' +
+          this.state.filter_list.sub_region_before +
+          '", "$options" : "i"}';
+    let tower_id_before =
+      this.state.filter_list.tower_id_before === null ||
+      this.state.filter_list.tower_id_before === undefined
+        ? '"tower_id_before" : {"$exists" : 1}'
+        : '"tower_id_before" : {"$regex" : "' +
+          this.state.filter_list.tower_id_before +
+          '", "$options" : "i"}';
+    let site_id_before =
+      this.state.filter_list.site_id_before === null ||
+      this.state.filter_list.site_id_before === undefined
+        ? '"site_id_before" : {"$exists" : 1}'
+        : '"site_id_before" : {"$regex" : "' +
+          this.state.filter_list.site_id_before +
+          '", "$options" : "i"}';
+    let site_name_before =
+      this.state.filter_list.site_name_before === null ||
+      this.state.filter_list.site_name_before === undefined
+        ? '"site_name_before" : {"$exists" : 1}'
+        : '"site_name_before" : {"$regex" : "' +
+          this.state.filter_list.site_name_before +
+          '", "$options" : "i"}';
+    let sub_region_after =
+      this.state.filter_list.sub_region_after === null ||
+      this.state.filter_list.sub_region_after === undefined
+        ? '"sub_region_after" : {"$exists" : 1}'
+        : '"sub_region_after" : {"$regex" : "' +
+          this.state.filter_list.sub_region_after +
+          '", "$options" : "i"}';
+    let tower_id_after =
+      this.state.filter_list.tower_id_after === null ||
+      this.state.filter_list.tower_id_after === undefined
+        ? '"tower_id_after" : {"$exists" : 1}'
+        : '"tower_id_after" : {"$regex" : "' +
+          this.state.filter_list.tower_id_after +
+          '", "$options" : "i"}';
+    let site_id_after =
+      this.state.filter_list.site_id_after === null ||
+      this.state.filter_list.site_id_after === undefined
+        ? '"site_id_after" : {"$exists" : 1}'
+        : '"site_id_after" : {"$regex" : "' +
+          this.state.filter_list.site_id_after +
+          '", "$options" : "i"}';
+    let site_name_after =
+      this.state.filter_list.site_name_after === null ||
+      this.state.filter_list.site_name_after === undefined
+        ? '"site_name_after" : {"$exists" : 1}'
+        : '"site_name_after" : {"$regex" : "' +
+          this.state.filter_list.site_name_after +
+          '", "$options" : "i"}';
+    let remark =
+      this.state.filter_list.remark === null ||
+      this.state.filter_list.remark === undefined
+        ? '"remark" : {"$exists" : 1}'
+        : '"remark" : {"$regex" : "' +
+          this.state.filter_list.remark +
+          '", "$options" : "i"}';
+    let status =
+      this.state.filter_list.status === null ||
+      this.state.filter_list.status === undefined
+        ? '"status" : {"$exists" : 1}'
+        : '"status" : {"$regex" : "' +
+          this.state.filter_list.status +
+          '", "$options" : "i"}';
+    let whereAnd =
+      "q={" +
+      cr_system_number +
+      "," +
+      sub_region_before +
+      "," +
+      tower_id_before +
+      "," +
+      site_id_before +
+      "," +
+      site_name_before +
+      "," +
+      sub_region_after +
+      "," +
+      tower_id_after +
+      "," +
+      site_id_after +
+      "," +
+      site_name_after +
+      "," +
+      remark +
+      "," +
+      status +
+      "}";
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE('/changeRequest/getCr?noPg=1&'+whereAnd);
+    let getAll_nonpage = await this.getDatafromAPINODE(
+      "/changeRequest/getCr?noPg=1&" + whereAnd
+    );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -705,11 +1014,75 @@ class CRDetail extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["cr_system_number","sub_region_before","project_group","tower_id_before","site_id_before","site_name_before","project_definition_before","municipality_before","sow_before","site_base_type","wbs", "sub_region_after","tower_id_after","site_id_after", "site_name_after", "project_definition_after", "municipality_after", "sow_after", "cr_number","category","reason", "date_submission", "ageing", "duration", "date_approval", "remark","status","pic", "cr_announce_status","final_status","po_completeness"]);
+    ws.addRow([
+      "cr_system_number",
+      "sub_region_before",
+      "project_group",
+      "tower_id_before",
+      "site_id_before",
+      "site_name_before",
+      "project_definition_before",
+      "municipality_before",
+      "sow_before",
+      "site_base_type",
+      "wbs",
+      "sub_region_after",
+      "tower_id_after",
+      "site_id_after",
+      "site_name_after",
+      "project_definition_after",
+      "municipality_after",
+      "sow_after",
+      "cr_number",
+      "category",
+      "reason",
+      "date_submission",
+      "ageing",
+      "duration",
+      "date_approval",
+      "remark",
+      "status",
+      "pic",
+      "cr_announce_status",
+      "final_status",
+      "po_completeness",
+    ]);
 
     for (let i = 0; i < download_all.length; i++) {
       let cr = download_all[i];
-      ws.addRow([cr.cr_system_number, cr.sub_region_before, cr.project_group, cr.tower_id_before, cr.site_id_before, cr.site_name_before, cr.project_definition_before, cr.municipality_before, cr.sow_before, cr.site_base_type, cr.wbs, cr.sub_region_after, cr.tower_id_after, cr.site_id_after, cr.site_name_after, cr.project_definition_after, cr.municipality_after, cr.sow_after, cr.cr_number, cr.category, cr.reason, cr.date_submission, cr.ageing, cr.duration, cr.date_approval, cr.remark, cr.status, cr.pic, cr.cr_announce_status, cr.final_status, cr.po_completeness]);
+      ws.addRow([
+        cr.cr_system_number,
+        cr.sub_region_before,
+        cr.project_group,
+        cr.tower_id_before,
+        cr.site_id_before,
+        cr.site_name_before,
+        cr.project_definition_before,
+        cr.municipality_before,
+        cr.sow_before,
+        cr.site_base_type,
+        cr.wbs,
+        cr.sub_region_after,
+        cr.tower_id_after,
+        cr.site_id_after,
+        cr.site_name_after,
+        cr.project_definition_after,
+        cr.municipality_after,
+        cr.sow_after,
+        cr.cr_number,
+        cr.category,
+        cr.reason,
+        cr.date_submission,
+        cr.ageing,
+        cr.duration,
+        cr.date_approval,
+        cr.remark,
+        cr.status,
+        cr.pic,
+        cr.cr_announce_status,
+        cr.final_status,
+        cr.po_completeness,
+      ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -733,15 +1106,79 @@ class CRDetail extends React.Component {
         });
       }
     });
-  }
+  };
 
   exportCRTemplate = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["cr_system_number","sub_region_before","project_group","tower_id_before","site_id_before","site_name_before","project_definition_before","municipality_before","sow_before","site_base_type","wbs", "sub_region_after","tower_id_after","site_id_after", "site_name_after", "project_definition_after", "municipality_after", "sow_after", "cr_number","category","reason", "date_submission", "ageing", "duration", "date_approval", "remark","status","pic", "cr_announce_status","final_status","po_completeness"]);
+    ws.addRow([
+      "cr_system_number",
+      "sub_region_before",
+      "project_group",
+      "tower_id_before",
+      "site_id_before",
+      "site_name_before",
+      "project_definition_before",
+      "municipality_before",
+      "sow_before",
+      "site_base_type",
+      "wbs",
+      "sub_region_after",
+      "tower_id_after",
+      "site_id_after",
+      "site_name_after",
+      "project_definition_after",
+      "municipality_after",
+      "sow_after",
+      "cr_number",
+      "category",
+      "reason",
+      "date_submission",
+      "ageing",
+      "duration",
+      "date_approval",
+      "remark",
+      "status",
+      "pic",
+      "cr_announce_status",
+      "final_status",
+      "po_completeness",
+    ]);
 
-    ws.addRow(["new","Jabo 1 EXAMPLE","STP Sunrise Project B2","JAW-JT-SLW-3108","4431387E","SUDIRMAN SLAWI","XP/2427","JAKARTA SELATAN","Add L2100 5M+Swap RU to RRU Dualband 4T4R+Swap All Existing antenna to Penta Band","Site Base","-","Jabo 1","JAW-JK-KYB-1575","4431387E","CISANGGIRI_IV_RAWA_BARAT","New Prodeff", "Kab. Kodya Jakarta Selatan", "Add L2100 5M + Swap RU to RRU B0 + Swap RU to RRU Dualband 4T4R + Swap All Existing antenna to Quadband","","","Add Config : Config-30fa","","","","","Cancel CR, Back to Original Plan","Cancel CR","EID","","",""]);
+    ws.addRow([
+      "new",
+      "Jabo 1 EXAMPLE",
+      "STP Sunrise Project B2",
+      "JAW-JT-SLW-3108",
+      "4431387E",
+      "SUDIRMAN SLAWI",
+      "XP/2427",
+      "JAKARTA SELATAN",
+      "Add L2100 5M+Swap RU to RRU Dualband 4T4R+Swap All Existing antenna to Penta Band",
+      "Site Base",
+      "-",
+      "Jabo 1",
+      "JAW-JK-KYB-1575",
+      "4431387E",
+      "CISANGGIRI_IV_RAWA_BARAT",
+      "New Prodeff",
+      "Kab. Kodya Jakarta Selatan",
+      "Add L2100 5M + Swap RU to RRU B0 + Swap RU to RRU Dualband 4T4R + Swap All Existing antenna to Quadband",
+      "",
+      "",
+      "Add Config : Config-30fa",
+      "",
+      "",
+      "",
+      "",
+      "Cancel CR, Back to Original Plan",
+      "Cancel CR",
+      "EID",
+      "",
+      "",
+      "",
+    ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "CR Template.xlsx");
@@ -750,14 +1187,14 @@ class CRDetail extends React.Component {
   handleFilterList(e) {
     const index = e.target.name;
     let value = e.target.value;
-    if(value !== "" && value.length === 0) {
+    if (value !== "" && value.length === 0) {
       value = null;
     }
     let dataFilter = this.state.filter_list;
     dataFilter[index] = value;
-    this.setState({filter_list : dataFilter, activePage: 1}, () => {
+    this.setState({ filter_list: dataFilter, activePage: 1 }, () => {
       this.onChangeDebounced(e);
-    })
+    });
   }
 
   onChangeDebounced(e) {
@@ -776,24 +1213,52 @@ class CRDetail extends React.Component {
             <Card style={{}}>
               <CardHeader>
                 <span style={{ marginTop: "5px", position: "absolute" }}>
-                  {" "}CR Detail{" "}
+                  {" "}
+                  CR Detail{" "}
                 </span>
-                <div className="card-header-actions" style={{ display: "inline-flex" }}>
+                <div
+                  className="card-header-actions"
+                  style={{ display: "inline-flex" }}
+                >
                   <div>
-                    <Button block color="success" onClick={this.togglecreateModal} size="sm">
-                      <i className="fa fa-plus-square" aria-hidden="true">{" "}&nbsp;{" "}</i>{" "}New
-                  </Button>
+                    <Button
+                      block
+                      color="success"
+                      onClick={this.togglecreateModal}
+                      size="sm"
+                    >
+                      <i className="fa fa-plus-square" aria-hidden="true">
+                        {" "}
+                        &nbsp;{" "}
+                      </i>{" "}
+                      New
+                    </Button>
                   </div>
                   <div style={{ marginRight: "10px" }}>
-                    <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggle(0);}} size="sm">
+                    <Dropdown
+                      isOpen={this.state.dropdownOpen[0]}
+                      toggle={() => {
+                        this.toggle(0);
+                      }}
+                      size="sm"
+                    >
                       <DropdownToggle caret color="light">
                         Download Template
                       </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportCRTemplate}>{" "}CR Template</DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>{" "}Download All</DropdownItem>
-                        <DropdownItem onClick={this.downloadAllFilter}>{" "}Download All Filter</DropdownItem>
+                        <DropdownItem onClick={this.exportCRTemplate}>
+                          {" "}
+                          CR Template
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>
+                          {" "}
+                          Download All
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAllFilter}>
+                          {" "}
+                          Download All Filter
+                        </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -858,9 +1323,12 @@ class CRDetail extends React.Component {
                 <Row>
                   <Col>
                     <div className="divtable">
-                      <Table bordered style={{
-        height: "400px"
-      }}>
+                      <Table
+                        bordered
+                        style={{
+                          height: "400px",
+                        }}
+                      >
                         <thead className=" table-drm__header--middle">
                           <tr align="center">
                             <th>CR System Number</th>
@@ -894,162 +1362,346 @@ class CRDetail extends React.Component {
                             <th>PIC</th>
                             <th>CR Announce Status</th>
                             <th>Final Status</th>
-                            <th>PO Completeness (Compare TSSR BOQ to CPO of the Site - SOW Code basis)</th>
+                            <th>
+                              PO Completeness (Compare TSSR BOQ to CPO of the
+                              Site - SOW Code basis)
+                            </th>
                           </tr>
                           <tr>
                             <th>
                               <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                <InputGroup
+                                  className="input-prepend"
+                                  style={{ width: "150px" }}
+                                >
                                   <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                    <InputGroupText>
+                                      <i className="fa fa-search"></i>
+                                    </InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.cr_system_number} name="cr_system_number" size="sm"/>
+                                  <Input
+                                    type="text"
+                                    placeholder="Search"
+                                    onChange={this.handleFilterList}
+                                    value={
+                                      this.state.filter_list.cr_system_number
+                                    }
+                                    name="cr_system_number"
+                                    size="sm"
+                                  />
                                 </InputGroup>
                               </div>
                             </th>
                             <th>
                               <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                <InputGroup
+                                  className="input-prepend"
+                                  style={{ width: "150px" }}
+                                >
                                   <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                    <InputGroupText>
+                                      <i className="fa fa-search"></i>
+                                    </InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.sub_region_before} name="sub_region_before" size="sm"/>
+                                  <Input
+                                    type="text"
+                                    placeholder="Search"
+                                    onChange={this.handleFilterList}
+                                    value={
+                                      this.state.filter_list.sub_region_before
+                                    }
+                                    name="sub_region_before"
+                                    size="sm"
+                                  />
                                 </InputGroup>
                               </div>
                             </th>
                             <th>
                               <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '100px'}}>
+                                <InputGroup
+                                  className="input-prepend"
+                                  style={{ width: "100px" }}
+                                >
                                   <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                    <InputGroupText>
+                                      <i className="fa fa-search"></i>
+                                    </InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.tower_id_before} name="tower_id_before" size="sm"/>
+                                  <Input
+                                    type="text"
+                                    placeholder="Search"
+                                    onChange={this.handleFilterList}
+                                    value={
+                                      this.state.filter_list.tower_id_before
+                                    }
+                                    name="tower_id_before"
+                                    size="sm"
+                                  />
                                 </InputGroup>
                               </div>
                             </th>
                             <th>
                               <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                <InputGroup
+                                  className="input-prepend"
+                                  style={{ width: "150px" }}
+                                >
                                   <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                    <InputGroupText>
+                                      <i className="fa fa-search"></i>
+                                    </InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.site_id_before} name="site_id_before" size="sm"/>
+                                  <Input
+                                    type="text"
+                                    placeholder="Search"
+                                    onChange={this.handleFilterList}
+                                    value={
+                                      this.state.filter_list.site_id_before
+                                    }
+                                    name="site_id_before"
+                                    size="sm"
+                                  />
                                 </InputGroup>
                               </div>
                             </th>
                             <th>
                               <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                <InputGroup
+                                  className="input-prepend"
+                                  style={{ width: "150px" }}
+                                >
                                   <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                    <InputGroupText>
+                                      <i className="fa fa-search"></i>
+                                    </InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.site_name_before} name="site_name_before" size="sm"/>
+                                  <Input
+                                    type="text"
+                                    placeholder="Search"
+                                    onChange={this.handleFilterList}
+                                    value={
+                                      this.state.filter_list.site_name_before
+                                    }
+                                    name="site_name_before"
+                                    size="sm"
+                                  />
                                 </InputGroup>
                               </div>
                             </th>
                             <th>
                               <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '100px'}}>
+                                <InputGroup
+                                  className="input-prepend"
+                                  style={{ width: "100px" }}
+                                >
                                   <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                    <InputGroupText>
+                                      <i className="fa fa-search"></i>
+                                    </InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.sub_region_after} name="sub_region_after" size="sm"/>
+                                  <Input
+                                    type="text"
+                                    placeholder="Search"
+                                    onChange={this.handleFilterList}
+                                    value={
+                                      this.state.filter_list.sub_region_after
+                                    }
+                                    name="sub_region_after"
+                                    size="sm"
+                                  />
                                 </InputGroup>
                               </div>
                             </th>
                             <th>
                               <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                <InputGroup
+                                  className="input-prepend"
+                                  style={{ width: "150px" }}
+                                >
                                   <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                    <InputGroupText>
+                                      <i className="fa fa-search"></i>
+                                    </InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.tower_id_after} name="tower_id_after" size="sm"/>
+                                  <Input
+                                    type="text"
+                                    placeholder="Search"
+                                    onChange={this.handleFilterList}
+                                    value={
+                                      this.state.filter_list.tower_id_after
+                                    }
+                                    name="tower_id_after"
+                                    size="sm"
+                                  />
                                 </InputGroup>
                               </div>
                             </th>
                             <th>
                               <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                <InputGroup
+                                  className="input-prepend"
+                                  style={{ width: "150px" }}
+                                >
                                   <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                    <InputGroupText>
+                                      <i className="fa fa-search"></i>
+                                    </InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.site_id_after} name="site_id_after" size="sm"/>
+                                  <Input
+                                    type="text"
+                                    placeholder="Search"
+                                    onChange={this.handleFilterList}
+                                    value={this.state.filter_list.site_id_after}
+                                    name="site_id_after"
+                                    size="sm"
+                                  />
                                 </InputGroup>
                               </div>
                             </th>
                             <th>
                               <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '100px'}}>
+                                <InputGroup
+                                  className="input-prepend"
+                                  style={{ width: "100px" }}
+                                >
                                   <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                    <InputGroupText>
+                                      <i className="fa fa-search"></i>
+                                    </InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.site_name_after} name="site_name_after" size="sm"/>
+                                  <Input
+                                    type="text"
+                                    placeholder="Search"
+                                    onChange={this.handleFilterList}
+                                    value={
+                                      this.state.filter_list.site_name_after
+                                    }
+                                    name="site_name_after"
+                                    size="sm"
+                                  />
                                 </InputGroup>
                               </div>
                             </th>
                             <th>
                               <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                <InputGroup
+                                  className="input-prepend"
+                                  style={{ width: "150px" }}
+                                >
                                   <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                    <InputGroupText>
+                                      <i className="fa fa-search"></i>
+                                    </InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.remark} name="remark" size="sm"/>
+                                  <Input
+                                    type="text"
+                                    placeholder="Search"
+                                    onChange={this.handleFilterList}
+                                    value={this.state.filter_list.remark}
+                                    name="remark"
+                                    size="sm"
+                                  />
                                 </InputGroup>
                               </div>
                             </th>
                             <th>
                               <div className="controls">
-                                <InputGroup className="input-prepend" style={{width : '150px'}}>
+                                <InputGroup
+                                  className="input-prepend"
+                                  style={{ width: "150px" }}
+                                >
                                   <InputGroupAddon addonType="prepend">
-                                    <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                                    <InputGroupText>
+                                      <i className="fa fa-search"></i>
+                                    </InputGroupText>
                                   </InputGroupAddon>
-                                  <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list.status} name="status" size="sm"/>
+                                  <Input
+                                    type="text"
+                                    placeholder="Search"
+                                    onChange={this.handleFilterList}
+                                    value={this.state.filter_list.status}
+                                    name="status"
+                                    size="sm"
+                                  />
                                 </InputGroup>
                               </div>
                             </th>
-                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th ></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
                           </tr>
                         </thead>
                         <tbody>
-                        {this.state.all_data.map(cr =>
-                          <tr>
-                            <td>{cr.cr_system_number}</td>
-                            <td>{cr.sub_region_before}</td>
-                            <td>{cr.tower_id_before}</td>
-                            <td>{cr.site_id_before}</td>
-                            <td>{cr.site_name_before}</td>
-                            <td>{cr.sub_region_after}</td>
-                            <td>{cr.tower_id_after}</td>
-                            <td>{cr.site_id_after}</td>
-                            <td>{cr.site_name_after}</td>
-                            <td>{cr.remark}</td>
-                            <td>{cr.status}</td>
+                          {this.state.all_data.map((cr) => (
+                            <tr>
+                              <td>{cr.cr_system_number}</td>
+                              <td>{cr.sub_region_before}</td>
+                              <td>{cr.tower_id_before}</td>
+                              <td>{cr.site_id_before}</td>
+                              <td>{cr.site_name_before}</td>
+                              <td>{cr.sub_region_after}</td>
+                              <td>{cr.tower_id_after}</td>
+                              <td>{cr.site_id_after}</td>
+                              <td>{cr.site_name_after}</td>
+                              <td>{cr.remark}</td>
+                              <td>{cr.status}</td>
 
-                            <td>{cr.project_group}</td>
-                            <td>{cr.project_definition_before}</td>
-                            <td>{cr.municipality_before}</td>
-                            <td>{cr.sow_before}</td>
-                            <td>{cr.site_base_type}</td>
-                            <td>{cr.wbs}</td>
-                            <td>{cr.project_definition_after}</td>
-                            <td>{cr.municipality_after}</td>
-                            <td>{cr.sow_after}</td>
-                            <td>{cr.cr_number}</td>
-                            <td>{cr.category}</td>
-                            <td>{cr.reason}</td>
-                            <td>{convertDateFormat(cr.date_submission)}</td>
-                            {/* aging */}
-                            <td>{cr.date_approval === null ? this.countagingCR(cr.date_submission) : this.countagingApproved(cr.date_approval, cr.date_submission)}</td>
-                            {/* duration */}
-                            <td>{this.countagingCR(cr.date_submission) > 7 ? '> 7 Days' : '< 7 Days' }</td>
-                            <td>{cr.date_approval === null ? null : convertDateFormat(cr.date_approval)}</td>
-                            <td>{cr.pic}</td>
-                            <td>{cr.cr_announce_status}</td>
-                            <td>{cr.final_status}</td>
-                            <td>{cr.po_completeness}</td>
-                          </tr>
-                        )}
-
+                              <td>{cr.project_group}</td>
+                              <td>{cr.project_definition_before}</td>
+                              <td>{cr.municipality_before}</td>
+                              <td>{cr.sow_before}</td>
+                              <td>{cr.site_base_type}</td>
+                              <td>{cr.wbs}</td>
+                              <td>{cr.project_definition_after}</td>
+                              <td>{cr.municipality_after}</td>
+                              <td>{cr.sow_after}</td>
+                              <td>{cr.cr_number}</td>
+                              <td>{cr.category}</td>
+                              <td>{cr.reason}</td>
+                              <td>{convertDateFormat(cr.date_submission)}</td>
+                              {/* aging */}
+                              <td>
+                                {cr.date_approval === null
+                                  ? this.countagingCR(cr.date_submission)
+                                  : this.countagingApproved(
+                                      cr.date_approval,
+                                      cr.date_submission
+                                    )}
+                              </td>
+                              {/* duration */}
+                              <td>
+                                {this.countagingCR(cr.date_submission) > 7
+                                  ? "> 7 Days"
+                                  : "< 7 Days"}
+                              </td>
+                              <td>
+                                {cr.date_approval === null
+                                  ? null
+                                  : convertDateFormat(cr.date_approval)}
+                              </td>
+                              <td>{cr.pic}</td>
+                              <td>{cr.cr_announce_status}</td>
+                              <td>{cr.final_status}</td>
+                              <td>{cr.po_completeness}</td>
+                            </tr>
+                          ))}
                         </tbody>
                       </Table>
                     </div>
@@ -1268,36 +1920,47 @@ class CRDetail extends React.Component {
           </ModalFooter>
         </Modal>
 
-         {/* Modal create New */}
-         <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-         <ModalHeader toggle={this.togglecreateModal}>CR Uploader</ModalHeader>
-         <ModalBody>
-           <CardBody>
-             <div>
-               <table>
-                 <tbody>
-                   <tr>
-                     <td>Upload File</td>
-                     <td>:</td>
-                     <td>
-                       <input
-                         type="file"
-                         onChange={this.fileHandlerMaterial.bind(this)}
-                         style={{ padding: "10px", visiblity: "hidden" }}
-                       />
-                     </td>
-                   </tr>
-                 </tbody>
-               </table>
-             </div>
-           </CardBody>
-         </ModalBody>
-         <ModalFooter>
-           <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveDRMBulk}>Save</Button>{' '}
-           {/* }<Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button> */}
-         </ModalFooter>
-       </Modal>
-
+        {/* Modal create New */}
+        <Modal
+          isOpen={this.state.createModal}
+          toggle={this.togglecreateModal}
+          className={this.props.className}
+        >
+          <ModalHeader toggle={this.togglecreateModal}>CR Uploader</ModalHeader>
+          <ModalBody>
+            <CardBody>
+              <div>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Upload File</td>
+                      <td>:</td>
+                      <td>
+                        <input
+                          type="file"
+                          onChange={this.fileHandlerMaterial.bind(this)}
+                          style={{ padding: "10px", visiblity: "hidden" }}
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardBody>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              block
+              color="success"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveDRMBulk}
+            >
+              Save
+            </Button>{" "}
+            {/* }<Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button> */}
+          </ModalFooter>
+        </Modal>
 
         {/* Modal Loading */}
         <Modal

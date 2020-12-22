@@ -58,7 +58,7 @@ const API_URL_BAM = "https://api-dev.bam-id.e-dpm.com/bamidapi";
 const usernameBAM = "bamidadmin@e-dpm.com";
 const passwordBAM = "F760qbAg2sml";
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 class CommercialBoq extends Component {
   constructor(props) {
@@ -133,7 +133,7 @@ class CommercialBoq extends Component {
       TotalPriceUSDChange: new Map(),
       total_comm: {},
       boq_tech_select: {},
-      service_library : [],
+      service_library: [],
     };
     this.toggleLoading = this.toggleLoading.bind(this);
     this.toggleDropdown = this.toggleDropdown.bind(this);
@@ -276,7 +276,7 @@ class CommercialBoq extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -295,12 +295,16 @@ class CommercialBoq extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Post Data", respond);
       }
@@ -319,12 +323,16 @@ class CommercialBoq extends Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.post(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Post Data", respond);
       }
@@ -390,8 +398,12 @@ class CommercialBoq extends Component {
   async getCommBoqData(_id) {
     let getComm = await this.getDataFromAPINODE("/commBoqIsat/" + _id);
     if (getComm.data !== undefined) {
-      this.setState({ data_comm_boq_items: getComm.data.data.items, data_comm_boq: getComm.data.data }, () =>
-        this.getServiceLibrary()
+      this.setState(
+        {
+          data_comm_boq_items: getComm.data.data.items,
+          data_comm_boq: getComm.data.data,
+        },
+        () => this.getServiceLibrary()
       );
     }
   }
@@ -399,7 +411,7 @@ class CommercialBoq extends Component {
   async getServiceLibrary() {
     let getSvc = await this.getDataFromAPINODE("/libser/getLibSer?lmt=20&pg=1");
     if (getSvc.data !== undefined) {
-      this.setState({ service_library: getSvc.data.data});
+      this.setState({ service_library: getSvc.data.data });
     }
   }
 
@@ -1130,7 +1142,7 @@ class CommercialBoq extends Component {
     const data_non_svc = data_info_item.filter(function (row) {
       return row.pr_item_type !== "SVC";
     });
-    const dataNonSVC = [...new Set(data_non_svc.map(({ pp_id }) => pp_id))]
+    const dataNonSVC = [...new Set(data_non_svc.map(({ pp_id }) => pp_id))];
     const data_svc = data_info_item.filter(function (row) {
       return row.pr_item_type === "SVC";
     });
@@ -1202,8 +1214,10 @@ class CommercialBoq extends Component {
     // non svc
     if ((data_non_svc !== null) & (data_non_svc !== undefined)) {
       for (let i = 0; i < dataNonSVC.length; i++) {
-        const dataItem = data_non_svc.filter(dns => dns.pp_id === dataNonSVC[i]);
-        if(dataItem.length !== 0){
+        const dataItem = data_non_svc.filter(
+          (dns) => dns.pp_id === dataNonSVC[i]
+        );
+        if (dataItem.length !== 0) {
           ws.addRow([
             "",
             "",
@@ -1234,7 +1248,7 @@ class CommercialBoq extends Component {
             data_non_svc[i].short_text,
             dataItem[0].item_text + "-" + data_non_svc[i].pp_id,
             "",
-            dataItem.reduce((a,b) => a + b.material_quantity, 0),
+            dataItem.reduce((a, b) => a + b.material_quantity, 0),
             "",
             "",
             "1000",
@@ -1333,10 +1347,10 @@ class CommercialBoq extends Component {
           "",
           data_svc[i].site_list[0].site_name,
           data_svc[i].site_list[0].site_id,
-          data_svc[i].site_list[0].ne_id
+          data_svc[i].site_list[0].ne_id,
         ]);
         const svcLib = this.getServiceLib(data_svc[i]);
-        for(let j = 0; j < svcLib.length; j++){
+        for (let j = 0; j < svcLib.length; j++) {
           ws.addRow([
             "",
             "",
@@ -1400,67 +1414,65 @@ class CommercialBoq extends Component {
             "",
           ]);
         }
-
       }
     }
 
     const comFormat = await wb.xlsx.writeBuffer();
     saveAs(
       new Blob([comFormat]),
-      "PR " + this.state.data_comm_boq.no_comm_boq +" "+data_info_item[0].region+ " Uploader.xlsx"
+      "PR " +
+        this.state.data_comm_boq.no_comm_boq +
+        " " +
+        data_info_item[0].region +
+        " Uploader.xlsx"
     );
   };
 
-  getServiceLib(svc){
+  getServiceLib(svc) {
     let svcLib = svc;
-    svcLib["pr_uploader_description"] = svc.pp_id + "-"+svc.item_text;
+    svcLib["pr_uploader_description"] = svc.pp_id + "-" + svc.item_text;
     const service_library = this.state.service_library;
-    const filter = service_library.filter(e => e.boq_service_scope.toString().trim() === svc.item_text.toString().trim());
-    if(filter.length === 0){
+    const filter = service_library.filter(
+      (e) =>
+        e.boq_service_scope.toString().trim() ===
+        svc.item_text.toString().trim()
+    );
+    if (filter.length === 0) {
       return [svc];
-    }else{
+    } else {
       return filter;
     }
   }
 
-  getItemUniqandQtyTotal(pp_id){
-    let row = {}
-    const data_item = this.state.data_comm_boq_items.filter(e => e.pp_id === pp_id);
-    if(data_item.length !== 0){
+  getItemUniqandQtyTotal(pp_id) {
+    let row = {};
+    const data_item = this.state.data_comm_boq_items.filter(
+      (e) => e.pp_id === pp_id
+    );
+    if (data_item.length !== 0) {
       row = data_item[0];
-      row["material_qty_total"] = data_item.reduce((a,b) => a + b.material_quantity, 0);
+      row["material_qty_total"] = data_item.reduce(
+        (a, b) => a + b.material_quantity,
+        0
+      );
       return (
         <tr key={row._id}>
           <td style={{ verticalAlign: "middle" }}>
             {this.state.data_comm_boq.project_name}
           </td>
-          <td style={{ verticalAlign: "middle" }}>
-            {row.region}
-          </td>
-          <td style={{ verticalAlign: "middle" }}>
-            {row.tax_code}
-          </td>
-          <td style={{ verticalAlign: "middle" }}>
-            {row.short_text}
-          </td>
+          <td style={{ verticalAlign: "middle" }}>{row.region}</td>
+          <td style={{ verticalAlign: "middle" }}>{row.tax_code}</td>
+          <td style={{ verticalAlign: "middle" }}>{row.short_text}</td>
           <td style={{ verticalAlign: "middle" }}>
             {row.item_text}-{row.pp_id}
           </td>
-          <td style={{ verticalAlign: "middle" }}>
-            {row.material_qty_total}
-          </td>
-          <td style={{ verticalAlign: "middle" }}>
-
-          </td>
-          <td style={{ verticalAlign: "middle" }}>
-
-          </td>
-          <td style={{ verticalAlign: "middle" }}>
-
-          </td>
+          <td style={{ verticalAlign: "middle" }}>{row.material_qty_total}</td>
+          <td style={{ verticalAlign: "middle" }}></td>
+          <td style={{ verticalAlign: "middle" }}></td>
+          <td style={{ verticalAlign: "middle" }}></td>
         </tr>
-      )
-    }else{
+      );
+    } else {
       return <Fragment></Fragment>;
     }
   }
@@ -1497,7 +1509,7 @@ class CommercialBoq extends Component {
     const data_non_svc = this.state.data_comm_boq_items.filter(function (row) {
       return row.pr_item_type !== "SVC";
     });
-    const dataNonSVC = [...new Set(data_non_svc.map(({ pp_id }) => pp_id))]
+    const dataNonSVC = [...new Set(data_non_svc.map(({ pp_id }) => pp_id))];
     const data_svc = this.state.data_comm_boq_items.filter(function (row) {
       return row.pr_item_type === "SVC";
     });
@@ -1511,7 +1523,10 @@ class CommercialBoq extends Component {
           <Col xl="12">
             <Card>
               <CardHeader>
-                <span style={{ lineHeight: "2", fontSize: "17px" }}> PR Uploader</span>
+                <span style={{ lineHeight: "2", fontSize: "17px" }}>
+                  {" "}
+                  PR Uploader
+                </span>
                 {this.state.data_comm_boq_items !== null && (
                   <React.Fragment>
                     <Dropdown
@@ -1683,8 +1698,10 @@ class CommercialBoq extends Component {
                               >
                                 <td>Region</td>
                                 <td>:</td>
-                                <td colSpan="2"style={{ paddingLeft: "10px" }}>
-                                  {this.state.data_comm_boq_items.length > 0 ? this.state.data_comm_boq_items[0].region : null}
+                                <td colSpan="2" style={{ paddingLeft: "10px" }}>
+                                  {this.state.data_comm_boq_items.length > 0
+                                    ? this.state.data_comm_boq_items[0].region
+                                    : null}
                                 </td>
                               </tr>
                             </tbody>
@@ -1695,69 +1712,76 @@ class CommercialBoq extends Component {
                   )}
                 </div>
                 <div class="divtable">
-                    <Table striped hover bordered responsive size="sm" width="100%">
-                      <thead class="table-commercial__header--fixed">
-                        <tr>
-                          <th>Project Name</th>
-                          <th>Region</th>
-                          <th>Tax Code</th>
-                          <th>Short Text</th>
-                          <th>Item Text</th>
-                          <th>Materials Quantity</th>
-                          <th>Site Name</th>
-                          <th>Site ID</th>
-                          <th>NE ID</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {dataNonSVC.map((row, i) => (
-                          this.getItemUniqandQtyTotal(row)
-                        ))}
-                        {data_svc.map((row, i) => (
-                          <>
-                            <tr key={row._id}>
-                              <td style={{ verticalAlign: "middle" }}>
-                                {this.state.data_comm_boq.project_name}
-                              </td>
-                              <td style={{ verticalAlign: "middle" }}>
-                                {row.region}
-                              </td>
-                              <td style={{ verticalAlign: "middle" }}>
-                                {row.tax_code}
-                              </td>
-                              <td style={{ verticalAlign: "middle" }}>
-                                {row.short_text}
-                              </td>
+                  <Table
+                    striped
+                    hover
+                    bordered
+                    responsive
+                    size="sm"
+                    width="100%"
+                  >
+                    <thead class="table-commercial__header--fixed">
+                      <tr>
+                        <th>Project Name</th>
+                        <th>Region</th>
+                        <th>Tax Code</th>
+                        <th>Short Text</th>
+                        <th>Item Text</th>
+                        <th>Materials Quantity</th>
+                        <th>Site Name</th>
+                        <th>Site ID</th>
+                        <th>NE ID</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dataNonSVC.map((row, i) =>
+                        this.getItemUniqandQtyTotal(row)
+                      )}
+                      {data_svc.map((row, i) => (
+                        <>
+                          <tr key={row._id}>
+                            <td style={{ verticalAlign: "middle" }}>
+                              {this.state.data_comm_boq.project_name}
+                            </td>
+                            <td style={{ verticalAlign: "middle" }}>
+                              {row.region}
+                            </td>
+                            <td style={{ verticalAlign: "middle" }}>
+                              {row.tax_code}
+                            </td>
+                            <td style={{ verticalAlign: "middle" }}>
+                              {row.short_text}
+                            </td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td style={{ verticalAlign: "middle" }}>
+                              {row.site_list.map((site) => site.site_id)}
+                            </td>
+                            <td style={{ verticalAlign: "middle" }}>
+                              {row.site_list.map((site) => site.ne_id)}
+                            </td>
+                          </tr>
+                          {this.getServiceLib(row).map((svl) => (
+                            <tr>
                               <td></td>
                               <td></td>
                               <td></td>
-                              <td style={{ verticalAlign: "middle" }}>
-                                {row.site_list.map((site) => site.site_id)}
-                              </td>
-                              <td style={{ verticalAlign: "middle" }}>
-                                {row.site_list.map((site) => site.ne_id)}
-                              </td>
-                            </tr>
-                            {this.getServiceLib(row).map(svl => (
-                              <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
+                              <td></td>
 
-                                <td style={{ verticalAlign: "middle" }}>
-                                  {svl.pr_uploader_description}
-                                </td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                              </tr>
-                            ))}
-                          </>
-                        ))}
-                      </tbody>
-                    </Table>
+                              <td style={{ verticalAlign: "middle" }}>
+                                {svl.pr_uploader_description}
+                              </td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                            </tr>
+                          ))}
+                        </>
+                      ))}
+                    </tbody>
+                  </Table>
                 </div>
                 {this.state.boq_comm_API !== null && (
                   <React.Fragment>
@@ -1867,8 +1891,6 @@ class CommercialBoq extends Component {
           </ModalFooter>
         </Modal>
         {/* end Modal Loading */}
-
-
       </div>
     );
   }

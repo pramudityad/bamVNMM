@@ -1,5 +1,22 @@
 import React, { Component } from "react";
-import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table, FormGroup, Label, ModalFooter, Modal, ModalBody } from "reactstrap";
+import {
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Col,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  Input,
+  Row,
+  Table,
+  FormGroup,
+  Label,
+  ModalFooter,
+  Modal,
+  ModalBody,
+} from "reactstrap";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import Pagination from "react-js-pagination";
@@ -9,7 +26,10 @@ import { saveAs } from "file-saver";
 import { connect } from "react-redux";
 
 import ModalForm from "../components/ModalForm";
-import {convertDateFormatfull, convertDateFormat} from '../../helper/basicFunction'
+import {
+  convertDateFormatfull,
+  convertDateFormat,
+} from "../../helper/basicFunction";
 
 const API_URL = "https://api.bam-id.e-dpm.com/bamidapi";
 const username = "bamidadmin@e-dpm.com";
@@ -19,13 +39,25 @@ const API_URL_XL = "https://api.isat.pdb.e-dpm.com/isatapi";
 const usernameXL = "adminbamidsuper";
 const passwordXL = "F760qbAg2sml";
 
-const API_URL_NODE = "https://api2.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2.bam-id.e-dpm.com/bamidapi";
 
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
 
-const array_field = ["mra_id", "mra_type", "mrd_category", "project_name", "site_info.site_id", "site_info.site_name", "destination.value", "site_info.site_name", "current_mra_status", "creator.email", "created_on"];
+const array_field = [
+  "mra_id",
+  "mra_type",
+  "mrd_category",
+  "project_name",
+  "site_info.site_id",
+  "site_info.site_name",
+  "destination.value",
+  "site_info.site_name",
+  "current_mra_status",
+  "creator.email",
+  "created_on",
+];
 
 class OrderCreated extends Component {
   constructor(props) {
@@ -53,7 +85,7 @@ class OrderCreated extends Component {
       data_mr_selected: null,
       modal_box_input: false,
       rejectNote: "",
-      mot_type : null,
+      mot_type: null,
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -69,12 +101,12 @@ class OrderCreated extends Component {
   }
 
   toggleBoxInput(e) {
-    if(e !== undefined){
+    if (e !== undefined) {
       const id_doc = e.currentTarget.id;
       this.setState({ id_mr_selected: id_doc });
     }
-    this.setState(prevState => ({
-      modal_box_input: !prevState.modal_box_input
+    this.setState((prevState) => ({
+      modal_box_input: !prevState.modal_box_input,
     }));
   }
 
@@ -84,7 +116,7 @@ class OrderCreated extends Component {
     if (value !== null && value.length !== 0 && value !== 0) {
       this.setState({ rejectNote: value });
     }
-  }
+  };
 
   async getDataFromAPI(url) {
     try {
@@ -108,7 +140,7 @@ class OrderCreated extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -127,12 +159,16 @@ class OrderCreated extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Post Data", respond);
       }
@@ -225,23 +261,42 @@ class OrderCreated extends Component {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     let filter_array = [];
-    for(let i = 0; i < array_field.length; i++){
-      if(this.state.filter_list[array_field[i]] !== undefined && this.state.filter_list[array_field[i]] !== null){
-        filter_array.push('"'+array_field[i]+'":{"$regex" : "' + this.state.filter_list[array_field[i]] + '", "$options" : "i"}');
+    for (let i = 0; i < array_field.length; i++) {
+      if (
+        this.state.filter_list[array_field[i]] !== undefined &&
+        this.state.filter_list[array_field[i]] !== null
+      ) {
+        filter_array.push(
+          '"' +
+            array_field[i] +
+            '":{"$regex" : "' +
+            this.state.filter_list[array_field[i]] +
+            '", "$options" : "i"}'
+        );
       }
     }
-    filter_array.push('"$or" : [{"current_mra_status":"PLANTSPEC SRN ASSIGNED"}, {"current_mra_status":"MR REQUESTED"}]');
-    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
-      filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
+    filter_array.push(
+      '"$or" : [{"current_mra_status":"PLANTSPEC SRN ASSIGNED"}, {"current_mra_status":"MR REQUESTED"}]'
+    );
+    if (
+      (this.state.userRole.findIndex((e) => e === "BAM-ASP") !== -1 ||
+        this.state.userRole.findIndex((e) => e === "BAM-ASP Management") !==
+          -1 ||
+        this.state.userRole.findIndex((e) => e === "BAM-Mover") !== -1) &&
+      this.state.userRole.findIndex((e) => e === "Admin") === -1
+    ) {
+      filter_array.push('"dsp_company" : "' + this.state.vendor_name + '"');
     }
-    let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDataFromAPINODE('/matreq-srn?srt=_id:-1&q=' + whereAnd + '&lmt=' + maxPage + '&pg=' + page).then(res => {
+    let whereAnd = "{" + filter_array.join(",") + "}";
+    this.getDataFromAPINODE(
+      "/matreq-srn?srt=_id:-1&q=" + whereAnd + "&lmt=" + maxPage + "&pg=" + page
+    ).then((res) => {
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
         this.setState({ mr_dis_list: items, totalData: totalData });
       }
-    })
+    });
   }
 
   numToSSColumn(num) {
@@ -334,62 +389,88 @@ class OrderCreated extends Component {
     const _id = this.state.id_mr_selected;
     let body = this.state.selected_dsp;
     let dataMot = this.state.mot_type;
-    const dataMR = this.state.mr_dis_list.find(mrd => mrd._id === _id);
-    if(dataMR.dsp_company !== null && dataMR.dsp_company !== undefined){
-      body = {"dsp_company_code" : dataMR.dsp_company_code, "dsp_company": dataMR.dsp_company}
+    const dataMR = this.state.mr_dis_list.find((mrd) => mrd._id === _id);
+    if (dataMR.dsp_company !== null && dataMR.dsp_company !== undefined) {
+      body = {
+        dsp_company_code: dataMR.dsp_company_code,
+        dsp_company: dataMR.dsp_company,
+      };
     }
-    body = {...body, ...{"approve": true}, ...{"motType" : dataMot}}
-    this.patchDatatoAPINODE("/matreq-srn/approveMrd/" + _id,  {data : body} ).then(
-      (res) => {
-        if (res.data !== undefined) {
-          this.setState({ action_status: "success" });
-          this.toggleModalapprove();
-        } else {
-          if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
-            if (res.response.data.error.message !== undefined) {
-              this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-            } else {
-              this.setState({ action_status: 'failed', action_message: res.response.data.error });
-            }
+    body = { ...body, ...{ approve: true }, ...{ motType: dataMot } };
+    this.patchDatatoAPINODE("/matreq-srn/approveMrd/" + _id, {
+      data: body,
+    }).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
+        this.toggleModalapprove();
+      } else {
+        if (
+          res.response !== undefined &&
+          res.response.data !== undefined &&
+          res.response.data.error !== undefined
+        ) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error.message,
+            });
           } else {
-            this.setState({ action_status: 'failed' });
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error,
+            });
           }
-          this.toggleModalapprove();
+        } else {
+          this.setState({ action_status: "failed" });
         }
+        this.toggleModalapprove();
       }
-    );
+    });
   }
 
   rejectMR(e) {
     this.toggleLoading();
     const _id = this.state.id_mr_selected;
     let body = this.state.selected_dsp;
-    const dataMR = this.state.mr_dis_list.find(mrd => mrd._id === _id);
-    if(dataMR.dsp_company !== null && dataMR.dsp_company !== undefined){
-      body = {"dsp_company_code" : dataMR.dsp_company_code, "dsp_company": dataMR.dsp_company}
+    const dataMR = this.state.mr_dis_list.find((mrd) => mrd._id === _id);
+    if (dataMR.dsp_company !== null && dataMR.dsp_company !== undefined) {
+      body = {
+        dsp_company_code: dataMR.dsp_company_code,
+        dsp_company: dataMR.dsp_company,
+      };
     }
-    body = {...body, ...{"approve": true}}
+    body = { ...body, ...{ approve: true } };
     // console.log('_id ',_id);
-    this.patchDatatoAPINODE("/matreq-srn/approveMrd/" + _id,  {data : body} ).then(
-      (res) => {
-        if (res.data !== undefined) {
-          this.setState({ action_status: "success" });
-          this.getMRDisList();
-          this.toggleLoading();
-        } else {
-          if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
-            if (res.response.data.error.message !== undefined) {
-              this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
-            } else {
-              this.setState({ action_status: 'failed', action_message: res.response.data.error });
-            }
+    this.patchDatatoAPINODE("/matreq-srn/approveMrd/" + _id, {
+      data: body,
+    }).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
+        this.getMRDisList();
+        this.toggleLoading();
+      } else {
+        if (
+          res.response !== undefined &&
+          res.response.data !== undefined &&
+          res.response.data.error !== undefined
+        ) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error.message,
+            });
           } else {
-            this.setState({ action_status: 'failed' });
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error,
+            });
           }
-          this.toggleLoading();
+        } else {
+          this.setState({ action_status: "failed" });
         }
+        this.toggleLoading();
       }
-    );
+    });
   }
 
   componentDidMount() {
@@ -427,22 +508,31 @@ class OrderCreated extends Component {
     for (let i = 0; i < array_field.length; i++) {
       searchBar.push(
         <td>
-          <div className="controls" style={{ width: '150px' }}>
+          <div className="controls" style={{ width: "150px" }}>
             <InputGroup className="input-prepend">
               <InputGroupAddon addonType="prepend">
-                <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                <InputGroupText>
+                  <i className="fa fa-search"></i>
+                </InputGroupText>
               </InputGroupAddon>
-              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[array_field[i]]} name={array_field[i]} size="sm" />
+              <Input
+                type="text"
+                placeholder="Search"
+                onChange={this.handleFilterList}
+                value={this.state.filter_list[array_field[i]]}
+                name={array_field[i]}
+                size="sm"
+              />
             </InputGroup>
           </div>
         </td>
-      )
+      );
     }
     return searchBar;
-  }
+  };
 
-  handleMotType(e){
-    this.setState({mot_type : e.target.value});
+  handleMotType(e) {
+    this.setState({ mot_type: e.target.value });
   }
 
   loading = () => (
@@ -450,7 +540,6 @@ class OrderCreated extends Component {
   );
 
   render() {
-
     const downloadMR = {
       float: "right",
     };
@@ -466,7 +555,10 @@ class OrderCreated extends Component {
             <Card>
               <CardHeader>
                 <span style={{ lineHeight: "2" }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }} ></i>
+                  <i
+                    className="fa fa-align-justify"
+                    style={{ marginRight: "8px" }}
+                  ></i>
                   LDM Approval MRA
                 </span>
               </CardHeader>
@@ -474,7 +566,7 @@ class OrderCreated extends Component {
                 <Table responsive striped bordered size="sm">
                   <tr>
                     <th rowSpan="2">Action</th>
-                    <th>MRA  ID</th>
+                    <th>MRA ID</th>
                     <th>MRA Type</th>
                     <th>Category</th>
                     <th>Project Name</th>
@@ -486,45 +578,110 @@ class OrderCreated extends Component {
                     <th>Created By</th>
                     <th>Created On</th>
                   </tr>
-                  <tr>
-                    {this.loopSearchBar()}
-                  </tr>
+                  <tr>{this.loopSearchBar()}</tr>
                   <tbody>
                     {this.state.mr_dis_list.length === 0 && (
                       <tr>
                         <td colSpan="16">No Data Available</td>
                       </tr>
                     )}
-                    {this.state.mr_dis_list.map((list, i) =>
+                    {this.state.mr_dis_list.map((list, i) => (
                       <tr key={list._id}>
                         <td>
                           {/* <Button outline color="success" size="sm" className="btn-pill" style={{ width: "90px", marginBottom: "4px" }} id={list._id} value={list._etag} onClick={this.ApproveMR}><i className="fa fa-check" style={{ marginRight: "8px" }}></i>Approve</Button> */}
-                          <Button outline color="success" size="sm" className="btn-pill" style={{ width: "90px", marginBottom: "4px" }} id={list._id} value={list._etag} onClick={this.toggleModalapprove} >
-                            <i className="fa fa-check" style={{ marginRight: "8px" }} ></i>
+                          <Button
+                            outline
+                            color="success"
+                            size="sm"
+                            className="btn-pill"
+                            style={{ width: "90px", marginBottom: "4px" }}
+                            id={list._id}
+                            value={list._etag}
+                            onClick={this.toggleModalapprove}
+                          >
+                            <i
+                              className="fa fa-check"
+                              style={{ marginRight: "8px" }}
+                            ></i>
                             Approve
                           </Button>
-                          <Button outline color="danger" size="sm" className="btn-pill" style={{ width: "90px" }} id={list._id} value={list._etag} onClick={this.toggleBoxInput} >
-                            <i className="fa fa-times" style={{ marginRight: "8px" }} ></i>
+                          <Button
+                            outline
+                            color="danger"
+                            size="sm"
+                            className="btn-pill"
+                            style={{ width: "90px" }}
+                            id={list._id}
+                            value={list._etag}
+                            onClick={this.toggleBoxInput}
+                          >
+                            <i
+                              className="fa fa-times"
+                              style={{ marginRight: "8px" }}
+                            ></i>
                             Reject
                           </Button>
                         </td>
-                        <td><Link to={'/srn/mr-srn-detail/'+list._id}>{list.mra_id}</Link></td>
+                        <td>
+                          <Link to={"/srn/mr-srn-detail/" + list._id}>
+                            {list.mra_id}
+                          </Link>
+                        </td>
                         <td>{list.mra_type}</td>
                         <td>{list.mrd_category}</td>
                         <td>{list.project_name}</td>
-                        <td>{list.site_info.find(si => si.srn_title === "Origin") !== undefined ? list.site_info.find(si => si.srn_title === "Origin").site_id : null }</td>
-                        <td>{list.site_info.find(si => si.srn_title === "Origin") !== undefined ? list.site_info.find(si => si.srn_title === "Origin").site_name : null}</td>
-                        <td>{list.mrd_category === "To Warehouse" ? list.destination.value : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_id : null }</td>
-                        <td>{list.mrd_category === "To Warehouse" ? null : list.site_info.find(si => si.srn_title === "Destination") !== undefined ? list.site_info.find(si => si.srn_title === "Destination").site_name : null}</td>
+                        <td>
+                          {list.site_info.find(
+                            (si) => si.srn_title === "Origin"
+                          ) !== undefined
+                            ? list.site_info.find(
+                                (si) => si.srn_title === "Origin"
+                              ).site_id
+                            : null}
+                        </td>
+                        <td>
+                          {list.site_info.find(
+                            (si) => si.srn_title === "Origin"
+                          ) !== undefined
+                            ? list.site_info.find(
+                                (si) => si.srn_title === "Origin"
+                              ).site_name
+                            : null}
+                        </td>
+                        <td>
+                          {list.mrd_category === "To Warehouse"
+                            ? list.destination.value
+                            : list.site_info.find(
+                                (si) => si.srn_title === "Destination"
+                              ) !== undefined
+                            ? list.site_info.find(
+                                (si) => si.srn_title === "Destination"
+                              ).site_id
+                            : null}
+                        </td>
+                        <td>
+                          {list.mrd_category === "To Warehouse"
+                            ? null
+                            : list.site_info.find(
+                                (si) => si.srn_title === "Destination"
+                              ) !== undefined
+                            ? list.site_info.find(
+                                (si) => si.srn_title === "Destination"
+                              ).site_name
+                            : null}
+                        </td>
                         <td>{list.current_mra_status}</td>
-                        <td>{list.creator.map(e => e.email)}</td>
+                        <td>{list.creator.map((e) => e.email)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
-                    )}
+                    ))}
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries from {this.state.totalData} data</small>
+                  <small>
+                    Showing {this.state.mr_all.length} entries from{" "}
+                    {this.state.totalData} data
+                  </small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}
@@ -540,8 +697,12 @@ class OrderCreated extends Component {
           </Col>
         </Row>
 
-{/* Modal Loading */}
-<Modal isOpen={this.state.modal_box_input} toggle={this.toggleBoxInput} className={'modal-sm modal--box-input'}>
+        {/* Modal Loading */}
+        <Modal
+          isOpen={this.state.modal_box_input}
+          toggle={this.toggleBoxInput}
+          className={"modal-sm modal--box-input"}
+        >
           <ModalBody>
             <Row>
               <Col sm="12">
@@ -559,7 +720,17 @@ class OrderCreated extends Component {
             </Row>
           </ModalBody>
           <ModalFooter>
-            <Button disabled={!this.state.rejectNote} outline color="danger" size="sm" style={{ width: "80px" }} id={this.state.id_mr_selected} onClick={this.rejectMR}>Reject MR</Button>
+            <Button
+              disabled={!this.state.rejectNote}
+              outline
+              color="danger"
+              size="sm"
+              style={{ width: "80px" }}
+              id={this.state.id_mr_selected}
+              onClick={this.rejectMR}
+            >
+              Reject MR
+            </Button>
           </ModalFooter>
         </Modal>
         {/* end Modal Loading */}
@@ -586,30 +757,35 @@ class OrderCreated extends Component {
               </FormGroup>
             ) : (
               <React.Fragment>
-              <FormGroup>
-                <Label htmlFor="total_box">DSP Company</Label>
-                <Input
-                  type="select"
-                  className=""
-                  placeholder=""
-                  onChange={this.handleLDMapprove}
-                  name={this.state.id_mr_selected}
-                >
-                  <option value="" disabled selected hidden></option>
-                  {this.state.asp_data.map((asp) => (
-                    <option value={asp.Vendor_Code}>{asp.Name}</option>
-                  ))}
-                </Input>
-              </FormGroup>
-              <FormGroup>
-                <Label htmlFor="total_box">MOT Type</Label>
-                <Input type="select" name={"0 /// sub_category"} onChange={this.handleMotType} value={this.state.mot_type}>
-                  <option value="" disabled selected hidden></option>
-                  <option value="MOT-Land">MOT-Land</option>
-                  <option value="MOT-Air">MOT-Air</option>
-                  <option value="MOT-Sea">MOT-Sea</option>
-                </Input>
-              </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="total_box">DSP Company</Label>
+                  <Input
+                    type="select"
+                    className=""
+                    placeholder=""
+                    onChange={this.handleLDMapprove}
+                    name={this.state.id_mr_selected}
+                  >
+                    <option value="" disabled selected hidden></option>
+                    {this.state.asp_data.map((asp) => (
+                      <option value={asp.Vendor_Code}>{asp.Name}</option>
+                    ))}
+                  </Input>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="total_box">MOT Type</Label>
+                  <Input
+                    type="select"
+                    name={"0 /// sub_category"}
+                    onChange={this.handleMotType}
+                    value={this.state.mot_type}
+                  >
+                    <option value="" disabled selected hidden></option>
+                    <option value="MOT-Land">MOT-Land</option>
+                    <option value="MOT-Air">MOT-Air</option>
+                    <option value="MOT-Sea">MOT-Sea</option>
+                  </Input>
+                </FormGroup>
               </React.Fragment>
             )}
           </Col>

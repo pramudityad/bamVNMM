@@ -9,15 +9,22 @@ import {
   Collapse,
   Button,
 } from "reactstrap";
-import { InputGroup, InputGroupAddon, InputGroupText, Modal, ModalBody, ModalFooter } from "reactstrap";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  Modal,
+  ModalBody,
+  ModalFooter,
+} from "reactstrap";
 import { Link } from "react-router-dom";
 // import Widget from "./Widget";
 import "../wh_css.css";
 import { connect } from "react-redux";
 import axios from "axios";
-import Loading from '../../components/Loading'
+import Loading from "../../components/Loading";
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
 const usernameXL = "adminbamidsuper";
@@ -99,7 +106,7 @@ class WarehouseDashboard extends Component {
 
   async getDatafromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -118,12 +125,16 @@ class WarehouseDashboard extends Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.post(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         // console.log("respond Post Data", respond);
       }
@@ -137,12 +148,16 @@ class WarehouseDashboard extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond patch Data", respond);
       }
@@ -156,12 +171,15 @@ class WarehouseDashboard extends Component {
 
   async deleteDataFromAPINODE(url) {
     try {
-      let respond = await axios.delete(API_URL_NODE + url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.delete(
+        process.env.REACT_APP_API_URL_NODE + url,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond delete Data", respond);
       }
@@ -194,7 +212,9 @@ class WarehouseDashboard extends Component {
 
   getWHStockList() {
     this.toggleLoading();
-    this.getDatafromAPINODE('/whManagement/warehouse?noPg=1&q={"wh_type":{"$regex" : "internal", "$options" : "i"}}').then((res) => {
+    this.getDatafromAPINODE(
+      '/whManagement/warehouse?noPg=1&q={"wh_type":{"$regex" : "internal", "$options" : "i"}}'
+    ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -279,8 +299,7 @@ class WarehouseDashboard extends Component {
                       <Link
                         to={{
                           pathname:
-                            "/wh-dashboard-eid/wh-dashboard-eid-det/" +
-                            e.wh_id
+                            "/wh-dashboard-eid/wh-dashboard-eid-det/" + e.wh_id,
                         }}
                       >
                         <h6>
@@ -317,7 +336,9 @@ class WarehouseDashboard extends Component {
                           <Col col="2" xl className="mb-3 mb-xl-0">
                             <Link
                               to={{
-                                pathname:"/wh-dashboard-eid/material-stock2/" +e.wh_id,
+                                pathname:
+                                  "/wh-dashboard-eid/material-stock2/" +
+                                  e.wh_id,
                               }}
                             >
                               <Button
@@ -334,7 +355,9 @@ class WarehouseDashboard extends Component {
                           <Col col="2" xl className="mb-3 mb-xl-0">
                             <Link
                               to={{
-                                pathname:"/wh-dashboard-eid/material-inbound-plan2/" +e.wh_id,
+                                pathname:
+                                  "/wh-dashboard-eid/material-inbound-plan2/" +
+                                  e.wh_id,
                               }}
                             >
                               <Button
@@ -349,34 +372,38 @@ class WarehouseDashboard extends Component {
                           </Col>
 
                           <Col col="2" xl className="mb-3 mb-xl-0">
-                          <Link
+                            <Link
                               to={{
-                                pathname:"/wh-dashboard-eid/wh-gr-eid/" +e.wh_id,
-                              }}>
-                            <Button
-                              block
-                              color="success"
-                              size="sm"
-                              className="btn-pill"
+                                pathname:
+                                  "/wh-dashboard-eid/wh-gr-eid/" + e.wh_id,
+                              }}
                             >
-                              GR
-                            </Button>
+                              <Button
+                                block
+                                color="success"
+                                size="sm"
+                                className="btn-pill"
+                              >
+                                GR
+                              </Button>
                             </Link>
                           </Col>
 
                           <Col col="2" xl className="mb-3 mb-xl-0">
-                          <Link
+                            <Link
                               to={{
-                                pathname:"/wh-dashboard-eid/wh-gi-eid/" +e.wh_id,
-                              }}>
-                            <Button
-                              block
-                              color="warning"
-                              size="sm"
-                              className="btn-pill"
+                                pathname:
+                                  "/wh-dashboard-eid/wh-gi-eid/" + e.wh_id,
+                              }}
                             >
-                              GI
-                            </Button>
+                              <Button
+                                block
+                                color="warning"
+                                size="sm"
+                                className="btn-pill"
+                              >
+                                GI
+                              </Button>
                             </Link>
                           </Col>
                         </Row>
@@ -388,10 +415,11 @@ class WarehouseDashboard extends Component {
             ))}
         </Row>
         {/* Modal Loading */}
-        <Loading isOpen={this.state.modal_loading}
+        <Loading
+          isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
-          className={"modal-sm modal--loading "}>
-        </Loading>
+          className={"modal-sm modal--loading "}
+        ></Loading>
         {/* end Modal Loading */}
       </div>
     );

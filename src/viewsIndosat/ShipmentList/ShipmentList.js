@@ -29,9 +29,16 @@ const API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
 const username = "bamidadmin@e-dpm.com";
 const password = "F760qbAg2sml";
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-const array_field = ["shipment_id", "no_shipment", "transporter", "truck_no", "driver", "driver_phone"]
+const array_field = [
+  "shipment_id",
+  "no_shipment",
+  "transporter",
+  "truck_no",
+  "driver",
+  "driver_phone",
+];
 
 const Checkbox = ({
   type = "checkbox",
@@ -75,8 +82,8 @@ class ShipmentList extends Component {
       danger: false,
       warning: false,
       selected_id: "",
-      selected_mr:[],
-      selected_mr_id:[],
+      selected_mr: [],
+      selected_mr_id: [],
       modal_loading: false,
     };
     this.handlePageChange = this.handlePageChange.bind(this);
@@ -118,7 +125,7 @@ class ShipmentList extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -137,12 +144,16 @@ class ShipmentList extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Patch data", respond);
       }
@@ -156,12 +167,15 @@ class ShipmentList extends Component {
 
   async deleteDataFromAPINODE(url) {
     try {
-      let respond = await axios.delete(API_URL_NODE + url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.delete(
+        process.env.REACT_APP_API_URL_NODE + url,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond delete Data", respond);
       }
@@ -175,13 +189,16 @@ class ShipmentList extends Component {
 
   async deleteDataFromAPINODE2(url, data) {
     try {
-      let respond = await axios.delete(API_URL_NODE + url,{
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-        data
-      });
+      let respond = await axios.delete(
+        process.env.REACT_APP_API_URL_NODE + url,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+          data,
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond delete Data", respond);
       }
@@ -240,14 +257,28 @@ class ShipmentList extends Component {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     let filter_array = [];
-    for(let i = 0; i < array_field.length; i++){
-      if(this.state.filter_list[array_field[i]] !== null && this.state.filter_list[array_field[i]] !== undefined){
-        filter_array.push('"'+array_field[i]+'":{"$regex" : "' + this.state.filter_list[array_field[i]] + '", "$options" : "i"}');
+    for (let i = 0; i < array_field.length; i++) {
+      if (
+        this.state.filter_list[array_field[i]] !== null &&
+        this.state.filter_list[array_field[i]] !== undefined
+      ) {
+        filter_array.push(
+          '"' +
+            array_field[i] +
+            '":{"$regex" : "' +
+            this.state.filter_list[array_field[i]] +
+            '", "$options" : "i"}'
+        );
       }
     }
-    let whereAnd = '{' + filter_array.join(',') + '}';
+    let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE(
-      "/matreqShipment?srt=_id:-1&q="+ whereAnd +"&lmt=" + maxPage + "&pg=" + page
+      "/matreqShipment?srt=_id:-1&q=" +
+        whereAnd +
+        "&lmt=" +
+        maxPage +
+        "&pg=" +
+        page
     ).then((res) => {
       if (res.data !== undefined) {
         const items = res.data.data;
@@ -263,7 +294,7 @@ class ShipmentList extends Component {
       this.getDataFromAPINODE("/matreqShipment/" + e.target.value).then(
         (res) => {
           if (res.data !== undefined) {
-            console.log('matreqShipment ', res.data.data)
+            console.log("matreqShipment ", res.data.data);
             this.setState({ shipment_detail: res.data.data });
           }
         }
@@ -295,24 +326,24 @@ class ShipmentList extends Component {
 
   TakeoutMR(e) {
     const _id = this.state.selected_id;
-    const mr_takeout = this.state.mr_data_selected.map(mr=>mr._id);
+    const mr_takeout = this.state.mr_data_selected.map((mr) => mr._id);
     if (e !== undefined) {
       this.toggleLoading();
       this.toggleTakeOut();
-      this.patchDatatoAPINODE("/matreqShipment/takeOutMR/" + _id, {"mrList" : mr_takeout}).then(
-        (res) => {
-          console.log("matreqShipment/takeOutMR/ ", res);
-          if (res.data !== undefined) {
-            this.setState({ action_status: "success" });
-            this.getShipmentList();
-            this.toggleLoading();
-          } else {
-            this.setState({ action_status: "failed" });
-            this.getShipmentList();
-            this.toggleLoading();
-          }
+      this.patchDatatoAPINODE("/matreqShipment/takeOutMR/" + _id, {
+        mrList: mr_takeout,
+      }).then((res) => {
+        console.log("matreqShipment/takeOutMR/ ", res);
+        if (res.data !== undefined) {
+          this.setState({ action_status: "success" });
+          this.getShipmentList();
+          this.toggleLoading();
+        } else {
+          this.setState({ action_status: "failed" });
+          this.getShipmentList();
+          this.toggleLoading();
         }
-      );
+      });
     }
   }
 
@@ -443,7 +474,9 @@ class ShipmentList extends Component {
     const dataMR = this.state.shipment_list;
     let MRSelected = this.state.mr_data_selected;
     if (isChecked === true) {
-      const getMR = this.state.shipment_detail.mr_list.find((mr) =>mr._id === item)
+      const getMR = this.state.shipment_detail.mr_list.find(
+        (mr) => mr._id === item
+      );
       MRSelected.push(getMR);
     } else {
       MRSelected = MRSelected.filter(function (e) {
@@ -465,19 +498,28 @@ class ShipmentList extends Component {
     for (let i = 0; i < array_field.length; i++) {
       searchBar.push(
         <td>
-          <div className="controls" style={{ width: '150px' }}>
+          <div className="controls" style={{ width: "150px" }}>
             <InputGroup className="input-prepend">
               <InputGroupAddon addonType="prepend">
-                <InputGroupText><i className="fa fa-search"></i></InputGroupText>
+                <InputGroupText>
+                  <i className="fa fa-search"></i>
+                </InputGroupText>
               </InputGroupAddon>
-              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[array_field[i]]} name={array_field[i]} size="sm" />
+              <Input
+                type="text"
+                placeholder="Search"
+                onChange={this.handleFilterList}
+                value={this.state.filter_list[array_field[i]]}
+                name={array_field[i]}
+                size="sm"
+              />
             </InputGroup>
           </div>
         </td>
-      )
+      );
     }
     return searchBar;
-  }
+  };
 
   render() {
     function AlertProcess(props) {
@@ -522,22 +564,39 @@ class ShipmentList extends Component {
         <Row>
           <Col xs="12" lg="12">
             <Card>
-              <CardHeader style={{display: "inline-flex"}}>
-                <span>Shipment Detail{" "}
-                {this.state.shipment_detail.no_shipment !== undefined ? "(" + this.state.shipment_detail.no_shipment + ")" : ""}
+              <CardHeader style={{ display: "inline-flex" }}>
+                <span>
+                  Shipment Detail{" "}
+                  {this.state.shipment_detail.no_shipment !== undefined
+                    ? "(" + this.state.shipment_detail.no_shipment + ")"
+                    : ""}
                 </span>
-                  {this.state.shipment_detail.no_shipment !== undefined && (
-                    <div style={{ marginLeft: "auto", float: "right" }}>
-                    <Button color="danger" size="sm" value={this.state.shipment_detail._id} onClick={this.toggleDelete} style={{float : 'right', marginRight: "6px"}}>
-                      <i className="icon-ban icons "> &nbsp; </i> Cancel Shipment
+                {this.state.shipment_detail.no_shipment !== undefined && (
+                  <div style={{ marginLeft: "auto", float: "right" }}>
+                    <Button
+                      color="danger"
+                      size="sm"
+                      value={this.state.shipment_detail._id}
+                      onClick={this.toggleDelete}
+                      style={{ float: "right", marginRight: "6px" }}
+                    >
+                      <i className="icon-ban icons "> &nbsp; </i> Cancel
+                      Shipment
                     </Button>
-                    &nbsp;&nbsp;&nbsp;
-                    &nbsp;&nbsp;&nbsp;
-                    <Button color="warning" size="sm" disabled={this.state.mr_data_selected.length === 0} value={this.state.shipment_detail._id} onClick={this.toggleTakeOut} style={{float : 'right', marginRight:"6px"}}>
-                    <i className="icon-action-undo icons "> &nbsp; </i> Takeout MR
-                  </Button></div>
-
-                  )}
+                    &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+                    <Button
+                      color="warning"
+                      size="sm"
+                      disabled={this.state.mr_data_selected.length === 0}
+                      value={this.state.shipment_detail._id}
+                      onClick={this.toggleTakeOut}
+                      style={{ float: "right", marginRight: "6px" }}
+                    >
+                      <i className="icon-action-undo icons "> &nbsp; </i>{" "}
+                      Takeout MR
+                    </Button>
+                  </div>
+                )}
               </CardHeader>
               <CardBody>
                 <Row>
@@ -675,15 +734,22 @@ class ShipmentList extends Component {
                       <Table responsive striped bordered size="sm">
                         <thead>
                           <tr>
-                            <th style={{width: '60px'}}></th>
-                            <th style={{width: '150px'}}>MR ID</th>
-                            <th style={{width: '80px'}}>Total Box</th>
+                            <th style={{ width: "60px" }}></th>
+                            <th style={{ width: "150px" }}>MR ID</th>
+                            <th style={{ width: "80px" }}>Total Box</th>
                           </tr>
                         </thead>
                         <tbody>
                           {this.state.shipment_detail.mr_list.map((mr) => (
                             <tr>
-                              <td style={{ textAlign: 'center' }}><Checkbox name={mr._id} checked={this.state.mr_checked.get(mr._id)} onChange={this.handleChangeChecklist} value={mr} /></td>
+                              <td style={{ textAlign: "center" }}>
+                                <Checkbox
+                                  name={mr._id}
+                                  checked={this.state.mr_checked.get(mr._id)}
+                                  onChange={this.handleChangeChecklist}
+                                  value={mr}
+                                />
+                              </td>
                               <td>{mr.mr_id}</td>
                               <td>{mr.total_boxes}</td>
                             </tr>
@@ -692,8 +758,13 @@ class ShipmentList extends Component {
                       </Table>
                     </Col>
                     <Row xs="1" sm="2" md="4" className="align-items-center">
-                      <Col col="6" sm="4" md="2" xl className="mb-3 mb-xl-0">
-                      </Col>
+                      <Col
+                        col="6"
+                        sm="4"
+                        md="2"
+                        xl
+                        className="mb-3 mb-xl-0"
+                      ></Col>
                     </Row>
                   </Row>
                 )}
@@ -725,9 +796,7 @@ class ShipmentList extends Component {
                       <th>Driver</th>
                       <th>Driver Phone</th>
                     </tr>
-                    <tr>
-                      {this.loopSearchBar()}
-                    </tr>
+                    <tr>{this.loopSearchBar()}</tr>
                   </thead>
                   <tbody>
                     {this.state.shipment_list.length === 0 && (
@@ -792,8 +861,13 @@ class ShipmentList extends Component {
           isOpen={this.state.warning}
           toggle={this.toggleTakeOut}
           className={"modal-warning " + this.props.className}
-          title={"Takeout MR from Shipment " + this.state.shipment_detail.no_shipment}
-          body={"Are you sure want takeout " + this.state.mr_data_selected.map(mr=>mr.mr_id)}
+          title={
+            "Takeout MR from Shipment " + this.state.shipment_detail.no_shipment
+          }
+          body={
+            "Are you sure want takeout " +
+            this.state.mr_data_selected.map((mr) => mr.mr_id)
+          }
           // title={"Takeout MR "}
         >
           <Button color="warning" onClick={this.TakeoutMR}>

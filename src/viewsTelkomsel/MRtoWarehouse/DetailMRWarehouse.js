@@ -15,10 +15,10 @@ import {
   Dropdown,
   DropdownToggle,
   DropdownMenu,
-  DropdownItem
+  DropdownItem,
 } from "reactstrap";
 import { Form, FormGroup, Label } from "reactstrap";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 import { Modal, ModalBody, ModalHeader, ModalFooter } from "reactstrap";
 import axios from "axios";
 import { connect } from "react-redux";
@@ -37,7 +37,7 @@ import "./MatStyle.css";
 import ModalForm from "../components/ModalForm";
 import { getDatafromAPINODEFile } from "../../helper/asyncFunction";
 
-import {convertDateFormatfull} from '../../helper/basicFunction'
+import { convertDateFormatfull } from "../../helper/basicFunction";
 
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
@@ -74,9 +74,20 @@ const Checkbox = ({
   />
 );
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-const status_can_edit_material = [ "PLANTSPEC ASSIGNED", "PLANTSPEC UPDATED", "MR REQUESTED", "MR CANCELED", "MR APPROVED", "MR REJECTED", "MR UPDATED", "ORDER PROCESSING START", "MR NEED REVISION", "PS NEED REVISION"];
+const status_can_edit_material = [
+  "PLANTSPEC ASSIGNED",
+  "PLANTSPEC UPDATED",
+  "MR REQUESTED",
+  "MR CANCELED",
+  "MR APPROVED",
+  "MR REJECTED",
+  "MR UPDATED",
+  "ORDER PROCESSING START",
+  "MR NEED REVISION",
+  "PS NEED REVISION",
+];
 
 class DetailMRWarehouse extends Component {
   constructor(props) {
@@ -91,7 +102,7 @@ class DetailMRWarehouse extends Component {
       list_mr_item: [],
       rowsXLS: [],
       data_mr: null,
-      data_wh : {},
+      data_wh: {},
       mr_site_NE: null,
       mr_site_FE: null,
       update_mr_form: {},
@@ -111,15 +122,15 @@ class DetailMRWarehouse extends Component {
       asp_data: [],
       modal_revision: false,
       revision_note: "",
-      wbs_cd_id_data : [],
-      location_mr : {},
+      wbs_cd_id_data: [],
+      location_mr: {},
       dropdownOpen: new Array(2).fill(false),
-      modal_loading : false,
-      dsp_list : [],
+      modal_loading: false,
+      dsp_list: [],
       sid_file: [],
       abd_file: [],
-      mot_type:null,
-      product_package_ps_mw : [],
+      mot_type: null,
+      product_package_ps_mw: [],
     };
     this.getQtyMRPPNE = this.getQtyMRPPNE.bind(this);
     this.getQtyMRPPFE = this.getQtyMRPPFE.bind(this);
@@ -145,13 +156,15 @@ class DetailMRWarehouse extends Component {
     this.toggleLoading = this.toggleLoading.bind(this);
     this.exportMRFormat = this.exportMRFormat.bind(this);
     this.updateMR = this.updateMR.bind(this);
-    this.downloadMaterialSerialNumberReport = this.downloadMaterialSerialNumberReport.bind(this);
+    this.downloadMaterialSerialNumberReport = this.downloadMaterialSerialNumberReport.bind(
+      this
+    );
     this.handleMotType = this.handleMotType.bind(this);
   }
 
-  toggleLoading(){
-    this.setState(prevState => ({
-      modal_loading: !prevState.modal_loading
+  toggleLoading() {
+    this.setState((prevState) => ({
+      modal_loading: !prevState.modal_loading,
     }));
   }
 
@@ -165,13 +178,13 @@ class DetailMRWarehouse extends Component {
 
   toggleModalRevision(e) {
     this.setState((prevState) => ({
-      modal_revision: !prevState.modal_revision
+      modal_revision: !prevState.modal_revision,
     }));
   }
 
   toggleDropdown(i) {
     const newArray = this.state.dropdownOpen.map((element, index) => {
-      return (index === i ? !element : false);
+      return index === i ? !element : false;
     });
     this.setState({
       dropdownOpen: newArray,
@@ -180,7 +193,7 @@ class DetailMRWarehouse extends Component {
 
   handleRevisionNote(e) {
     let value = e.target.value;
-    this.setState({ revision_note: value })
+    this.setState({ revision_note: value });
   }
 
   async getDatafromAPIEXEL(url) {
@@ -206,14 +219,16 @@ class DetailMRWarehouse extends Component {
   getASPList() {
     // switch (this.props.dataLogin.account_id) {
     //   case "xl":
-    this.getDatafromAPIEXEL('/vendor_data_non_page?where={"Type":"DSP"}').then((res) => {
-      // console.log("asp data ", res.data);
-      if (res.data !== undefined) {
-        this.setState({ asp_data: res.data._items });
-      } else {
-        this.setState({ asp_data: [] });
+    this.getDatafromAPIEXEL('/vendor_data_non_page?where={"Type":"DSP"}').then(
+      (res) => {
+        // console.log("asp data ", res.data);
+        if (res.data !== undefined) {
+          this.setState({ asp_data: res.data._items });
+        } else {
+          this.setState({ asp_data: [] });
+        }
       }
-    });
+    );
     //     break;
     //   default:
     //     break;
@@ -325,7 +340,7 @@ class DetailMRWarehouse extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -344,12 +359,16 @@ class DetailMRWarehouse extends Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.post(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond post data", respond);
       }
@@ -363,12 +382,16 @@ class DetailMRWarehouse extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Post Data", respond);
       }
@@ -385,20 +408,20 @@ class DetailMRWarehouse extends Component {
     }
   }
 
-  async getDatafromAPITSEL(url){
+  async getDatafromAPITSEL(url) {
     try {
-      let respond = await axios.get(API_URL_ISAT +url, {
-        headers : {'Content-Type':'application/json'},
+      let respond = await axios.get(API_URL_ISAT + url, {
+        headers: { "Content-Type": "application/json" },
         auth: {
           username: usernameISAT,
-          password: passwordISAT
+          password: passwordISAT,
         },
-      })
-      if(respond.status >= 200 && respond.status < 300){
+      });
+      if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Get Data", respond);
       }
       return respond;
-    }catch (err) {
+    } catch (err) {
       let respond = err;
       console.log("respond Get Data", err);
       return respond;
@@ -407,13 +430,16 @@ class DetailMRWarehouse extends Component {
 
   async deleteDataFromAPINODE(url, data) {
     try {
-      let respond = await axios.delete(API_URL_NODE + url, {
-        headers: {
-          'Content-Type':'application/json',
-          'Authorization': 'Bearer '+this.state.tokenUser
-        },
-          data : data
-      });
+      let respond = await axios.delete(
+        process.env.REACT_APP_API_URL_NODE + url,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+          data: data,
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond delete Data", respond);
       }
@@ -467,29 +493,26 @@ class DetailMRWarehouse extends Component {
     this.getDataFromAPINODE("/matreq/" + _id_MR).then((resMR) => {
       if (resMR.data !== undefined) {
         this.getMRLocation(_id_MR);
-        if(resMR.data.dsp_company === null){
+        if (resMR.data.dsp_company === null) {
           this.getASPList();
         }
         this.setState({ data_mr: resMR.data }, () => {
-          if(resMR.data.origin !== undefined){
+          if (resMR.data.origin !== undefined) {
             this.getWHOrigin(resMR.data.origin.value);
           }
-          if(this.state.data_mr.cust_del !== undefined){
-            this.getDataCDID(this.state.data_mr.cust_del.map(e => e.cd_id));
-            this.getSIDNumber(this.state.data_mr.cust_del.map(e => e.cd_id));
+          if (this.state.data_mr.cust_del !== undefined) {
+            this.getDataCDID(this.state.data_mr.cust_del.map((e) => e.cd_id));
+            this.getSIDNumber(this.state.data_mr.cust_del.map((e) => e.cd_id));
           }
-          this.setState(
-            { mr_pp: resMR.data.packages },
-            () => {
-              if (
-                status_can_edit_material.includes(resMR.data.current_mr_status)
-              ) {
-                this.getDataWarehouse(resMR.data.packages);
-                this.getDataInbound(resMR.data.packages);
-              }
-              this.prepareView();
+          this.setState({ mr_pp: resMR.data.packages }, () => {
+            if (
+              status_can_edit_material.includes(resMR.data.current_mr_status)
+            ) {
+              this.getDataWarehouse(resMR.data.packages);
+              this.getDataInbound(resMR.data.packages);
             }
-          );
+            this.prepareView();
+          });
         });
       }
     });
@@ -500,54 +523,74 @@ class DetailMRWarehouse extends Component {
     const maxPage = 1;
     let dataSID = [];
     let dataABD = [];
-    for(let i = 0; i < arrayCDID.length; i++){
+    for (let i = 0; i < arrayCDID.length; i++) {
       let filter_array = [];
-      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"cust_del.cd_id":"' + arrayCDID[i] + '"');
       filter_array.push('"type" : {"$ne" : "ABD"}');
       let whereAnd = "{" + filter_array.join(",") + "}";
-      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
-      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
-        dataSID.push(res.data.data[0])
+      const res = await this.getDataFromAPINODE(
+        "/sidFile?srt=_id:-1&q=" + whereAnd + "&lmt=" + maxPage + "&pg=" + page
+      );
+      if (
+        res.data !== undefined &&
+        res.data.data !== undefined &&
+        res.data.data.length !== 0
+      ) {
+        dataSID.push(res.data.data[0]);
       }
     }
-    for(let i = 0; i < arrayCDID.length; i++){
+    for (let i = 0; i < arrayCDID.length; i++) {
       let filter_array = [];
-      filter_array.push('"cust_del.cd_id":"'+arrayCDID[i]+'"');
+      filter_array.push('"cust_del.cd_id":"' + arrayCDID[i] + '"');
       filter_array.push('"type" : "ABD"');
       let whereAnd = "{" + filter_array.join(",") + "}";
-      const res = await this.getDataFromAPINODE("/sidFile?srt=_id:-1&q="+whereAnd+"&lmt="+maxPage +"&pg="+page)
-      if (res.data !== undefined && res.data.data !== undefined && res.data.data.length !== 0) {
-        dataABD.push(res.data.data[0])
+      const res = await this.getDataFromAPINODE(
+        "/sidFile?srt=_id:-1&q=" + whereAnd + "&lmt=" + maxPage + "&pg=" + page
+      );
+      if (
+        res.data !== undefined &&
+        res.data.data !== undefined &&
+        res.data.data.length !== 0
+      ) {
+        dataABD.push(res.data.data[0]);
       }
     }
-    this.setState({sid_file : dataSID, abd_file : dataABD});
+    this.setState({ sid_file: dataSID, abd_file: dataABD });
   }
 
-  getWHOrigin(wh_id){
-    this.getDataFromAPINODE('/whManagement/warehouse?q={"wh_id" : "'+wh_id+'"}').then((resWH) => {
-      if(resWH.data !== undefined){
-        if(resWH.data.data[0] !== undefined){
-          this.setState({data_wh : resWH.data.data[0]});
+  getWHOrigin(wh_id) {
+    this.getDataFromAPINODE(
+      '/whManagement/warehouse?q={"wh_id" : "' + wh_id + '"}'
+    ).then((resWH) => {
+      if (resWH.data !== undefined) {
+        if (resWH.data.data[0] !== undefined) {
+          this.setState({ data_wh: resWH.data.data[0] });
           console.log("resWH", resWH.data.data[0]);
         }
-      }
-    })
-  }
-
-  getMRLocation(_id_MR){
-    this.getDataFromAPINODE('/getMRLocationById/' + _id_MR).then((resLocMR) => {
-      if (resLocMR.data !== undefined) {
-        this.setState({location_mr : resLocMR.data});
       }
     });
   }
 
-  async getDataCDID(array_cd_id){
-    let array_in_cdid = '"'+array_cd_id.join('", "')+'"';
-    let projection = '&projection={"WP_ID" : 1, "C1043_WBS_HW" : 1, "C1023_WBS_HWAC" : 1, "C1033_WBS_LCM" : 1, "C1003_WBS_PNRO" : 1, "C1053_WBS_SW" : 1, "C1063_C1053_WBS_PS" : 1, "C1066_C1053_WBS_ANC" : 1, "C1034_WBS_PowHW_Site_Basis" : 1, "C1035_WBS_PowLCM_Site_Basis" : 1, "C1036_WBS_Kathrein" : 1}'
-    const getWPID = await this.getDatafromAPITSEL('/custdel_sorted?where={"WP_ID":{"$in" : ['+array_in_cdid+']}}'+projection);
-    if(getWPID !== undefined && getWPID.data !== undefined) {
-      this.setState({ wbs_cd_id_data : getWPID.data._items});
+  getMRLocation(_id_MR) {
+    this.getDataFromAPINODE("/getMRLocationById/" + _id_MR).then((resLocMR) => {
+      if (resLocMR.data !== undefined) {
+        this.setState({ location_mr: resLocMR.data });
+      }
+    });
+  }
+
+  async getDataCDID(array_cd_id) {
+    let array_in_cdid = '"' + array_cd_id.join('", "') + '"';
+    let projection =
+      '&projection={"WP_ID" : 1, "C1043_WBS_HW" : 1, "C1023_WBS_HWAC" : 1, "C1033_WBS_LCM" : 1, "C1003_WBS_PNRO" : 1, "C1053_WBS_SW" : 1, "C1063_C1053_WBS_PS" : 1, "C1066_C1053_WBS_ANC" : 1, "C1034_WBS_PowHW_Site_Basis" : 1, "C1035_WBS_PowLCM_Site_Basis" : 1, "C1036_WBS_Kathrein" : 1}';
+    const getWPID = await this.getDatafromAPITSEL(
+      '/custdel_sorted?where={"WP_ID":{"$in" : [' +
+        array_in_cdid +
+        "]}}" +
+        projection
+    );
+    if (getWPID !== undefined && getWPID.data !== undefined) {
+      this.setState({ wbs_cd_id_data: getWPID.data._items });
     }
   }
 
@@ -611,11 +654,13 @@ class DetailMRWarehouse extends Component {
     }
   }
 
-  uniqObjectArray(array, field){
+  uniqObjectArray(array, field) {
     let arrUniq = [];
-    array.map(arr =>
-      !arrUniq.find(au => au[field] === arr[field]) && arrUniq.push(Object.assign(arr))
-    )
+    array.map(
+      (arr) =>
+        !arrUniq.find((au) => au[field] === arr[field]) &&
+        arrUniq.push(Object.assign(arr))
+    );
     return arrUniq;
   }
 
@@ -640,31 +685,49 @@ class DetailMRWarehouse extends Component {
       site_FE["mr_pp"] = data_pp_FE;
       this.setState({ mr_site_FE: site_FE });
     }
-    if(mr_data.sow_type === "TRM"){
+    if (mr_data.sow_type === "TRM") {
       let dataPS = Object.assign({}, mr_data);
       let dataPPPS = dataPS.packages;
-      let dataPPNE = dataPPPS.filter(ne => ne.site_title === "NE");
-      let dataPPMW = []
-      for(let i = 0; i < dataPPNE.length; i++){
+      let dataPPNE = dataPPPS.filter((ne) => ne.site_title === "NE");
+      let dataPPMW = [];
+      for (let i = 0; i < dataPPNE.length; i++) {
         let dataNEIdx = Object.assign({}, dataPPNE[i]);
-        const dataFEIdx = dataPPPS.find(fe => fe.site_title === "FE" && fe.id_pp_doc === dataPPNE[i].id_pp_doc );
+        const dataFEIdx = dataPPPS.find(
+          (fe) =>
+            fe.site_title === "FE" && fe.id_pp_doc === dataPPNE[i].id_pp_doc
+        );
         const dataFEIdxCopy = Object.assign({}, dataFEIdx);
-        const materialConcat = dataPPNE[i].materials.concat(dataFEIdxCopy.materials);
-        const materialConcatNE = materialConcat.filter(mc => mc.site_title === "NE");
-        let materialConcatUniq = this.uniqObjectArray(JSON.parse(JSON.stringify(materialConcat)), "id_mc_doc");
-        for(let j = 0; j < materialConcatUniq.length; j++){
-          let materialConcatNE = materialConcat.find(mcf => mcf.site_title === "NE" && mcf.id_mc_doc === materialConcatUniq[j].id_mc_doc);
-          let materialConcatFE = materialConcat.find(mcf => mcf.site_title === "FE" && mcf.id_mc_doc === materialConcatUniq[j].id_mc_doc);
-          if(materialConcatNE !== undefined){
+        const materialConcat = dataPPNE[i].materials.concat(
+          dataFEIdxCopy.materials
+        );
+        const materialConcatNE = materialConcat.filter(
+          (mc) => mc.site_title === "NE"
+        );
+        let materialConcatUniq = this.uniqObjectArray(
+          JSON.parse(JSON.stringify(materialConcat)),
+          "id_mc_doc"
+        );
+        for (let j = 0; j < materialConcatUniq.length; j++) {
+          let materialConcatNE = materialConcat.find(
+            (mcf) =>
+              mcf.site_title === "NE" &&
+              mcf.id_mc_doc === materialConcatUniq[j].id_mc_doc
+          );
+          let materialConcatFE = materialConcat.find(
+            (mcf) =>
+              mcf.site_title === "FE" &&
+              mcf.id_mc_doc === materialConcatUniq[j].id_mc_doc
+          );
+          if (materialConcatNE !== undefined) {
             materialConcatUniq[j]["qty"] = materialConcatNE.qty;
             materialConcatUniq[j]["_id_ne"] = materialConcatNE._id;
-          }else{
+          } else {
             materialConcatUniq[j]["qty"] = 0;
           }
-          if(materialConcatFE !== undefined){
+          if (materialConcatFE !== undefined) {
             materialConcatUniq[j]["qty_fe"] = materialConcatFE.qty;
             materialConcatUniq[j]["_id_fe"] = materialConcatFE._id;
-          }else{
+          } else {
             materialConcatUniq[j]["qty_fe"] = 0;
           }
         }
@@ -674,7 +737,7 @@ class DetailMRWarehouse extends Component {
         dataNEIdx["materials"] = materialConcatUniq;
         dataPPMW.push(dataNEIdx);
       }
-      this.setState({ product_package_ps_mw : dataPPMW});
+      this.setState({ product_package_ps_mw: dataPPMW });
     }
   }
 
@@ -733,12 +796,12 @@ class DetailMRWarehouse extends Component {
   }
 
   changeEditable(e) {
-    if(this.state.edit_detail === false){
+    if (this.state.edit_detail === false) {
       this.getDSPList();
       let dataForm = this.state.update_mr_form;
       dataForm["vendor_code"] = this.state.data_mr.dsp_company_code;
-      dataForm["vendor_name"] =this.state.data_mr.dsp_company;
-      this.setState({update_mr_form : dataForm});
+      dataForm["vendor_name"] = this.state.data_mr.dsp_company;
+      this.setState({ update_mr_form: dataForm });
     }
     this.setState((prevState) => ({
       edit_detail: !prevState.edit_detail,
@@ -747,13 +810,15 @@ class DetailMRWarehouse extends Component {
 
   getDSPList() {
     this.toggleLoading();
-    this.getDatafromAPITSEL('/vendor_data_non_page?where={"Type":"ASP"}').then(res => {
-      if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({dsp_list : items});
+    this.getDatafromAPITSEL('/vendor_data_non_page?where={"Type":"ASP"}').then(
+      (res) => {
+        if (res.data !== undefined) {
+          const items = res.data._items;
+          this.setState({ dsp_list: items });
+        }
+        this.toggleLoading();
       }
-      this.toggleLoading();
-    })
+    );
   }
 
   changeTabsSubmenu(e) {
@@ -768,10 +833,10 @@ class DetailMRWarehouse extends Component {
     let dataForm = this.state.update_mr_form;
     dataForm[field] = value;
     const indexOpt = e.target.selectedIndex;
-    if (field === 'vendor_code') {
-      let vendoridx = this.state.dsp_list.find(v => v.Vendor_Code === value);
-      if(vendoridx !== undefined){
-        dataForm["vendor_name"] = vendoridx.Name
+    if (field === "vendor_code") {
+      let vendoridx = this.state.dsp_list.find((v) => v.Vendor_Code === value);
+      if (vendoridx !== undefined) {
+        dataForm["vendor_name"] = vendoridx.Name;
       }
     }
     this.setState({ update_mr_form: dataForm });
@@ -790,7 +855,7 @@ class DetailMRWarehouse extends Component {
         <h4 className="vertical-timeline-element-subtitle">
           initiated by <b>{ms_updater}</b>
         </h4>
-        {(ms_notes !== undefined && ms_notes !== null) && (
+        {ms_notes !== undefined && ms_notes !== null && (
           <h6 className="vertical-timeline-element-subtitle">
             Notes : {ms_notes}
           </h6>
@@ -812,14 +877,16 @@ class DetailMRWarehouse extends Component {
   //   }
   // }
 
-  submitTSSR(_id_ps){
-    this.patchDatatoAPINODE('/plantspec/submitPlantspec/'+_id_ps).then(res => {
-      if(res.data !== undefined){
-        // this.setState({ action_status : "success" });
-      }else{
-        // this.setState({ action_status : "failed" });
+  submitTSSR(_id_ps) {
+    this.patchDatatoAPINODE("/plantspec/submitPlantspec/" + _id_ps).then(
+      (res) => {
+        if (res.data !== undefined) {
+          // this.setState({ action_status : "success" });
+        } else {
+          // this.setState({ action_status : "failed" });
+        }
       }
-    })
+    );
   }
 
   requestForApproval() {
@@ -842,27 +909,43 @@ class DetailMRWarehouse extends Component {
     this.toggleLoading();
     const _id = this.props.match.params.id;
     let body = this.state.selected_dsp;
-    if(this.state.data_mr.dsp_company !== null && this.state.data_mr.dsp_company !== undefined){
-      body = {"dsp_company_code" : this.state.data_mr.dsp_company_code, "dsp_company": this.state.data_mr.dsp_company}
+    if (
+      this.state.data_mr.dsp_company !== null &&
+      this.state.data_mr.dsp_company !== undefined
+    ) {
+      body = {
+        dsp_company_code: this.state.data_mr.dsp_company_code,
+        dsp_company: this.state.data_mr.dsp_company,
+      };
     }
-    body = {...body, "motType" : this.state.mot_type}
+    body = { ...body, motType: this.state.mot_type };
     // console.log('_id ',_id);
     // console.log('body ',body);
-    this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id,  body ).then(
+    this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id, body).then(
       (res) => {
         if (res.data !== undefined) {
           this.setState({ action_status: "success" });
           this.toggleModalapprove();
           this.toggleLoading();
         } else {
-          if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+          if (
+            res.response !== undefined &&
+            res.response.data !== undefined &&
+            res.response.data.error !== undefined
+          ) {
             if (res.response.data.error.message !== undefined) {
-              this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+              this.setState({
+                action_status: "failed",
+                action_message: res.response.data.error.message,
+              });
             } else {
-              this.setState({ action_status: 'failed', action_message: res.response.data.error });
+              this.setState({
+                action_status: "failed",
+                action_message: res.response.data.error,
+              });
             }
           } else {
-            this.setState({ action_status: 'failed' });
+            this.setState({ action_status: "failed" });
           }
           this.toggleModalapprove();
           this.toggleLoading();
@@ -991,8 +1074,8 @@ class DetailMRWarehouse extends Component {
 
     let listMatId = [...new Set(list_material_id)];
     let matIdData = {
-      "list_material_id" : listMatId
-    }
+      list_material_id: listMatId,
+    };
 
     const getMaterialVariant = await this.postDatatoAPINODE(
       "/variants/materialId",
@@ -1017,8 +1100,11 @@ class DetailMRWarehouse extends Component {
       sku_list.push(dataMaterialVariant[j].material_id);
     }
     const list_qtySKU = [];
-    const getQtyfromWHbySKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', {"sku": sku_list }).then((res) => {
-      if(res.data !== undefined && res.status >= 200 && res.status < 400){
+    const getQtyfromWHbySKU = await this.postDatatoAPINODE(
+      "/whStock/getWhStockbySku",
+      { sku: sku_list }
+    ).then((res) => {
+      if (res.data !== undefined && res.status >= 200 && res.status < 400) {
         const dataSKU = res.data.data;
         // console.log('dataSKU ', dataSKU);
         for (let i = 0; i < dataSKU.length; i++) {
@@ -1096,7 +1182,9 @@ class DetailMRWarehouse extends Component {
         );
         qty_wh = qty_wh !== undefined ? qty_wh.qty_sku : 0;
         qty_inbound = qty_inbound !== undefined ? qty_inbound.qty_sku : 0;
-        if ((dataMatIdx.qty) < qty_wh) {continue}
+        if (dataMatIdx.qty < qty_wh) {
+          continue;
+        }
         ws.addRow([
           dataMatIdx._id,
           dataItemMR[i].no_tssr_boq_site,
@@ -1118,8 +1206,8 @@ class DetailMRWarehouse extends Component {
 
     let listMatId = [...new Set(list_material_id)];
     let matIdData = {
-      "list_material_id" : listMatId
-    }
+      list_material_id: listMatId,
+    };
 
     const getMaterialVariant = await this.postDatatoAPINODE(
       "/variants/materialId",
@@ -1144,8 +1232,11 @@ class DetailMRWarehouse extends Component {
       sku_list.push(dataMaterialVariant[j].material_id);
     }
     const list_qtySKU = [];
-    const getQtyfromWHbySKU = await this.postDatatoAPINODE('/whStock/getWhStockbySku', {"sku": sku_list }).then((res) => {
-      if(res.data !== undefined && res.status >= 200 && res.status < 400){
+    const getQtyfromWHbySKU = await this.postDatatoAPINODE(
+      "/whStock/getWhStockbySku",
+      { sku: sku_list }
+    ).then((res) => {
+      if (res.data !== undefined && res.status >= 200 && res.status < 400) {
         const dataSKU = res.data.data;
         // console.log('dataSKU ', dataSKU);
         for (let i = 0; i < dataSKU.length; i++) {
@@ -1213,29 +1304,89 @@ class DetailMRWarehouse extends Component {
       "PS No.",
     ];
     ws.addRow(headerRow);
-    ws.getCell('A5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('B5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('C5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('D5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('E5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('F5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('G5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('H5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('I5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('J5').border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-    ws.getCell('A5').font  = {bold : true };
-    ws.getCell('B5').font  = {bold : true };
-    ws.getCell('C5').font  = {bold : true };
-    ws.getCell('D5').font  = {bold : true };
-    ws.getCell('E5').font  = {bold : true };
-    ws.getCell('F5').font  = {bold : true };
-    ws.getCell('G5').font  = {bold : true };
-    ws.getCell('H5').font  = {bold : true };
-    ws.getCell('I5').font  = {bold : true };
-    ws.getCell('J5').font  = {bold : true };
+    ws.getCell("A5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("B5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("C5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("D5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("E5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("F5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("G5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("H5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("I5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("J5").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    ws.getCell("A5").font = { bold: true };
+    ws.getCell("B5").font = { bold: true };
+    ws.getCell("C5").font = { bold: true };
+    ws.getCell("D5").font = { bold: true };
+    ws.getCell("E5").font = { bold: true };
+    ws.getCell("F5").font = { bold: true };
+    ws.getCell("G5").font = { bold: true };
+    ws.getCell("H5").font = { bold: true };
+    ws.getCell("I5").font = { bold: true };
+    ws.getCell("J5").font = { bold: true };
     ws.addRow([]);
     for (let i = 0; i < dataItemMR.length; i++) {
-      ws.addRow([dataItemMR[i].pp_id, dataItemMR[i].product_name, null, null, dataItemMR[i].uom, null, null, null, dataItemMR[i].no_tssr_boq_site]);
+      ws.addRow([
+        dataItemMR[i].pp_id,
+        dataItemMR[i].product_name,
+        null,
+        null,
+        dataItemMR[i].uom,
+        null,
+        null,
+        null,
+        dataItemMR[i].no_tssr_boq_site,
+      ]);
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
         ws.addRow([
@@ -1269,30 +1420,124 @@ class DetailMRWarehouse extends Component {
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
 
-    let headerRow = ["REC_TYPE", "FILLER", "COMP_CD", "CUST_DELIV_NO", "CUST_ID", "CUST_CNTRY_CD", "ETA_SHP_DT", "SHP_DT", "SITE_LOC_ID", "SITE_CNTRY_CD", "SEND_SYSTEM", "SEND_UNIT", "SALES_GRP", "PRNO ", "SHP_NO", "END_CUST_NM", "END_CUST_ID", "CUST_NM", "SALES_ORD_NO", "PACK_ID", "PURCH_ORD_NO", "SER_NO", "CIN", "GI_Type", "Shp_Pnt", "Plant_ID"];
+    let headerRow = [
+      "REC_TYPE",
+      "FILLER",
+      "COMP_CD",
+      "CUST_DELIV_NO",
+      "CUST_ID",
+      "CUST_CNTRY_CD",
+      "ETA_SHP_DT",
+      "SHP_DT",
+      "SITE_LOC_ID",
+      "SITE_CNTRY_CD",
+      "SEND_SYSTEM",
+      "SEND_UNIT",
+      "SALES_GRP",
+      "PRNO ",
+      "SHP_NO",
+      "END_CUST_NM",
+      "END_CUST_ID",
+      "CUST_NM",
+      "SALES_ORD_NO",
+      "PACK_ID",
+      "PURCH_ORD_NO",
+      "SER_NO",
+      "CIN",
+      "GI_Type",
+      "Shp_Pnt",
+      "Plant_ID",
+    ];
     ws.addRow(headerRow);
     let dateDispatch = null;
-    const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
-    if(dispatchData.mr_status_date !== undefined && dispatchData.mr_status_date !== null){
+    const dispatchData = dataMR.mr_status.find(
+      (e) => e.mr_status_value === "DISPATCH"
+    );
+    if (
+      dispatchData.mr_status_date !== undefined &&
+      dispatchData.mr_status_date !== null
+    ) {
       let dateDispatchNew = new Date(dispatchData.mr_status_date);
-      dateDispatch = dateDispatchNew.getFullYear().toString()+(dateDispatchNew.getMonth()+1).toString().padStart(2, '0')+dateDispatchNew.getDate().toString().padStart(2, '0');
+      dateDispatch =
+        dateDispatchNew.getFullYear().toString() +
+        (dateDispatchNew.getMonth() + 1).toString().padStart(2, "0") +
+        dateDispatchNew.getDate().toString().padStart(2, "0");
     }
     const dataSite = dataMR.site_info[0].site_id;
     let shipTrim = dataMR.no_shipment.split("-");
     shipTrim.splice(0, 2);
-    const shipTracy = shipTrim.join('');
+    const shipTracy = shipTrim.join("");
     for (let i = 0; i < dataItemMR.length; i++) {
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
-        if(dataMatIdx.serial_numbers !== undefined && dataMatIdx.serial_numbers.length !== 0){
-          let serial_number = dataMatIdx.serial_numbers.find(e => e.flag_name === "obd");
-          if(serial_number !== undefined){
-            for(let k = 0; k < serial_number.list_of_sn.length; k++){
-              ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, shipTracy, "Indosat", "ISAT", "Indosat", null, null, dataMatIdx.cpo_number, serial_number.list_of_sn[k], null, null, null, null]);
+        if (
+          dataMatIdx.serial_numbers !== undefined &&
+          dataMatIdx.serial_numbers.length !== 0
+        ) {
+          let serial_number = dataMatIdx.serial_numbers.find(
+            (e) => e.flag_name === "obd"
+          );
+          if (serial_number !== undefined) {
+            for (let k = 0; k < serial_number.list_of_sn.length; k++) {
+              ws.addRow([
+                "K",
+                null,
+                2089,
+                dataMR.mr_id,
+                "XL",
+                "ID",
+                null,
+                dateDispatch,
+                dataMR.site_info[0].site_id,
+                "ID",
+                "DPM",
+                1105,
+                null,
+                dataMatIdx.material_id,
+                shipTracy,
+                "Indosat",
+                "ISAT",
+                "Indosat",
+                null,
+                null,
+                dataMatIdx.cpo_number,
+                serial_number.list_of_sn[k],
+                null,
+                null,
+                null,
+                null,
+              ]);
             }
           }
-        }else{
-          ws.addRow(["K", null, 2089, dataMR.mr_id, "XL", "ID", null, dateDispatch, dataMR.site_info[0].site_id,"ID", "DPM", 1105, null, dataMatIdx.material_id, shipTracy, "Indosat", "ISAT", "Indosat", null, null, dataMatIdx.cpo_number, null, null, null, null, null]);
+        } else {
+          ws.addRow([
+            "K",
+            null,
+            2089,
+            dataMR.mr_id,
+            "XL",
+            "ID",
+            null,
+            dateDispatch,
+            dataMR.site_info[0].site_id,
+            "ID",
+            "DPM",
+            1105,
+            null,
+            dataMatIdx.material_id,
+            shipTracy,
+            "Indosat",
+            "ISAT",
+            "Indosat",
+            null,
+            null,
+            dataMatIdx.cpo_number,
+            null,
+            null,
+            null,
+            null,
+            null,
+          ]);
         }
       }
     }
@@ -1315,27 +1560,68 @@ class DetailMRWarehouse extends Component {
     const inboundWH = this.state.material_inbound;
     let dataMaterialVariant = [];
 
-    let headerRow = ["MR_ID", "SKU", "SERIAL_NUMBER", "DESCRIPTION", "SCAN_BY", "LASTEST_UPDATE_DATE_SCAN", "ACCOUNT", "WAREHOUSE"];
+    let headerRow = [
+      "MR_ID",
+      "SKU",
+      "SERIAL_NUMBER",
+      "DESCRIPTION",
+      "SCAN_BY",
+      "LASTEST_UPDATE_DATE_SCAN",
+      "ACCOUNT",
+      "WAREHOUSE",
+    ];
     ws.addRow(headerRow);
     let dateDispatch = null;
-    const dispatchData = dataMR.mr_status.find(e => e.mr_status_value === "DISPATCH");
-    if(dispatchData !== undefined && dispatchData.mr_status_date !== undefined && dispatchData.mr_status_date !== null){
+    const dispatchData = dataMR.mr_status.find(
+      (e) => e.mr_status_value === "DISPATCH"
+    );
+    if (
+      dispatchData !== undefined &&
+      dispatchData.mr_status_date !== undefined &&
+      dispatchData.mr_status_date !== null
+    ) {
       let dateDispatchNew = new Date(dispatchData.mr_status_date);
-      dateDispatch = dateDispatchNew.getFullYear().toString()+(dateDispatchNew.getMonth()+1).toString().padStart(2, '0')+dateDispatchNew.getDate().toString().padStart(2, '0');
+      dateDispatch =
+        dateDispatchNew.getFullYear().toString() +
+        (dateDispatchNew.getMonth() + 1).toString().padStart(2, "0") +
+        dateDispatchNew.getDate().toString().padStart(2, "0");
     }
-    const dataSite = dataMR.site_info[0].site_id
+    const dataSite = dataMR.site_info[0].site_id;
     for (let i = 0; i < dataItemMR.length; i++) {
       for (let j = 0; j < dataItemMR[i].materials.length; j++) {
         let dataMatIdx = dataItemMR[i].materials[j];
-        if(dataMatIdx.serial_numbers !== undefined && dataMatIdx.serial_numbers.length !== 0){
-          let serial_number = dataMatIdx.serial_numbers.find(e => e.flag_name === "obd");
-          if(serial_number !== undefined){
-            for(let k = 0; k < serial_number.list_of_sn.length; k++){
-              ws.addRow([dataMR.mr_id, dataMatIdx.material_id, serial_number.list_of_sn[k], dataMatIdx.material_name, serial_number.updated_by, serial_number.updated_on, "XL", dataMR.origin.value]);
+        if (
+          dataMatIdx.serial_numbers !== undefined &&
+          dataMatIdx.serial_numbers.length !== 0
+        ) {
+          let serial_number = dataMatIdx.serial_numbers.find(
+            (e) => e.flag_name === "obd"
+          );
+          if (serial_number !== undefined) {
+            for (let k = 0; k < serial_number.list_of_sn.length; k++) {
+              ws.addRow([
+                dataMR.mr_id,
+                dataMatIdx.material_id,
+                serial_number.list_of_sn[k],
+                dataMatIdx.material_name,
+                serial_number.updated_by,
+                serial_number.updated_on,
+                "XL",
+                dataMR.origin.value,
+              ]);
             }
           }
-        }else{
-          ws.addRow([dataMR.mr_id, dataMatIdx.material_id, null, dataMatIdx.material_name, null, null, "XL", dataMR.origin.value]);
+        } else {
+          ws.addRow([
+            dataMR.mr_id,
+            dataMatIdx.material_id,
+            null,
+            dataMatIdx.material_name,
+            null,
+            null,
+            "XL",
+            dataMR.origin.value,
+          ]);
         }
       }
     }
@@ -1355,7 +1641,7 @@ class DetailMRWarehouse extends Component {
       "/matreq/updatePlantSpecWithVariant/" + dataMR._id,
       { identifier: "MR", data: dataXLS }
     );
-    if(dataMR.id_plantspec_doc !== undefined){
+    if (dataMR.id_plantspec_doc !== undefined) {
       let submitPS = this.submitTSSR(dataMR.id_plantspec_doc);
     }
     if (
@@ -1392,14 +1678,15 @@ class DetailMRWarehouse extends Component {
     this.toggleLoading();
     const dataMR = this.state.data_mr;
     let patchDataMR = await this.patchDatatoAPINODE(
-      "/matreq/needReviseMRFromWH/" + dataMR._id, {"note_value" : this.state.revision_note}
+      "/matreq/needReviseMRFromWH/" + dataMR._id,
+      { note_value: this.state.revision_note }
     );
     if (
       patchDataMR.data !== undefined &&
       patchDataMR.status >= 200 &&
       patchDataMR.status <= 300
     ) {
-      this.setState({ action_status: "success", modal_revision : false });
+      this.setState({ action_status: "success", modal_revision: false });
     } else {
       if (
         patchDataMR.response !== undefined &&
@@ -1415,7 +1702,7 @@ class DetailMRWarehouse extends Component {
           this.setState({
             action_status: "failed",
             action_message: patchDataMR.response.data.error,
-            modal_revision : false
+            modal_revision: false,
           });
         }
       } else {
@@ -1425,38 +1712,42 @@ class DetailMRWarehouse extends Component {
     this.toggleLoading();
   }
 
-  async takeoutPS(){
+  async takeoutPS() {
     this.toggleLoading();
     const dataMR = this.state.data_mr;
-    this.patchDatatoAPINODE('/matreq/takeOutPlantSpec/'+dataMR._id).then(res => {
-      if(res.data !== undefined){
-        this.setState({ action_status : "success" });
-        this.toggleLoading();
-      }else{
-        this.setState({ action_status : "failed" });
-        this.toggleLoading();
+    this.patchDatatoAPINODE("/matreq/takeOutPlantSpec/" + dataMR._id).then(
+      (res) => {
+        if (res.data !== undefined) {
+          this.setState({ action_status: "success" });
+          this.toggleLoading();
+        } else {
+          this.setState({ action_status: "failed" });
+          this.toggleLoading();
+        }
       }
-    })
+    );
   }
 
-  async cancelMR(){
+  async cancelMR() {
     this.toggleLoading();
     const dataMR = this.state.data_mr;
-    this.patchDatatoAPINODE('/matreq/cancelMatreq/'+dataMR._id, {"cancelNote" : "Cancel MR"}).then(res => {
-      if(res.data !== undefined){
-        this.setState({ action_status : "success" });
+    this.patchDatatoAPINODE("/matreq/cancelMatreq/" + dataMR._id, {
+      cancelNote: "Cancel MR",
+    }).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
         this.toggleLoading();
-      }else{
-        this.setState({ action_status : "failed" });
+      } else {
+        this.setState({ action_status: "failed" });
         this.toggleLoading();
       }
-    })
+    });
   }
 
-  tableViewWBSCDID(cd_id){
+  tableViewWBSCDID(cd_id) {
     const dataCDWBS = this.state.wbs_cd_id_data;
-    let dataCDWBSbyCDID = dataCDWBS.find(e => e.WP_ID === cd_id);
-    if(dataCDWBSbyCDID !== undefined){
+    let dataCDWBSbyCDID = dataCDWBS.find((e) => e.WP_ID === cd_id);
+    if (dataCDWBSbyCDID !== undefined) {
       return (
         <Fragment>
           <td>{dataCDWBSbyCDID.C1043_WBS_HW}</td>
@@ -1467,9 +1758,9 @@ class DetailMRWarehouse extends Component {
           <td>{dataCDWBSbyCDID.C1063_C1053_WBS_PS}</td>
           <td>{dataCDWBSbyCDID.C1066_C1053_WBS_ANC}</td>
         </Fragment>
-      )
-    }else{
-      return(
+      );
+    } else {
+      return (
         <Fragment>
           <td></td>
           <td></td>
@@ -1479,7 +1770,7 @@ class DetailMRWarehouse extends Component {
           <td></td>
           <td></td>
         </Fragment>
-      )
+      );
     }
   }
 
@@ -1501,7 +1792,7 @@ class DetailMRWarehouse extends Component {
       "mr_comment_project",
       "sent_mr_request",
       "created_based",
-      "identifier"
+      "identifier",
     ]);
 
     ws.addRow([
@@ -1510,101 +1801,177 @@ class DetailMRWarehouse extends Component {
       1,
       1,
       dataMR.origin.value,
-      dataMR.etd.slice(0,10),
-      dataMR.eta.slice(0,10),
+      dataMR.etd.slice(0, 10),
+      dataMR.eta.slice(0, 10),
       dataMR.dsp_company_code,
       null,
       null,
       "cd_id",
-      dataMR.cust_del[0].cd_id
+      dataMR.cust_del[0].cd_id,
     ]);
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), 'MR Uploader Template '+dataMR.mr_id+'.xlsx');
+    saveAs(
+      new Blob([MRFormat]),
+      "MR Uploader Template " + dataMR.mr_id + ".xlsx"
+    );
   }
 
-  async updateMR(){
+  async updateMR() {
     this.toggleLoading();
     let success = true;
-    this.setState({action_status : null, action_message : null});
+    this.setState({ action_status: null, action_message: null });
     const dataMR = this.state.data_mr;
     const newDate = new Date();
-    const dateNow = newDate.getFullYear()+"-"+(newDate.getMonth()+1)+"-"+newDate.getDate()+" "+newDate.getHours()+":"+newDate.getMinutes()+":"+newDate.getSeconds();
+    const dateNow =
+      newDate.getFullYear() +
+      "-" +
+      (newDate.getMonth() + 1) +
+      "-" +
+      newDate.getDate() +
+      " " +
+      newDate.getHours() +
+      ":" +
+      newDate.getMinutes() +
+      ":" +
+      newDate.getSeconds();
     let list_site = [];
     let dataXLS = [
-      ["id", "project_name", "mr_type", "mr_delivery_type", "origin_warehouse", "etd", "eta", "deliver_by", "mr_comment_project", "sent_mr_request", "created_based", "identifier"],
-      [ dataMR.mr_id,
+      [
+        "id",
+        "project_name",
+        "mr_type",
+        "mr_delivery_type",
+        "origin_warehouse",
+        "etd",
+        "eta",
+        "deliver_by",
+        "mr_comment_project",
+        "sent_mr_request",
+        "created_based",
+        "identifier",
+      ],
+      [
+        dataMR.mr_id,
         dataMR.project_name,
         1,
         1,
         dataMR.origin.value,
-        dataMR.etd.slice(0,10),
-        dataMR.eta.slice(0,10),
+        dataMR.etd.slice(0, 10),
+        dataMR.eta.slice(0, 10),
         this.state.update_mr_form.vendor_code,
         null,
         null,
         "cd_id",
-        dataMR.cust_del[0].cd_id
-      ]
-    ]
-    const respondCheckingMR = await this.postDatatoAPINODE('/matreq/matreqByActivity', {"data" : dataXLS});
-    if(respondCheckingMR.data !== undefined && respondCheckingMR.status >= 200 && respondCheckingMR.status <= 300 ) {
-      const respondSaveMR = await this.postDatatoAPINODE('/matreq/saveMatreqByActivity', {"data" : respondCheckingMR.data.data });
-      if(respondSaveMR.data !== undefined && respondSaveMR.status >= 200 && respondSaveMR.status <= 300 ) {
-        this.setState({ action_status : 'success', action_message: null });
-      } else{
-        if(respondSaveMR.response !== undefined && respondSaveMR.response.data !== undefined && respondSaveMR.response.data.error !== undefined){
-          if(respondSaveMR.response.data.error.message !== undefined){
-            this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error.message });
-          }else{
-            this.setState({ action_status: 'failed', action_message: respondSaveMR.response.data.error });
+        dataMR.cust_del[0].cd_id,
+      ],
+    ];
+    const respondCheckingMR = await this.postDatatoAPINODE(
+      "/matreq/matreqByActivity",
+      { data: dataXLS }
+    );
+    if (
+      respondCheckingMR.data !== undefined &&
+      respondCheckingMR.status >= 200 &&
+      respondCheckingMR.status <= 300
+    ) {
+      const respondSaveMR = await this.postDatatoAPINODE(
+        "/matreq/saveMatreqByActivity",
+        { data: respondCheckingMR.data.data }
+      );
+      if (
+        respondSaveMR.data !== undefined &&
+        respondSaveMR.status >= 200 &&
+        respondSaveMR.status <= 300
+      ) {
+        this.setState({ action_status: "success", action_message: null });
+      } else {
+        if (
+          respondSaveMR.response !== undefined &&
+          respondSaveMR.response.data !== undefined &&
+          respondSaveMR.response.data.error !== undefined
+        ) {
+          if (respondSaveMR.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: respondSaveMR.response.data.error.message,
+            });
+          } else {
+            this.setState({
+              action_status: "failed",
+              action_message: respondSaveMR.response.data.error,
+            });
           }
-        }else{
-          this.setState({ action_status: 'failed' });
+        } else {
+          this.setState({ action_status: "failed" });
         }
       }
-    }else{
-      if(respondCheckingMR.response !== undefined && respondCheckingMR.response.data !== undefined && respondCheckingMR.response.data.error !== undefined){
-        if(respondCheckingMR.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error.message });
-        }else{
-          this.setState({ action_status: 'failed', action_message: respondCheckingMR.response.data.error });
+    } else {
+      if (
+        respondCheckingMR.response !== undefined &&
+        respondCheckingMR.response.data !== undefined &&
+        respondCheckingMR.response.data.error !== undefined
+      ) {
+        if (respondCheckingMR.response.data.error.message !== undefined) {
+          this.setState({
+            action_status: "failed",
+            action_message: respondCheckingMR.response.data.error.message,
+          });
+        } else {
+          this.setState({
+            action_status: "failed",
+            action_message: respondCheckingMR.response.data.error,
+          });
         }
-      }else{
-        this.setState({ action_status: 'failed' });
+      } else {
+        this.setState({ action_status: "failed" });
       }
     }
     this.toggleLoading();
   }
 
   getSIDFile = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     e.persist();
     const _id = e.target.value;
-    const dataSID = this.state.sid_file.find(sf => sf._id === _id);
-    if(dataSID !== undefined)  {
-      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
-      if(resFile !== undefined){
-        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+    const dataSID = this.state.sid_file.find((sf) => sf._id === _id);
+    if (dataSID !== undefined) {
+      const resFile = await getDatafromAPINODEFile(
+        "/sidFile/getDocument/" + _id,
+        this.props.dataLogin.token,
+        dataSID.file_document.mime_type
+      );
+      if (resFile !== undefined) {
+        saveAs(
+          new Blob([resFile.data], { type: dataSID.file_document.mime_type }),
+          dataSID.file_document.file_name
+        );
       }
     }
-  }
+  };
 
   getABDFile = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     e.persist();
     const _id = e.currentTarget.value;
-    const dataSID = this.state.abd_file.find(sf => sf._id === _id);
-    if(dataSID !== undefined)  {
-      const resFile = await getDatafromAPINODEFile('/sidFile/getDocument/' + _id, this.props.dataLogin.token, dataSID.file_document.mime_type);
-      if(resFile !== undefined){
-        saveAs(new Blob([resFile.data], {type:dataSID.file_document.mime_type}), dataSID.file_document.file_name);
+    const dataSID = this.state.abd_file.find((sf) => sf._id === _id);
+    if (dataSID !== undefined) {
+      const resFile = await getDatafromAPINODEFile(
+        "/sidFile/getDocument/" + _id,
+        this.props.dataLogin.token,
+        dataSID.file_document.mime_type
+      );
+      if (resFile !== undefined) {
+        saveAs(
+          new Blob([resFile.data], { type: dataSID.file_document.mime_type }),
+          dataSID.file_document.file_name
+        );
       }
     }
-  }
+  };
 
-  handleMotType(e){
-    this.setState({mot_type : e.target.value});
+  handleMotType(e) {
+    this.setState({ mot_type: e.target.value });
   }
 
   render() {
@@ -1612,13 +1979,14 @@ class DetailMRWarehouse extends Component {
       backgroundColor: "#e3e3e3",
     };
 
-    function MapsTrekking(props){
-      return (<GMap/>)
+    function MapsTrekking(props) {
+      return <GMap />;
     }
 
     // const MapLoader = withScriptjs(MapsTrekking);
 
-    let qty_wh = undefined,qty_inbound = undefined;
+    let qty_wh = undefined,
+      qty_inbound = undefined;
     return (
       <div>
         <DefaultNotif
@@ -1636,27 +2004,77 @@ class DetailMRWarehouse extends Component {
                   ></i>
                   MR Detail
                 </span>
-                {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && this.state.userRole.findIndex(e => e === "BAM-Project Planner") === -1 && this.state.userRole.findIndex(e => e === "BAM-Warehouse") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && (
-                  <Fragment>{/* }<Button style={{float : 'right', marginRight: "8px"}} size="sm" color="warning" onClick={this.changeEditable}>Edit MR Detail</Button> */}</Fragment>
-                )}
-                {(this.state.sid_file.length !== 0 || this.state.abd_file.length !== 0) ? (
-                  <Dropdown size="sm" isOpen={this.state.dropdownOpen[1]} toggle={() => {this.toggleDropdown(1);}} style={{float : 'right', marginRight : '10px'}}>
+                {this.state.data_mr !== null &&
+                  this.state.data_mr.current_mr_status !== "MR CANCELED" &&
+                  this.state.userRole.findIndex(
+                    (e) => e === "BAM-Project Planner"
+                  ) === -1 &&
+                  this.state.userRole.findIndex(
+                    (e) => e === "BAM-Warehouse"
+                  ) === -1 &&
+                  this.state.userRole.findIndex(
+                    (e) => e === "BAM-ASP Management"
+                  ) === -1 &&
+                  this.state.userRole.findIndex((e) => e === "BAM-ASP") ===
+                    -1 &&
+                  this.state.userRole.findIndex(
+                    (e) => e === "BAM-ASPWarehouse"
+                  ) === -1 && (
+                    <Fragment>
+                      {/* }<Button style={{float : 'right', marginRight: "8px"}} size="sm" color="warning" onClick={this.changeEditable}>Edit MR Detail</Button> */}
+                    </Fragment>
+                  )}
+                {this.state.sid_file.length !== 0 ||
+                this.state.abd_file.length !== 0 ? (
+                  <Dropdown
+                    size="sm"
+                    isOpen={this.state.dropdownOpen[1]}
+                    toggle={() => {
+                      this.toggleDropdown(1);
+                    }}
+                    style={{ float: "right", marginRight: "10px" }}
+                  >
                     <DropdownToggle caret color="secondary">
-                      <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download SID File
+                      <i className="fa fa-download" aria-hidden="true">
+                        {" "}
+                        &nbsp;{" "}
+                      </i>
+                      Download SID File
                     </DropdownToggle>
                     <DropdownMenu>
                       <DropdownItem header>SID File</DropdownItem>
-                      {this.state.sid_file.map(sf =>
-                        <DropdownItem value={sf._id} onClick={this.getSIDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
-                      )}
+                      {this.state.sid_file.map((sf) => (
+                        <DropdownItem value={sf._id} onClick={this.getSIDFile}>
+                          <span>{sf.file_document.file_name}</span> (
+                          {sf.cust_del[0].cd_id})
+                        </DropdownItem>
+                      ))}
                       <DropdownItem header>ABD File</DropdownItem>
-                      {(this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && this.state.abd_file.map(sf =>
-                        <DropdownItem value={sf._id} onClick={this.getABDFile}><span>{sf.file_document.file_name}</span> ({sf.cust_del[0].cd_id})</DropdownItem>
-                      )}
+                      {this.state.userRole.findIndex(
+                        (e) => e === "BAM-ASP Management"
+                      ) === -1 &&
+                        this.state.userRole.findIndex(
+                          (e) => e === "BAM-ASP"
+                        ) === -1 &&
+                        this.state.userRole.findIndex(
+                          (e) => e === "BAM-ASPWarehouse"
+                        ) === -1 &&
+                        this.state.abd_file.map((sf) => (
+                          <DropdownItem
+                            value={sf._id}
+                            onClick={this.getABDFile}
+                          >
+                            <span>{sf.file_document.file_name}</span> (
+                            {sf.cust_del[0].cd_id})
+                          </DropdownItem>
+                        ))}
                     </DropdownMenu>
                   </Dropdown>
                 ) : (
-                  <Button size="sm" style={{float : 'right', marginRight : '10px'}}>
+                  <Button
+                    size="sm"
+                    style={{ float: "right", marginRight: "10px" }}
+                  >
                     no data SID or ABD
                   </Button>
                 )}
@@ -1779,20 +2197,22 @@ class DetailMRWarehouse extends Component {
                             MR Type : {this.state.data_mr.mr_type}
                           </td>
                         </tr>
-                        {(this.state.data_mr.mr_mitt_no != undefined && this.state.data_mr.mr_mitt_no !== null) && (
-                          <tr>
-                            <td
-                              colSpan="4"
-                              style={{
-                                fontSize: "13px",
-                                textAlign: "center",
-                                color: "rgba(59,134,134,1)",
-                              }}
-                            >
-                              MR MITT Migration ID : {this.state.data_mr.mr_mitt_no}
-                            </td>
-                          </tr>
-                        )}
+                        {this.state.data_mr.mr_mitt_no != undefined &&
+                          this.state.data_mr.mr_mitt_no !== null && (
+                            <tr>
+                              <td
+                                colSpan="4"
+                                style={{
+                                  fontSize: "13px",
+                                  textAlign: "center",
+                                  color: "rgba(59,134,134,1)",
+                                }}
+                              >
+                                MR MITT Migration ID :{" "}
+                                {this.state.data_mr.mr_mitt_no}
+                              </td>
+                            </tr>
+                          )}
                       </Fragment>
                     )}
                   </tbody>
@@ -1817,7 +2237,11 @@ class DetailMRWarehouse extends Component {
                             <div>
                               <ul className="mr-detail__ul--cd-id">
                                 {this.state.data_mr.cust_del !== undefined ? (
-                                  <li>{this.state.data_mr.cust_del.map(cd => cd.cd_id).join(', ')}</li>
+                                  <li>
+                                    {this.state.data_mr.cust_del
+                                      .map((cd) => cd.cd_id)
+                                      .join(", ")}
+                                  </li>
                                 ) : (
                                   <li>{this.state.data_mr.cd_id}</li>
                                 )}
@@ -1877,12 +2301,21 @@ class DetailMRWarehouse extends Component {
                               <span>Delivery Company</span>
                             </div>
                             {this.state.edit_detail === true ? (
-                              <Input type="select" name="vendor_code" value={this.state.update_mr_form.vendor_code} onChange={this.handleChangeFormMRUpdate}>
-                                <option value="" disabled selected hidden>Select Delivery Company</option>
+                              <Input
+                                type="select"
+                                name="vendor_code"
+                                value={this.state.update_mr_form.vendor_code}
+                                onChange={this.handleChangeFormMRUpdate}
+                              >
+                                <option value="" disabled selected hidden>
+                                  Select Delivery Company
+                                </option>
                                 <option value="DSP">DSP</option>
-                                {this.state.dsp_list.map(e =>
-                                  <option value={e.Vendor_Code}>{e.Name}</option>
-                                )}
+                                {this.state.dsp_list.map((e) => (
+                                  <option value={e.Vendor_Code}>
+                                    {e.Name}
+                                  </option>
+                                ))}
                               </Input>
                             ) : (
                               <div>{this.state.data_mr.dsp_company}</div>
@@ -1904,28 +2337,35 @@ class DetailMRWarehouse extends Component {
                             <div className="mr-detail__body--header-detail">
                               <span>Shipment ID</span>
                             </div>
-                            <div>
-                              {this.state.data_mr.no_shipment}
-                            </div>
+                            <div>{this.state.data_mr.no_shipment}</div>
                           </div>
                           <div>
                             <div className="mr-detail__body--header-detail">
                               <span>Project PO</span>
                             </div>
                             <div>
-                              {this.state.data_mr.cust_del.map(dm => dm.project_po).join(', ')}
+                              {this.state.data_mr.cust_del
+                                .map((dm) => dm.project_po)
+                                .join(", ")}
                             </div>
                           </div>
-                          {(this.state.data_mr.mr_note !== undefined && this.state.data_mr.mr_note.find(e => e.title === "RE-ROUTE") !== undefined) && (
-                            <div>
-                              <div className="mr-detail__body--header-detail">
-                                <span>Re-Route</span>
-                              </div>
+                          {this.state.data_mr.mr_note !== undefined &&
+                            this.state.data_mr.mr_note.find(
+                              (e) => e.title === "RE-ROUTE"
+                            ) !== undefined && (
                               <div>
-                                {this.state.data_mr.mr_note.find(e => e.title === "RE-ROUTE").value}
+                                <div className="mr-detail__body--header-detail">
+                                  <span>Re-Route</span>
+                                </div>
+                                <div>
+                                  {
+                                    this.state.data_mr.mr_note.find(
+                                      (e) => e.title === "RE-ROUTE"
+                                    ).value
+                                  }
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                         </div>
 
                         <hr className="mr-detail__line" />
@@ -1950,9 +2390,15 @@ class DetailMRWarehouse extends Component {
                                   <span>Site Coordinat</span>
                                 </div>
                                 <div>
-                                  <span style={{fontWeight : '700'}}>Lat : </span>{this.state.mr_site_NE.site_latitude}
+                                  <span style={{ fontWeight: "700" }}>
+                                    Lat :{" "}
+                                  </span>
+                                  {this.state.mr_site_NE.site_latitude}
                                   <br />
-                                  <span style={{fontWeight : '700'}}>Long : </span>{this.state.mr_site_NE.site_longitude}
+                                  <span style={{ fontWeight: "700" }}>
+                                    Long :{" "}
+                                  </span>
+                                  {this.state.mr_site_NE.site_longitude}
                                 </div>
                               </div>
                             </Fragment>
@@ -1973,22 +2419,37 @@ class DetailMRWarehouse extends Component {
                               </div>
                             </Fragment>
                           )}
-                          {(this.state.data_mr.mr_delivery_type_code === "A1" || this.state.data_mr.mr_delivery_type_code === "A2" || this.state.data_mr.mr_delivery_type_code === "B1" ||this.state.data_mr.mr_delivery_type_code === "C1") && (
+                          {(this.state.data_mr.mr_delivery_type_code === "A1" ||
+                            this.state.data_mr.mr_delivery_type_code === "A2" ||
+                            this.state.data_mr.mr_delivery_type_code === "B1" ||
+                            this.state.data_mr.mr_delivery_type_code ===
+                              "C1") && (
                             <Fragment>
                               <div className="mr-detail__flex-body--25">
                                 <div className="mr-detail__body--header-detail">
                                   <span>Destination</span>
                                 </div>
-                                <div>{this.state.data_mr["destination"] !== undefined ? this.state.data_mr["destination"].value : null}</div>
+                                <div>
+                                  {this.state.data_mr["destination"] !==
+                                  undefined
+                                    ? this.state.data_mr["destination"].value
+                                    : null}
+                                </div>
                               </div>
                             </Fragment>
-                          ) }
+                          )}
                           <Fragment>
                             <div className="mr-detail__flex-body--25">
                               <div className="mr-detail__body--header-detail">
                                 <span>MRA</span>
                               </div>
-                              <div>{this.state.data_mr["matreq-ra"] !== undefined ? this.state.data_mr["matreq-ra"].map(mra => mra.mra_id).join(", ") : null}</div>
+                              <div>
+                                {this.state.data_mr["matreq-ra"] !== undefined
+                                  ? this.state.data_mr["matreq-ra"]
+                                      .map((mra) => mra.mra_id)
+                                      .join(", ")
+                                  : null}
+                              </div>
                             </div>
                           </Fragment>
                         </div>
@@ -1996,44 +2457,51 @@ class DetailMRWarehouse extends Component {
                         <hr className="mr-detail__line" />
 
                         <div className="mr-detail__body--flex-long">
-                            <Fragment>
-                              {this.state.data_mr.cust_del !== undefined ? (
-                                this.state.data_mr.cust_del.map((e) => (
-                                  <div className="mr-detail__flex-body--25">
-                                    <div className="mr-detail__body--header-detail">
-                                      <span>WBS of CD ID {e.cd_id}</span>
-                                    </div>
-                                    <div>
-                                      <Table responsive striped bordered size="sm">
-                                        <thead>
-                                          <tr style={{fontSize : '10.5px'}}>
-                                            <th>WBS HW</th>
-                                            <th>WBS HWAC (License)</th>
-                                            <th>WBS LCM</th>
-                                            <th>WBS PNRO</th>
-                                            <th>WBS SW</th>
-                                            <th>WBS PS</th>
-                                            <th>WBS ANC</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          <tr style={{fontSize : '10.5px'}}>
-                                            {this.tableViewWBSCDID(e.cd_id)}
-                                          </tr>
-                                        </tbody>
-                                      </Table>
-                                    </div>
-                                  </div>
-                                ))
-                              ) : (
+                          <Fragment>
+                            {this.state.data_mr.cust_del !== undefined ? (
+                              this.state.data_mr.cust_del.map((e) => (
                                 <div className="mr-detail__flex-body--25">
                                   <div className="mr-detail__body--header-detail">
-                                    <span>WBS of CD ID {this.state.data_mr.cd_id}</span>
+                                    <span>WBS of CD ID {e.cd_id}</span>
                                   </div>
-                                  <div>{this.state.mr_site_NE.site_id}</div>
+                                  <div>
+                                    <Table
+                                      responsive
+                                      striped
+                                      bordered
+                                      size="sm"
+                                    >
+                                      <thead>
+                                        <tr style={{ fontSize: "10.5px" }}>
+                                          <th>WBS HW</th>
+                                          <th>WBS HWAC (License)</th>
+                                          <th>WBS LCM</th>
+                                          <th>WBS PNRO</th>
+                                          <th>WBS SW</th>
+                                          <th>WBS PS</th>
+                                          <th>WBS ANC</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr style={{ fontSize: "10.5px" }}>
+                                          {this.tableViewWBSCDID(e.cd_id)}
+                                        </tr>
+                                      </tbody>
+                                    </Table>
+                                  </div>
                                 </div>
-                              )}
-                            </Fragment>
+                              ))
+                            ) : (
+                              <div className="mr-detail__flex-body--25">
+                                <div className="mr-detail__body--header-detail">
+                                  <span>
+                                    WBS of CD ID {this.state.data_mr.cd_id}
+                                  </span>
+                                </div>
+                                <div>{this.state.mr_site_NE.site_id}</div>
+                              </div>
+                            )}
+                          </Fragment>
                         </div>
 
                         <hr className="mr-detail__line" />
@@ -2068,7 +2536,10 @@ class DetailMRWarehouse extends Component {
                                         </td>
                                       )}
                                       <td>: &nbsp;</td>
-                                      {this.state.data_mr.mr_type === "Relocation" || this.state.data_mr.mr_type === "Return" ? (
+                                      {this.state.data_mr.mr_type ===
+                                        "Relocation" ||
+                                      this.state.data_mr.mr_type ===
+                                        "Return" ? (
                                         <td style={{ width: "150px" }}>
                                           {this.state.data_mr.destination.value}
                                         </td>
@@ -2076,7 +2547,9 @@ class DetailMRWarehouse extends Component {
                                         <td>{this.state.mr_site_NE.site_id}</td>
                                       )}
                                     </tr>
-                                    {this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
+                                    {this.state.data_mr.mr_type !==
+                                      "Relocation" &&
+                                    this.state.data_mr.mr_type !== "Return" ? (
                                       <tr>
                                         <td style={{ width: "150px" }}>
                                           Site Name NE
@@ -2089,28 +2562,29 @@ class DetailMRWarehouse extends Component {
                                     ) : (
                                       ""
                                     )}
-                                    {this.state.data_mr !== null && this.state.data_mr.sow_type === "TRM" && (
-                                      <Fragment>
-                                      <tr>
-                                        <td style={{ width: "150px" }}>
-                                          Site ID NE
-                                        </td>
-                                        <td>:</td>
-                                        <td>
-                                          {this.state.mr_site_FE.site_id}
-                                        </td>
-                                      </tr>
-                                      <tr>
-                                        <td style={{ width: "150px" }}>
-                                          Site Name NE
-                                        </td>
-                                        <td>:</td>
-                                        <td>
-                                          {this.state.mr_site_FE.site_name}
-                                        </td>
-                                      </tr>
-                                      </Fragment>
-                                    )}
+                                    {this.state.data_mr !== null &&
+                                      this.state.data_mr.sow_type === "TRM" && (
+                                        <Fragment>
+                                          <tr>
+                                            <td style={{ width: "150px" }}>
+                                              Site ID NE
+                                            </td>
+                                            <td>:</td>
+                                            <td>
+                                              {this.state.mr_site_FE.site_id}
+                                            </td>
+                                          </tr>
+                                          <tr>
+                                            <td style={{ width: "150px" }}>
+                                              Site Name NE
+                                            </td>
+                                            <td>:</td>
+                                            <td>
+                                              {this.state.mr_site_FE.site_name}
+                                            </td>
+                                          </tr>
+                                        </Fragment>
+                                      )}
                                     <tr>
                                       <td style={{ width: "150px" }}>
                                         Total Box
@@ -2125,7 +2599,10 @@ class DetailMRWarehouse extends Component {
                                         {this.state.data_mr.list_of_box_id !==
                                         undefined
                                           ? this.state.data_mr.list_of_box_id.map(
-                                              (e) => typeof e === "string" ? e+" , " : e.box_id + " , "
+                                              (e) =>
+                                                typeof e === "string"
+                                                  ? e + " , "
+                                                  : e.box_id + " , "
                                             )
                                           : ""}
                                       </td>
@@ -2138,36 +2615,131 @@ class DetailMRWarehouse extends Component {
                         </table>
                       </Col>
                       <Col md="6">
-                        <table style={{ marginBottom: "0px", float : 'right' }}>
+                        <table style={{ marginBottom: "0px", float: "right" }}>
                           <tbody>
                             {this.state.data_mr !== null && (
                               <Fragment>
-                              {(this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1)  ? (
-                                <Dropdown size="sm" isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggleDropdown(0);}} style={{float : 'left', marginRight : '10px'}}>
-                                  <DropdownToggle caret color="secondary">
-                                    <i className="fa fa-download" aria-hidden="true"> &nbsp; </i>Download File
-                                  </DropdownToggle>
-                                  <DropdownMenu>
-                                    <DropdownItem header>MR File</DropdownItem>
-                                    {((this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1 ) && this.state.data_mr.mr_status !== undefined && this.state.data_mr.mr_status.find(e => e.mr_status_value === "DISPATCH") !== undefined ) && (
-                                      <DropdownItem onClick={this.downloadMaterialMRTRACY}> <i className="fa fa-file-text-o" aria-hidden="true"></i>TRACY Format</DropdownItem>
-
-                                    )}
-                                    <DropdownItem onClick={this.downloadMaterialSerialNumberReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>SN Report</DropdownItem>
-                                    <DropdownItem onClick={this.downloadMaterialMRReport}> <i className="fa fa-file-text-o" aria-hidden="true"></i>Download MR PS</DropdownItem>
-                                    <DropdownItem onClick={this.downloadMaterialMRUpload}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format</DropdownItem>
-                                    <DropdownItem onClick={this.downloadMaterialMRUpload2}> <i className="fa fa-file-text-o" aria-hidden="true"></i>PlantSpec Format NOK</DropdownItem>
-                                  </DropdownMenu>
-                                </Dropdown>
-                              ) : (
-                                <Button onClick={this.downloadMaterialMRReport}>Download MR PS</Button>
-                              )}
+                                {this.state.userRole.findIndex(
+                                  (e) => e === "BAM-Mover"
+                                ) === -1 &&
+                                this.state.userRole.findIndex(
+                                  (e) => e === "BAM-ASP Management"
+                                ) === -1 &&
+                                this.state.userRole.findIndex(
+                                  (e) => e === "BAM-ASP"
+                                ) === -1 &&
+                                this.state.userRole.findIndex(
+                                  (e) => e === "BAM-ASPWarehouse"
+                                ) === -1 ? (
+                                  <Dropdown
+                                    size="sm"
+                                    isOpen={this.state.dropdownOpen[0]}
+                                    toggle={() => {
+                                      this.toggleDropdown(0);
+                                    }}
+                                    style={{
+                                      float: "left",
+                                      marginRight: "10px",
+                                    }}
+                                  >
+                                    <DropdownToggle caret color="secondary">
+                                      <i
+                                        className="fa fa-download"
+                                        aria-hidden="true"
+                                      >
+                                        {" "}
+                                        &nbsp;{" "}
+                                      </i>
+                                      Download File
+                                    </DropdownToggle>
+                                    <DropdownMenu>
+                                      <DropdownItem header>
+                                        MR File
+                                      </DropdownItem>
+                                      {this.state.userRole.findIndex(
+                                        (e) => e === "BAM-ASP Management"
+                                      ) === -1 &&
+                                        this.state.userRole.findIndex(
+                                          (e) => e === "BAM-ASP"
+                                        ) === -1 &&
+                                        this.state.userRole.findIndex(
+                                          (e) => e === "BAM-ASPWarehouse"
+                                        ) === -1 &&
+                                        this.state.data_mr.mr_status !==
+                                          undefined &&
+                                        this.state.data_mr.mr_status.find(
+                                          (e) =>
+                                            e.mr_status_value === "DISPATCH"
+                                        ) !== undefined && (
+                                          <DropdownItem
+                                            onClick={
+                                              this.downloadMaterialMRTRACY
+                                            }
+                                          >
+                                            {" "}
+                                            <i
+                                              className="fa fa-file-text-o"
+                                              aria-hidden="true"
+                                            ></i>
+                                            TRACY Format
+                                          </DropdownItem>
+                                        )}
+                                      <DropdownItem
+                                        onClick={
+                                          this
+                                            .downloadMaterialSerialNumberReport
+                                        }
+                                      >
+                                        {" "}
+                                        <i
+                                          className="fa fa-file-text-o"
+                                          aria-hidden="true"
+                                        ></i>
+                                        SN Report
+                                      </DropdownItem>
+                                      <DropdownItem
+                                        onClick={this.downloadMaterialMRReport}
+                                      >
+                                        {" "}
+                                        <i
+                                          className="fa fa-file-text-o"
+                                          aria-hidden="true"
+                                        ></i>
+                                        Download MR PS
+                                      </DropdownItem>
+                                      <DropdownItem
+                                        onClick={this.downloadMaterialMRUpload}
+                                      >
+                                        {" "}
+                                        <i
+                                          className="fa fa-file-text-o"
+                                          aria-hidden="true"
+                                        ></i>
+                                        PlantSpec Format
+                                      </DropdownItem>
+                                      <DropdownItem
+                                        onClick={this.downloadMaterialMRUpload2}
+                                      >
+                                        {" "}
+                                        <i
+                                          className="fa fa-file-text-o"
+                                          aria-hidden="true"
+                                        ></i>
+                                        PlantSpec Format NOK
+                                      </DropdownItem>
+                                    </DropdownMenu>
+                                  </Dropdown>
+                                ) : (
+                                  <Button
+                                    onClick={this.downloadMaterialMRReport}
+                                  >
+                                    Download MR PS
+                                  </Button>
+                                )}
                                 {this.state.mr_site_FE !== null &&
                                 this.state.data_mr.mr_type !== "Relocation" &&
                                 this.state.data_mr.mr_type !== "Return" ? (
-                                  <Fragment>
-
-                                  </Fragment>
+                                  <Fragment></Fragment>
                                 ) : (
                                   <Fragment>
                                     <tr>
@@ -2175,43 +2747,65 @@ class DetailMRWarehouse extends Component {
                                         &nbsp;
                                       </td>
                                     </tr>
-                                    {((this.state.userRole.findIndex(e => e === "BAM-Implementation Manager") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Coordinator") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ) && status_can_edit_material.includes(
-                                      this.state.data_mr.current_mr_status
-                                    )) && (
-                                      <tr>
-                                        <td style={{ fontSize: "12px" }}>
-                                          Change to Material Variant :{" "}
-                                        </td>
-                                      </tr>
-                                    )}
+                                    {(this.state.userRole.findIndex(
+                                      (e) => e === "BAM-Implementation Manager"
+                                    ) !== -1 ||
+                                      this.state.userRole.findIndex(
+                                        (e) =>
+                                          e === "BAM-Implementation Coordinator"
+                                      ) !== -1 ||
+                                      this.state.userRole.findIndex(
+                                        (e) => e === "Admin"
+                                      ) !== -1) &&
+                                      status_can_edit_material.includes(
+                                        this.state.data_mr.current_mr_status
+                                      ) && (
+                                        <tr>
+                                          <td style={{ fontSize: "12px" }}>
+                                            Change to Material Variant :{" "}
+                                          </td>
+                                        </tr>
+                                      )}
                                   </Fragment>
                                 )}
-                                {((this.state.userRole.findIndex(e => e === "BAM-Mover") === -1) && (this.state.userRole.findIndex(e => e === "BAM-ASP Management") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASP") === -1 && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") === -1) && status_can_edit_material.includes(
-                                  this.state.data_mr.current_mr_status
-                                )) && (
-                                  <tr>
-                                    <td style={{ width: "550px" }}>
-                                      <input
-                                        type="file"
-                                        onChange={this.fileHandlerMaterial.bind(
-                                          this
-                                        )}
-                                        style={{ visiblity: "hidden" }}
-                                      />
-                                      <Button
-                                        size="sm"
-                                        color="success"
-                                        style={{ float: "right" }}
-                                        onClick={this.saveUpdateMaterial}
-                                        disabled={
-                                          this.state.rowsXLS.length === 0
-                                        }
-                                      >
-                                        Save
-                                      </Button>
-                                    </td>
-                                  </tr>
-                                )}
+                                {this.state.userRole.findIndex(
+                                  (e) => e === "BAM-Mover"
+                                ) === -1 &&
+                                  this.state.userRole.findIndex(
+                                    (e) => e === "BAM-ASP Management"
+                                  ) === -1 &&
+                                  this.state.userRole.findIndex(
+                                    (e) => e === "BAM-ASP"
+                                  ) === -1 &&
+                                  this.state.userRole.findIndex(
+                                    (e) => e === "BAM-ASPWarehouse"
+                                  ) === -1 &&
+                                  status_can_edit_material.includes(
+                                    this.state.data_mr.current_mr_status
+                                  ) && (
+                                    <tr>
+                                      <td style={{ width: "550px" }}>
+                                        <input
+                                          type="file"
+                                          onChange={this.fileHandlerMaterial.bind(
+                                            this
+                                          )}
+                                          style={{ visiblity: "hidden" }}
+                                        />
+                                        <Button
+                                          size="sm"
+                                          color="success"
+                                          style={{ float: "right" }}
+                                          onClick={this.saveUpdateMaterial}
+                                          disabled={
+                                            this.state.rowsXLS.length === 0
+                                          }
+                                        >
+                                          Save
+                                        </Button>
+                                      </td>
+                                    </tr>
+                                  )}
                               </Fragment>
                             )}
                           </tbody>
@@ -2219,107 +2813,491 @@ class DetailMRWarehouse extends Component {
                       </Col>
                     </Row>
                     <hr className="upload-line-ordering"></hr>
-                    <div>PlantSpec Group No : {this.state.data_mr !== null ? (<Link to={'/ps-list/'+this.state.data_mr.id_plantspec_doc}>{this.state.data_mr.no_plantspec}</Link>) : ""}</div>
-                    <div className="divtable2">
-                    {(this.state.data_mr !== null && this.state.data_mr.sow_type !== "TRM") ? (
-                      <Table hover bordered striped responsive size="sm">
-                        <thead
-                          style={{ backgroundColor: "#0B486B", color: "white" }}
-                          className="table-mr__header--fixed"
+                    <div>
+                      PlantSpec Group No :{" "}
+                      {this.state.data_mr !== null ? (
+                        <Link
+                          to={"/ps-list/" + this.state.data_mr.id_plantspec_doc}
                         >
-                          <tr>
-                            <th
-                              rowSpan="2"
-                              className="fixedhead"
-                              style={{
-                                width: "250px",
-                                verticalAlign: "middle",
-                              }}
-                            >
-                              PP / Material Code
-                            </th>
-                            <th
-                              rowSpan="2"
-                              className="fixedhead"
-                              style={{ verticalAlign: "middle" }}
-                            >
-                              PP / Material Name
-                            </th>
-                            <th
-                              rowSpan="2"
-                              className="fixedhead"
-                              style={{ width: "75px", verticalAlign: "middle" }}
-                            >
-                              Unit
-                            </th>
-                            <th
-                              colSpan="2"
-                              className="fixedhead"
-                              style={{
-                                width: "100px",
-                                verticalAlign: "middle",
-                              }}
-                            >
-                              Total Qty per PP
-                            </th>
-                            {this.state.data_mr !== null &&
-                            status_can_edit_material.includes(
-                              this.state.data_mr.current_mr_status
-                            ) ? (
-                              <Fragment>
-                                <th
-                                  rowSpan="2"
-                                  className="fixedhead"
-                                  style={{
-                                    width: "100px",
-                                    verticalAlign: "middle",
-                                  }}
-                                >
-                                  Material in Warehouse
-                                </th>
-                                <th
-                                  rowSpan="2"
-                                  className="fixedhead"
-                                  style={{
-                                    width: "100px",
-                                    verticalAlign: "middle",
-                                  }}
-                                >
-                                  Material Plan
-                                </th>
-                                <th
-                                  rowSpan="2"
-                                  className="fixedhead"
-                                  style={{
-                                    width: "100px",
-                                    verticalAlign: "middle",
-                                  }}
-                                >
-                                  Availability
-                                </th>
-                              </Fragment>
-                            ) : (
-                              <Fragment></Fragment>
-                            )}
-                            <th rowSpan="2" className="fixedhead" style={{verticalAlign: "middle" }}>
-                              PS No. / Material Source
-                            </th>
-                          </tr>
-                          {this.state.data_mr !== null &&
-                          this.state.data_mr.mr_type !== "Relocation" &&
-                          this.state.data_mr.mr_type !== "Return" ? (
+                          {this.state.data_mr.no_plantspec}
+                        </Link>
+                      ) : (
+                        ""
+                      )}
+                    </div>
+                    <div className="divtable2">
+                      {this.state.data_mr !== null &&
+                      this.state.data_mr.sow_type !== "TRM" ? (
+                        <Table hover bordered striped responsive size="sm">
+                          <thead
+                            style={{
+                              backgroundColor: "#0B486B",
+                              color: "white",
+                            }}
+                            className="table-mr__header--fixed"
+                          >
                             <tr>
                               <th
+                                rowSpan="2"
                                 className="fixedhead"
-                                colSpan={this.state.mr_site_FE !== null ? 1 : 2}
+                                style={{
+                                  width: "250px",
+                                  verticalAlign: "middle",
+                                }}
+                              >
+                                PP / Material Code
+                              </th>
+                              <th
+                                rowSpan="2"
+                                className="fixedhead"
+                                style={{ verticalAlign: "middle" }}
+                              >
+                                PP / Material Name
+                              </th>
+                              <th
+                                rowSpan="2"
+                                className="fixedhead"
+                                style={{
+                                  width: "75px",
+                                  verticalAlign: "middle",
+                                }}
+                              >
+                                Unit
+                              </th>
+                              <th
+                                colSpan="2"
+                                className="fixedhead"
                                 style={{
                                   width: "100px",
                                   verticalAlign: "middle",
                                 }}
                               >
-                                Site NE
+                                Total Qty per PP
                               </th>
-                              {this.state.mr_site_FE !== null ? (
+                              {this.state.data_mr !== null &&
+                              status_can_edit_material.includes(
+                                this.state.data_mr.current_mr_status
+                              ) ? (
+                                <Fragment>
+                                  <th
+                                    rowSpan="2"
+                                    className="fixedhead"
+                                    style={{
+                                      width: "100px",
+                                      verticalAlign: "middle",
+                                    }}
+                                  >
+                                    Material in Warehouse
+                                  </th>
+                                  <th
+                                    rowSpan="2"
+                                    className="fixedhead"
+                                    style={{
+                                      width: "100px",
+                                      verticalAlign: "middle",
+                                    }}
+                                  >
+                                    Material Plan
+                                  </th>
+                                  <th
+                                    rowSpan="2"
+                                    className="fixedhead"
+                                    style={{
+                                      width: "100px",
+                                      verticalAlign: "middle",
+                                    }}
+                                  >
+                                    Availability
+                                  </th>
+                                </Fragment>
+                              ) : (
+                                <Fragment></Fragment>
+                              )}
+                              <th
+                                rowSpan="2"
+                                className="fixedhead"
+                                style={{ verticalAlign: "middle" }}
+                              >
+                                PS No. / Material Source
+                              </th>
+                            </tr>
+                            {this.state.data_mr !== null &&
+                            this.state.data_mr.mr_type !== "Relocation" &&
+                            this.state.data_mr.mr_type !== "Return" ? (
+                              <tr>
+                                <th
+                                  className="fixedhead"
+                                  colSpan={
+                                    this.state.mr_site_FE !== null ? 1 : 2
+                                  }
+                                  style={{
+                                    width: "100px",
+                                    verticalAlign: "middle",
+                                  }}
+                                >
+                                  Site NE
+                                </th>
+                                {this.state.mr_site_FE !== null ? (
+                                  <th
+                                    className="fixedhead"
+                                    style={{
+                                      width: "100px",
+                                      verticalAlign: "middle",
+                                    }}
+                                  >
+                                    SITE FE
+                                  </th>
+                                ) : (
+                                  <Fragment></Fragment>
+                                )}
+                              </tr>
+                            ) : (
+                              ""
+                            )}
+                          </thead>
+                          {this.state.data_mr !== null &&
+                          status_can_edit_material.includes(
+                            this.state.data_mr.current_mr_status
+                          ) ? (
+                            <tbody>
+                              {this.state.mr_site_NE !== null &&
+                                this.state.list_mr_item
+                                  .filter(
+                                    (e) =>
+                                      e.product_type.toLowerCase() !== "svc" &&
+                                      e.product_type.toLowerCase() !== "hwac" &&
+                                      e.product_type.toLowerCase() !== "sw"
+                                  )
+                                  .map((pp) => (
+                                    <Fragment>
+                                      <tr
+                                        style={{ backgroundColor: "#E5FCC2" }}
+                                        className="fixbody"
+                                      >
+                                        <td style={{ textAlign: "left" }}>
+                                          {pp.pp_id}
+                                        </td>
+                                        <td>{pp.product_name}</td>
+                                        <td>{pp.uom}</td>
+                                        <td
+                                          align="center"
+                                          colSpan={
+                                            this.state.mr_site_FE !== null
+                                              ? 1
+                                              : 2
+                                          }
+                                        >
+                                          {pp.qty}
+                                        </td>
+                                        {this.state.mr_site_FE !== null ? (
+                                          <td align="center">
+                                            {this.getQtyMRPPFE(pp.pp_id)}
+                                          </td>
+                                        ) : (
+                                          <Fragment></Fragment>
+                                        )}
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td>{pp.no_tssr_boq_site}</td>
+                                      </tr>
+                                      {pp.materials.map((material) => (
+                                        <tr
+                                          style={{
+                                            backgroundColor:
+                                              "rgba(248,246,223, 0.5)",
+                                          }}
+                                          className="fixbody"
+                                        >
+                                          <td style={{ textAlign: "right" }}>
+                                            {material.material_id}
+                                          </td>
+                                          <td style={{ textAlign: "left" }}>
+                                            {material.material_name}
+                                          </td>
+                                          <td>{material.uom}</td>
+                                          <td
+                                            align="center"
+                                            colSpan={
+                                              this.state.mr_site_FE !== null
+                                                ? 1
+                                                : 2
+                                            }
+                                          >
+                                            {material.qty}
+                                          </td>
+                                          {this.state.mr_site_FE !== null ? (
+                                            <td align="center">
+                                              {this.getQtyMRMDFE(
+                                                pp.pp_id,
+                                                material.material_id
+                                              )}
+                                            </td>
+                                          ) : (
+                                            <Fragment></Fragment>
+                                          )}
+                                          <td align="center">
+                                            {
+                                              (qty_wh =
+                                                this.state.material_wh.find(
+                                                  (e) =>
+                                                    e.sku ===
+                                                    material.material_id
+                                                ) !== undefined
+                                                  ? this.state.material_wh
+                                                      .find(
+                                                        (e) =>
+                                                          e.sku ===
+                                                          material.material_id
+                                                      )
+                                                      .qty_sku.toFixed(2)
+                                                  : 0)
+                                            }
+                                          </td>
+                                          <td align="center">
+                                            {
+                                              (qty_inbound =
+                                                this.state.material_inbound.find(
+                                                  (e) =>
+                                                    e.sku ===
+                                                    material.material_id
+                                                ) !== undefined
+                                                  ? this.state.material_inbound
+                                                      .find(
+                                                        (e) =>
+                                                          e.sku ===
+                                                          material.material_id
+                                                      )
+                                                      .qty_sku.toFixed(2)
+                                                  : 0)
+                                            }
+                                          </td>
+                                          <td align="center">
+                                            {material.qty < qty_wh
+                                              ? "OK"
+                                              : "NOK"}
+                                          </td>
+                                          <td>{material.source_material}</td>
+                                        </tr>
+                                      ))}
+                                    </Fragment>
+                                  ))}
+                              {this.state.data_mr === null ? (
+                                <tr>
+                                  <td colSpan="5">Loading...</td>
+                                </tr>
+                              ) : (
+                                this.state.data_mr.current_mr_status ===
+                                  "NOT ASSIGNED" && (
+                                  <tr>
+                                    <td colSpan="5">PS not Assigned</td>
+                                  </tr>
+                                )
+                              )}
+                            </tbody>
+                          ) : (
+                            <tbody>
+                              {this.state.mr_site_NE !== null &&
+                                this.state.list_mr_item.map((pp) => (
+                                  <Fragment>
+                                    <tr
+                                      style={{ backgroundColor: "#E5FCC2" }}
+                                      className="fixbody"
+                                    >
+                                      <td style={{ textAlign: "left" }}>
+                                        {pp.pp_id}
+                                      </td>
+                                      <td>{pp.product_name}</td>
+                                      <td>{pp.uom}</td>
+                                      <td
+                                        align="center"
+                                        colSpan={
+                                          this.state.mr_site_FE !== null ? 1 : 2
+                                        }
+                                      >
+                                        {pp.qty}
+                                      </td>
+                                      {this.state.mr_site_FE !== null ? (
+                                        <td align="center">
+                                          {this.getQtyMRPPFE(pp.pp_id)}
+                                        </td>
+                                      ) : (
+                                        <Fragment></Fragment>
+                                      )}
+                                      <td>{pp.no_tssr_boq_site}</td>
+                                    </tr>
+                                    {pp.materials.map((material) => (
+                                      <tr
+                                        style={{
+                                          backgroundColor:
+                                            "rgba(248,246,223, 0.5)",
+                                        }}
+                                        className="fixbody"
+                                      >
+                                        <td style={{ textAlign: "right" }}>
+                                          {material.material_id}
+                                        </td>
+                                        <td style={{ textAlign: "left" }}>
+                                          {material.material_name}
+                                        </td>
+                                        <td>{material.uom}</td>
+                                        <td
+                                          align="center"
+                                          colSpan={
+                                            this.state.mr_site_FE !== null
+                                              ? 1
+                                              : 2
+                                          }
+                                        >
+                                          {material.qty}
+                                        </td>
+                                        {this.state.mr_site_FE !== null ? (
+                                          <td align="center">
+                                            {this.getQtyMRMDFE(
+                                              pp.pp_id,
+                                              material.material_id
+                                            )}
+                                          </td>
+                                        ) : (
+                                          <Fragment></Fragment>
+                                        )}
+                                        <td>{material.source_material}</td>
+                                      </tr>
+                                    ))}
+                                  </Fragment>
+                                ))}
+                              {this.state.data_mr === null ? (
+                                <tr>
+                                  <td colSpan="5">Loading...</td>
+                                </tr>
+                              ) : (
+                                this.state.data_mr.current_mr_status ===
+                                  "NOT ASSIGNED" && (
+                                  <tr>
+                                    <td colSpan="5">PS not Assigned</td>
+                                  </tr>
+                                )
+                              )}
+                            </tbody>
+                          )}
+                        </Table>
+                      ) : (
+                        <Table hover bordered striped responsive size="sm">
+                          <thead
+                            style={{
+                              backgroundColor: "#0B486B",
+                              color: "white",
+                            }}
+                            className="table-mr__header--fixed"
+                          >
+                            <tr>
+                              <th
+                                rowSpan="2"
+                                className="fixedhead"
+                                style={{
+                                  width: "250px",
+                                  verticalAlign: "middle",
+                                }}
+                              >
+                                PP / Material Code
+                              </th>
+                              <th
+                                rowSpan="2"
+                                className="fixedhead"
+                                style={{ verticalAlign: "middle" }}
+                              >
+                                PP / Material Name
+                              </th>
+                              <th
+                                rowSpan="2"
+                                className="fixedhead"
+                                style={{
+                                  width: "75px",
+                                  verticalAlign: "middle",
+                                }}
+                              >
+                                Program
+                              </th>
+                              <th
+                                rowSpan="2"
+                                className="fixedhead"
+                                style={{
+                                  width: "75px",
+                                  verticalAlign: "middle",
+                                }}
+                              >
+                                Unit
+                              </th>
+                              <th
+                                colSpan="2"
+                                className="fixedhead"
+                                style={{
+                                  width: "100px",
+                                  verticalAlign: "middle",
+                                }}
+                              >
+                                Total Qty per PP
+                              </th>
+                              {this.state.data_mr !== null &&
+                              status_can_edit_material.includes(
+                                this.state.data_mr.current_mr_status
+                              ) ? (
+                                <Fragment>
+                                  <th
+                                    rowSpan="2"
+                                    className="fixedhead"
+                                    style={{
+                                      width: "100px",
+                                      verticalAlign: "middle",
+                                    }}
+                                  >
+                                    Material in Warehouse
+                                  </th>
+                                  <th
+                                    rowSpan="2"
+                                    className="fixedhead"
+                                    style={{
+                                      width: "100px",
+                                      verticalAlign: "middle",
+                                    }}
+                                  >
+                                    Material Plan
+                                  </th>
+                                  <th
+                                    rowSpan="2"
+                                    className="fixedhead"
+                                    style={{
+                                      width: "100px",
+                                      verticalAlign: "middle",
+                                    }}
+                                  >
+                                    Availability
+                                  </th>
+                                </Fragment>
+                              ) : (
+                                <Fragment></Fragment>
+                              )}
+                              <th
+                                rowSpan="2"
+                                className="fixedhead"
+                                style={{ verticalAlign: "middle" }}
+                              >
+                                PS No. / Material Source
+                              </th>
+                            </tr>
+                            {this.state.data_mr !== null &&
+                            this.state.data_mr.mr_type !== "Relocation" &&
+                            this.state.data_mr.mr_type !== "Return" ? (
+                              <tr>
+                                <th
+                                  className="fixedhead"
+                                  style={{
+                                    width: "100px",
+                                    verticalAlign: "middle",
+                                  }}
+                                >
+                                  Site NE
+                                </th>
                                 <th
                                   className="fixedhead"
                                   style={{
@@ -2329,329 +3307,122 @@ class DetailMRWarehouse extends Component {
                                 >
                                   SITE FE
                                 </th>
-                              ) : (
-                                <Fragment></Fragment>
-                              )}
-                            </tr>
-                          ) : (
-                            ""
-                          )}
-                        </thead>
-                        {this.state.data_mr !== null &&
-                        status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
-                          <tbody>
-                            {this.state.mr_site_NE !== null &&
-                              this.state.list_mr_item.filter(e => e.product_type.toLowerCase() !== "svc" && e.product_type.toLowerCase() !== "hwac" && e.product_type.toLowerCase() !== "sw").map((pp) => (
-                                <Fragment>
-                                  <tr
-                                    style={{ backgroundColor: "#E5FCC2" }}
-                                    className="fixbody"
-                                  >
-                                    <td style={{ textAlign: "left" }}>
-                                      {pp.pp_id}
-                                    </td>
-                                    <td>{pp.product_name}</td>
-                                    <td>{pp.uom}</td>
-                                    <td
-                                      align="center"
-                                      colSpan={
-                                        this.state.mr_site_FE !== null ? 1 : 2
-                                      }
-                                    >
-                                      {pp.qty}
-                                    </td>
-                                    {this.state.mr_site_FE !== null ? (
-                                      <td align="center">
-                                        {this.getQtyMRPPFE(pp.pp_id)}
-                                      </td>
-                                    ) : (
-                                      <Fragment></Fragment>
-                                    )}
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td>{pp.no_tssr_boq_site}</td>
-                                  </tr>
-                                  {pp.materials.map((material) => (
-                                    <tr
-                                      style={{
-                                        backgroundColor:
-                                          "rgba(248,246,223, 0.5)",
-                                      }}
-                                      className="fixbody"
-                                    >
-                                      <td style={{ textAlign: "right" }}>
-                                        {material.material_id}
-                                      </td>
-                                      <td style={{ textAlign: "left" }}>
-                                        {material.material_name}
-                                      </td>
-                                      <td>{material.uom}</td>
-                                      <td
-                                        align="center"
-                                        colSpan={
-                                          this.state.mr_site_FE !== null ? 1 : 2
-                                        }
-                                      >
-                                        {material.qty}
-                                      </td>
-                                      {this.state.mr_site_FE !== null ? (
-                                        <td align="center">
-                                          {this.getQtyMRMDFE(
-                                            pp.pp_id,
-                                            material.material_id
-                                          )}
-                                        </td>
-                                      ) : (
-                                        <Fragment></Fragment>
-                                      )}
-                                      <td align="center">
-                                        {
-                                          (qty_wh =
-                                            this.state.material_wh.find(
-                                              (e) =>
-                                                e.sku === material.material_id
-                                            ) !== undefined
-                                              ? this.state.material_wh
-                                                  .find(
-                                                    (e) =>
-                                                      e.sku ===
-                                                      material.material_id
-                                                  )
-                                                  .qty_sku.toFixed(2)
-                                              : 0)
-                                        }
-                                      </td>
-                                      <td align="center">
-                                        {
-                                          (qty_inbound =
-                                            this.state.material_inbound.find(
-                                              (e) =>
-                                                e.sku === material.material_id
-                                            ) !== undefined
-                                              ? this.state.material_inbound
-                                                  .find(
-                                                    (e) =>
-                                                      e.sku ===
-                                                      material.material_id
-                                                  )
-                                                  .qty_sku.toFixed(2)
-                                              : 0)
-                                        }
-                                      </td>
-                                      <td align="center">
-                                        {material.qty < qty_wh ? "OK" : "NOK"}
-                                      </td>
-                                      <td>{material.source_material}</td>
-                                    </tr>
-                                  ))}
-                                </Fragment>
-                              ))}
-                            {this.state.data_mr === null ? (
-                              <tr>
-                                <td colSpan="5">Loading...</td>
                               </tr>
-                            ) : (
-                              this.state.data_mr.current_mr_status === "NOT ASSIGNED" && (
-                                <tr>
-                                  <td colSpan="5">PS not Assigned</td>
-                                </tr>
-                              )
-                            )}
-                          </tbody>
-                        ) : (
-                          <tbody>
-                            {this.state.mr_site_NE !== null &&
-                              this.state.list_mr_item.map((pp) => (
-                                <Fragment>
-                                  <tr
-                                    style={{ backgroundColor: "#E5FCC2" }}
-                                    className="fixbody"
-                                  >
-                                    <td style={{ textAlign: "left" }}>
-                                      {pp.pp_id}
-                                    </td>
-                                    <td>{pp.product_name}</td>
-                                    <td>{pp.uom}</td>
-                                    <td align="center" colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{pp.qty}</td>
-                                    {this.state.mr_site_FE !== null ? (
-                                      <td align="center">
-                                        {this.getQtyMRPPFE(pp.pp_id)}
-                                      </td>
-                                    ) : (
-                                      <Fragment></Fragment>
-                                    )}
-                                    <td>{pp.no_tssr_boq_site}</td>
-                                  </tr>
-                                  {pp.materials.map((material) => (
-                                    <tr
-                                      style={{
-                                        backgroundColor:
-                                          "rgba(248,246,223, 0.5)",
-                                      }}
-                                      className="fixbody"
-                                    >
-                                      <td style={{ textAlign: "right" }}>
-                                        {material.material_id}
-                                      </td>
-                                      <td style={{ textAlign: "left" }}>
-                                        {material.material_name}
-                                      </td>
-                                      <td>{material.uom}</td>
-                                      <td align="center" colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{material.qty}</td>
-                                      {this.state.mr_site_FE !== null ? (
-                                        <td align="center">
-                                          {this.getQtyMRMDFE(
-                                            pp.pp_id,
-                                            material.material_id
-                                          )}
-                                        </td>
-                                      ) : (
-                                        <Fragment></Fragment>
-                                      )}
-                                      <td>{material.source_material}</td>
-                                    </tr>
-                                  ))}
-                                </Fragment>
-                              ))}
-                            {this.state.data_mr === null ? (
-                              <tr>
-                                <td colSpan="5">Loading...</td>
-                              </tr>
-                            ) : (
-                              this.state.data_mr.current_mr_status ===
-                                "NOT ASSIGNED" && (
-                                <tr>
-                                  <td colSpan="5">PS not Assigned</td>
-                                </tr>
-                              )
-                            )}
-                          </tbody>
-                        )}
-                      </Table>
-                    ) : (
-                      <Table hover bordered striped responsive size="sm">
-                        <thead style={{ backgroundColor: "#0B486B", color: "white" }} className="table-mr__header--fixed" >
-                          <tr>
-                            <th rowSpan="2" className="fixedhead" style={{ width: "250px", verticalAlign: "middle", }} >
-                              PP / Material Code
-                            </th>
-                            <th rowSpan="2" className="fixedhead" style={{ verticalAlign: "middle" }} >
-                              PP / Material Name
-                            </th>
-                            <th rowSpan="2" className="fixedhead" style={{ width: "75px", verticalAlign: "middle" }} >
-                              Program
-                            </th>
-                            <th rowSpan="2" className="fixedhead" style={{ width: "75px", verticalAlign: "middle" }} >
-                              Unit
-                            </th>
-                            <th colSpan="2" className="fixedhead" style={{ width: "100px", verticalAlign: "middle", }} >
-                              Total Qty per PP
-                            </th>
-                            {this.state.data_mr !== null && status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
-                              <Fragment>
-                                <th rowSpan="2" className="fixedhead" style={{ width: "100px", verticalAlign: "middle", }} >
-                                  Material in Warehouse
-                                </th>
-                                <th rowSpan="2" className="fixedhead" style={{ width: "100px", verticalAlign: "middle", }} >
-                                  Material Plan
-                                </th>
-                                <th rowSpan="2" className="fixedhead" style={{ width: "100px", verticalAlign: "middle", }} >
-                                  Availability
-                                </th>
-                              </Fragment>
                             ) : (
                               <Fragment></Fragment>
                             )}
-                            <th rowSpan="2" className="fixedhead" style={{verticalAlign: "middle" }}>
-                              PS No. / Material Source
-                            </th>
-                          </tr>
-                          {this.state.data_mr !== null && this.state.data_mr.mr_type !== "Relocation" && this.state.data_mr.mr_type !== "Return" ? (
-                            <tr>
-                              <th className="fixedhead" style={{ width: "100px", verticalAlign: "middle"}} >
-                                Site NE
-                              </th>
-                              <th className="fixedhead" style={{ width: "100px", verticalAlign: "middle"}} >
-                                SITE FE
-                              </th>
-                            </tr>
-                          ) : (
-                            <Fragment></Fragment>
-                          )}
-                        </thead>
-                        {this.state.data_mr !== null && status_can_edit_material.includes(this.state.data_mr.current_mr_status) ? (
-                          <tbody>
-                            {this.state.product_package_ps_mw.filter(e => e.product_type.toLowerCase() !== "svc").map((pp) => (
-                                <Fragment>
-                                  <tr style={{ backgroundColor: "#E5FCC2" }} className="fixbody" >
-                                    <td style={{ textAlign: "left" }}>
-                                      {pp.pp_id}
-                                    </td>
-                                    <td>{pp.product_name}</td>
-                                    <td>{pp.program}</td>
-                                    <td>{pp.uom}</td>
-                                    <td align="center">
-                                      {pp.qty}
-                                    </td>
-                                    <td align="center">
-                                      {pp.qty_fe}
-                                    </td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td>{pp.no_tssr_boq_site}</td>
-                                  </tr>
-                                  {pp.materials.map((material) => (
-                                    <tr style={{ backgroundColor: "rgba(248,246,223, 0.5)", }} className="fixbody" >
-                                      <td style={{ textAlign: "right" }}>
-                                        {material.material_id}
-                                      </td>
+                          </thead>
+                          {this.state.data_mr !== null &&
+                          status_can_edit_material.includes(
+                            this.state.data_mr.current_mr_status
+                          ) ? (
+                            <tbody>
+                              {this.state.product_package_ps_mw
+                                .filter(
+                                  (e) => e.product_type.toLowerCase() !== "svc"
+                                )
+                                .map((pp) => (
+                                  <Fragment>
+                                    <tr
+                                      style={{ backgroundColor: "#E5FCC2" }}
+                                      className="fixbody"
+                                    >
                                       <td style={{ textAlign: "left" }}>
-                                        {material.material_name}
+                                        {pp.pp_id}
                                       </td>
+                                      <td>{pp.product_name}</td>
+                                      <td>{pp.program}</td>
+                                      <td>{pp.uom}</td>
+                                      <td align="center">{pp.qty}</td>
+                                      <td align="center">{pp.qty_fe}</td>
                                       <td></td>
-                                      <td>{material.uom}</td>
-                                      <td align="center" >
-                                        {material.qty}
-                                      </td>
-                                      <td align="center" >
-                                        {material.qty_fe}
-                                      </td>
-                                      <td align="center">
-                                        { (qty_wh = this.state.material_wh.find( (e) => e.sku === material.material_id ) !== undefined
-                                            ? this.state.material_wh.find( (e) => e.sku === material.material_id ).qty_sku.toFixed(2) : 0)
-                                        }
-                                      </td>
-                                      <td align="center">
-                                        { (qty_inbound = this.state.material_inbound.find( (e) => e.sku === material.material_id ) !== undefined
-                                          ? this.state.material_inbound.find((e) => e.sku === material.material_id).qty_sku.toFixed(2): 0)
-                                        }
-                                      </td>
-                                      <td align="center">
-                                        {material.qty < qty_wh ? "OK" : "NOK"}
-                                      </td>
-                                      <td>{material.source_material}</td>
+                                      <td></td>
+                                      <td></td>
+                                      <td>{pp.no_tssr_boq_site}</td>
                                     </tr>
-                                  ))}
-                                </Fragment>
-                              ))}
-                            {this.state.data_mr === null ? (
-                              <tr>
-                                <td colSpan="5">Loading...</td>
-                              </tr>
-                            ) : ( this.state.data_mr.current_mr_status === "NOT ASSIGNED" && (
+                                    {pp.materials.map((material) => (
+                                      <tr
+                                        style={{
+                                          backgroundColor:
+                                            "rgba(248,246,223, 0.5)",
+                                        }}
+                                        className="fixbody"
+                                      >
+                                        <td style={{ textAlign: "right" }}>
+                                          {material.material_id}
+                                        </td>
+                                        <td style={{ textAlign: "left" }}>
+                                          {material.material_name}
+                                        </td>
+                                        <td></td>
+                                        <td>{material.uom}</td>
+                                        <td align="center">{material.qty}</td>
+                                        <td align="center">
+                                          {material.qty_fe}
+                                        </td>
+                                        <td align="center">
+                                          {
+                                            (qty_wh =
+                                              this.state.material_wh.find(
+                                                (e) =>
+                                                  e.sku === material.material_id
+                                              ) !== undefined
+                                                ? this.state.material_wh
+                                                    .find(
+                                                      (e) =>
+                                                        e.sku ===
+                                                        material.material_id
+                                                    )
+                                                    .qty_sku.toFixed(2)
+                                                : 0)
+                                          }
+                                        </td>
+                                        <td align="center">
+                                          {
+                                            (qty_inbound =
+                                              this.state.material_inbound.find(
+                                                (e) =>
+                                                  e.sku === material.material_id
+                                              ) !== undefined
+                                                ? this.state.material_inbound
+                                                    .find(
+                                                      (e) =>
+                                                        e.sku ===
+                                                        material.material_id
+                                                    )
+                                                    .qty_sku.toFixed(2)
+                                                : 0)
+                                          }
+                                        </td>
+                                        <td align="center">
+                                          {material.qty < qty_wh ? "OK" : "NOK"}
+                                        </td>
+                                        <td>{material.source_material}</td>
+                                      </tr>
+                                    ))}
+                                  </Fragment>
+                                ))}
+                              {this.state.data_mr === null ? (
                                 <tr>
-                                  <td colSpan="5">PS not Assigned</td>
+                                  <td colSpan="5">Loading...</td>
                                 </tr>
-                              )
-                            )}
-                          </tbody>
-                        ) : (
-                          <tbody>
-                            {this.state.product_package_ps_mw.map((pp) => (
+                              ) : (
+                                this.state.data_mr.current_mr_status ===
+                                  "NOT ASSIGNED" && (
+                                  <tr>
+                                    <td colSpan="5">PS not Assigned</td>
+                                  </tr>
+                                )
+                              )}
+                            </tbody>
+                          ) : (
+                            <tbody>
+                              {this.state.product_package_ps_mw.map((pp) => (
                                 <Fragment>
-                                  <tr style={{ backgroundColor: "#E5FCC2" }} className="fixbody" >
+                                  <tr
+                                    style={{ backgroundColor: "#E5FCC2" }}
+                                    className="fixbody"
+                                  >
                                     <td style={{ textAlign: "left" }}>
                                       {pp.pp_id}
                                     </td>
@@ -2663,7 +3434,13 @@ class DetailMRWarehouse extends Component {
                                     <td>{pp.no_tssr_boq_site}</td>
                                   </tr>
                                   {pp.materials.map((material) => (
-                                    <tr style={{ backgroundColor: "rgba(248,246,223, 0.5)", }} className="fixbody" >
+                                    <tr
+                                      style={{
+                                        backgroundColor:
+                                          "rgba(248,246,223, 0.5)",
+                                      }}
+                                      className="fixbody"
+                                    >
                                       <td style={{ textAlign: "right" }}>
                                         {material.material_id}
                                       </td>
@@ -2672,33 +3449,53 @@ class DetailMRWarehouse extends Component {
                                       </td>
                                       <td></td>
                                       <td>{material.uom}</td>
-                                      <td align="center" colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{material.qty}</td>
-                                      <td align="center" colSpan={this.state.mr_site_FE !== null ? 1 : 2}>{material.qty_fe}</td>
+                                      <td
+                                        align="center"
+                                        colSpan={
+                                          this.state.mr_site_FE !== null ? 1 : 2
+                                        }
+                                      >
+                                        {material.qty}
+                                      </td>
+                                      <td
+                                        align="center"
+                                        colSpan={
+                                          this.state.mr_site_FE !== null ? 1 : 2
+                                        }
+                                      >
+                                        {material.qty_fe}
+                                      </td>
                                       <td>{material.source_material}</td>
                                     </tr>
                                   ))}
                                 </Fragment>
                               ))}
-                            {this.state.data_mr === null ? (
-                              <tr>
-                                <td colSpan="5">Loading...</td>
-                              </tr>
-                            ) : ( this.state.data_mr.current_mr_status === "NOT ASSIGNED" && (
+                              {this.state.data_mr === null ? (
                                 <tr>
-                                  <td colSpan="5">PS not Assigned</td>
+                                  <td colSpan="5">Loading...</td>
                                 </tr>
-                              )
-                            )}
-                          </tbody>
-                        )}
-                      </Table>
-                    )}
+                              ) : (
+                                this.state.data_mr.current_mr_status ===
+                                  "NOT ASSIGNED" && (
+                                  <tr>
+                                    <td colSpan="5">PS not Assigned</td>
+                                  </tr>
+                                )
+                              )}
+                            </tbody>
+                          )}
+                        </Table>
+                      )}
                     </div>
                     <div>Material LOM</div>
                     <div className="divtable2">
                       <Table hover bordered striped responsive size="sm">
-                        <thead style={{ backgroundColor: "#0B486B", color: "white" }} className="table-mr__header--fixed">
-                          <th rowSpan="2"
+                        <thead
+                          style={{ backgroundColor: "#0B486B", color: "white" }}
+                          className="table-mr__header--fixed"
+                        >
+                          <th
+                            rowSpan="2"
                             className="fixedhead"
                             style={{
                               width: "250px",
@@ -2731,11 +3528,19 @@ class DetailMRWarehouse extends Component {
                           >
                             Total Qty per PP
                           </th>
-                          {this.state.data_mr !== null && this.state.data_mr.sow_type === "TRM" && (
-                            <th rowSpan="2" className="fixedhead" style={{width: "100px", verticalAlign: "middle" }}>
-                              Site Title
-                            </th>
-                          )}
+                          {this.state.data_mr !== null &&
+                            this.state.data_mr.sow_type === "TRM" && (
+                              <th
+                                rowSpan="2"
+                                className="fixedhead"
+                                style={{
+                                  width: "100px",
+                                  verticalAlign: "middle",
+                                }}
+                              >
+                                Site Title
+                              </th>
+                            )}
                           <th
                             rowSpan="2"
                             className="fixedhead"
@@ -2748,48 +3553,57 @@ class DetailMRWarehouse extends Component {
                           </th>
                         </thead>
                         <tbody>
-                          {(this.state.data_mr !== null && this.state.data_mr.lom_packages !== undefined) && (
-                            <Fragment>
-                              {this.state.data_mr.lom_packages.map(pp =>
-                                <Fragment>
-                                  <tr
-                                    style={{ backgroundColor: "#E5FCC2" }}
-                                    className="fixbody"
-                                  >
-                                    <td style={{ textAlign: "left" }}>
-                                      {pp.pp_id}
-                                    </td>
-                                    <td>{pp.product_name}</td>
-                                    <td>{pp.uom}</td>
-                                    <td>{pp.qty}</td>
-                                    {this.state.data_mr !== null && this.state.data_mr.sow_type === "TRM" && (
-                                      <td>{pp.site_title}</td>
-                                    )}
-                                    <td>{pp.process}</td>
-                                  </tr>
-                                  {pp.lom_materials.map(mm =>
-                                    <Fragment>
-                                      <tr style={{
-                                        backgroundColor:
-                                          "rgba(248,246,223, 0.5)",
-                                      }}>
-                                        <td style={{ textAlign: "right" }}>
-                                          {mm.material_id}
-                                        </td>
-                                        <td>{mm.material_name}</td>
-                                        <td>{mm.uom}</td>
-                                        <td>{mm.qty}</td>
-                                        {this.state.data_mr !== null && this.state.data_mr.sow_type === "TRM" && (
-                                          <td>{pp.site_title +" => "+pp.site_id}</td>
-                                        )}
-                                        <td></td>
-                                      </tr>
-                                    </Fragment>
-                                  )}
-                                </Fragment>
-                              )}
-                            </Fragment>
-                          )}
+                          {this.state.data_mr !== null &&
+                            this.state.data_mr.lom_packages !== undefined && (
+                              <Fragment>
+                                {this.state.data_mr.lom_packages.map((pp) => (
+                                  <Fragment>
+                                    <tr
+                                      style={{ backgroundColor: "#E5FCC2" }}
+                                      className="fixbody"
+                                    >
+                                      <td style={{ textAlign: "left" }}>
+                                        {pp.pp_id}
+                                      </td>
+                                      <td>{pp.product_name}</td>
+                                      <td>{pp.uom}</td>
+                                      <td>{pp.qty}</td>
+                                      {this.state.data_mr !== null &&
+                                        this.state.data_mr.sow_type ===
+                                          "TRM" && <td>{pp.site_title}</td>}
+                                      <td>{pp.process}</td>
+                                    </tr>
+                                    {pp.lom_materials.map((mm) => (
+                                      <Fragment>
+                                        <tr
+                                          style={{
+                                            backgroundColor:
+                                              "rgba(248,246,223, 0.5)",
+                                          }}
+                                        >
+                                          <td style={{ textAlign: "right" }}>
+                                            {mm.material_id}
+                                          </td>
+                                          <td>{mm.material_name}</td>
+                                          <td>{mm.uom}</td>
+                                          <td>{mm.qty}</td>
+                                          {this.state.data_mr !== null &&
+                                            this.state.data_mr.sow_type ===
+                                              "TRM" && (
+                                              <td>
+                                                {pp.site_title +
+                                                  " => " +
+                                                  pp.site_id}
+                                              </td>
+                                            )}
+                                          <td></td>
+                                        </tr>
+                                      </Fragment>
+                                    ))}
+                                  </Fragment>
+                                ))}
+                              </Fragment>
+                            )}
                         </tbody>
                       </Table>
                     </div>
@@ -2872,114 +3686,201 @@ class DetailMRWarehouse extends Component {
                       googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyB5mmXco3GYZhRDNY4CJcBlaENjteSC8DM"
                       loadingElement={<div style={{ height: "100%" }} />}
                     /> */}
-                    {this.state.data_mr !== null ? (this.state.location_mr.updated_location !== undefined) ? (
-                      <Fragment>
-                      {console.log("dataWH", this.state.data_wh)}
-                      <GMap
-                        wh_lat={this.state.data_wh.latitude}
-                        wh_lng={this.state.data_wh.longitude}
-                        dsp_lat={this.state.location_mr.updated_location.latitude}
-                        dsp_lng={this.state.location_mr.updated_location.longitude}
-                        site_lat={this.state.data_mr.site_info[0].site_latitude}
-                        site_lng={this.state.data_mr.site_info[0].site_longitude}
-                      />
-                      </Fragment>
-                    ): (
-                      <GMap
-                        wh_lat={this.state.data_wh.latitude === null ? undefined : this.state.data_wh.latitude}
-                        wh_lng={this.state.data_wh.longitude === null ? undefined : this.state.data_wh.longitude}
-                        dsp_lat={this.state.data_wh.latitude === null ? undefined : this.state.data_wh.latitude}
-                        dsp_lng={this.state.data_wh.longitude === null ? undefined : this.state.data_wh.longitude}
-                        site_lat={this.state.data_mr.site_info[0].site_latitude}
-                        site_lng={this.state.data_mr.site_info[0].site_longitude}
-                      />
-                    ) : <div></div>}
+                    {this.state.data_mr !== null ? (
+                      this.state.location_mr.updated_location !== undefined ? (
+                        <Fragment>
+                          {console.log("dataWH", this.state.data_wh)}
+                          <GMap
+                            wh_lat={this.state.data_wh.latitude}
+                            wh_lng={this.state.data_wh.longitude}
+                            dsp_lat={
+                              this.state.location_mr.updated_location.latitude
+                            }
+                            dsp_lng={
+                              this.state.location_mr.updated_location.longitude
+                            }
+                            site_lat={
+                              this.state.data_mr.site_info[0].site_latitude
+                            }
+                            site_lng={
+                              this.state.data_mr.site_info[0].site_longitude
+                            }
+                          />
+                        </Fragment>
+                      ) : (
+                        <GMap
+                          wh_lat={
+                            this.state.data_wh.latitude === null
+                              ? undefined
+                              : this.state.data_wh.latitude
+                          }
+                          wh_lng={
+                            this.state.data_wh.longitude === null
+                              ? undefined
+                              : this.state.data_wh.longitude
+                          }
+                          dsp_lat={
+                            this.state.data_wh.latitude === null
+                              ? undefined
+                              : this.state.data_wh.latitude
+                          }
+                          dsp_lng={
+                            this.state.data_wh.longitude === null
+                              ? undefined
+                              : this.state.data_wh.longitude
+                          }
+                          site_lat={
+                            this.state.data_mr.site_info[0].site_latitude
+                          }
+                          site_lng={
+                            this.state.data_mr.site_info[0].site_longitude
+                          }
+                        />
+                      )
+                    ) : (
+                      <div></div>
+                    )}
                   </Fragment>
                 )}
               </CardBody>
               <CardFooter>
-              {(this.state.data_mr !== null && this.state.data_mr.current_mr_status !== "MR CANCELED" && ((this.state.userRole.findIndex(e => e === "LDM") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Manager") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Coordinator") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 ))) && (
-                <React.Fragment>
-                  {this.state.data_mr !== null && (
-                    <div>
-                      {(this.state.data_mr.current_mr_status ===
-                        "PLANTSPEC ASSIGNED" ||
-                      this.state.data_mr.current_mr_status ===
-                        "PLANTSPEC UPDATED"||
-                      this.state.data_mr.current_mr_status ===
-                        "MR UPDATED"  || this.state.data_mr.current_mr_status === "MR REJECTED") ? (
-                        <Button
-                          color="success"
-                          style={{ float: "right" }}
-                          onClick={this.requestForApproval}
-                        >
-                          {" "}
-                          Send Request
-                        </Button>
-                      ) : (
-                        <div></div>
+                {this.state.data_mr !== null &&
+                  this.state.data_mr.current_mr_status !== "MR CANCELED" &&
+                  (this.state.userRole.findIndex((e) => e === "LDM") !== -1 ||
+                    this.state.userRole.findIndex(
+                      (e) => e === "BAM-Implementation Manager"
+                    ) !== -1 ||
+                    this.state.userRole.findIndex(
+                      (e) => e === "BAM-Implementation Coordinator"
+                    ) !== -1 ||
+                    this.state.userRole.findIndex((e) => e === "Admin") !==
+                      -1) && (
+                    <React.Fragment>
+                      {this.state.data_mr !== null && (
+                        <div>
+                          {this.state.data_mr.current_mr_status ===
+                            "PLANTSPEC ASSIGNED" ||
+                          this.state.data_mr.current_mr_status ===
+                            "PLANTSPEC UPDATED" ||
+                          this.state.data_mr.current_mr_status ===
+                            "MR UPDATED" ||
+                          this.state.data_mr.current_mr_status ===
+                            "MR REJECTED" ? (
+                            <Button
+                              color="success"
+                              style={{ float: "right" }}
+                              onClick={this.requestForApproval}
+                            >
+                              {" "}
+                              Send Request
+                            </Button>
+                          ) : (
+                            <div></div>
+                          )}
+                          {(this.state.userRole.findIndex(
+                            (e) => e === "BAM-LDM"
+                          ) !== -1 ||
+                            this.state.userRole.findIndex(
+                              (e) => e === "Admin"
+                            ) !== -1) &&
+                          this.state.data_mr.current_mr_status ===
+                            "MR REQUESTED" ? (
+                            // <Button color='success' style={{float : 'right'}} onClick={this.ApproveMR}>Approve</Button>
+                            <Button
+                              color="success"
+                              style={{ float: "right" }}
+                              onClick={this.toggleModalapprove}
+                            >
+                              Approve
+                            </Button>
+                          ) : (
+                            <div></div>
+                          )}
+                          {this.state.data_mr !== null &&
+                          this.state.data_mr.no_plantspec !== null &&
+                          this.state.data_mr.mr_status.findIndex(
+                            (st) =>
+                              st.mr_status_name === "LOADING_PROCESS" &&
+                              st.mr_status_value === "FINISH"
+                          ) === -1 ? (
+                            <Fragment>
+                              {(this.state.data_mr.current_mr_status ===
+                                "MR UPDATED" ||
+                                this.state.data_mr.current_mr_status ===
+                                  "MR REQUESTED" ||
+                                this.state.data_mr.current_mr_status ===
+                                  "PLANTSPEC ASSIGNED" ||
+                                this.state.data_mr.current_mr_status ===
+                                  "PLANTSPEC NOT ASSIGNED" ||
+                                this.state.userRole.findIndex(
+                                  (e) => e === "BAM-Implementation Manager"
+                                ) !== -1 ||
+                                this.state.userRole.findIndex(
+                                  (e) => e === "BAM-Implementation Coordinator"
+                                ) !== -1 ||
+                                this.state.userRole.findIndex(
+                                  (e) => e === "Admin"
+                                ) !== -1) && (
+                                <Fragment>
+                                  <Button
+                                    color="warning"
+                                    style={{ float: "left" }}
+                                    size="sm"
+                                    onClick={this.toggleModalRevision}
+                                  >
+                                    Need Revise
+                                  </Button>
+                                  <Button
+                                    color="danger"
+                                    style={{
+                                      float: "left",
+                                      margin: "0 10px 0 20px",
+                                    }}
+                                    size="sm"
+                                    onClick={this.takeoutPS}
+                                  >
+                                    Takeout PS
+                                  </Button>
+                                </Fragment>
+                              )}
+                            </Fragment>
+                          ) : (
+                            <Fragment></Fragment>
+                          )}
+                          {this.state.userRole.findIndex(
+                            (e) => e === "BAM-Engineering"
+                          ) === -1 &&
+                            this.state.data_mr.mr_status.findIndex(
+                              (st) =>
+                                st.mr_status_name === "LOADING_PROCESS" &&
+                                st.mr_status_value === "FINISH"
+                            ) === -1 && (
+                              <Button
+                                color="danger"
+                                style={{
+                                  float: "left",
+                                  margin: "0 10px 0 10px",
+                                }}
+                                size="sm"
+                                onClick={this.cancelMR}
+                              >
+                                Cancel MR
+                              </Button>
+                            )}
+                          {this.state.edit_detail === true && (
+                            <Button
+                              color="warning"
+                              style={{ float: "left", margin: "0 10px 0 10px" }}
+                              size="sm"
+                              onClick={this.updateMR}
+                            >
+                              Save Update MR
+                            </Button>
+                          )}
+                        </div>
                       )}
-                      {(this.state.userRole.findIndex(e => e === "BAM-LDM") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1) && this.state.data_mr.current_mr_status === "MR REQUESTED" ? (
-                        // <Button color='success' style={{float : 'right'}} onClick={this.ApproveMR}>Approve</Button>
-                        <Button
-                          color="success"
-                          style={{ float: "right" }}
-                          onClick={this.toggleModalapprove}
-                        >
-                          Approve
-                        </Button>
-                      ) : (
-                        <div></div>
-                      )}
-                      {this.state.data_mr !== null && this.state.data_mr.no_plantspec !== null && this.state.data_mr.mr_status.findIndex(st => st.mr_status_name === "LOADING_PROCESS" && st.mr_status_value === "FINISH") === -1 ?
-                      (
-                        <Fragment>
-                        {((this.state.data_mr.current_mr_status === "MR UPDATED" || this.state.data_mr.current_mr_status === "MR REQUESTED" || this.state.data_mr.current_mr_status === "PLANTSPEC ASSIGNED" || this.state.data_mr.current_mr_status === "PLANTSPEC NOT ASSIGNED") || (this.state.userRole.findIndex(e => e === "BAM-Implementation Manager") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Implementation Coordinator") !== -1 || this.state.userRole.findIndex(e => e === "Admin") !== -1 )) && (
-                          <Fragment>
-                          <Button
-                            color="warning"
-                            style={{ float: "left" }}
-                            size="sm"
-                            onClick={this.toggleModalRevision}
-                          >
-                            Need Revise
-                          </Button>
-                          <Button
-                            color="danger"
-                            style={{ float: "left", margin: '0 10px 0 20px' }}
-                            size="sm"
-                            onClick={this.takeoutPS}
-                          >
-                            Takeout PS
-                          </Button>
-                          </Fragment>
-                        ) }
-                        </Fragment>
-                      ) : <Fragment></Fragment>}
-                      {(this.state.userRole.findIndex(e => e === "BAM-Engineering") === -1 && this.state.data_mr.mr_status.findIndex(st => st.mr_status_name === "LOADING_PROCESS" && st.mr_status_value === "FINISH") === -1) && (
-                        <Button
-                          color="danger"
-                          style={{ float: "left", margin: '0 10px 0 10px' }}
-                          size="sm"
-                          onClick={this.cancelMR}
-                        >
-                          Cancel MR
-                        </Button>
-                      )}
-                      {this.state.edit_detail === true && (
-                        <Button
-                          color="warning"
-                          style={{ float: "left", margin: '0 10px 0 10px' }}
-                          size="sm"
-                          onClick={this.updateMR}
-                        >
-                          Save Update MR
-                        </Button>
-                      )}
-                    </div>
+                    </React.Fragment>
                   )}
-                </React.Fragment>
-              )}
               </CardFooter>
             </Card>
           </Col>
@@ -3011,14 +3912,33 @@ class DetailMRWarehouse extends Component {
         </Modal>
         {/* end Modal Loading */}
 
-        <Modal isOpen={this.state.modal_revision} toggle={this.toggleModalRevision} className={"modal-sm"}>
+        <Modal
+          isOpen={this.state.modal_revision}
+          toggle={this.toggleModalRevision}
+          className={"modal-sm"}
+        >
           <ModalHeader>Note for Revision</ModalHeader>
           <ModalBody>
-            <Input type="textarea" rows="9" placeholder="Note..." onChange={this.handleRevisionNote} value={this.state.revision_note} />
+            <Input
+              type="textarea"
+              rows="9"
+              placeholder="Note..."
+              onChange={this.handleRevisionNote}
+              value={this.state.revision_note}
+            />
           </ModalBody>
           <ModalFooter>
-            <Button color="warning" style={{ float: "right", marginRight: "8px" }} onClick={this.needReviseMR}><i className="fa fa-edit" style={{ marginRight: "8px" }}></i> Need Revision</Button>
-            <Button color="secondary" onClick={this.toggleModalRevision}>Cancel</Button>
+            <Button
+              color="warning"
+              style={{ float: "right", marginRight: "8px" }}
+              onClick={this.needReviseMR}
+            >
+              <i className="fa fa-edit" style={{ marginRight: "8px" }}></i> Need
+              Revision
+            </Button>
+            <Button color="secondary" onClick={this.toggleModalRevision}>
+              Cancel
+            </Button>
           </ModalFooter>
         </Modal>
 
@@ -3026,46 +3946,53 @@ class DetailMRWarehouse extends Component {
         <ModalForm
           isOpen={this.state.modal_approve_ldm}
           toggle={this.toggleModalapprove}
-          className={'modal-sm modal--box-input'}
+          className={"modal-sm modal--box-input"}
         >
           <Col>
-          {this.state.data_mr !== null && this.state.data_mr !== undefined && this.state.data_mr.dsp_company !== null ? (
-            <FormGroup>
-              <Label htmlFor="total_box">Delivery Company</Label>
-              <Input
-                type="text"
-                className=""
-                placeholder=""
-                value={this.state.data_mr.dsp_company}
-                readOnly
-              />
-            </FormGroup>
-          ) : (
-            <Fragment>
-            <FormGroup>
-              <Label htmlFor="total_box">DSP Company</Label>
-              <Input
-                type="select"
-                className=""
-                placeholder=""
-                onChange={this.handleLDMapprove}
-              >
-                {this.state.asp_data.map((asp) => (
-                  <option value={asp.Vendor_Code}>{asp.Name}</option>
-                ))}
-              </Input>
-            </FormGroup>
-            <FormGroup>
-              <Label htmlFor="total_box">MOT Type</Label>
-              <Input type="select" name={"0 /// sub_category"} onChange={this.handleMotType} value={this.state.mot_type}>
-                <option value="" disabled selected hidden></option>
-                <option value="MOT-Land">MOT-Land</option>
-                <option value="MOT-Air">MOT-Air</option>
-                <option value="MOT-Sea">MOT-Sea</option>
-              </Input>
-            </FormGroup>
-            </Fragment>
-          )}
+            {this.state.data_mr !== null &&
+            this.state.data_mr !== undefined &&
+            this.state.data_mr.dsp_company !== null ? (
+              <FormGroup>
+                <Label htmlFor="total_box">Delivery Company</Label>
+                <Input
+                  type="text"
+                  className=""
+                  placeholder=""
+                  value={this.state.data_mr.dsp_company}
+                  readOnly
+                />
+              </FormGroup>
+            ) : (
+              <Fragment>
+                <FormGroup>
+                  <Label htmlFor="total_box">DSP Company</Label>
+                  <Input
+                    type="select"
+                    className=""
+                    placeholder=""
+                    onChange={this.handleLDMapprove}
+                  >
+                    {this.state.asp_data.map((asp) => (
+                      <option value={asp.Vendor_Code}>{asp.Name}</option>
+                    ))}
+                  </Input>
+                </FormGroup>
+                <FormGroup>
+                  <Label htmlFor="total_box">MOT Type</Label>
+                  <Input
+                    type="select"
+                    name={"0 /// sub_category"}
+                    onChange={this.handleMotType}
+                    value={this.state.mot_type}
+                  >
+                    <option value="" disabled selected hidden></option>
+                    <option value="MOT-Land">MOT-Land</option>
+                    <option value="MOT-Air">MOT-Air</option>
+                    <option value="MOT-Sea">MOT-Sea</option>
+                  </Input>
+                </FormGroup>
+              </Fragment>
+            )}
           </Col>
           <div style={{ justifyContent: "center", alignSelf: "center" }}>
             <Button

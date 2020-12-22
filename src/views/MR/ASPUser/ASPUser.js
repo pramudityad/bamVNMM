@@ -19,14 +19,19 @@ import { saveAs } from "file-saver";
 import Excel from "exceljs";
 import { connect } from "react-redux";
 import * as XLSX from "xlsx";
-import { Redirect, Route, Switch, Link } from 'react-router-dom';
-import Select from 'react-select';
-
+import { Redirect, Route, Switch, Link } from "react-router-dom";
+import Select from "react-select";
 
 import ModalDelete from "../../components/ModalDelete";
-import Loading from '../../components/Loading'
-import {getDatafromAPIEXEL,getDatafromAPINODE, postDatatoAPINODE, patchDatatoAPINODE, deleteDataFromAPINODE} from '../../../helper/asyncFunction'
-import {convertDMSToDD} from '../../../helper/basicFunction'
+import Loading from "../../components/Loading";
+import {
+  getDatafromAPIEXEL,
+  getDatafromAPINODE,
+  postDatatoAPINODE,
+  patchDatatoAPINODE,
+  deleteDataFromAPINODE,
+} from "../../../helper/asyncFunction";
+import { convertDMSToDD } from "../../../helper/basicFunction";
 import "../MatStyle.css";
 
 const Checkbox = ({
@@ -48,7 +53,7 @@ const Checkbox = ({
 
 const DefaultNotif = React.lazy(() => import("../../DefaultView/DefaultNotif"));
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
 const usernameXL = "adminbamidsuper";
@@ -77,7 +82,7 @@ class ASPUserManagement extends React.Component {
       all_data: [],
       asp_data: [],
       data_PO: [],
-      asp_list : [],
+      asp_list: [],
       packageSelected: [],
       modal_loading: false,
       dropdownOpen: new Array(6).fill(false),
@@ -193,22 +198,28 @@ class ASPUserManagement extends React.Component {
   }
 
   loadOptionsASP() {
-    getDatafromAPIEXEL('/vendor_data_non_page', this.state.tokenUser).then(res => {
-      if(res.data !== undefined) {
-        const items = res.data._items;
-        this.setState({asp_list : items});
+    getDatafromAPIEXEL("/vendor_data_non_page", this.state.tokenUser).then(
+      (res) => {
+        if (res.data !== undefined) {
+          const items = res.data._items;
+          this.setState({ asp_list: items });
+        }
       }
-    })
+    );
   }
 
   getASPUser() {
-    getDatafromAPINODE("/vendorManagement/getAllUser", this.props.dataLogin.token).then((res) => {
+    getDatafromAPINODE(
+      "/vendorManagement/getAllUser",
+      this.props.dataLogin.token
+    ).then((res) => {
       if (res.data !== undefined) {
         const data_user = res.data.data;
         let list_asp_select = [];
-        data_user.map(i => list_asp_select.push({'label' : i.email, 'value' : i._id}))
-        this.setState({ list_asp_user: list_asp_select,
-          });
+        data_user.map((i) =>
+          list_asp_select.push({ label: i.email, value: i._id })
+        );
+        this.setState({ list_asp_user: list_asp_select });
       } else {
         this.setState({ list_asp_user: [] });
       }
@@ -256,7 +267,8 @@ class ASPUserManagement extends React.Component {
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
-        this.state.activePage, this.props.dataLogin.token
+        this.state.activePage,
+      this.props.dataLogin.token
     ).then((res) => {
       // console.log("all data ", res.data);
       if (res.data !== undefined) {
@@ -280,7 +292,10 @@ class ASPUserManagement extends React.Component {
   getASPList() {
     // switch (this.props.dataLogin.account_id) {
     //   case "xl":
-    getDatafromAPINODE('/vendorManagement/viewAllVendor', this.props.dataLogin.token).then((res) => {
+    getDatafromAPINODE(
+      "/vendorManagement/viewAllVendor",
+      this.props.dataLogin.token
+    ).then((res) => {
       // console.log("asp data ", res.data);
       if (res.data !== undefined) {
         this.setState({ asp_data: res.data.data });
@@ -362,14 +377,14 @@ class ASPUserManagement extends React.Component {
     let newDataXLS = [];
     for (let i = 0; i < dataXLS.length; i++) {
       let col = [];
-      console.log('col ', col)
+      console.log("col ", col);
       for (let j = 0; j < dataXLS[0].length; j++) {
         if (typeof dataXLS[i][j] === "object") {
           let dataObject = this.checkValue(JSON.stringify(dataXLS[i][j]));
           if (dataObject !== null) {
             dataObject = dataObject.replace(/"/g, "");
           }
-          console.log('dataObject ', dataObject)
+          console.log("dataObject ", dataObject);
           col.push(dataObject);
         } else {
           col.push(this.checkValue(dataXLS[i][j]));
@@ -488,28 +503,40 @@ class ASPUserManagement extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     console.log("xlsx data", JSON.stringify(BulkXLSX));
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
-    const res = await postDatatoAPINODE("/whManagement/createWarehouse", {
-      managementData: BulkXLSX,
-    }, this.props.dataLogin.token);
+    const res = await postDatatoAPINODE(
+      "/whManagement/createWarehouse",
+      {
+        managementData: BulkXLSX,
+      },
+      this.props.dataLogin.token
+    );
     console.log("res bulk ", res.response);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
         if (res.response.data.error.message !== undefined) {
-
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error.message,
+          });
         } else {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error,
+          });
         }
       } else {
-        this.setState({ action_status: 'failed' });
+        this.setState({ action_status: "failed" });
       }
       this.toggleLoading();
     }
   };
-
 
   saveTruncateBulk = async () => {
     this.toggleLoading();
@@ -521,7 +548,8 @@ class ASPUserManagement extends React.Component {
       "/whManagement/createWhManagementTruncate",
       {
         managementData: BulkXLSX,
-      }, this.props.dataLogin.token
+      },
+      this.props.dataLogin.token
     );
     console.log("res bulk ", res);
     if (res.data !== undefined) {
@@ -561,7 +589,8 @@ class ASPUserManagement extends React.Component {
     this.toggleEdit();
     let patchData = await patchDatatoAPINODE(
       "/whManagement/UpdateOneWarehouse/" + objData,
-      { data: pp }, this.props.dataLogin.token
+      { data: pp },
+      this.props.dataLogin.token
     );
     console.log("patch data ", pp);
     if (patchData === undefined) {
@@ -577,14 +606,24 @@ class ASPUserManagement extends React.Component {
       });
     } else {
       this.toggleLoading();
-      if (patchData.response !== undefined && patchData.response.data !== undefined && patchData.response.data.error !== undefined) {
+      if (
+        patchData.response !== undefined &&
+        patchData.response.data !== undefined &&
+        patchData.response.data.error !== undefined
+      ) {
         if (patchData.response.data.error.message !== undefined) {
-          this.setState({ action_status: 'failed', action_message: patchData.response.data.error.message });
+          this.setState({
+            action_status: "failed",
+            action_message: patchData.response.data.error.message,
+          });
         } else {
-          this.setState({ action_status: 'failed', action_message: patchData.response.data.error });
+          this.setState({
+            action_status: "failed",
+            action_message: patchData.response.data.error,
+          });
         }
       } else {
-        this.setState({ action_status: 'failed' });
+        this.setState({ action_status: "failed" });
       }
     }
   }
@@ -604,7 +643,8 @@ class ASPUserManagement extends React.Component {
       "/vendorManagement/assignVendor",
       {
         data: poData,
-      }, this.props.dataLogin.token
+      },
+      this.props.dataLogin.token
     ).then((res) => {
       console.log("res save ", res);
       if (res.data !== undefined) {
@@ -612,14 +652,24 @@ class ASPUserManagement extends React.Component {
           this.toggleLoading();
         });
       } else {
-        if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+        if (
+          res.response !== undefined &&
+          res.response.data !== undefined &&
+          res.response.data.error !== undefined
+        ) {
           if (res.response.data.error.message !== undefined) {
-            this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error.message,
+            });
           } else {
-            this.setState({ action_status: 'failed', action_message: res.response.data.error });
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error,
+            });
           }
         } else {
-          this.setState({ action_status: 'failed' });
+          this.setState({ action_status: "failed" });
         }
         this.toggleLoading();
       }
@@ -641,7 +691,8 @@ class ASPUserManagement extends React.Component {
   async downloadAll() {
     let download_all = [];
     let getAll_nonpage = await getDatafromAPINODE(
-      "/whManagement/warehouse?noPg=1", this.props.dataLogin.token
+      "/whManagement/warehouse?noPg=1",
+      this.props.dataLogin.token
     );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
@@ -685,7 +736,6 @@ class ASPUserManagement extends React.Component {
   }
 
   exportMatStatus = async () => {
-
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
     const ws2 = wb.addWorksheet();
@@ -713,7 +763,6 @@ class ASPUserManagement extends React.Component {
       ws2.addRow([aspData[i].Name, aspData[i].Vendor_Code]);
     }
 
-
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "WH Management Template.xlsx");
   };
@@ -728,7 +777,8 @@ class ASPUserManagement extends React.Component {
         "&lmt=" +
         this.state.perPage +
         "&pg=" +
-        this.state.activePage, this.props.dataLogin.token
+        this.state.activePage,
+      this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
@@ -752,25 +802,26 @@ class ASPUserManagement extends React.Component {
   handleSelectUser = (newValue) => {
     if (newValue !== null) {
       const selectPriority = [];
-      newValue.forEach( i => {
-        selectPriority.push(i.value)
-      })
-      console.log('selectPriority ',selectPriority)
-      this.setState({id_email_selected : selectPriority});
+      newValue.forEach((i) => {
+        selectPriority.push(i.value);
+      });
+      console.log("selectPriority ", selectPriority);
+      this.setState({ id_email_selected: selectPriority });
       // this.priorityToXLSCreation(selectPriority)
     } else {
-      this.setState({id_email_selected : []});
+      this.setState({ id_email_selected: [] });
       // this.priorityToXLSCreation([])
     }
     return newValue;
-  }
+  };
 
   DeleteData = async () => {
     const objData = this.state.selected_id;
     this.toggleLoading();
     this.toggleDelete();
     const DelData = deleteDataFromAPINODE(
-      "/whManagement/deleteWarehouse/" + objData, this.props.dataLogin.token
+      "/whManagement/deleteWarehouse/" + objData,
+      this.props.dataLogin.token
     ).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
@@ -809,12 +860,12 @@ class ASPUserManagement extends React.Component {
     // const name = e.target.value;
     // const value = e.target.value;
     this.setState({ selected_vendor_code: code }, () => {
-      console.log(this.state.selected_vendor_code)
+      console.log(this.state.selected_vendor_code);
     });
   }
 
   render() {
-    const {all_data} = this.state;
+    const { all_data } = this.state;
     return (
       <div className="animated fadeIn">
         <DefaultNotif
@@ -834,13 +885,13 @@ class ASPUserManagement extends React.Component {
                   style={{ display: "inline-flex" }}
                 >
                   <div>
-                        <Button color="success" onClick={this.toggleMatStockForm}>
-                        <i className="fa fa-plus-square" aria-hidden="true">
-                              {" "}
-                              &nbsp;{" "}
-                            </i>{" "}
-                            New User
-                        </Button>
+                    <Button color="success" onClick={this.toggleMatStockForm}>
+                      <i className="fa fa-plus-square" aria-hidden="true">
+                        {" "}
+                        &nbsp;{" "}
+                      </i>{" "}
+                      New User
+                    </Button>
                   </div>
                   &nbsp;&nbsp;&nbsp;
                 </div>
@@ -856,7 +907,7 @@ class ASPUserManagement extends React.Component {
                 <Row>
                   <Col>
                     <div style={{ marginBottom: "10px" }}>
-                    {/* <div
+                      {/* <div
                         style={{
                           float: "left",
                           margin: "5px",
@@ -896,43 +947,43 @@ class ASPUserManagement extends React.Component {
                 </Row>
                 <Row>
                   <Col>
-                    <div >
+                    <div>
                       <Table hover size="sm">
                         <thead
                           // style={{ backgroundColor: "#73818f" }}
                           className="fixed-whman"
                         >
                           <tr align="center">
-                          <th>
-                            {/* <Button color="ghost-dark"
+                            <th>
+                              {/* <Button color="ghost-dark"
                                 onClick={() => this.requestSort('wh_name')}
                               > */}
-                                <b>Vendor Name</b>
+                              <b>Vendor Name</b>
                               {/* </Button> */}
-                              </th>
-                              <th>
-                                {/* <Button color="ghost-dark"
+                            </th>
+                            <th>
+                              {/* <Button color="ghost-dark"
                                 onClick={() => this.requestSort('wh_id')}
                               > */}
-                                <b>Vendor Code</b>
+                              <b>Vendor Code</b>
                               {/* </Button> */}
-                              </th>
-                            <th ></th>
+                            </th>
+                            <th></th>
                           </tr>
                         </thead>
                         <tbody>
                           {this.state.asp_data
-                           .filter((e) => {
-                            if (this.state.filter_name === null) {
-                              return e;
-                            } else if (
-                              e.Name
-                                .toLowerCase()
-                                .includes(this.state.filter_name.toLowerCase())
-                            ) {
-                              return e;
-                            }
-                          })
+                            .filter((e) => {
+                              if (this.state.filter_name === null) {
+                                return e;
+                              } else if (
+                                e.Name.toLowerCase().includes(
+                                  this.state.filter_name.toLowerCase()
+                                )
+                              ) {
+                                return e;
+                              }
+                            })
                             .map((e) => (
                               <React.Fragment key={e._id + "frag"}>
                                 <tr
@@ -947,10 +998,27 @@ class ASPUserManagement extends React.Component {
                                     {e.Vendor_Code}
                                   </td>
                                   <td>
-                                  <Link to={'/asp-user-management/' + e.Vendor_Code}>
-                                    <Button color="primary" size="sm" style={{ marginRight: '10px' }}> <i className="fa fa-info-circle" aria-hidden="true">&nbsp;</i> Detail</Button>
-                                  </Link>
-                                </td>
+                                    <Link
+                                      to={
+                                        "/asp-user-management/" + e.Vendor_Code
+                                      }
+                                    >
+                                      <Button
+                                        color="primary"
+                                        size="sm"
+                                        style={{ marginRight: "10px" }}
+                                      >
+                                        {" "}
+                                        <i
+                                          className="fa fa-info-circle"
+                                          aria-hidden="true"
+                                        >
+                                          &nbsp;
+                                        </i>{" "}
+                                        Detail
+                                      </Button>
+                                    </Link>
+                                  </td>
                                 </tr>
                               </React.Fragment>
                             ))}
@@ -999,18 +1067,24 @@ class ASPUserManagement extends React.Component {
                     classNamePrefix="select"
                     onChange={this.handleSelectUser}
                     // isDisabled = {this.state.list_asp_user.length==0}
-                                />
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label>Vendor Name</Label>
-                  <Input type="select" name="14" onChange={this.handlechangevendor}>
-                          <option value="" disabled selected hidden>Select Vendor</option>
-                          {this.state.asp_list.map((list, i) =>
-                            <option value={list.Vendor_Code}>{list.Name}</option>
-                          )}
-                        </Input>
+                  <Input
+                    type="select"
+                    name="14"
+                    onChange={this.handlechangevendor}
+                  >
+                    <option value="" disabled selected hidden>
+                      Select Vendor
+                    </option>
+                    {this.state.asp_list.map((list, i) => (
+                      <option value={list.Vendor_Code}>{list.Name}</option>
+                    ))}
+                  </Input>
                 </FormGroup>
-                </Col>
+              </Col>
             </Row>
           </ModalBody>
           <ModalFooter>
@@ -1162,7 +1236,7 @@ class ASPUserManagement extends React.Component {
           isOpen={this.state.danger}
           toggle={this.toggleDelete}
           className={"modal-danger " + this.props.className}
-          title={"Delete WH "+ this.state.selected_wh_id}
+          title={"Delete WH " + this.state.selected_wh_id}
           body={"Are you sure ?"}
         >
           <Button color="danger" onClick={this.DeleteData}>
@@ -1174,10 +1248,11 @@ class ASPUserManagement extends React.Component {
         </ModalDelete>
 
         {/* Modal Loading */}
-        <Loading isOpen={this.state.modal_loading}
+        <Loading
+          isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
-          className={"modal-sm modal--loading "}>
-        </Loading>
+          className={"modal-sm modal--loading "}
+        ></Loading>
         {/* end Modal Loading */}
       </div>
     );

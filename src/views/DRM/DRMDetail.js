@@ -58,7 +58,7 @@ const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 class DRMList extends React.Component {
   constructor(props) {
@@ -112,7 +112,6 @@ class DRMList extends React.Component {
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.handleChangeVersion = this.handleChangeVersion.bind(this);
-
   }
 
   toggle(i) {
@@ -176,7 +175,7 @@ class DRMList extends React.Component {
 
   async getDatafromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -195,12 +194,16 @@ class DRMList extends React.Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.post(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         // console.log("respond Post Data", respond);
       }
@@ -214,12 +217,16 @@ class DRMList extends React.Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond patch Data", respond);
       }
@@ -233,12 +240,15 @@ class DRMList extends React.Component {
 
   async deleteDataFromAPINODE(url) {
     try {
-      let respond = await axios.delete(API_URL_NODE + url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.delete(
+        process.env.REACT_APP_API_URL_NODE + url,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond delete Data", respond);
       }
@@ -369,15 +379,14 @@ class DRMList extends React.Component {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
-          version_selected: res.data.data.version-1
+          version_selected: res.data.data.version - 1,
         });
         this.toggleLoading();
       } else {
         this.setState({ all_data: {} });
         this.toggleLoading();
       }
-      console.log('version ',this.state.version_selected)
-
+      console.log("version ", this.state.version_selected);
     });
   }
 
@@ -385,7 +394,7 @@ class DRMList extends React.Component {
     this.getDatafromAPINODE("/drm/getDrmVersion/" + _id).then((res) => {
       if (res.data !== undefined) {
         this.setState({
-         list_version : res.data.data.map(a => a.version)
+          list_version: res.data.data.map((a) => a.version),
         });
       } else {
         this.setState({ list_version: [] });
@@ -393,12 +402,12 @@ class DRMList extends React.Component {
     });
   }
 
-  handleChangeVersion(e){
+  handleChangeVersion(e) {
     const value = e.target.value;
-    this.setState({version_selected : value}, () => {
-      if(value !== this.state.all_data.version){
+    this.setState({ version_selected: value }, () => {
+      if (value !== this.state.all_data.version) {
         this.getDRMDataVersion(this.props.match.params.id, value);
-      }else{
+      } else {
         this.getDRMData(this.props.match.params.id);
       }
     });
@@ -406,17 +415,19 @@ class DRMList extends React.Component {
 
   getDRMDataVersion(_id, ver) {
     this.toggleLoading();
-    this.getDatafromAPINODE("/drm/getDrmVersion/" + _id + '/ver/' + ver).then((res) => {
-      if (res.data !== undefined) {
-        this.setState({
-         all_data : res.data.data
-        });
-        this.toggleLoading();
-      } else {
-        this.setState({ all_data: [] });
-        this.toggleLoading();
+    this.getDatafromAPINODE("/drm/getDrmVersion/" + _id + "/ver/" + ver).then(
+      (res) => {
+        if (res.data !== undefined) {
+          this.setState({
+            all_data: res.data.data,
+          });
+          this.toggleLoading();
+        } else {
+          this.setState({ all_data: [] });
+          this.toggleLoading();
+        }
       }
-    });
+    );
   }
 
   async getMatStockFormat(dataImport) {
@@ -707,57 +718,64 @@ class DRMList extends React.Component {
 
     // for (let i = 0; i < download_all.length; i++) {
     //   let drm = download_all[i];
-      ws.addRow([
-        download_all.tower_id,
-        download_all.project_name,
-        download_all.program,
-        download_all.actual_rbs_data,
-        download_all.actual_du,
-        download_all.ru_b0_900,
-        download_all.ru_b1_2100,
-        download_all.ru_b3_1800,
-        download_all.ru_b8_900,
-        download_all.ru_b1b3,
-        download_all.ru_band_agnostic,
-        download_all.remarks_need_cr_go_as_sow_original,
-        download_all.existing_antenna_type,
-        download_all.antenna_height,
-        download_all.scenario_ran,
-        download_all.dismantle_antenna,
-        download_all.dismantle_ru,
-        download_all.dismantle_accessories,
-        download_all.dismantle_du,
-        download_all.dismantle_rbs_encl,
-        download_all.existing_dan_scenario_implementasi_rbs,
-        download_all.drm_final_module,
-        download_all.drm_final_radio,
-        download_all.drm_final_sow_cabinet,
-        download_all.drm_final_sow_g9_u9_l9,
-        download_all.drm_final_sow_g18_l18,
-        download_all.drm_final_sow_u21_l21,
-        download_all.drm_final_antenna_type,
-        download_all.plan_antenna_azimuth,
-        download_all.plan_antenna_et_mt,
-        download_all.module,
-        download_all.cabinet,
-        download_all.radio,
-        download_all.power_rru,
-        download_all.antenna,
-        download_all.dismantle,
-        download_all.system,
-        download_all.optic_rru,
-        download_all.area,
-        download_all.atp_doc_reviewed,
-        download_all.verification_date,
-        download_all.verification_status,
-        download_all.verification_pic,
-        download_all.issued_detail,
-        download_all.cr_flag_engineering
-      ]);
+    ws.addRow([
+      download_all.tower_id,
+      download_all.project_name,
+      download_all.program,
+      download_all.actual_rbs_data,
+      download_all.actual_du,
+      download_all.ru_b0_900,
+      download_all.ru_b1_2100,
+      download_all.ru_b3_1800,
+      download_all.ru_b8_900,
+      download_all.ru_b1b3,
+      download_all.ru_band_agnostic,
+      download_all.remarks_need_cr_go_as_sow_original,
+      download_all.existing_antenna_type,
+      download_all.antenna_height,
+      download_all.scenario_ran,
+      download_all.dismantle_antenna,
+      download_all.dismantle_ru,
+      download_all.dismantle_accessories,
+      download_all.dismantle_du,
+      download_all.dismantle_rbs_encl,
+      download_all.existing_dan_scenario_implementasi_rbs,
+      download_all.drm_final_module,
+      download_all.drm_final_radio,
+      download_all.drm_final_sow_cabinet,
+      download_all.drm_final_sow_g9_u9_l9,
+      download_all.drm_final_sow_g18_l18,
+      download_all.drm_final_sow_u21_l21,
+      download_all.drm_final_antenna_type,
+      download_all.plan_antenna_azimuth,
+      download_all.plan_antenna_et_mt,
+      download_all.module,
+      download_all.cabinet,
+      download_all.radio,
+      download_all.power_rru,
+      download_all.antenna,
+      download_all.dismantle,
+      download_all.system,
+      download_all.optic_rru,
+      download_all.area,
+      download_all.atp_doc_reviewed,
+      download_all.verification_date,
+      download_all.verification_status,
+      download_all.verification_pic,
+      download_all.issued_detail,
+      download_all.cr_flag_engineering,
+    ]);
     // }
 
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "DRM Data "+ download_all.no_drm + " ver "+ download_all.version+".xlsx");
+    saveAs(
+      new Blob([allocexport]),
+      "DRM Data " +
+        download_all.no_drm +
+        " ver " +
+        download_all.version +
+        ".xlsx"
+    );
     this.toggleLoading();
   }
 
@@ -1064,19 +1082,19 @@ class DRMList extends React.Component {
                       </DropdownMenu>
                     </Dropdown> */}
                     &nbsp;&nbsp;&nbsp;
-                                    <Button
-                  style={{ marginRight: "8px", float: "right" }}
-                  outline
-                  color="info"
-                  size="sm"
-                  onClick={this.downloadAll}
-                >
-                  <i
-                    className="fa fa-download"
-                    style={{ marginRight: "8px" }}
-                  ></i>
-                  DRM Format
-                </Button>
+                    <Button
+                      style={{ marginRight: "8px", float: "right" }}
+                      outline
+                      color="info"
+                      size="sm"
+                      onClick={this.downloadAll}
+                    >
+                      <i
+                        className="fa fa-download"
+                        style={{ marginRight: "8px" }}
+                      ></i>
+                      DRM Format
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -1150,15 +1168,17 @@ class DRMList extends React.Component {
                             <td style={{ textAlign: "left" }} colspan={2}>
                               <Input
                                 type="select"
-                                value={
-                                  this.state.version_selected
-                                }
+                                value={this.state.version_selected}
                                 onChange={this.handleChangeVersion}
                                 style={{ width: "100px", height: "30px" }}
                               >
-                                {this.state.list_version.length !== 0 ? this.state.list_version.map((e, i) => (
-                                  <option value={i}>{i}</option>
-                                )) : (<option value={0}>{0}</option>)}
+                                {this.state.list_version.length !== 0 ? (
+                                  this.state.list_version.map((e, i) => (
+                                    <option value={i}>{i}</option>
+                                  ))
+                                ) : (
+                                  <option value={0}>{0}</option>
+                                )}
                               </Input>
                             </td>
                           </tr>
@@ -1269,7 +1289,12 @@ class DRMList extends React.Component {
                             <td>{drm.system}</td>
                             <td>{drm.optic_rru}</td>
                             <td>{drm.area}</td>
-                            <td>{(drm.atp_doc_reviewed === undefined || drm.atp_doc_reviewed === null ) ? null : convertDateFormat(drm.atp_doc_reviewed)}</td>
+                            <td>
+                              {drm.atp_doc_reviewed === undefined ||
+                              drm.atp_doc_reviewed === null
+                                ? null
+                                : convertDateFormat(drm.atp_doc_reviewed)}
+                            </td>
                             <td>{convertDateFormat(drm.verification_date)}</td>
                             <td>{drm.verification_status}</td>
                             <td>{drm.verification_pic}</td>

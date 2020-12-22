@@ -23,7 +23,7 @@ import "./assignment.css";
 import AsyncSelect from "react-select/async";
 import debounce from "lodash.debounce";
 
-import {apiSendEmail} from '../../helper/asyncFunction'
+import { apiSendEmail } from "../../helper/asyncFunction";
 
 const Checkbox = ({
   type = "checkbox",
@@ -52,7 +52,7 @@ const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
 const usernameXL = "adminbamidsuper";
 const passwordXL = "F760qbAg2sml";
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 class AssignmentDetail extends Component {
   constructor(props) {
@@ -151,7 +151,7 @@ class AssignmentDetail extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -170,12 +170,16 @@ class AssignmentDetail extends Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.post(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Post data", respond);
       }
@@ -216,12 +220,16 @@ class AssignmentDetail extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Patch data", respond);
       }
@@ -756,14 +764,26 @@ class AssignmentDetail extends Component {
     let res = await this.patchDatatoAPINODE("/aspAssignment/pmApproval/" + _id);
     if (res !== undefined) {
       if (res.data !== undefined) {
-        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/"+_id;
-        const bodyEmail = "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment need approval by PM, <br/><br/><i>Site</i>: <b>"+dataAssignment.Site_ID+"</b> <br/><i>Project</i>: <b>"+dataAssignment.Project+"</b><br/><i>Assignment</i>: <b>"+dataAssignment.Assignment_No+".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='"+linkImp+"'>"+linkImp+"</a>";
+        let linkImp = "https://bam-id.e-dpm.com/assignment-detail/" + _id;
+        const bodyEmail =
+          "<h2>DPM - BAM Notification</h2><br/><span>Please be notified that the following Assingment need approval by PM, <br/><br/><i>Site</i>: <b>" +
+          dataAssignment.Site_ID +
+          "</b> <br/><i>Project</i>: <b>" +
+          dataAssignment.Project +
+          "</b><br/><i>Assignment</i>: <b>" +
+          dataAssignment.Assignment_No +
+          ".</span><br/><br/><br/><br/>Please follow this link to see the Assignment detail:<br/><a href='" +
+          linkImp +
+          "'>" +
+          linkImp +
+          "</a>";
         let dataEmail = {
           // "to": creatorEmail,
-          "to": "damar.pramuditya@ericsson.com",
-          "subject":"[NEED APPROVAL by PM] Assignment "+dataAssignment.Assignment_No,
-          "body": bodyEmail
-        }
+          to: "damar.pramuditya@ericsson.com",
+          subject:
+            "[NEED APPROVAL by PM] Assignment " + dataAssignment.Assignment_No,
+          body: bodyEmail,
+        };
         let sendEmail = await apiSendEmail(dataEmail);
         this.setState({ action_status: "success" });
       } else {
@@ -914,16 +934,16 @@ class AssignmentDetail extends Component {
                       </Col>
                       {this.state.data_assignment.Current_Status ===
                       "ASP ASSIGNMENT NEED REVISION" ? (
-                          <Col md="6">
-                            <FormGroup style={{ paddingLeft: "16px" }}>
-                              <Label>Notes</Label>
-                              <Input
-                                type="text"
-                                readOnly
-                                value={this.state.data_assignment.notes}
-                              ></Input>
-                            </FormGroup>
-                          </Col>
+                        <Col md="6">
+                          <FormGroup style={{ paddingLeft: "16px" }}>
+                            <Label>Notes</Label>
+                            <Input
+                              type="text"
+                              readOnly
+                              value={this.state.data_assignment.notes}
+                            ></Input>
+                          </FormGroup>
+                        </Col>
                       ) : (
                         ""
                       )}

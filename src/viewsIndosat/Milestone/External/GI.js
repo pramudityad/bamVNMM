@@ -26,7 +26,7 @@ const API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
 const username = "bamidadmin@e-dpm.com";
 const password = "F760qbAg2sml";
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 class GI extends Component {
   constructor(props) {
@@ -62,7 +62,7 @@ class GI extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -128,12 +128,16 @@ class GI extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Patch data", respond);
       }
@@ -237,7 +241,9 @@ class GI extends Component {
       filter_array.push(
         '"dsp_handover.location_id" : "' + this.props.match.params.whid + '"'
       );
-    filter_array.push('"$or" : [{"asp_material_gi" : {"$ne" : null}}, {"asp_material_confirmation" : {"$ne" : null} }]');
+    filter_array.push(
+      '"$or" : [{"asp_material_gi" : {"$ne" : null}}, {"asp_material_confirmation" : {"$ne" : null} }]'
+    );
     let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE(
       "/matreq?srt=_id:-1&q=" + whereAnd + "&lmt=" + maxPage + "&pg=" + page
@@ -324,7 +330,9 @@ class GI extends Component {
       filter_array.push(
         '"dsp_handover.location_id" : "' + this.props.match.params.whid + '"'
       );
-    filter_array.push('"$or" : [{"asp_material_gi" : {"$ne" : null}}, {"asp_material_confirmation" : {"$ne" : null} }]');
+    filter_array.push(
+      '"$or" : [{"asp_material_gi" : {"$ne" : null}}, {"asp_material_confirmation" : {"$ne" : null} }]'
+    );
     let whereAnd = "{" + filter_array.join(",") + "}";
     this.getDataFromAPINODE("/matreq?noPg=1&q=" + whereAnd).then((res) => {
       console.log("MR List All", res);
@@ -770,19 +778,28 @@ class GI extends Component {
                         </td>
                         <td>{list.project_name}</td>
                         <td>
-                          {list.cust_del !== undefined && (list.cust_del.map(custdel => custdel.cd_id).join(' , '))}
+                          {list.cust_del !== undefined &&
+                            list.cust_del
+                              .map((custdel) => custdel.cd_id)
+                              .join(" , ")}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_id).join(' , '))}
+                          {list.site_info !== undefined &&
+                            list.site_info
+                              .map((site_info) => site_info.site_id)
+                              .join(" , ")}
                         </td>
                         <td>
-                          {list.site_info !== undefined && (list.site_info.map(site_info => site_info.site_name).join(' , '))}
+                          {list.site_info !== undefined &&
+                            list.site_info
+                              .map((site_info) => site_info.site_name)
+                              .join(" , ")}
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{list.eta}</td>
-                        <td>{list.creator.map(e => e.email)}</td>
+                        <td>{list.creator.map((e) => e.email)}</td>
                         <td>{list.updated_on}</td>
                         <td>{list.created_on}</td>
                       </tr>
@@ -790,7 +807,10 @@ class GI extends Component {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_list.length} entries from {this.state.totalData} data</small>
+                  <small>
+                    Showing {this.state.mr_list.length} entries from{" "}
+                    {this.state.totalData} data
+                  </small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}

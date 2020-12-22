@@ -1,27 +1,39 @@
-import React, { Component, Fragment } from 'react';
-import { Card, CardHeader, CardBody, Row, Col, Button, Input, CardFooter, ModalFooter } from 'reactstrap';
-import { Form, FormGroup, Label } from 'reactstrap';
-import axios from 'axios';
-import { connect } from 'react-redux';
-import AsyncSelect from 'react-select/async';
+import React, { Component, Fragment } from "react";
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  Row,
+  Col,
+  Button,
+  Input,
+  CardFooter,
+  ModalFooter,
+} from "reactstrap";
+import { Form, FormGroup, Label } from "reactstrap";
+import axios from "axios";
+import { connect } from "react-redux";
+import AsyncSelect from "react-select/async";
 import debounce from "debounce-promise";
-import './DSA.css'
+import "./DSA.css";
 import ModalCreateNew from "../components/ModalCreateNew";
 
-const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const username = 'bamidadmin@e-dpm.com';
-const password = 'F760qbAg2sml';
+const API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
+const username = "bamidadmin@e-dpm.com";
+const password = "F760qbAg2sml";
 
-const API_URL_tsel = 'https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi';
-const username_tsel = 'adminbamidsuper';
-const password_tsel = 'F760qbAg2sml';
+const API_URL_tsel = "https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi";
+const username_tsel = "adminbamidsuper";
+const password_tsel = "F760qbAg2sml";
 
-const API_URL_XL = 'https://api-dev.xl.pdb.e-dpm.com/xlpdbapi';
-const usernameXL = 'adminbamidsuper';
-const passwordXL = 'F760qbAg2sml';
+const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
+const usernameXL = "adminbamidsuper";
+const passwordXL = "F760qbAg2sml";
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
-const DefaultNotif = React.lazy(() => import('../../views/DefaultView/DefaultNotif'));
+//const process.env.REACT_APP_API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+const DefaultNotif = React.lazy(() =>
+  import("../../views/DefaultView/DefaultNotif")
+);
 
 class DSADEdit extends Component {
   constructor(props) {
@@ -36,14 +48,14 @@ class DSADEdit extends Component {
       tokenUser: this.props.dataLogin.token,
       network_number: null,
       destination: "",
-      list_dsa_selection : [],
-      list_po_selection : [],
-      inputan_file : null,
-      actualModal : false,
-      action_status : null,
-      action_message : null,
-      reactual_note : " ",
-    }
+      list_dsa_selection: [],
+      list_po_selection: [],
+      inputan_file: null,
+      actualModal: false,
+      action_status: null,
+      action_message: null,
+      reactual_note: " ",
+    };
     this.toggleActualModal = this.toggleActualModal.bind(this);
     this.submitDSA = this.submitDSA.bind(this);
     this.approveDSA = this.approveDSA.bind(this);
@@ -52,11 +64,15 @@ class DSADEdit extends Component {
     this.handleChangeFormSection3 = this.handleChangeFormSection3.bind(this);
     this.handleChangeFormSection2 = this.handleChangeFormSection2.bind(this);
     this.loadOptionsPO = this.loadOptionsPO.bind(this);
-    this.handleChangeFormSectionLevel2 = this.handleChangeFormSectionLevel2.bind(this);
+    this.handleChangeFormSectionLevel2 = this.handleChangeFormSectionLevel2.bind(
+      this
+    );
     this.addListSection1 = this.addListSection1.bind(this);
     this.addListSection3 = this.addListSection3.bind(this);
     this.addListSection2 = this.addListSection2.bind(this);
-    this.handleChangeFormSectionNonDetail3 = this.handleChangeFormSectionNonDetail3.bind(this);
+    this.handleChangeFormSectionNonDetail3 = this.handleChangeFormSectionNonDetail3.bind(
+      this
+    );
     this.handleChangeReactualNote = this.handleChangeReactualNote.bind(this);
   }
 
@@ -69,11 +85,11 @@ class DSADEdit extends Component {
   async getDataFromAPI(url) {
     try {
       let respond = await axios.get(API_URL + url, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         auth: {
           username: username,
-          password: password
-        }
+          password: password,
+        },
       });
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond data", respond);
@@ -89,11 +105,11 @@ class DSADEdit extends Component {
   async getDataFromAPI_tsel(url) {
     try {
       let respond = await axios.get(API_URL_tsel + url, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         auth: {
           username: username_tsel,
-          password: password_tsel
-        }
+          password: password_tsel,
+        },
       });
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond data", respond);
@@ -109,11 +125,11 @@ class DSADEdit extends Component {
   async getDataFromAPIXL(url) {
     try {
       let respond = await axios.get(API_URL_XL + url, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         auth: {
           username: usernameXL,
-          password: passwordXL
-        }
+          password: passwordXL,
+        },
       });
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond data", respond);
@@ -128,10 +144,10 @@ class DSADEdit extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + this.state.tokenUser
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + this.state.tokenUser,
         },
       });
       if (respond.status >= 200 && respond.status < 300) {
@@ -147,41 +163,78 @@ class DSADEdit extends Component {
 
   componentDidMount() {
     this.getDataDSA(this.props.match.params.id);
-    document.title = 'DSA Detail | BAM';
+    document.title = "DSA Detail | BAM";
   }
 
   getDataDSA(_id_MR) {
-    this.getDataFromAPINODE('/matreq-srn/' + _id_MR).then(res => {
+    this.getDataFromAPINODE("/matreq-srn/" + _id_MR).then((res) => {
       if (res.data !== undefined) {
         this.setState({ data_dsa: res.data });
-        if (this.state.data_dsa.mr_type === "Return" || this.state.data_dsa.mr_type === "Relocation") {
+        if (
+          this.state.data_dsa.mr_type === "Return" ||
+          this.state.data_dsa.mr_type === "Relocation"
+        ) {
           this.setState({ destination: this.state.data_dsa.destination.value });
         } else {
-          this.setState({ destination: this.state.data_dsa.site_info[0].site_id });
+          this.setState({
+            destination: this.state.data_dsa.site_info[0].site_id,
+          });
         }
-        this.getDataFromAPIXL('/custdel_sorted_non_page?where={"WP_ID":"' + this.state.data_dsa.cust_del[0].cd_id + '"}').then(res => {
-          let nn = res.data._items[0] !== undefined ? res.data._items[0].CD_Info_Network_Number : "";
+        this.getDataFromAPIXL(
+          '/custdel_sorted_non_page?where={"WP_ID":"' +
+            this.state.data_dsa.cust_del[0].cd_id +
+            '"}'
+        ).then((res) => {
+          let nn =
+            res.data._items[0] !== undefined
+              ? res.data._items[0].CD_Info_Network_Number
+              : "";
           if (res.data !== undefined) {
             this.setState({ network_number: nn });
           }
-        })
+        });
       }
-    })
+    });
   }
 
-  countTotalValue(){
+  countTotalValue() {
     let dataSec = this.state.data_dsa;
     let dataSection1 = dataSec.primary_section;
     let dataSection2 = dataSec.second_section.service_details;
     let dataSection3 = dataSec.third_section.service_details;
     let dataForm = this.state.create_dsa_form;
     let totalValue = 0;
-    let totalSec1 = dataSection1.filter(ds => ds.total_price !== undefined && ds.total_price !== null && ds.total_price.length !== 0 && !isNaN(ds.total_price)).reduce((a,b) => a+parseFloat(b.total_price), 0);
-    let totalSec2 = dataSection2.filter(ds => ds.total_price !== undefined && ds.total_price !== null && ds.total_price.length !== 0 && !isNaN(ds.total_price)).reduce((a,b) => a+parseFloat(b.total_price), 0);
-    let totalSec3 = dataSection3.filter(ds => ds.price !== undefined && ds.price !== null && ds.price.length !== 0 && !isNaN(ds.price)).reduce((a,b) => a+parseFloat(b.price), 0);
-    totalValue = parseFloat(totalSec1)+parseFloat(totalSec2)+parseFloat(totalSec3);
+    let totalSec1 = dataSection1
+      .filter(
+        (ds) =>
+          ds.total_price !== undefined &&
+          ds.total_price !== null &&
+          ds.total_price.length !== 0 &&
+          !isNaN(ds.total_price)
+      )
+      .reduce((a, b) => a + parseFloat(b.total_price), 0);
+    let totalSec2 = dataSection2
+      .filter(
+        (ds) =>
+          ds.total_price !== undefined &&
+          ds.total_price !== null &&
+          ds.total_price.length !== 0 &&
+          !isNaN(ds.total_price)
+      )
+      .reduce((a, b) => a + parseFloat(b.total_price), 0);
+    let totalSec3 = dataSection3
+      .filter(
+        (ds) =>
+          ds.price !== undefined &&
+          ds.price !== null &&
+          ds.price.length !== 0 &&
+          !isNaN(ds.price)
+      )
+      .reduce((a, b) => a + parseFloat(b.price), 0);
+    totalValue =
+      parseFloat(totalSec1) + parseFloat(totalSec2) + parseFloat(totalSec3);
     dataSec["dsa_total_value"] = totalValue;
-    this.setState({data_dsa : dataSec});
+    this.setState({ data_dsa: dataSec });
   }
 
   async handleChangeFormSection1(e) {
@@ -191,15 +244,17 @@ class DSADEdit extends Component {
     let idx = idxField[0];
     let field = idxField[1];
     dataSec["primary_section"][parseInt(idx)][field] = value;
-    if(parseInt(idx) === 0 && field === "sub_category"){
+    if (parseInt(idx) === 0 && field === "sub_category") {
       dataSec["primary_section"][parseInt(idx)]["category"] = "MOT";
       dataSec["primary_section"][parseInt(idx)]["sub_category"] = value;
     }
-    if(field === "qty"){
-      const total_price = parseFloat(value)*parseFloat(dataSec["primary_section"][parseInt(idx)]["price"]);
+    if (field === "qty") {
+      const total_price =
+        parseFloat(value) *
+        parseFloat(dataSec["primary_section"][parseInt(idx)]["price"]);
       dataSec["primary_section"][parseInt(idx)]["total_price"] = total_price;
     }
-    this.setState({ data_dsa: dataSec }, ()=> {
+    this.setState({ data_dsa: dataSec }, () => {
       console.log("primary_section", this.state.data_dsa);
       this.countTotalValue();
     });
@@ -207,25 +262,30 @@ class DSADEdit extends Component {
 
   handleChangeDSASection1 = async (newValue, e) => {
     let dataSec = this.state.data_dsa;
-    let idxField = e.name.split(" /// ")
+    let idxField = e.name.split(" /// ");
     let idx = idxField[0];
     let field = idxField[1];
     if (field === "service_master") {
-      let dataDSA = this.state.list_dsa_selection.find(e => e._id === newValue.value);
-      dataSec["primary_section"][parseInt(idx)]['service_master'] = dataDSA.dsa_price_id;
-      dataSec["primary_section"][parseInt(idx)]['price'] = dataDSA.price;
-      dataSec["primary_section"][parseInt(idx)]['qty'] = 0;
-      dataSec["primary_section"][parseInt(idx)]['total_price'] = 0;
-      dataSec["primary_section"][parseInt(idx)]['short_text'] = dataDSA.short_text;
-      dataSec["primary_section"][parseInt(idx)]['long_text'] = dataDSA.long_text;
+      let dataDSA = this.state.list_dsa_selection.find(
+        (e) => e._id === newValue.value
+      );
+      dataSec["primary_section"][parseInt(idx)]["service_master"] =
+        dataDSA.dsa_price_id;
+      dataSec["primary_section"][parseInt(idx)]["price"] = dataDSA.price;
+      dataSec["primary_section"][parseInt(idx)]["qty"] = 0;
+      dataSec["primary_section"][parseInt(idx)]["total_price"] = 0;
+      dataSec["primary_section"][parseInt(idx)]["short_text"] =
+        dataDSA.short_text;
+      dataSec["primary_section"][parseInt(idx)]["long_text"] =
+        dataDSA.long_text;
     }
 
-    this.setState({ data_dsa: dataSec }, ()=>{
+    this.setState({ data_dsa: dataSec }, () => {
       this.countTotalValue();
     });
   };
 
-  addListSection1(){
+  addListSection1() {
     let dataSec = this.state.data_dsa;
     dataSec["primary_section"].push({});
     this.setState({ data_dsa: dataSec });
@@ -234,101 +294,150 @@ class DSADEdit extends Component {
   loopSection1 = () => {
     let section_1 = [];
     let label1, label2, label3, label4, label5, label6, label7;
-    label1 = (<Label>Details</Label>);
-    label2 = (<Label>Service Master</Label>);
-    label3 = (<Label>Price</Label>);
-    label4 = (<Label>Quantity</Label>);
-    label5 = (<Label>Total Price</Label>);
-    label6 = (<Label>Short Text</Label>);
-    label7 = (<Label>Long Text</Label>);
-    if(this.state.data_dsa.primary_section.length > 0){
+    label1 = <Label>Details</Label>;
+    label2 = <Label>Service Master</Label>;
+    label3 = <Label>Price</Label>;
+    label4 = <Label>Quantity</Label>;
+    label5 = <Label>Total Price</Label>;
+    label6 = <Label>Short Text</Label>;
+    label7 = <Label>Long Text</Label>;
+    if (this.state.data_dsa.primary_section.length > 0) {
       section_1.push(
-      <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
-        <Col md="1" style={{ margin: "0", padding: "4px" }}>
-          <FormGroup>
-            {label1}
-            <Input type="select" name={"0 /// sub_category"} defaultValue={this.state.data_dsa.primary_section[0].category} onChange={this.handleChangeFormSection1}>
-              <option value="" disabled selected hidden>MOT</option>
-              <option value="MOT-Land">MOT-Land</option>
-              <option value="MOT-Air">MOT-Air</option>
-              <option value="MOT-Sea">MOT-Sea</option>
-            </Input>
-          </FormGroup>
-        </Col>
-        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-          <FormGroup>
-            {label2}
-            <AsyncSelect
-              loadOptions={this.loadOptionsDSA}
-              defaultOptions
-              defaultInputValue={this.state.data_dsa.primary_section[0].service_master}
-              onChange={this.handleChangeDSASection1}
-              name={"0 /// service_master"}
-            />
-          </FormGroup>
-        </Col>
-        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-          <FormGroup>
-            {label3}
-            <Input type="text" readOnly value={this.state.data_dsa.primary_section[0].price} ></Input>
-          </FormGroup>
-        </Col>
-        <Col md="1" style={{ margin: "0", padding: "4px" }}>
-          <FormGroup>
-            {label4}
-            <Input type="number" name={"0 /// qty"} defaultValue={this.state.data_dsa.primary_section[0].qty} onChange={this.handleChangeFormSection1}></Input>
-          </FormGroup>
-        </Col>
-        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-          <FormGroup>
-            {label5}
-            <Input type="text" readOnly value={this.state.data_dsa.primary_section[0].total_price}></Input>
-          </FormGroup>
-        </Col>
-        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-          <FormGroup>
-            {label6}
-            <Input type="text" readOnly value={this.state.data_dsa.primary_section[0].short_text}></Input>
-          </FormGroup>
-        </Col>
-        <Col md="2" style={{ margin: "0", padding: "4px" }}>
-          <FormGroup>
-            {label7}
-            <Input type="textarea" rows="1" readOnly value={this.state.data_dsa.primary_section[0].long_text}></Input>
-          </FormGroup>
-        </Col>
-      </Row>
-    )
+        <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
+          <Col md="1" style={{ margin: "0", padding: "4px" }}>
+            <FormGroup>
+              {label1}
+              <Input
+                type="select"
+                name={"0 /// sub_category"}
+                defaultValue={this.state.data_dsa.primary_section[0].category}
+                onChange={this.handleChangeFormSection1}
+              >
+                <option value="" disabled selected hidden>
+                  MOT
+                </option>
+                <option value="MOT-Land">MOT-Land</option>
+                <option value="MOT-Air">MOT-Air</option>
+                <option value="MOT-Sea">MOT-Sea</option>
+              </Input>
+            </FormGroup>
+          </Col>
+          <Col md="2" style={{ margin: "0", padding: "4px" }}>
+            <FormGroup>
+              {label2}
+              <AsyncSelect
+                loadOptions={this.loadOptionsDSA}
+                defaultOptions
+                defaultInputValue={
+                  this.state.data_dsa.primary_section[0].service_master
+                }
+                onChange={this.handleChangeDSASection1}
+                name={"0 /// service_master"}
+              />
+            </FormGroup>
+          </Col>
+          <Col md="2" style={{ margin: "0", padding: "4px" }}>
+            <FormGroup>
+              {label3}
+              <Input
+                type="text"
+                readOnly
+                value={this.state.data_dsa.primary_section[0].price}
+              ></Input>
+            </FormGroup>
+          </Col>
+          <Col md="1" style={{ margin: "0", padding: "4px" }}>
+            <FormGroup>
+              {label4}
+              <Input
+                type="number"
+                name={"0 /// qty"}
+                defaultValue={this.state.data_dsa.primary_section[0].qty}
+                onChange={this.handleChangeFormSection1}
+              ></Input>
+            </FormGroup>
+          </Col>
+          <Col md="2" style={{ margin: "0", padding: "4px" }}>
+            <FormGroup>
+              {label5}
+              <Input
+                type="text"
+                readOnly
+                value={this.state.data_dsa.primary_section[0].total_price}
+              ></Input>
+            </FormGroup>
+          </Col>
+          <Col md="2" style={{ margin: "0", padding: "4px" }}>
+            <FormGroup>
+              {label6}
+              <Input
+                type="text"
+                readOnly
+                value={this.state.data_dsa.primary_section[0].short_text}
+              ></Input>
+            </FormGroup>
+          </Col>
+          <Col md="2" style={{ margin: "0", padding: "4px" }}>
+            <FormGroup>
+              {label7}
+              <Input
+                type="textarea"
+                rows="1"
+                readOnly
+                value={this.state.data_dsa.primary_section[0].long_text}
+              ></Input>
+            </FormGroup>
+          </Col>
+        </Row>
+      );
     }
     for (let i = 1; i < this.state.data_dsa.primary_section.length; i++) {
       if (this.state.data_dsa.primary_section[i] !== undefined) {
         section_1.push(
-          <Row style={{ paddingLeft: "16px", paddingRight: "16px" }} key={this.state.data_dsa.primary_section[i].service_master}>
+          <Row
+            style={{ paddingLeft: "16px", paddingRight: "16px" }}
+            key={this.state.data_dsa.primary_section[i].service_master}
+          >
             <Col md="1" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label1}
-                <Input type="select" name={i+" /// category"} defaultValue={this.state.data_dsa.primary_section[i].category} onChange={this.handleChangeFormSection1}>
-                  <option disabled selected hidden>Select</option>
-                  <option value="Additional Delivery">Additional Delivery</option>
+                <Input
+                  type="select"
+                  name={i + " /// category"}
+                  defaultValue={this.state.data_dsa.primary_section[i].category}
+                  onChange={this.handleChangeFormSection1}
+                >
+                  <option disabled selected hidden>
+                    Select
+                  </option>
+                  <option value="Additional Delivery">
+                    Additional Delivery
+                  </option>
                   <option value="MOT-Air">MOT-Air</option>
                   <option value="Crane">Crane</option>
                   <option value="Custom">Custom</option>
                   <option value="Custom Clearance">Custom Clearance</option>
                   <option value="Delivery Service">Delivery Service</option>
                   <option value="Flat Community">Flat Community</option>
-                  <option value="Flat Community Cost">Flat Community Cost</option>
+                  <option value="Flat Community Cost">
+                    Flat Community Cost
+                  </option>
                   <option value="Forklift">Forklift</option>
                   <option value="MOT-Land">MOT-Land</option>
                   <option value="Manual Handling">Manual Handling</option>
                   <option value="On Forwarding">On Forwarding</option>
-                  <option value="On Forwarding (Langsir)">On Forwarding (Langsir)</option>
+                  <option value="On Forwarding (Langsir)">
+                    On Forwarding (Langsir)
+                  </option>
                   <option value="Other Service">Other Service</option>
                   <option value="Others">Others</option>
                   <option value="Packing">Packing</option>
                   <option value="Port to WH">Port to WH</option>
                   <option value="MOT-Sea">MOT-Sea</option>
                   <option value="Service">Service</option>
-                  <option value="Service (Seaport to WH)">Service (Seaport to WH)</option>
+                  <option value="Service (Seaport to WH)">
+                    Service (Seaport to WH)
+                  </option>
                   <option value="Service (WH to WH)">Service (WH to WH)</option>
                   <option value="Standby On Site">Standby On Site</option>
                   <option value="Temporary Storage">Temporary Storage</option>
@@ -342,57 +451,86 @@ class DSADEdit extends Component {
                 <AsyncSelect
                   loadOptions={this.loadOptionsDSA}
                   defaultOptions
-                  defaultInputValue={this.state.data_dsa.primary_section[i].service_master}
+                  defaultInputValue={
+                    this.state.data_dsa.primary_section[i].service_master
+                  }
                   onChange={this.handleChangeDSASection1}
-                  name={i+" /// service_master"}
+                  name={i + " /// service_master"}
                 />
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label3}
-                <Input type="text" readOnly value={this.state.data_dsa.primary_section[i].price} ></Input>
+                <Input
+                  type="text"
+                  readOnly
+                  value={this.state.data_dsa.primary_section[i].price}
+                ></Input>
               </FormGroup>
             </Col>
             <Col md="1" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label4}
-                <Input type="number" name={i+" /// qty"} defaultValue={this.state.data_dsa.primary_section[i].qty} onChange={this.handleChangeFormSection1}></Input>
+                <Input
+                  type="number"
+                  name={i + " /// qty"}
+                  defaultValue={this.state.data_dsa.primary_section[i].qty}
+                  onChange={this.handleChangeFormSection1}
+                ></Input>
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label5}
-                <Input type="text" readOnly value={this.state.data_dsa.primary_section[i].total_price}></Input>
+                <Input
+                  type="text"
+                  readOnly
+                  value={this.state.data_dsa.primary_section[i].total_price}
+                ></Input>
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label6}
-                <Input type="text" readOnly value={this.state.data_dsa.primary_section[i].short_text}></Input>
+                <Input
+                  type="text"
+                  readOnly
+                  value={this.state.data_dsa.primary_section[i].short_text}
+                ></Input>
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label7}
-                <Input type="textarea" rows="1" readOnly value={this.state.data_dsa.primary_section[i].long_text}></Input>
+                <Input
+                  type="textarea"
+                  rows="1"
+                  readOnly
+                  value={this.state.data_dsa.primary_section[i].long_text}
+                ></Input>
               </FormGroup>
             </Col>
           </Row>
-        )
+        );
       }
     }
     section_1.push(
       <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
         <Col>
-          <Button onClick={this.addListSection1} size="sm" color="success" style={{margin : '-10px 0px 10px 0px'}}>
+          <Button
+            onClick={this.addListSection1}
+            size="sm"
+            color="success"
+            style={{ margin: "-10px 0px 10px 0px" }}
+          >
             Add List
           </Button>
         </Col>
       </Row>
-    )
+    );
     return section_1;
-  }
+  };
 
   async handleChangeFormSection2(e) {
     let dataSec = this.state.data_dsa;
@@ -401,11 +539,17 @@ class DSADEdit extends Component {
     let idx = idxField[0];
     let field = idxField[1];
     dataSec["second_section"]["service_details"][parseInt(idx)][field] = value;
-    if(field === "qty"){
-      const total_price = parseFloat(value)*parseFloat(dataSec["second_section"]["service_details"][parseInt(idx)]["price"]);
-      dataSec["second_section"]["service_details"][parseInt(idx)]["total_price"] = total_price;
+    if (field === "qty") {
+      const total_price =
+        parseFloat(value) *
+        parseFloat(
+          dataSec["second_section"]["service_details"][parseInt(idx)]["price"]
+        );
+      dataSec["second_section"]["service_details"][parseInt(idx)][
+        "total_price"
+      ] = total_price;
     }
-    this.setState({ data_dsa: dataSec }, ()=> {
+    this.setState({ data_dsa: dataSec }, () => {
       console.log("second_section", this.state.data_dsa);
       this.countTotalValue();
     });
@@ -413,25 +557,35 @@ class DSADEdit extends Component {
 
   handleChangeDSASection2 = async (newValue, e) => {
     let dataSec = this.state.data_dsa;
-    let idxField = e.name.split(" /// ")
+    let idxField = e.name.split(" /// ");
     let idx = idxField[0];
     let field = idxField[1];
     if (field === "service_master") {
-      let dataDSA = this.state.list_dsa_selection.find(e => e._id === newValue.value);
-      dataSec["second_section"]["service_details"][parseInt(idx)]['service_master'] = dataDSA.dsa_price_id;
-      dataSec["second_section"]["service_details"][parseInt(idx)]['price'] = dataDSA.price;
-      dataSec["second_section"]["service_details"][parseInt(idx)]['qty'] = 0;
-      dataSec["second_section"]["service_details"][parseInt(idx)]['total_price'] = 0;
-      dataSec["second_section"]["service_details"][parseInt(idx)]['short_text'] = dataDSA.short_text;
-      dataSec["second_section"]["service_details"][parseInt(idx)]['long_text'] = dataDSA.long_text;
+      let dataDSA = this.state.list_dsa_selection.find(
+        (e) => e._id === newValue.value
+      );
+      dataSec["second_section"]["service_details"][parseInt(idx)][
+        "service_master"
+      ] = dataDSA.dsa_price_id;
+      dataSec["second_section"]["service_details"][parseInt(idx)]["price"] =
+        dataDSA.price;
+      dataSec["second_section"]["service_details"][parseInt(idx)]["qty"] = 0;
+      dataSec["second_section"]["service_details"][parseInt(idx)][
+        "total_price"
+      ] = 0;
+      dataSec["second_section"]["service_details"][parseInt(idx)][
+        "short_text"
+      ] = dataDSA.short_text;
+      dataSec["second_section"]["service_details"][parseInt(idx)]["long_text"] =
+        dataDSA.long_text;
     }
 
-    this.setState({ data_dsa: dataSec }, ()=>{
+    this.setState({ data_dsa: dataSec }, () => {
       this.countTotalValue();
     });
   };
 
-  addListSection2(){
+  addListSection2() {
     let dataSec = this.state.data_dsa;
     dataSec["second_section"]["service_details"].push({});
     this.setState({ data_dsa: dataSec });
@@ -439,49 +593,75 @@ class DSADEdit extends Component {
 
   loopSection2 = () => {
     let section_2 = [];
-    for (let i = 0; i < this.state.data_dsa.second_section.service_details.length; i++) {
+    for (
+      let i = 0;
+      i < this.state.data_dsa.second_section.service_details.length;
+      i++
+    ) {
       if (this.state.data_dsa.second_section.service_details[i] !== undefined) {
         let label1, label2, label3, label4, label5, label6, label7;
         if (i === 0) {
-          label1 = (<Label><small>Additional Service</small></Label>);
-          label2 = (<Label>Service Master</Label>);
-          label3 = (<Label>Price</Label>);
-          label4 = (<Label>Quantity</Label>);
-          label5 = (<Label>Total Price</Label>);
-          label6 = (<Label>Short Text</Label>);
-          label7 = (<Label>Long Text</Label>);
+          label1 = (
+            <Label>
+              <small>Additional Service</small>
+            </Label>
+          );
+          label2 = <Label>Service Master</Label>;
+          label3 = <Label>Price</Label>;
+          label4 = <Label>Quantity</Label>;
+          label5 = <Label>Total Price</Label>;
+          label6 = <Label>Short Text</Label>;
+          label7 = <Label>Long Text</Label>;
         }
         section_2.push(
           <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
             <Col md="1" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label1}
-                <Input type="select" name={i+" /// category"} defaultValue={this.state.data_dsa.second_section.service_details[i].category} onChange={this.handleChangeFormSection2}>
-                <option disabled selected hidden>Select</option>
-                <option value="Additional Delivery">Additional Delivery</option>
-                <option value="MOT-Air">MOT-Air</option>
-                <option value="Crane">Crane</option>
-                <option value="Custom">Custom</option>
-                <option value="Custom Clearance">Custom Clearance</option>
-                <option value="Delivery Service">Delivery Service</option>
-                <option value="Flat Community">Flat Community</option>
-                <option value="Flat Community Cost">Flat Community Cost</option>
-                <option value="Forklift">Forklift</option>
-                <option value="MOT-Land">MOT-Land</option>
-                <option value="Manual Handling">Manual Handling</option>
-                <option value="On Forwarding">On Forwarding</option>
-                <option value="On Forwarding (Langsir)">On Forwarding (Langsir)</option>
-                <option value="Other Service">Other Service</option>
-                <option value="Others">Others</option>
-                <option value="Packing">Packing</option>
-                <option value="Port to WH">Port to WH</option>
-                <option value="MOT-Sea">MOT-Sea</option>
-                <option value="Service">Service</option>
-                <option value="Service (Seaport to WH)">Service (Seaport to WH)</option>
-                <option value="Service (WH to WH)">Service (WH to WH)</option>
-                <option value="Standby On Site">Standby On Site</option>
-                <option value="Temporary Storage">Temporary Storage</option>
-                <option value="WH to WH">WH to WH</option>
+                <Input
+                  type="select"
+                  name={i + " /// category"}
+                  defaultValue={
+                    this.state.data_dsa.second_section.service_details[i]
+                      .category
+                  }
+                  onChange={this.handleChangeFormSection2}
+                >
+                  <option disabled selected hidden>
+                    Select
+                  </option>
+                  <option value="Additional Delivery">
+                    Additional Delivery
+                  </option>
+                  <option value="MOT-Air">MOT-Air</option>
+                  <option value="Crane">Crane</option>
+                  <option value="Custom">Custom</option>
+                  <option value="Custom Clearance">Custom Clearance</option>
+                  <option value="Delivery Service">Delivery Service</option>
+                  <option value="Flat Community">Flat Community</option>
+                  <option value="Flat Community Cost">
+                    Flat Community Cost
+                  </option>
+                  <option value="Forklift">Forklift</option>
+                  <option value="MOT-Land">MOT-Land</option>
+                  <option value="Manual Handling">Manual Handling</option>
+                  <option value="On Forwarding">On Forwarding</option>
+                  <option value="On Forwarding (Langsir)">
+                    On Forwarding (Langsir)
+                  </option>
+                  <option value="Other Service">Other Service</option>
+                  <option value="Others">Others</option>
+                  <option value="Packing">Packing</option>
+                  <option value="Port to WH">Port to WH</option>
+                  <option value="MOT-Sea">MOT-Sea</option>
+                  <option value="Service">Service</option>
+                  <option value="Service (Seaport to WH)">
+                    Service (Seaport to WH)
+                  </option>
+                  <option value="Service (WH to WH)">Service (WH to WH)</option>
+                  <option value="Standby On Site">Standby On Site</option>
+                  <option value="Temporary Storage">Temporary Storage</option>
+                  <option value="WH to WH">WH to WH</option>
                 </Input>
               </FormGroup>
             </Col>
@@ -489,59 +669,102 @@ class DSADEdit extends Component {
               <FormGroup>
                 {label2}
                 <AsyncSelect
-                  defaultInputValue={this.state.data_dsa.second_section.service_details[i].service_master}
+                  defaultInputValue={
+                    this.state.data_dsa.second_section.service_details[i]
+                      .service_master
+                  }
                   loadOptions={debounce(this.loadOptionsDSA, 500)}
                   defaultOptions
                   onChange={this.handleChangeDSASection2}
-                  name={i+" /// service_master"}
+                  name={i + " /// service_master"}
                 />
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label3}
-                <Input type="text" readOnly value={this.state.data_dsa.second_section.service_details[i].price}></Input>
+                <Input
+                  type="text"
+                  readOnly
+                  value={
+                    this.state.data_dsa.second_section.service_details[i].price
+                  }
+                ></Input>
               </FormGroup>
             </Col>
             <Col md="1" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label4}
-                <Input type="number" name={i+" /// qty"} defaultValue={this.state.data_dsa.second_section.service_details[i].qty} onChange={this.handleChangeFormSection2}></Input>
+                <Input
+                  type="number"
+                  name={i + " /// qty"}
+                  defaultValue={
+                    this.state.data_dsa.second_section.service_details[i].qty
+                  }
+                  onChange={this.handleChangeFormSection2}
+                ></Input>
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label5}
-                <Input type="text" readOnly value={this.state.data_dsa.second_section.service_details[i].total_price}></Input>
+                <Input
+                  type="text"
+                  readOnly
+                  value={
+                    this.state.data_dsa.second_section.service_details[i]
+                      .total_price
+                  }
+                ></Input>
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label6}
-                <Input type="text" readOnly value={this.state.data_dsa.second_section.service_details[i].short_text}></Input>
+                <Input
+                  type="text"
+                  readOnly
+                  value={
+                    this.state.data_dsa.second_section.service_details[i]
+                      .short_text
+                  }
+                ></Input>
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label7}
-                <Input type="textarea" rows="1" readOnly value={this.state.data_dsa.second_section.service_details[i].long_text}></Input>
+                <Input
+                  type="textarea"
+                  rows="1"
+                  readOnly
+                  value={
+                    this.state.data_dsa.second_section.service_details[i]
+                      .long_text
+                  }
+                ></Input>
               </FormGroup>
             </Col>
           </Row>
-        )
+        );
       }
     }
     section_2.push(
       <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
         <Col>
-          <Button onClick={this.addListSection2} size="sm" color="success" style={{margin : '-10px 0px 10px 0px'}}>
+          <Button
+            onClick={this.addListSection2}
+            size="sm"
+            color="success"
+            style={{ margin: "-10px 0px 10px 0px" }}
+          >
             Add List
           </Button>
         </Col>
       </Row>
-    )
+    );
     return section_2;
-  }
+  };
 
   async handleChangeFormSectionNonDetail3(e) {
     let dataSec = this.state.data_dsa;
@@ -559,12 +782,12 @@ class DSADEdit extends Component {
     let field = idxField[1];
     dataSec["third_section"]["service_details"][parseInt(idx)][field] = value;
     console.log("totalValue", dataSec);
-    this.setState({ data_dsa: dataSec }, ()=> {
+    this.setState({ data_dsa: dataSec }, () => {
       this.countTotalValue();
     });
   }
 
-  addListSection3(){
+  addListSection3() {
     let dataSec = this.state.data_dsa;
     dataSec["third_section"]["service_details"].push({});
     this.setState({ data_dsa: dataSec });
@@ -572,329 +795,459 @@ class DSADEdit extends Component {
 
   loopSection3 = () => {
     let section_3 = [];
-    for (let i = 0; i < this.state.data_dsa.third_section.service_details.length; i++) {
+    for (
+      let i = 0;
+      i < this.state.data_dsa.third_section.service_details.length;
+      i++
+    ) {
       if (this.state.data_dsa.third_section.service_details[i] !== undefined) {
         let label0, label1, label2, label3;
         if (i === 0) {
-          label0 = (<Label>&nbsp;</Label>);
-          label1 = (<Label>Type of Cost</Label>);
-          label2 = (<Label>Description</Label>);
-          label3 = (<Label>Price</Label>);
+          label0 = <Label>&nbsp;</Label>;
+          label1 = <Label>Type of Cost</Label>;
+          label2 = <Label>Description</Label>;
+          label3 = <Label>Price</Label>;
         }
         section_3.push(
           <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
             <Col md="1" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label0}
-                <div>
-                  Additional {i + 1}
-                </div>
+                <div>Additional {i + 1}</div>
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label1}
-                <Input type="text" name={i+" /// type_of_cost"}  defaultValue={this.state.data_dsa.third_section.service_details[i].type_of_cost} onChange={this.handleChangeFormSection3}></Input>
+                <Input
+                  type="text"
+                  name={i + " /// type_of_cost"}
+                  defaultValue={
+                    this.state.data_dsa.third_section.service_details[i]
+                      .type_of_cost
+                  }
+                  onChange={this.handleChangeFormSection3}
+                ></Input>
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label2}
-                <Input type="textarea" rows="1" name={i+" /// description"}  defaultValue={this.state.data_dsa.third_section.service_details[i].description} onChange={this.handleChangeFormSection3}></Input>
+                <Input
+                  type="textarea"
+                  rows="1"
+                  name={i + " /// description"}
+                  defaultValue={
+                    this.state.data_dsa.third_section.service_details[i]
+                      .description
+                  }
+                  onChange={this.handleChangeFormSection3}
+                ></Input>
               </FormGroup>
             </Col>
             <Col md="2" style={{ margin: "0", padding: "4px" }}>
               <FormGroup>
                 {label3}
-                <Input type="number" name={i+" /// price"}  defaultValue={this.state.data_dsa.third_section.service_details[i].price} onChange={this.handleChangeFormSection3}></Input>
+                <Input
+                  type="number"
+                  name={i + " /// price"}
+                  defaultValue={
+                    this.state.data_dsa.third_section.service_details[i].price
+                  }
+                  onChange={this.handleChangeFormSection3}
+                ></Input>
               </FormGroup>
             </Col>
           </Row>
-        )
+        );
       }
     }
     section_3.push(
       <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
         <Col>
-          <Button onClick={this.addListSection3} size="sm" color="success" style={{margin : '-10px 0px 10px 0px'}}>
+          <Button
+            onClick={this.addListSection3}
+            size="sm"
+            color="success"
+            style={{ margin: "-10px 0px 10px 0px" }}
+          >
             Add List
           </Button>
         </Col>
       </Row>
-    )
+    );
     return section_3;
-  }
+  };
 
   async submitDSA(e) {
     const _id = e.target.id;
     let successUpdate = [];
-    let res = await this.patchDatatoAPINODE('/matreq/submitDsa/' + _id);
+    let res = await this.patchDatatoAPINODE("/matreq/submitDsa/" + _id);
     if (res !== undefined) {
       if (res.data !== undefined) {
         successUpdate.push(res.data);
       }
     }
     if (successUpdate.length !== 0) {
-      alert('DSA has been submitted!');
-      setTimeout(function () { window.location.reload(); }, 2000);
+      alert("DSA has been submitted!");
+      setTimeout(function () {
+        window.location.reload();
+      }, 2000);
     } else {
-      alert('Sorry there is an error, please try again!');
+      alert("Sorry there is an error, please try again!");
     }
   }
 
   updateDSA = async (e) => {
     const dataForm = this.state.data_dsa;
     const newDate = new Date();
-    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
+    const dateNow =
+      newDate.getFullYear() +
+      "-" +
+      (newDate.getMonth() + 1) +
+      "-" +
+      newDate.getDate() +
+      " " +
+      newDate.getHours() +
+      ":" +
+      newDate.getMinutes() +
+      ":" +
+      newDate.getSeconds();
     let successUpdate = [];
 
     let section_1 = [];
-    for(let i = 0; i < 1; i++){
-      if(dataForm.primary_section[i].sub_category !== null){
-        section_1.push(
-          {
-            "category": "MOT",
-            "sub_category": dataForm.primary_section[i].sub_category,
-            "service_master": dataForm.primary_section[i].service_master,
-            "price": isNaN(dataForm.primary_section[i].price) ? 0 : dataForm.primary_section[i].price,
-            "qty": isNaN(dataForm.primary_section[i].qty) ? 0 : dataForm.primary_section[i].qty,
-            "total_price": isNaN(dataForm.primary_section[i].total_price) ? 0 : dataForm.primary_section[i].total_price,
-            "short_text": dataForm.primary_section[i].short_text,
-            "long_text": dataForm.primary_section[i].long_text
-          }
-        )
+    for (let i = 0; i < 1; i++) {
+      if (dataForm.primary_section[i].sub_category !== null) {
+        section_1.push({
+          category: "MOT",
+          sub_category: dataForm.primary_section[i].sub_category,
+          service_master: dataForm.primary_section[i].service_master,
+          price: isNaN(dataForm.primary_section[i].price)
+            ? 0
+            : dataForm.primary_section[i].price,
+          qty: isNaN(dataForm.primary_section[i].qty)
+            ? 0
+            : dataForm.primary_section[i].qty,
+          total_price: isNaN(dataForm.primary_section[i].total_price)
+            ? 0
+            : dataForm.primary_section[i].total_price,
+          short_text: dataForm.primary_section[i].short_text,
+          long_text: dataForm.primary_section[i].long_text,
+        });
       }
     }
-    for(let i = 1; i < dataForm.primary_section.length; i++){
-      if(dataForm.primary_section[i].category !== undefined && dataForm.primary_section[i].category !== null && dataForm.primary_section[i].service_master !== undefined && dataForm.primary_section[i].service_master !== null){
-        section_1.push(
-          {
-            "category": dataForm.primary_section[i].category,
-            "sub_category": dataForm.primary_section[i].category,
-            "service_master": dataForm.primary_section[i].service_master,
-            "price": isNaN(dataForm.primary_section[i].price) ? 0 : dataForm.primary_section[i].price,
-            "qty": isNaN(dataForm.primary_section[i].qty) ? 0 : dataForm.primary_section[i].qty,
-            "total_price": dataForm.primary_section[i].total_price,
-            "short_text": dataForm.primary_section[i].short_text,
-            "long_text": dataForm.primary_section[i].long_text
-          }
-        )
+    for (let i = 1; i < dataForm.primary_section.length; i++) {
+      if (
+        dataForm.primary_section[i].category !== undefined &&
+        dataForm.primary_section[i].category !== null &&
+        dataForm.primary_section[i].service_master !== undefined &&
+        dataForm.primary_section[i].service_master !== null
+      ) {
+        section_1.push({
+          category: dataForm.primary_section[i].category,
+          sub_category: dataForm.primary_section[i].category,
+          service_master: dataForm.primary_section[i].service_master,
+          price: isNaN(dataForm.primary_section[i].price)
+            ? 0
+            : dataForm.primary_section[i].price,
+          qty: isNaN(dataForm.primary_section[i].qty)
+            ? 0
+            : dataForm.primary_section[i].qty,
+          total_price: dataForm.primary_section[i].total_price,
+          short_text: dataForm.primary_section[i].short_text,
+          long_text: dataForm.primary_section[i].long_text,
+        });
       }
     }
 
     let section_2 = [];
 
-    for(let i = 0; i < dataForm.second_section.service_details.length; i++){
-      if(dataForm.second_section.service_details[i].category !== undefined && dataForm.second_section.service_details[i].category !== null && dataForm.second_section.service_details[i].service_master !== undefined && dataForm.second_section.service_details[i].service_master !== null ){
-
-        section_2.push(
-          {
-            "category": dataForm.second_section.service_details[i].category,
-            "sub_category": null,
-            "service_master": dataForm.second_section.service_details[i].service_master,
-            "price": isNaN(dataForm.second_section.service_details[i].price) ? 0 : dataForm.second_section.service_details[i].price,
-            "qty": isNaN(dataForm.second_section.service_details[i].qty) ? 0 : dataForm.second_section.service_details[i].qty,
-            "total_price": isNaN(dataForm.second_section.service_details[i].total_price) ? 0 : dataForm.second_section.service_details[i].total_price,
-            "short_text": dataForm.second_section.service_details[i].short_text,
-            "long_text": dataForm.second_section.service_details[i].long_text
-          }
-        )
+    for (let i = 0; i < dataForm.second_section.service_details.length; i++) {
+      if (
+        dataForm.second_section.service_details[i].category !== undefined &&
+        dataForm.second_section.service_details[i].category !== null &&
+        dataForm.second_section.service_details[i].service_master !==
+          undefined &&
+        dataForm.second_section.service_details[i].service_master !== null
+      ) {
+        section_2.push({
+          category: dataForm.second_section.service_details[i].category,
+          sub_category: null,
+          service_master:
+            dataForm.second_section.service_details[i].service_master,
+          price: isNaN(dataForm.second_section.service_details[i].price)
+            ? 0
+            : dataForm.second_section.service_details[i].price,
+          qty: isNaN(dataForm.second_section.service_details[i].qty)
+            ? 0
+            : dataForm.second_section.service_details[i].qty,
+          total_price: isNaN(
+            dataForm.second_section.service_details[i].total_price
+          )
+            ? 0
+            : dataForm.second_section.service_details[i].total_price,
+          short_text: dataForm.second_section.service_details[i].short_text,
+          long_text: dataForm.second_section.service_details[i].long_text,
+        });
       }
-
     }
 
-
     let section_3 = [];
-    for(let i = 0; i < dataForm.third_section.service_details.length; i++){
-      if(dataForm.third_section.service_details[i].type_of_cost !== undefined){
-        section_3.push(
-          {
-            "type_of_cost":  dataForm.third_section.service_details[i].type_of_cost,
-            "description": dataForm.third_section.service_details[i].description,
-            "price": isNaN(dataForm.third_section.service_details[i].price) ? 0 : dataForm.third_section.service_details[i].price,
-          }
-        )
+    for (let i = 0; i < dataForm.third_section.service_details.length; i++) {
+      if (
+        dataForm.third_section.service_details[i].type_of_cost !== undefined
+      ) {
+        section_3.push({
+          type_of_cost: dataForm.third_section.service_details[i].type_of_cost,
+          description: dataForm.third_section.service_details[i].description,
+          price: isNaN(dataForm.third_section.service_details[i].price)
+            ? 0
+            : dataForm.third_section.service_details[i].price,
+        });
       }
     }
 
     let updateDSA = {
-      "job_order_number": dataForm.job_order_number,
-      "id_po_dsa_doc" : dataForm.id_po_dsa_doc,
-      "no_po_dsa" : dataForm.no_po_dsa,
-      "po_for_dsp": dataForm.no_po_dsa,
-      "po_item_number": dataForm.po_item_number,
-      "dimension_volume": dataForm.dimension_volume,
-      "dimension_weight": dataForm.dimension_weight,
-      "primary_section": section_1,
-      "second_section": {
-        "po_number": null,
-        "service_details": section_2,
+      job_order_number: dataForm.job_order_number,
+      id_po_dsa_doc: dataForm.id_po_dsa_doc,
+      no_po_dsa: dataForm.no_po_dsa,
+      po_for_dsp: dataForm.no_po_dsa,
+      po_item_number: dataForm.po_item_number,
+      dimension_volume: dataForm.dimension_volume,
+      dimension_weight: dataForm.dimension_weight,
+      primary_section: section_1,
+      second_section: {
+        po_number: null,
+        service_details: section_2,
       },
-      "third_section": {
-        "po_number": dataForm.third_section.po_number,
-        "dac_number": dataForm.third_section.dac_number,
-        "service_details": section_3
+      third_section: {
+        po_number: dataForm.third_section.po_number,
+        dac_number: dataForm.third_section.dac_number,
+        service_details: section_3,
       },
-      "dsa_total_value": dataForm.dsa_total_value,
+      dsa_total_value: dataForm.dsa_total_value,
     };
     let fileDocument = new FormData();
-    await fileDocument.append('mrCategory', "Return");
-    await fileDocument.append('submitType', parseInt(0));
-    await fileDocument.append('data', JSON.stringify(updateDSA));
-    await fileDocument.append('account_id', "2");
-    let res = await this.patchDatatoAPINODE('/matreq/updateDsa/' + this.props.match.params.id, fileDocument);
+    await fileDocument.append("mrCategory", "Return");
+    await fileDocument.append("submitType", parseInt(0));
+    await fileDocument.append("data", JSON.stringify(updateDSA));
+    await fileDocument.append("account_id", "2");
+    let res = await this.patchDatatoAPINODE(
+      "/matreq/updateDsa/" + this.props.match.params.id,
+      fileDocument
+    );
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
     } else {
-      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
         if (res.response.data.error.message !== undefined) {
-
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error.message,
+          });
         } else {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error,
+          });
         }
       } else {
-        this.setState({ action_status: 'failed' });
+        this.setState({ action_status: "failed" });
       }
     }
-  }
+  };
 
   updateDSAAcutalize = async (e) => {
     const dataForm = this.state.data_dsa;
     this.toggleActualModal();
     const newDate = new Date();
-    const dateNow = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + " " + newDate.getHours() + ":" + newDate.getMinutes() + ":" + newDate.getSeconds();
+    const dateNow =
+      newDate.getFullYear() +
+      "-" +
+      (newDate.getMonth() + 1) +
+      "-" +
+      newDate.getDate() +
+      " " +
+      newDate.getHours() +
+      ":" +
+      newDate.getMinutes() +
+      ":" +
+      newDate.getSeconds();
     let successUpdate = [];
 
     let section_1 = [];
-    for(let i = 0; i < 1; i++){
-      if(dataForm.primary_section[i].sub_category !== null){
-        section_1.push(
-          {
-            "category": "MOT",
-            "sub_category": dataForm.primary_section[i].sub_category,
-            "service_master": dataForm.primary_section[i].service_master,
-            "price": isNaN(dataForm.primary_section[i].price) ? 0 : dataForm.primary_section[i].price,
-            "qty": isNaN(dataForm.primary_section[i].qty) ? 0 : dataForm.primary_section[i].qty,
-            "total_price": isNaN(dataForm.primary_section[i].total_price) ? 0 : dataForm.primary_section[i].total_price,
-            "short_text": dataForm.primary_section[i].short_text,
-            "long_text": dataForm.primary_section[i].long_text
-          }
-        )
+    for (let i = 0; i < 1; i++) {
+      if (dataForm.primary_section[i].sub_category !== null) {
+        section_1.push({
+          category: "MOT",
+          sub_category: dataForm.primary_section[i].sub_category,
+          service_master: dataForm.primary_section[i].service_master,
+          price: isNaN(dataForm.primary_section[i].price)
+            ? 0
+            : dataForm.primary_section[i].price,
+          qty: isNaN(dataForm.primary_section[i].qty)
+            ? 0
+            : dataForm.primary_section[i].qty,
+          total_price: isNaN(dataForm.primary_section[i].total_price)
+            ? 0
+            : dataForm.primary_section[i].total_price,
+          short_text: dataForm.primary_section[i].short_text,
+          long_text: dataForm.primary_section[i].long_text,
+        });
       }
     }
-    for(let i = 1; i < dataForm.primary_section.length; i++){
-      if(dataForm.primary_section[i].category !== undefined && dataForm.primary_section[i].category !== null && dataForm.primary_section[i].service_master !== undefined && dataForm.primary_section[i].service_master !== null){
-        section_1.push(
-          {
-            "category": dataForm.primary_section[i].category,
-            "sub_category": dataForm.primary_section[i].category,
-            "service_master": dataForm.primary_section[i].service_master,
-            "price": isNaN(dataForm.primary_section[i].price) ? 0 : dataForm.primary_section[i].price,
-            "qty": isNaN(dataForm.primary_section[i].qty) ? 0 : dataForm.primary_section[i].qty,
-            "total_price": dataForm.primary_section[i].total_price,
-            "short_text": dataForm.primary_section[i].short_text,
-            "long_text": dataForm.primary_section[i].long_text
-          }
-        )
+    for (let i = 1; i < dataForm.primary_section.length; i++) {
+      if (
+        dataForm.primary_section[i].category !== undefined &&
+        dataForm.primary_section[i].category !== null &&
+        dataForm.primary_section[i].service_master !== undefined &&
+        dataForm.primary_section[i].service_master !== null
+      ) {
+        section_1.push({
+          category: dataForm.primary_section[i].category,
+          sub_category: dataForm.primary_section[i].category,
+          service_master: dataForm.primary_section[i].service_master,
+          price: isNaN(dataForm.primary_section[i].price)
+            ? 0
+            : dataForm.primary_section[i].price,
+          qty: isNaN(dataForm.primary_section[i].qty)
+            ? 0
+            : dataForm.primary_section[i].qty,
+          total_price: dataForm.primary_section[i].total_price,
+          short_text: dataForm.primary_section[i].short_text,
+          long_text: dataForm.primary_section[i].long_text,
+        });
       }
     }
 
     let section_2 = [];
 
-    for(let i = 0; i < dataForm.second_section.service_details.length; i++){
-      if(dataForm.second_section.service_details[i].category !== undefined && dataForm.second_section.service_details[i].category !== null && dataForm.second_section.service_details[i].service_master !== undefined && dataForm.second_section.service_details[i].service_master !== null ){
-
-        section_2.push(
-          {
-            "category": dataForm.second_section.service_details[i].category,
-            "sub_category": null,
-            "service_master": dataForm.second_section.service_details[i].service_master,
-            "price": isNaN(dataForm.second_section.service_details[i].price) ? 0 : dataForm.second_section.service_details[i].price,
-            "qty": isNaN(dataForm.second_section.service_details[i].qty) ? 0 : dataForm.second_section.service_details[i].qty,
-            "total_price": isNaN(dataForm.second_section.service_details[i].total_price) ? 0 : dataForm.second_section.service_details[i].total_price,
-            "short_text": dataForm.second_section.service_details[i].short_text,
-            "long_text": dataForm.second_section.service_details[i].long_text
-          }
-        )
+    for (let i = 0; i < dataForm.second_section.service_details.length; i++) {
+      if (
+        dataForm.second_section.service_details[i].category !== undefined &&
+        dataForm.second_section.service_details[i].category !== null &&
+        dataForm.second_section.service_details[i].service_master !==
+          undefined &&
+        dataForm.second_section.service_details[i].service_master !== null
+      ) {
+        section_2.push({
+          category: dataForm.second_section.service_details[i].category,
+          sub_category: null,
+          service_master:
+            dataForm.second_section.service_details[i].service_master,
+          price: isNaN(dataForm.second_section.service_details[i].price)
+            ? 0
+            : dataForm.second_section.service_details[i].price,
+          qty: isNaN(dataForm.second_section.service_details[i].qty)
+            ? 0
+            : dataForm.second_section.service_details[i].qty,
+          total_price: isNaN(
+            dataForm.second_section.service_details[i].total_price
+          )
+            ? 0
+            : dataForm.second_section.service_details[i].total_price,
+          short_text: dataForm.second_section.service_details[i].short_text,
+          long_text: dataForm.second_section.service_details[i].long_text,
+        });
       }
-
     }
 
-
     let section_3 = [];
-    for(let i = 0; i < dataForm.third_section.service_details.length; i++){
-      if(dataForm.third_section.service_details[i].type_of_cost !== undefined){
-        section_3.push(
-          {
-            "type_of_cost":  dataForm.third_section.service_details[i].type_of_cost,
-            "description": dataForm.third_section.service_details[i].description,
-            "price": isNaN(dataForm.third_section.service_details[i].price) ? 0 : dataForm.third_section.service_details[i].price,
-          }
-        )
+    for (let i = 0; i < dataForm.third_section.service_details.length; i++) {
+      if (
+        dataForm.third_section.service_details[i].type_of_cost !== undefined
+      ) {
+        section_3.push({
+          type_of_cost: dataForm.third_section.service_details[i].type_of_cost,
+          description: dataForm.third_section.service_details[i].description,
+          price: isNaN(dataForm.third_section.service_details[i].price)
+            ? 0
+            : dataForm.third_section.service_details[i].price,
+        });
       }
     }
 
     let updateDSA = {
-      "job_order_number": dataForm.job_order_number,
-      "id_po_dsa_doc" : dataForm.id_po_dsa_doc,
-      "no_po_dsa" : dataForm.no_po_dsa,
-      "po_for_dsp": dataForm.no_po_dsa,
-      "po_item_number": dataForm.po_item_number,
-      "dimension_volume": dataForm.dimension_volume,
-      "dimension_weight": dataForm.dimension_weight,
-      "primary_section": section_1,
-      "second_section": {
-        "po_number": null,
-        "service_details": section_2,
+      job_order_number: dataForm.job_order_number,
+      id_po_dsa_doc: dataForm.id_po_dsa_doc,
+      no_po_dsa: dataForm.no_po_dsa,
+      po_for_dsp: dataForm.no_po_dsa,
+      po_item_number: dataForm.po_item_number,
+      dimension_volume: dataForm.dimension_volume,
+      dimension_weight: dataForm.dimension_weight,
+      primary_section: section_1,
+      second_section: {
+        po_number: null,
+        service_details: section_2,
       },
-      "third_section": {
-        "po_number": dataForm.third_section.po_number,
-        "dac_number": dataForm.third_section.dac_number,
-        "service_details": section_3
+      third_section: {
+        po_number: dataForm.third_section.po_number,
+        dac_number: dataForm.third_section.dac_number,
+        service_details: section_3,
       },
-      "dsa_total_value": dataForm.dsa_total_value,
+      dsa_total_value: dataForm.dsa_total_value,
     };
     let fileDocument = new FormData();
-    await fileDocument.append('submitType', parseInt(1));
-    await fileDocument.append('data', JSON.stringify(updateDSA));
-    await fileDocument.append('dsa_documents', this.state.inputan_file);
-    await fileDocument.append('account_id', "2");
-    await fileDocument.append('mrCategory', "Return");
-    if(dataForm.dsa_status.find(ds => ds.dsa_status_value === "REJECTED") !== undefined){
-      await fileDocument.append('updateNote', this.state.reactual_note)
+    await fileDocument.append("submitType", parseInt(1));
+    await fileDocument.append("data", JSON.stringify(updateDSA));
+    await fileDocument.append("dsa_documents", this.state.inputan_file);
+    await fileDocument.append("account_id", "2");
+    await fileDocument.append("mrCategory", "Return");
+    if (
+      dataForm.dsa_status.find((ds) => ds.dsa_status_value === "REJECTED") !==
+      undefined
+    ) {
+      await fileDocument.append("updateNote", this.state.reactual_note);
     }
-    let res = await this.patchDatatoAPINODE('/matreq/updateDsa/' + this.props.match.params.id, fileDocument);
+    let res = await this.patchDatatoAPINODE(
+      "/matreq/updateDsa/" + this.props.match.params.id,
+      fileDocument
+    );
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
     } else {
-      if (res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined) {
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
         if (res.response.data.error.message !== undefined) {
-
-          this.setState({ action_status: 'failed', action_message: res.response.data.error.message });
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error.message,
+          });
         } else {
-          this.setState({ action_status: 'failed', action_message: res.response.data.error });
+          this.setState({
+            action_status: "failed",
+            action_message: res.response.data.error,
+          });
         }
       } else {
-        this.setState({ action_status: 'failed' });
+        this.setState({ action_status: "failed" });
       }
     }
-  }
+  };
 
   async approveDSA(e) {
     const _id = e.target.id;
     let successUpdate = [];
-    let res = await this.patchDatatoAPINODE('/matreq/approveDSA/' + _id);
+    let res = await this.patchDatatoAPINODE("/matreq/approveDSA/" + _id);
     if (res !== undefined) {
       if (res.data !== undefined) {
         successUpdate.push(res.data);
       }
     }
     if (successUpdate.length !== 0) {
-      alert('DSA has been approved!');
-      setTimeout(function () { window.location.reload(); }, 2000);
+      alert("DSA has been approved!");
+      setTimeout(function () {
+        window.location.reload();
+      }, 2000);
     } else {
-      alert('Sorry there is an error, please try again!');
+      alert("Sorry there is an error, please try again!");
     }
   }
 
@@ -902,34 +1255,41 @@ class DSADEdit extends Component {
     try {
       let respond = await axios.patch(API_URL + url, data, {
         headers: {
-          'Content-Type': 'application/json',
-          'If-Match': _etag
+          "Content-Type": "application/json",
+          "If-Match": _etag,
         },
         auth: {
           username: username,
-          password: password
-        }
-      })
+          password: password,
+        },
+      });
       if (respond.status >= 200 && respond.status < 300) {
-        console.log('respond patch data', respond);
+        console.log("respond patch data", respond);
       }
       return respond;
     } catch (err) {
       let respond = undefined;
-      this.setState({ action_status: 'failed', action_message: 'Sorry, there is something wrong, please try again!' });
-      console.log('respond patch data', err);
+      this.setState({
+        action_status: "failed",
+        action_message: "Sorry, there is something wrong, please try again!",
+      });
+      console.log("respond patch data", err);
       return respond;
     }
   }
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + this.state.tokenUser
-        },
-      })
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond Patch data", respond);
       }
@@ -941,7 +1301,9 @@ class DSADEdit extends Component {
     }
   }
 
-  loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
+  loading = () => (
+    <div className="animated fadeIn pt-1 text-center">Loading...</div>
+  );
 
   handleChangeForm = async (e) => {
     const value = e.target.value;
@@ -983,10 +1345,12 @@ class DSADEdit extends Component {
     this.setState({ data_dsa: dataForm }, () => {
       console.log("DSA Form", this.state.data_dsa);
     });
-  }
+  };
 
   handleChangeDSA = async (newValue, e) => {
-    let dataDSA = this.state.list_dsa_selection.find(e => e._id === newValue.value);
+    let dataDSA = this.state.list_dsa_selection.find(
+      (e) => e._id === newValue.value
+    );
     let dataForm = this.state.data_dsa;
     dataForm[parseInt(e.name)] = dataDSA.dsa_price_id;
     dataForm[parseInt(e.name) + 1] = dataDSA.price;
@@ -1004,11 +1368,22 @@ class DSADEdit extends Component {
       return [];
     } else {
       let dsa_list = [];
-      const getDSA = await this.getDataFromAPIXL('/dsa_price_sorted?where={"dsa_price_id":{"$regex":"' + inputValue + '", "$options":"i"}, "vendor_code_actual" :"'+this.state.data_dsa.dsp_company_code+'"}');
+      const getDSA = await this.getDataFromAPIXL(
+        '/dsa_price_sorted?where={"dsa_price_id":{"$regex":"' +
+          inputValue +
+          '", "$options":"i"}, "vendor_code_actual" :"' +
+          this.state.data_dsa.dsp_company_code +
+          '"}'
+      );
       if (getDSA !== undefined && getDSA.data !== undefined) {
         this.setState({ list_dsa_selection: getDSA.data._items }, () =>
-          getDSA.data._items.map(dsa =>
-            dsa_list.push({ 'label': dsa.dsa_price_id !== undefined ? dsa.dsa_price_id : null, 'value': dsa._id })))
+          getDSA.data._items.map((dsa) =>
+            dsa_list.push({
+              label: dsa.dsa_price_id !== undefined ? dsa.dsa_price_id : null,
+              value: dsa._id,
+            })
+          )
+        );
       }
       return dsa_list;
     }
@@ -1020,11 +1395,20 @@ class DSADEdit extends Component {
       return [];
     } else {
       let po_list = [];
-      const getPO = await this.getDataFromAPINODE('/poDsa?where={"po_dsa_no":{"$regex":"' + inputValue + '", "$options":"i"}, "status": "Online"}');
+      const getPO = await this.getDataFromAPINODE(
+        '/poDsa?where={"po_dsa_no":{"$regex":"' +
+          inputValue +
+          '", "$options":"i"}, "status": "Online"}'
+      );
       if (getPO !== undefined && getPO.data !== undefined) {
         this.setState({ list_po_selection: getPO.data.data }, () =>
-          getPO.data.data.map(dsa =>
-            po_list.push({ 'label': dsa.no_po_dsa !== undefined ? dsa.no_po_dsa : null, 'value': dsa._id })))
+          getPO.data.data.map((dsa) =>
+            po_list.push({
+              label: dsa.no_po_dsa !== undefined ? dsa.no_po_dsa : null,
+              value: dsa._id,
+            })
+          )
+        );
       }
       return po_list;
     }
@@ -1036,12 +1420,14 @@ class DSADEdit extends Component {
     let field = e.target.name;
     dataSec[field] = value;
     this.setState({ data_dsa: dataSec });
-    console.log("dataSec", this.state.data_dsa)
+    console.log("dataSec", this.state.data_dsa);
   }
 
   handleChangePO = async (newValue, e) => {
     let dataDSA = this.state.data_dsa;
-    let dataPO = this.state.list_po_selection.find(e => e._id === newValue.value);
+    let dataPO = this.state.list_po_selection.find(
+      (e) => e._id === newValue.value
+    );
     let dataForm = this.state.po_selected;
     dataDSA["id_po_dsa_doc"] = dataPO._id;
     dataDSA["no_po_dsa"] = dataPO.no_po_dsa;
@@ -1051,7 +1437,11 @@ class DSADEdit extends Component {
 
   handleInputFileDSA = (e) => {
     let fileUpload = null;
-    if (e !== undefined && e.target !== undefined && e.target.files !== undefined ) {
+    if (
+      e !== undefined &&
+      e.target !== undefined &&
+      e.target.files !== undefined
+    ) {
       fileUpload = e.target.files[0];
     }
     this.setState({ inputan_file: fileUpload }, () =>
@@ -1059,186 +1449,358 @@ class DSADEdit extends Component {
     );
   };
 
-  handleChangeReactualNote(e){
+  handleChangeReactualNote(e) {
     const value = e.target.value;
-    this.setState({reactual_note : value});
+    this.setState({ reactual_note: value });
   }
 
   render() {
     return (
       <div className="animated fadeIn" style={{ overflow: "scroll" }}>
         <div style={{ width: "150%" }}>
-        <Row className="row-alert-fixed">
-          <Col xs="12" lg="12">
-            <DefaultNotif actionMessage={this.state.action_message} actionStatus={this.state.action_status} />
-          </Col>
-        </Row>
+          <Row className="row-alert-fixed">
+            <Col xs="12" lg="12">
+              <DefaultNotif
+                actionMessage={this.state.action_message}
+                actionStatus={this.state.action_status}
+              />
+            </Col>
+          </Row>
           <Row>
             <Col xs="12" lg="12">
-              {this.state.data_dsa !== null && this.state.data_dsa !== undefined && (
-                <Card>
-                  <CardHeader>
-                    <span style={{ lineHeight: '2', fontSize: '17px' }}><i className="fa fa-info-circle" style={{ marginRight: "8px" }}></i>DSA Detail ({this.state.data_dsa.dsa_number})</span>
-                  </CardHeader>
-                  <CardBody>
-                    <Form>
-                      <Row>
-                        <Col md="3">
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>MRA ID</Label>
-                            <Input type="text" readOnly value={this.state.data_dsa.mra_id}></Input>
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                      <h5>MR INFORMATION</h5>
-                      <Row>
-                        <Col md="3">
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>DSA Number</Label>
-                            <Input type="text" name="dsa_number" readOnly value={this.state.data_dsa.dsa_number} />
-                          </FormGroup>
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>Project</Label>
-                            <Input type="text" name="project" readOnly value={this.state.data_dsa.project_name} />
-                          </FormGroup>
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>DSP</Label>
-                            <Input type="text" name="dsp" readOnly value={this.state.data_dsa.dsp_company} />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                      <Row>
-                        <Col md="3">
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>PO for DSP</Label>
-                            <AsyncSelect
-                              isDisabled
-                              loadOptions={this.loadOptionsPO}
-                              defaultOptions
-                              defaultInputValue={this.state.data_dsa.no_po_dsa}
-                              onChange={this.handleChangePO}
-                              name="16"
-                            />
-                          </FormGroup>
-                        </Col>
-                        <Col md="3">
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>Network Number</Label>
-                            <Input type="text" name="network_number" readOnly value={this.state.network_number} />
-                          </FormGroup>
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>PO Item Number</Label>
-                            <Input type="text" name="po_item_number" defaultValue={this.state.data_dsa.po_item_number} onChange={this.handleChangeFormSectionLevel2} />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                      <h5>PO UTILIZATION</h5>
-                      <Row>
-                        <Col md="3">
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>Balanced Value</Label>
-                            <Input type="text" name="balanced_value" readOnly />
-                          </FormGroup>
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>% Utilization</Label>
-                            <Input type="text" name="percent_utilization" readOnly />
-                          </FormGroup>
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>Status</Label>
-                            <Input type="text" name="status" readOnly />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                      <h5>DETAIL</h5>
-                      <Row>
-                        <Col md="3">
-                          <h6>Destination</h6>
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>From</Label>
-                            <Input type="text" name="10" value={this.state.data_dsa.origin !== undefined ? this.state.data_dsa.origin.value : ""} onChange={this.handleChangeForm} readOnly />
-                          </FormGroup>
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>To {this.state.data_dsa !== null && (this.state.data_dsa.mr_type === "New" || this.state.data_dsa.mr_type === null) ? "(NE)" : "(Warehouse)"}</Label>
-                            <Input type="text" name="11" value={this.state.destination} onChange={this.handleChangeForm} readOnly />
-                          </FormGroup>
-                          {this.state.data_dsa !== null ? this.state.data_dsa.site_info[1] !== undefined && this.state.data_dsa.mr_type !== "Return" && this.state.data_dsa.mr_type !== "Relocation" ? (
+              {this.state.data_dsa !== null &&
+                this.state.data_dsa !== undefined && (
+                  <Card>
+                    <CardHeader>
+                      <span style={{ lineHeight: "2", fontSize: "17px" }}>
+                        <i
+                          className="fa fa-info-circle"
+                          style={{ marginRight: "8px" }}
+                        ></i>
+                        DSA Detail ({this.state.data_dsa.dsa_number})
+                      </span>
+                    </CardHeader>
+                    <CardBody>
+                      <Form>
+                        <Row>
+                          <Col md="3">
                             <FormGroup style={{ paddingLeft: "16px" }}>
-                              <Label>To (FE)</Label>
-                              <Input type="text" name="11" value={this.state.data_dsa !== null ? this.state.data_dsa.site_info[1].site_id : ""} onChange={this.handleChangeForm} readOnly />
+                              <Label>MRA ID</Label>
+                              <Input
+                                type="text"
+                                readOnly
+                                value={this.state.data_dsa.mra_id}
+                              ></Input>
                             </FormGroup>
-                          ) : (<div></div>) : (<div></div>)}
-                        </Col>
-                      </Row>
-                      <Row>
-                        <Col md="6">
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>Address</Label>
-                            <Input type="textarea" name="14" rows="3" readOnly value={this.state.data_dsa.origin !== undefined ? this.state.data_dsa.origin.value : ""} />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                      <Row>
-                        <Col md="2">
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>Vol (m<sup>3</sup>)</Label>
-                            <Input type="text" name="dimension_volume" defaultValue={this.state.data_dsa.dimension_volume} onChange={this.handleChangeFormSectionLevel2}/>
-                          </FormGroup>
-                        </Col>
-                        <Col md="2">
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>Weight (Kg)</Label>
-                            <Input type="text" name="dimension_weight" defaultValue={this.state.data_dsa.dimension_weight} onChange={this.handleChangeFormSectionLevel2}/>
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                      {this.loopSection1()}
-                      <h5>SECTION 2 (For additional services which are covered in PO and available in contract)</h5>
-                      {this.loopSection2()}
-                      <h5>SECTION 3 (For additional services which are not covered in PO and not available in contract)</h5>
-                      <Row>
-                        <Col md="3">
-                          <FormGroup style={{ paddingLeft: "16px" }}>
-                            <Label>DAC Number</Label>
-                            <Input type="text" name="dac_number" value={this.state.data_dsa.third_section.dac_number} onChange={this.handleChangeFormSectionNonDetail3}/>
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                      {this.loopSection3()}
-                      <div></div>
-                      <h5 style={{ display: "none" }}>DSA UPDATE</h5>
-                      <Row style={{ paddingLeft: "16px", display: "none" }}>
-                        <Col md="1" style={{ paddingLeft: "16px" }}>
-                          <FormGroup>
-                            <Label>Submission Type</Label>
-                          </FormGroup>
-                        </Col>
-                        <Col md="1" style={{ margin: "0", padding: "4px" }}>
-                          <FormGroup>
-                            <Input type="select" name="196" onChange={this.handleChangeForm}>
-                              <option disabled selected hidden>Select</option>
-                              <option value="Actual">Actual</option>
-                              <option value="Prebook">Prebook</option>
-                            </Input>
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                      <h5>DSA SUMMARY</h5>
-                      <Row style={{ paddingLeft: "16px", paddingRight: "16px" }}>
-                        <Col md="2" style={{ margin: "0", paddingLeft: "16px" }}>
-                          <FormGroup>
-                            <Label>Total Value</Label>
-                            <Input type="text" readOnly value={this.state.data_dsa.dsa_total_value.toLocaleString()} />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                    </Form>
-                  </CardBody>
-                  <CardFooter>
-                    <Button type="submit" color="primary" onClick={this.updateDSA} size="sm" ><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i> Update DSA</Button>
-                    <Button type="submit" color="primary" style={{marginLeft : '200px'}} onClick={this.toggleActualModal} size="sm" ><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i> Update DSA and state to Actual</Button>
-                  </CardFooter>
-                </Card>
-              )}
+                          </Col>
+                        </Row>
+                        <h5>MR INFORMATION</h5>
+                        <Row>
+                          <Col md="3">
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>DSA Number</Label>
+                              <Input
+                                type="text"
+                                name="dsa_number"
+                                readOnly
+                                value={this.state.data_dsa.dsa_number}
+                              />
+                            </FormGroup>
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>Project</Label>
+                              <Input
+                                type="text"
+                                name="project"
+                                readOnly
+                                value={this.state.data_dsa.project_name}
+                              />
+                            </FormGroup>
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>DSP</Label>
+                              <Input
+                                type="text"
+                                name="dsp"
+                                readOnly
+                                value={this.state.data_dsa.dsp_company}
+                              />
+                            </FormGroup>
+                          </Col>
+                        </Row>
+                        <Row>
+                          <Col md="3">
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>PO for DSP</Label>
+                              <AsyncSelect
+                                isDisabled
+                                loadOptions={this.loadOptionsPO}
+                                defaultOptions
+                                defaultInputValue={
+                                  this.state.data_dsa.no_po_dsa
+                                }
+                                onChange={this.handleChangePO}
+                                name="16"
+                              />
+                            </FormGroup>
+                          </Col>
+                          <Col md="3">
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>Network Number</Label>
+                              <Input
+                                type="text"
+                                name="network_number"
+                                readOnly
+                                value={this.state.network_number}
+                              />
+                            </FormGroup>
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>PO Item Number</Label>
+                              <Input
+                                type="text"
+                                name="po_item_number"
+                                defaultValue={
+                                  this.state.data_dsa.po_item_number
+                                }
+                                onChange={this.handleChangeFormSectionLevel2}
+                              />
+                            </FormGroup>
+                          </Col>
+                        </Row>
+                        <h5>PO UTILIZATION</h5>
+                        <Row>
+                          <Col md="3">
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>Balanced Value</Label>
+                              <Input
+                                type="text"
+                                name="balanced_value"
+                                readOnly
+                              />
+                            </FormGroup>
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>% Utilization</Label>
+                              <Input
+                                type="text"
+                                name="percent_utilization"
+                                readOnly
+                              />
+                            </FormGroup>
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>Status</Label>
+                              <Input type="text" name="status" readOnly />
+                            </FormGroup>
+                          </Col>
+                        </Row>
+                        <h5>DETAIL</h5>
+                        <Row>
+                          <Col md="3">
+                            <h6>Destination</h6>
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>From</Label>
+                              <Input
+                                type="text"
+                                name="10"
+                                value={
+                                  this.state.data_dsa.origin !== undefined
+                                    ? this.state.data_dsa.origin.value
+                                    : ""
+                                }
+                                onChange={this.handleChangeForm}
+                                readOnly
+                              />
+                            </FormGroup>
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>
+                                To{" "}
+                                {this.state.data_dsa !== null &&
+                                (this.state.data_dsa.mr_type === "New" ||
+                                  this.state.data_dsa.mr_type === null)
+                                  ? "(NE)"
+                                  : "(Warehouse)"}
+                              </Label>
+                              <Input
+                                type="text"
+                                name="11"
+                                value={this.state.destination}
+                                onChange={this.handleChangeForm}
+                                readOnly
+                              />
+                            </FormGroup>
+                            {this.state.data_dsa !== null ? (
+                              this.state.data_dsa.site_info[1] !== undefined &&
+                              this.state.data_dsa.mr_type !== "Return" &&
+                              this.state.data_dsa.mr_type !== "Relocation" ? (
+                                <FormGroup style={{ paddingLeft: "16px" }}>
+                                  <Label>To (FE)</Label>
+                                  <Input
+                                    type="text"
+                                    name="11"
+                                    value={
+                                      this.state.data_dsa !== null
+                                        ? this.state.data_dsa.site_info[1]
+                                            .site_id
+                                        : ""
+                                    }
+                                    onChange={this.handleChangeForm}
+                                    readOnly
+                                  />
+                                </FormGroup>
+                              ) : (
+                                <div></div>
+                              )
+                            ) : (
+                              <div></div>
+                            )}
+                          </Col>
+                        </Row>
+                        <Row>
+                          <Col md="6">
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>Address</Label>
+                              <Input
+                                type="textarea"
+                                name="14"
+                                rows="3"
+                                readOnly
+                                value={
+                                  this.state.data_dsa.origin !== undefined
+                                    ? this.state.data_dsa.origin.value
+                                    : ""
+                                }
+                              />
+                            </FormGroup>
+                          </Col>
+                        </Row>
+                        <Row>
+                          <Col md="2">
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>
+                                Vol (m<sup>3</sup>)
+                              </Label>
+                              <Input
+                                type="text"
+                                name="dimension_volume"
+                                defaultValue={
+                                  this.state.data_dsa.dimension_volume
+                                }
+                                onChange={this.handleChangeFormSectionLevel2}
+                              />
+                            </FormGroup>
+                          </Col>
+                          <Col md="2">
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>Weight (Kg)</Label>
+                              <Input
+                                type="text"
+                                name="dimension_weight"
+                                defaultValue={
+                                  this.state.data_dsa.dimension_weight
+                                }
+                                onChange={this.handleChangeFormSectionLevel2}
+                              />
+                            </FormGroup>
+                          </Col>
+                        </Row>
+                        {this.loopSection1()}
+                        <h5>
+                          SECTION 2 (For additional services which are covered
+                          in PO and available in contract)
+                        </h5>
+                        {this.loopSection2()}
+                        <h5>
+                          SECTION 3 (For additional services which are not
+                          covered in PO and not available in contract)
+                        </h5>
+                        <Row>
+                          <Col md="3">
+                            <FormGroup style={{ paddingLeft: "16px" }}>
+                              <Label>DAC Number</Label>
+                              <Input
+                                type="text"
+                                name="dac_number"
+                                value={
+                                  this.state.data_dsa.third_section.dac_number
+                                }
+                                onChange={
+                                  this.handleChangeFormSectionNonDetail3
+                                }
+                              />
+                            </FormGroup>
+                          </Col>
+                        </Row>
+                        {this.loopSection3()}
+                        <div></div>
+                        <h5 style={{ display: "none" }}>DSA UPDATE</h5>
+                        <Row style={{ paddingLeft: "16px", display: "none" }}>
+                          <Col md="1" style={{ paddingLeft: "16px" }}>
+                            <FormGroup>
+                              <Label>Submission Type</Label>
+                            </FormGroup>
+                          </Col>
+                          <Col md="1" style={{ margin: "0", padding: "4px" }}>
+                            <FormGroup>
+                              <Input
+                                type="select"
+                                name="196"
+                                onChange={this.handleChangeForm}
+                              >
+                                <option disabled selected hidden>
+                                  Select
+                                </option>
+                                <option value="Actual">Actual</option>
+                                <option value="Prebook">Prebook</option>
+                              </Input>
+                            </FormGroup>
+                          </Col>
+                        </Row>
+                        <h5>DSA SUMMARY</h5>
+                        <Row
+                          style={{ paddingLeft: "16px", paddingRight: "16px" }}
+                        >
+                          <Col
+                            md="2"
+                            style={{ margin: "0", paddingLeft: "16px" }}
+                          >
+                            <FormGroup>
+                              <Label>Total Value</Label>
+                              <Input
+                                type="text"
+                                readOnly
+                                value={this.state.data_dsa.dsa_total_value.toLocaleString()}
+                              />
+                            </FormGroup>
+                          </Col>
+                        </Row>
+                      </Form>
+                    </CardBody>
+                    <CardFooter>
+                      <Button
+                        type="submit"
+                        color="primary"
+                        onClick={this.updateDSA}
+                        size="sm"
+                      >
+                        <i
+                          className="fa fa-plus-square"
+                          style={{ marginRight: "8px" }}
+                        ></i>{" "}
+                        Update DSA
+                      </Button>
+                      <Button
+                        type="submit"
+                        color="primary"
+                        style={{ marginLeft: "200px" }}
+                        onClick={this.toggleActualModal}
+                        size="sm"
+                      >
+                        <i
+                          className="fa fa-plus-square"
+                          style={{ marginRight: "8px" }}
+                        ></i>{" "}
+                        Update DSA and state to Actual
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                )}
             </Col>
           </Row>
         </div>
@@ -1252,18 +1814,27 @@ class DSADEdit extends Component {
           <div>
             <table>
               <tbody>
-                {(this.state.data_dsa !== null && this.state.data_dsa.dsa_status !== undefined && this.state.data_dsa.dsa_status.find(ds => ds.dsa_status_value === "REJECTED") !== undefined) && (
-                  <Fragment>
-                  <tr>
-                    <td>Reactual Note</td>
-                  </tr>
-                  <tr>
-                    <td colSpan="3">
-                      <Input type="textarea" style={{marginBottom : '20px'}} onChange={this.handleChangeReactualNote} value={this.state.reactual_note} />
-                    </td>
-                  </tr>
-                  </Fragment>
-                )}
+                {this.state.data_dsa !== null &&
+                  this.state.data_dsa.dsa_status !== undefined &&
+                  this.state.data_dsa.dsa_status.find(
+                    (ds) => ds.dsa_status_value === "REJECTED"
+                  ) !== undefined && (
+                    <Fragment>
+                      <tr>
+                        <td>Reactual Note</td>
+                      </tr>
+                      <tr>
+                        <td colSpan="3">
+                          <Input
+                            type="textarea"
+                            style={{ marginBottom: "20px" }}
+                            onChange={this.handleChangeReactualNote}
+                            value={this.state.reactual_note}
+                          />
+                        </td>
+                      </tr>
+                    </Fragment>
+                  )}
                 <tr>
                   <td colSpan="3">Please upload the document</td>
                 </tr>
@@ -1296,15 +1867,15 @@ class DSADEdit extends Component {
           </ModalFooter>
         </ModalCreateNew>
       </div>
-    )
+    );
   }
 }
 
 const mapStateToProps = (state) => {
   return {
     dataLogin: state.loginData,
-    SidebarMinimize: state.minimizeSidebar
-  }
-}
+    SidebarMinimize: state.minimizeSidebar,
+  };
+};
 
 export default connect(mapStateToProps)(DSADEdit);

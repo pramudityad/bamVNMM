@@ -25,7 +25,7 @@ const API_URL_tsel = "https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi";
 const username_tsel = "adminbamidsuper";
 const password_tsel = "F760qbAg2sml";
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 class AssignmentListReport extends Component {
   constructor(props) {
@@ -43,9 +43,9 @@ class AssignmentListReport extends Component {
       totalData: 0,
       perPage: 10,
       filter_list: new Array(8).fill(""),
-      filter_date:{
+      filter_date: {
         filter_list_date: null,
-        filter_list_date2: null
+        filter_list_date2: null,
       },
       asg_all: [],
     };
@@ -65,7 +65,7 @@ class AssignmentListReport extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -106,7 +106,15 @@ class AssignmentListReport extends Component {
     const page = this.state.activePage;
     const maxPage = this.state.perPage;
     let filter_array = [];
-    let date =  this.state.filter_date.filter_list_date && this.state.filter_date.filter_list_date2 === null ? '{}' : '{"created_on":{"$gte":"'+this.state.filter_date.filter_list_date+' 00:00:00", "$lte":"'+this.state.filter_date.filter_list_date2+' 23:59:59"}}';
+    let date =
+      this.state.filter_date.filter_list_date &&
+      this.state.filter_date.filter_list_date2 === null
+        ? "{}"
+        : '{"created_on":{"$gte":"' +
+          this.state.filter_date.filter_list_date +
+          ' 00:00:00", "$lte":"' +
+          this.state.filter_date.filter_list_date2 +
+          ' 23:59:59"}}';
     this.state.filter_list[0] !== "" &&
       filter_array.push(
         '"Assignment_No":{"$regex" : "' +
@@ -149,9 +157,11 @@ class AssignmentListReport extends Component {
           this.state.filter_list[6] +
           '", "$options" : "i"}'
       );
-      let whereAnd = "{" + filter_array.join(",") + "}";
-      this.getDataFromAPINODE(
-      "/aspAssignment/aspassign?srt=_id:-1&q="+ date + "&" +
+    let whereAnd = "{" + filter_array.join(",") + "}";
+    this.getDataFromAPINODE(
+      "/aspAssignment/aspassign?srt=_id:-1&q=" +
+        date +
+        "&" +
         whereAnd +
         "&lmt=" +
         maxPage +
@@ -226,8 +236,8 @@ class AssignmentListReport extends Component {
   }
 
   componentDidMount() {
-    console.log('1 ',this.state.filter_date.filter_list_date)
-    console.log('2 ',this.state.filter_date.filter_list_date2)
+    console.log("1 ", this.state.filter_date.filter_list_date);
+    console.log("2 ", this.state.filter_date.filter_list_date2);
     this.getAssignmentList();
     // this.getAllAssignment();
     document.title = "Assignment List | BAM";
@@ -266,7 +276,6 @@ class AssignmentListReport extends Component {
       // () => console.log(this.state.filter_date)
     );
   }
-
 
   onChangeDebounced(e) {
     this.getAssignmentList();
@@ -540,9 +549,14 @@ class AssignmentListReport extends Component {
                 </Button>
               </CardHeader>
               <CardBody>
-                <Label><b>Filter Date</b></Label>
+                <Label>
+                  <b>Filter Date</b>
+                </Label>
                 <Row>
-                  <div className="controls" style={{ width: "150px", marginLeft: "10px" }}>
+                  <div
+                    className="controls"
+                    style={{ width: "150px", marginLeft: "10px" }}
+                  >
                     <div>Start Date</div>
                     <InputGroup className="input-prepend">
                       <InputGroupAddon addonType="prepend">

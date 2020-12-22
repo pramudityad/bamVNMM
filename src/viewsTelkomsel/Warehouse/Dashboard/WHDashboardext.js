@@ -15,9 +15,9 @@ import Widget from "./Widget";
 import "../wh_css.css";
 import { connect } from "react-redux";
 import axios from "axios";
-import Loading from '../../components/Loading'
+import Loading from "../../components/Loading";
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
 const usernameXL = "adminbamidsuper";
@@ -33,8 +33,8 @@ class WarehouseDashboardExt extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      vendor_name : this.props.dataLogin.vendor_name,
-      vendor_code : this.props.dataLogin.vendor_code,
+      vendor_name: this.props.dataLogin.vendor_name,
+      vendor_code: this.props.dataLogin.vendor_code,
       collapse: true,
       fadeIn: true,
       timeout: 300,
@@ -101,7 +101,7 @@ class WarehouseDashboardExt extends Component {
 
   async getDatafromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -120,12 +120,16 @@ class WarehouseDashboardExt extends Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.post(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         // console.log("respond Post Data", respond);
       }
@@ -139,12 +143,16 @@ class WarehouseDashboardExt extends Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond patch Data", respond);
       }
@@ -158,12 +166,15 @@ class WarehouseDashboardExt extends Component {
 
   async deleteDataFromAPINODE(url) {
     try {
-      let respond = await axios.delete(API_URL_NODE + url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.delete(
+        process.env.REACT_APP_API_URL_NODE + url,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond delete Data", respond);
       }
@@ -197,12 +208,23 @@ class WarehouseDashboardExt extends Component {
   getWHStockList() {
     this.toggleLoading();
     let filter_array = [];
-    filter_array.push('"$or" : [{"wh_type":{"$regex" : "asp", "$options" : "i"}}, {"wh_type":{"$regex" : "dsp", "$options" : "i"}} ]');
-    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "BAM-ASPWarehouse") !== -1 && this.state.userRole.findIndex(e => e === "Admin") === -1){
-      filter_array.push('"owner" : "'+this.state.vendor_code+'"');
+    filter_array.push(
+      '"$or" : [{"wh_type":{"$regex" : "asp", "$options" : "i"}}, {"wh_type":{"$regex" : "dsp", "$options" : "i"}} ]'
+    );
+    if (
+      (this.state.userRole.findIndex((e) => e === "BAM-ASP") !== -1 ||
+        this.state.userRole.findIndex((e) => e === "BAM-ASP Management") !==
+          -1 ||
+        this.state.userRole.findIndex((e) => e === "BAM-Mover") !== -1) &&
+      this.state.userRole.findIndex((e) => e === "BAM-ASPWarehouse") !== -1 &&
+      this.state.userRole.findIndex((e) => e === "Admin") === -1
+    ) {
+      filter_array.push('"owner" : "' + this.state.vendor_code + '"');
     }
-    let whereAnd = '{' + filter_array.join(',') + '}';
-    this.getDatafromAPINODE('/whManagement/warehouse?noPg=1&q='+whereAnd).then((res) => {
+    let whereAnd = "{" + filter_array.join(",") + "}";
+    this.getDatafromAPINODE(
+      "/whManagement/warehouse?noPg=1&q=" + whereAnd
+    ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -287,8 +309,7 @@ class WarehouseDashboardExt extends Component {
                       <Link
                         to={{
                           pathname:
-                            "/wh-dashboard-ext/wh-dashboard-ext-det/" +
-                            e.wh_id
+                            "/wh-dashboard-ext/wh-dashboard-ext-det/" + e.wh_id,
                         }}
                       >
                         {/* <a href="wh-dashboard-eid"> */}
@@ -325,36 +346,42 @@ class WarehouseDashboardExt extends Component {
                       <CardFooter>
                         <Row className="align-items-center">
                           <Col col="2" xl className="mb-3 mb-xl-0">
-                          <Link
+                            <Link
                               to={{
                                 // pathname:"/wh-gr-eid/" +e.wh_id,
-                                pathname: "wh-dashboard-ext/wh-gr-ext-per-wh/"+e.wh_id
-                              }}>
-                            <Button
-                              block
-                              color="success"
-                              size="sm"
-                              className="btn-pill"
+                                pathname:
+                                  "wh-dashboard-ext/wh-gr-ext-per-wh/" +
+                                  e.wh_id,
+                              }}
                             >
-                              GR
-                            </Button>
+                              <Button
+                                block
+                                color="success"
+                                size="sm"
+                                className="btn-pill"
+                              >
+                                GR
+                              </Button>
                             </Link>
                           </Col>
 
                           <Col col="2" xl className="mb-3 mb-xl-0">
-                          <Link
+                            <Link
                               to={{
                                 // pathname:"/wh-gi-eid/" +e.wh_id,
-                                pathname: "wh-dashboard-ext/wh-gi-ext-per-wh/"+e.wh_id
-                              }}>
-                            <Button
-                              block
-                              color="warning"
-                              size="sm"
-                              className="btn-pill"
+                                pathname:
+                                  "wh-dashboard-ext/wh-gi-ext-per-wh/" +
+                                  e.wh_id,
+                              }}
                             >
-                              GI
-                            </Button>
+                              <Button
+                                block
+                                color="warning"
+                                size="sm"
+                                className="btn-pill"
+                              >
+                                GI
+                              </Button>
                             </Link>
                           </Col>
                         </Row>
@@ -366,10 +393,11 @@ class WarehouseDashboardExt extends Component {
             ))}
         </Row>
         {/* Modal Loading */}
-        <Loading isOpen={this.state.modal_loading}
+        <Loading
+          isOpen={this.state.modal_loading}
           toggle={this.toggleLoading}
-          className={"modal-sm modal--loading "}>
-        </Loading>
+          className={"modal-sm modal--loading "}
+        ></Loading>
         {/* end Modal Loading */}
       </div>
     );

@@ -11,7 +11,17 @@ import {
   DropdownToggle,
   Collapse,
 } from "reactstrap";
-import { Col, FormGroup, Label, Row, Table, Input, InputGroup, InputGroupAddon, InputGroupText } from "reactstrap";
+import {
+  Col,
+  FormGroup,
+  Label,
+  Row,
+  Table,
+  Input,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+} from "reactstrap";
 import { ExcelRenderer } from "react-excel-renderer";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 import axios from "axios";
@@ -23,7 +33,7 @@ import Excel from "exceljs";
 import { connect } from "react-redux";
 import { Redirect, Route, Switch, Link } from "react-router-dom";
 import * as XLSX from "xlsx";
-import {convertDateFormat} from '../../helper/basicFunction'
+import { convertDateFormat } from "../../helper/basicFunction";
 import "./CRcss.css";
 
 const Checkbox = ({
@@ -33,21 +43,21 @@ const Checkbox = ({
   onChange,
   value,
 }) => (
-    <input
-      type={type}
-      name={name}
-      checked={checked}
-      onChange={onChange}
-      value={value}
-      className="checkmark-dash"
-    />
-  );
+  <input
+    type={type}
+    name={name}
+    checked={checked}
+    onChange={onChange}
+    value={value}
+    className="checkmark-dash"
+  />
+);
 
 const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
 
-const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
+//const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
 class CRDetail extends React.Component {
   constructor(props) {
@@ -81,8 +91,8 @@ class CRDetail extends React.Component {
       activeItemName: "",
       activeItemId: null,
       createModal: false,
-      filter_list : {},
-      cr_temp_aging : 0,
+      filter_list: {},
+      cr_temp_aging: 0,
     };
     this.toggleMatStockForm = this.toggleMatStockForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -161,10 +171,9 @@ class CRDetail extends React.Component {
     });
   }
 
-
   async getDatafromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.state.tokenUser,
@@ -183,12 +192,16 @@ class CRDetail extends React.Component {
 
   async postDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.post(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.post(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         // console.log("respond Post Data", respond);
       }
@@ -202,12 +215,16 @@ class CRDetail extends React.Component {
 
   async patchDatatoAPINODE(url, data) {
     try {
-      let respond = await axios.patch(API_URL_NODE + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL_NODE + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond patch Data", respond);
       }
@@ -221,12 +238,15 @@ class CRDetail extends React.Component {
 
   async deleteDataFromAPINODE(url) {
     try {
-      let respond = await axios.delete(API_URL_NODE + url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + this.state.tokenUser,
-        },
-      });
+      let respond = await axios.delete(
+        process.env.REACT_APP_API_URL_NODE + url,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.state.tokenUser,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond delete Data", respond);
       }
@@ -257,9 +277,13 @@ class CRDetail extends React.Component {
     this.setState({ search: keyword });
   };
 
-
   getWHStockList() {
-    this.getDatafromAPINODE("/variants/variants?lmt=" + this.state.perPage + '&pg=' + this.state.activePage).then((res) => {
+    this.getDatafromAPINODE(
+      "/variants/variants?lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
+    ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -267,7 +291,11 @@ class CRDetail extends React.Component {
           total_dataParent: res.data.totalResults,
         });
       } else {
-        this.setState({ all_data: [], total_dataParent: 0, prevPage: this.state.activePage });
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
       }
     });
   }
@@ -365,19 +393,113 @@ class CRDetail extends React.Component {
   }
 
   getCRDataList() {
-    let cr_system_number = this.state.filter_list.cr_system_number === null || this.state.filter_list.cr_system_number ===  undefined ? '"cr_system_number" : {"$exists" : 1}' : '"cr_system_number" : {"$regex" : "'+this.state.filter_list.cr_system_number+'", "$options" : "i"}';
-    let sub_region_before = this.state.filter_list.sub_region_before === null || this.state.filter_list.sub_region_before ===  undefined ? '"sub_region_before" : {"$exists" : 1}' : '"sub_region_before" : {"$regex" : "'+this.state.filter_list.sub_region_before+'", "$options" : "i"}';
-    let tower_id_before = this.state.filter_list.tower_id_before === null || this.state.filter_list.tower_id_before ===  undefined ? '"tower_id_before" : {"$exists" : 1}' : '"tower_id_before" : {"$regex" : "'+this.state.filter_list.tower_id_before+'", "$options" : "i"}';
-    let site_id_before = this.state.filter_list.site_id_before === null || this.state.filter_list.site_id_before ===  undefined ? '"site_id_before" : {"$exists" : 1}' : '"site_id_before" : {"$regex" : "'+this.state.filter_list.site_id_before+'", "$options" : "i"}';
-    let site_name_before = this.state.filter_list.site_name_before === null || this.state.filter_list.site_name_before ===  undefined ? '"site_name_before" : {"$exists" : 1}' : '"site_name_before" : {"$regex" : "'+this.state.filter_list.site_name_before+'", "$options" : "i"}';
-    let sub_region_after = this.state.filter_list.sub_region_after === null || this.state.filter_list.sub_region_after ===  undefined ? '"sub_region_after" : {"$exists" : 1}' : '"sub_region_after" : {"$regex" : "'+this.state.filter_list.sub_region_after+'", "$options" : "i"}';
-    let tower_id_after = this.state.filter_list.tower_id_after === null || this.state.filter_list.tower_id_after ===  undefined ? '"tower_id_after" : {"$exists" : 1}' : '"tower_id_after" : {"$regex" : "'+this.state.filter_list.tower_id_after+'", "$options" : "i"}';
-    let site_id_after = this.state.filter_list.site_id_after === null || this.state.filter_list.site_id_after ===  undefined ? '"site_id_after" : {"$exists" : 1}' : '"site_id_after" : {"$regex" : "'+this.state.filter_list.site_id_after+'", "$options" : "i"}';
-    let site_name_after = this.state.filter_list.site_name_after === null || this.state.filter_list.site_name_after ===  undefined ? '"site_name_after" : {"$exists" : 1}' : '"site_name_after" : {"$regex" : "'+this.state.filter_list.site_name_after+'", "$options" : "i"}';
-    let remark = this.state.filter_list.remark === null || this.state.filter_list.remark ===  undefined ? '"remark" : {"$exists" : 1}' : '"remark" : {"$regex" : "'+this.state.filter_list.remark+'", "$options" : "i"}';
-    let status = this.state.filter_list.status === null || this.state.filter_list.status ===  undefined ? '"status" : {"$exists" : 1}' : '"status" : {"$regex" : "'+this.state.filter_list.status+'", "$options" : "i"}';
-    let whereAnd = 'q={'+cr_system_number+','+sub_region_before+','+tower_id_before+','+site_id_before+','+site_name_before+','+sub_region_after+','+tower_id_after+','+site_id_after+','+site_name_after+','+remark+','+status+'}';
-    this.getDatafromAPINODE("/changeRequest/getCrIsat?srt=_id:-1&lmt=" + this.state.perPage + '&pg=' + this.state.activePage).then((res) => {
+    let cr_system_number =
+      this.state.filter_list.cr_system_number === null ||
+      this.state.filter_list.cr_system_number === undefined
+        ? '"cr_system_number" : {"$exists" : 1}'
+        : '"cr_system_number" : {"$regex" : "' +
+          this.state.filter_list.cr_system_number +
+          '", "$options" : "i"}';
+    let sub_region_before =
+      this.state.filter_list.sub_region_before === null ||
+      this.state.filter_list.sub_region_before === undefined
+        ? '"sub_region_before" : {"$exists" : 1}'
+        : '"sub_region_before" : {"$regex" : "' +
+          this.state.filter_list.sub_region_before +
+          '", "$options" : "i"}';
+    let tower_id_before =
+      this.state.filter_list.tower_id_before === null ||
+      this.state.filter_list.tower_id_before === undefined
+        ? '"tower_id_before" : {"$exists" : 1}'
+        : '"tower_id_before" : {"$regex" : "' +
+          this.state.filter_list.tower_id_before +
+          '", "$options" : "i"}';
+    let site_id_before =
+      this.state.filter_list.site_id_before === null ||
+      this.state.filter_list.site_id_before === undefined
+        ? '"site_id_before" : {"$exists" : 1}'
+        : '"site_id_before" : {"$regex" : "' +
+          this.state.filter_list.site_id_before +
+          '", "$options" : "i"}';
+    let site_name_before =
+      this.state.filter_list.site_name_before === null ||
+      this.state.filter_list.site_name_before === undefined
+        ? '"site_name_before" : {"$exists" : 1}'
+        : '"site_name_before" : {"$regex" : "' +
+          this.state.filter_list.site_name_before +
+          '", "$options" : "i"}';
+    let sub_region_after =
+      this.state.filter_list.sub_region_after === null ||
+      this.state.filter_list.sub_region_after === undefined
+        ? '"sub_region_after" : {"$exists" : 1}'
+        : '"sub_region_after" : {"$regex" : "' +
+          this.state.filter_list.sub_region_after +
+          '", "$options" : "i"}';
+    let tower_id_after =
+      this.state.filter_list.tower_id_after === null ||
+      this.state.filter_list.tower_id_after === undefined
+        ? '"tower_id_after" : {"$exists" : 1}'
+        : '"tower_id_after" : {"$regex" : "' +
+          this.state.filter_list.tower_id_after +
+          '", "$options" : "i"}';
+    let site_id_after =
+      this.state.filter_list.site_id_after === null ||
+      this.state.filter_list.site_id_after === undefined
+        ? '"site_id_after" : {"$exists" : 1}'
+        : '"site_id_after" : {"$regex" : "' +
+          this.state.filter_list.site_id_after +
+          '", "$options" : "i"}';
+    let site_name_after =
+      this.state.filter_list.site_name_after === null ||
+      this.state.filter_list.site_name_after === undefined
+        ? '"site_name_after" : {"$exists" : 1}'
+        : '"site_name_after" : {"$regex" : "' +
+          this.state.filter_list.site_name_after +
+          '", "$options" : "i"}';
+    let remark =
+      this.state.filter_list.remark === null ||
+      this.state.filter_list.remark === undefined
+        ? '"remark" : {"$exists" : 1}'
+        : '"remark" : {"$regex" : "' +
+          this.state.filter_list.remark +
+          '", "$options" : "i"}';
+    let status =
+      this.state.filter_list.status === null ||
+      this.state.filter_list.status === undefined
+        ? '"status" : {"$exists" : 1}'
+        : '"status" : {"$regex" : "' +
+          this.state.filter_list.status +
+          '", "$options" : "i"}';
+    let whereAnd =
+      "q={" +
+      cr_system_number +
+      "," +
+      sub_region_before +
+      "," +
+      tower_id_before +
+      "," +
+      site_id_before +
+      "," +
+      site_name_before +
+      "," +
+      sub_region_after +
+      "," +
+      tower_id_after +
+      "," +
+      site_id_after +
+      "," +
+      site_name_after +
+      "," +
+      remark +
+      "," +
+      status +
+      "}";
+    this.getDatafromAPINODE(
+      "/changeRequest/getCrIsat?srt=_id:-1&lmt=" +
+        this.state.perPage +
+        "&pg=" +
+        this.state.activePage
+    ).then((res) => {
       if (res.data !== undefined) {
         this.setState({
           all_data: res.data.data,
@@ -385,7 +507,11 @@ class CRDetail extends React.Component {
           total_dataParent: res.data.totalResults,
         });
       } else {
-        this.setState({ all_data: [], total_dataParent: 0, prevPage: this.state.activePage });
+        this.setState({
+          all_data: [],
+          total_dataParent: 0,
+          prevPage: this.state.activePage,
+        });
       }
     });
   }
@@ -498,21 +624,31 @@ class CRDetail extends React.Component {
     const dataXLS = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     const res = await this.postDatatoAPINODE("/changeRequest/createCrIsat", {
-      'crData': dataXLS,
+      crData: dataXLS,
     });
     // console.log('res bulk ', res.error.message);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
     } else {
-      if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-        if(res.response.data.error.message !== undefined){
-          this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error.message) });
-        }else{
-          this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error) });
+      if (
+        res.response !== undefined &&
+        res.response.data !== undefined &&
+        res.response.data.error !== undefined
+      ) {
+        if (res.response.data.error.message !== undefined) {
+          this.setState({
+            action_status: "failed",
+            action_message: JSON.stringify(res.response.data.error.message),
+          });
+        } else {
+          this.setState({
+            action_status: "failed",
+            action_message: JSON.stringify(res.response.data.error),
+          });
         }
-      }else{
-        this.setState({ action_status: 'failed' });
+      } else {
+        this.setState({ action_status: "failed" });
       }
       this.toggleLoading();
     }
@@ -524,10 +660,13 @@ class CRDetail extends React.Component {
     const BulkXLSX = this.state.rowsXLS;
     // const BulkData = await this.getMatStockFormat(BulkXLSX);
     // console.log('xlsx data', JSON.stringify(BulkXLSX));
-    const res = await this.postDatatoAPINODE("/variants/createVariantsTruncate", {
-      'materialData': BulkXLSX,
-    });
-    console.log('res bulk ', res);
+    const res = await this.postDatatoAPINODE(
+      "/variants/createVariantsTruncate",
+      {
+        materialData: BulkXLSX,
+      }
+    );
+    console.log("res bulk ", res);
     if (res.data !== undefined) {
       this.setState({ action_status: "success" });
       this.toggleLoading();
@@ -613,14 +752,24 @@ class CRDetail extends React.Component {
       if (res.data !== undefined) {
         this.toggleLoading();
       } else {
-        if(res.response !== undefined && res.response.data !== undefined && res.response.data.error !== undefined){
-          if(res.response.data.error.message !== undefined){
-            this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error.message) });
-          }else{
-            this.setState({ action_status: 'failed', action_message: JSON.stringify(res.response.data.error) });
+        if (
+          res.response !== undefined &&
+          res.response.data !== undefined &&
+          res.response.data.error !== undefined
+        ) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: JSON.stringify(res.response.data.error.message),
+            });
+          } else {
+            this.setState({
+              action_status: "failed",
+              action_message: JSON.stringify(res.response.data.error),
+            });
           }
-        }else{
-          this.setState({ action_status: 'failed' });
+        } else {
+          this.setState({ action_status: "failed" });
         }
         this.toggleLoading();
       }
@@ -642,7 +791,9 @@ class CRDetail extends React.Component {
   async downloadAll() {
     this.toggleLoading();
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE('/changeRequest/getCrIsat?noPg=1');
+    let getAll_nonpage = await this.getDatafromAPINODE(
+      "/changeRequest/getCrIsat?noPg=1"
+    );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -650,11 +801,99 @@ class CRDetail extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["cr_system_number","pcg_number","pcg_register_date","system_key","network_harder","po_no","site_id_original","site_name_original","site_id_actual","site_name_actual","region","project_type","project_manager_indosat","ippid","project_name","po_line_item_impacted","cr_pic","cr_progress","cr_progress_remark","cr_submit_date","cr_budget_approve_date","cr_aging_io_nd","cr_aging_io_planning","cr_aging_io_investment","cr_aging_booking_budget","additional_qty","reduce_value","additional_value","cr_background","cr_remark","cr_info","type_of_cr","status","pm_project_paraf","pm_approved_date","vp_head_net_deploy","vp_head_net_deploy_date","vp_head_ran","vp_head_ran_date","vp_head_technology_investment_mgt","vp_head_technology_investment_mgt_date","assurance_team","svp_head_RAN"]);
+    ws.addRow([
+      "cr_system_number",
+      "pcg_number",
+      "pcg_register_date",
+      "system_key",
+      "network_harder",
+      "po_no",
+      "site_id_original",
+      "site_name_original",
+      "site_id_actual",
+      "site_name_actual",
+      "region",
+      "project_type",
+      "project_manager_indosat",
+      "ippid",
+      "project_name",
+      "po_line_item_impacted",
+      "cr_pic",
+      "cr_progress",
+      "cr_progress_remark",
+      "cr_submit_date",
+      "cr_budget_approve_date",
+      "cr_aging_io_nd",
+      "cr_aging_io_planning",
+      "cr_aging_io_investment",
+      "cr_aging_booking_budget",
+      "additional_qty",
+      "reduce_value",
+      "additional_value",
+      "cr_background",
+      "cr_remark",
+      "cr_info",
+      "type_of_cr",
+      "status",
+      "pm_project_paraf",
+      "pm_approved_date",
+      "vp_head_net_deploy",
+      "vp_head_net_deploy_date",
+      "vp_head_ran",
+      "vp_head_ran_date",
+      "vp_head_technology_investment_mgt",
+      "vp_head_technology_investment_mgt_date",
+      "assurance_team",
+      "svp_head_RAN",
+    ]);
 
     for (let i = 0; i < download_all.length; i++) {
       let cr = download_all[i];
-      ws.addRow([cr.cr_system_number, cr.pcg_number, cr.pcg_register_date, cr.system_key, cr.network_harder, cr.po_no, cr.site_id_original, cr.site_name_original, cr.site_id_actual, cr.site_name_actual, cr.region, cr.project_type, cr.project_manager_indosat, cr.ippid, cr.project_name, cr.po_line_item_impacted, cr.cr_progress, cr.cr_pic, cr.cr_progress_remark, cr.cr_submit_date, cr.cr_budget_approve_date, cr.cr_aging_io_nd, cr.cr_aging_io_planning, cr.cr_aging_io_investment, cr.cr_aging_booking_budget, cr.additional_qty, cr.reduce_value, cr.additional_value, cr.cr_background, cr.cr_remark, cr.cr_info, cr.type_of_cr, cr.status, cr.pm_project_paraf, cr.pm_approved_date, cr.vp_head_net_deploy, cr.vp_head_net_deploy_date, cr.vp_head_ran, cr.vp_head_ran_date, cr.vp_head_technology_investment_mgt, cr.vp_head_technology_investment_mgt_date, cr.assurance_team, cr.svp_head_RAN]);
+      ws.addRow([
+        cr.cr_system_number,
+        cr.pcg_number,
+        cr.pcg_register_date,
+        cr.system_key,
+        cr.network_harder,
+        cr.po_no,
+        cr.site_id_original,
+        cr.site_name_original,
+        cr.site_id_actual,
+        cr.site_name_actual,
+        cr.region,
+        cr.project_type,
+        cr.project_manager_indosat,
+        cr.ippid,
+        cr.project_name,
+        cr.po_line_item_impacted,
+        cr.cr_progress,
+        cr.cr_pic,
+        cr.cr_progress_remark,
+        cr.cr_submit_date,
+        cr.cr_budget_approve_date,
+        cr.cr_aging_io_nd,
+        cr.cr_aging_io_planning,
+        cr.cr_aging_io_investment,
+        cr.cr_aging_booking_budget,
+        cr.additional_qty,
+        cr.reduce_value,
+        cr.additional_value,
+        cr.cr_background,
+        cr.cr_remark,
+        cr.cr_info,
+        cr.type_of_cr,
+        cr.status,
+        cr.pm_project_paraf,
+        cr.pm_approved_date,
+        cr.vp_head_net_deploy,
+        cr.vp_head_net_deploy_date,
+        cr.vp_head_ran,
+        cr.vp_head_ran_date,
+        cr.vp_head_technology_investment_mgt,
+        cr.vp_head_technology_investment_mgt_date,
+        cr.assurance_team,
+        cr.svp_head_RAN,
+      ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -664,20 +903,111 @@ class CRDetail extends React.Component {
 
   async downloadAllFilter() {
     this.toggleLoading();
-    let cr_system_number = this.state.filter_list.cr_system_number === null || this.state.filter_list.cr_system_number ===  undefined ? '"cr_system_number" : {"$exists" : 1}' : '"cr_system_number" : {"$regex" : "'+this.state.filter_list.cr_system_number+'", "$options" : "i"}';
-    let sub_region_before = this.state.filter_list.sub_region_before === null || this.state.filter_list.sub_region_before ===  undefined ? '"sub_region_before" : {"$exists" : 1}' : '"sub_region_before" : {"$regex" : "'+this.state.filter_list.sub_region_before+'", "$options" : "i"}';
-    let tower_id_before = this.state.filter_list.tower_id_before === null || this.state.filter_list.tower_id_before ===  undefined ? '"tower_id_before" : {"$exists" : 1}' : '"tower_id_before" : {"$regex" : "'+this.state.filter_list.tower_id_before+'", "$options" : "i"}';
-    let site_id_before = this.state.filter_list.site_id_before === null || this.state.filter_list.site_id_before ===  undefined ? '"site_id_before" : {"$exists" : 1}' : '"site_id_before" : {"$regex" : "'+this.state.filter_list.site_id_before+'", "$options" : "i"}';
-    let site_name_before = this.state.filter_list.site_name_before === null || this.state.filter_list.site_name_before ===  undefined ? '"site_name_before" : {"$exists" : 1}' : '"site_name_before" : {"$regex" : "'+this.state.filter_list.site_name_before+'", "$options" : "i"}';
-    let sub_region_after = this.state.filter_list.sub_region_after === null || this.state.filter_list.sub_region_after ===  undefined ? '"sub_region_after" : {"$exists" : 1}' : '"sub_region_after" : {"$regex" : "'+this.state.filter_list.sub_region_after+'", "$options" : "i"}';
-    let tower_id_after = this.state.filter_list.tower_id_after === null || this.state.filter_list.tower_id_after ===  undefined ? '"tower_id_after" : {"$exists" : 1}' : '"tower_id_after" : {"$regex" : "'+this.state.filter_list.tower_id_after+'", "$options" : "i"}';
-    let site_id_after = this.state.filter_list.site_id_after === null || this.state.filter_list.site_id_after ===  undefined ? '"site_id_after" : {"$exists" : 1}' : '"site_id_after" : {"$regex" : "'+this.state.filter_list.site_id_after+'", "$options" : "i"}';
-    let site_name_after = this.state.filter_list.site_name_after === null || this.state.filter_list.site_name_after ===  undefined ? '"site_name_after" : {"$exists" : 1}' : '"site_name_after" : {"$regex" : "'+this.state.filter_list.site_name_after+'", "$options" : "i"}';
-    let remark = this.state.filter_list.remark === null || this.state.filter_list.remark ===  undefined ? '"remark" : {"$exists" : 1}' : '"remark" : {"$regex" : "'+this.state.filter_list.remark+'", "$options" : "i"}';
-    let status = this.state.filter_list.status === null || this.state.filter_list.status ===  undefined ? '"status" : {"$exists" : 1}' : '"status" : {"$regex" : "'+this.state.filter_list.status+'", "$options" : "i"}';
-    let whereAnd = 'q={'+cr_system_number+','+sub_region_before+','+tower_id_before+','+site_id_before+','+site_name_before+','+sub_region_after+','+tower_id_after+','+site_id_after+','+site_name_after+','+remark+','+status+'}';
+    let cr_system_number =
+      this.state.filter_list.cr_system_number === null ||
+      this.state.filter_list.cr_system_number === undefined
+        ? '"cr_system_number" : {"$exists" : 1}'
+        : '"cr_system_number" : {"$regex" : "' +
+          this.state.filter_list.cr_system_number +
+          '", "$options" : "i"}';
+    let sub_region_before =
+      this.state.filter_list.sub_region_before === null ||
+      this.state.filter_list.sub_region_before === undefined
+        ? '"sub_region_before" : {"$exists" : 1}'
+        : '"sub_region_before" : {"$regex" : "' +
+          this.state.filter_list.sub_region_before +
+          '", "$options" : "i"}';
+    let tower_id_before =
+      this.state.filter_list.tower_id_before === null ||
+      this.state.filter_list.tower_id_before === undefined
+        ? '"tower_id_before" : {"$exists" : 1}'
+        : '"tower_id_before" : {"$regex" : "' +
+          this.state.filter_list.tower_id_before +
+          '", "$options" : "i"}';
+    let site_id_before =
+      this.state.filter_list.site_id_before === null ||
+      this.state.filter_list.site_id_before === undefined
+        ? '"site_id_before" : {"$exists" : 1}'
+        : '"site_id_before" : {"$regex" : "' +
+          this.state.filter_list.site_id_before +
+          '", "$options" : "i"}';
+    let site_name_before =
+      this.state.filter_list.site_name_before === null ||
+      this.state.filter_list.site_name_before === undefined
+        ? '"site_name_before" : {"$exists" : 1}'
+        : '"site_name_before" : {"$regex" : "' +
+          this.state.filter_list.site_name_before +
+          '", "$options" : "i"}';
+    let sub_region_after =
+      this.state.filter_list.sub_region_after === null ||
+      this.state.filter_list.sub_region_after === undefined
+        ? '"sub_region_after" : {"$exists" : 1}'
+        : '"sub_region_after" : {"$regex" : "' +
+          this.state.filter_list.sub_region_after +
+          '", "$options" : "i"}';
+    let tower_id_after =
+      this.state.filter_list.tower_id_after === null ||
+      this.state.filter_list.tower_id_after === undefined
+        ? '"tower_id_after" : {"$exists" : 1}'
+        : '"tower_id_after" : {"$regex" : "' +
+          this.state.filter_list.tower_id_after +
+          '", "$options" : "i"}';
+    let site_id_after =
+      this.state.filter_list.site_id_after === null ||
+      this.state.filter_list.site_id_after === undefined
+        ? '"site_id_after" : {"$exists" : 1}'
+        : '"site_id_after" : {"$regex" : "' +
+          this.state.filter_list.site_id_after +
+          '", "$options" : "i"}';
+    let site_name_after =
+      this.state.filter_list.site_name_after === null ||
+      this.state.filter_list.site_name_after === undefined
+        ? '"site_name_after" : {"$exists" : 1}'
+        : '"site_name_after" : {"$regex" : "' +
+          this.state.filter_list.site_name_after +
+          '", "$options" : "i"}';
+    let remark =
+      this.state.filter_list.remark === null ||
+      this.state.filter_list.remark === undefined
+        ? '"remark" : {"$exists" : 1}'
+        : '"remark" : {"$regex" : "' +
+          this.state.filter_list.remark +
+          '", "$options" : "i"}';
+    let status =
+      this.state.filter_list.status === null ||
+      this.state.filter_list.status === undefined
+        ? '"status" : {"$exists" : 1}'
+        : '"status" : {"$regex" : "' +
+          this.state.filter_list.status +
+          '", "$options" : "i"}';
+    let whereAnd =
+      "q={" +
+      cr_system_number +
+      "," +
+      sub_region_before +
+      "," +
+      tower_id_before +
+      "," +
+      site_id_before +
+      "," +
+      site_name_before +
+      "," +
+      sub_region_after +
+      "," +
+      tower_id_after +
+      "," +
+      site_id_after +
+      "," +
+      site_name_after +
+      "," +
+      remark +
+      "," +
+      status +
+      "}";
     let download_all = [];
-    let getAll_nonpage = await this.getDatafromAPINODE('/changeRequest/getCrIsat?noPg=1&'+whereAnd);
+    let getAll_nonpage = await this.getDatafromAPINODE(
+      "/changeRequest/getCrIsat?noPg=1&" + whereAnd
+    );
     if (getAll_nonpage.data !== undefined) {
       download_all = getAll_nonpage.data.data;
     }
@@ -685,11 +1015,99 @@ class CRDetail extends React.Component {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["cr_system_number","pcg_number","pcg_register_date","system_key","network_harder","po_no","site_id_original","site_name_original","site_id_actual","site_name_actual","region","project_type","project_manager_indosat","ippid","project_name","po_line_item_impacted","cr_pic","cr_progress","cr_progress_remark","cr_submit_date","cr_budget_approve_date","cr_aging_io_nd","cr_aging_io_planning","cr_aging_io_investment","cr_aging_booking_budget","additional_qty","reduce_value","additional_value","cr_background","cr_remark","cr_info","type_of_cr","status","pm_project_paraf","pm_approved_date","vp_head_net_deploy","vp_head_net_deploy_date","vp_head_ran","vp_head_ran_date","vp_head_technology_investment_mgt","vp_head_technology_investment_mgt_date","assurance_team","svp_head_RAN"]);
+    ws.addRow([
+      "cr_system_number",
+      "pcg_number",
+      "pcg_register_date",
+      "system_key",
+      "network_harder",
+      "po_no",
+      "site_id_original",
+      "site_name_original",
+      "site_id_actual",
+      "site_name_actual",
+      "region",
+      "project_type",
+      "project_manager_indosat",
+      "ippid",
+      "project_name",
+      "po_line_item_impacted",
+      "cr_pic",
+      "cr_progress",
+      "cr_progress_remark",
+      "cr_submit_date",
+      "cr_budget_approve_date",
+      "cr_aging_io_nd",
+      "cr_aging_io_planning",
+      "cr_aging_io_investment",
+      "cr_aging_booking_budget",
+      "additional_qty",
+      "reduce_value",
+      "additional_value",
+      "cr_background",
+      "cr_remark",
+      "cr_info",
+      "type_of_cr",
+      "status",
+      "pm_project_paraf",
+      "pm_approved_date",
+      "vp_head_net_deploy",
+      "vp_head_net_deploy_date",
+      "vp_head_ran",
+      "vp_head_ran_date",
+      "vp_head_technology_investment_mgt",
+      "vp_head_technology_investment_mgt_date",
+      "assurance_team",
+      "svp_head_RAN",
+    ]);
 
     for (let i = 0; i < download_all.length; i++) {
       let cr = download_all[i];
-      ws.addRow([cr.cr_system_number, cr.pcg_number, cr.pcg_register_date, cr.system_key, cr.network_harder, cr.po_no, cr.site_id_original, cr.site_name_original, cr.site_id_actual, cr.site_name_actual, cr.region, cr.project_type, cr.project_manager_indosat, cr.ippid, cr.project_name, cr.po_line_item_impacted, cr.cr_progress, cr.cr_pic, cr.cr_progress_remark, cr.cr_submit_date, cr.cr_budget_approve_date, cr.cr_aging_io_nd, cr.cr_aging_io_planning, cr.cr_aging_io_investment, cr.cr_aging_booking_budget, cr.additional_qty, cr.reduce_value, cr.additional_value, cr.cr_background, cr.cr_remark, cr.cr_info, cr.type_of_cr, cr.status, cr.pm_project_paraf, cr.pm_approved_date, cr.vp_head_net_deploy, cr.vp_head_net_deploy_date, cr.vp_head_ran, cr.vp_head_ran_date, cr.vp_head_technology_investment_mgt, cr.vp_head_technology_investment_mgt_date, cr.assurance_team, cr.svp_head_RAN]);
+      ws.addRow([
+        cr.cr_system_number,
+        cr.pcg_number,
+        cr.pcg_register_date,
+        cr.system_key,
+        cr.network_harder,
+        cr.po_no,
+        cr.site_id_original,
+        cr.site_name_original,
+        cr.site_id_actual,
+        cr.site_name_actual,
+        cr.region,
+        cr.project_type,
+        cr.project_manager_indosat,
+        cr.ippid,
+        cr.project_name,
+        cr.po_line_item_impacted,
+        cr.cr_progress,
+        cr.cr_pic,
+        cr.cr_progress_remark,
+        cr.cr_submit_date,
+        cr.cr_budget_approve_date,
+        cr.cr_aging_io_nd,
+        cr.cr_aging_io_planning,
+        cr.cr_aging_io_investment,
+        cr.cr_aging_booking_budget,
+        cr.additional_qty,
+        cr.reduce_value,
+        cr.additional_value,
+        cr.cr_background,
+        cr.cr_remark,
+        cr.cr_info,
+        cr.type_of_cr,
+        cr.status,
+        cr.pm_project_paraf,
+        cr.pm_approved_date,
+        cr.vp_head_net_deploy,
+        cr.vp_head_net_deploy_date,
+        cr.vp_head_ran,
+        cr.vp_head_ran_date,
+        cr.vp_head_technology_investment_mgt,
+        cr.vp_head_technology_investment_mgt_date,
+        cr.assurance_team,
+        cr.svp_head_RAN,
+      ]);
     }
 
     const allocexport = await wb.xlsx.writeBuffer();
@@ -713,15 +1131,103 @@ class CRDetail extends React.Component {
         });
       }
     });
-  }
+  };
 
   exportCRTemplate = async () => {
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    ws.addRow(["cr_system_number","pcg_number","pcg_register_date","system_key","network_harder","po_no","site_id_original","site_name_original","site_id_actual","site_name_actual","region","project_type","project_manager_indosat","ippid","project_name","po_line_item_impacted","cr_pic","cr_progress","cr_progress_remark","cr_submit_date","cr_budget_approve_date","cr_aging_io_nd","cr_aging_io_planning","cr_aging_io_investment","cr_aging_booking_budget","additional_qty","reduce_value","additional_value","cr_background","cr_remark","cr_info","type_of_cr","status","pm_project_paraf","pm_approved_date","vp_head_net_deploy","vp_head_net_deploy_date","vp_head_ran","vp_head_ran_date","vp_head_technology_investment_mgt","vp_head_technology_investment_mgt_date","assurance_team","svp_head_RAN"]);
+    ws.addRow([
+      "cr_system_number",
+      "pcg_number",
+      "pcg_register_date",
+      "system_key",
+      "network_harder",
+      "po_no",
+      "site_id_original",
+      "site_name_original",
+      "site_id_actual",
+      "site_name_actual",
+      "region",
+      "project_type",
+      "project_manager_indosat",
+      "ippid",
+      "project_name",
+      "po_line_item_impacted",
+      "cr_pic",
+      "cr_progress",
+      "cr_progress_remark",
+      "cr_submit_date",
+      "cr_budget_approve_date",
+      "cr_aging_io_nd",
+      "cr_aging_io_planning",
+      "cr_aging_io_investment",
+      "cr_aging_booking_budget",
+      "additional_qty",
+      "reduce_value",
+      "additional_value",
+      "cr_background",
+      "cr_remark",
+      "cr_info",
+      "type_of_cr",
+      "status",
+      "pm_project_paraf",
+      "pm_approved_date",
+      "vp_head_net_deploy",
+      "vp_head_net_deploy_date",
+      "vp_head_ran",
+      "vp_head_ran_date",
+      "vp_head_technology_investment_mgt",
+      "vp_head_technology_investment_mgt_date",
+      "assurance_team",
+      "svp_head_RAN",
+    ]);
 
-    ws.addRow(["new","EXAMPLE PCG/EID-20:0001/ISAT RAN","1/8/2020","19ND008NW010012","1000377317","4000031192","4533536E","LTE_UNISSULA","4533945E","PURI ANJASMORO MAEROKOCO","JRO","Existing","Mochamad Ismail","I1904NEND013NW","Snapshot January Cap UG 2019 JRO","10","03-Budget Review","EID Account","Resubmit to VP head of Net Deploy Jabodetabek, Java & Bali","","2/19/2020","76","","","125",1,0,69832000,"Cable Optic","'Budget Approved, Circulate Planning Approved, Investement reject due to wrong tittle Pak Azinul (5 Mar 20) Re-circulate for approval still in Erlitha Waiting Pak Ali Approval","PURI ANJASMORO MAEROKOCO","CR Add Work","OPEN","Approved","4/8/2020","Need Re-Approve","","Need Re-Approve","","Need Re-Approve","","",""]);
+    ws.addRow([
+      "new",
+      "EXAMPLE PCG/EID-20:0001/ISAT RAN",
+      "1/8/2020",
+      "19ND008NW010012",
+      "1000377317",
+      "4000031192",
+      "4533536E",
+      "LTE_UNISSULA",
+      "4533945E",
+      "PURI ANJASMORO MAEROKOCO",
+      "JRO",
+      "Existing",
+      "Mochamad Ismail",
+      "I1904NEND013NW",
+      "Snapshot January Cap UG 2019 JRO",
+      "10",
+      "03-Budget Review",
+      "EID Account",
+      "Resubmit to VP head of Net Deploy Jabodetabek, Java & Bali",
+      "",
+      "2/19/2020",
+      "76",
+      "",
+      "",
+      "125",
+      1,
+      0,
+      69832000,
+      "Cable Optic",
+      "'Budget Approved, Circulate Planning Approved, Investement reject due to wrong tittle Pak Azinul (5 Mar 20) Re-circulate for approval still in Erlitha Waiting Pak Ali Approval",
+      "PURI ANJASMORO MAEROKOCO",
+      "CR Add Work",
+      "OPEN",
+      "Approved",
+      "4/8/2020",
+      "Need Re-Approve",
+      "",
+      "Need Re-Approve",
+      "",
+      "Need Re-Approve",
+      "",
+      "",
+      "",
+    ]);
 
     const PPFormat = await wb.xlsx.writeBuffer();
     saveAs(new Blob([PPFormat]), "CR Template.xlsx");
@@ -730,14 +1236,14 @@ class CRDetail extends React.Component {
   handleFilterList(e) {
     const index = e.target.name;
     let value = e.target.value;
-    if(value !== "" && value.length === 0) {
+    if (value !== "" && value.length === 0) {
       value = null;
     }
     let dataFilter = this.state.filter_list;
     dataFilter[index] = value;
-    this.setState({filter_list : dataFilter, activePage: 1}, () => {
+    this.setState({ filter_list: dataFilter, activePage: 1 }, () => {
       this.onChangeDebounced(e);
-    })
+    });
   }
 
   onChangeDebounced(e) {
@@ -756,24 +1262,52 @@ class CRDetail extends React.Component {
             <Card style={{}}>
               <CardHeader>
                 <span style={{ marginTop: "5px", position: "absolute" }}>
-                  {" "}CR Detail{" "}
+                  {" "}
+                  CR Detail{" "}
                 </span>
-                <div className="card-header-actions" style={{ display: "inline-flex" }}>
+                <div
+                  className="card-header-actions"
+                  style={{ display: "inline-flex" }}
+                >
                   <div>
-                    <Button block color="success" onClick={this.togglecreateModal} size="sm">
-                      <i className="fa fa-plus-square" aria-hidden="true">{" "}&nbsp;{" "}</i>{" "}New
-                  </Button>
+                    <Button
+                      block
+                      color="success"
+                      onClick={this.togglecreateModal}
+                      size="sm"
+                    >
+                      <i className="fa fa-plus-square" aria-hidden="true">
+                        {" "}
+                        &nbsp;{" "}
+                      </i>{" "}
+                      New
+                    </Button>
                   </div>
                   <div style={{ marginRight: "10px" }}>
-                    <Dropdown isOpen={this.state.dropdownOpen[0]} toggle={() => {this.toggle(0);}} size="sm">
+                    <Dropdown
+                      isOpen={this.state.dropdownOpen[0]}
+                      toggle={() => {
+                        this.toggle(0);
+                      }}
+                      size="sm"
+                    >
                       <DropdownToggle caret color="light">
                         Download Template
                       </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem header>Uploader Template</DropdownItem>
-                        <DropdownItem onClick={this.exportCRTemplate}>{" "}CR Template</DropdownItem>
-                        <DropdownItem onClick={this.downloadAll}>{" "}Download All</DropdownItem>
-                        <DropdownItem onClick={this.downloadAllFilter}>{" "}Download All Filter</DropdownItem>
+                        <DropdownItem onClick={this.exportCRTemplate}>
+                          {" "}
+                          CR Template
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAll}>
+                          {" "}
+                          Download All
+                        </DropdownItem>
+                        <DropdownItem onClick={this.downloadAllFilter}>
+                          {" "}
+                          Download All Filter
+                        </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
                   </div>
@@ -838,9 +1372,12 @@ class CRDetail extends React.Component {
                 <Row>
                   <Col>
                     <div className="divtable">
-                      <Table bordered style={{
-        height: "400px"
-      }}>
+                      <Table
+                        bordered
+                        style={{
+                          height: "400px",
+                        }}
+                      >
                         <thead className="table-CR__header--middle">
                           <tr align="center">
                             <th>CR System Number</th>
@@ -878,64 +1415,75 @@ class CRDetail extends React.Component {
                             <th>Status</th>
                             <th>PM Project Paraf</th>
                             <th>PM Approved (Date)</th>
-                            <th>VP head of Net Deploy Jabodetabek, Java & Bali</th>
-                            <th>VP head of Net Deploy Jabodetabek, Java & Bali (Date)</th>
+                            <th>
+                              VP head of Net Deploy Jabodetabek, Java & Bali
+                            </th>
+                            <th>
+                              VP head of Net Deploy Jabodetabek, Java & Bali
+                              (Date)
+                            </th>
                             <th>VP-Head of RAN Planning & Engineering</th>
-                            <th>VP-Head of RAN Planning & Engineering (Date)</th>
+                            <th>
+                              VP-Head of RAN Planning & Engineering (Date)
+                            </th>
                             <th>VP- Head of Technology Investment Mgt</th>
-                            <th>VP- Head of Technology Investment Mgt (Date)</th>
+                            <th>
+                              VP- Head of Technology Investment Mgt (Date)
+                            </th>
                             <th>Assurance Team</th>
                             <th>SVP-Head of RAN/Access Jabotabek</th>
                           </tr>
                         </thead>
                         <tbody>
-                        {this.state.all_data.map(cr =>
-                          <tr>
-                            <td>{cr.cr_system_number}</td>
-                            <td>{cr.pcg_number}</td>
-                            <td>{cr.pcg_register_date}</td>
-                            <td>{cr.system_key}</td>
-                            <td>{cr.network_harder}</td>
-                            <td>{cr.po_no}</td>
-                            <td>{cr.site_id_original}</td>
-                            <td>{cr.site_name_original}</td>
-                            <td>{cr.site_id_actual}</td>
-                            <td>{cr.site_name_actual}</td>
-                            <td>{cr.region}</td>
-                            <td>{cr.project_type}</td>
-                            <td>{cr.project_manager_indosat}</td>
-                            <td>{cr.ippid}</td>
-                            <td>{cr.project_name}</td>
-                            <td>{cr.po_line_item_impacted}</td>
-                            <td>{cr.cr_progress}</td>
-                            <td>{cr.cr_pic}</td>
-                            <td>{cr.cr_progress_remark}</td>
-                            <td>{cr.cr_submit_date}</td>
-                            <td>{cr.cr_budget_approve_date}</td>
-                            <td>{cr.cr_aging_io_nd}</td>
-                            <td>{cr.cr_aging_io_planning}</td>
-                            <td>{cr.cr_aging_io_investment}</td>
-                            <td>{cr.cr_aging_booking_budget}</td>
-                            <td>{cr.additional_qty}</td>
-                            <td>{cr.reduce_value}</td>
-                            <td>{cr.additional_value}</td>
-                            <td>{cr.cr_background}</td>
-                            <td>{cr.cr_remark}</td>
-                            <td>{cr.cr_info}</td>
-                            <td>{cr.type_of_cr}</td>
-                            <td>{cr.status}</td>
-                            <td>{cr.pm_project_paraf}</td>
-                            <td>{cr.pm_approved_date}</td>
-                            <td>{cr.vp_head_net_deploy}</td>
-                            <td>{cr.vp_head_net_deploy_date}</td>
-                            <td>{cr.vp_head_ran}</td>
-                            <td>{cr.vp_head_ran_date}</td>
-                            <td>{cr.vp_head_technology_investment_mgt}</td>
-                            <td>{cr.vp_head_technology_investment_mgt_date}</td>
-                            <td>{cr.assurance_team}</td>
-                            <td>{cr.svp_head_RAN}</td>
-                          </tr>
-                        )}
+                          {this.state.all_data.map((cr) => (
+                            <tr>
+                              <td>{cr.cr_system_number}</td>
+                              <td>{cr.pcg_number}</td>
+                              <td>{cr.pcg_register_date}</td>
+                              <td>{cr.system_key}</td>
+                              <td>{cr.network_harder}</td>
+                              <td>{cr.po_no}</td>
+                              <td>{cr.site_id_original}</td>
+                              <td>{cr.site_name_original}</td>
+                              <td>{cr.site_id_actual}</td>
+                              <td>{cr.site_name_actual}</td>
+                              <td>{cr.region}</td>
+                              <td>{cr.project_type}</td>
+                              <td>{cr.project_manager_indosat}</td>
+                              <td>{cr.ippid}</td>
+                              <td>{cr.project_name}</td>
+                              <td>{cr.po_line_item_impacted}</td>
+                              <td>{cr.cr_progress}</td>
+                              <td>{cr.cr_pic}</td>
+                              <td>{cr.cr_progress_remark}</td>
+                              <td>{cr.cr_submit_date}</td>
+                              <td>{cr.cr_budget_approve_date}</td>
+                              <td>{cr.cr_aging_io_nd}</td>
+                              <td>{cr.cr_aging_io_planning}</td>
+                              <td>{cr.cr_aging_io_investment}</td>
+                              <td>{cr.cr_aging_booking_budget}</td>
+                              <td>{cr.additional_qty}</td>
+                              <td>{cr.reduce_value}</td>
+                              <td>{cr.additional_value}</td>
+                              <td>{cr.cr_background}</td>
+                              <td>{cr.cr_remark}</td>
+                              <td>{cr.cr_info}</td>
+                              <td>{cr.type_of_cr}</td>
+                              <td>{cr.status}</td>
+                              <td>{cr.pm_project_paraf}</td>
+                              <td>{cr.pm_approved_date}</td>
+                              <td>{cr.vp_head_net_deploy}</td>
+                              <td>{cr.vp_head_net_deploy_date}</td>
+                              <td>{cr.vp_head_ran}</td>
+                              <td>{cr.vp_head_ran_date}</td>
+                              <td>{cr.vp_head_technology_investment_mgt}</td>
+                              <td>
+                                {cr.vp_head_technology_investment_mgt_date}
+                              </td>
+                              <td>{cr.assurance_team}</td>
+                              <td>{cr.svp_head_RAN}</td>
+                            </tr>
+                          ))}
                         </tbody>
                       </Table>
                     </div>
@@ -1154,36 +1702,47 @@ class CRDetail extends React.Component {
           </ModalFooter>
         </Modal>
 
-         {/* Modal create New */}
-         <Modal isOpen={this.state.createModal} toggle={this.togglecreateModal} className={this.props.className}>
-         <ModalHeader toggle={this.togglecreateModal}>CR Uploader</ModalHeader>
-         <ModalBody>
-           <CardBody>
-             <div>
-               <table>
-                 <tbody>
-                   <tr>
-                     <td>Upload File</td>
-                     <td>:</td>
-                     <td>
-                       <input
-                         type="file"
-                         onChange={this.fileHandlerMaterial.bind(this)}
-                         style={{ padding: "10px", visiblity: "hidden" }}
-                       />
-                     </td>
-                   </tr>
-                 </tbody>
-               </table>
-             </div>
-           </CardBody>
-         </ModalBody>
-         <ModalFooter>
-           <Button block color="success" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveCRBulk}>Save</Button>{' '}
-           {/* }<Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button> */}
-         </ModalFooter>
-       </Modal>
-
+        {/* Modal create New */}
+        <Modal
+          isOpen={this.state.createModal}
+          toggle={this.togglecreateModal}
+          className={this.props.className}
+        >
+          <ModalHeader toggle={this.togglecreateModal}>CR Uploader</ModalHeader>
+          <ModalBody>
+            <CardBody>
+              <div>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Upload File</td>
+                      <td>:</td>
+                      <td>
+                        <input
+                          type="file"
+                          onChange={this.fileHandlerMaterial.bind(this)}
+                          style={{ padding: "10px", visiblity: "hidden" }}
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardBody>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              block
+              color="success"
+              className="btn-pill"
+              disabled={this.state.rowsXLS.length === 0}
+              onClick={this.saveCRBulk}
+            >
+              Save
+            </Button>{" "}
+            {/* }<Button block color="secondary" className="btn-pill" disabled={this.state.rowsXLS.length === 0} onClick={this.saveTruncateBulk}>Truncate</Button> */}
+          </ModalFooter>
+        </Modal>
 
         {/* Modal Loading */}
         <Modal

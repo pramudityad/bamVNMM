@@ -1,20 +1,39 @@
-import React, { Component } from 'react';
-import { Button, Card, CardBody, CardHeader, Col, InputGroup, InputGroupAddon, InputGroupText, Input, Row, Table } from 'reactstrap';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
-import Pagination from 'react-js-pagination';
-import debounce from 'lodash.debounce';
-import Excel from 'exceljs';
-import { saveAs } from 'file-saver';
-import { connect } from 'react-redux';
+import React, { Component } from "react";
+import {
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Col,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  Input,
+  Row,
+  Table,
+} from "reactstrap";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import Pagination from "react-js-pagination";
+import debounce from "lodash.debounce";
+import Excel from "exceljs";
+import { saveAs } from "file-saver";
+import { connect } from "react-redux";
 
-const API_URL = 'https://api-dev.bam-id.e-dpm.com/bamidapi';
-const username = 'bamidadmin@e-dpm.com';
-const password = 'F760qbAg2sml';
+const API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
+const username = "bamidadmin@e-dpm.com";
+const password = "F760qbAg2sml";
 
-const API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+//const process.env.REACT_APP_API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-const arrayFilter = ["dsa_number", "dsa_total_value", "current_dsa_status", "dsp_company", "dimension_volume", "dimension_weight"];
+const arrayFilter = [
+  "dsa_number",
+  "dsa_total_value",
+  "current_dsa_status",
+  "dsp_company",
+  "dimension_volume",
+  "dimension_weight",
+];
 
 class DSAList extends Component {
   constructor(props) {
@@ -26,15 +45,15 @@ class DSAList extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
-      vendor_name : this.props.dataLogin.vendor_name,
-      vendor_code : this.props.dataLogin.vendor_code,
+      vendor_name: this.props.dataLogin.vendor_name,
+      vendor_code: this.props.dataLogin.vendor_code,
       dsa_list: [],
       prevPage: 0,
       activePage: 1,
       totalData: 0,
       perPage: 10,
-      filter_list : [],
-    }
+      filter_list: [],
+    };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.getDSAList = this.getDSAList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
@@ -43,11 +62,11 @@ class DSAList extends Component {
   async getDataFromAPI(url) {
     try {
       let respond = await axios.get(API_URL + url, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         auth: {
           username: username,
-          password: password
-        }
+          password: password,
+        },
       });
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond data", respond);
@@ -62,10 +81,10 @@ class DSAList extends Component {
 
   async getDataFromAPINODE(url) {
     try {
-      let respond = await axios.get(API_URL_NODE + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_NODE + url, {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + this.props.dataLogin.token
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + this.props.dataLogin.token,
         },
       });
       if (respond.status >= 200 && respond.status < 300) {
@@ -84,26 +103,41 @@ class DSAList extends Component {
     const maxPage = this.state.perPage;
     let filter_array = [];
     filter_array.push('"dsa_number":{"$exists" : 1, "$ne" : null}');
-    for(let i = 0; i < arrayFilter.length; i++){
-      this.state.filter_list[arrayFilter[i]] !== null && this.state.filter_list[arrayFilter[i]] !== undefined &&
-        filter_array.push('"'+arrayFilter[i]+'":{"$regex" : "' +   this.state.filter_list[arrayFilter[i]] + '", "$options" : "i"}');
+    for (let i = 0; i < arrayFilter.length; i++) {
+      this.state.filter_list[arrayFilter[i]] !== null &&
+        this.state.filter_list[arrayFilter[i]] !== undefined &&
+        filter_array.push(
+          '"' +
+            arrayFilter[i] +
+            '":{"$regex" : "' +
+            this.state.filter_list[arrayFilter[i]] +
+            '", "$options" : "i"}'
+        );
     }
-    if((this.state.userRole.findIndex(e => e === "BAM-ASP") !== -1 || this.state.userRole.findIndex(e => e === "BAM-ASP Management") !== -1 || this.state.userRole.findIndex(e => e === "BAM-Mover") !== -1) && this.state.userRole.findIndex(e => e === "Admin") === -1){
-      filter_array.push('"dsp_company" : "'+this.state.vendor_name+'"');
+    if (
+      (this.state.userRole.findIndex((e) => e === "BAM-ASP") !== -1 ||
+        this.state.userRole.findIndex((e) => e === "BAM-ASP Management") !==
+          -1 ||
+        this.state.userRole.findIndex((e) => e === "BAM-Mover") !== -1) &&
+      this.state.userRole.findIndex((e) => e === "Admin") === -1
+    ) {
+      filter_array.push('"dsp_company" : "' + this.state.vendor_name + '"');
     }
     let whereAnd = "{" + filter_array.join(",") + "}";
-    this.getDataFromAPINODE('/matreq?srt=_id:-1&q='+whereAnd+'&lmt=' + maxPage + '&pg=' + page).then(res => {
+    this.getDataFromAPINODE(
+      "/matreq?srt=_id:-1&q=" + whereAnd + "&lmt=" + maxPage + "&pg=" + page
+    ).then((res) => {
       if (res.data !== undefined) {
         const items = res.data.data;
         const totalData = res.data.totalResults;
         this.setState({ dsa_list: items, totalData: totalData });
       }
-    })
+    });
   }
 
   componentDidMount() {
     this.getDSAList();
-    document.title = 'DSA List | BAM';
+    document.title = "DSA List | BAM";
   }
 
   handlePageChange(pageNumber) {
@@ -141,7 +175,14 @@ class DSAList extends Component {
                   <i className="fa fa-search"></i>
                 </InputGroupText>
               </InputGroupAddon>
-              <Input type="text" placeholder="Search" onChange={this.handleFilterList} value={this.state.filter_list[arrayFilter[i]]} name={arrayFilter[i]} size="sm" />
+              <Input
+                type="text"
+                placeholder="Search"
+                onChange={this.handleFilterList}
+                value={this.state.filter_list[arrayFilter[i]]}
+                name={arrayFilter[i]}
+                size="sm"
+              />
             </InputGroup>
           </div>
         </td>
@@ -150,17 +191,19 @@ class DSAList extends Component {
     return searchBar;
   };
 
-  loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>
+  loading = () => (
+    <div className="animated fadeIn pt-1 text-center">Loading...</div>
+  );
 
   render() {
     const downloadDSA = {
-      float: 'right',
-      marginRight: '10px'
-    }
+      float: "right",
+      marginRight: "10px",
+    };
 
     const tableWidth = {
-      width: '150px'
-    }
+      width: "150px",
+    };
 
     return (
       <div className="animated fadeIn">
@@ -168,20 +211,52 @@ class DSAList extends Component {
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
-                <span style={{ lineHeight: '2' }}>
-                  <i className="fa fa-align-justify" style={{ marginRight: "8px" }}></i> DSA List
+                <span style={{ lineHeight: "2" }}>
+                  <i
+                    className="fa fa-align-justify"
+                    style={{ marginRight: "8px" }}
+                  ></i>{" "}
+                  DSA List
                 </span>
-                <Link to={'/dsa-creation'}><Button color="success" style={{ float: 'right' }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create DSA</Button></Link>
-                <Button style={downloadDSA} outline color="success" size="sm"><i className="fa fa-download" style={{ marginRight: "8px" }}></i>Download DSA List</Button>
-                {(this.state.userRole.findIndex(e => e === "Admin") !== -1) && (
-                  <Link to={'/dsa-migration'}><Button color="success" style={{ float: 'right', marginRight: "8px"  }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>DSA Migration</Button></Link>
+                <Link to={"/dsa-creation"}>
+                  <Button color="success" style={{ float: "right" }} size="sm">
+                    <i
+                      className="fa fa-plus-square"
+                      style={{ marginRight: "8px" }}
+                    ></i>
+                    Create DSA
+                  </Button>
+                </Link>
+                <Button style={downloadDSA} outline color="success" size="sm">
+                  <i
+                    className="fa fa-download"
+                    style={{ marginRight: "8px" }}
+                  ></i>
+                  Download DSA List
+                </Button>
+                {this.state.userRole.findIndex((e) => e === "Admin") !== -1 && (
+                  <Link to={"/dsa-migration"}>
+                    <Button
+                      color="success"
+                      style={{ float: "right", marginRight: "8px" }}
+                      size="sm"
+                    >
+                      <i
+                        className="fa fa-plus-square"
+                        style={{ marginRight: "8px" }}
+                      ></i>
+                      DSA Migration
+                    </Button>
+                  </Link>
                 )}
               </CardHeader>
               <CardBody>
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
-                      <th rowSpan="2" style={{ verticalAlign: "middle" }}>Action</th>
+                      <th rowSpan="2" style={{ verticalAlign: "middle" }}>
+                        Action
+                      </th>
                       <th>DSA Number</th>
                       <th>DSA Total Value</th>
                       <th>Current Status</th>
@@ -197,11 +272,18 @@ class DSAList extends Component {
                         <td colSpan="7">No Data Available</td>
                       </tr>
                     )}
-                    {this.state.dsa_list.map((list, i) =>
+                    {this.state.dsa_list.map((list, i) => (
                       <tr key={list._id}>
                         <td>
-                          <Link to={'/dsa-detail/' + list._id}>
-                            <Button style={{ width: "90px" }} outline color="info" size="sm">Detail</Button>
+                          <Link to={"/dsa-detail/" + list._id}>
+                            <Button
+                              style={{ width: "90px" }}
+                              outline
+                              color="info"
+                              size="sm"
+                            >
+                              Detail
+                            </Button>
                           </Link>
                         </td>
                         <td>{list.dsa_number}</td>
@@ -211,11 +293,14 @@ class DSAList extends Component {
                         <td>{list.dimension_volume}</td>
                         <td>{list.dimension_weight}</td>
                       </tr>
-                    )}
+                    ))}
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }} className="pagination">
-                  <small>Showing {this.state.dsa_list.length} entries from {this.state.totalData} data</small>
+                  <small>
+                    Showing {this.state.dsa_list.length} entries from{" "}
+                    {this.state.totalData} data
+                  </small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}
@@ -231,15 +316,15 @@ class DSAList extends Component {
           </Col>
         </Row>
       </div>
-    )
+    );
   }
 }
 
 const mapStateToProps = (state) => {
   return {
     dataLogin: state.loginData,
-    SidebarMinimize: state.minimizeSidebar
-  }
-}
+    SidebarMinimize: state.minimizeSidebar,
+  };
+};
 
 export default connect(mapStateToProps)(DSAList);
