@@ -2523,11 +2523,11 @@ class MRDetail extends Component {
                           </Fragment>
                         </div>
 
-                        <hr className="mr-detail__line" />
+                        {/* <hr className="mr-detail__line" /> */}
 
                         <div className="mr-detail__body--flex-long">
                           <Fragment>
-                            {this.state.data_mr.cust_del !== undefined ? (
+                            {/* {this.state.data_mr.cust_del !== undefined ? (
                               this.state.data_mr.cust_del.map((e) => (
                                 <div className="mr-detail__flex-body--25">
                                   <div className="mr-detail__body--header-detail">
@@ -2569,7 +2569,7 @@ class MRDetail extends Component {
                                 </div>
                                 <div>{this.state.mr_site_NE.site_id}</div>
                               </div>
-                            )}
+                            )} */}
                           </Fragment>
                         </div>
 
@@ -3993,7 +3993,7 @@ class MRDetail extends Component {
                               st.mr_status_value === "FINISH"
                           ) === -1 ? (
                             <Fragment>
-                              {(this.state.data_mr.current_mr_status ===
+                              {/* {(this.state.data_mr.current_mr_status ===
                                 "MR UPDATED" ||
                                 this.state.data_mr.current_mr_status ===
                                   "MR REQUESTED" ||
@@ -4031,12 +4031,12 @@ class MRDetail extends Component {
                                     Takeout PS
                                   </Button>
                                 </Fragment>
-                              )}
+                              )} */}
                             </Fragment>
                           ) : (
                             <Fragment></Fragment>
                           )}
-                          {this.state.userRole.findIndex(
+                          {/* {this.state.userRole.findIndex(
                             (e) => e === "BAM-Engineering"
                           ) === -1 &&
                             this.state.data_mr.mr_status.findIndex(
@@ -4055,7 +4055,7 @@ class MRDetail extends Component {
                               >
                                 Cancel MR
                               </Button>
-                            )}
+                            )} */}
                           {this.state.edit_detail === true && (
                             <Button
                               color="warning"

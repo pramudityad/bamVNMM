@@ -172,25 +172,20 @@ class MRList extends Component {
           this.state.filter_list[6] +
           '", "$options" : "i"}'
       );
+
     this.state.filter_list[7] !== "" &&
       filter_array.push(
-        '"site_info.site_region":{"$regex" : "' +
+        '"dsp_company":{"$regex" : "' +
           this.state.filter_list[7] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[8] !== "" &&
       filter_array.push(
-        '"dsp_company":{"$regex" : "' +
+        '"eta":{"$regex" : "' +
           this.state.filter_list[8] +
           '", "$options" : "i"}'
       );
-    this.state.filter_list[9] !== "" &&
-      filter_array.push(
-        '"eta":{"$regex" : "' +
-          this.state.filter_list[9] +
-          '", "$options" : "i"}'
-      );
-    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    // this.state.filter_list[8] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" &&
       filter_array.push(
         '"updated_on":{"$regex" : "' +
@@ -274,25 +269,20 @@ class MRList extends Component {
           this.state.filter_list[6] +
           '", "$options" : "i"}'
       );
+
     this.state.filter_list[7] !== "" &&
       filter_array.push(
-        '"site_info.site_region":{"$regex" : "' +
+        '"dsp_company":{"$regex" : "' +
           this.state.filter_list[7] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[8] !== "" &&
       filter_array.push(
-        '"dsp_company":{"$regex" : "' +
+        '"eta":{"$regex" : "' +
           this.state.filter_list[8] +
           '", "$options" : "i"}'
       );
-    this.state.filter_list[9] !== "" &&
-      filter_array.push(
-        '"eta":{"$regex" : "' +
-          this.state.filter_list[9] +
-          '", "$options" : "i"}'
-      );
-    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    // this.state.filter_list[8] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[8] + '", "$options" : "i"}'));
     this.state.filter_list[11] !== "" &&
       filter_array.push(
         '"updated_on":{"$regex" : "' +
@@ -499,7 +489,7 @@ class MRList extends Component {
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < 13; i++) {
+    for (let i = 0; i < 12; i++) {
       searchBar.push(
         <td>
           <div className="controls" style={{ width: "150px" }}>
@@ -609,7 +599,7 @@ class MRList extends Component {
                             ></i>
                             Download MR List
                           </DropdownItem>
-                          {this.state.userRole.findIndex(
+                          {/* {this.state.userRole.findIndex(
                             (e) => e === "BAM-Engineering"
                           ) === -1 &&
                             this.state.userRole.findIndex(
@@ -631,7 +621,7 @@ class MRList extends Component {
                                 ></i>
                                 Format MR List Status Migration
                               </DropdownItem>
-                            )}
+                            )} */}
                         </DropdownMenu>
                       </Dropdown>
                     </React.Fragment>
@@ -648,7 +638,7 @@ class MRList extends Component {
                       <th>Site Name</th>
                       <th>Current Status</th>
                       <th>Current Milestone</th>
-                      <th>Region</th>
+                      {/* <th>Region</th> */}
                       <th>DSP</th>
                       <th>ETA</th>
                       <th>Created By</th>
@@ -691,12 +681,12 @@ class MRList extends Component {
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
-                        <td>
+                        {/* <td>
                           {list.site_info !== undefined &&
                             list.site_info
                               .map((site_info) => site_info.site_region)
                               .join(" , ")}
-                        </td>
+                        </td> */}
                         <td>{list.dsp_company}</td>
                         <td>{convertDateFormat(list.eta)}</td>
                         <td>{list.creator.map((e) => e.email)}</td>
@@ -708,8 +698,11 @@ class MRList extends Component {
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
                   <small>
-                    Showing {this.state.perPage} entries from{" "}
-                    {this.state.totalData} data
+                    Showing{" "}
+                    {this.state.totalData < 10
+                      ? this.state.totalData
+                      : this.state.perPage}{" "}
+                    entries from {this.state.totalData} data
                   </small>
                 </div>
                 <Pagination

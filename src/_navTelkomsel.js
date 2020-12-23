@@ -164,26 +164,26 @@ export default {
         //     "BAM-Implementation Coordinator",
         //   ],
         // },
-        {
-          name: "MRA List",
-          url: "/mra-list",
-          icon: "icon-list",
-          roles: [
-            "BAM-Implementation Manager",
-            "BAM-Implementation Coordinator",
-            "BAM-Warehouse",
-          ],
-        },
-        {
-          name: "MRA Need Confirm",
-          url: "/mra-list-need-confirm",
-          icon: "icon-list",
-          roles: [
-            "BAM-Implementation Manager",
-            "BAM-Implementation Coordinator",
-            "BAM-Warehouse",
-          ],
-        },
+        // {
+        //   name: "MRA List",
+        //   url: "/mra-list",
+        //   icon: "icon-list",
+        //   roles: [
+        //     "BAM-Implementation Manager",
+        //     "BAM-Implementation Coordinator",
+        //     "BAM-Warehouse",
+        //   ],
+        // },
+        // {
+        //   name: "MRA Need Confirm",
+        //   url: "/mra-list-need-confirm",
+        //   icon: "icon-list",
+        //   roles: [
+        //     "BAM-Implementation Manager",
+        //     "BAM-Implementation Coordinator",
+        //     "BAM-Warehouse",
+        //   ],
+        // },
       ],
     },
     {

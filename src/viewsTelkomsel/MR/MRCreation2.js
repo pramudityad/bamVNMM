@@ -330,11 +330,11 @@ class WizardMR extends Component {
       respondSaveTSSR.status >= 200 &&
       respondSaveTSSR.status <= 300
     ) {
-      this.setState({
-        action_status: "success",
-        action_message: "MR Created, please check in MR List",
-      });
-      this.toggleLoading();
+      // this.setState({
+      //   action_status: "success",
+      //   action_message: "MR Created, please check in MR List",
+      // });
+      // this.toggleLoading();
 
       // const idps = respondSaveTSSR.data.id_plantspec_doc;
       // const nops = respondSaveTSSR.data.no_plantspec;
@@ -390,84 +390,91 @@ class WizardMR extends Component {
       //   respondCheckingMR.status >= 200 &&
       //   respondCheckingMR.status <= 300
       // ) {
-      //   const respondSaveMR = await postDatatoAPINODE(
-      //     "/matreq/saveMatreqByActivity",
-      //     { data: respondCheckingMR.data.data },
-      //     this.state.tokenUser
-      //   );
-      //   if (
-      //     respondSaveMR.data !== undefined &&
-      //     respondSaveMR.status >= 200 &&
-      //     respondSaveMR.status <= 300
-      //   ) {
-      //     const idmr = respondSaveMR.data.new[0]._id;
-      //     const no_mr = respondSaveMR.data.new[0].mr_id;
-      //     // Assing PS to MR
-      //     const respondAssignMR = await patchDatatoAPINODE(
-      //       "/matreq/assignPlantSpecByTssr2/" + idmr + "/ps/" + idps,
-      //       {
-      //         mr_type: this.state.dataMR[0],
-      //       },
-      //       this.state.tokenUser
-      //     );
-      //     if (
-      //       respondAssignMR.data !== undefined &&
-      //       respondAssignMR.status >= 200 &&
-      //       respondAssignMR.status <= 300
-      //     ) {
-      //       this.setState({
-      //         action_status: "success",
-      //         action_message: "MR Created, please check in MR List",
-      //       });
-      //       this.toggleLoading();
-      //     } else {
-      //       if (
-      //         respondAssignMR.response !== undefined &&
-      //         respondAssignMR.response.data !== undefined &&
-      //         respondAssignMR.response.data.error !== undefined
-      //       ) {
-      //         if (respondAssignMR.response.data.error.message !== undefined) {
-      //           this.setState({
-      //             action_status: "failed",
-      //             action_message: respondAssignMR.response.data.error.message,
-      //           });
-      //           this.toggleLoading();
-      //         } else {
-      //           this.setState({
-      //             action_status: "failed",
-      //             action_message: respondAssignMR.response.data.error,
-      //           });
-      //           this.toggleLoading();
-      //         }
-      //       } else {
-      //         this.setState({ action_status: "failed" });
-      //         this.toggleLoading();
-      //       }
-      //     }
-      //   } else {
-      //     if (
-      //       respondSaveMR.response !== undefined &&
-      //       respondSaveMR.response.data !== undefined &&
-      //       respondSaveMR.response.data.error !== undefined
-      //     ) {
-      //       if (respondSaveMR.response.data.error.message !== undefined) {
-      //         this.setState({
-      //           action_status: "failed",
-      //           action_message: respondSaveMR.response.data.error.message,
-      //         });
-      //         this.toggleLoading();
-      //       } else {
-      //         this.setState({
-      //           action_status: "failed",
-      //           action_message: respondSaveMR.response.data.error,
-      //         });
-      //         this.toggleLoading();
-      //       }
-      //     } else {
-      //       this.setState({ action_status: "failed" });
-      //       this.toggleLoading();
-      //     }
-      //   }
+
+      const respondSaveASG = await postDatatoAPINODE(
+        "/aspAssignment/createAspAssignWithMr",
+        { aspaData: respondSaveTSSR.data.aspaData },
+        this.state.tokenUser
+      );
+      if (
+        respondSaveASG.data !== undefined &&
+        respondSaveASG.status >= 200 &&
+        respondSaveASG.status <= 300
+      ) {
+        this.setState({
+          action_status: "success",
+          action_message: "MR & Asignment Created, please check in MR List",
+        });
+        this.toggleLoading();
+
+        // const idmr = respondSaveASG.data.new[0]._id;
+        // const no_mr = respondSaveASG.data.new[0].mr_id;
+        // // Assing PS to MR
+        // const respondAssignMR = await patchDatatoAPINODE(
+        //   "/matreq/assignPlantSpecByTssr2/" + idmr + "/ps/" + idps,
+        //   {
+        //     mr_type: this.state.dataMR[0],
+        //   },
+        //   this.state.tokenUser
+        // );
+        // if (
+        //   respondAssignMR.data !== undefined &&
+        //   respondAssignMR.status >= 200 &&
+        //   respondAssignMR.status <= 300
+        // ) {
+        //   this.setState({
+        //     action_status: "success",
+        //     action_message: "MR Created, please check in MR List",
+        //   });
+        //   this.toggleLoading();
+        // } else {
+        //   if (
+        //     respondAssignMR.response !== undefined &&
+        //     respondAssignMR.response.data !== undefined &&
+        //     respondAssignMR.response.data.error !== undefined
+        //   ) {
+        //     if (respondAssignMR.response.data.error.message !== undefined) {
+        //       this.setState({
+        //         action_status: "failed",
+        //         action_message: respondAssignMR.response.data.error.message,
+        //       });
+        //       this.toggleLoading();
+        //     } else {
+        //       this.setState({
+        //         action_status: "failed",
+        //         action_message: respondAssignMR.response.data.error,
+        //       });
+        //       this.toggleLoading();
+        //     }
+        //   } else {
+        //     this.setState({ action_status: "failed" });
+        //     this.toggleLoading();
+        //   }
+        // }
+      } else {
+        if (
+          respondSaveASG.response !== undefined &&
+          respondSaveASG.response.data !== undefined &&
+          respondSaveASG.response.data.error !== undefined
+        ) {
+          if (respondSaveASG.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: respondSaveASG.response.data.error.message,
+            });
+            this.toggleLoading();
+          } else {
+            this.setState({
+              action_status: "failed",
+              action_message: respondSaveASG.response.data.error,
+            });
+            this.toggleLoading();
+          }
+        } else {
+          this.setState({ action_status: "failed" });
+          this.toggleLoading();
+        }
+      }
       // } else {
       //   if (
       //     respondCheckingMR.response !== undefined &&

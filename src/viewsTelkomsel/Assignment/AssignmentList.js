@@ -38,7 +38,7 @@ class AssignmentList extends Component {
       activePage: 1,
       totalData: 0,
       perPage: 10,
-      filter_list: new Array(8).fill(""),
+      filter_list: new Array(9).fill(""),
       asg_all: [],
     };
     this.handlePageChange = this.handlePageChange.bind(this);
@@ -85,44 +85,50 @@ class AssignmentList extends Component {
       );
     this.state.filter_list[1] !== "" &&
       filter_array.push(
-        '"Account_Name":{"$regex" : "' +
+        '"MR_ID":{"$regex" : "' +
           this.state.filter_list[1] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[2] !== "" &&
       filter_array.push(
-        '"Project":{"$regex" : "' +
+        '"Account_Name":{"$regex" : "' +
           this.state.filter_list[2] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[3] !== "" &&
       filter_array.push(
-        '"cust_del.cd_id":{"$regex" : "' +
+        '"Project":{"$regex" : "' +
           this.state.filter_list[3] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[4] !== "" &&
       filter_array.push(
-        '"Vendor_Name":{"$regex" : "' +
+        '"cust_del.cd_id":{"$regex" : "' +
           this.state.filter_list[4] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[5] !== "" &&
       filter_array.push(
-        '"Payment_Terms":{"$regex" : "' +
+        '"Vendor_Name":{"$regex" : "' +
           this.state.filter_list[5] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[6] !== "" &&
       filter_array.push(
-        '"Current_Status":{"$regex" : "' +
+        '"Payment_Terms":{"$regex" : "' +
           this.state.filter_list[6] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[7] !== "" &&
       filter_array.push(
-        '"Work_Status":{"$regex" : "' +
+        '"Current_Status":{"$regex" : "' +
           this.state.filter_list[7] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[8] !== "" &&
+      filter_array.push(
+        '"Work_Status":{"$regex" : "' +
+          this.state.filter_list[8] +
           '", "$options" : "i"}'
       );
     let whereAnd = "{" + filter_array.join(",") + "}";
@@ -154,44 +160,50 @@ class AssignmentList extends Component {
       );
     this.state.filter_list[1] !== "" &&
       filter_array.push(
-        '"Account_Name":{"$regex" : "' +
+        '"MR_ID":{"$regex" : "' +
           this.state.filter_list[1] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[2] !== "" &&
       filter_array.push(
-        '"Project":{"$regex" : "' +
+        '"Account_Name":{"$regex" : "' +
           this.state.filter_list[2] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[3] !== "" &&
       filter_array.push(
-        '"cust_del.cd_id":{"$regex" : "' +
+        '"Project":{"$regex" : "' +
           this.state.filter_list[3] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[4] !== "" &&
       filter_array.push(
-        '"Vendor_Name":{"$regex" : "' +
+        '"cust_del.cd_id":{"$regex" : "' +
           this.state.filter_list[4] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[5] !== "" &&
       filter_array.push(
-        '"Payment_Terms":{"$regex" : "' +
+        '"Vendor_Name":{"$regex" : "' +
           this.state.filter_list[5] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[6] !== "" &&
       filter_array.push(
-        '"Current_Status":{"$regex" : "' +
+        '"Payment_Terms":{"$regex" : "' +
           this.state.filter_list[6] +
           '", "$options" : "i"}'
       );
     this.state.filter_list[7] !== "" &&
       filter_array.push(
-        '"Work_Status":{"$regex" : "' +
+        '"Current_Status":{"$regex" : "' +
           this.state.filter_list[7] +
+          '", "$options" : "i"}'
+      );
+    this.state.filter_list[8] !== "" &&
+      filter_array.push(
+        '"Work_Status":{"$regex" : "' +
+          this.state.filter_list[8] +
           '", "$options" : "i"}'
       );
     let whereAnd = "{" + filter_array.join(",") + "}";
@@ -517,7 +529,7 @@ class AssignmentList extends Component {
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       searchBar.push(
         <td>
           <div className="controls" style={{ width: "150px" }}>
@@ -609,6 +621,7 @@ class AssignmentList extends Component {
                         Action
                       </th>
                       <th>Assignment ID</th>
+                      <th>MR Related</th>
                       <th>Account Name</th>
                       <th>Project Name</th>
                       <th>CD ID</th>
@@ -640,6 +653,7 @@ class AssignmentList extends Component {
                           </Link>
                         </td>
                         <td>{list.Assignment_No}</td>
+                        <td>{list.MR_ID}</td>
                         <td>{list.Account_Name}</td>
                         <td>{list.Project}</td>
                         <td>

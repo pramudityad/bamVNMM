@@ -302,7 +302,7 @@ class AssignmentDetail extends Component {
     this.getDataFromAPINODE("/aspAssignment/aspassign/" + _id_Assignment).then(
       (resAsg) => {
         if (resAsg.data !== undefined) {
-          this.getSIDNumber(resAsg.data.data.cust_del.map((cd) => cd.cd_id));
+          // this.getSIDNumber(resAsg.data.data.cust_del.map((cd) => cd.cd_id));
           this.setState({ data_assignment: resAsg.data.data });
         }
       }
@@ -1441,7 +1441,7 @@ class AssignmentDetail extends Component {
                     ></i>
                     Assignment Format
                   </Button>
-                  {this.state.userRole.findIndex((e) => e === "Admin") !== -1 &&
+                  {/* {this.state.userRole.findIndex((e) => e === "Admin") !== -1 &&
                     (this.state.data_assignment.Locked_For_Revision ===
                       undefined ||
                       this.state.data_assignment.Locked_For_Revision ===
@@ -1461,8 +1461,8 @@ class AssignmentDetail extends Component {
                         ></i>
                         Resync NN and ACT Code
                       </Button>
-                    )}
-                  {this.state.sid_file.length !== 0 ||
+                    )} */}
+                  {/* {this.state.sid_file.length !== 0 ||
                   this.state.abd_file.length !== 0 ||
                   this.state.pqr_file !== 0 ? (
                     <Dropdown
@@ -1538,7 +1538,7 @@ class AssignmentDetail extends Component {
                     >
                       no data SID or ABD
                     </Button>
-                  )}
+                  )} */}
                 </CardHeader>
                 <CardBody>
                   <Form>
@@ -1813,7 +1813,7 @@ class AssignmentDetail extends Component {
                         </FormGroup>
                       </Col>
                     </Row>
-                    <h5 style={{ marginTop: "16px" }}>PR/PO INFORMATION</h5>
+                    {/* <h5 style={{ marginTop: "16px" }}>PR/PO INFORMATION</h5>
                     <Row>
                       <div style={{ paddingLeft: "25px" }}>
                         <Checkbox
@@ -2035,8 +2035,8 @@ class AssignmentDetail extends Component {
                           <Input type="text" name="po_line_item" readOnly />
                         </FormGroup>
                       </Col>
-                    </Row>
-                    {this.state.data_assignment !== null &&
+                    </Row> */}
+                    {/* {this.state.data_assignment !== null &&
                       this.state.data_assignment !== undefined && (
                         <Fragment>
                           <h5 style={{ marginTop: "16px" }}>SSOW List</h5>
@@ -2334,8 +2334,8 @@ class AssignmentDetail extends Component {
                             </Fragment>
                           )}
                         </Fragment>
-                      )}
-                    <h5 style={{ marginTop: "16px" }}>GR</h5>
+                      )} */}
+                    {/* <h5 style={{ marginTop: "16px" }}>GR</h5>
                     <Row>
                       <Col md="4">
                         <Table responsive striped bordered size="sm">
@@ -2353,7 +2353,7 @@ class AssignmentDetail extends Component {
                           </tbody>
                         </Table>
                       </Col>
-                    </Row>
+                    </Row> */}
                   </Form>
                 </CardBody>
                 <CardFooter>
@@ -2384,7 +2384,7 @@ class AssignmentDetail extends Component {
                       Approve
                     </Button>
                   )}
-                  {this.state.data_assignment.Current_Status !==
+                  {/* {this.state.data_assignment.Current_Status !==
                     "ASP ASSIGNMENT REQUEST FOR CANCELATION" &&
                     this.state.data_assignment.Current_Status !==
                       "ASP ASSIGNMENT CANCEL APPROVED" &&
@@ -2404,7 +2404,7 @@ class AssignmentDetail extends Component {
                       >
                         Cancel ASG
                       </Button>
-                    )}
+                    )} */}
                   {this.state.data_assignment.Current_Status ===
                     "ASP ASSIGNMENT REQUEST FOR CANCELATION" &&
                     (this.state.userRole.findIndex(
