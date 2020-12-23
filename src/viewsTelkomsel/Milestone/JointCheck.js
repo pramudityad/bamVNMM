@@ -38,6 +38,25 @@ const username = "bamidadmin@e-dpm.com";
 const password = "F760qbAg2sml";
 
 //const process.env.REACT_APP_API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+const Checkbox = ({
+  type = "checkbox",
+  name,
+  checked = false,
+  onChange,
+  value,
+  id,
+  key,
+}) => (
+  <input
+    key={key}
+    type={type}
+    name={name}
+    checked={checked}
+    onChange={onChange}
+    value={value}
+    id={id}
+  />
+);
 
 class JointCheck extends Component {
   constructor(props) {
@@ -59,6 +78,7 @@ class JointCheck extends Component {
       action_status: null,
       action_message: "",
       qty_box: new Map(),
+      array_without_box: new Array(1).fill("N/A"),
       array_id_box: [],
       modal_box_input: false,
       id_mr_selected: null,
@@ -602,6 +622,18 @@ class JointCheck extends Component {
     <div className="animated fadeIn pt-1 text-center">Loading...</div>
   );
 
+  handleWithoutBox = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+    this.setState({
+      without_box: !this.state.without_box,
+      array_id_box: new Array(parseInt(value)).fill("N/A"),
+    });
+    this.setState((prevState) => ({
+      qty_box: prevState.qty_box.set(name, value),
+    }));
+  };
+
   render() {
     function AlertProcess(props) {
       const alert = props.alertAct;
@@ -772,6 +804,16 @@ class JointCheck extends Component {
             <Row>
               <Col sm="12">
                 <FormGroup>
+                  <Label htmlFor="total_box">Without Box</Label>
+                  &nbsp;&nbsp;&nbsp;
+                  <Checkbox
+                    checked={this.state.without_box}
+                    onChange={this.handleWithoutBox}
+                    name={this.state.id_mr_selected}
+                    value={1}
+                  />
+                </FormGroup>
+                <FormGroup>
                   <Label htmlFor="total_box">Total Box</Label>
                   <Input
                     type="number"
@@ -784,15 +826,26 @@ class JointCheck extends Component {
                 </FormGroup>
                 <FormGroup>
                   <Label htmlFor="box_id">Box ID</Label>
-                  {this.state.array_id_box.map((e, idx) => (
-                    <Input
-                      type="text"
-                      name={idx}
-                      onChange={this.handleChangeIdBox}
-                      value={this.state.array_id_box[idx]}
-                      style={{ marginBottom: "5px" }}
-                    />
-                  ))}
+                  {this.state.without_box === true
+                    ? this.state.array_id_box.map((e, idx) => (
+                        <Input
+                          readOnly
+                          type="text"
+                          name={idx}
+                          onChange={this.handleChangeIdBox}
+                          value={this.state.array_without_box[idx]}
+                          style={{ marginBottom: "5px" }}
+                        />
+                      ))
+                    : this.state.array_id_box.map((e, idx) => (
+                        <Input
+                          type="text"
+                          name={idx}
+                          onChange={this.handleChangeIdBox}
+                          value={this.state.array_id_box[idx]}
+                          style={{ marginBottom: "5px" }}
+                        />
+                      ))}
                 </FormGroup>
               </Col>
             </Row>
