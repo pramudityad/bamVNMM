@@ -1017,16 +1017,16 @@ const MRCreation = (props) => {
                         onChange={props.handleChange}
                       >
                         {" "}
-                        <option value="" disabled selected hidden>
+                        {/* <option value="" disabled selected hidden>
                           Select MR Delivery Type
-                        </option>
-                        <option value="Warehouse to Site">
+                        </option> */}
+                        <option value="Warehouse to Site" selected>
                           Warehouse to Site
                         </option>
-                        <option value="Site to Warehouse">
+                        {/* <option value="Site to Warehouse">
                           Site to Warehouse
                         </option>
-                        <option value="Site to Site">Site to Site</option>
+                        <option value="Site to Site">Site to Site</option> */}
                         {/* {(this.state.create_mr_form[3] === "New" || this.state.create_mr_form[3] === "Return Excess" || this.state.create_mr_form[3] === "Return Faulty") && (
                         <Fragment>
                           <option value="Warehouse to Warehouse" hidden={this.state.toggle_display !== "new"}>Warehouse to Warehouse</option>
@@ -1165,7 +1165,7 @@ const MRCreation = (props) => {
                       />
                     </FormGroup>
                   </Col>
-                  <Col md={3}>
+                  {/* <Col md={3}>
                     <FormGroup>
                       <Label>Priority</Label>
                       <Input
@@ -1196,7 +1196,7 @@ const MRCreation = (props) => {
                         onChange={props.handleChange}
                       />
                     </FormGroup>
-                  </Col>
+                  </Col> */}
                 </Row>
                 {/* {this.state.create_mr_form[3] === "Replacement" && (
                 <Row form>

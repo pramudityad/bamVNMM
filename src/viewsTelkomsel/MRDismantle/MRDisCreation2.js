@@ -1039,7 +1039,7 @@ const MRCreation = (props) => {
                         <option value="1">Dismantle</option>
                         <option value="2">Return Excess</option>
                         <option value="3">Return Faulty</option>
-                        <option value="4">Relocation</option>
+                        {/* <option value="4">Relocation</option> */}
                       </Input>
                     </FormGroup>
                   </Col>
@@ -1125,11 +1125,13 @@ const MRCreation = (props) => {
                         onChange={props.handleChange}
                       >
                         {" "}
-                        <option value="" disabled selected hidden>
+                        {/* <option value="" disabled selected hidden>
                           Select Destination
+                        </option> */}
+                        <option value="TWH" selected>
+                          Delivery to Warehouse
                         </option>
-                        <option value="TWH">Delivery to Warehouse</option>
-                        <option value="TST">Delivery to Site</option>
+                        {/* <option value="TST">Delivery to Site</option> */}
                       </Input>
                     </FormGroup>
                   </Col>
