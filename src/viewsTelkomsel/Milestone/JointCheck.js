@@ -58,7 +58,7 @@ const Checkbox = ({
   />
 );
 
-class JointCheck extends Component {
+class JointCheck extends React.PureComponent {
   constructor(props) {
     super(props);
 

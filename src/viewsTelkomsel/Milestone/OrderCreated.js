@@ -46,7 +46,7 @@ const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
 
-class OrderCreated extends Component {
+class OrderCreated extends React.PureComponent {
   constructor(props) {
     super(props);
 

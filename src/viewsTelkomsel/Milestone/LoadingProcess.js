@@ -60,7 +60,7 @@ const Checkbox = ({
   />
 );
 
-class LoadingProcess extends Component {
+class LoadingProcess extends React.PureComponent {
   constructor(props) {
     super(props);
 

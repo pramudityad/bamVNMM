@@ -61,7 +61,7 @@ const Checkbox = ({
   />
 );
 
-class WizardMR extends Component {
+class WizardMR extends React.PureComponent {
   constructor(props) {
     super(props);
 
@@ -409,7 +409,7 @@ class WizardMR extends Component {
       ) {
         this.setState({
           action_status: "success",
-          action_message: "MR & Asignment Created, please check in MR List",
+          action_message: "MR & Asignment Created Succesfully",
         });
         this.toggleLoading();
 

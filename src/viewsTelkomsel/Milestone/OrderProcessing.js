@@ -37,7 +37,7 @@ const API_URL_ISAT = "https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi";
 const usernameISAT = "adminbamidsuper";
 const passwordISAT = "F760qbAg2sml";
 
-class OrderProcessing extends Component {
+class OrderProcessing extends React.PureComponent {
   constructor(props) {
     super(props);
 

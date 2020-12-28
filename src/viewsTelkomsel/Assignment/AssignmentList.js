@@ -23,7 +23,7 @@ import { connect } from "react-redux";
 // //const process.env.REACT_APP_API_URL_NODE = process.env.REACT_APP_API_URL_NODE;
 //const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-class AssignmentList extends Component {
+class AssignmentList extends React.PureComponent {
   constructor(props) {
     super(props);
 

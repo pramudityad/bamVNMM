@@ -62,7 +62,7 @@ const Checkbox = ({
   />
 );
 
-class WizardMRDis extends Component {
+class WizardMRDis extends React.PureComponent {
   constructor(props) {
     super(props);
 

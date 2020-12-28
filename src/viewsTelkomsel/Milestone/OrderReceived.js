@@ -30,7 +30,7 @@ const password = "F760qbAg2sml";
 
 //const process.env.REACT_APP_API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class OrderReceived extends Component {
+class OrderReceived extends React.PureComponent {
   constructor(props) {
     super(props);
 

@@ -57,7 +57,7 @@ const passwordTSEL = "F760qbAg2sml";
 
 //const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
-class AssignmentDetail extends Component {
+class AssignmentDetail extends React.PureComponent {
   constructor(props) {
     super(props);
 

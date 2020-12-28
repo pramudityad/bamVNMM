@@ -567,7 +567,7 @@ const options = {
   maintainAspectRatio: false,
 };
 
-class Dashboard extends Component {
+class Dashboard extends React.PureComponent {
   constructor(props) {
     super(props);
 
@@ -616,10 +616,10 @@ class Dashboard extends Component {
   }
 
   componentDidMount() {
-    this.getPendingTaskBOQ();
+    // this.getPendingTaskBOQ();
     this.getPendingTaskMR();
     this.getPendingTaskASG();
-    this.getPODataListPending();
+    // this.getPODataListPending();
   }
 
   async getPendingTaskBOQ() {
