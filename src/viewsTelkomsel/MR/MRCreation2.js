@@ -77,6 +77,7 @@ class WizardMR extends Component {
       project_list: [],
       list_cd_options: [],
       vendor_list: [],
+      asp_list: [],
       list_tower_selection_ne: [],
       list_tower_selection_fe: [],
       modal_loading: false,
@@ -107,9 +108,14 @@ class WizardMR extends Component {
     getDatafromAPITSEL("/vendor_non_page").then((res) => {
       if (res.data !== undefined) {
         const items = res.data._items;
-        this.setState({ vendor_list: items });
+        this.setState({ vendor_list: items }, () => this.getASPList(items));
       }
     });
+  }
+
+  getASPList(datalist) {
+    const aspData = datalist.filter((asp) => asp.type === "ASP");
+    this.setState({ asp_list: aspData });
   }
 
   //   getDataProject() {
@@ -312,7 +318,7 @@ class WizardMR extends Component {
       eta: this.state.dataMR[6],
       etd: this.state.dataMR[5],
       dsp: this.state.dataMR[7],
-      asp: this.state.dataMR[7],
+      asp: this.state.dataMR[4],
       wh_origin: this.state.dataMR[8],
     };
     // post ps
@@ -799,6 +805,7 @@ class WizardMR extends Component {
           />
           <MRCreation
             list_dsp={this.state.vendor_list}
+            list_asp={this.state.asp_list}
             list_project={this.loadOptionsCDID}
             list_wh={this.state.list_warehouse}
             currentStep={this.state.currentStep}
@@ -942,6 +949,7 @@ const PScreation = (props) => {
 
 const MRCreation = (props) => {
   const list_dsp = props.list_dsp;
+  const list_asp = props.list_asp;
   const list_project = props.list_project;
   const project_select = props.project_name;
   const list_wh = props.list_wh;
@@ -1065,7 +1073,34 @@ const MRCreation = (props) => {
                 <Row form>
                   <Col md={6}>
                     <FormGroup>
-                      <Label>Delivery Company</Label>
+                      <Label>Assignment By</Label>
+                      <Input
+                        type="select"
+                        id={"4"}
+                        name={"4"}
+                        value={props.dataMR}
+                        onChange={props.handleChange}
+                      >
+                        {" "}
+                        <option value="" disabled selected hidden>
+                          Select ASP
+                        </option>
+                        {list_asp.map((e) => (
+                          <option value={e.Vendor_Code}>{e.Name}</option>
+                        ))}
+                      </Input>
+                      {/* {this.state.create_mr_form[7] === "DSP" && (
+                      <FormText color="muted" style={{fontSize : '12px', paddingLeft : '5px', marginTop : '5px'}}>
+                        LDM will choose the DSP company
+                      </FormText>
+                    ) } */}
+                    </FormGroup>
+                  </Col>
+                </Row>
+                <Row form>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>DSP</Label>
                       <Input
                         type="select"
                         id={"7"}

@@ -95,6 +95,7 @@ class WizardMRDis extends Component {
       site_fe_select: "",
       mr_select: "",
       list_asg_selection: [],
+      asp_list: [],
     };
   }
 
@@ -112,9 +113,14 @@ class WizardMRDis extends Component {
     getDatafromAPITSEL("/vendor_non_page").then((res) => {
       if (res.data !== undefined) {
         const items = res.data._items;
-        this.setState({ vendor_list: items });
+        this.setState({ vendor_list: items }, () => this.getASPList(items));
       }
     });
+  }
+
+  getASPList(datalist) {
+    const aspData = datalist.filter((asp) => asp.type === "ASP");
+    this.setState({ asp_list: aspData });
   }
 
   getDataWarehouse() {
@@ -849,6 +855,7 @@ class WizardMRDis extends Component {
           />
           <MRCreation
             list_dsp={this.state.vendor_list}
+            list_asp={this.state.asp_list}
             list_project={this.loadOptionsCDID}
             list_mr={this.loadOptionsMR}
             currentStep={this.state.currentStep}
@@ -997,6 +1004,7 @@ const PScreation = (props) => {
 
 const MRCreation = (props) => {
   const list_dsp = props.list_dsp;
+  const list_asp = props.list_asp;
   const list_project = props.list_project;
   const list_wh = props.list_wh;
   const list_mr = props.list_mr;
@@ -1183,7 +1191,7 @@ const MRCreation = (props) => {
                         <option value="" disabled selected hidden>
                           Select Dismantle Company
                         </option>
-                        {list_dsp.map((e) => (
+                        {list_asp.map((e) => (
                           <option value={e.Vendor_Code}>{e.Name}</option>
                         ))}
                       </Input>
