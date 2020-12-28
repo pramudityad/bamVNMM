@@ -1633,7 +1633,7 @@ class AssignmentDetail extends Component {
                         ""
                       )}
                     </Row>
-                    <Row>
+                    {/* <Row>
                       <Col md="6">
                         <FormGroup style={{ paddingLeft: "16px" }}>
                           <Label>Remark</Label>
@@ -1663,7 +1663,7 @@ class AssignmentDetail extends Component {
                             </FormGroup>
                           </Col>
                         )}
-                    </Row>
+                    </Row> */}
                     <h5 style={{ marginTop: "16px" }}>PROJECT</h5>
                     <Row>
                       <Col md="6">

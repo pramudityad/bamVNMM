@@ -493,7 +493,7 @@ class MRDetail extends Component {
   getDataMR(_id_MR) {
     this.getDataFromAPINODE("/matreq/" + _id_MR).then((resMR) => {
       if (resMR.data !== undefined) {
-        this.getMRLocation(_id_MR);
+        // this.getMRLocation(_id_MR);
         if (resMR.data.dsp_company === null) {
           this.getASPList();
         }
@@ -503,7 +503,7 @@ class MRDetail extends Component {
           }
           if (this.state.data_mr.cust_del !== undefined) {
             this.getDataCDID(this.state.data_mr.cust_del.map((e) => e.cd_id));
-            this.getSIDNumber(this.state.data_mr.cust_del.map((e) => e.cd_id));
+            // this.getSIDNumber(this.state.data_mr.cust_del.map((e) => e.cd_id));
           }
           this.setState({ mr_pp: resMR.data.packages }, () => {
             if (
@@ -2062,7 +2062,7 @@ class MRDetail extends Component {
                       {/* }<Button style={{float : 'right', marginRight: "8px"}} size="sm" color="warning" onClick={this.changeEditable}>Edit MR Detail</Button> */}
                     </Fragment>
                   )}
-                {this.state.sid_file.length !== 0 ||
+                {/* {this.state.sid_file.length !== 0 ||
                 this.state.abd_file.length !== 0 ||
                 this.state.pqr_file !== 0 ? (
                   <Dropdown
@@ -2135,7 +2135,7 @@ class MRDetail extends Component {
                   >
                     no data SID or ABD
                   </Button>
-                )}
+                )} */}
                 <Button
                   style={{ marginRight: "8px", float: "right" }}
                   outline

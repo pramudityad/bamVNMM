@@ -2115,7 +2115,7 @@ class MRDisDetail extends Component {
                       {/* }<Button style={{float : 'right', marginRight: "8px"}} size="sm" color="warning" onClick={this.changeEditable}>Edit MRA  Detail</Button> */}
                     </Fragment>
                   )}
-                {this.state.data_mr !== null &&
+                {/* {this.state.data_mr !== null &&
                 (this.state.sid_file.length !== 0 ||
                   this.state.abd_file.length !== 0 ||
                   (this.state.data_mr.bapa_document !== undefined &&
@@ -2183,7 +2183,7 @@ class MRDisDetail extends Component {
                   >
                     no data SID or ABD
                   </Button>
-                )}
+                )} */}
                 <Button
                   style={{ marginRight: "8px", float: "right" }}
                   outline
@@ -2589,7 +2589,7 @@ class MRDisDetail extends Component {
                           )}
                         </div>
 
-                        <hr className="mr-detail__line" />
+                        {/* <hr className="mr-detail__line" />
 
                         <div className="mr-detail__body--flex-long">
                           <Fragment>
@@ -2640,7 +2640,7 @@ class MRDisDetail extends Component {
                               </div>
                             )}
                           </Fragment>
-                        </div>
+                        </div> */}
 
                         <hr className="mr-detail__line" />
 
