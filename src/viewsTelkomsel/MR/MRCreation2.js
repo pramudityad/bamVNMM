@@ -261,7 +261,7 @@ class WizardMR extends React.PureComponent {
     ws.addRow(headerRow);
     ws.addRow(row1);
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "Template PS.xlsx");
+    saveAs(new Blob([allocexport]), "Template PS RBS.xlsx");
   }
 
   async DownloadPStemplateTRM() {
@@ -304,7 +304,7 @@ class WizardMR extends React.PureComponent {
     ws.addRow(headerRow);
     ws.addRow(row1);
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "Template PS.xlsx");
+    saveAs(new Blob([allocexport]), "Template PS TRM.xlsx");
   }
 
   saveMRtoAPI = async () => {
