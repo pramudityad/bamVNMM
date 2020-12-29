@@ -3652,10 +3652,7 @@ class MRDetail extends Component {
                       </div>
                     )}
                     {this.state.data_mr !== null &&
-                    (this.state.data_mr.mr_delivery_type_code === "A1" ||
-                      (this.state.data_mr.mr_delivery_type_code !== "A2" &&
-                        this.state.data_mr.mr_delivery_type_code !== "B1" &&
-                        this.state.data_mr.mr_delivery_type_code !== "C1")) ? (
+                    this.state.data_mr.lom_packages === undefined ? (
                       <Fragment></Fragment>
                     ) : (
                       <Fragment>
@@ -3777,9 +3774,10 @@ class MRDetail extends Component {
                                                   this.state.data_mr
                                                     .sow_type === "TRM" && (
                                                     <td>
-                                                      {pp.site_title +
+                                                      {/* {pp.site_title +
                                                         " => " +
-                                                        pp.site_id}
+                                                        pp.site_id} */}
+                                                      {pp.site_id}
                                                     </td>
                                                   )}
                                                 <td></td>

@@ -584,7 +584,7 @@ class MaterialDispatch extends React.PureComponent {
                 dataMatIdx.material_name,
                 serial_number.updated_by,
                 serial_number.updated_on,
-                "XL",
+                "vnmm test",
                 dataMR.origin.value,
               ]);
             }
@@ -597,7 +597,7 @@ class MaterialDispatch extends React.PureComponent {
             dataMatIdx.material_name,
             null,
             null,
-            "XL",
+            "vnmm test",
             dataMR.origin.value,
           ]);
         }
@@ -769,7 +769,7 @@ class MaterialDispatch extends React.PureComponent {
                                       <DropdownItem header>
                                         MR File
                                       </DropdownItem>
-                                      <DropdownItem
+                                      {/* <DropdownItem
                                         onClick={() =>
                                           this.downloadMRTRACY(list._id)
                                         }
@@ -780,7 +780,7 @@ class MaterialDispatch extends React.PureComponent {
                                           aria-hidden="true"
                                         ></i>
                                         TRACY
-                                      </DropdownItem>
+                                      </DropdownItem> */}
                                       <DropdownItem
                                         onClick={() =>
                                           this.downloadMaterialSerialNumberReport(
