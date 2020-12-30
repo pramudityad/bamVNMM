@@ -83,7 +83,7 @@ const JointCheck = React.lazy(() =>
   import("./viewsTelkomsel/Milestone/JointCheck")
 );
 const LoadingProcess = React.lazy(() =>
-  import("./viewsTelkomsel/Milestone/LoadingProcess")
+  import("./viewsTelkomsel/Milestone/LoadingProcess2")
 );
 const WaitingDispatch = React.lazy(() =>
   import("./viewsTelkomsel/Milestone/WaitingDispatch")

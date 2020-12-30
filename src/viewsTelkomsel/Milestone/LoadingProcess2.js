@@ -33,16 +33,6 @@ import {
   getDatafromAPITSEL,
 } from "../../helper/asyncFunction";
 
-const API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
-const username = "bamidadmin@e-dpm.com";
-const password = "F760qbAg2sml";
-
-const API_URL_TSEL = "https://api-dev.tsel.pdb.e-dpm.com/tselpdbapi";
-const usernameISAT = "adminbamidsuper";
-const passwordISAT = "F760qbAg2sml";
-
-//const process.env.REACT_APP_API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
-
 const Checkbox = ({
   type = "checkbox",
   name,
@@ -60,7 +50,7 @@ const Checkbox = ({
   />
 );
 
-class LoadingProcess extends React.PureComponent {
+class LoadingProcess extends Component {
   constructor(props) {
     super(props);
 
@@ -85,7 +75,6 @@ class LoadingProcess extends React.PureComponent {
       validation_form: {},
       modal_loading: false,
       asp_list: [],
-      no_filter_dsp: false,
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -101,16 +90,15 @@ class LoadingProcess extends React.PureComponent {
     );
     this.handleCheckingForm = this.handleCheckingForm.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
-    this.handleChangeFilterDSP = this.handleChangeFilterDSP.bind(this);
   }
 
   async getDataFromAPI(url) {
     try {
-      let respond = await axios.get(API_URL + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL + url, {
         headers: { "Content-Type": "application/json" },
         auth: {
-          username: username,
-          password: password,
+          username: process.env.REACT_APP_username,
+          password: process.env.REACT_APP_password,
         },
       });
       if (respond.status >= 200 && respond.status < 300) {
@@ -168,11 +156,11 @@ class LoadingProcess extends React.PureComponent {
 
   async getDataFromAPIEXEL(url) {
     try {
-      let respond = await axios.get(API_URL_TSEL + url, {
+      let respond = await axios.get(process.env.REACT_APP_API_URL_XL + url, {
         headers: { "Content-Type": "application/json" },
         auth: {
-          username: usernameISAT,
-          password: passwordISAT,
+          username: process.env.REACT_APP_usernameXL,
+          password: process.env.REACT_APP_passwordXL,
         },
       });
       if (respond.status >= 200 && respond.status < 300) {
@@ -245,7 +233,7 @@ class LoadingProcess extends React.PureComponent {
           this.state.filter_list[8] +
           '", "$options" : "i"}'
       );
-    // this.state.filter_list[9] !== "" && (filter_array.push('"creator.email":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
     this.state.filter_list[10] !== "" &&
       filter_array.push(
         '"updated_on":{"$regex" : "' +
@@ -258,15 +246,6 @@ class LoadingProcess extends React.PureComponent {
           this.state.filter_list[11] +
           '", "$options" : "i"}'
       );
-    if (this.state.no_filter_dsp === true) {
-      filter_array.push(
-        '"$or" : [{"dsp_company_code" : {"$regex" : "' +
-          this.state.shipment_detail.transporter +
-          '", "$options" : "i"}}, {"dsp_company":{"$regex" : "' +
-          this.state.shipment_detail.transporter_name +
-          '", "$options" : "i"}}]'
-      );
-    }
     this.props.match.params.whid !== undefined &&
       filter_array.push(
         '"origin.value" : "' + this.props.match.params.whid + '"'
@@ -284,8 +263,7 @@ class LoadingProcess extends React.PureComponent {
     });
   }
 
-  async getAllMR() {
-    let mrList = [];
+  getAllMR() {
     let filter_array = [];
     this.state.filter_list[0] !== "" &&
       filter_array.push(
@@ -336,7 +314,7 @@ class LoadingProcess extends React.PureComponent {
           this.state.filter_list[8] +
           '", "$options" : "i"}'
       );
-    // this.state.filter_list[9] !== "" && (filter_array.push('"creator.email":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
+    // this.state.filter_list[9] !== "" && (filter_array.push('"created_by":{"$regex" : "' + this.state.filter_list[9] + '", "$options" : "i"}'));
     this.state.filter_list[10] !== "" &&
       filter_array.push(
         '"updated_on":{"$regex" : "' +
@@ -354,17 +332,13 @@ class LoadingProcess extends React.PureComponent {
         '"origin.value" : "' + this.props.match.params.whid + '"'
       );
     let whereAnd = "{" + filter_array.join(",") + "}";
-    let res = await this.getDataFromAPINODE(
-      "/matreq?srt=_id:-1&noPg=1&q=" + whereAnd
-    );
-    if (res.data !== undefined) {
-      const items = res.data.data;
-      mrList = res.data.data;
-      return mrList;
-      // this.setState({ mr_all: items });
-    } else {
-      return [];
-    }
+    this.getDataFromAPINODE("/matreq?noPg=1&q=" + whereAnd).then((res) => {
+      console.log("MR List All", res);
+      if (res.data !== undefined) {
+        const items = res.data.data;
+        this.setState({ mr_all: items });
+      }
+    });
   }
 
   numToSSColumn(num) {
@@ -379,68 +353,25 @@ class LoadingProcess extends React.PureComponent {
     return s || undefined;
   }
 
-  async getDataCDID(data_mr) {
-    let arrayCD = [];
-    arrayCD = data_mr.map((e) => e.cust_del).reduce((l, n) => l.concat(n), []);
-    let array_cd_id = [...new Set(arrayCD.map(({ cd_id }) => cd_id))];
-    let dataCDID = [];
-    let getNumberPage = Math.ceil(array_cd_id.length / 20);
-    for (let i = 0; i < getNumberPage; i++) {
-      let DataPaginationWPID = array_cd_id.slice(i * 20, (i + 1) * 20);
-      let array_in_cdid = '"' + DataPaginationWPID.join('", "') + '"';
-      let projection =
-        '&projection={"WP_ID" : 1, "C1043_WBS_HW" : 1, "C1023_WBS_HWAC" : 1, "C1033_WBS_LCM" : 1, "C1003_WBS_PNRO" : 1, "C1053_WBS_SW" : 1, "C1063_C1053_WBS_PS" : 1, "C1066_C1053_WBS_ANC" : 1, "C1034_WBS_PowHW_Site_Basis" : 1, "C1035_WBS_PowLCM_Site_Basis" : 1, "C1036_WBS_Kathrein" : 1}';
-      const getWPID = await getDatafromAPIISAT(
-        '/custdel_sorted?where={"WP_ID":{"$in" : [' +
-          array_in_cdid +
-          "]}}" +
-          projection,
-        this.state.tokenUser
-      );
-      if (getWPID !== undefined && getWPID.data !== undefined) {
-        dataCDID = dataCDID.concat(getWPID.data._items);
-      }
-    }
-    return dataCDID;
-  }
-
   async downloadMRlist() {
-    this.toggleLoading();
     const wb = new Excel.Workbook();
     const ws = wb.addWorksheet();
 
-    const allMR = await this.getAllMR();
-
-    let dataCDID = [];
-    if (allMR.cust_del !== undefined) {
-      dataCDID = await this.getDataCDID(allMR);
-    }
+    const allMR = this.state.mr_all;
 
     let headerRow = [
       "MR ID",
-      "MR MITT ID",
-      "MR Type",
-      "MR Delivery Type",
       "Project Name",
       "CD ID",
-      "Project PO",
       "Site ID",
       "Site Name",
       "Current Status",
       "Current Milestone",
       "DSP",
       "ETA",
-      "MR MITT Created On",
-      "MR MITT Created By",
+      "Created By",
       "Updated On",
       "Created On",
-      "WBS HW",
-      "WBS HWAC (License)",
-      "WBS LCM",
-      "WBS PNRO",
-      "WBS SW",
-      "WBS PS",
-      "WBS ANC",
     ];
     ws.addRow(headerRow);
 
@@ -449,82 +380,42 @@ class LoadingProcess extends React.PureComponent {
     }
 
     for (let i = 0; i < allMR.length; i++) {
-      let dataCDIDIdx = {};
-      if (allMR[i].cust_del[0] !== undefined) {
-        dataCDIDIdx = dataCDID.find(
-          (dc) => dc.WP_ID === allMR[i].cust_del[0].cd_id
-        );
-        if (dataCDIDIdx === undefined) {
-          dataCDIDIdx = {};
-        }
-      }
-
-      const creator_mr_mitt = allMR[i].mr_status.find(
-        (e) =>
-          e.mr_status_name === "PLANTSPEC" &&
-          e.mr_status_value === "NOT ASSIGNED"
-      );
       ws.addRow([
         allMR[i].mr_id,
-        allMR[i].mr_mitt_no,
-        allMR[i].mr_type,
-        allMR[i].mr_delivery_type,
         allMR[i].project_name,
-        allMR[i].cust_del !== undefined
-          ? allMR[i].cust_del.map((cd) => cd.cd_id).join(", ")
-          : allMR[i].cd_id,
-        allMR[i].project_po,
-        allMR[i].site_info[0] !== undefined
-          ? allMR[i].site_info[0].site_id
-          : null,
-        allMR[i].site_info[0] !== undefined
-          ? allMR[i].site_info[0].site_name
-          : null,
+        allMR[i].cd_id,
+        allMR[i].site_info[0].site_id,
+        allMR[i].site_info[0].site_name,
         allMR[i].current_mr_status,
         allMR[i].current_milestones,
         allMR[i].dsp_company,
-        new Date(allMR[i].eta),
-        creator_mr_mitt !== undefined
-          ? new Date(creator_mr_mitt.mr_status_date)
-          : null,
-        creator_mr_mitt !== undefined
-          ? creator_mr_mitt.mr_status_updater
-          : null,
-        new Date(allMR[i].updated_on),
-        new Date(allMR[i].created_on),
-        dataCDIDIdx.C1043_WBS_HW,
-        dataCDIDIdx.C1023_WBS_HWAC,
-        dataCDIDIdx.C1033_WBS_LCM,
-        dataCDIDIdx.C1003_WBS_PNRO,
-        dataCDIDIdx.C1053_WBS_SW,
-        dataCDIDIdx.C1063_C1053_WBS_PS,
-        dataCDIDIdx.C1066_C1053_WBS_ANC,
+        allMR[i].eta,
+        "",
+        allMR[i].updated_on,
+        allMR[i].created_on,
       ]);
-      const getRowLast = ws.lastRow._number;
-      ws.getCell("M" + getRowLast).numFmt = "YYYY-MM-DD";
-      ws.getCell("Q" + getRowLast).numFmt = "YYYY-MM-DD";
-      ws.getCell("P" + getRowLast).numFmt = "YYYY-MM-DD";
-      if (creator_mr_mitt !== undefined && creator_mr_mitt !== null) {
-        ws.getCell("N" + getRowLast).numFmt = "YYYY-MM-DD";
-      }
     }
-    this.toggleLoading();
+
     const allocexport = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([allocexport]), "MR List Loading Process.xlsx");
+    saveAs(new Blob([allocexport]), "Loading Process.xlsx");
   }
 
   async patchDataToAPI(url, data, _etag) {
     try {
-      let respond = await axios.patch(API_URL + url, data, {
-        headers: {
-          "Content-Type": "application/json",
-          "If-Match": _etag,
-        },
-        auth: {
-          username: username,
-          password: password,
-        },
-      });
+      let respond = await axios.patch(
+        process.env.REACT_APP_API_URL + url,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "If-Match": _etag,
+          },
+          auth: {
+            username: process.env.REACT_APP_username,
+            password: process.env.REACT_APP_password,
+          },
+        }
+      );
       if (respond.status >= 200 && respond.status < 300) {
         console.log("respond patch data", respond);
       }
@@ -737,24 +628,8 @@ class LoadingProcess extends React.PureComponent {
     if (value !== (null && undefined)) {
       value = value.toString();
     }
-    if (name.toString() === "transporter") {
-      const indexOpt = e.target.selectedIndex;
-      const textOpt = e.target[indexOpt].text;
-      dataShipment[name.toString() + "_name"] = textOpt;
-      if (value === "All") {
-        this.setState({ no_filter_dsp: false }, () => {
-          this.getMRList();
-        });
-      } else {
-        this.setState({ no_filter_dsp: true }, () => {
-          this.getMRList();
-        });
-      }
-    }
     dataShipment[name.toString()] = value;
-    this.setState({ shipment_detail: dataShipment }, () =>
-      console.log(this.state.shipment_detail)
-    );
+    this.setState({ shipment_detail: dataShipment });
   }
 
   handleChangeChecklist(e) {
@@ -778,7 +653,7 @@ class LoadingProcess extends React.PureComponent {
 
   loopSearchBar = () => {
     let searchBar = [];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 11; i++) {
       searchBar.push(
         <td>
           <div className="controls" style={{ width: "150px" }}>
@@ -803,17 +678,6 @@ class LoadingProcess extends React.PureComponent {
     }
     return searchBar;
   };
-
-  handleChangeFilterDSP() {
-    this.setState(
-      (prevState) => ({
-        no_filter_dsp: !prevState.no_filter_dsp,
-      }),
-      () => {
-        this.getMRList();
-      }
-    );
-  }
 
   loading = () => (
     <div className="animated fadeIn pt-1 text-center">Loading...</div>
@@ -865,10 +729,7 @@ class LoadingProcess extends React.PureComponent {
                   size="sm"
                   style={{ float: "right" }}
                   color="success"
-                  disabled={
-                    this.state.mr_data_selected.length === 0 ||
-                    this.state.shipment_detail.transporter === "All"
-                  }
+                  disabled={this.state.mr_data_selected.length === 0}
                 >
                   <i class="fa fa-plus" aria-hidden="true">
                     &nbsp;
@@ -925,18 +786,14 @@ class LoadingProcess extends React.PureComponent {
                             name="transporter"
                             onChange={this.handleChangeShipmentDetail}
                             value={
-                              // this.state.shipment_detail.transporter ===
-                              // undefined
-                              //   ? ""
-                              //   : this.state.shipment_detail.transporter
-                              this.state.shipment_detail.transporter
+                              this.state.shipment_detail.transporter ===
+                              undefined
+                                ? ""
+                                : this.state.shipment_detail.transporter
                             }
                           >
                             <option value="" disabled selected hidden>
                               Select Transporter
-                            </option>
-                            <option value={"All"}>
-                              {"All Transporter (Just For Show)"}
                             </option>
                             {this.state.asp_list.map((list, i) => (
                               <option value={list.Vendor_Code}>
@@ -972,11 +829,10 @@ class LoadingProcess extends React.PureComponent {
                             name="truck_type"
                             onChange={this.handleChangeShipmentDetail}
                             value={
-                              // this.state.shipment_detail.truck_type ===
-                              // undefined
-                              //   ? ""
-                              //   : this.state.shipment_detail.truck_type
-                              this.state.shipment_detail.truck_type
+                              this.state.shipment_detail.truck_type ===
+                              undefined
+                                ? ""
+                                : this.state.shipment_detail.truck_type
                             }
                           >
                             <option value="" disabled hidden>
@@ -1129,7 +985,7 @@ class LoadingProcess extends React.PureComponent {
                     </FormGroup>
                     <FormGroup row>
                       <Col md="2">
-                        <Label htmlFor="driver_phone_number">Note</Label>
+                        <Label htmlFor="driver_phone_number">DSP Email</Label>
                       </Col>
                       <Col md="8">
                         <Input
@@ -1215,19 +1071,12 @@ class LoadingProcess extends React.PureComponent {
                       </th>
                       <th>MR ID</th>
                       <th>Project Name</th>
-                      <th>CD ID</th>
+
                       <th>Site ID</th>
                       <th>Site Name</th>
                       <th>Current Status</th>
                       <th>Current Milestone</th>
-                      <th>
-                        <Checkbox
-                          type="checkbox"
-                          checked={this.state.no_filter_dsp}
-                          onChange={this.handleChangeFilterDSP}
-                        />
-                        DSP
-                      </th>
+                      <th>DSP</th>
                       <th>ETA</th>
                       <th>Created By</th>
                       <th>Updated On</th>
@@ -1257,29 +1106,28 @@ class LoadingProcess extends React.PureComponent {
                           </Link>
                         </td>
                         <td>{list.project_name}</td>
+
                         <td>
-                          {list.cust_del !== undefined &&
-                            list.cust_del
-                              .map((custdel) => custdel.cd_id)
-                              .join(" , ")}
+                          {list.site_info !== undefined &&
+                            list.site_info.map((site_info, j) =>
+                              j === list.site_info.length - 1
+                                ? site_info.site_id
+                                : site_info.site_id + ", "
+                            )}
                         </td>
                         <td>
                           {list.site_info !== undefined &&
-                            list.site_info
-                              .map((site_info) => site_info.site_id)
-                              .join(" , ")}
-                        </td>
-                        <td>
-                          {list.site_info !== undefined &&
-                            list.site_info
-                              .map((site_info) => site_info.site_name)
-                              .join(" , ")}
+                            list.site_info.map((site_info, j) =>
+                              j === list.site_info.length - 1
+                                ? site_info.site_id
+                                : site_info.site_name + ", "
+                            )}
                         </td>
                         <td>{list.current_mr_status}</td>
                         <td>{list.current_milestones}</td>
                         <td>{list.dsp_company}</td>
                         <td>{convertDateFormat(list.eta)}</td>
-                        <td>{list.creator.map((e) => e.email)}</td>
+                        <td></td>
                         <td>{convertDateFormatfull(list.updated_on)}</td>
                         <td>{convertDateFormatfull(list.created_on)}</td>
                       </tr>
@@ -1287,10 +1135,7 @@ class LoadingProcess extends React.PureComponent {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>
-                    Showing {this.state.mr_list.length} entries from{" "}
-                    {this.state.totalData} data
-                  </small>
+                  <small>Showing {this.state.totalData} entries</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}
