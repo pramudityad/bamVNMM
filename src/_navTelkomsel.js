@@ -318,7 +318,7 @@ export default {
       ],
       children: [
         {
-          name: "Dashboard EID",
+          name: "Dashboard Internal",
           url: "/wh-dashboard-eid",
           icon: "icon-speedometer",
           roles: [

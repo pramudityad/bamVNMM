@@ -792,7 +792,7 @@ class Dashboard extends React.PureComponent {
             <Col xs="6" sm="4" lg="4">
               <a
                 style={{ textDecoration: "none" }}
-                href="https://act.e-dpm.com"
+                // href="https://act.e-dpm.com"
               >
                 <Widget05
                   icon="fa fa-cogs"
@@ -808,7 +808,7 @@ class Dashboard extends React.PureComponent {
             <Col xs="6" sm="4" lg="4">
               <a
                 style={{ textDecoration: "none" }}
-                href="https://xl.pdb.e-dpm.com/"
+                // href="https://xl.pdb.e-dpm.com/"
               >
                 <Widget05
                   icon="fa fa-database"
