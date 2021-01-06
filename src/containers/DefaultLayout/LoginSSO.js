@@ -121,7 +121,7 @@ class SSOLogin extends Component {
         key: this.state.key,
         authenticated: this.state.authenticated,
         authenticatedLoginBAM: false,
-        // authenticatedLoginBAMStatus: getLogin.response.data.error,
+        authenticatedLoginBAMStatus: getLogin.response.data.error,
       });
     }
   }
@@ -269,13 +269,13 @@ class SSOLogin extends Component {
                   </div>
                 </Col>
               </Row>
-              {/* {this.state.authenticatedLoginBAM === false && (
+              {this.state.authenticatedLoginBAM === false && (
                 <Row className="justify-content-center">
                   <div className="card--error">
                     <h5>{this.state.authenticatedLoginBAMStatus}</h5>
                   </div>
                 </Row>
-              )} */}
+              )}
             </Container>
           </div>
         </React.Fragment>
