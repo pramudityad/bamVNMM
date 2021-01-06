@@ -14,8 +14,6 @@ const loading = () => (
   <div className="animated fadeIn pt-3 text-center">Loading...</div>
 );
 
-const API_URL_Node = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
-
 class SSOLogin extends Component {
   constructor(props) {
     super(props);
@@ -117,6 +115,7 @@ class SSOLogin extends Component {
         authenticatedLoginBAM: true,
       });
     } else {
+      console.log("getLoginerror", getLogin);
       this.setState({
         key: this.state.key,
         authenticated: this.state.authenticated,
