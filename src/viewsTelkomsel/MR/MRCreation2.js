@@ -1025,9 +1025,9 @@ const MRCreation = (props) => {
                         onChange={props.handleChange}
                       >
                         {" "}
-                        {/* <option value="" disabled selected hidden>
+                        <option value="" disabled selected hidden>
                           Select MR Delivery Type
-                        </option> */}
+                        </option>
                         <option value="Warehouse to Site" selected>
                           Warehouse to Site
                         </option>

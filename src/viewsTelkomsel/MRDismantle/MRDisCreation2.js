@@ -870,7 +870,7 @@ class WizardMRDis extends React.PureComponent {
             id={this.state.dataMR[0]}
             sow_type={this.state.dataMR[2]}
             mrdev_type={this.state.dataMR[3]}
-            cdid={this.state.dataMR[1]}
+            delivery_category={this.state.dataMR[1]}
             dsp_company={this.state.dataMR[7]}
             originwh={this.state.dataMR[8]}
             weektarget={this.state.dataMR[9]}
@@ -1133,12 +1133,10 @@ const MRCreation = (props) => {
                         onChange={props.handleChange}
                       >
                         {" "}
-                        {/* <option value="" disabled selected hidden>
+                        <option value="" disabled selected hidden>
                           Select Destination
-                        </option> */}
-                        <option value="TWH" selected>
-                          Delivery to Warehouse
                         </option>
+                        <option value="TWH">Delivery to Warehouse</option>
                         {/* <option value="TST">Delivery to Site</option> */}
                       </Input>
                     </FormGroup>
