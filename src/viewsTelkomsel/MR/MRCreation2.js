@@ -1050,7 +1050,7 @@ const MRCreation = (props) => {
                 <Row form>
                   <Col md={6}>
                     <FormGroup>
-                      <Label>CD ID</Label>
+                      <Label>WP ID</Label>
                       <AsyncSelect
                         cacheOptions
                         loadOptions={list_project}
