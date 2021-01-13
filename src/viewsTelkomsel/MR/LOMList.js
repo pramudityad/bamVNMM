@@ -281,7 +281,7 @@ class LOMList extends Component {
     let headerRow = [
       "MR ID",
       "Project Name",
-      "CD ID",
+      "WP ID",
       "Site ID",
       "Site Name",
       "Current Status",
@@ -609,7 +609,7 @@ class LOMList extends Component {
                       </th>
                       <th>MR ID</th>
                       <th>Project Name</th>
-                      <th>CD ID</th>
+                      <th>WP ID</th>
                       <th>Site ID</th>
                       <th>Site Name</th>
                       <th>Current Status</th>

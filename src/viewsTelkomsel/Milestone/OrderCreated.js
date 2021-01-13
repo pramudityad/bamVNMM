@@ -441,7 +441,7 @@ class OrderCreated extends React.PureComponent {
       "MR Type",
       "MR Delivery Type",
       "Project Name",
-      "CD ID",
+      "WP ID",
       "Site ID",
       "Site Name",
       "Current Status",
@@ -798,7 +798,7 @@ class OrderCreated extends React.PureComponent {
                       </th>
                       <th>MR ID</th>
                       <th>Project Name</th>
-                      <th>CD ID</th>
+                      <th>WP ID</th>
                       <th>Site ID</th>
                       <th>Site Name</th>
                       <th>Current Status</th>

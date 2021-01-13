@@ -330,7 +330,7 @@ class MaterialDispatch extends React.PureComponent {
     let headerRow = [
       "MR ID",
       "Project Name",
-      "CD ID",
+      "WP ID",
       "Site ID",
       "Site Name",
       "Current Status",
@@ -714,7 +714,7 @@ class MaterialDispatch extends React.PureComponent {
                       </th>
                       <th>MR ID</th>
                       <th>Project Name</th>
-                      <th>CD ID</th>
+                      <th>WP ID</th>
                       <th>Site ID</th>
                       <th>Site Name</th>
                       <th>Current Status</th>
