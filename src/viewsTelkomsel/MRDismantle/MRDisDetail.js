@@ -2338,7 +2338,7 @@ class MRDisDetail extends Component {
                         <div className="mr-detail__body--flex">
                           <div>
                             <div className="mr-detail__body--header-detail">
-                              <span>CD ID</span>
+                              <span>WP ID</span>
                             </div>
                             <div>
                               <ul className="mr-detail__ul--cd-id">
@@ -2597,7 +2597,7 @@ class MRDisDetail extends Component {
                               this.state.data_mr.cust_del.map((e) => (
                                 <div className="mr-detail__flex-body--25">
                                   <div className="mr-detail__body--header-detail">
-                                    <span>WBS of CD ID {e.cd_id}</span>
+                                    <span>WBS of WP ID {e.cd_id}</span>
                                   </div>
                                   <div>
                                     <Table
@@ -2633,7 +2633,7 @@ class MRDisDetail extends Component {
                               <div className="mr-detail__flex-body--25">
                                 <div className="mr-detail__body--header-detail">
                                   <span>
-                                    WBS of CD ID {this.state.data_mr.cd_id}
+                                    WBS of WP ID {this.state.data_mr.cd_id}
                                   </span>
                                 </div>
                                 <div>{this.state.mr_site_NE.site_id}</div>
