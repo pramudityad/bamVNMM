@@ -130,6 +130,7 @@ class SSOLogin extends Component {
     keycloak
       .init({ onLoad: "login-required", checkLoginIframe: false })
       .then((authenticated) => {
+        console.log('ini ray',keycloak.token)
         keycloak.loadUserInfo().then((userInfo) => {
           this.setState({
             key: keycloak,
