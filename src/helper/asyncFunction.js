@@ -1,5 +1,4 @@
 import axios from "axios";
-import React from "react";
 
 const API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 const API_URL_XL = "https://api-dev.xl.pdb.e-dpm.com/xlpdbapi";
@@ -28,6 +27,27 @@ export const getDatafromAPIFreeToken = async (url, token) => {
 };
 
 // PDB
+
+export const getDatafromAPI_PDB2 = async (url, props) => {
+  try {
+    let respond = await axios.get(process.env.REACT_APP_API_URL_PDB2 + url, {
+      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + props,
+      },
+    });
+    if (respond.status >= 200 && respond.status < 300) {
+      console.log("respond Get Data", respond);
+    }
+    return respond;
+  } catch (err) {
+    let respond = err;
+    console.log("respond Get Data", err);
+    return respond;
+  }
+};
+
 export const getDatafromAPIEXEL = async (url) => {
   try {
     let respond = await axios.get(API_URL_XL + url, {

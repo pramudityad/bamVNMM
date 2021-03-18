@@ -9,6 +9,7 @@ import { Button, Col, Container, Row } from "reactstrap";
 import telenor from "../../assets/img/customer/Telenor_logo.png";
 
 import ericssonLogoBlack from "../../assets/img/brand/ERI_horizontal_RGB_BLACK.svg";
+import { CollectionsBookmark } from "@material-ui/icons";
 
 const loading = () => (
   <div className="animated fadeIn pt-3 text-center">Loading...</div>
@@ -23,6 +24,7 @@ class SSOLogin extends Component {
       authenticated: false,
       dataLogin: null,
       token: null,
+      token_pdb: null,
       authenticatedLoginBAM: null,
       authenticatedLoginBAMStatus: null,
     };
@@ -60,10 +62,12 @@ class SSOLogin extends Component {
     }
   }
 
-  async getDataLogin(keycloak, account_id) {
+  async getDataLogin(keycloak, account_id, token_pdb) {
+    console.log('token_pdb ', token_pdb)
     const dataReq = {
       account_id: account_id,
       cas_id: keycloak.sub,
+      token_pdb: token_pdb,
       data: {
         first_name: keycloak.given_name,
         last_name: keycloak.family_name,
@@ -99,7 +103,7 @@ class SSOLogin extends Component {
         vendor_code: getLogin.data.validUser.vendor_code,
         vendor_name: getLogin.data.validUser.vendor_name,
       });
-      console.log("getLogin.data", getLogin.data.validUser.vendor_code);
+      // console.log("getLogin.data", getLogin.data.validUser.vendor_code);
       localStorage.setItem(
         "keycloack_data_login",
         JSON.stringify(this.state.key)
@@ -130,16 +134,18 @@ class SSOLogin extends Component {
     keycloak
       .init({ onLoad: "login-required", checkLoginIframe: false })
       .then((authenticated) => {
-        console.log('ini ray',keycloak.token)
+        // console.log('ini ray',keycloak.token)
         keycloak.loadUserInfo().then((userInfo) => {
           this.setState({
             key: keycloak,
             authenticated: authenticated,
             userInfo: userInfo,
+            token_pdb: keycloak.token,
           });
           if (localStorage.getItem("user_data_login") === null) {
           } else {
-            this.getDatafromLocalStorage(keycloak, authenticated);
+            console.log('getDatafromLocalStorage')
+            this.getDatafromLocalStorage(keycloak, authenticated, this.state.token_pdb);
           }
         });
       });
@@ -149,7 +155,7 @@ class SSOLogin extends Component {
     this.loginKeycloack();
   }
 
-  getDatafromLocalStorage(keycloak, authenticated) {
+  getDatafromLocalStorage(keycloak, authenticated, token_pdb) {
     const dataLogin = JSON.parse(localStorage.getItem("user_data_login"));
     let role_user = dataLogin.listRole;
     if (
@@ -160,6 +166,7 @@ class SSOLogin extends Component {
       role_user.push("BAM-ASP");
     }
     this.props.saveDataUser({
+      token_pdb: token_pdb,
       data_user: dataLogin,
       _id_user: dataLogin.validUser._id,
       email_user: dataLogin.validUser.email,
@@ -173,7 +180,7 @@ class SSOLogin extends Component {
       vendor_code: dataLogin.validUser.vendor_code,
       vendor_name: dataLogin.validUser.vendor_name,
     });
-    console.log("getLogin.data", dataLogin.validUser.vendor_code);
+    // console.log("getLogin.data", dataLogin.validUser.vendor_code);
     this.setState({ dataLogin: dataLogin });
     this.setState({ key: keycloak, authenticated: authenticated }, () => {
       if (dataLogin === null) {
@@ -186,7 +193,7 @@ class SSOLogin extends Component {
 
   handleChangeAccount(account_id) {
     this.setState({ authenticatedLoginBAM: null });
-    this.getDataLogin(this.state.userInfo, account_id);
+    this.getDataLogin(this.state.userInfo, account_id, this.state.token_pdb);
   }
 
   render() {
@@ -258,12 +265,12 @@ class SSOLogin extends Component {
                       onClick={() => this.handleChangeAccount("1")}
                     >
                       <div>
-                        {/* <img
+                        <img
                           src={telenor}
                           alt="telenor logo"
-                          style={{ width: "80%", marginTop: "15%" }}
-                        /> */}
-                        <h2>VN MM</h2>
+                          style={{ width: "50%" }}
+                        />
+                        {/* <h2>VN MM</h2> */}
                       </div>
                     </div>
                   </div>

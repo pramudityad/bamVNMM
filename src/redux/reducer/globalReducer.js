@@ -16,6 +16,7 @@ const globalState = {
         "_id" : null,
         "vendor_code" : null,
         "vendor_name" : null,
+        "token_pdb": null,
     },
     minimizeSidebar : false,
 }
@@ -39,6 +40,7 @@ const rootReducer = ( state = globalState, action) => {
                 "account_access" : action.data_user.account_access,
                 "vendor_code" : action.data_user.vendor_code,
                 "vendor_name" : action.data_user.vendor_name,
+                "token_pdb": action.data_user.token_pdb,
             }
         }
     }

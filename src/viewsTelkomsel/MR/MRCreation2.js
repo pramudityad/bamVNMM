@@ -30,6 +30,7 @@ import { ExcelRenderer } from "react-excel-renderer";
 import {
   getDatafromAPITSEL,
   getDatafromAPIBHARTI,
+  getDatafromAPI_PDB2,
   getDatafromAPINODE,
   postDatatoAPINODE,
   patchDatatoAPINODE,
@@ -71,6 +72,7 @@ class WizardMR extends React.PureComponent {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      tokenPDB: this.props.dataLogin.token_pdb,
       datawizard: {},
       currentStep: 1,
       dsp_list: [],
@@ -104,8 +106,17 @@ class WizardMR extends React.PureComponent {
     document.title = "MR Creation | BAM";
   }
 
+  // getDSPList() {
+  //   getDatafromAPITSEL("/vendor_non_page").then((res) => {
+  //     if (res.data !== undefined) {
+  //       const items = res.data._items;
+  //       this.setState({ vendor_list: items }, () => this.getASPList(items));
+  //     }
+  //   });
+  // }
+
   getDSPList() {
-    getDatafromAPITSEL("/vendor_non_page").then((res) => {
+    getDatafromAPI_PDB2("/get-vendors", this.state.tokenPDB).then((res) => {
       if (res.data !== undefined) {
         const items = res.data._items;
         this.setState({ vendor_list: items }, () => this.getASPList(items));
@@ -139,23 +150,49 @@ class WizardMR extends React.PureComponent {
     });
   }
 
+  // loadOptionsCDID = async (inputValue) => {
+  //   if (!inputValue) {
+  //     return [];
+  //   } else {
+  //     let wp_id_list = [];
+  //     // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
+  //     const getWPID = await getDatafromAPITSEL(
+  //       '/custdel_tlnr_sorted_non_page?where={"WP_ID":{"$regex":"' +
+  //         inputValue +
+  //         '", "$options":"i"}}'
+  //     );
+  //     if (getWPID !== undefined && getWPID.data !== undefined) {
+  //       this.setState({ list_cd_options: getWPID.data._items });
+  //       getWPID.data._items.map((wp) =>
+  //         wp_id_list.push({
+  //           value: wp.WP_ID,
+  //           label: wp.WP_ID + " ( " + wp.WP_Name + " )",
+  //           project: wp.CD_Info_Project_Name,
+  //           id_project_doc: wp.CD_Info_Project,
+  //           id_cd_doc: wp._id,
+  //         })
+  //       );
+  //     }
+  //     // this.setState({ project_name: wp_id_list[0].project });
+  //     return wp_id_list;
+  //   }
+  // };
+
   loadOptionsCDID = async (inputValue) => {
-    if (!inputValue) {
-      return [];
-    } else {
+    // if (!inputValue) {
+    //   return [];
+    // } else {
       let wp_id_list = [];
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
-      const getWPID = await getDatafromAPITSEL(
-        '/custdel_tlnr_sorted_non_page?where={"WP_ID":{"$regex":"' +
-          inputValue +
-          '", "$options":"i"}}'
+      const getWPID = await getDatafromAPI_PDB2(
+        '/get-activities', this.state.tokenPDB
       );
       if (getWPID !== undefined && getWPID.data !== undefined) {
         this.setState({ list_cd_options: getWPID.data._items });
         getWPID.data._items.map((wp) =>
           wp_id_list.push({
             value: wp.WP_ID,
-            label: wp.WP_ID + " ( " + wp.WP_Name + " )",
+            label: wp.CD_Info_Network_Number + " ( " + wp.CD_Info_Activity_Code + " )",
             project: wp.CD_Info_Project_Name,
             id_project_doc: wp.CD_Info_Project,
             id_cd_doc: wp._id,
@@ -164,7 +201,7 @@ class WizardMR extends React.PureComponent {
       }
       // this.setState({ project_name: wp_id_list[0].project });
       return wp_id_list;
-    }
+    // }
   };
 
   filterDataTower = (inputValue) => {
