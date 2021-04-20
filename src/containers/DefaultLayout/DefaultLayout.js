@@ -1,4 +1,4 @@
-import React, { Component, Suspense } from 'react';
+import React, { Component, Suspense, PureComponent } from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
 import * as router from 'react-router-dom';
 import { Container } from 'reactstrap';
@@ -34,7 +34,7 @@ const LoaderPage = React.lazy(() => import('../../views/DefaultView/LoaderPage')
 
 const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
 
-class DefaultLayout extends Component {
+class DefaultLayout extends PureComponent {
 
   constructor(props) {
     super(props);
@@ -87,7 +87,7 @@ class DefaultLayout extends Component {
   }
 
   showMenuByRole(){
-    // console.log("showMenuByRole", this.state.navMenu);
+    console.log("showMenuByRole", this.state.navMenu);
     let rolesUser = this.props.dataLogin.role;
     let dataMenu = this.state.navMenu.items;
     let dataMenuRoles = [];

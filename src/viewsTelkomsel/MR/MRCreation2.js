@@ -192,7 +192,7 @@ class WizardMR extends React.PureComponent {
         getWPID.data._items.map((wp) =>
           wp_id_list.push({
             value: wp.WP_ID,
-            label: wp.CD_Info_Network_Number + " ( " + wp.CD_Info_Activity_Code + " )",
+            label: wp.WP_ID + " ( " + wp.CD_Info_Activity_Code + " )",
             project: wp.CD_Info_Project_Name,
             id_project_doc: wp.CD_Info_Project,
             id_cd_doc: wp._id,
@@ -365,6 +365,7 @@ class WizardMR extends React.PureComponent {
         mrInfo: body_MR,
         psData: this.state.dataPS,
         sowType: this.state.dataMR[2],
+        access_token_vnmm: this.state.tokenPDB
       },
       this.state.tokenUser
     );
