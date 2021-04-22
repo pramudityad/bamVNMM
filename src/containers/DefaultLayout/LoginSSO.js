@@ -65,6 +65,7 @@ class SSOLogin extends Component {
   async getDataLogin(keycloak, account_id, token_pdb) {
     console.log('token_pdb ', token_pdb)
     const dataReq = {
+      access_token_vnmm: token_pdb,
       account_id: account_id,
       cas_id: keycloak.sub,
       token_pdb: token_pdb,
