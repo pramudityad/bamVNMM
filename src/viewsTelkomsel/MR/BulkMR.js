@@ -18,6 +18,15 @@ import { ExcelRenderer } from "react-excel-renderer";
 import { connect } from "react-redux";
 import { Link, Redirect } from "react-router-dom";
 import * as XLSX from "xlsx";
+import {
+  getDatafromAPITSEL,
+  getDatafromAPIBHARTI,
+  getDatafromAPI_PDB2,
+  getDatafromAPINODE,
+  postDatatoAPINODE,
+  patchDatatoAPINODE,
+} from "../../helper/asyncFunction";
+import Select from "react-select";
 
 const DefaultNotif = React.lazy(() =>
   import("../../viewsIndosat/DefaultView/DefaultNotif")
@@ -40,6 +49,8 @@ const usernameISAT = "adminbamidsuper";
 const passwordISAT = "F760qbAg2sml";
 
 //const process.env.REACT_APP_API_URL_NODE = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+
+const tokenpdb_temp = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJiSTgzcmtBQ0RBeDhJdkpvTnhjbzZLQlp3S1NHUGtYNGhzbVdieXd0OFZnIn0.eyJqdGkiOiI5YWY5MGRiNC0zYjM2LTQwZTUtYTEzZS03NTg1YjM2MDJhOGEiLCJleHAiOjE2MjE0MzQ0NjQsIm5iZiI6MCwiaWF0IjoxNjIxNDI4MTY1LCJpc3MiOiJodHRwczovL2Nhcy5lLWRwbS5jb20vYXV0aC9yZWFsbXMvRURQTS1TU08iLCJzdWIiOiJhOGMyMWZkOS0zZWEyLTQxYWQtYmVjYy1kNTk3ODg5ODA0ODkiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJhY2NvdW50Iiwibm9uY2UiOiJlOGQyOGQ2Yy02YzJhLTRhNTUtOTIzZC0yMmJmMGZkOWU5NGQiLCJhdXRoX3RpbWUiOjE2MjE0MjgxNjQsInNlc3Npb25fc3RhdGUiOiJmYTYxMDczMy00ZWFjLTQyNTItOWFhMS03YTc0ZjhlODEzNTciLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbImh0dHBzOi8vYWN0LmUtZHBtLmNvbSIsImh0dHBzOi8vYmFtLXZubW0uZS1kcG0uY29tIiwiaHR0cHM6Ly9iYW0tbXkuZS1kcG0uY29tIiwiaHR0cHM6Ly9zbWFydC5wZGItZmxvdy5lLWRwbS5jb20iLCJodHRwczovL3NtYXJ0LnBkYi10ZXN0Zmxvdy5lLWRwbS5jb20iLCJodHRwOi8vZGV2LmNvbnZlcnNhdGlvbi5lLWRwbS5jb20iLCJodHRwOi8vbG9jYWxob3N0OjUwMTQiLCJodHRwOi8vY29udmVyc2F0aW9uLmUtZHBtLmNvbSIsImh0dHA6Ly90aC5lLWRwbS5jb20iLCJodHRwczovL3NtYXJ0LmUtZHBtLmNvbSIsImh0dHBzOi8vZGV2LmJhbS1teS5lLWRwbS5jb20iLCJodHRwczovL2Rldi54bC5wZGItdjIuZS1kcG0uY29tIiwiaHR0cHM6Ly9jYXMuZS1kcG0uY29tL2F1dGgiLCJodHRwczovL2JhbS1pZC5lLWRwbS5jb20iLCJodHRwczovL2JhbS12aWwuZS1kcG0uY29tIiwiaHR0cHM6Ly90aC5lLWRwbS5jb20iLCJodHRwczovL2Rldi5iYW0tdmlsLmUtZHBtLmNvbSIsImh0dHBzOi8vdGVzdC5pdi10cmFja2VyLmNvbSIsImh0dHBzOi8vdm5tbS1wZGIuZS1kcG0uY29tIiwiaHR0cHM6Ly9iYW0tYmhhcnRpLmUtZHBtLmNvbSIsImh0dHBzOi8vZGV2LmJhbS1iaGFydGkuZS1kcG0uY29tIiwiaHR0cHM6Ly9kZXYtdGguZS1kcG0uY29tIiwiaHR0cDovL2xvY2FsaG9zdDozMDA1IiwiaHR0cHM6Ly9hY3QtYmhhcnRpLmUtZHBtLmNvbSIsImh0dHA6Ly9sb2NhbGhvc3Q6NTAwMCIsImh0dHA6Ly81Mi4yMzAuNC4yMTg6NTAwMiIsImh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImh0dHBzOi8vZGV2LmJhbS1zZy5lLWRwbS5jb20iLCJodHRwczovL2RldjMuYWN0LmUtZHBtLmNvbSIsImh0dHBzOi8vYmFtLXNnLmUtZHBtLmNvbSIsImh0dHBzOi8vbW9haS1kYXNoLmUtZHBtLmNvbSIsImh0dHBzOi8vZGV2LmJhbS1pZC5lLWRwbS5jb20iLCJodHRwczovL2Rldi5iYW0tdm5tbS5lLWRwbS5jb20iXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZW5pZCBlbWFpbCBwaG9uZSBwcm9maWxlIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJuYW1lIjoiQWRtaW4gQkFNLVZOTU0iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhZG1pbmJhbXZubW1zdXBlciIsImdpdmVuX25hbWUiOiJBZG1pbiIsImZhbWlseV9uYW1lIjoiQkFNLVZOTU0iLCJlbWFpbCI6ImJhbXZubW1hZG1pbkBlLWRwbS5jb20ifQ.IXxIrL4i-Xwh_buRWU_aQIQhiwF0hywdCYzkMt40bJnX1gMZOMa-waXWd6kOeuqtV_TOKj94c2Pitz1kumGGvDvjrltzl8iclGTEBXjHf9n1KK1KAU3qFvC1z3BLzUxUBradpnQCHO3mj5yJytJ_D2vWDdlJMGxdBbQ1wb2wGmAHOP2LfppD558reDi6l4G44k5nx-SRvoVW4QPbLPxh-JfpSLsTb17UF-2QFTYIPwJPUpA5xj0wGffSGNWk-txnKdRgU8VuGh6NnndGPafanYsshkeN5WZQw2Jk0ABVbrcD7F7pVUuBJ9JWDwX6skRYF5r2Fyic3MolzQwNOKReHw";
 
 const Checkbox = ({
   type = "checkbox",
@@ -104,6 +115,7 @@ class BulkMR extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      tokenPDB: this.props.dataLogin.token_pdb,
       asp_list: [],
       rowsXLS: [],
       list_data_activity: [],
@@ -119,6 +131,8 @@ class BulkMR extends Component {
       data_checking_mr: [],
       list_warehouse: [],
       modal_loading: false,
+      sow_type: null,
+      list_project_selection: []
     };
     this.exportFormatBulkMR = this.exportFormatBulkMR.bind(this);
     this.saveDataMRBulk = this.saveDataMRBulk.bind(this);
@@ -382,9 +396,22 @@ class BulkMR extends Component {
     };
   }
 
+  filterDataProject = () => {
+    const list = [
+    {
+      label: "RBS", value:"RBS" 
+    },
+    {
+      label: "TRM", value:"TRM"
+    },
+  ];
+    this.setState({ list_project_selection: list });
+  };
+
   componentDidMount() {
     this.getDataWarehouse();
     this.getASPList();
+    this.filterDataProject()
   }
 
   getDataWarehouse() {
@@ -398,7 +425,7 @@ class BulkMR extends Component {
   }
 
   getASPList() {
-    this.getDataFromAPIEXEL('/vendor_data_non_page?where={"Type":"ASP"}').then(
+    getDatafromAPI_PDB2("/get-vendors", this.state.tokenPDB).then(
       (res) => {
         if (res.data !== undefined) {
           const items = res.data._items;
@@ -455,7 +482,7 @@ class BulkMR extends Component {
     this.setState({
       rowsXLS: newDataXLS,
     });
-    this.checkingDataMR(newDataXLS);
+    // this.checkingDataMR(newDataXLS);
     // this.formatDataTSSR(newDataXLS);
   }
 
@@ -699,10 +726,10 @@ class BulkMR extends Component {
 
   async saveDataMRBulk() {
     this.toggleLoading();
-    const dataChecking = this.state.data_checking_mr;
+    // const dataChecking = this.state.data_checking_mr;
     const respondSaveMR = await this.postDatatoAPINODE(
-      "/matreq/saveMatreqByActivity",
-      { data: dataChecking }
+      "/matreq/createMultipleMatreqWithPs",
+      { sowType: this.state.sow_type, mrPsData: this.state.rowsXLS, access_token_vnmm: this.state.tokenPDB }
     );
     if (
       respondSaveMR.data !== undefined &&
@@ -814,60 +841,53 @@ class BulkMR extends Component {
     const ws = wb.addWorksheet();
 
     ws.addRow([
-      "id",
-      "project_name",
+      "wp_id",
       "mr_type",
       "mr_delivery_type",
+      "assignment_by",
+      "dsp",
       "origin_warehouse",
       "etd",
       "eta",
-      "deliver_by",
-      "mr_comment_project",
-      "sent_mr_request",
-      "created_based",
-      "identifier",
-      "priority_mr",
-      "week_number",
-      "sow_type",
+      "pp_id",
+      "product_name",
+      "product_type",
+      "physical_group",
+      "package_unit",
+      "pp_group",
+      "material_id",
+      "material_name",
+      "material_type",
+      "material_unit",
+      "material_qty",
+      "material_qty_fe",
     ]);
 
     ws.addRow([
-      "new",
-      "ISAT AOP 2019",
-      "1",
-      "1",
-      "JKT1",
-      "2020-10-19",
-      "YYYY-MM-DD",
-      "DSP",
-      null,
-      null,
-      "cd_id",
-      "XISAT2009171",
-      null,
-      null,
-      "RBS",
-    ]);
-    ws.addRow([
-      "new",
-      "ISAT AOP 2019",
-      "1",
-      "1",
-      "JKT1",
-      "2020-10-19",
-      "YYYY-MM-DD",
-      "DSP",
-      null,
-      null,
-      "cd_id",
-      "XISAT2009171TRM",
-      null,
-      null,
-      "TRM",
+      "123460",
+      "look cheatsheet",
+      "look cheatsheet",
+      "vendor",
+      "vendor",
+      "look cheatsheet",
+      "DD/MM/YYY",
+      "DD/MM/YYY",
+      "PPID2001s",
+      "Package Satu",
+      "HW",
+      "Radio",
+      "unit",
+      "Radio 2",
+      "MDID001",
+      "Material 1",
+      "active",
+      "pc",
+      "3",
+      "3",
     ]);
 
     const MRFormat = await wb.xlsx.writeBuffer();
-    saveAs(new Blob([MRFormat]), "MR Uploader Template.xlsx");
+    saveAs(new Blob([MRFormat]), "MR Bulk Uploader Template.xlsx");
   };
 
   async downloadResultofUploader() {
@@ -905,6 +925,12 @@ class BulkMR extends Component {
     );
   }
 
+  handleChangeProject = (e) => {
+    this.setState(
+      {sow_type : e.value }
+    );
+  };
+
   render() {
     if (this.state.redirectSign !== false) {
       return <Redirect to={"/mr-list"} />;
@@ -940,8 +966,18 @@ class BulkMR extends Component {
                   Download MR Format
                 </Button>
               </CardHeader>
-              <CardBody className="card-UploadBoq">
+              <CardBody className="card-UploadBoq">              
                 <Row>
+                <Col md={4}>
+                    <FormGroup>
+                      <Label>Sow Type</Label>
+                      <Select
+                        cacheOptions
+                        options={this.state.list_project_selection}
+                        onChange={this.handleChangeProject}
+                      />
+                    </FormGroup>
+                  </Col>
                   <Col>
                     <input
                       type="file"
@@ -953,20 +989,14 @@ class BulkMR extends Component {
                       onClick={this.saveDataMRBulk}
                       style={{ float: "right" }}
                       disabled={
-                        this.state.rowsXLS.length === 0 ||
-                        this.state.waiting_status === true ||
-                        this.state.action_status === "failed"
+                        this.state.rowsXLS.length === 0 
                       }
                     >
-                      {this.state.rowsXLS.length === 0
-                        ? "Save"
-                        : this.state.waiting_status === true
-                        ? "Loading..."
-                        : "Save"}
+                      Save
                     </Button>
                   </Col>
                 </Row>
-                {this.state.userRole.includes("Admin") && (
+                {/* {this.state.userRole.includes("Admin") && (
                   <Fragment>
                     <hr
                       style={{
@@ -998,7 +1028,7 @@ class BulkMR extends Component {
                       </Col>
                     </Row>
                   </Fragment>
-                )}
+                )} */}
                 <table
                   style={{
                     width: "100%",

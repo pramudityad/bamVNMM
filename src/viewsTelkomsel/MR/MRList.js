@@ -571,7 +571,7 @@ class MRList extends Component {
                                 Create MR
                               </Button>
                             </Link>
-                            {/* <Link to={'/bulk-mr-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR Bulk</Button></Link> */}
+                            <Link to={'/bulk-mr-creation'}><Button color="success" style={{ float: 'right', marginRight: "8px" }} size="sm"><i className="fa fa-plus-square" style={{ marginRight: "8px" }}></i>Create MR Bulk</Button></Link>
                           </React.Fragment>
                         )}
                       <Dropdown
