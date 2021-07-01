@@ -99,6 +99,7 @@ class MRDetail extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      tokenPDB: this.props.dataLogin.token_pdb,
       list_mr_item: [],
       rowsXLS: [],
       data_mr: null,
@@ -936,9 +937,9 @@ class MRDetail extends Component {
         dsp_company: this.state.data_mr.dsp_company,
       };
     }
-    body = { ...body, motType: this.state.mot_type };
+    body = { ...body, motType: this.state.mot_type, access_token_vnmm: this.state.tokenPDB };
     // console.log('_id ',_id);
-    // console.log('body ',body);
+    console.log('body ',body);
     this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id, body).then(
       (res) => {
         if (res.data !== undefined) {
