@@ -1111,7 +1111,7 @@ const MRCreation = (props) => {
                 <Row form>
                   <Col md={6}>
                     <FormGroup>
-                      <Label>Assignment By</Label>
+                      <Label>ASP</Label>
                       <Input
                         type="select"
                         id={"4"}
