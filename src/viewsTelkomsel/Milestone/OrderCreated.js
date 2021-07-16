@@ -56,6 +56,7 @@ class OrderCreated extends React.PureComponent {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      tokenPDB: this.props.dataLogin.token_pdb,
       mr_list: [],
       prevPage: 0,
       activePage: 1,
@@ -612,10 +613,10 @@ class OrderCreated extends React.PureComponent {
   ApproveMR(e) {
     const _id = this.state.id_mr_selected;
     let body = this.state.selected_dsp;
-    body = { ...body, motType: this.state.mot_type };
+    body = { ...body, motType: this.state.mot_type, access_token_vnmm: this.state.tokenPDB };
     // console.log('_id ',_id);
     // console.log('body ',body);
-    this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id).then((res) => {
+    this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id, body).then((res) => {
       if (res.data !== undefined) {
         this.setState({ action_status: "success" });
         this.getMRList();

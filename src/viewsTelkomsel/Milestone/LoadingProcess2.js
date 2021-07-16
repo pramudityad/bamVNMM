@@ -31,6 +31,7 @@ import {
 import {
   getDatafromAPIISAT,
   getDatafromAPITSEL,
+  getDatafromAPI_PDB2
 } from "../../helper/asyncFunction";
 
 const Checkbox = ({
@@ -60,6 +61,7 @@ class LoadingProcess extends Component {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      tokenPDB: this.props.dataLogin.token_pdb,
       mr_list: [],
       prevPage: 0,
       activePage: 1,
@@ -589,7 +591,7 @@ class LoadingProcess extends Component {
   }
 
   loadOptionsASP() {
-    getDatafromAPITSEL("/vendor_non_page").then((res) => {
+    getDatafromAPI_PDB2("/get-vendors", this.state.tokenPDB).then((res) => {
       if (res.data !== undefined) {
         const items = res.data._items;
         this.setState({ asp_list: items });

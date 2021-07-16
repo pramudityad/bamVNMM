@@ -481,7 +481,28 @@ class BulkMR extends Component {
     }
     this.setState({
       rowsXLS: newDataXLS,
-    });
+    },()=> console.log([
+      ["wp_id",
+      "mr_type",
+      "mr_delivery_type",
+      "assignment_by",
+      "dsp",
+      "origin_warehouse",
+      "etd",
+      "eta",
+      "pp_id",
+      "product_name",
+      "product_type",
+      "physical_group",
+      "package_unit",
+      "pp_group",
+      "material_id",
+      "material_name",
+      "material_type",
+      "material_unit",
+      "material_qty",
+      "material_qty_fe"
+    ]].concat(this.state.rowsXLS.slice(1,this.state.rowsXLS.length))));
     // this.checkingDataMR(newDataXLS);
     // this.formatDataTSSR(newDataXLS);
   }
@@ -729,7 +750,28 @@ class BulkMR extends Component {
     // const dataChecking = this.state.data_checking_mr;
     const respondSaveMR = await this.postDatatoAPINODE(
       "/matreq/createMultipleMatreqWithPs",
-      { sowType: this.state.sow_type, mrPsData: this.state.rowsXLS, access_token_vnmm: this.state.tokenPDB }
+      { sowType: this.state.sow_type, mrPsData: [
+        ["wp_id",
+        "mr_type",
+        "mr_delivery_type",
+        "assignment_by",
+        "dsp",
+        "origin_warehouse",
+        "etd",
+        "eta",
+        "pp_id",
+        "product_name",
+        "product_type",
+        "physical_group",
+        "package_unit",
+        "pp_group",
+        "material_id",
+        "material_name",
+        "material_type",
+        "material_unit",
+        "material_qty",
+        "material_qty_fe"
+      ]].concat(this.state.rowsXLS.slice(1,this.state.rowsXLS.length)), access_token_vnmm: this.state.tokenPDB }
     );
     if (
       respondSaveMR.data !== undefined &&
@@ -844,7 +886,7 @@ class BulkMR extends Component {
       "wp_id",
       "mr_type",
       "mr_delivery_type",
-      "assignment_by",
+      "asp",
       "dsp",
       "origin_warehouse",
       "etd",
