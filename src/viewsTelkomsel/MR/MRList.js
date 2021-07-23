@@ -51,6 +51,7 @@ class MRList extends Component {
       tokenUser: this.props.dataLogin.token,
       vendor_name: this.props.dataLogin.vendor_name,
       vendor_code: this.props.dataLogin.vendor_code,
+      account_name : this.props.dataLogin.account_id === "1" ? "Telenor" : "Mobifone",
       mr_list: [],
       prevPage: 0,
       activePage: 1,
@@ -65,6 +66,9 @@ class MRList extends Component {
     this.handleFilterList = this.handleFilterList.bind(this);
     this.onChangeDebounced = debounce(this.onChangeDebounced, 500);
     this.downloadMRlist = this.downloadMRlist.bind(this);
+    this.downloadSNReportAll = this.downloadSNReportAll.bind(this)
+    this.downloadSNReportAll2 = this.downloadSNReportAll2.bind(this)
+
     this.getMRList = this.getMRList.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.downloadAllMRMigration = this.downloadAllMRMigration.bind(this);
@@ -222,6 +226,192 @@ class MRList extends Component {
         this.setState({ mr_list: items, totalData: totalData });
       }
     });
+  }
+
+  async downloadSNReportAll(){
+    this.toggleLoading();
+
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataMR = await this.getAllMR();
+    // console.log('dataMR',dataMR)
+    const dataItemMR = await dataMR.map(mr => mr.packages);
+    // console.log('dataItemMR',dataItemMR)
+
+    let headerRow = [
+      "MR_ID",
+      "SKU",
+      "SERIAL_NUMBER",
+      "DESCRIPTION",
+      "SCAN_BY",
+      "LASTEST_UPDATE_DATE_SCAN",
+      "ACCOUNT",
+      "WAREHOUSE",
+    ];
+    ws.addRow(headerRow);
+    let dateDispatch = null;
+    let dispatchData = dataMR.map(mr => mr.mr_status).find(
+      (e) => e.mr_status_value === "DISPATCH"
+    );
+    // console.log('dispatchData', dispatchData)
+    if (
+      dispatchData !== undefined && dispatchData.length !== 0
+    ) {
+      let dateDispatchNew = new Date(dispatchData.mr_status_date);
+      dateDispatch =
+        dateDispatchNew.getFullYear().toString() +
+        (dateDispatchNew.getMonth() + 1).toString().padStart(2, "0") +
+        dateDispatchNew.getDate().toString().padStart(2, "0");
+    }
+    for (let i = 0; i < dataItemMR.length; i++) {
+      // console.log('dataItemMR['+i+']', dataItemMR[i]);
+      for (let j = 0; j < dataItemMR[i].length; j++) {
+      // console.log('package['+j+']', dataItemMR[i][j]);
+
+        if(dataItemMR[i][j].materials !== undefined && dataItemMR[i][j].materials.length !== 0){          
+          for (let k = 0; k < dataItemMR[i][j].materials.length; k++) {
+            // console.log('dataItemMR[i][j].materials.length', dataItemMR[i][j].materials);
+            let dataMatIdx = dataItemMR[i][j].materials[k];
+            // console.log('dataMatIdx', dataMatIdx);
+          if (
+            dataMatIdx.serial_numbers !== undefined &&
+            dataMatIdx.serial_numbers.length !== 0
+          ) {
+            let serial_number = dataMatIdx.serial_numbers.find(
+              (e) => e.flag_name === "obd"
+            );
+            if (serial_number !== undefined) {
+              for (let l = 0; l < serial_number.list_of_sn.length; l++) {
+                ws.addRow([
+                  dataMR[i].mr_id,
+                  dataMatIdx.material_id,
+                  serial_number.list_of_sn[l],
+                  dataMatIdx.material_name,
+                  serial_number.updated_by,
+                  serial_number.updated_on,
+                  this.state.account_name,
+                  dataMR[i].origin.value,
+                ]);
+              }
+            }
+          } else {
+            ws.addRow([
+              dataMR[i].mr_id,
+              dataMatIdx.material_id,
+              null,
+              dataMatIdx.material_name,
+              null,
+              null,
+              this.state.account_name,
+              dataMR[i].origin.value,
+            ]);
+          }
+          }  
+        }
+              
+      }
+    }
+    this.toggleLoading();
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([allocexport]),
+      "SERIAL NUMBER Material REPORT WH.xlsx"
+    );
+  }
+
+  async downloadSNReportAll2(){
+    this.toggleLoading();
+
+    const wb = new Excel.Workbook();
+    const ws = wb.addWorksheet();
+
+    const dataMR = await this.getAllMR();
+    // console.log('dataMR',dataMR)
+    const dataItemMR = await dataMR.map(mr => mr.packages);
+    // console.log('dataItemMR',dataItemMR)
+
+    let headerRow = [
+      "MR_ID",
+      "SKU",
+      "SERIAL_NUMBER",
+      "DESCRIPTION",
+      "SCAN_BY",
+      "LASTEST_UPDATE_DATE_SCAN",
+      "ACCOUNT",
+      "WAREHOUSE",
+    ];
+    ws.addRow(headerRow);
+    let dateDispatch = null;
+    let dispatchData = dataMR.map(mr => mr.mr_status).find(
+      (e) => e.mr_status_value === "DISPATCH"
+    );
+    // console.log('dispatchData', dispatchData)
+    if (
+      dispatchData !== undefined && dispatchData.length !== 0
+    ) {
+      let dateDispatchNew = new Date(dispatchData.mr_status_date);
+      dateDispatch =
+        dateDispatchNew.getFullYear().toString() +
+        (dateDispatchNew.getMonth() + 1).toString().padStart(2, "0") +
+        dateDispatchNew.getDate().toString().padStart(2, "0");
+    }
+    for (let i = 0; i < dataItemMR.length; i++) {
+      // console.log('dataItemMR['+i+']', dataItemMR[i]);
+      for (let j = 0; j < dataItemMR[i].length; j++) {
+      // console.log('package['+j+']', dataItemMR[i][j]);
+
+        if(dataItemMR[i][j].materials !== undefined && dataItemMR[i][j].materials.length !== 0){          
+          for (let k = 0; k < dataItemMR[i][j].materials.length; k++) {
+            // console.log('dataItemMR[i][j].materials.length', dataItemMR[i][j].materials);
+            let dataMatIdx = dataItemMR[i][j].materials[k];
+            // console.log('dataMatIdx', dataMatIdx);
+          if (
+            dataMatIdx.serial_numbers !== undefined &&
+            dataMatIdx.serial_numbers.length !== 0
+          ) {
+            let serial_number = dataMatIdx.serial_numbers.find(
+              (e) => e.flag_name === "mho"
+            );
+            if (serial_number !== undefined) {
+              for (let l = 0; l < serial_number.list_of_sn.length; l++) {
+                ws.addRow([
+                  dataMR[i].mr_id,
+                  dataMatIdx.material_id,
+                  serial_number.list_of_sn[l],
+                  dataMatIdx.material_name,
+                  serial_number.updated_by,
+                  serial_number.updated_on,
+                  this.state.account_name,
+                  dataMR[i].origin.value,
+                ]);
+              }
+            }
+          } else {
+            ws.addRow([
+              dataMR[i].mr_id,
+              dataMatIdx.material_id,
+              null,
+              dataMatIdx.material_name,
+              null,
+              null,
+              this.state.account_name,
+              dataMR[i].origin.value,
+            ]);
+          }
+          }  
+        }
+              
+      }
+    }
+    this.toggleLoading();
+
+    const allocexport = await wb.xlsx.writeBuffer();
+    saveAs(
+      new Blob([allocexport]),
+      "SERIAL NUMBER Material REPORT ASP.xlsx"
+    );
   }
 
   async getAllMR() {
@@ -598,6 +788,23 @@ class MRList extends Component {
                               aria-hidden="true"
                             ></i>
                             Download MR List
+                          </DropdownItem>
+                          <DropdownItem header>SN Report</DropdownItem>
+                          <DropdownItem onClick={this.downloadSNReportAll}>
+                            {" "}
+                            <i
+                              className="fa fa-file-text-o"
+                              aria-hidden="true"
+                            ></i>
+                            Download SN List WH
+                          </DropdownItem>
+                          <DropdownItem onClick={this.downloadSNReportAll2}>
+                            {" "}
+                            <i
+                              className="fa fa-file-text-o"
+                              aria-hidden="true"
+                            ></i>
+                            Download SN List ASP
                           </DropdownItem>
                           {/* {this.state.userRole.findIndex(
                             (e) => e === "BAM-Engineering"
