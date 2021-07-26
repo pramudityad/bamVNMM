@@ -241,6 +241,7 @@ class MRList extends Component {
 
     let headerRow = [
       "MR_ID",
+      "SITE ID",
       "SKU",
       "SERIAL_NUMBER",
       "DESCRIPTION",
@@ -285,6 +286,7 @@ class MRList extends Component {
               for (let l = 0; l < serial_number.list_of_sn.length; l++) {
                 ws.addRow([
                   dataMR[i].mr_id,
+                  dataMR[i].site_info[0].site_id,
                   dataMatIdx.material_id,
                   serial_number.list_of_sn[l],
                   dataMatIdx.material_name,
@@ -298,6 +300,7 @@ class MRList extends Component {
           } else {
             ws.addRow([
               dataMR[i].mr_id,
+              dataMR[i].site_info[0].site_id,
               dataMatIdx.material_id,
               null,
               dataMatIdx.material_name,
@@ -334,6 +337,7 @@ class MRList extends Component {
 
     let headerRow = [
       "MR_ID",
+      "SITE ID",
       "SKU",
       "SERIAL_NUMBER",
       "DESCRIPTION",
@@ -378,7 +382,8 @@ class MRList extends Component {
               for (let l = 0; l < serial_number.list_of_sn.length; l++) {
                 ws.addRow([
                   dataMR[i].mr_id,
-                  dataMatIdx.material_id,
+                  dataMR[i].site_info[0].site_id,
+                  dataMatIdx.material_id,                  
                   serial_number.list_of_sn[l],
                   dataMatIdx.material_name,
                   serial_number.updated_by,
@@ -391,6 +396,7 @@ class MRList extends Component {
           } else {
             ws.addRow([
               dataMR[i].mr_id,
+              dataMR[i].site_info[0].site_id,
               dataMatIdx.material_id,
               null,
               dataMatIdx.material_name,
