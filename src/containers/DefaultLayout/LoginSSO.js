@@ -259,7 +259,7 @@ class SSOLogin extends Component {
                 <h3>Please Select Account :</h3>
               </Row>
               <Row className="justify-content-center">
-                <Col md="12" lg="12" xl="12">
+                <Col md="6" lg="6" xl="6">
                   <div className="flex--card-account">
                     <div
                       className="card-account--telkom"
@@ -272,6 +272,23 @@ class SSOLogin extends Component {
                           style={{ width: "50%" }}
                         />
                         {/* <h2>VN MM</h2> */}
+                      </div>
+                    </div>
+                  </div>
+                </Col>
+                <Col md="6" lg="6" xl="6">
+                  <div className="flex--card-account">
+                    <div
+                      className="card-account--telkom"
+                      onClick={() => this.handleChangeAccount("2")}
+                    >
+                      <div>
+                        {/* <img
+                          src={telenor}
+                          alt="mobifone logo"
+                          style={{ width: "50%" }}
+                        /> */}
+                        <h2>Mobifone</h2>
                       </div>
                     </div>
                   </div>
