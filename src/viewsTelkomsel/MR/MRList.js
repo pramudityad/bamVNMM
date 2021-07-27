@@ -11,6 +11,8 @@ import {
   Input,
   Row,
   Table,
+  FormGroup,
+  Label,
 } from "reactstrap";
 import {
   Dropdown,
@@ -30,6 +32,11 @@ import {
   convertDateFormatfull,
   convertDateFormat,
 } from "../../helper/basicFunction";
+import {
+  getDatafromAPI_PDB2,
+} from "../../helper/asyncFunction";
+import ModalForm from "../components/ModalForm";
+
 
 import Loading from "../components/Loading";
 
@@ -52,6 +59,8 @@ class MRList extends Component {
       vendor_name: this.props.dataLogin.vendor_name,
       vendor_code: this.props.dataLogin.vendor_code,
       account_name : this.props.dataLogin.account_id === "1" ? "Telenor" : "Mobifone",
+      tokenPDB: this.props.dataLogin.token_pdb,
+
       mr_list: [],
       prevPage: 0,
       activePage: 1,
@@ -60,7 +69,10 @@ class MRList extends Component {
       filter_list: new Array(14).fill(""),
       mr_all: [],
       modal_loading: false,
+      vendor_list : [],
+      modal_approve_ldm: false,
       dropdownOpen: new Array(1).fill(false),
+      id_mr_selected: ""
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -68,6 +80,8 @@ class MRList extends Component {
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.downloadSNReportAll = this.downloadSNReportAll.bind(this)
     this.downloadSNReportAll2 = this.downloadSNReportAll2.bind(this)
+    this.toggleModalapprove = this.toggleModalapprove.bind(this);
+    this.handleMRassign = this.handleMRassign.bind(this);
 
     this.getMRList = this.getMRList.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
@@ -610,6 +624,15 @@ class MRList extends Component {
     this.props.SidebarMinimizer(false);
   }
 
+  getDSPList() {
+    getDatafromAPI_PDB2("/get-vendors", this.state.tokenPDB).then((res) => {
+      if (res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({ vendor_list: items });
+      }
+    });
+  }
+
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
       this.getMRList();
@@ -715,6 +738,35 @@ class MRList extends Component {
     <div className="animated fadeIn pt-1 text-center">Loading...</div>
   );
 
+  toggleModalapprove(e) {
+    this.getDSPList();
+    this.setState((prevState) => ({
+      modal_approve_ldm: !prevState.modal_approve_ldm,
+
+    }));
+  }
+
+  handleMRassign(e){
+    this.setState({id_mr_selected: e.name})
+  }
+
+  AssignMR(e) {
+    const id_doc = e.currentTarget.id;
+    let reason = this.state.rejectNote;
+    this.patchDatatoAPINODE("/matreq/rejectMatreq/" + id_doc, {
+      rejectNote: reason,
+    }).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
+        this.getMRList();
+        this.toggleBoxInput();
+      } else {
+        this.setState({ action_status: "failed" });
+        this.toggleBoxInput();
+      }
+    });
+  }
+
   render() {
     const downloadMR = {
       float: "right",
@@ -811,30 +863,7 @@ class MRList extends Component {
                               aria-hidden="true"
                             ></i>
                             Download SN List ASP
-                          </DropdownItem>
-                          {/* {this.state.userRole.findIndex(
-                            (e) => e === "BAM-Engineering"
-                          ) === -1 &&
-                            this.state.userRole.findIndex(
-                              (e) => e === "BAM-Project Planner"
-                            ) === -1 &&
-                            this.state.userRole.findIndex(
-                              (e) => e === "BAM-Warehouse"
-                            ) === -1 &&
-                            this.state.userRole.findIndex(
-                              (e) => e === "BAM-LDM"
-                            ) === -1 && (
-                              <DropdownItem
-                                onClick={this.downloadAllMRMigration}
-                              >
-                                {" "}
-                                <i
-                                  className="fa fa-file-text-o"
-                                  aria-hidden="true"
-                                ></i>
-                                Format MR List Status Migration
-                              </DropdownItem>
-                            )} */}
+                          </DropdownItem>                     
                         </DropdownMenu>
                       </Dropdown>
                     </React.Fragment>
@@ -844,6 +873,7 @@ class MRList extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
+                      <th rowSpan="2">Action</th>
                       <th>MR ID</th>
                       <th>Project Name</th>
                       <th>WP ID</th>
@@ -868,6 +898,24 @@ class MRList extends Component {
                     )}
                     {this.state.mr_list.map((list, i) => (
                       <tr key={list._id}>
+                      <td>
+                      <Button
+                            outline
+                            color="default"
+                            size="sm"
+                            className="btn-pill"
+                            style={{ width: "90px", marginBottom: "4px" }}
+                            name={list._id}
+                            value={list.mr_id}
+                            onClick={this.toggleModalapprove}
+                          >
+                            <i
+                              className="fa fa-truck"
+                              style={{ marginRight: "8px" }}
+                            ></i>
+                            ASP/DSP
+                          </Button>
+                      </td>
                         <td>
                           <Link to={"/mr-detail/" + list._id}>
                             {list.mr_id}
@@ -939,6 +987,43 @@ class MRList extends Component {
           className={"modal-sm modal--loading "}
         ></Loading>
         {/* end Modal Loading */}
+
+         {/* modal form approve */}
+         <ModalForm
+          isOpen={this.state.modal_approve_ldm}
+          toggle={this.toggleModalapprove}
+          className={"modal-sm modal--box-input modal__delivery--ldm-approve"}
+        >
+          <Col>
+              <React.Fragment>
+                <FormGroup>
+                  <Label htmlFor="total_box"> {this.state.id_mr_selected} | ASP & DSP Company</Label>
+                  <Input
+                    type="select"
+                    className=""
+                    placeholder=""
+                    onChange={this.handleMRassign}
+                    name={this.state.id_mr_selected}
+                  >
+                    <option value="" disabled selected hidden></option>
+                    {this.state.vendor_list.map((asp) => (
+                      <option value={asp.Vendor_Code}>{asp.Name}</option>
+                    ))}
+                  </Input>
+                </FormGroup>
+                
+              </React.Fragment>
+          </Col>
+          <div style={{ justifyContent: "center", alignSelf: "center" }}>
+            <Button
+              color="success"
+              onClick={this.AssignMR}
+              className="btn-pill"
+            >
+              <i className="icon-check icons"></i> Assign
+            </Button>
+          </div>
+        </ModalForm>
       </div>
     );
   }
