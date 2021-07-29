@@ -7,6 +7,8 @@ import App from "../../App";
 import "./LoginSSO.css";
 import { Button, Col, Container, Row } from "reactstrap";
 import telenor from "../../assets/img/customer/Telenor_logo.png";
+import mobifone from "../../assets/img/customer/logo-mobifone-1.png";
+
 
 import ericssonLogoBlack from "../../assets/img/brand/ERI_horizontal_RGB_BLACK.svg";
 import { CollectionsBookmark } from "@material-ui/icons";
@@ -283,12 +285,12 @@ class SSOLogin extends Component {
                       onClick={() => this.handleChangeAccount("2")}
                     >
                       <div>
-                        {/* <img
-                          src={telenor}
+                        <img
+                          src={mobifone}
                           alt="mobifone logo"
                           style={{ width: "50%" }}
-                        /> */}
-                        <h2>Mobifone</h2>
+                        />
+                        {/* <h2>Mobifone</h2> */}
                       </div>
                     </div>
                   </div>
