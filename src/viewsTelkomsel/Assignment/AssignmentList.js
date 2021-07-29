@@ -11,6 +11,8 @@ import {
   Input,
   Row,
   Table,
+  FormGroup,
+  Label
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -19,10 +21,17 @@ import debounce from "lodash.debounce";
 import Excel from "exceljs";
 import { saveAs } from "file-saver";
 import { connect } from "react-redux";
+import {
+  getDatafromAPI_PDB2,
+  patchDatatoAPINODE
+} from "../../helper/asyncFunction";
+import ModalForm from "../components/ModalForm";
 
 // //const process.env.REACT_APP_API_URL_NODE = process.env.REACT_APP_API_URL_NODE;
 //const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
-
+const DefaultNotif = React.lazy(() =>
+  import("../../views/DefaultView/DefaultNotif")
+);
 class AssignmentList extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -33,6 +42,7 @@ class AssignmentList extends React.PureComponent {
       userName: this.props.dataLogin.userName,
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
+      tokenPDB: this.props.dataLogin.token_pdb,
       assignment_list: [],
       prevPage: 0,
       activePage: 1,
@@ -40,6 +50,12 @@ class AssignmentList extends React.PureComponent {
       perPage: 10,
       filter_list: new Array(9).fill(""),
       asg_all: [],
+      vendor_list: [],
+      id_asg_selected: "",
+      vendor_code_selected : "",
+      _id_selected : "",
+      action_status: null,
+      action_message: null,
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.getAssignmentList = this.getAssignmentList.bind(this);
@@ -52,6 +68,9 @@ class AssignmentList extends React.PureComponent {
       this
     );
     this.downloadAllAssignmentBAST = this.downloadAllAssignmentBAST.bind(this);
+    this.toggleModalapprove = this.toggleModalapprove.bind(this);
+    this.handleMRassign = this.handleMRassign.bind(this);
+    this.AssignMR = this.AssignMR.bind(this);
   }
 
   async getDataFromAPINODE(url) {
@@ -222,6 +241,15 @@ class AssignmentList extends React.PureComponent {
     this.getAssignmentList();
     // this.getAllAssignment();
     document.title = "Assignment List | BAM";
+  }
+
+  getDSPList() {
+    getDatafromAPI_PDB2("/get-vendors", this.state.tokenPDB).then((res) => {
+      if (res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({ vendor_list: items });
+      }
+    });
   }
 
   handlePageChange(pageNumber) {
@@ -559,6 +587,38 @@ class AssignmentList extends React.PureComponent {
     <div className="animated fadeIn pt-1 text-center">Loading...</div>
   );
 
+  toggleModalapprove(e) {
+    this.getDSPList();
+    this.setState((prevState) => ({
+      modal_approve_ldm: !prevState.modal_approve_ldm,
+    }));
+    this.setState({
+      id_mr_selected : e.currentTarget.value,
+      _id_selected : e.currentTarget.name
+    })
+  }
+
+  AssignMR() {
+    const _id = this.state._id_selected;
+    patchDatatoAPINODE("/matreq/assignAspDspToMatReq/" + _id, {
+      access_token_vnmm: this.state.tokenPDB,
+      mrInfo: {asp: this.state.vendor_code_selected} 
+    }, this.state.tokenUser).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success", modal_approve_ldm : false });
+        this.getAssignmentList();
+        // this.toggleModalapprove();
+      } else {
+        this.setState({ action_status: "failed", modal_approve_ldm : false });
+        // this.toggleModalapprove();
+      }
+    });
+  }
+
+  handleMRassign(e){
+    this.setState({vendor_code_selected: e.currentTarget.value, })
+  }
+
   render() {
     const downloadAssignment = {
       float: "right",
@@ -577,6 +637,10 @@ class AssignmentList extends React.PureComponent {
     return (
       <div className="animated fadeIn">
         <Row>
+        <DefaultNotif
+          actionMessage={this.state.action_message}
+          actionStatus={this.state.action_status}
+        />
           <Col xs="12" lg="12">
             <Card>
               <CardHeader>
@@ -651,6 +715,22 @@ class AssignmentList extends React.PureComponent {
                               Detail
                             </Button>
                           </Link>
+                          <Button
+                            outline
+                            color="default"
+                            size="sm"
+                            className="btn-pill"
+                            style={{ width: "90px", marginBottom: "4px" }}
+                            name={list.id_mr_doc}
+                            value={list.Assignment_No}
+                            onClick={this.toggleModalapprove}
+                          >
+                            <i
+                              className="fa fa-truck"
+                              style={{ marginRight: "8px" }}
+                            ></i>
+                            ASP
+                          </Button>
                         </td>
                         <td>{list.Assignment_No}</td>
                         <td>{list.MR_ID}</td>
@@ -689,6 +769,44 @@ class AssignmentList extends React.PureComponent {
             </Card>
           </Col>
         </Row>
+
+        {/* modal form approve */}
+        <ModalForm
+          isOpen={this.state.modal_approve_ldm}
+          toggle={this.toggleModalapprove}
+          className={"modal-sm modal--box-input modal__delivery--ldm-approve"}
+        >
+          <Col>
+              <React.Fragment>
+                <FormGroup>
+                  <Label htmlFor="total_box"> {this.state.id_mr_selected !== undefined ? this.state.id_mr_selected : ""} | ASP & DSP Company</Label>
+                  <Input
+                    type="select"
+                    className=""
+                    placeholder="Select ASP/DSP"
+                    onChange={this.handleMRassign}
+                    name={this.state.id_mr_selected}
+                    value={this.state.vendor_code_selected}           
+                  >
+                    <option value="" disabled selected hidden></option>
+                    {this.state.vendor_list.map((asp) => (
+                      <option value={asp.Vendor_Code}>{asp.Name}</option>
+                    ))}
+                  </Input>
+                </FormGroup>
+                
+              </React.Fragment>
+          </Col>
+          <div style={{ justifyContent: "center", alignSelf: "center" }}>
+            <Button
+              color="success"
+              onClick={this.AssignMR}
+              className="btn-pill"
+            >
+              <i className="icon-check icons"></i> Assign
+            </Button>
+          </div>
+        </ModalForm>
       </div>
     );
   }

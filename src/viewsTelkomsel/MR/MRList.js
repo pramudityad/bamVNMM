@@ -34,6 +34,7 @@ import {
 } from "../../helper/basicFunction";
 import {
   getDatafromAPI_PDB2,
+  patchDatatoAPINODE
 } from "../../helper/asyncFunction";
 import ModalForm from "../components/ModalForm";
 
@@ -43,6 +44,9 @@ import Loading from "../components/Loading";
 const API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
 const username = "bamidadmin@e-dpm.com";
 const password = "F760qbAg2sml";
+const DefaultNotif = React.lazy(() =>
+  import("../../views/DefaultView/DefaultNotif")
+);
 
 //const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
@@ -60,7 +64,8 @@ class MRList extends Component {
       vendor_code: this.props.dataLogin.vendor_code,
       account_name : this.props.dataLogin.account_id === "1" ? "Telenor" : "Mobifone",
       tokenPDB: this.props.dataLogin.token_pdb,
-
+      action_status: null,
+      action_message: null,
       mr_list: [],
       prevPage: 0,
       activePage: 1,
@@ -72,7 +77,9 @@ class MRList extends Component {
       vendor_list : [],
       modal_approve_ldm: false,
       dropdownOpen: new Array(1).fill(false),
-      id_mr_selected: ""
+      id_mr_selected: "",
+      vendor_code_selected : "",
+      _id_selected : ""
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -82,7 +89,7 @@ class MRList extends Component {
     this.downloadSNReportAll2 = this.downloadSNReportAll2.bind(this)
     this.toggleModalapprove = this.toggleModalapprove.bind(this);
     this.handleMRassign = this.handleMRassign.bind(this);
-
+    this.AssignMR = this.AssignMR.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.downloadAllMRMigration = this.downloadAllMRMigration.bind(this);
@@ -742,27 +749,30 @@ class MRList extends Component {
     this.getDSPList();
     this.setState((prevState) => ({
       modal_approve_ldm: !prevState.modal_approve_ldm,
-
     }));
+    this.setState({
+      id_mr_selected : e.currentTarget.value,
+      _id_selected : e.currentTarget.name
+    })
   }
 
   handleMRassign(e){
-    this.setState({id_mr_selected: e.name})
+    this.setState({vendor_code_selected: e.currentTarget.value, })
   }
 
-  AssignMR(e) {
-    const id_doc = e.currentTarget.id;
-    let reason = this.state.rejectNote;
-    this.patchDatatoAPINODE("/matreq/rejectMatreq/" + id_doc, {
-      rejectNote: reason,
-    }).then((res) => {
+  AssignMR() {
+    const _id = this.state._id_selected;
+    patchDatatoAPINODE("/matreq/assignAspDspToMatReq/" + _id, {
+      access_token_vnmm: this.state.tokenPDB,
+      mrInfo: {dsp: this.state.vendor_code_selected} 
+    }, this.state.tokenUser).then((res) => {
       if (res.data !== undefined) {
-        this.setState({ action_status: "success" });
+        this.setState({ action_status: "success", modal_approve_ldm : false });
         this.getMRList();
-        this.toggleBoxInput();
+        // this.toggleModalapprove();
       } else {
-        this.setState({ action_status: "failed" });
-        this.toggleBoxInput();
+        this.setState({ action_status: "failed", modal_approve_ldm : false });
+        // this.toggleModalapprove();
       }
     });
   }
@@ -775,6 +785,10 @@ class MRList extends Component {
 
     return (
       <div className="animated fadeIn">
+       <DefaultNotif
+          actionMessage={this.state.action_message}
+          actionStatus={this.state.action_status}
+        />
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -913,7 +927,7 @@ class MRList extends Component {
                               className="fa fa-truck"
                               style={{ marginRight: "8px" }}
                             ></i>
-                            ASP/DSP
+                            DSP
                           </Button>
                       </td>
                         <td>
@@ -997,13 +1011,14 @@ class MRList extends Component {
           <Col>
               <React.Fragment>
                 <FormGroup>
-                  <Label htmlFor="total_box"> {this.state.id_mr_selected} | ASP & DSP Company</Label>
+                  <Label htmlFor="total_box"> {this.state.id_mr_selected !== undefined ? this.state.id_mr_selected : ""} | ASP & DSP Company</Label>
                   <Input
                     type="select"
                     className=""
-                    placeholder=""
+                    placeholder="Select ASP/DSP"
                     onChange={this.handleMRassign}
                     name={this.state.id_mr_selected}
+                    value={this.state.vendor_code_selected}           
                   >
                     <option value="" disabled selected hidden></option>
                     {this.state.vendor_list.map((asp) => (
