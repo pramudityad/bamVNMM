@@ -55,6 +55,8 @@ const CRDetail = React.lazy(() => import("./viewsTelkomsel/CR/CRDetail"));
 const MRList = React.lazy(() => import("./viewsTelkomsel/MR/MRList"));
 const MRNAList = React.lazy(() => import("./viewsTelkomsel/MR/MRNAList"));
 const MRCreation = React.lazy(() => import("./viewsTelkomsel/MR/MRCreation2"));
+const MRCreationLOM = React.lazy(() => import("./viewsTelkomsel/MR/MRLOMClearance"));
+
 const BulkMRCreation = React.lazy(() => import("./viewsTelkomsel/MR/BulkMR"));
 const MRDetail = React.lazy(() => import("./viewsTelkomsel/MR/MRDetail"));
 const PSUpload = React.lazy(() => import("./viewsTelkomsel/MR/PSUpload"));
@@ -443,6 +445,12 @@ const routes = [
     exact: true,
     name: "Create MR",
     component: MRCreation,
+  },
+  {
+    path: "/mr-clearance-lom",
+    exact: true,
+    name: "Create MR LOM",
+    component: MRCreationLOM,
   },
   {
     path: "/mr-detail/:id",

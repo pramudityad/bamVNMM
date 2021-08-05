@@ -2256,6 +2256,21 @@ class MRDetail extends Component {
                             MR Type : {this.state.data_mr.mr_type}
                           </td>
                         </tr>
+                        {this.state.data_mr.mr_type === "Additional" ? (
+                          <tr>
+                          <td
+                            colSpan="4"
+                            style={{
+                              fontSize: "15px",
+                              textAlign: "center",
+                              color: "rgba(59,134,134,1)",
+                            }}
+                          >
+                            MR LOM Related : {this.state.data_mr.mr_lom_related}
+                          </td>
+                        </tr>
+                        ):("")                          
+                        }
                         {this.state.data_mr.mr_mitt_no != undefined &&
                           this.state.data_mr.mr_mitt_no !== null && (
                             <tr>

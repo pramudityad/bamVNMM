@@ -62,7 +62,7 @@ const Checkbox = ({
   />
 );
 
-class WizardMR extends React.PureComponent {
+class WizardMR2 extends React.PureComponent {
   constructor(props) {
     super(props);
 
@@ -84,7 +84,7 @@ class WizardMR extends React.PureComponent {
       list_tower_selection_fe: [],
       modal_loading: false,
       dataPS: [],
-      steps: [{ title: "PS Creation" }, { title: "MR Creation" }],
+      steps: [{ title: "MR Creation" }],
       page: 0,
       dataMR: new Array(8).fill(""),
       project_name: "",
@@ -93,13 +93,16 @@ class WizardMR extends React.PureComponent {
       id_cd_doc: "",
       site_ne_select: "",
       site_fe_select: "",
+      package_selected_lom: null,
+      mr_selected_lom: null
     };
   }
 
   componentDidMount() {
+    console.log('didmount', this.state.tokenPDB);
     // this.loadOptionsCDID();
     // this.getDataTower();
-    this.getDSPList();
+    // this.getDSPList();
     // this.getDataProject();
     this.getDataWarehouse();
     // console.log("masuk");
@@ -141,42 +144,14 @@ class WizardMR extends React.PureComponent {
   //   }
   getDataWarehouse() {
     getDatafromAPINODE(
-      '/whManagement/warehouse?q={"wh_type":{"$regex" : "internal", "$options" : "i"}}',
+      '/whManagement/warehouse?q=',
       this.state.tokenUser
     ).then((resWH) => {
       if (resWH.data !== undefined) {
-        this.setState({ list_warehouse: resWH.data.data });
+        this.setState({ list_warehouse: resWH.data.data }, () => console.log('resWH.data', resWH.data ));
       }
     });
   }
-
-  // loadOptionsCDID = async (inputValue) => {
-  //   if (!inputValue) {
-  //     return [];
-  //   } else {
-  //     let wp_id_list = [];
-  //     // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
-  //     const getWPID = await getDatafromAPITSEL(
-  //       '/custdel_tlnr_sorted_non_page?where={"WP_ID":{"$regex":"' +
-  //         inputValue +
-  //         '", "$options":"i"}}'
-  //     );
-  //     if (getWPID !== undefined && getWPID.data !== undefined) {
-  //       this.setState({ list_cd_options: getWPID.data._items });
-  //       getWPID.data._items.map((wp) =>
-  //         wp_id_list.push({
-  //           value: wp.WP_ID,
-  //           label: wp.WP_ID + " ( " + wp.WP_Name + " )",
-  //           project: wp.CD_Info_Project_Name,
-  //           id_project_doc: wp.CD_Info_Project,
-  //           id_cd_doc: wp._id,
-  //         })
-  //       );
-  //     }
-  //     // this.setState({ project_name: wp_id_list[0].project });
-  //     return wp_id_list;
-  //   }
-  // };
 
   loadOptionsCDID = async (inputValue) => {
     // if (!inputValue) {
@@ -203,6 +178,41 @@ class WizardMR extends React.PureComponent {
       return wp_id_list;
     // }
   };
+
+  loadOptionsMR = async (inputValue) => {
+    let mr_list = []
+    let filter_array = [];
+    filter_array.push('"current_mr_status":"LACK OF MATERIAL"');
+    inputValue !== "" &&
+    filter_array.push(
+      '"mr_id":{"$regex" : "' +
+        inputValue +
+        '", "$options" : "i"}'
+    );
+    let whereAnd = "{" + filter_array.join(",") + "}";
+
+    const getMR = await getDatafromAPINODE(
+      "/matreq?srt=_id:-1&q=" + whereAnd, this.state.tokenUser
+    )
+    if (getMR !== undefined && getMR.data !== undefined) {
+      getMR.data.data.map((wp) =>
+        mr_list.push({
+          value: wp.mr_id,
+          label: wp.mr_id,
+          lom_packages: wp.lom_packages,    
+        })
+      );
+    }
+    return mr_list;
+
+  }
+
+  handleChangeMRID = (e) => {
+    this.setState({
+      package_selected_lom : e.lom_packages,
+      mr_selected_lom : e.value
+    }, ()=> console.log('lom_packages', this.state.package_selected_lom))
+  }
 
   filterDataTower = (inputValue) => {
     const list = [];
@@ -346,16 +356,15 @@ class WizardMR extends React.PureComponent {
 
   saveMRtoAPI = async () => {
     this.toggleLoading();
+    let endpoint = this.state.dataMR[0] === "New" ? "/matreq/createMatreqWithPs" : "/matreq/createMatreqAddWithPs"
     let body_MR = {
       id_cd_doc: this.state.id_cd_doc,
       cd_id: this.state.cd_id,
-      mr_type: 1,
+      mr_type: this.state.dataMR[0] === "New" ? 1:2,
       id_project_doc: this.state.id_project_doc,
       project_name: this.state.project_name,
       eta: this.state.dataMR[6],
-      etd: this.state.dataMR[5],
-      dsp: this.state.dataMR[7],
-      asp: this.state.dataMR[4],
+      etd: this.state.dataMR[5],   
       wh_origin: this.state.dataMR[8],
     };
     // post ps
@@ -366,6 +375,7 @@ class WizardMR extends React.PureComponent {
         psData: this.state.dataPS,
         sowType: this.state.dataMR[2],
         access_token_vnmm: this.state.tokenPDB
+        
       },
       this.state.tokenUser
     );
@@ -374,67 +384,6 @@ class WizardMR extends React.PureComponent {
       respondSaveTSSR.status >= 200 &&
       respondSaveTSSR.status <= 300
     ) {
-      // this.setState({
-      //   action_status: "success",
-      //   action_message: "MR Created, please check in MR List",
-      // });
-      // this.toggleLoading();
-
-      // const idps = respondSaveTSSR.data.id_plantspec_doc;
-      // const nops = respondSaveTSSR.data.no_plantspec;
-      // // post MR
-      // let MRdata = [
-      //   [
-      //     "id",
-      //     "project_name",
-      //     "created_based",
-      //     "mr_type",
-      //     "mr_delivery_type",
-      //     "origin_warehouse",
-      //     "etd",
-      //     "eta",
-      //     "mr_comment_project",
-      //     "sent_mr_request",
-      //     "identifier",
-      //     "site_id_ne",
-      //     "site_id_fe",
-      //     "asp_company",
-      //     "asp_company_code",
-      //     "dsp_company",
-      //     "dsp_company_code",
-      //   ],
-      //   [
-      //     "new",
-      //     this.state.project_select,
-      //     "dpr",
-      //     this.state.dataMR[0],
-      //     1,
-      //     this.state.dataMR[4],
-      //     this.state.dataMR[5],
-      //     this.state.dataMR[6],
-      //     null,
-      //     "",
-      //     "DSP",
-      //     this.state.site_ne_select,
-      //     this.state.site_fe_select,
-      //     this.state.dataMR[7],
-      //     this.state.dataMR[7],
-      //     this.state.dataMR[8],
-      //     this.state.dataMR[8],
-      //   ],
-      // ];
-      // const respondCheckingMR = await postDatatoAPINODE(
-      //   "/matreq/matreqByActivityNew",
-      //   { id_plantspec_doc: idps, no_plantspec: nops, data: MRdata },
-      //   this.state.tokenUser
-      // );
-      // // console.log("respondCheckingMR ", respondCheckingMR.data);
-      // if (
-      //   respondCheckingMR.data !== undefined &&
-      //   respondCheckingMR.status >= 200 &&
-      //   respondCheckingMR.status <= 300
-      // ) {
-
       const respondSaveASG = await postDatatoAPINODE(
         "/aspAssignment/createAspAssignWithMr",
         { aspaData: respondSaveTSSR.data.aspaData },
@@ -451,50 +400,7 @@ class WizardMR extends React.PureComponent {
         });
         this.toggleLoading();
 
-        // const idmr = respondSaveASG.data.new[0]._id;
-        // const no_mr = respondSaveASG.data.new[0].mr_id;
-        // // Assing PS to MR
-        // const respondAssignMR = await patchDatatoAPINODE(
-        //   "/matreq/assignPlantSpecByTssr2/" + idmr + "/ps/" + idps,
-        //   {
-        //     mr_type: this.state.dataMR[0],
-        //   },
-        //   this.state.tokenUser
-        // );
-        // if (
-        //   respondAssignMR.data !== undefined &&
-        //   respondAssignMR.status >= 200 &&
-        //   respondAssignMR.status <= 300
-        // ) {
-        //   this.setState({
-        //     action_status: "success",
-        //     action_message: "MR Created, please check in MR List",
-        //   });
-        //   this.toggleLoading();
-        // } else {
-        //   if (
-        //     respondAssignMR.response !== undefined &&
-        //     respondAssignMR.response.data !== undefined &&
-        //     respondAssignMR.response.data.error !== undefined
-        //   ) {
-        //     if (respondAssignMR.response.data.error.message !== undefined) {
-        //       this.setState({
-        //         action_status: "failed",
-        //         action_message: respondAssignMR.response.data.error.message,
-        //       });
-        //       this.toggleLoading();
-        //     } else {
-        //       this.setState({
-        //         action_status: "failed",
-        //         action_message: respondAssignMR.response.data.error,
-        //       });
-        //       this.toggleLoading();
-        //     }
-        //   } else {
-        //     this.setState({ action_status: "failed" });
-        //     this.toggleLoading();
-        //   }
-        // }
+       
       } else {
         if (
           respondSaveASG.response !== undefined &&
@@ -519,30 +425,104 @@ class WizardMR extends React.PureComponent {
           this.toggleLoading();
         }
       }
-      // } else {
-      //   if (
-      //     respondCheckingMR.response !== undefined &&
-      //     respondCheckingMR.response.data !== undefined &&
-      //     respondCheckingMR.response.data.error !== undefined
-      //   ) {
-      //     if (respondCheckingMR.response.data.error.message !== undefined) {
-      //       this.setState({
-      //         action_status: "failed",
-      //         action_message: respondCheckingMR.response.data.error.message,
-      //       });
-      //       this.toggleLoading();
-      //     } else {
-      //       this.setState({
-      //         action_status: "failed",
-      //         action_message: respondCheckingMR.response.data.error,
-      //       });
-      //       this.toggleLoading();
-      //     }
-      //   } else {
-      //     this.setState({ action_status: "failed" });
-      //     this.toggleLoading();
-      //   }
-      // }
+    } else {
+      if (
+        respondSaveTSSR.response !== undefined &&
+        respondSaveTSSR.response.data !== undefined &&
+        respondSaveTSSR.response.data.error !== undefined
+      ) {
+        if (respondSaveTSSR.response.data.error.message !== undefined) {
+          this.setState({
+            action_status: "failed",
+            action_message: respondSaveTSSR.response.data.error.message,
+          });
+          this.toggleLoading();
+        } else {
+          this.setState({
+            action_status: "failed",
+            action_message: respondSaveTSSR.response.data.error,
+          });
+          this.toggleLoading();
+        }
+      } else {
+        this.setState({ action_status: "failed" });
+        this.toggleLoading();
+      }
+    }
+  };
+
+  saveMRtoAPI_add = async () => {
+    this.toggleLoading();
+    let body_MR = {
+      id_cd_doc: this.state.id_cd_doc,
+      cd_id: this.state.cd_id,
+      mr_type: 3,
+      id_project_doc: this.state.id_project_doc,
+      project_name: this.state.project_name,
+      eta: this.state.dataMR[6],
+      etd: this.state.dataMR[5],
+
+      wh_origin: this.state.dataMR[8],
+    };
+    // post ps
+    const respondSaveTSSR = await postDatatoAPINODE(
+      "/matreq/createMatreqAddWithPs",
+      {
+        mrInfo: body_MR,
+        psData: this.state.package_selected_lom,
+        sowType: this.state.dataMR[2],
+        access_token_vnmm: this.state.tokenPDB,
+        mrRelated: this.state.mr_selected_lom
+        
+      },
+      this.state.tokenUser
+    );
+    if (
+      respondSaveTSSR.data !== undefined &&
+      respondSaveTSSR.status >= 200 &&
+      respondSaveTSSR.status <= 300
+    ) {
+      const respondSaveASG = await postDatatoAPINODE(
+        "/aspAssignment/createAspAssignWithMr",
+        { aspaData: respondSaveTSSR.data.aspaData },
+        this.state.tokenUser
+      );
+      if (
+        respondSaveASG.data !== undefined &&
+        respondSaveASG.status >= 200 &&
+        respondSaveASG.status <= 300
+      ) {
+        this.setState({
+          action_status: "success",
+          action_message: "MR & Asignment Created Succesfully",
+        });
+        this.toggleLoading();
+
+       
+      } else {
+        if (
+          respondSaveASG.response !== undefined &&
+          respondSaveASG.response.data !== undefined &&
+          respondSaveASG.response.data.error !== undefined
+        ) {
+          if (respondSaveASG.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: respondSaveASG.response.data.error.message,
+            });
+            this.toggleLoading();
+          } else {
+            this.setState({
+              action_status: "failed",
+              action_message: respondSaveASG.response.data.error,
+            });
+            this.toggleLoading();
+          }
+        } else {
+          this.setState({ action_status: "failed" });
+          this.toggleLoading();
+        }
+      }
     } else {
       if (
         respondSaveTSSR.response !== undefined &&
@@ -840,12 +820,14 @@ class WizardMR extends React.PureComponent {
             currentStep={this.state.currentStep}
             fileHandler={this.fileHandler}
             ps={this.state.dataPS}
+            // saveMRtoAPI={this.saveMRtoAPI}
           />
           <MRCreation
             list_dsp={this.state.vendor_list}
             list_asp={this.state.asp_list}
             list_project={this.loadOptionsCDID}
             list_wh={this.state.list_warehouse}
+            list_mr={this.loadOptionsMR}
             currentStep={this.state.currentStep}
             handleChange={this.handleChange}
             handleChangeCD={this.handleChangeCD}
@@ -860,7 +842,8 @@ class WizardMR extends React.PureComponent {
             prior={this.state.dataMR[10]}
             eta={this.state.dataMR[5]}
             etd={this.state.dataMR[6]}
-            saveMRtoAPI={this.saveMRtoAPI}
+            saveMRtoAPI2={this.saveMRtoAPI_add}
+            handleChangeMRID={this.handleChangeMRID}
           />
           <CardFooter>
             {this.previousButton()}
@@ -899,7 +882,7 @@ class WizardMR extends React.PureComponent {
 }
 
 const PScreation = (props) => {
-  if (props.currentStep !== 1) {
+  if (props.currentStep !== 2) {
     return null;
   }
   return (
@@ -910,19 +893,6 @@ const PScreation = (props) => {
             <span style={{ lineHeight: "2", fontSize: "17px" }}>
               Plant Spec Group
             </span>
-            <Link to={"/mr-clearance-lom"}>
-              <Button
-              size="sm"
-              style={{
-                marginBottom: "0px",
-                float: "right",
-                marginRight: "10px",
-              }}
-              color="warning"
-              >
-              MR Additional
-              </Button>
-            </Link>
             <Button
               size="sm"
               style={{ marginBottom: "0px", float: "right" }}
@@ -974,6 +944,17 @@ const PScreation = (props) => {
                 </tbody>
               </table>
             </div>
+            {/* <Button
+                color="success"
+                style={{ float: "right" }}
+                onClick={props.saveMRtoAPI}
+              >
+                <i
+                  className="fa fa-plus-square"
+                  style={{ marginRight: "8px" }}
+                ></i>{" "}
+                Create
+              </Button> */}
           </CardBody>
           <CardFooter>
             {props.ps.length !== 0 ? (
@@ -1003,9 +984,11 @@ const MRCreation = (props) => {
   const list_asp = props.list_asp;
   const list_project = props.list_project;
   const project_select = props.project_name;
+  const list_mr = props.list_mr;
   const list_wh = props.list_wh;
-  const mr_type = props.id;
-  if (props.currentStep !== 2) {
+  let mr_type = props.id;
+  mr_type !== "" ? console.log('mr_type ',mr_type) : console.log('');
+  if (props.currentStep !== 1) {
     return null;
   }
   return (
@@ -1055,11 +1038,11 @@ const MRCreation = (props) => {
                         <option value="" disabled selected hidden>
                           Select MR Type
                         </option>
-                        <option value="New">New</option>
-                        <option value="Upgrade">Upgrade</option>
+                        {/* <option value="New">New</option>
+                        <option value="Upgrade">Upgrade</option> */}
                         <option value="Additional">Additional</option>
                         {/* <option value="Outstanding">Outstanding</option> */}
-                        <option value="Replacement">Replacement</option>
+                        {/* <option value="Replacement">Replacement</option> */}
                         {/* <option value="Return Excess">Return Excess (WH to WH)</option>
                       <option value="Return Faulty">Return Faulty (WH to WH)</option> */}
                       </Input>
@@ -1193,7 +1176,7 @@ const MRCreation = (props) => {
                         </option>
                         {/* <option value="WH1">WH1</option>
                         <option value="WH2">WH2</option> */}
-                        {list_wh.map((e) => (
+                        {list_wh !== undefined && list_wh.map((e) => (
                           <option value={e.wh_id}>
                             {e.wh_id + " - " + e.wh_name}
                           </option>
@@ -1206,25 +1189,7 @@ const MRCreation = (props) => {
                         hidden={this.state.toggle_display !== "return"}
                       /> */}
                     </FormGroup>
-                  </Col>
-                  {/* {(this.state.create_mr_form[4] === "Warehouse to Warehouse" || this.state.create_mr_form[4] === "Warehouse to Port" || this.state.create_mr_form[4] === "Warehouse to Scrap") && (
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Destination</Label>
-                      <Input
-                        type="select"
-                        id={"0"}
-                        name={"0"}
-                        value={props.dataMR}
-                        onChange={props.handleChange}
-                      >                        <option value="" disabled selected hidden>Select Destination</option>
-                        {this.state.list_warehouse.map(e =>
-                          <option value={e.wh_id}>{e.wh_id +" - "+e.wh_name}</option>
-                        )}
-                      </Input>
-                    </FormGroup>
-                  </Col>
-                )} */}
+                  </Col>            
                 </Row>
                 <Row form>
                   <Col md={3}>
@@ -1251,74 +1216,30 @@ const MRCreation = (props) => {
                       />
                     </FormGroup>
                   </Col>
-                  {/* <Col md={3}>
-                    <FormGroup>
-                      <Label>Priority</Label>
-                      <Input
-                        type="select"
-                        id={"10"}
-                        name={"10"}
-                        value={props.dataMR}
-                        onChange={props.handleChange}
-                      >
-                        {" "}
-                        <option value="" disabled selected hidden>
-                          Select Priority
-                        </option>
-                        <option value={"P1"}>P1</option>
-                        <option value={"P2"}>P2</option>
-                        <option value={"P3"}>P3</option>
-                      </Input>
-                    </FormGroup>
-                  </Col>
-                  <Col md={3}>
-                    <FormGroup>
-                      <Label>Week target</Label>
-                      <Input
-                        type="number"
-                        id={"9"}
-                        name={"9"}
-                        value={props.dataMR}
-                        onChange={props.handleChange}
-                      />
-                    </FormGroup>
-                  </Col> */}
-                </Row>
-                {/* {this.state.create_mr_form[3] === "Replacement" && (
-                <Row form>
+                  {mr_type !== "" && mr_type === "Additional" && (
                   <Col md={4}>
                     <FormGroup>
-                      <Label>Note Replacement</Label>
-                      <Input
-                        type="text"
-                        name="12" value={this.state.create_mr_form[12]} onChange={this.handleChangeFormMRCreation}
-                        style={this.state.validation_form.etd === false ? {borderColor : 'red'} : {}}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md={4}>
-                    <FormGroup>
-                      <Label>MR Related</Label>
+                      <Label>MR LOM Related</Label>
                       <AsyncSelect
-                        loadOptions={this.loadOptionsMRID}
+                        loadOptions={list_mr}
                         defaultOptions
-                        onChange={this.handleChangeMRID}
+                        onChange={props.handleChangeMRID}
                       />
                     </FormGroup>
                   </Col>
-                </Row>
-              )} */}
+              )}
+                </Row>            
               </Form>
               <Button
                 color="success"
                 style={{ float: "right" }}
-                onClick={props.saveMRtoAPI}
+                onClick={props.saveMRtoAPI2}
               >
                 <i
                   className="fa fa-plus-square"
                   style={{ marginRight: "8px" }}
                 ></i>{" "}
-                Create
+                Create MR Additional
               </Button>
             </CardBody>
           </Card>
@@ -1334,4 +1255,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(WizardMR);
+export default connect(mapStateToProps)(WizardMR2);
