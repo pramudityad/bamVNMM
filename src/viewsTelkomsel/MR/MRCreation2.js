@@ -354,8 +354,8 @@ class WizardMR extends React.PureComponent {
       project_name: this.state.project_name,
       eta: this.state.dataMR[6],
       etd: this.state.dataMR[5],
-      dsp: this.state.dataMR[7],
-      asp: this.state.dataMR[4],
+      // dsp: this.state.dataMR[7],
+      // asp: this.state.dataMR[4],
       wh_origin: this.state.dataMR[8],
     };
     // post ps
