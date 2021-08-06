@@ -1206,7 +1206,7 @@ const MRCreation = (props) => {
                       />
                     </FormGroup>
                   </Col>
-                  {mr_type !== "" && mr_type === "Additional" && (
+                  
                   <Col md={4}>
                     <FormGroup>
                       <Label>MR LOM Related</Label>
@@ -1217,7 +1217,7 @@ const MRCreation = (props) => {
                       />
                     </FormGroup>
                   </Col>
-              )}
+     
                 </Row>            
               </Form>
               <Button
