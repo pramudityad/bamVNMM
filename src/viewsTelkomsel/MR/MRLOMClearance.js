@@ -84,7 +84,7 @@ class WizardMR2 extends React.PureComponent {
       list_tower_selection_fe: [],
       modal_loading: false,
       dataPS: [],
-      steps: [{ title: "MR Creation" }],
+      steps: [{ title: "MR Additional Creation" }],
       page: 0,
       dataMR: new Array(8).fill(""),
       project_name: "",
@@ -999,7 +999,7 @@ const MRCreation = (props) => {
             <CardHeader>
               <span style={{ lineHeight: "2", fontSize: "17px" }}>
                 <i className="fa fa-edit" style={{ marginRight: "8px" }}></i>
-                MR Creation{" "}
+                MR Additional Creation{" "}
               </span>
             </CardHeader>
             <CardBody>
@@ -1104,7 +1104,7 @@ const MRCreation = (props) => {
                     </FormGroup>
                   </Col>
                 </Row>
-                <Row form>
+                {/* <Row form>
                   <Col md={6}>
                     <FormGroup>
                       <Label>ASP</Label>
@@ -1122,12 +1122,7 @@ const MRCreation = (props) => {
                         {list_asp.map((e) => (
                           <option value={e.Vendor_Code}>{e.Name}</option>
                         ))}
-                      </Input>
-                      {/* {this.state.create_mr_form[7] === "DSP" && (
-                      <FormText color="muted" style={{fontSize : '12px', paddingLeft : '5px', marginTop : '5px'}}>
-                        LDM will choose the DSP company
-                      </FormText>
-                    ) } */}
+                      </Input>                    
                     </FormGroup>
                   </Col>
                 </Row>
@@ -1150,15 +1145,10 @@ const MRCreation = (props) => {
                         {list_dsp.map((e) => (
                           <option value={e.Vendor_Code}>{e.Name}</option>
                         ))}
-                      </Input>
-                      {/* {this.state.create_mr_form[7] === "DSP" && (
-                      <FormText color="muted" style={{fontSize : '12px', paddingLeft : '5px', marginTop : '5px'}}>
-                        LDM will choose the DSP company
-                      </FormText>
-                    ) } */}
+                      </Input>                    
                     </FormGroup>
                   </Col>
-                </Row>
+                </Row> */}
                 <Row form>
                   <Col md={6}>
                     <FormGroup>
