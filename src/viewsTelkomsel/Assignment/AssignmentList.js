@@ -244,7 +244,7 @@ class AssignmentList extends React.PureComponent {
   }
 
   getDSPList() {
-    getDatafromAPI_PDB2("/get-vendors", this.state.tokenPDB).then((res) => {
+    getDatafromAPI_PDB2("/get-vendors").then((res) => {
       if (res.data !== undefined) {
         const items = res.data._items;
         this.setState({ vendor_list: items });

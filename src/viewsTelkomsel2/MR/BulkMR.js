@@ -425,7 +425,7 @@ class BulkMR extends Component {
   }
 
   getASPList() {
-    getDatafromAPI_PDB2("/get-vendors", this.state.tokenPDB).then(
+    getDatafromAPI_PDB2("/get-vendors").then(
       (res) => {
         if (res.data !== undefined) {
           const items = res.data._items;

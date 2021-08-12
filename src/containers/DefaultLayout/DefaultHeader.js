@@ -29,6 +29,7 @@ class DefaultHeader extends Component {
     this.state = {
       userId: this.props.dataLogin._id,
       userName: this.props.dataLogin.userName,
+      account: this.props.dataLogin.account_id === "1" ? "Telenor" : "Mobifone",
       userEmail: this.props.dataLogin.email,
       tokenUser: this.props.dataLogin.token,
       vendor_name : this.props.dataLogin.vendor_name,
@@ -106,6 +107,8 @@ class DefaultHeader extends Component {
           minimized={{ src: sygnet, width: 30, height: 30, alt: 'CoreUI Logo' }}
         />
         <AppSidebarToggler className="d-md-down-none" display="lg" />
+        <h2><span class="badge badge-secondary">{this.state.account}</span></h2>
+
         {(this.state.userRole.indexOf("BAM-ASP Management") !== 1 && this.state.userRole.indexOf("Admin") !== -1) && (
           <React.Fragment>
           <Nav className="d-md-down-none" navbar>

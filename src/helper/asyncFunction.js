@@ -32,9 +32,9 @@ export const getDatafromAPI_PDB2 = async (url, props) => {
   try {
     let respond = await axios.get(process.env.REACT_APP_API_URL_PDB2 + url, {
       headers: { "Content-Type": "application/json" },
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + props,
+      auth: {
+        username: process.env.REACT_APP_usernamepdb2,
+        password: process.env.REACT_APP_passwordpdb2,
       },
     });
     if (respond.status >= 200 && respond.status < 300) {

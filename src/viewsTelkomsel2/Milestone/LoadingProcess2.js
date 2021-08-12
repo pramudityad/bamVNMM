@@ -591,7 +591,7 @@ class LoadingProcess extends Component {
   }
 
   loadOptionsASP() {
-    getDatafromAPI_PDB2("/get-vendors", this.state.tokenPDB).then((res) => {
+    getDatafromAPI_PDB2("/get-vendors").then((res) => {
       if (res.data !== undefined) {
         const items = res.data._items;
         this.setState({ asp_list: items });

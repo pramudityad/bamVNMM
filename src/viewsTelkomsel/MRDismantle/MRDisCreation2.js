@@ -121,7 +121,7 @@ class WizardMRDis extends React.PureComponent {
   // }
 
   getDSPList() {
-    getDatafromAPI_PDB2("/get-vendors", this.state.tokenPDB).then((res) => {
+    getDatafromAPI_PDB2("/get-vendors").then((res) => {
       if (res.data !== undefined) {
         const items = res.data._items;
         this.setState({ vendor_list: items }, () => this.getASPList(items));
@@ -152,7 +152,7 @@ class WizardMRDis extends React.PureComponent {
       let wp_id_list = [];
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
       const getWPID = await getDatafromAPI_PDB2(
-        '/get-activities', this.state.tokenPDB
+        '/get-activities'
       );
       if (getWPID !== undefined && getWPID.data !== undefined) {
         this.setState({ list_cd_options: getWPID.data._items });
