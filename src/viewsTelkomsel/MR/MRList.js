@@ -175,9 +175,9 @@ class MRList extends Component {
       );
     this.state.filter_list[3] !== "" &&
       filter_array.push(
-        '"site_info.site_id":{"$regex" : "' +
+        '"site_info.site_id": "' +
           this.state.filter_list[3] +
-          '", "$options" : "i"}'
+          '"'
       );
     this.state.filter_list[4] !== "" &&
       filter_array.push(
