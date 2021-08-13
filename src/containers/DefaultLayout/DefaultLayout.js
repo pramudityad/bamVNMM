@@ -195,7 +195,7 @@ class DefaultLayout extends PureComponent {
               </Suspense>
             </Container>
           </main>
-          <AppAside fixed>
+          <AppAside >
             <Suspense fallback={this.loading()}>
               <DefaultAside />
             </Suspense>
