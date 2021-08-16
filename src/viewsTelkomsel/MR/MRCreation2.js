@@ -179,13 +179,13 @@ class WizardMR extends React.PureComponent {
   // };
 
   loadOptionsCDID = async (inputValue) => {
-    // if (!inputValue) {
-    //   return [];
-    // } else {
+    if (!inputValue) {
+      return [];
+    } else {
       let wp_id_list = [];
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
       const getWPID = await getDatafromAPI_PDB2(
-        '/get-activities'
+        '/get-activities?WP_ID='+inputValue+''
       );
       if (getWPID !== undefined && getWPID.data !== undefined) {
         this.setState({ list_cd_options: getWPID.data._items });
@@ -201,7 +201,7 @@ class WizardMR extends React.PureComponent {
       }
       // this.setState({ project_name: wp_id_list[0].project });
       return wp_id_list;
-    // }
+     }
   };
 
   filterDataTower = (inputValue) => {
@@ -1103,6 +1103,7 @@ const MRCreation = (props) => {
                     <FormGroup>
                       <Label>WP ID</Label>
                       <AsyncSelect
+                      placeholder="Type Something"
                         cacheOptions
                         loadOptions={list_project}
                         defaultOptions
