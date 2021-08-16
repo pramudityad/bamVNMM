@@ -3,7 +3,8 @@ import { Nav, NavItem, NavLink, Progress, TabContent, TabPane, ListGroup, ListGr
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { AppSwitch } from '@coreui/react'
-
+import telenor from "../../assets/img/customer/Telenor_logo.png";
+import mobifone from "../../assets/img/customer/logo-mobifone-1.png";
 const propTypes = {
   children: PropTypes.node,
 };
@@ -68,40 +69,17 @@ class DefaultAside extends Component {
               <ListGroupItem className="list-group-item-accent-secondary bg-light text-center font-weight-bold text-muted text-uppercase small">Change Account</ListGroupItem>
               <ListGroupItem action tag="a" href="#" className="list-group-item-accent-warning list-group-item-divider">
                 <div className="avatar float-right">
-                  <img className="img-avatar" src="assets/img/avatars/7.jpg" alt="admin@bootstrapmaster.com"></img>
+                  <img className="img-avatar" src={telenor} alt="admin@bootstrapmaster.com"></img>
                 </div>
-                <div>Meeting with <strong>Lucas</strong> </div>
-                <small className="text-muted mr-3">
-                  <i className="icon-calendar"></i>&nbsp; 1 - 3pm
-                </small>
-                <small className="text-muted">
-                  <i className="icon-location-pin"></i> Palo Alto, CA
-                </small>
+                <div><strong>Telenor</strong></div>            
               </ListGroupItem>
               <ListGroupItem action tag="a" href="#" className="list-group-item-accent-info list-group-item-divider">
                 <div className="avatar float-right">
-                  <img className="img-avatar" src="assets/img/avatars/4.jpg" alt="admin@bootstrapmaster.com"></img>
+                  <img className="img-avatar" src={mobifone} alt="admin@bootstrapmaster.com"></img>
                 </div>
-                <div>Skype with <strong>Megan</strong></div>
-                <small className="text-muted mr-3">
-                  <i className="icon-calendar"></i>&nbsp; 4 - 5pm
-                </small>
-                <small className="text-muted">
-                  <i className="icon-social-skype"></i> On-line
-                </small>
-              </ListGroupItem>
-              <ListGroupItem action tag="a" href="#" className="list-group-item-accent-info list-group-item-divider">
-                <div className="avatar float-right">
-                  <img className="img-avatar" src="assets/img/avatars/4.jpg" alt="admin@bootstrapmaster.com"></img>
-                </div>
-                <div>Skype with <strong>Megan</strong></div>
-                <small className="text-muted mr-3">
-                  <i className="icon-calendar"></i>&nbsp; 4 - 5pm
-                </small>
-                <small className="text-muted">
-                  <i className="icon-social-skype"></i> On-line
-                </small>
-              </ListGroupItem>      
+                <div><strong>Mobifone</strong></div>
+                
+              </ListGroupItem>               
             </ListGroup>
           </TabPane>
         </TabContent>
