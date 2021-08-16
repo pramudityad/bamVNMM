@@ -100,7 +100,7 @@ const AssignmentCreation = React.lazy(() =>
   import("./viewsTelkomsel2/Assignment/AssignmentCreation")
 );
 const AssignmentList = React.lazy(() =>
-  import("./viewsTelkomsel2/Assignment/AssignmentList")
+  import("./viewsTelkomsel/Assignment/AssignmentList")
 );
 const AssignmentReport = React.lazy(() =>
   import("./viewsTelkomsel2/Assignment/AssignmentReport")
