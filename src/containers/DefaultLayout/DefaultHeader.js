@@ -107,7 +107,7 @@ class DefaultHeader extends Component {
           minimized={{ src: sygnet, width: 30, height: 30, alt: 'CoreUI Logo' }}
         />
         <AppSidebarToggler className="d-md-down-none" display="lg" />
-        <h2><span class="badge badge-secondary">{this.state.account}</span></h2>
+        <h2><span class="badge badge-secondary">{this.props.dataLogin.account_id === "1" ? "Telenor" : "Mobifone"}</span></h2>
 
         {(this.state.userRole.indexOf("BAM-ASP Management") !== 1 && this.state.userRole.indexOf("Admin") !== -1) && (
           <React.Fragment>

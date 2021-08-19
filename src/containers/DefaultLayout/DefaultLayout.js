@@ -34,7 +34,7 @@ const DefaultFooter = React.lazy(() => import('./DefaultFooter'));
 const DefaultHeader = React.lazy(() => import('./DefaultHeader'));
 const LoaderPage = React.lazy(() => import('../../views/DefaultView/LoaderPage'));
 
-const API_URL_BAM = 'https://api2-dev.bam-id.e-dpm.com/bamidapi';
+const API_URL_BAM = 'https://api2-dev.bam-vnmm.e-dpm.com/bamidapi';
 
 class DefaultLayout extends PureComponent {
 
