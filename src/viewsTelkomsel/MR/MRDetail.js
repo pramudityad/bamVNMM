@@ -35,7 +35,7 @@ import { saveAs } from "file-saver";
 import { ExcelRenderer } from "react-excel-renderer";
 import "./MatStyle.css";
 import ModalForm from "../components/ModalForm";
-import { getDatafromAPINODEFile } from "../../helper/asyncFunction";
+import { getDatafromAPINODEFile, getDatafromAPI_PDB2, getDatafromAPI_PDB_dev } from "../../helper/asyncFunction";
 
 import { convertDateFormatfull } from "../../helper/basicFunction";
 
@@ -221,7 +221,7 @@ class MRDetail extends Component {
   getASPList() {
     // switch (this.props.dataLogin.account_id) {
     //   case "xl":
-    this.getDatafromAPIEXEL('/vendor_data_non_page?where={"Type":"DSP"}').then(
+    getDatafromAPI_PDB_dev('/get-vendors').then(
       (res) => {
         // console.log("asp data ", res.data);
         if (res.data !== undefined) {
@@ -937,7 +937,7 @@ class MRDetail extends Component {
         dsp_company: this.state.data_mr.dsp_company,
       };
     }
-    body = { ...body, motType: this.state.mot_type, access_token_vnmm: this.state.tokenPDB };
+    body = { ...body, access_token_vnmm: this.state.tokenPDB };
     // console.log('_id ',_id);
     console.log('body ',body);
     this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id, body).then(
@@ -4180,7 +4180,7 @@ class MRDetail extends Component {
                     ))}
                   </Input>
                 </FormGroup>
-                <FormGroup>
+                {/* <FormGroup>
                   <Label htmlFor="total_box">MOT Type</Label>
                   <Input
                     type="select"
@@ -4193,7 +4193,7 @@ class MRDetail extends Component {
                     <option value="MOT-Air">MOT-Air</option>
                     <option value="MOT-Sea">MOT-Sea</option>
                   </Input>
-                </FormGroup>
+                </FormGroup> */}
               </Fragment>
             )}
           </Col>

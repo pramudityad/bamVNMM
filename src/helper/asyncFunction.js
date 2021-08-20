@@ -50,7 +50,7 @@ export const getDatafromAPI_PDB2 = async (url, props) => {
 
 export const getDatafromAPI_PDB_dev = async (url, props) => {
   try {
-    let respond = await axios.get('https://test.iv-tracker.com' + url, {
+    let respond = await axios.get('https://test.iv-tracker.com/api/bam' + url, {
       headers: { "Content-Type": "application/json" },
       auth: {
         username: process.env.REACT_APP_usernamepdb2,

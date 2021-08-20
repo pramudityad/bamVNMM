@@ -31,6 +31,11 @@ import {
   convertDateFormatfull,
   convertDateFormat,
 } from "../../helper/basicFunction";
+import {
+  getDatafromAPI_PDB2,
+  patchDatatoAPINODE,
+  getDatafromAPI_PDB_dev
+} from "../../helper/asyncFunction";
 
 const API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
 const username = "bamidadmin@e-dpm.com";
@@ -223,7 +228,7 @@ class OrderCreated extends React.PureComponent {
   getASPList() {
     // switch (this.props.dataLogin.account_id) {
     //   case "xl":
-    this.getDatafromAPIISAT('/vendor_data_non_page?where={"Type":"DSP"}').then(
+    getDatafromAPI_PDB2('/get-vendors').then(
       (res) => {
         console.log("asp data ", res.data);
         if (res.data !== undefined) {
@@ -613,7 +618,7 @@ class OrderCreated extends React.PureComponent {
   ApproveMR(e) {
     const _id = this.state.id_mr_selected;
     let body = this.state.selected_dsp;
-    body = { ...body, motType: this.state.mot_type, access_token_vnmm: this.state.tokenPDB };
+    body = { ...body, access_token_vnmm: this.state.tokenPDB };
     // console.log('_id ',_id);
     // console.log('body ',body);
     this.patchDatatoAPINODE("/matreq/approveMatreq/" + _id, body).then((res) => {
@@ -982,7 +987,7 @@ class OrderCreated extends React.PureComponent {
                     ))}
                   </Input>
                 </FormGroup>
-                <FormGroup>
+                {/* <FormGroup>
                   <Label htmlFor="total_box">MOT Type</Label>
                   <Input
                     type="select"
@@ -995,7 +1000,7 @@ class OrderCreated extends React.PureComponent {
                     <option value="MOT-Air">MOT-Air</option>
                     <option value="MOT-Sea">MOT-Sea</option>
                   </Input>
-                </FormGroup>
+                </FormGroup> */}
               </React.Fragment>
             )}
           </Col>
