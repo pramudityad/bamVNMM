@@ -6,7 +6,14 @@ import './font-awesome-animation.min.css';
 import axios from 'axios';
 import {connect} from 'react-redux';
 import ActionType from '../../redux/reducer/globalActionType';
-
+import {
+  getDatafromAPITSEL,
+  getDatafromAPIBHARTI,
+  getDatafromAPI_PDB2,
+  getDatafromAPINODE,
+  postDatatoAPINODE,
+  patchDatatoAPINODE,
+} from "../../helper/asyncFunction";
 import { AppAsideToggler, AppNavbarBrand, AppSidebarToggler } from '@coreui/react';
 import logo from '../../assets/img/ERI_horizontal_RGB.svg';
 import sygnet from '../../assets/img/brand/ECON_RGB.svg';
@@ -38,7 +45,7 @@ class DefaultHeader extends Component {
       rtd : [],
       userRole: this.props.dataLogin.role,
     }
-
+    this.toggeChangeAccount = this.toggeChangeAccount.bind(this)
     this.getOrderCreated = this.getOrderCreated.bind(this);
     this.getRTD = this.getRTD.bind(this);
   }
@@ -92,6 +99,16 @@ class DefaultHeader extends Component {
       // this.getOrderCreated();
       // this.getRTD();
     }
+  }
+  toggeChangeAccount(){
+    console.log('acc_no', )
+    postDatatoAPINODE('/logoutUser', {}, this.props.dataLogin.token).then((res) => {
+      console.log(res)
+      if(res.status === 200){
+        localStorage.clear();
+        window.location.reload(); 
+      }
+    });
   }
 
   render() {
@@ -167,6 +184,8 @@ class DefaultHeader extends Component {
               <DropdownItem divider />
               <DropdownItem><i className="fa fa-shield"></i> Lock Account</DropdownItem>*/}
               <DropdownItem onClick={e => this.props.onLogout(e)}><i className="fa fa-lock"></i> Logout</DropdownItem>
+              <DropdownItem onClick={this.toggeChangeAccount}> <b>Change Account</b></DropdownItem>
+
             </DropdownMenu>
           </UncontrolledDropdown>
         </Nav>
