@@ -52,10 +52,10 @@ const PSBOMDetail = React.lazy(() => import("./viewsTelkomsel2/PS/DetailPS"));
 
 const CRDetail = React.lazy(() => import("./viewsTelkomsel2/CR/CRDetail"));
 
-const MRList = React.lazy(() => import("./viewsTelkomsel/MR/MRList"));
+const MRList = React.lazy(() => import("./viewsTelkomsel2/MR/MRList"));
 const MRNAList = React.lazy(() => import("./viewsTelkomsel2/MR/MRNAList"));
-const MRCreation = React.lazy(() => import("./viewsTelkomsel/MR/MRCreation2"));
-const BulkMRCreation = React.lazy(() => import("./viewsTelkomsel/MR/BulkMR"));
+const MRCreation = React.lazy(() => import("./viewsTelkomsel2/MR/MRCreation2"));
+const BulkMRCreation = React.lazy(() => import("./viewsTelkomsel2/MR/BulkMR"));
 const MRDetail = React.lazy(() => import("./viewsTelkomsel2/MR/MRDetail"));
 const PSUpload = React.lazy(() => import("./viewsTelkomsel2/MR/PSUpload"));
 const MRProgress = React.lazy(() => import("./viewsTelkomsel2/MR/MRProgress"));
@@ -100,7 +100,7 @@ const AssignmentCreation = React.lazy(() =>
   import("./viewsTelkomsel2/Assignment/AssignmentCreation")
 );
 const AssignmentList = React.lazy(() =>
-  import("./viewsTelkomsel/Assignment/AssignmentList")
+  import("./viewsTelkomsel2/Assignment/AssignmentList")
 );
 const AssignmentReport = React.lazy(() =>
   import("./viewsTelkomsel2/Assignment/AssignmentReport")

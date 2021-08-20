@@ -11,6 +11,8 @@ import {
   Input,
   Row,
   Table,
+  FormGroup,
+  Label,
 } from "reactstrap";
 import {
   Dropdown,
@@ -30,12 +32,22 @@ import {
   convertDateFormatfull,
   convertDateFormat,
 } from "../../helper/basicFunction";
+import {
+  getDatafromAPI_PDB2,
+  patchDatatoAPINODE,
+  getDatafromAPI_PDB_dev
+} from "../../helper/asyncFunction";
+import ModalForm from "../components/ModalForm";
+
 
 import Loading from "../components/Loading";
 
 const API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
 const username = "bamidadmin@e-dpm.com";
 const password = "F760qbAg2sml";
+const DefaultNotif = React.lazy(() =>
+  import("../../views/DefaultView/DefaultNotif")
+);
 
 //const process.env.REACT_APP_API_URL_NODE = "https://api2-dev.bam-id.e-dpm.com/bamidapi";
 
@@ -52,6 +64,9 @@ class MRList extends Component {
       vendor_name: this.props.dataLogin.vendor_name,
       vendor_code: this.props.dataLogin.vendor_code,
       account_name : this.props.dataLogin.account_id === "1" ? "Telenor" : "Mobifone",
+      tokenPDB: this.props.dataLogin.token_pdb,
+      action_status: null,
+      action_message: null,
       mr_list: [],
       prevPage: 0,
       activePage: 1,
@@ -60,7 +75,12 @@ class MRList extends Component {
       filter_list: new Array(14).fill(""),
       mr_all: [],
       modal_loading: false,
+      vendor_list : [],
+      modal_approve_ldm: false,
       dropdownOpen: new Array(1).fill(false),
+      id_mr_selected: "",
+      vendor_code_selected : "",
+      _id_selected : ""
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -68,7 +88,9 @@ class MRList extends Component {
     this.downloadMRlist = this.downloadMRlist.bind(this);
     this.downloadSNReportAll = this.downloadSNReportAll.bind(this)
     this.downloadSNReportAll2 = this.downloadSNReportAll2.bind(this)
-
+    this.toggleModalapprove = this.toggleModalapprove.bind(this);
+    this.handleMRassign = this.handleMRassign.bind(this);
+    this.AssignMR = this.AssignMR.bind(this);
     this.getMRList = this.getMRList.bind(this);
     this.toggleLoading = this.toggleLoading.bind(this);
     this.downloadAllMRMigration = this.downloadAllMRMigration.bind(this);
@@ -154,9 +176,9 @@ class MRList extends Component {
       );
     this.state.filter_list[3] !== "" &&
       filter_array.push(
-        '"site_info.site_id":{"$regex" : "' +
+        '"site_info.site_id": "' +
           this.state.filter_list[3] +
-          '", "$options" : "i"}'
+          '"'
       );
     this.state.filter_list[4] !== "" &&
       filter_array.push(
@@ -241,6 +263,7 @@ class MRList extends Component {
 
     let headerRow = [
       "MR_ID",
+      "SITE ID",
       "SKU",
       "SERIAL_NUMBER",
       "DESCRIPTION",
@@ -285,6 +308,7 @@ class MRList extends Component {
               for (let l = 0; l < serial_number.list_of_sn.length; l++) {
                 ws.addRow([
                   dataMR[i].mr_id,
+                  dataMR[i].site_info[0].site_id,
                   dataMatIdx.material_id,
                   serial_number.list_of_sn[l],
                   dataMatIdx.material_name,
@@ -298,6 +322,7 @@ class MRList extends Component {
           } else {
             ws.addRow([
               dataMR[i].mr_id,
+              dataMR[i].site_info[0].site_id,
               dataMatIdx.material_id,
               null,
               dataMatIdx.material_name,
@@ -334,6 +359,7 @@ class MRList extends Component {
 
     let headerRow = [
       "MR_ID",
+      "SITE ID",
       "SKU",
       "SERIAL_NUMBER",
       "DESCRIPTION",
@@ -378,7 +404,8 @@ class MRList extends Component {
               for (let l = 0; l < serial_number.list_of_sn.length; l++) {
                 ws.addRow([
                   dataMR[i].mr_id,
-                  dataMatIdx.material_id,
+                  dataMR[i].site_info[0].site_id,
+                  dataMatIdx.material_id,                  
                   serial_number.list_of_sn[l],
                   dataMatIdx.material_name,
                   serial_number.updated_by,
@@ -391,6 +418,7 @@ class MRList extends Component {
           } else {
             ws.addRow([
               dataMR[i].mr_id,
+              dataMR[i].site_info[0].site_id,
               dataMatIdx.material_id,
               null,
               dataMatIdx.material_name,
@@ -604,6 +632,15 @@ class MRList extends Component {
     this.props.SidebarMinimizer(false);
   }
 
+  getDSPList() {
+    getDatafromAPI_PDB2("/get-vendors").then((res) => {
+      if (res.data !== undefined) {
+        const items = res.data._items;
+        this.setState({ vendor_list: items });
+      }
+    });
+  }
+
   handlePageChange(pageNumber) {
     this.setState({ activePage: pageNumber }, () => {
       this.getMRList();
@@ -709,6 +746,38 @@ class MRList extends Component {
     <div className="animated fadeIn pt-1 text-center">Loading...</div>
   );
 
+  toggleModalapprove(e) {
+    this.getDSPList();
+    this.setState((prevState) => ({
+      modal_approve_ldm: !prevState.modal_approve_ldm,
+    }));
+    this.setState({
+      id_mr_selected : e.currentTarget.value,
+      _id_selected : e.currentTarget.name
+    })
+  }
+
+  handleMRassign(e){
+    this.setState({vendor_code_selected: e.currentTarget.value, })
+  }
+
+  AssignMR() {
+    const _id = this.state._id_selected;
+    patchDatatoAPINODE("/matreq/assignAspDspToMatReq/" + _id, {
+      access_token_vnmm: this.state.tokenPDB,
+      mrInfo: {dsp: this.state.vendor_code_selected} 
+    }, this.state.tokenUser).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success", modal_approve_ldm : false });
+        this.getMRList();
+        // this.toggleModalapprove();
+      } else {
+        this.setState({ action_status: "failed", modal_approve_ldm : false });
+        // this.toggleModalapprove();
+      }
+    });
+  }
+
   render() {
     const downloadMR = {
       float: "right",
@@ -717,6 +786,10 @@ class MRList extends Component {
 
     return (
       <div className="animated fadeIn">
+       <DefaultNotif
+          actionMessage={this.state.action_message}
+          actionStatus={this.state.action_status}
+        />
         <Row>
           <Col xs="12" lg="12">
             <Card>
@@ -805,30 +878,7 @@ class MRList extends Component {
                               aria-hidden="true"
                             ></i>
                             Download SN List ASP
-                          </DropdownItem>
-                          {/* {this.state.userRole.findIndex(
-                            (e) => e === "BAM-Engineering"
-                          ) === -1 &&
-                            this.state.userRole.findIndex(
-                              (e) => e === "BAM-Project Planner"
-                            ) === -1 &&
-                            this.state.userRole.findIndex(
-                              (e) => e === "BAM-Warehouse"
-                            ) === -1 &&
-                            this.state.userRole.findIndex(
-                              (e) => e === "BAM-LDM"
-                            ) === -1 && (
-                              <DropdownItem
-                                onClick={this.downloadAllMRMigration}
-                              >
-                                {" "}
-                                <i
-                                  className="fa fa-file-text-o"
-                                  aria-hidden="true"
-                                ></i>
-                                Format MR List Status Migration
-                              </DropdownItem>
-                            )} */}
+                          </DropdownItem>                     
                         </DropdownMenu>
                       </Dropdown>
                     </React.Fragment>
@@ -838,6 +888,7 @@ class MRList extends Component {
                 <Table responsive striped bordered size="sm">
                   <thead>
                     <tr>
+                      <th rowSpan="2">Action</th>
                       <th>MR ID</th>
                       <th>Project Name</th>
                       <th>WP ID</th>
@@ -862,6 +913,24 @@ class MRList extends Component {
                     )}
                     {this.state.mr_list.map((list, i) => (
                       <tr key={list._id}>
+                      <td>
+                      <Button
+                            outline
+                            color="default"
+                            size="sm"
+                            className="btn-pill"
+                            style={{ width: "90px", marginBottom: "4px" }}
+                            name={list._id}
+                            value={list.mr_id}
+                            onClick={this.toggleModalapprove}
+                          >
+                            <i
+                              className="fa fa-truck"
+                              style={{ marginRight: "8px" }}
+                            ></i>
+                            DSP
+                          </Button>
+                      </td>
                         <td>
                           <Link to={"/mr-detail/" + list._id}>
                             {list.mr_id}
@@ -933,6 +1002,44 @@ class MRList extends Component {
           className={"modal-sm modal--loading "}
         ></Loading>
         {/* end Modal Loading */}
+
+         {/* modal form approve */}
+         <ModalForm
+          isOpen={this.state.modal_approve_ldm}
+          toggle={this.toggleModalapprove}
+          className={"modal-sm modal--box-input modal__delivery--ldm-approve"}
+        >
+          <Col>
+              <React.Fragment>
+                <FormGroup>
+                  <Label htmlFor="total_box"> {this.state.id_mr_selected !== undefined ? this.state.id_mr_selected : ""} | ASP & DSP Company</Label>
+                  <Input
+                    type="select"
+                    className=""
+                    placeholder="Select ASP/DSP"
+                    onChange={this.handleMRassign}
+                    name={this.state.id_mr_selected}
+                    value={this.state.vendor_code_selected}           
+                  >
+                    <option value="" disabled selected hidden></option>
+                    {this.state.vendor_list.map((asp) => (
+                      <option value={asp.Vendor_Code}>{asp.Name}</option>
+                    ))}
+                  </Input>
+                </FormGroup>
+                
+              </React.Fragment>
+          </Col>
+          <div style={{ justifyContent: "center", alignSelf: "center" }}>
+            <Button
+              color="success"
+              onClick={this.AssignMR}
+              className="btn-pill"
+            >
+              <i className="icon-check icons"></i> Assign
+            </Button>
+          </div>
+        </ModalForm>
       </div>
     );
   }

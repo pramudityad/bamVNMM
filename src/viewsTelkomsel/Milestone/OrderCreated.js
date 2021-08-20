@@ -31,6 +31,11 @@ import {
   convertDateFormatfull,
   convertDateFormat,
 } from "../../helper/basicFunction";
+import {
+  getDatafromAPI_PDB2,
+  patchDatatoAPINODE,
+  getDatafromAPI_PDB_dev
+} from "../../helper/asyncFunction";
 
 const API_URL = "https://api-dev.bam-id.e-dpm.com/bamidapi";
 const username = "bamidadmin@e-dpm.com";

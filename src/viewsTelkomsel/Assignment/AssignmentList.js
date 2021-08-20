@@ -23,7 +23,8 @@ import { saveAs } from "file-saver";
 import { connect } from "react-redux";
 import {
   getDatafromAPI_PDB2,
-  patchDatatoAPINODE
+  patchDatatoAPINODE,
+  getDatafromAPI_PDB_dev
 } from "../../helper/asyncFunction";
 import ModalForm from "../components/ModalForm";
 
@@ -244,7 +245,7 @@ class AssignmentList extends React.PureComponent {
   }
 
   getDSPList() {
-    getDatafromAPI_PDB2("/get-vendors").then((res) => {
+    getDatafromAPI_PDB_dev("/get-vendors").then((res) => {
       if (res.data !== undefined) {
         const items = res.data._items;
         this.setState({ vendor_list: items });

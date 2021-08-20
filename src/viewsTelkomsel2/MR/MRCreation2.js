@@ -34,6 +34,7 @@ import {
   getDatafromAPINODE,
   postDatatoAPINODE,
   patchDatatoAPINODE,
+  getDatafromAPI_PDB_dev
 } from "../../helper/asyncFunction";
 import { filterUnique } from "../../helper/basicFunction";
 import Excel from "exceljs";
@@ -179,20 +180,20 @@ class WizardMR extends React.PureComponent {
   // };
 
   loadOptionsCDID = async (inputValue) => {
-    // if (!inputValue) {
-    //   return [];
-    // } else {
+    if (!inputValue) {
+      return [];
+    } else {
       let wp_id_list = [];
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
       const getWPID = await getDatafromAPI_PDB2(
-        '/get-activities'
+        '/get-activities?WP_ID='+inputValue+''
       );
       if (getWPID !== undefined && getWPID.data !== undefined) {
         this.setState({ list_cd_options: getWPID.data._items });
         getWPID.data._items.map((wp) =>
           wp_id_list.push({
             value: wp.WP_ID,
-            label: wp.WP_ID + " ( " + wp.Site_Info_Address_NE + " )",
+            label: wp.WP_ID + " ( " + wp.Site_Info_SiteID_NE + " )",
             project: wp.CD_Info_Project_Name,
             id_project_doc: wp.CD_Info_Project,
             id_cd_doc: wp._id,
@@ -201,7 +202,7 @@ class WizardMR extends React.PureComponent {
       }
       // this.setState({ project_name: wp_id_list[0].project });
       return wp_id_list;
-    // }
+     }
   };
 
   filterDataTower = (inputValue) => {
@@ -354,8 +355,8 @@ class WizardMR extends React.PureComponent {
       project_name: this.state.project_name,
       eta: this.state.dataMR[6],
       etd: this.state.dataMR[5],
-      dsp: this.state.dataMR[7],
-      asp: this.state.dataMR[4],
+      // dsp: this.state.dataMR[7],
+      // asp: this.state.dataMR[4],
       wh_origin: this.state.dataMR[8],
     };
     // post ps
@@ -910,6 +911,19 @@ const PScreation = (props) => {
             <span style={{ lineHeight: "2", fontSize: "17px" }}>
               Plant Spec Group
             </span>
+            <Link to={"/mr-clearance-lom"}>
+              <Button
+              size="sm"
+              style={{
+                marginBottom: "0px",
+                float: "right",
+                marginRight: "10px",
+              }}
+              color="warning"
+              >
+              MR Additional
+              </Button>
+            </Link>
             <Button
               size="sm"
               style={{ marginBottom: "0px", float: "right" }}
@@ -1090,6 +1104,7 @@ const MRCreation = (props) => {
                     <FormGroup>
                       <Label>WP ID</Label>
                       <AsyncSelect
+                      placeholder="Type Something"
                         cacheOptions
                         loadOptions={list_project}
                         defaultOptions
@@ -1108,7 +1123,7 @@ const MRCreation = (props) => {
                     </FormGroup>
                   </Col>
                 </Row>
-                <Row form>
+                {/* <Row form>
                   <Col md={6}>
                     <FormGroup>
                       <Label>ASP</Label>
@@ -1126,12 +1141,7 @@ const MRCreation = (props) => {
                         {list_asp.map((e) => (
                           <option value={e.Vendor_Code}>{e.Name}</option>
                         ))}
-                      </Input>
-                      {/* {this.state.create_mr_form[7] === "DSP" && (
-                      <FormText color="muted" style={{fontSize : '12px', paddingLeft : '5px', marginTop : '5px'}}>
-                        LDM will choose the DSP company
-                      </FormText>
-                    ) } */}
+                      </Input>                  
                     </FormGroup>
                   </Col>
                 </Row>
@@ -1154,15 +1164,10 @@ const MRCreation = (props) => {
                         {list_dsp.map((e) => (
                           <option value={e.Vendor_Code}>{e.Name}</option>
                         ))}
-                      </Input>
-                      {/* {this.state.create_mr_form[7] === "DSP" && (
-                      <FormText color="muted" style={{fontSize : '12px', paddingLeft : '5px', marginTop : '5px'}}>
-                        LDM will choose the DSP company
-                      </FormText>
-                    ) } */}
+                      </Input>                
                     </FormGroup>
                   </Col>
-                </Row>
+                </Row> */}
                 <Row form>
                   <Col md={6}>
                     <FormGroup>

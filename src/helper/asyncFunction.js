@@ -48,6 +48,26 @@ export const getDatafromAPI_PDB2 = async (url, props) => {
   }
 };
 
+export const getDatafromAPI_PDB_dev = async (url, props) => {
+  try {
+    let respond = await axios.get('https://test.iv-tracker.com' + url, {
+      headers: { "Content-Type": "application/json" },
+      auth: {
+        username: process.env.REACT_APP_usernamepdb2,
+        password: process.env.REACT_APP_passwordpdb2,
+      },
+    });
+    if (respond.status >= 200 && respond.status < 300) {
+      console.log("respond Get Data", respond);
+    }
+    return respond;
+  } catch (err) {
+    let respond = err;
+    console.log("respond Get Data", err);
+    return respond;
+  }
+};
+
 export const getDatafromAPIEXEL = async (url) => {
   try {
     let respond = await axios.get(API_URL_XL + url, {
