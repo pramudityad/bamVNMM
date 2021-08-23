@@ -185,7 +185,7 @@ class WizardMR extends React.PureComponent {
     } else {
       let wp_id_list = [];
       // const getSSOWID = await this.getDatafromAPIXL('/ssow_sorted_nonpage?where={"ssow_id":{"$regex":"'+inputValue+'", "$options":"i"}, "sow_type":"'+this.state.list_activity_selected.CD_Info_SOW_Type +'"}');
-      const getWPID = await getDatafromAPI_PDB2(
+      const getWPID = await getDatafromAPI_PDB_dev(
         '/get-activities?WP_ID='+inputValue+''
       );
       if (getWPID !== undefined && getWPID.data !== undefined) {
