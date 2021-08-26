@@ -51,6 +51,28 @@ const DefaultNotif = React.lazy(() =>
   import("../../views/DefaultView/DefaultNotif")
 );
 
+let Checkbox1 = ({
+  type = "checkbox",
+  name,
+  checked,
+  onChange,
+  value,
+  id,
+  matId,
+  key,
+}) => (
+  <input
+    key={key}
+    type={type}
+    name={name}
+    checked={checked}
+    onChange={onChange}
+    value={value}
+    id={id}
+    matId={matId}
+  />
+);
+
 class OrderCreated extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -73,12 +95,20 @@ class OrderCreated extends React.PureComponent {
       action_status: null,
       action_message: null,
       modal_approve_ldm: false,
+      modal_approve_ldm_bulk : false,
       id_mr_selected: null,
       selected_dsp: "",
       data_mr_selected: null,
       modal_box_input: false,
       rejectNote: "",
       mot_type: null,
+      packageChecked: new Map(),
+      packageSelected: [],
+      idSelected: [],
+      packageChecked_all: false,
+ 
+
+
     };
     this.handlePageChange = this.handlePageChange.bind(this);
     this.handleFilterList = this.handleFilterList.bind(this);
@@ -92,6 +122,10 @@ class OrderCreated extends React.PureComponent {
     this.toggleBoxInput = this.toggleBoxInput.bind(this);
     this.handleChangeNote = this.handleChangeNote.bind(this);
     this.handleMotType = this.handleMotType.bind(this);
+    this.handleChangeChecklist = this.handleChangeChecklist.bind(this);
+    this.handleChangeChecklistAll = this.handleChangeChecklistAll.bind(this);
+
+    
   }
 
   toggleBoxInput(e) {
@@ -222,6 +256,12 @@ class OrderCreated extends React.PureComponent {
     }
     this.setState((prevState) => ({
       modal_approve_ldm: !prevState.modal_approve_ldm,
+    }));
+  }
+
+  toggleModalapprove_bulk=()=> {    
+    this.setState((prevState) => ({
+      modal_approve_ldm_bulk: !prevState.modal_approve_ldm_bulk,
     }));
   }
 
@@ -416,8 +456,9 @@ class OrderCreated extends React.PureComponent {
     if (res.data !== undefined) {
       const items = res.data.data;
       mrList = res.data.data;
+      this.setState({ mr_all: items });
+
       return mrList;
-      // this.setState({ mr_all: items });
     } else {
       return [];
     }
@@ -651,6 +692,40 @@ class OrderCreated extends React.PureComponent {
     });
   }
 
+  ApproveMRBulk = () => {    
+    this.patchDatatoAPINODE("/matreq/approveManyMatreqById", {
+      ids: this.state.idSelected
+  }
+  ).then((res) => {
+      if (res.data !== undefined) {
+        this.setState({ action_status: "success" });
+        this.getMRList();
+        this.toggleModalapprove_bulk();
+      } else {
+        if (
+          res.response !== undefined &&
+          res.response.data !== undefined &&
+          res.response.data.error !== undefined
+        ) {
+          if (res.response.data.error.message !== undefined) {
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error.message,
+            });
+          } else {
+            this.setState({
+              action_status: "failed",
+              action_message: res.response.data.error,
+            });
+          }
+        } else {
+          this.setState({ action_status: "failed" });
+        }
+        this.toggleModalapprove_bulk();
+      }
+    });
+  }
+
   rejectMR(e) {
     const id_doc = e.currentTarget.id;
     let reason = this.state.rejectNote;
@@ -670,7 +745,7 @@ class OrderCreated extends React.PureComponent {
 
   componentDidMount() {
     this.getMRList();
-    // this.getAllMR();
+    this.getAllMR();
     document.title = "Order Created | BAM";
   }
 
@@ -734,6 +809,74 @@ class OrderCreated extends React.PureComponent {
     <div className="animated fadeIn pt-1 text-center">Loading...</div>
   );
 
+  handleChangeChecklist = (list) => {
+    console.log('list', list.target);
+    console.log(this.state.packageChecked.has(list._id));
+    const item = list.target.name;
+    let checked_yet = list.target.checked;
+    const each_data = this.state.mr_list;
+    console.log("here", item, checked_yet, each_data);
+    let packageSelected = this.state.packageSelected;
+    let ids = this.state.idSelected
+    if (checked_yet === true) {
+      let getCPO = each_data.find((pp) => pp._id === item);
+      packageSelected.push(getCPO);
+      ids.push(item)
+    } else {
+      packageSelected = packageSelected.filter(function (pp) {
+        return pp._id !== item;
+      });
+      ids = ids.filter(many_ids => many_ids !== item)
+    }
+    this.setState({ packageSelected: packageSelected, idSelected : ids }, () =>
+      console.log("checklist", this.state.packageSelected)
+    );
+    this.setState(
+      (prevState) => ({
+        packageChecked: prevState.packageChecked.set(item, checked_yet),
+      }),
+      () => console.log("packageChecked ", this.state.packageChecked)
+    );
+  };
+
+  handleChangeChecklistAll(e){
+    const isChecked = e.target.checked;
+    let packageSelected = this.state.packageSelected;
+    let getAll = this.state.mr_all;
+    let ids = this.state.idSelected
+    console.log('getAll ',getAll)
+    if (isChecked) {
+      getAll = getAll.filter(
+        (e) => packageSelected.map((m) => m._id).includes(e._id) !== true
+      );
+      for (let x = 0; x < getAll.length; x++) {
+        packageSelected.push(getAll[x]);
+        this.setState((prevState) => ({
+          packageChecked: prevState.packageChecked.set(
+            getAll[x]._id,
+            isChecked
+          ),
+        }));
+      }
+      ids = getAll.map((mrs) => mrs._id)
+      this.setState({ packageSelected: packageSelected, ids : ids},() => console.log('all ids ',ids));
+    } else {
+      for (let x = 0; x < getAll.length; x++) {
+        this.setState((prevState) => ({
+          packageChecked: prevState.packageChecked.set(
+            getAll[x]._id,
+            isChecked
+          ),
+        }));
+      }
+      packageSelected.length = 0;
+      this.setState({ packageSelected: packageSelected, ids: [] });
+    }
+    this.setState((prevState) => ({
+      packageChecked_all: !prevState.packageChecked_all,
+    }));
+  }
+
   render() {
     function AlertProcess(props) {
       const alert = props.alertAct;
@@ -781,6 +924,24 @@ class OrderCreated extends React.PureComponent {
                   ></i>{" "}
                   Order Created
                 </span>
+                {" "}
+                <Button
+                            outline
+                            color="success"
+                            size="sm"
+                            className="btn-pill"
+                            // style={{ width: "90px", marginBottom: "4px" }}
+                            // id={list._id}
+                            // value={list._etag}
+                            onClick={this.toggleModalapprove_bulk}
+                            // disabled={this.state.packageSelected.length === 0}
+                          >
+                            <i
+                              className="fa fa-check"
+                              style={{ marginRight: "8px" }}
+                            ></i>
+                            Approve
+                          </Button>
                 <Button
                   style={downloadMR}
                   outline
@@ -801,6 +962,13 @@ class OrderCreated extends React.PureComponent {
                     <tr>
                       <th rowSpan="2" style={{ verticalAlign: "middle" }}>
                         Action
+                        <span style={{ marginRight: "10px" }}>
+                          <Checkbox1
+                            name={"all"}
+                            checked={this.state.packageChecked_all}
+                            onChange={this.handleChangeChecklistAll}
+                          />                          
+                        </span>
                       </th>
                       <th>MR ID</th>
                       <th>Project Name</th>
@@ -825,9 +993,17 @@ class OrderCreated extends React.PureComponent {
                     )}
                     {this.state.mr_list.map((list, i) => (
                       <tr key={list._id}>
+                      
                         <td>
-                          {/* <Button outline color="success" size="sm" className="btn-pill" style={{ width: "90px", marginBottom: "4px" }} id={list._id} value={list._etag} onClick={this.ApproveMR}><i className="fa fa-check" style={{ marginRight: "8px" }}></i>Approve</Button> */}
-                          <Button
+                        <Checkbox1
+                                    name={list._id}
+                                    checked={this.state.packageChecked.get(
+                                      list._id
+                                    )}
+                                    onChange={this.handleChangeChecklist}
+                                    value={list}
+                                  />                          
+                                  {/* <Button
                             outline
                             color="success"
                             size="sm"
@@ -858,7 +1034,7 @@ class OrderCreated extends React.PureComponent {
                               style={{ marginRight: "8px" }}
                             ></i>
                             Reject
-                          </Button>
+                          </Button> */}
                         </td>
                         <td>
                           <Link to={"/mr-detail/" + list._id}>
@@ -896,7 +1072,7 @@ class OrderCreated extends React.PureComponent {
                   </tbody>
                 </Table>
                 <div style={{ margin: "8px 0px" }}>
-                  <small>Showing {this.state.mr_all.length} entries</small>
+                  <small>Showing {this.state.totalData} entries</small>
                 </div>
                 <Pagination
                   activePage={this.state.activePage}
@@ -1008,6 +1184,30 @@ class OrderCreated extends React.PureComponent {
             <Button
               color="success"
               onClick={this.ApproveMR}
+              className="btn-pill"
+            >
+              <i className="icon-check icons"></i> Approve
+            </Button>
+          </div>
+        </ModalForm>
+
+        {/* modal bulk connfirmation */}
+        <ModalForm
+          isOpen={this.state.modal_approve_ldm_bulk}
+          toggle={this.toggleModalapprove_bulk}
+          className={"modal-sm modal--box-input modal__delivery--ldm-approve"}
+        >
+          <Col>
+           
+              <FormGroup>
+                <Label htmlFor="total_box">Are you sure to approve {this.state.packageSelected.length} MR?</Label>         
+              </FormGroup>
+           
+          </Col>
+          <div style={{ justifyContent: "center", alignSelf: "center" }}>
+            <Button
+              color="success"
+              onClick={this.ApproveMRBulk}
               className="btn-pill"
             >
               <i className="icon-check icons"></i> Approve

@@ -92,7 +92,7 @@ const MaterialDispatch = React.lazy(() =>
   import("./viewsTelkomsel2/Milestone/MaterialDispatch")
 );
 const OrderCreated = React.lazy(() =>
-  import("./viewsTelkomsel2/Milestone/OrderCreated")
+  import("./viewsTelkomsel/Milestone/OrderCreated")
 );
 const LOMList = React.lazy(() => import("./viewsTelkomsel2/MR/LOMList"));
 
